@@ -8,8 +8,9 @@ export interface LessonPlanRequest {
   subject: string;
   topic: string;
   learningObjective: string;
-  pedagogicalTheory?: string | null;
-  examSpec?: string | null;
+  abilityLevel?: string;
+  outputDetail?: "condensed" | "standard" | "detailed";
+  additionalInfo?: string | null;
 }
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -17,27 +18,46 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export async function POST(req: NextRequest) {
   const body: LessonPlanRequest = await req.json();
 
-  const { curriculum, yearGroup, subject, topic, learningObjective, pedagogicalTheory, examSpec } = body;
+  const {
+    curriculum,
+    yearGroup,
+    subject,
+    topic,
+    learningObjective,
+    abilityLevel = "EXS",
+    outputDetail = "detailed",
+    additionalInfo,
+  } = body;
 
   if (!curriculum || !yearGroup || !subject?.trim() || !topic?.trim() || !learningObjective?.trim()) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const pedagogySection = pedagogicalTheory
-    ? `\nIntegrate the following pedagogical theory throughout the lesson plan: ${pedagogicalTheory}.`
+  const detailPreamble =
+    outputDetail === "condensed"
+      ? "Produce a concise lesson plan. Keep each section brief — 2–3 bullet points per subsection. Avoid extended prose and use short, direct language throughout.\n\n"
+      : outputDetail === "standard"
+      ? "Produce a well-structured lesson plan with enough detail for a colleague to follow. Balance conciseness with clarity — 3–4 points per subsection where appropriate.\n\n"
+      : "";
+
+  const additionalSection = additionalInfo
+    ? `\nAdditional context or theme to incorporate: ${additionalInfo}`
     : "";
 
-  const examSpecSection = examSpec
-    ? `\nIncorporate the following exam specification or curriculum guidance content: ${examSpec}`
-    : "";
+  const adaptationLevel =
+    abilityLevel === "WTS"
+      ? `**WTS – Working Towards Standard**: 2 specific scaffolding strategies — such as graphic organisers, sentence frames, partially completed examples, or modified task demands — that maintain access to the learning objective without removing cognitive challenge.`
+      : abilityLevel === "GDS"
+      ? `**GDS – Greater Depth Standard**: 2 specific extension ideas that deepen understanding rather than simply accelerate pace — including suggestions for higher-order thinking, independent enquiry, or links to examination-level challenge.`
+      : `**EXS – Expected Standard**: Describe what successful engagement looks like at the expected level. Include 1–2 strategies to keep these learners on track and appropriately challenged throughout the lesson.`;
 
-  const userPrompt = `Create a detailed, classroom-ready lesson plan for the following:
+  const userPrompt = `${detailPreamble}Create a classroom-ready lesson plan for the following:
 
 - Curriculum: ${curriculum}
 - Year Group: ${yearGroup}
 - Subject: ${subject}
 - Topic: ${topic}
-- Learning Objective: ${learningObjective}${pedagogySection}${examSpecSection}
+- Learning Objective: ${learningObjective}${additionalSection}
 
 This plan is for use in a UK school and should reflect current best practice in line with Ofsted's Education Inspection Framework, which places particular emphasis on curriculum intent, implementation, and impact. The plan must be detailed enough for a colleague to pick up and teach without additional preparation.
 
@@ -53,13 +73,19 @@ Include:
 
 ---
 
-## Section 2 – Evaluation of Prior Knowledge
+## Section 2 – Key Vocabulary
+
+Provide a markdown table with three columns (Term | Definition | Example in Context) listing 4–6 subject-specific vocabulary items that students must know to access and demonstrate learning in this lesson. Definitions should be precise and age-appropriate for ${yearGroup}.
+
+---
+
+## Section 3 – Evaluation of Prior Knowledge
 
 Provide 5 diagnostic questions a teacher can use at the start of the lesson or in the days before to assess students' prior knowledge and identify gaps. Questions should probe the prerequisite knowledge needed for this lesson — not the lesson content itself. For each question, briefly note what a correct response indicates.
 
 ---
 
-## Section 3 – Instructional Strategies
+## Section 4 – Instructional Strategies
 
 ### Starter/Hook Activity
 
@@ -98,17 +124,17 @@ Describe two progressive activities that move from supported to independent prac
 
 ---
 
-## Section 4 – Adaptation Strategies
+## Section 5 – Adaptation Strategies
 
 Write in the context of the Teachers' Standards (particularly TS5: Adapt teaching to respond to the strengths and needs of all pupils) and the SEND Code of Practice.
 
-**For More Confident Students**: 2 specific extension ideas that deepen understanding rather than simply accelerate pace — including suggestions for higher-order thinking, independent enquiry, or links to examination-level challenge.
-**For Less Confident Students**: 2 specific scaffolding strategies — such as graphic organisers, sentence frames, partially completed examples, or modified task demands — that maintain access to the learning objective without removing the cognitive challenge.
+${adaptationLevel}
+
 **Considerations for Diverse Learning Needs**: 3 bullet points addressing inclusion more broadly — covering EAL learners, pupils with SEND, and those with social, emotional, or mental health needs where relevant. Reference specific adjustments rather than generic statements.
 
 ---
 
-## Section 5 – Summative Assessment
+## Section 6 – Summative Assessment
 
 **Assessment Opportunities**: 2 bullet points describing concrete methods for assessing whether students have met the learning objective — including both formative checks within the lesson and any summative task or homework that follows.
 **Long-term Evaluation**: 1 bullet point describing how the teacher will monitor retention and application of this learning beyond the lesson — for example, through spaced retrieval, marking of extended work, or progress tracking.
@@ -116,15 +142,9 @@ Write in the context of the Teachers' Standards (particularly TS5: Adapt teachin
 
 ---
 
-## Section 6 – Resources and Technology
+## Section 7 – Resources and Technology
 
 A structured bullet list of all materials, tools, and technology required. Separate into: printed resources, digital tools, physical materials, and any teacher-facing resources (e.g. mark schemes, model answers).
-
----
-
-## Section 7 – Key Vocabulary
-
-Provide a markdown table with three columns (Term | Definition | Example in Context) listing 4–6 subject-specific vocabulary items that students must know to access and demonstrate learning in this lesson. Definitions should be precise and age-appropriate for ${yearGroup}.
 
 Do not use any emojis. Write in a professional, teacher-friendly tone appropriate for use in a UK school context.`;
 

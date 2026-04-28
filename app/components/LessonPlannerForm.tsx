@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import { SubjectField, TopicField, LearningObjectiveField, AdditionalContextField, OutputDetailField, AbilityLevelField, type OutputDetail } from "@/app/components/fields";
 import { toTitleCase } from "@/app/lib/formOptions";
 import { Loader2, Sparkles } from "lucide-react";
 import ResultPanel from "@/app/components/ResultPanel";
 import Card from "@/app/components/ui/Card";
 import ConfirmModal from "@/app/components/ConfirmModal";
-
+import LessonPlannerNav from "@/app/components/LessonPlannerNav";
 
 export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNode }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
@@ -15,10 +16,9 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
   const [learningObjective, setLearningObjective] = useState("");
-  const [pedagogicalTheory, setPedagogicalTheory] = useState<"yes" | "no">("no");
-  const [theoryText, setTheoryText] = useState("");
-  const [examSpec, setExamSpec] = useState<"yes" | "no">("no");
-  const [examSpecText, setExamSpecText] = useState("");
+  const [abilityLevel, setAbilityLevel] = useState<string>("EXS");
+  const [outputDetail, setOutputDetail] = useState<OutputDetail>("detailed");
+  const [additionalInfo, setAdditionalInfo] = useState("");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,7 +29,7 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
   const canGenerate =
     curriculum && (mixed || yearGroup) && subject.trim() && topic.trim() && learningObjective.trim();
 
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, topic, learningObjective, pedagogicalTheory, theoryText, examSpec, examSpecText });
+  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, topic, learningObjective, abilityLevel, outputDetail, additionalInfo });
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const handleGenerate = async () => {
@@ -47,8 +47,9 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
           subject: toTitleCase(subject),
           topic,
           learningObjective,
-          pedagogicalTheory: pedagogicalTheory === "yes" ? theoryText : null,
-          examSpec: examSpec === "yes" ? examSpecText : null,
+          abilityLevel,
+          outputDetail,
+          additionalInfo: additionalInfo.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -60,7 +61,7 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
+        const chunk = decoder.decode(value, { stream: true }).replace(/©/g, "(c)");
         setResult((prev) => (prev ?? "") + chunk);
       }
     } catch (err) {
@@ -71,13 +72,13 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
     }
   };
 
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
-return (
+  return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1 space-y-4">
+          {sidebar}
+          {result !== null && <LessonPlannerNav />}
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -88,52 +89,14 @@ return (
               mixed={mixed} onMixedChange={setMixed}
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Subject</label>
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Mathematics" className={inputClass} />
-            </div>
+            <SubjectField value={subject} onChange={setSubject} />
+            <TopicField value={topic} onChange={setTopic} />
+            <LearningObjectiveField value={learningObjective} onChange={setLearningObjective} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Topic</label>
-              <textarea value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Quadratic equations" rows={3} className={`${inputClass} resize-none`} />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <OutputDetailField value={outputDetail} onChange={setOutputDetail} />
+            <AbilityLevelField value={abilityLevel} onChange={setAbilityLevel} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Learning objective</label>
-              <textarea value={learningObjective} onChange={(e) => setLearningObjective(e.target.value)} placeholder="e.g. Students will be able to factorise and solve quadratic equations" rows={3} className={`${inputClass} resize-none`} />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Integrate a specific pedagogical theory</label>
-              <div className="flex gap-5">
-                {(["yes", "no"] as const).map((val) => (
-                  <label key={val} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                    <input type="radio" name="pedagogicalTheory" value={val} checked={pedagogicalTheory === val} onChange={() => setPedagogicalTheory(val)} className="accent-gray-900" />
-                    {val.charAt(0).toUpperCase() + val.slice(1)}
-                  </label>
-                ))}
-              </div>
-              {pedagogicalTheory === "yes" && (
-                <input type="text" value={theoryText} onChange={(e) => setTheoryText(e.target.value)} placeholder="e.g. Bloom's Taxonomy, Vygotsky's Zone of Proximal Development..." className={`${inputClass} mt-2`} />
-              )}
-            </div>
-
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Include content from exam specification or other curriculum guidance</label>
-              <div className="flex gap-5">
-                {(["yes", "no"] as const).map((val) => (
-                  <label key={val} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                    <input type="radio" name="examSpec" value={val} checked={examSpec === val} onChange={() => setExamSpec(val)} className="accent-gray-900" />
-                    {val.charAt(0).toUpperCase() + val.slice(1)}
-                  </label>
-                ))}
-              </div>
-              {examSpec === "yes" && (
-                <textarea value={examSpecText} onChange={(e) => setExamSpecText(e.target.value)} placeholder="Paste relevant exam specification or curriculum guidance here..." rows={4} className={`${inputClass} resize-none mt-2`} />
-              )}
-            </div>
+            <AdditionalContextField value={additionalInfo} onChange={setAdditionalInfo} />
 
             <div className="flex gap-3">
               <button type="button" onClick={() => setConfirmingReset(true)} disabled={!result} className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50">
@@ -144,7 +107,13 @@ return (
                 title="Reset form?"
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
-                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setLearningObjective(""); setPedagogicalTheory("no"); setTheoryText(""); setExamSpec("no"); setExamSpecText(""); setResult(null); setError(null); setConfirmingReset(false); }}
+                onConfirm={() => {
+                  setCurriculum(""); setYearGroup(""); setMixed(false);
+                  setSubject(""); setTopic(""); setLearningObjective("");
+                  setAbilityLevel("EXS"); setOutputDetail("detailed");
+                  setAdditionalInfo("");
+                  setResult(null); setError(null); setConfirmingReset(false);
+                }}
                 onCancel={() => setConfirmingReset(false)}
               />
               <button type="button" onClick={handleGenerate} disabled={!canGenerate || isGenerating || unchangedSinceGeneration} className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
