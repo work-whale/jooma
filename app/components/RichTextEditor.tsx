@@ -119,7 +119,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  if (!editor) return <div className="p-6 min-h-96" />;
+  if (!editor) return <div className="py-20 px-24 min-h-96" />;
 
   const handleSetLink = () => {
     if (!linkUrl.trim()) {
@@ -148,9 +148,9 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
   ];
 
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div>
       {/* Toolbar */}
-      <div className="sticky top-14.25 z-10 flex items-center flex-wrap gap-0.5 px-3 py-2 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+      <div className="sticky top-22.25 z-10 flex items-center flex-wrap gap-0.5 px-3 py-2 border-b border-gray-200 bg-gray-50">
 
         {/* Undo / Redo */}
         <Btn title="Undo" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
@@ -352,7 +352,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       )}
 
       {/* Editor area */}
-      <div className="p-6 bg-white">
+      <div className="py-20 px-24 bg-white">
         <EditorContent editor={editor} />
       </div>
 

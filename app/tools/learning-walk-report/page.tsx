@@ -1,5 +1,5 @@
 import { Footprints } from "lucide-react";
-import LearningWalkReportForm from "@/app/components/LearningWalkReportForm";
+import LearningWalkReportForm from "@/app/components/forms/LearningWalkReportForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function LearningWalkReportPage() {

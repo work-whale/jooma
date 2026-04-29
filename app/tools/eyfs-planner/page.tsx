@@ -1,5 +1,5 @@
 import { Baby } from "lucide-react";
-import EYFSPlannerForm from "@/app/components/EYFSPlannerForm";
+import EYFSPlannerForm from "@/app/components/forms/EYFSPlannerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function EYFSPlannerPage() {

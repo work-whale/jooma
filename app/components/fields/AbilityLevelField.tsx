@@ -19,9 +19,9 @@ export default function AbilityLevelField({ value, onChange }: Props) {
         {LEVELS.map(({ value: v, label, detail }) => (
           <label
             key={v}
-            className={`flex-1 flex flex-col cursor-pointer px-4 py-3 rounded-xl border transition-colors ${
+            className={`flex-1 flex flex-col px-4 py-3 rounded-xl border transition-colors cursor-pointer ${
               value === v
-                ? "bg-gray-900 text-white border-gray-900"
+                ? "bg-stone-700 text-white border-stone-700"
                 : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
             }`}
           >

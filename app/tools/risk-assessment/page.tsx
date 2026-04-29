@@ -1,5 +1,5 @@
 import { TriangleAlert } from "lucide-react";
-import RiskAssessmentForm from "@/app/components/RiskAssessmentForm";
+import RiskAssessmentForm from "@/app/components/forms/RiskAssessmentForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function RiskAssessmentPage() {

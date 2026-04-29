@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import SensoryActivitiesForm from "@/app/components/SensoryActivitiesForm";
+import SensoryActivitiesForm from "@/app/components/forms/SensoryActivitiesForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function SensoryActivitiesPage() {

@@ -1,5 +1,5 @@
 import { ClipboardList } from "lucide-react";
-import CoverLessonForm from "@/app/components/CoverLessonForm";
+import CoverLessonForm from "@/app/components/forms/CoverLessonForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function CoverLessonPage() {

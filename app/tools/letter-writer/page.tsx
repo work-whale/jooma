@@ -1,5 +1,5 @@
 import { Mail } from "lucide-react";
-import LetterWriterForm from "@/app/components/LetterWriterForm";
+import LetterWriterForm from "@/app/components/forms/LetterWriterForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function LetterWriterPage() {

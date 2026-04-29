@@ -17,6 +17,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/tools/model-text-generator": "Model Text Generator",
   "/tools/sensory-activities": "Sensory Activities",
   "/tools/phonics-support": "Phonics Support",
+  "/tools/exam-question-generator": "Exam Question Generator",
   "/tools/model-answer-generator": "Model Answer Generator",
   "/tools/homework-generator": "Homework Generator",
   "/tools/targeted-intervention": "Targeted Intervention Ideas",
@@ -49,7 +50,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#F1EFE3" }}>
       <SideNav />
-      <main className="grow overflow-y-auto flex flex-col">
+      <main className="grow flex flex-col min-h-screen">
         <TopBar title={label} />
         <div className="px-10 pb-4 shrink-0">
           <Link href="/" className="flex items-center gap-1.5 text-sm text-muted hover:text-gray-700 transition-colors w-fit">

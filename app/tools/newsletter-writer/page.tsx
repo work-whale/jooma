@@ -1,5 +1,5 @@
 import { Newspaper } from "lucide-react";
-import NewsletterWriterForm from "@/app/components/NewsletterWriterForm";
+import NewsletterWriterForm from "@/app/components/forms/NewsletterWriterForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function NewsletterWriterPage() {

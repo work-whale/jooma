@@ -1,5 +1,5 @@
 import { TrendingUp } from "lucide-react";
-import PupilPremiumPlannerForm from "@/app/components/PupilPremiumPlannerForm";
+import PupilPremiumPlannerForm from "@/app/components/forms/PupilPremiumPlannerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function PupilPremiumPlannerPage() {

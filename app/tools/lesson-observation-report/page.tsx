@@ -1,5 +1,5 @@
 import { Eye } from "lucide-react";
-import LessonObservationReportForm from "@/app/components/LessonObservationReportForm";
+import LessonObservationReportForm from "@/app/components/forms/LessonObservationReportForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function LessonObservationReportPage() {

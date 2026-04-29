@@ -1,5 +1,5 @@
 import { Target } from "lucide-react";
-import SmartTargetsForm from "@/app/components/SmartTargetsForm";
+import SmartTargetsForm from "@/app/components/forms/SmartTargetsForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function SmartTargetsPage() {

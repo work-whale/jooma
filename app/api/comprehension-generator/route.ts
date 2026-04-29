@@ -8,7 +8,9 @@ export interface GenerateRequest {
   textSource: "generate" | "own";
   topic?: string;
   ownText?: string;
-  readingFocuses: string[];
+  passageWordCount?: number;
+  contentDomains: string[];
+  questionTypes?: string[];
   numQuestions: number;
   complexity?: "Simple" | "Standard" | "Challenging";
   includeAnswerKey?: boolean;
@@ -19,9 +21,21 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export async function POST(req: NextRequest) {
   const body: GenerateRequest = await req.json();
 
-  const { curriculum, yearGroup, textSource, topic, ownText, readingFocuses, numQuestions, complexity = "Standard", includeAnswerKey = true } = body;
+  const {
+    curriculum,
+    yearGroup,
+    textSource,
+    topic,
+    ownText,
+    passageWordCount = 300,
+    contentDomains,
+    questionTypes = [],
+    numQuestions,
+    complexity = "Standard",
+    includeAnswerKey = true,
+  } = body;
 
-  if (!curriculum || !yearGroup || !textSource || readingFocuses.length === 0) {
+  if (!curriculum || !yearGroup || !textSource || contentDomains.length === 0) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -33,11 +47,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Text is required when using own text" }, { status: 400 });
   }
 
-  const focusList = readingFocuses.join(", ");
+  const domainList = contentDomains.join(", ");
+
+  const questionTypeInstruction = questionTypes.length > 0
+    ? `\nAcross questions, use a mix of these question formats: ${questionTypes.join(", ")}.`
+    : "";
 
   const answerKeyInstruction = includeAnswerKey
     ? "\nAfter the questions, include a clearly labelled Answer Key section with model answers for each question."
     : "";
+
+  const complexityInstruction =
+    complexity === "Challenging"
+      ? "Include at least one question per domain that requires extended written response or comparative analysis."
+      : complexity === "Simple"
+      ? "Keep questions direct and ensure answers can be found explicitly in the text or require simple inference."
+      : "Balance retrieval and inference questions with one higher-order thinking question per domain.";
 
   const userPrompt =
     textSource === "generate"
@@ -45,42 +70,40 @@ export async function POST(req: NextRequest) {
 
 Part 1 — Reading Passage
 
-Write an original, engaging non-fiction or fiction passage of approximately 300–400 words. The passage must:
+Write an original, engaging non-fiction or fiction passage of approximately ${passageWordCount} words. The passage must:
 - Be written at a complexity level appropriate for ${complexity} readers in ${yearGroup}
 - Use varied sentence structures and a rich but accessible vocabulary suited to the year group
-- Contain sufficient content depth to support ${numQuestions} question(s) per reading focus
+- Contain sufficient content depth to support ${numQuestions} question(s) per content domain
 - Be clearly titled with a heading above the passage
 - Avoid bullet points or lists — the passage must be written in continuous prose paragraphs
 - Be accurate and well-researched if non-fiction; show craft and characterisation if fiction
 
 Part 2 — Comprehension Questions
 
-Below the passage, write ${numQuestions} comprehension question(s) for each of the following reading focuses: ${focusList}.
+Below the passage, write ${numQuestions} comprehension question(s) for each of the following content domains: ${domainList}.
 
 Formatting and quality rules:
-- Use a bold ## heading for each reading focus group (e.g. ## Retrieval, ## Inference)
+- Use a bold ## heading for each content domain group (e.g. ## 2b – Retrieval)
 - Number questions sequentially within each group (1., 2., etc.)
 - Questions must be clearly rooted in the passage — do not ask questions that cannot be answered from the text
-- Vary question types: include literal retrieval, text-based inference, vocabulary in context, authorial intent, and evaluation as appropriate to the focus
 - For inference and evaluation questions, phrase them to require evidence from the text (e.g. "Using evidence from the text, explain...")
 - Allocate marks to each question in brackets, e.g. [2 marks] — align mark allocations with the complexity of the response required
-- ${complexity === "Challenging" ? "Include at least one question per group that requires extended written response or comparative analysis." : complexity === "Simple" ? "Keep questions direct and ensure answers can be found explicitly in the text or require simple inference." : "Balance retrieval and inference questions with one higher-order thinking question per group."}
+- ${complexityInstruction}${questionTypeInstruction}
 
 ${answerKeyInstruction}`
       : `Using the passage below, create a reading comprehension activity for ${yearGroup} students following the ${curriculum}.
 
 The questions should be at ${complexity.toLowerCase()} complexity level.
 
-Write ${numQuestions} comprehension question(s) for each of the following reading focuses: ${focusList}.
+Write ${numQuestions} comprehension question(s) for each of the following content domains: ${domainList}.
 
 Formatting and quality rules:
-- Use a bold ## heading for each reading focus group (e.g. ## Retrieval, ## Inference)
+- Use a bold ## heading for each content domain group (e.g. ## 2b – Retrieval)
 - Number questions sequentially within each group (1., 2., etc.)
 - Questions must be clearly rooted in the passage — every question must be answerable from the text provided
-- Vary question types: include literal retrieval, text-based inference, vocabulary in context, authorial intent, and evaluation as appropriate to the focus
 - For inference and evaluation questions, phrase them to require evidence from the text (e.g. "Using evidence from the text, explain...")
 - Allocate marks to each question in brackets, e.g. [2 marks] — align mark allocations with the complexity of the response required
-- ${complexity === "Challenging" ? "Include at least one question per group that requires extended written response or comparative analysis." : complexity === "Simple" ? "Keep questions direct and ensure answers can be found explicitly in the text or require simple inference." : "Balance retrieval and inference questions with one higher-order thinking question per group."}
+- ${complexityInstruction}${questionTypeInstruction}
 
 ${answerKeyInstruction}
 
@@ -91,7 +114,7 @@ ${ownText}`;
   const anthropicStream = client.messages.stream({
     model: "claude-sonnet-4-6",
     max_tokens: 4096,
-    system: buildSystem("You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and KS1–KS4 reading assessment frameworks. You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills — from retrieval and inference through to evaluation and critical response. Your passages are well-crafted, purposeful, and rich enough to sustain genuine comprehension work. Your questions are precise, unambiguous, and matched to the reading focus they are assessing. Write in professional UK English."),
+    system: buildSystem("You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and KS1–KS4 reading assessment frameworks. You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills — from retrieval and inference through to evaluation and critical response. Your passages are well-crafted, purposeful, and rich enough to sustain genuine comprehension work. Your questions are precise, unambiguous, and matched to the content domain they are assessing. Write in professional UK English."),
     messages: [{ role: "user", content: userPrompt }],
   });
 

@@ -1,5 +1,5 @@
 import { MdCalendarMonth } from "react-icons/md";
-import LessonPlannerForm from "@/app/components/LessonPlannerForm";
+import LessonPlannerForm from "@/app/components/forms/LessonPlannerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function LessonPlannerPage() {

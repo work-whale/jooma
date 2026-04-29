@@ -1,5 +1,5 @@
 import { TrendingUp } from "lucide-react";
-import SchoolImprovementPlanForm from "@/app/components/SchoolImprovementPlanForm";
+import SchoolImprovementPlanForm from "@/app/components/forms/SchoolImprovementPlanForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function SchoolImprovementPlanPage() {

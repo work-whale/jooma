@@ -1,5 +1,5 @@
 import { ClipboardCheck } from "lucide-react";
-import ModelAnswerForm from "@/app/components/ModelAnswerForm";
+import ModelAnswerForm from "@/app/components/forms/ModelAnswerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function ModelAnswerGeneratorPage() {

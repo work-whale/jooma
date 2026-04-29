@@ -1,5 +1,5 @@
 import { UserCircle } from "lucide-react";
-import OnePageProfileForm from "@/app/components/OnePageProfileForm";
+import OnePageProfileForm from "@/app/components/forms/OnePageProfileForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function OnePageProfilePage() {

@@ -1,5 +1,5 @@
 import { ScrollText } from "lucide-react";
-import PolicyGeneratorForm from "@/app/components/PolicyGeneratorForm";
+import PolicyGeneratorForm from "@/app/components/forms/PolicyGeneratorForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function PolicyGeneratorPage() {

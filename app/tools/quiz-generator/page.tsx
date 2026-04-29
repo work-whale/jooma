@@ -1,5 +1,5 @@
 import { CircleHelp } from "lucide-react";
-import QuizGeneratorForm from "@/app/components/QuizGeneratorForm";
+import QuizGeneratorForm from "@/app/components/forms/QuizGeneratorForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function QuizGeneratorPage() {

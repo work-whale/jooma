@@ -1,5 +1,5 @@
 import { BookOpen } from "lucide-react";
-import ComprehensionForm from "@/app/components/ComprehensionForm";
+import ComprehensionForm from "@/app/components/forms/ComprehensionForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function ComprehensionGeneratorPage() {

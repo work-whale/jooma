@@ -7,6 +7,7 @@ interface RefinePanelProps {
   onRefine: (instruction: string) => void;
   isRefining: boolean;
   chips?: string[];
+  maxWidth?: boolean;
 }
 
 const DEFAULT_CHIPS = [
@@ -18,7 +19,7 @@ const DEFAULT_CHIPS = [
   "Translate to French",
 ];
 
-export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIPS }: RefinePanelProps) {
+export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIPS, maxWidth = true }: RefinePanelProps) {
   const [instruction, setInstruction] = useState("");
 
   const handleSubmit = () => {
@@ -29,18 +30,19 @@ export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIP
   };
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 space-y-4">
-      <h3 className="text-base font-semibold text-gray-900">Want to refine your results?</h3>
+    <div className={`bg-white border border-gray-200 rounded-3xl shadow-sm${maxWidth ? " max-w-7xl mx-auto" : ""}`} style={{ overflow: "clip" }}>
+      <div className="flex items-center px-6 py-4 border-b border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900">Refine results</h3>
+      </div>
 
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-gray-700">What would you like to change?</label>
+      <div className="px-8 py-6 space-y-4">
         <div className="flex gap-2">
           <input
             type="text"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
-            placeholder="Type changes here"
+            placeholder="What would you like to change?"
             disabled={isRefining}
             className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent disabled:opacity-50 bg-white"
           />
@@ -48,26 +50,26 @@ export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIP
             type="button"
             onClick={handleSubmit}
             disabled={!instruction.trim() || isRefining}
-            className="flex items-center gap-2 bg-[#1a1a1a] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 shrink-0"
+            className="flex items-center gap-2 bg-stone-700 text-white text-sm font-semibold px-5 py-3 rounded-xl hover:bg-stone-600 disabled:hover:bg-stone-700 active:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-default cursor-pointer shrink-0"
           >
             {isRefining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {isRefining ? "Refining..." : "Refine"}
           </button>
         </div>
-      </div>
 
-      <div className="flex flex-wrap gap-2">
-        {chips.map((chip) => (
-          <button
-            key={chip}
-            type="button"
-            onClick={() => setInstruction(chip)}
-            disabled={isRefining}
-            className="text-xs border border-gray-300 rounded-full px-3 py-1.5 text-gray-600 bg-white hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {chip}
-          </button>
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {chips.map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => setInstruction(chip)}
+              disabled={isRefining}
+              className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

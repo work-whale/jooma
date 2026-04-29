@@ -8,17 +8,28 @@ export interface TopicOverviewRequest {
   subject: string;
   topic: string;
   numLessons: number;
+  abilityLevel?: string;
+  additionalInfo?: string | null;
 }
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: TopicOverviewRequest = await req.json();
-  const { curriculum, yearGroup, subject, topic, numLessons } = body;
+  const { curriculum, yearGroup, subject, topic, numLessons, abilityLevel = "EXS", additionalInfo } = body;
 
   if (!curriculum || !yearGroup || !subject?.trim() || !topic?.trim() || !numLessons) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
+
+  const abilityLine =
+    abilityLevel === "WTS"
+      ? "Pitch the content for Working Towards Standard (WTS) students — use accessible language, provide scaffolding and support, and avoid unnecessary complexity."
+      : abilityLevel === "GDS"
+      ? "Pitch the content for Greater Depth Standard (GDS) students — include higher-order thinking, extension opportunities, and tasks that require deeper analysis and evaluation."
+      : "Pitch the content at the Expected Standard (EXS) — appropriate challenge for most students in this year group.";
+
+  const additionalLine = additionalInfo ? `\nAdditional instructions: ${additionalInfo}` : "";
 
   const userPrompt = `Create a detailed, sequenced topic overview for the following:
 
@@ -27,6 +38,7 @@ export async function POST(req: NextRequest) {
 - Subject: ${subject}
 - Topic: ${topic}
 - Number of Lessons: ${numLessons}
+- ${abilityLine}${additionalLine}
 
 This overview is for a UK school and should reflect curriculum coherence — lessons must build progressively on one another, with knowledge and skills introduced, developed, and consolidated across the sequence. The overview should be practical enough to guide lesson-by-lesson planning.
 

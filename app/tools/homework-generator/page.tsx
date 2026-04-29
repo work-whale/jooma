@@ -1,5 +1,5 @@
 import { BookOpen } from "lucide-react";
-import HomeworkGeneratorForm from "@/app/components/HomeworkGeneratorForm";
+import HomeworkGeneratorForm from "@/app/components/forms/HomeworkGeneratorForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function HomeworkGeneratorPage() {

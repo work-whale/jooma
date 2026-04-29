@@ -1,5 +1,5 @@
 import { ListChecks } from "lucide-react";
-import TopicOverviewForm from "@/app/components/TopicOverviewForm";
+import TopicOverviewForm from "@/app/components/forms/TopicOverviewForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function TopicOverviewPage() {

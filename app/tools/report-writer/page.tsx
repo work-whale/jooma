@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import ReportWriterForm from "@/app/components/ReportWriterForm";
+import ReportWriterForm from "@/app/components/forms/ReportWriterForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function ReportWriterPage() {

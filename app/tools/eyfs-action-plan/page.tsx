@@ -1,5 +1,5 @@
 import { ClipboardList } from "lucide-react";
-import EYFSActionPlanForm from "@/app/components/EYFSActionPlanForm";
+import EYFSActionPlanForm from "@/app/components/forms/EYFSActionPlanForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function EYFSActionPlanPage() {

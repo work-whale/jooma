@@ -28,14 +28,14 @@ export default function ConfirmModal({
           <button
             type="button"
             onClick={onCancel}
-            className="border border-gray-300 text-gray-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="border border-gray-300 text-gray-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+            className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors cursor-pointer"
           >
             {confirmLabel}
           </button>

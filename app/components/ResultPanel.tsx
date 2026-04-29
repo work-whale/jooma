@@ -12,6 +12,7 @@ interface ResultPanelProps {
   isRefining?: boolean;
   onChange: (md: string) => void;
   exportFilename?: string;
+  maxWidth?: boolean;
 }
 
 export default function ResultPanel({
@@ -20,6 +21,7 @@ export default function ResultPanel({
   isRefining = false,
   onChange,
   exportFilename = "export",
+  maxWidth = true,
 }: ResultPanelProps) {
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState<"docx" | "pdf" | null>(null);
@@ -92,8 +94,8 @@ export default function ResultPanel({
 
   return (
     <>
-      <div ref={panelRef} className="bg-white border border-gray-200 rounded-lg shadow-sm">
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white rounded-t-lg">
+      <div ref={panelRef} className={`bg-white border border-gray-200 rounded-3xl shadow-sm${maxWidth ? " max-w-7xl mx-auto" : ""}`} style={{ overflow: "clip" }}>
+        <div className="sticky top-8 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white rounded-t-3xl">
           <div className="flex items-center gap-3">
             <h2 className="font-semibold text-gray-900 text-sm">My results</h2>
             {isGenerating && (
@@ -117,7 +119,7 @@ export default function ResultPanel({
                   type="button"
                   onClick={handleExportDocx}
                   disabled={isExporting !== null}
-                  className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40"
+                  className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
                 >
                   {isExporting === "docx" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
                   DOCX
@@ -126,7 +128,7 @@ export default function ResultPanel({
                   type="button"
                   onClick={handleExportPdf}
                   disabled={isExporting !== null}
-                  className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40"
+                  className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
                 >
                   <FileDown className="w-3.5 h-3.5" />
                   Print
@@ -137,7 +139,7 @@ export default function ResultPanel({
               type="button"
               onClick={handleCopy}
               disabled={isBusy}
-              className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
               {copied ? "Copied!" : "Copy to clipboard"}
@@ -146,7 +148,7 @@ export default function ResultPanel({
         </div>
 
         {isBusy ? (
-          <div className="p-6 min-h-48">
+          <div className="py-20 px-24 min-h-48">
             <MarkdownResult text={result} />
             <span className="inline-block w-px h-[1em] bg-gray-500 animate-pulse ml-px align-text-bottom" />
             <div ref={bottomRef} />

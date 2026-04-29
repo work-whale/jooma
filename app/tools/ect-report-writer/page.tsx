@@ -1,5 +1,5 @@
 import { FileEdit } from "lucide-react";
-import ECTReportWriterForm from "@/app/components/ECTReportWriterForm";
+import ECTReportWriterForm from "@/app/components/forms/ECTReportWriterForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function ECTReportWriterPage() {

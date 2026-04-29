@@ -1,5 +1,5 @@
 import { LayoutList } from "lucide-react";
-import MediumTermPlannerForm from "@/app/components/MediumTermPlannerForm";
+import MediumTermPlannerForm from "@/app/components/forms/MediumTermPlannerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function MediumTermPlannerPage() {

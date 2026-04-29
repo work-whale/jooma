@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import InspectionPrepForm from "@/app/components/InspectionPrepForm";
+import InspectionPrepForm from "@/app/components/forms/InspectionPrepForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function InspectionPrepPage() {

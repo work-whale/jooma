@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import WorksheetGeneratorForm from "@/app/components/WorksheetGeneratorForm";
+import WorksheetGeneratorForm from "@/app/components/forms/WorksheetGeneratorForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function WorksheetGeneratorPage() {
@@ -12,9 +12,10 @@ export default function WorksheetGeneratorPage() {
           title="Worksheet Generator"
           description="This tool can be used to create worksheets. Simply enter the year group, subject and learning objective you are targeting (remember to be specific) and hit generate."
           steps={[
-            { label: "Enter key details", detail: "Read the examples in the inputs to ensure you're entering information in the correct format." },
-            { label: "Be specific", detail: "It's important to be specific when entering the learning objective." },
-            { label: "Generate", detail: "Whatever you need a worksheet on, this is the tool for you." },
+            { label: "Enter key details", detail: "Add the year group, subject, and learning objective." },
+            { label: "Choose question types", detail: "Select the types of questions to include and how many." },
+            { label: "Set level and detail", detail: "Choose the ability level and how detailed the output should be.", optional: true },
+            { label: "Generate", detail: "The tool creates a full worksheet with an answer key and common misconceptions." },
           ]}
         />
       }

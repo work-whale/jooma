@@ -1,5 +1,5 @@
 import { PenLine } from "lucide-react";
-import ModelTextGeneratorForm from "@/app/components/ModelTextGeneratorForm";
+import ModelTextGeneratorForm from "@/app/components/forms/ModelTextGeneratorForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function ModelTextGeneratorPage() {

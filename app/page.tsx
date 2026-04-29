@@ -14,7 +14,7 @@ import {
   MdVisibility, MdTrendingUp, MdSearch, MdAssignmentTurnedIn,
   MdDescription, MdPlaylistAdd, MdWarning, MdBadge, MdShowChart,
   MdNewspaper, MdGroups, MdBarChart, MdSecurity, MdTrackChanges,
-  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll,
+  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll, MdSchool,
 } from "react-icons/md";
 
 const TAG_COLORS: Record<string, { bg: string; icon: string }> = {
@@ -129,6 +129,7 @@ const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   "model-text": MdEdit,
   "eyfs": MdEmojiPeople,
   "phonics": MdTextFields,
+  "exam": MdSchool,
   "model-answer": MdFactCheck,
   "homework": MdHomeWork,
   "intervention": MdPersonSearch,

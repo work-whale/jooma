@@ -78,6 +78,13 @@ export const TOOLS: Tool[] = [
     tag: "Literacy",
   },
   {
+    href: "/tools/exam-question-generator",
+    icon: "exam",
+    label: "Exam Question Generator",
+    description: "Generate a complete examination paper for any subject, topic, and exam type — with questions scaled by marks and an optional mark scheme.",
+    tag: "Assessment",
+  },
+  {
     href: "/tools/model-answer-generator",
     icon: "model-answer",
     label: "Model Answer Generator",

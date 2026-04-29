@@ -1,5 +1,5 @@
 import { Monitor } from "lucide-react";
-import CpdSlideshowForm from "@/app/components/CpdSlideshowForm";
+import CpdSlideshowForm from "@/app/components/forms/CpdSlideshowForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function CpdSlideshowPage() {

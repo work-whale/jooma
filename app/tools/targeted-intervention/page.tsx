@@ -1,5 +1,5 @@
 import { Target } from "lucide-react";
-import TargetedInterventionForm from "@/app/components/TargetedInterventionForm";
+import TargetedInterventionForm from "@/app/components/forms/TargetedInterventionForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function TargetedInterventionPage() {

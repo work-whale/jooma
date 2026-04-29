@@ -1,5 +1,5 @@
 import { TextCursorInput } from "lucide-react";
-import PhonicsForm from "@/app/components/PhonicsForm";
+import PhonicsForm from "@/app/components/forms/PhonicsForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function PhonicsSupportPage() {

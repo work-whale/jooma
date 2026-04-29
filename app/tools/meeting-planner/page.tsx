@@ -1,5 +1,5 @@
 import { CalendarDays } from "lucide-react";
-import MeetingPlannerForm from "@/app/components/MeetingPlannerForm";
+import MeetingPlannerForm from "@/app/components/forms/MeetingPlannerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function MeetingPlannerPage() {

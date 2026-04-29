@@ -1,5 +1,5 @@
 import { Users } from "lucide-react";
-import AssemblyPlannerForm from "@/app/components/AssemblyPlannerForm";
+import AssemblyPlannerForm from "@/app/components/forms/AssemblyPlannerForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function AssemblyPlannerPage() {

@@ -1,5 +1,5 @@
 import { ClipboardList } from "lucide-react";
-import BehaviourSupportPlanForm from "@/app/components/BehaviourSupportPlanForm";
+import BehaviourSupportPlanForm from "@/app/components/forms/BehaviourSupportPlanForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function BehaviourSupportPlanPage() {

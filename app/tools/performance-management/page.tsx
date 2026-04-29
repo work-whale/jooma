@@ -1,5 +1,5 @@
 import { Target } from "lucide-react";
-import PerformanceManagementForm from "@/app/components/PerformanceManagementForm";
+import PerformanceManagementForm from "@/app/components/forms/PerformanceManagementForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
 
 export default function PerformanceManagementPage() {

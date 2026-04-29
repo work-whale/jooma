@@ -7,7 +7,11 @@ export interface WorksheetRequest {
   yearGroup: string;
   subject: string;
   learningObjective: string;
-  examSpec?: string | null;
+  questionTypes?: string[];
+  questionCount?: number;
+  abilityLevel?: string;
+  outputDetail?: "condensed" | "standard" | "detailed";
+  additionalInfo?: string | null;
 }
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -15,32 +19,66 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export async function POST(req: NextRequest) {
   const body: WorksheetRequest = await req.json();
 
-  const { curriculum, yearGroup, subject, learningObjective, examSpec } = body;
+  const {
+    curriculum,
+    yearGroup,
+    subject,
+    learningObjective,
+    questionTypes = [],
+    questionCount = 10,
+    abilityLevel = "EXS",
+    outputDetail = "detailed",
+    additionalInfo,
+  } = body;
 
   if (!curriculum || !yearGroup || !subject?.trim() || !learningObjective?.trim()) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const examSpecSection = examSpec
-    ? `\nIncorporate the following exam specification or curriculum guidance content: ${examSpec}`
+  const detailPreamble =
+    outputDetail === "condensed"
+      ? "Produce a concise worksheet. Keep questions brief and mark schemes compact.\n\n"
+      : outputDetail === "standard"
+      ? "Produce a well-structured worksheet with clear questions and guidance. Balance brevity with clarity.\n\n"
+      : "";
+
+  const typesLine = questionTypes.length
+    ? `Use only these question types across the worksheet: ${questionTypes.join(", ")}.`
     : "";
 
-  const userPrompt = `Create a high-quality, classroom-ready worksheet for the following:
+  const abilityLine =
+    abilityLevel === "WTS"
+      ? "Pitch the questions for Working Towards Standard (WTS) students — use accessible language, provide sentence starters or scaffolding where helpful, and avoid unnecessary complexity."
+      : abilityLevel === "GDS"
+      ? "Pitch the questions for Greater Depth Standard (GDS) students — include higher-order thinking, open-ended challenge, and questions that require justification or extension beyond the objective."
+      : "Pitch the questions at the Expected Standard (EXS) — appropriate challenge for most students in this year group.";
+
+  const additionalLine = additionalInfo ? `\nAdditional instructions: ${additionalInfo}` : "";
+
+  const sectionA = Math.round(questionCount * 0.35);
+  const sectionB = Math.round(questionCount * 0.3);
+  const sectionC = Math.round(questionCount * 0.2);
+  const sectionD = questionCount - sectionA - sectionB - sectionC;
+
+  const userPrompt = `${detailPreamble}Create a high-quality, classroom-ready worksheet for the following:
 
 - Curriculum: ${curriculum}
 - Year Group: ${yearGroup}
 - Subject: ${subject}
-- Learning Objective: ${learningObjective}${examSpecSection}
+- Learning Objective: ${learningObjective}
+- Total questions: approximately ${questionCount}
+- ${abilityLine}
+- ${typesLine}${additionalLine}
 
-This worksheet is for use in a UK school. It should be rigorous, carefully sequenced, and pitched accurately for ${yearGroup} students. The questions must build progressively from knowledge recall through to higher-order thinking, in line with Bloom's Taxonomy.
+This worksheet is for use in a UK school. Questions must build progressively from knowledge recall through to higher-order thinking, in line with Bloom's Taxonomy. Number all questions sequentially within each section. When labelling sub-questions use plain text: (a), (b), (c) — never use the © symbol.
 
 Structure the worksheet using markdown as follows:
 
-# [Worksheet Title — make this specific to the topic, not generic]
+# [Worksheet Title — specific to the topic, not generic]
 
 **Curriculum:** ${curriculum} | **Year Group:** ${yearGroup} | **Subject:** ${subject}
 
-**Learning Objective:** [Restate the learning objective in clear, student-facing language beginning with "I am learning to..."]
+**Learning Objective:** [Restate in student-facing language beginning with "I am learning to..."]
 
 **Name:** ______________________________ **Date:** ______________ **Class:** ______________
 
@@ -48,42 +86,48 @@ Structure the worksheet using markdown as follows:
 
 ## Section A – Knowledge Recall [1 mark each]
 
-Write 4–5 short-answer or fill-in-the-blank questions that test students' ability to recall key facts, definitions, or processes directly related to the learning objective. Questions should be unambiguous and have a single correct answer. Number each question. Blank lines for each answer should be shown as: ___________________________________
+Write approximately ${sectionA} questions testing recall of key facts, definitions, or processes. Questions should have a single correct answer. Show answer blanks as: ___________________________________
 
 ---
 
 ## Section B – Understanding [2 marks each]
 
-Write 3–4 questions that require students to demonstrate understanding by explaining concepts in their own words, identifying relationships, or interpreting information. These should go beyond pure recall. Include the mark allocation in brackets after each question, e.g. [2 marks]. Leave adequate answer space (shown as multiple blank lines).
+Write approximately ${sectionB} questions requiring students to explain concepts, identify relationships, or interpret information. Include mark allocations in brackets, e.g. [2 marks].
 
 ---
 
 ## Section C – Application [3–4 marks each]
 
-Write 2–3 questions where students apply their knowledge to a new scenario, worked example, or unfamiliar context. Include a brief stimulus (e.g. a scenario, data extract, or diagram description) where appropriate. Include mark allocations.
+Write approximately ${sectionC} questions where students apply knowledge to a new scenario or context. Include a brief stimulus where appropriate. Include mark allocations.
 
 ---
 
 ## Section D – Analysis and Evaluation [6–8 marks]
 
-Write 1–2 higher-order questions requiring extended written responses. Questions should ask students to analyse, evaluate, justify, or argue a position — not merely describe. Clearly state the mark allocation. Include a note of what a strong response will include (e.g. "Your answer should include: specific examples, a judgement, and use of subject vocabulary.").
+Write approximately ${sectionD} higher-order questions requiring extended responses — analysis, evaluation, justification, or argument. State mark allocation and include a note on what a strong response will include.
+
+---
+
+## Common Misconceptions
+
+Provide 4–6 bullet points identifying the most common misconceptions students have about this topic. For each, briefly explain why the misconception occurs and how it can be addressed.
 
 ---
 
 ## Answer Key
 
-Provide a comprehensive answer key for all sections with:
+Provide a comprehensive answer key for all sections:
 - Section A: exact model answers
-- Section B: mark scheme guidance noting what earns each mark
+- Section B: mark scheme noting what earns each mark
 - Section C: full model answers with annotations
-- Section D: a level descriptor or bullet-pointed mark scheme indicating what is required for full marks, partial marks, and no marks
+- Section D: level descriptor or bullet-pointed mark scheme for full, partial, and no marks
 
-Write in clear, professional language appropriate for ${yearGroup}. Do not use any emojis. Number all questions sequentially within each section. When labelling sub-questions use plain text letters in parentheses: (a), (b), (c), (d) — never use the © symbol.`;
+Write in clear, professional language appropriate for ${yearGroup}. Do not use any emojis.`;
 
   const encoder = new TextEncoder();
   const anthropicStream = client.messages.stream({
     model: "claude-sonnet-4-6",
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: buildSystem("You are an expert UK teacher and curriculum designer with extensive experience creating high-quality classroom worksheets for KS1 through KS5. You understand Bloom's Taxonomy, tiered questioning, and how to scaffold access without reducing challenge. Your worksheets are precisely pitched for the specified year group, subject-accurate, and built around a clear learning objective. You write in professional UK English and produce materials that could be used in any well-run UK school without amendment. Never use the © symbol — always write sub-question labels as plain text: (a), (b), (c), (d)."),
     messages: [{ role: "user", content: userPrompt }],
   });
