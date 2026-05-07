@@ -2,10 +2,13 @@
 
 import { useRef, useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import { SubjectField, TopicField, LessonCountField, AnswerTypeField } from "@/app/components/fields";
 import { toTitleCase } from "@/app/lib/formOptions";
-import { Loader2, Sparkles, Minus, Plus, Trash2, Download, ChevronDown, PlusCircle } from "lucide-react";
+import { Loader2, Trash2, Download, ChevronDown, PlusCircle } from "lucide-react";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import RefinePanel from "@/app/components/RefinePanel";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import { exportToDocx } from "@/app/lib/exportUtils";
 import Card from "@/app/components/ui/Card";
 
@@ -22,17 +25,6 @@ const REFINE_CHIPS = [
   "Include questions on...",
   "Remove questions on...",
 ];
-
-const ANSWER_TYPES = [
-  { label: "Single correct answer", value: "single" },
-  { label: "Multiple correct answers", value: "multiple" },
-];
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
-const selectClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 // ---- Download helpers ----
 
@@ -498,102 +490,39 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
               yearGroupNote
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Subject</label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. Science"
-                className={inputClass}
-              />
-            </div>
+            <SubjectField value={subject} onChange={setSubject} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Topic</label>
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. difference between solid, liquid, and gas"
-                className={inputClass}
-              />
-            </div>
+            <TopicField value={topic} onChange={setTopic} />
 
-            {/* Number of questions + Time limit */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Number of questions</label>
-                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                  <span className="flex-1 px-3 py-2 text-sm text-gray-900">{numQuestions}</span>
-                  <button
-                    type="button"
-                    onClick={() => setNumQuestions((v) => Math.max(1, v - 1))}
-                    disabled={numQuestions <= 1}
-                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 border-l border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Decrease"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNumQuestions((v) => Math.min(20, v + 1))}
-                    disabled={numQuestions >= 20}
-                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 border-l border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Increase"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
+              <div className="space-y-2">
+                <LessonCountField
+                  value={numQuestions}
+                  onChange={setNumQuestions}
+                  min={1}
+                  max={20}
+                  label="Number of questions"
+                  unit="questions"
+                />
                 <p className="text-xs text-gray-400">
                   You can choose to generate up to 20 initial questions and then add your own or generate additional AI questions.
                 </p>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Time limit per question (seconds)</label>
-                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-                  <span className="flex-1 px-3 py-2 text-sm text-gray-900">{timeLimit}</span>
-                  <button
-                    type="button"
-                    onClick={() => setTimeLimit((v) => Math.max(5, v - 5))}
-                    disabled={timeLimit <= 5}
-                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 border-l border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Decrease"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTimeLimit((v) => Math.min(300, v + 5))}
-                    disabled={timeLimit >= 300}
-                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 border-l border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Increase"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              <LessonCountField
+                value={timeLimit}
+                onChange={setTimeLimit}
+                min={5}
+                max={300}
+                step={5}
+                label="Time limit per question (seconds)"
+                unit="sec"
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Single or multiple choice</label>
-              <select value={answerType} onChange={(e) => setAnswerType(e.target.value)} className={selectClass}>
-                {ANSWER_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
+            <AnswerTypeField value={answerType} onChange={setAnswerType} />
 
             <div className="flex gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!questions.length}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!questions.length} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -607,16 +536,12 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{questions.length ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={questions.length > 0}
+              />
             </div>
           </Card>
         </div>

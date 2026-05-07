@@ -1,20 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import {
+  ActivityField,
+  TransportField,
+  LocationField,
+  ResourcesField,
+} from "@/app/components/fields";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ResultPanel from "@/app/components/ResultPanel";
-import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import RefinePanel from "@/app/components/RefinePanel";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 
 const REFINE_CHIPS = [
   "Translate to...",
   "Include the following risk...",
   "Make the risk assessment more detailed",
 ];
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNode }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
@@ -30,7 +35,6 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
   const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const [refineInstruction, setRefineInstruction] = useState("");
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
@@ -88,7 +92,6 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
       // silently ignore
     } finally {
       setIsRefining(false);
-      setRefineInstruction("");
     }
   };
 
@@ -110,60 +113,17 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
               yearGroupNote
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Activity or trip</label>
-              <input
-                type="text"
-                value={activity}
-                onChange={(e) => setActivity(e.target.value)}
-                placeholder="e.g. Visit to the local zoo, science experiment with Bunsen burners"
-                className={inputClass}
-              />
-            </div>
+            <ActivityField value={activity} onChange={setActivity} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Mode of transport for school trip</label>
-                <input
-                  type="text"
-                  value={transport}
-                  onChange={(e) => setTransport(e.target.value)}
-                  placeholder="e.g. Coach, walking, public transport"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Location if school based</label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Science lab, school field, sports hall"
-                  className={inputClass}
-                />
-              </div>
+              <TransportField value={transport} onChange={setTransport} />
+              <LocationField value={location} onChange={setLocation} />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Resources if school based</label>
-              <input
-                type="text"
-                value={resources}
-                onChange={(e) => setResources(e.target.value)}
-                placeholder="e.g. Scissors, Bunsen burners, climbing equipment"
-                className={inputClass}
-              />
-            </div>
+            <ResourcesField value={resources} onChange={setResources} />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -175,16 +135,12 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -207,37 +163,11 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
       />
 
       {result && !isGenerating && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
-          <h3 className="text-base font-semibold text-gray-900">Want to refine your results?</h3>
-          <p className="text-sm font-medium text-gray-600">What would you like to change?</p>
-          <textarea
-            value={refineInstruction}
-            onChange={(e) => setRefineInstruction(e.target.value)}
-            placeholder="Type changes here"
-            rows={2}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent resize-none bg-white"
-          />
-          <div className="flex flex-wrap gap-2">
-            {REFINE_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setRefineInstruction(chip)}
-                className="text-xs text-gray-600 border border-gray-200 rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => handleRefine(refineInstruction)}
-            disabled={isRefining || !refineInstruction.trim()}
-            className="bg-[#1a1a1a] text-white py-2 px-6 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {isRefining ? <><Loader2 className="w-4 h-4 animate-spin" />Refining...</> : "Refine results"}
-          </button>
-        </div>
+        <RefinePanel
+          isRefining={isRefining}
+          chips={REFINE_CHIPS}
+          onRefine={handleRefine}
+        />
       )}
     </div>
   );

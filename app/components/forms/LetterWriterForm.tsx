@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  LetterRecipientField,
+  LetterContentField,
+  LetterDateField,
+  LetterToneField,
+} from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-
-const TONES = ["Formal", "Semi-formal", "Informal"];
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -16,12 +21,6 @@ const REFINE_CHIPS = [
   "Change the tone to...",
   "Also include...",
 ];
-
-const selectClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 export default function LetterWriterForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [recipient, setRecipient] = useState("");
@@ -70,6 +69,32 @@ export default function LetterWriterForm({ sidebar }: { sidebar: React.ReactNode
     }
   };
 
+  const handleRefine = async (instruction: string) => {
+    if (!result) return;
+    setIsRefining(true);
+    try {
+      const res = await fetch("/api/modify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentContent: result, instruction }),
+      });
+      if (!res.ok) throw new Error("Refinement failed");
+      let refined = "";
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        refined += decoder.decode(value, { stream: true });
+        setResult(refined);
+      }
+    } catch {
+      // result stays as-is
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -78,59 +103,17 @@ export default function LetterWriterForm({ sidebar }: { sidebar: React.ReactNode
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Who is the letter for?</label>
-              <input
-                type="text"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                placeholder="e.g. parents, governors, staff, Year 10 pupils"
-                className={inputClass}
-              />
-            </div>
+            <LetterRecipientField value={recipient} onChange={setRecipient} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Summary of key information for letter content</label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Key points to include in the letter (e.g. Own clothes day on Friday — bring £1 to raise money for Children in Need. Appropriate clothing only.)"
-                rows={5}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <LetterContentField value={content} onChange={setContent} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Date</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white w-full"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Tone</label>
-                <select value={tone} onChange={(e) => setTone(e.target.value)} className={selectClass}>
-                  {TONES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
+              <LetterDateField value={date} onChange={setDate} />
+              <LetterToneField value={tone} onChange={setTone} />
             </div>
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -147,16 +130,12 @@ export default function LetterWriterForm({ sidebar }: { sidebar: React.ReactNode
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -182,30 +161,7 @@ export default function LetterWriterForm({ sidebar }: { sidebar: React.ReactNode
         <RefinePanel
           isRefining={isRefining}
           chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
-            } catch {
-              // silently fail
-            } finally {
-              setIsRefining(false);
-            }
-          }}
+          onRefine={handleRefine}
         />
       )}
     </div>

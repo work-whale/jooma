@@ -40,7 +40,7 @@ export default function SideNav() {
           className="text-xl font-extrabold overflow-hidden whitespace-nowrap transition-all duration-300"
           style={{ color: "#4a4a4a", maxWidth: collapsed ? "0px" : "160px", opacity: collapsed ? 0 : 1 }}
         >
-          Lesson Lift
+          Jooma
         </span>
         <button
           onClick={toggle}

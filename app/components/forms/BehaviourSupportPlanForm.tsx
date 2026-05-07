@@ -1,13 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import {
+  PupilNameField,
+  GenderField,
+  StudentClassField,
+  SupportNeedsField,
+  KeyStaffField,
+  BehaviourDescriptionField,
+  BehaviouralTriggersField,
+  TopicField,
+  PlanStartDateField,
+  ReviewDateField,
+} from "@/app/components/fields";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ResultPanel from "@/app/components/ResultPanel";
-import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
-
-type Gender = "Male" | "Female" | "Non-Binary/Other";
+import RefinePanel from "@/app/components/RefinePanel";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -18,40 +30,12 @@ const REFINE_CHIPS = [
   "Add in the following strategy:",
 ];
 
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
-const selectClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
-function RequiredTextarea({
-  label, value, onChange, placeholder, touched,
-}: {
-  label: string; value: string; onChange: (v: string) => void; placeholder: string; touched: boolean;
-}) {
-  const invalid = touched && !value.trim();
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">{label}</label>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-        className={`${inputClass} resize-none ${invalid ? "border-red-400 focus:ring-red-400" : ""}`}
-      />
-      {invalid && <p className="text-xs text-red-500">{label} is required</p>}
-      <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-    </div>
-  );
-}
-
 export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.ReactNode }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
 
   const [studentName, setStudentName] = useState("");
-  const [studentGender, setStudentGender] = useState<Gender>("Male");
+  const [studentGender, setStudentGender] = useState("Male");
   const [studentClass, setStudentClass] = useState("");
   const [supportNeeds, setSupportNeeds] = useState("");
   const [keyStaff, setKeyStaff] = useState("");
@@ -69,7 +53,6 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
   const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const [refineInstruction, setRefineInstruction] = useState("");
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
@@ -131,7 +114,6 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
       // silently ignore
     } finally {
       setIsRefining(false);
-      setRefineInstruction("");
     }
   };
 
@@ -154,125 +136,83 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Student name</label>
-                <input
-                  type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="e.g. Jamie"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Student gender</label>
-                <select value={studentGender} onChange={(e) => setStudentGender(e.target.value as Gender)} className={selectClass}>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Non-Binary/Other">Non-Binary/Other</option>
-                </select>
-              </div>
+              <PupilNameField value={studentName} onChange={setStudentName} />
+              <GenderField value={studentGender} onChange={setStudentGender} label="Student gender" />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Student's class</label>
-              <input
-                type="text"
-                value={studentClass}
-                onChange={(e) => setStudentClass(e.target.value)}
-                placeholder="e.g. Class 4, 7B"
-                className={inputClass}
-              />
-            </div>
+            <StudentClassField value={studentClass} onChange={setStudentClass} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Additional support needs</label>
-              <textarea
-                value={supportNeeds}
-                onChange={(e) => setSupportNeeds(e.target.value)}
-                placeholder="e.g. ADHD, ASD, sensory processing difficulties"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <SupportNeedsField value={supportNeeds} onChange={setSupportNeeds} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Key staff working with student</label>
-              <input
-                type="text"
-                value={keyStaff}
-                onChange={(e) => setKeyStaff(e.target.value)}
-                placeholder="e.g. Mrs Smith (Form Tutor), Mr Patel (SENCO), Ms Brown (LSA)"
-                className={inputClass}
-              />
-            </div>
+            <KeyStaffField value={keyStaff} onChange={setKeyStaff} />
 
-            <RequiredTextarea
-              label="Challenging behaviour description"
+            <BehaviourDescriptionField
               value={behaviourDescription}
               onChange={setBehaviourDescription}
-              placeholder="e.g. Frequently calls out without permission, leaves seat during whole-class teaching, and makes disruptive comments towards peers — occurring 3–4 times per lesson"
-              touched={touched}
+              invalid={touched && !behaviourDescription.trim()}
             />
 
-            <RequiredTextarea
-              label="Behavioural triggers"
+            <BehaviouralTriggersField
               value={behaviouralTriggers}
               onChange={setBehaviouralTriggers}
-              placeholder="e.g. Unstructured tasks, extended writing activities, transitions between lessons, seating near certain peers, perceived criticism from staff"
-              touched={touched}
+              invalid={touched && !behaviouralTriggers.trim()}
             />
 
-            {[
-              { label: "Behavioural patterns/context", value: behaviouralPatterns, onChange: setBehaviouralPatterns, placeholder: "e.g. Behaviour is most frequent before lunch and in larger class settings; significantly reduced in 1:1 or small group work" },
-              { label: "Student strengths and interests", value: strengths, onChange: setStrengths, placeholder: "e.g. Strong verbal communicator, enthusiastic about art and practical activities, builds positive relationships with staff when given responsibility" },
-              { label: "Student dislikes", value: dislikes, onChange: setDislikes, placeholder: "e.g. Extended written tasks, reading aloud in class, sitting still for long periods, feeling singled out in front of peers" },
-              { label: "Previous interventions", value: previousInterventions, onChange: setPreviousInterventions, placeholder: "e.g. Daily check-in/check-out, seating plan adjustment, reward chart (discontinued after 4 weeks), referral to school counsellor" },
-            ].map(({ label, value, onChange, placeholder }) => (
-              <div key={label} className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">{label}</label>
-                <textarea
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  placeholder={placeholder}
-                  rows={3}
-                  className={`${inputClass} resize-none`}
-                />
-                <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-              </div>
-            ))}
+            <TopicField
+              label="Behavioural patterns and context"
+              value={behaviouralPatterns}
+              onChange={setBehaviouralPatterns}
+              placeholders={[
+                "e.g. Most frequent before lunch and in larger class settings",
+                "e.g. Significantly reduced in 1:1 or small group work",
+                "e.g. Escalates quickly if not de-escalated within 2 minutes",
+                "e.g. Better in practical lessons than in written tasks",
+              ]}
+            />
+
+            <TopicField
+              label="Student strengths and interests"
+              value={strengths}
+              onChange={setStrengths}
+              placeholders={[
+                "e.g. Strong verbal communicator, enthusiastic about art",
+                "e.g. Builds positive relationships with staff when given responsibility",
+                "e.g. Excels in PE and practical subjects",
+                "e.g. Creative, kind to younger students, good sense of humour",
+              ]}
+            />
+
+            <TopicField
+              label="Student dislikes"
+              value={dislikes}
+              onChange={setDislikes}
+              placeholders={[
+                "e.g. Extended written tasks, reading aloud in class",
+                "e.g. Sitting still for long periods, feeling singled out",
+                "e.g. Sudden changes to routine, crowded spaces",
+                "e.g. Open-ended tasks without a clear structure",
+              ]}
+            />
+
+            <TopicField
+              label="Previous interventions"
+              value={previousInterventions}
+              onChange={setPreviousInterventions}
+              placeholders={[
+                "e.g. Daily check-in/check-out, seating plan adjustment",
+                "e.g. Reward chart (discontinued after 4 weeks)",
+                "e.g. Referral to school counsellor, nurture group placement",
+                "e.g. Restorative conversations, reduced timetable trialled",
+              ]}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Plan start date</label>
-                <input
-                  type="date"
-                  value={planStartDate}
-                  onChange={(e) => setPlanStartDate(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Next review date</label>
-                <input
-                  type="date"
-                  value={reviewDate}
-                  onChange={(e) => setReviewDate(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
+              <PlanStartDateField value={planStartDate} onChange={setPlanStartDate} />
+              <ReviewDateField value={reviewDate} onChange={setReviewDate} />
             </div>
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -287,16 +227,12 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -319,37 +255,11 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
       />
 
       {result && !isGenerating && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
-          <h3 className="text-base font-semibold text-gray-900">Want to refine your results?</h3>
-          <p className="text-sm font-medium text-gray-600">What would you like to change?</p>
-          <textarea
-            value={refineInstruction}
-            onChange={(e) => setRefineInstruction(e.target.value)}
-            placeholder="Type changes here"
-            rows={2}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent resize-none bg-white"
-          />
-          <div className="flex flex-wrap gap-2">
-            {REFINE_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setRefineInstruction(chip)}
-                className="text-xs text-gray-600 border border-gray-200 rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => handleRefine(refineInstruction)}
-            disabled={isRefining || !refineInstruction.trim()}
-            className="bg-[#1a1a1a] text-white py-2 px-6 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {isRefining ? <><Loader2 className="w-4 h-4 animate-spin" />Refining...</> : "Refine results"}
-          </button>
-        </div>
+        <RefinePanel
+          isRefining={isRefining}
+          chips={REFINE_CHIPS}
+          onRefine={handleRefine}
+        />
       )}
     </div>
   );

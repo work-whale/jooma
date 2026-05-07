@@ -18,34 +18,43 @@ INPUTS:
 - Challenges: ${challenges}
 - Education phase: ${educationPhase || "Not specified"}
 
-Generate a Pupil Premium Strategy Plan using the structure below.
-
-Output a title and subtitle, then a single markdown table. No preamble, no explanation after the table.
+Generate a Pupil Premium Strategy Plan using the structure below. Use proper markdown formatting. No preamble, no explanation after the content.
 
 # Pupil Premium Strategy Plan
 
-## Evidence-Based Approaches Aligned with DfE Best Practice
+For each challenge provided, output a section using this exact structure:
 
-The table must have exactly these columns:
+---
 
-| Challenge | Tier 1: High-quality teaching | Tier 2: Targeted academic support | Tier 3: Wider strategies |
+## [Challenge name — concise, 5 words or fewer]
 
-For each challenge provided, write one table row. Each tier cell must contain exactly these 5 fields on separate lines, each preceded by a bold label:
+### Tier 1: High-quality teaching
 
-**Approach:** [A specific, named strategy appropriate to this tier and challenge — not generic]
-**Evidence:** [A specific reference to EEF research, DfE guidance, or published evidence with approximate impact in months' progress where available]
-**Implementation:** [Concrete steps to put this strategy in place — specific and actionable]
-**Impact:** [Expected measurable impact on disadvantaged pupils if implemented well]
-**Monitoring:** [How the school will track whether this strategy is working — specific data sources and review points]
+- **Approach:** [One specific, named strategy — e.g. "Explicit vocabulary instruction using Frayer models"]
+- **Implementation:** [Two or three concrete steps to put this in place]
+- **Impact:** [One sentence — expected measurable outcome for disadvantaged pupils]
+- **Monitoring:** [One sentence — specific data source and review frequency]
 
-Tier definitions to follow strictly:
-- **Tier 1 (High-quality teaching):** Whole-class approaches that improve the quality of everyday teaching for all pupils, with particular benefit to disadvantaged pupils. Examples: explicit vocabulary instruction, responsive teaching, metacognition strategies, high-quality feedback.
-- **Tier 2 (Targeted academic support):** Structured interventions for pupils who need additional academic support, delivered in small groups or one-to-one. Examples: small group tuition, one-to-one tutoring, structured literacy/numeracy programmes, National Tutoring Programme.
-- **Tier 3 (Wider strategies):** Approaches that address non-academic barriers to learning for disadvantaged pupils. Examples: attendance support, social-emotional learning, mental health support, family engagement, extracurricular enrichment.
+### Tier 2: Targeted academic support
 
-Each cell must be a single block of text — no nested bullet points, no line breaks within a field. Each of the 5 fields must appear on its own line within the cell.
+- **Approach:** [One specific, named intervention — e.g. "Small group tuition using a structured phonics programme"]
+- **Implementation:** [Two or three concrete steps to put this in place]
+- **Impact:** [One sentence — expected measurable outcome]
+- **Monitoring:** [One sentence — specific data source and review frequency]
 
-Reference EEF (Education Endowment Foundation) research where relevant. Use UK English throughout. Be specific to the education phase: ${educationPhase || "the school phase"}.`;
+### Tier 3: Wider strategies
+
+- **Approach:** [One specific strategy addressing a non-academic barrier — e.g. "Attendance mentoring with a key worker"]
+- **Implementation:** [Two or three concrete steps to put this in place]
+- **Impact:** [One sentence — expected measurable outcome]
+- **Monitoring:** [One sentence — specific data source and review frequency]
+
+Tier definitions:
+- Tier 1: Whole-class teaching approaches that benefit all pupils, with particular benefit to disadvantaged pupils.
+- Tier 2: Structured small-group or one-to-one academic interventions.
+- Tier 3: Approaches that address non-academic barriers such as attendance, mental health, or family engagement.
+
+Keep each bullet point to one or two short sentences. Be specific and avoid generic advice. Reference EEF evidence where relevant. Use UK English throughout. Be specific to the education phase: ${educationPhase || "the school phase"}.`;
 
   const stream = await client.messages.stream({
     model: "claude-opus-4-6",

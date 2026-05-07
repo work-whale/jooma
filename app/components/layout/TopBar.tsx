@@ -40,11 +40,6 @@ export default function TopBar({ title, onSearchChange }: TopBarProps) {
       ).slice(0, 6)
     : [];
 
-  // Reset highlight to first item whenever results change
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [trimmed]);
-
   // Sync to parent (home page grid filter) if a handler is provided
   useEffect(() => {
     onSearchChange?.(query);
@@ -96,6 +91,7 @@ export default function TopBar({ title, onSearchChange }: TopBarProps) {
             onChange={(e) => {
               setQuery(e.target.value);
               setOpen(true);
+              setActiveIndex(0);
             }}
             onFocus={() => { if (query.trim()) setOpen(true); }}
             onKeyDown={handleKeyDown}
@@ -139,7 +135,7 @@ export default function TopBar({ title, onSearchChange }: TopBarProps) {
           {/* No results */}
           {open && trimmed && results.length === 0 && (
             <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 px-4 py-4">
-              <p className="text-sm text-gray-500">No tools match <span className="font-medium text-gray-700">"{query}"</span></p>
+              <p className="text-sm text-gray-500">No tools match <span className="font-medium text-gray-700">&quot;{query}&quot;</span></p>
             </div>
           )}
         </div>

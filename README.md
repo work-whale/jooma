@@ -1,4 +1,4 @@
-# Lesson Lift
+# Jooma
 
 An AI-powered toolkit for teachers and school leaders. Generate lesson plans, worksheets, reports, policies, and more — all tailored to your curriculum, year group, and classroom context.
 

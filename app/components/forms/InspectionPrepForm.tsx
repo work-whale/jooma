@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  InspectionBodyField,
+  InspectionFocusField,
+  InspectionOptionsField,
+} from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 const REFINE_CHIPS = [
@@ -14,9 +20,6 @@ const REFINE_CHIPS = [
   "Make the output more detailed",
   "Explain more about...",
 ];
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 export default function InspectionPrepForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [inspectionBody, setInspectionBody] = useState("");
@@ -66,6 +69,32 @@ export default function InspectionPrepForm({ sidebar }: { sidebar: React.ReactNo
     }
   };
 
+  const handleRefine = async (instruction: string) => {
+    if (!result) return;
+    setIsRefining(true);
+    try {
+      const res = await fetch("/api/modify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentContent: result, instruction }),
+      });
+      if (!res.ok) throw new Error("Refinement failed");
+      let refined = "";
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        refined += decoder.decode(value, { stream: true });
+        setResult(refined);
+      }
+    } catch {
+      // result stays as-is
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -74,81 +103,21 @@ export default function InspectionPrepForm({ sidebar }: { sidebar: React.ReactNo
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Inspection/accreditation body</label>
-              <input
-                type="text"
-                value={inspectionBody}
-                onChange={(e) => setInspectionBody(e.target.value)}
-                placeholder="e.g. Ofsted, ISI, CIS, BSO, KHDA"
-                className={inputClass}
-              />
-            </div>
+            <InspectionBodyField value={inspectionBody} onChange={setInspectionBody} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Inspection focus <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={inspectionFocus}
-                onChange={(e) => setInspectionFocus(e.target.value)}
-                placeholder="e.g. Safeguarding, quality of education, leadership and management, SEND provision"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <InspectionFocusField value={inspectionFocus} onChange={setInspectionFocus} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-800">Include evidence examples</p>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeEvidence}
-                    onChange={(e) => setIncludeEvidence(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-800">Include success criteria</p>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeSuccessCriteria}
-                    onChange={(e) => setIncludeSuccessCriteria(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-800">Include recent policy changes</p>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includePolicyChanges}
-                    onChange={(e) => setIncludePolicyChanges(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-              </div>
-            </div>
+            <InspectionOptionsField
+              includeEvidence={includeEvidence}
+              includeSuccessCriteria={includeSuccessCriteria}
+              includePolicyChanges={includePolicyChanges}
+              onChangeEvidence={setIncludeEvidence}
+              onChangeSuccessCriteria={setIncludeSuccessCriteria}
+              onChangePolicyChanges={setIncludePolicyChanges}
+            />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -166,16 +135,12 @@ export default function InspectionPrepForm({ sidebar }: { sidebar: React.ReactNo
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -201,30 +166,7 @@ export default function InspectionPrepForm({ sidebar }: { sidebar: React.ReactNo
         <RefinePanel
           isRefining={isRefining}
           chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
-            } catch {
-              // silently fail — result stays as-is
-            } finally {
-              setIsRefining(false);
-            }
-          }}
+          onRefine={handleRefine}
         />
       )}
     </div>

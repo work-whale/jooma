@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles, Plus, Trash2, Minus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
+import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
+import { PupilNameField, GenderField, WordCountField, IncludeTargetsField, ToneField } from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-
-const GENDER_OPTIONS = ["Male", "Female", "Non-Binary"] as const;
-type Gender = (typeof GENDER_OPTIONS)[number];
 
 interface SubjectFocus {
   subject: string;
@@ -24,6 +26,87 @@ const emptySubject = (): SubjectFocus => ({
   targets: "",
 });
 
+const inputClass =
+  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
+
+interface SubjectFocusCardProps {
+  subject: SubjectFocus;
+  index: number;
+  showRemove: boolean;
+  includeTargets: boolean;
+  onChange: (field: keyof SubjectFocus, value: string) => void;
+  onRemove: () => void;
+}
+
+function SubjectFocusCard({ subject, index, showRemove, includeTargets, onChange, onRemove }: SubjectFocusCardProps) {
+  const subjectPlaceholder = useTypingPlaceholder(["e.g. Mathematics", "e.g. English", "e.g. Science", "e.g. History"]);
+  const strengthsPlaceholder = useTypingPlaceholder([
+    "e.g. Demonstrates strong number sense and applies methods accurately",
+    "e.g. Reads with confidence and contributes thoughtfully to discussions",
+    "e.g. Shows great curiosity and produces detailed written explanations",
+  ]);
+  const areasPlaceholder = useTypingPlaceholder([
+    "e.g. Would benefit from showing working out more clearly",
+    "e.g. Could develop greater consistency when writing at length",
+    "e.g. Would benefit from checking answers before submitting",
+  ]);
+  const targetsPlaceholder = useTypingPlaceholder([
+    "e.g. Practise reading longer texts to build fluency and stamina",
+    "e.g. Focus on presenting written work in a structured way",
+    "e.g. Work on times tables to improve calculation speed",
+  ]);
+
+  return (
+    <Card className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-700">Subject / focus {index + 1}</h3>
+        {showRemove && (
+          <button type="button" onClick={onRemove} className="text-gray-400 hover:text-red-500 transition-colors" aria-label="Remove subject">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="block text-sm font-semibold text-gray-800">Subject or Focus</label>
+        <div className="relative">
+          <input type="text" value={subject.subject} onChange={(e) => onChange("subject", e.target.value)} placeholder="" className={inputClass} />
+          {!subject.subject && <PlaceholderOverlay text={subjectPlaceholder} />}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="block text-sm font-semibold text-gray-800">Strengths</label>
+        <div className="relative">
+          <textarea value={subject.strengths} onChange={(e) => onChange("strengths", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
+          {!subject.strengths && <PlaceholderOverlay text={strengthsPlaceholder} area />}
+        </div>
+        <p className="text-xs text-gray-400">100,000 character maximum input text</p>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="block text-sm font-semibold text-gray-800">Areas for development</label>
+        <div className="relative">
+          <textarea value={subject.areasForDevelopment} onChange={(e) => onChange("areasForDevelopment", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
+          {!subject.areasForDevelopment && <PlaceholderOverlay text={areasPlaceholder} area />}
+        </div>
+        <p className="text-xs text-gray-400">100,000 character maximum input text</p>
+      </div>
+
+      {includeTargets && (
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-gray-800">Targets</label>
+          <div className="relative">
+            <textarea value={subject.targets} onChange={(e) => onChange("targets", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
+            {!subject.targets && <PlaceholderOverlay text={targetsPlaceholder} area />}
+          </div>
+          <p className="text-xs text-gray-400">100,000 character maximum input text</p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 const REFINE_CHIPS = [
   "Make more concise",
   "Make each paragraph longer",
@@ -35,7 +118,7 @@ const REFINE_CHIPS = [
 
 export default function ReportWriterForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [name, setName] = useState("");
-  const [gender, setGender] = useState<Gender | "">("");
+  const [gender, setGender] = useState("");
   const [wordCount, setWordCount] = useState("150");
   const [includeTargets, setIncludeTargets] = useState(true);
   const [tone, setTone] = useState("formal");
@@ -69,11 +152,6 @@ export default function ReportWriterForm({ sidebar }: { sidebar: React.ReactNode
     if (subjects.length > 1) setSubjects((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const adjustWordCount = (delta: number) => {
-    const current = parseInt(wordCount, 10) || 150;
-    setWordCount(String(Math.min(1000, Math.max(50, current + delta))));
-  };
-
   const handleGenerate = async () => {
     setError(null);
     setResult("");
@@ -104,9 +182,6 @@ export default function ReportWriterForm({ sidebar }: { sidebar: React.ReactNode
     }
   };
 
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -115,167 +190,37 @@ export default function ReportWriterForm({ sidebar }: { sidebar: React.ReactNode
         <div className="lg:col-span-2 space-y-4">
           <Card className="space-y-6">
 
-            {/* Name + Gender */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Name (first name only)</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Emily"
-                  className={inputClass}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Gender</label>
-                <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value as Gender)}
-                  className={inputClass}
-                >
-                  <option value="">Please select an option</option>
-                  {GENDER_OPTIONS.map((g) => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
+              <PupilNameField value={name} onChange={setName} />
+              <GenderField value={gender} onChange={setGender} />
             </div>
 
-            {/* Word count + Include targets */}
             <div className="grid grid-cols-2 gap-4 items-start">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Word count (approximate)</label>
-                <div className="flex items-center gap-0">
-                  <input
-                    type="number"
-                    min={50}
-                    max={1000}
-                    value={wordCount}
-                    onChange={(e) => setWordCount(e.target.value)}
-                    onBlur={() => {
-                      const n = parseInt(wordCount, 10);
-                      setWordCount(String(isNaN(n) ? 150 : Math.min(1000, Math.max(50, n))));
-                    }}
-                    className="w-20 border border-gray-200 rounded-l-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent text-center"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => adjustWordCount(-10)}
-                    disabled={wordCountNum <= 50}
-                    className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => adjustWordCount(10)}
-                    disabled={wordCountNum >= 1000}
-                    className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Include targets?</label>
-                <div className="flex gap-6 pt-2">
-                  {[true, false].map((val) => (
-                    <label key={String(val)} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="includeTargets"
-                        checked={includeTargets === val}
-                        onChange={() => setIncludeTargets(val)}
-                        className="accent-gray-900"
-                      />
-                      <span className="text-sm text-gray-700">{val ? "Yes" : "No"}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Tone */}
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Tone</label>
-              <input
-                type="text"
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                placeholder="e.g. formal, encouraging, positive"
-                className={inputClass}
+              <WordCountField
+                value={wordCount}
+                onChange={setWordCount}
+                label="Word count (approximate)"
+                min={50}
+                max={1000}
+                step={10}
+                defaultValue={150}
               />
+              <IncludeTargetsField value={includeTargets} onChange={setIncludeTargets} />
             </div>
+
+            <ToneField value={tone} onChange={setTone} />
           </Card>
 
-          {/* Subject sections */}
           {subjects.map((s, i) => (
-            <Card key={i} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-700">Subject / focus {i + 1}</h3>
-                {subjects.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeSubject(i)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                    aria-label="Remove subject"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Subject or Focus</label>
-                <input
-                  type="text"
-                  value={s.subject}
-                  onChange={(e) => updateSubject(i, "subject", e.target.value)}
-                  placeholder="e.g. Mathematics"
-                  className={inputClass}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Strengths</label>
-                <textarea
-                  value={s.strengths}
-                  onChange={(e) => updateSubject(i, "strengths", e.target.value)}
-                  placeholder="e.g. Demonstrates strong number sense, applies methods accurately, and contributes confidently to class discussions"
-                  rows={3}
-                  className={`${inputClass} resize-none`}
-                />
-                <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Areas for development</label>
-                <textarea
-                  value={s.areasForDevelopment}
-                  onChange={(e) => updateSubject(i, "areasForDevelopment", e.target.value)}
-                  placeholder="e.g. Would benefit from showing working out more clearly and checking answers before submitting"
-                  rows={3}
-                  className={`${inputClass} resize-none`}
-                />
-                <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-              </div>
-
-              {includeTargets && (
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-gray-800">Targets</label>
-                  <textarea
-                    value={s.targets}
-                    onChange={(e) => updateSubject(i, "targets", e.target.value)}
-                    placeholder="e.g. Practise reading longer texts independently to build fluency and comprehension stamina"
-                    rows={3}
-                    className={`${inputClass} resize-none`}
-                  />
-                  <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-                </div>
-              )}
-            </Card>
+            <SubjectFocusCard
+              key={i}
+              subject={s}
+              index={i}
+              showRemove={subjects.length > 1}
+              includeTargets={includeTargets}
+              onChange={(field, value) => updateSubject(i, field, value)}
+              onRemove={() => removeSubject(i)}
+            />
           ))}
 
           {subjects.length < 10 && (
@@ -289,16 +234,8 @@ export default function ReportWriterForm({ sidebar }: { sidebar: React.ReactNode
             </button>
           )}
 
-          {/* Actions */}
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setConfirmingReset(true)}
-              disabled={!result}
-              className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              Reset
-            </button>
+            <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
             <ConfirmModal
               open={confirmingReset}
               title="Reset form?"
@@ -317,16 +254,12 @@ export default function ReportWriterForm({ sidebar }: { sidebar: React.ReactNode
               }}
               onCancel={() => setConfirmingReset(false)}
             />
-            <button
-              type="button"
+            <GenerateButton
               onClick={handleGenerate}
               disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-              className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isGenerating
-                ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-            </button>
+              isGenerating={isGenerating}
+              hasResult={result !== null}
+            />
           </div>
         </div>
       </div>

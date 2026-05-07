@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     yearGroup,
     subject,
     learningObjective,
+    observationFocus,
     strengths,
     areasForDevelopment,
     date,
@@ -69,6 +70,7 @@ OBSERVATION DETAILS:
 - Year Group: ${yearGroup || "Not specified"}
 - Subject: ${subject?.trim() || "Not specified"}
 - Learning Objective: ${learningObjective?.trim() || "Not specified"}
+- Observation Focus: ${observationFocus?.trim() || "Not specified"}
 - Date: ${dateStr || "Not specified"}
 - Observed Strengths: ${strengths}
 - Areas for Development: ${areasForDevelopment}
@@ -80,8 +82,8 @@ Generate a professional Lesson Observation Report using the following structure.
 ## Observation Details
 **Date:** ${dateStr || "Not specified"}
 **Subject:** ${subject?.trim() || "Not specified"}
-**Learning Objective:** ${learningObjective?.trim() || "Not specified"}
 **Year Group:** ${yearGroup || "Not specified"}
+**Learning Objective:** ${learningObjective?.trim() || "Not specified"}${observationFocus?.trim() ? `\n**Observation Focus:** ${observationFocus.trim()}` : ""}
 
 ## Lesson Context
 Write 3–4 sentences contextualising the lesson. Reference the curriculum area, the relevance of the learning objective to the year group, and what the lesson aimed to achieve in terms of both substantive and disciplinary knowledge. Be specific — this should read as an accurate account of the lesson observed, not a generic description.

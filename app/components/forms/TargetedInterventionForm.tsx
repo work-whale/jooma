@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import {
+  SubjectField,
+  AttitudinalDataField,
+  AptitudinalDataField,
+  AttainmentDataField,
+  OtherDataField,
+} from "@/app/components/fields";
 import { toTitleCase } from "@/app/lib/formOptions";
-import { Loader2, Sparkles } from "lucide-react";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 const REFINE_CHIPS = [
@@ -17,9 +25,6 @@ const REFINE_CHIPS = [
   "Make strategies more suitable for SEND learners",
   "Include strategies for parental engagement",
 ];
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 export default function TargetedInterventionForm({ sidebar }: { sidebar: React.ReactNode }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
@@ -37,8 +42,7 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
 
-  const canGenerate =
-    curriculum && (mixed || yearGroup) && subject.trim() && attitudinalData.trim();
+  const canGenerate = curriculum && (mixed || yearGroup) && subject.trim() && attitudinalData.trim();
 
   const formSnapshot = JSON.stringify({
     curriculum, yearGroup, mixed, subject,
@@ -74,8 +78,7 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
+        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }).replace(/©/g, "(c)"));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -140,84 +143,18 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
               yearGroupNote
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Subject</label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. Science, Maths, English"
-                className={inputClass}
-              />
-            </div>
+            <SubjectField value={subject} onChange={setSubject} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Attitudinal data</label>
-              <textarea
-                value={attitudinalData}
-                onChange={(e) => setAttitudinalData(e.target.value)}
-                placeholder="Describe what you know about their attitude to themselves, school and their studies. e.g. low self-regard as a learner, positive attitude to attending school, good peer relationships, or Scores out of 100: learner self-regard 50, attitude to curriculum 90"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">
-                If you include numerical survey data here, explain what the scores are for and what they are out of.
-              </p>
-            </div>
+            <AttitudinalDataField value={attitudinalData} onChange={setAttitudinalData} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Aptitudinal data <span className="font-normal text-gray-400">(optional)</span>
-              </label>
-              <textarea
-                value={aptitudinalData}
-                onChange={(e) => setAptitudinalData(e.target.value)}
-                placeholder="Describe what you know of their aptitude and general skills, abilities and potential here. e.g. Scores out of 100: verbal reasoning 70, spatial reasoning 90, numerical reasoning 50, non-verbal reasoning 25, or Target grade A*"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">
-                If you include numerical survey data here, explain what the scores are for and what they are out of.
-              </p>
-            </div>
+            <AptitudinalDataField value={aptitudinalData} onChange={setAptitudinalData} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Attainment data <span className="font-normal text-gray-400">(optional)</span>
-              </label>
-              <textarea
-                value={attainmentData}
-                onChange={(e) => setAttainmentData(e.target.value)}
-                placeholder="Describe what you know of their work in your subject so far. You may want to use comments from a report here. e.g. struggles with evaluation work, strong at recording their reasoning, struggles with complex theories, working at grade D"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <AttainmentDataField value={attainmentData} onChange={setAttainmentData} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Other relevant data <span className="font-normal text-gray-400">(optional)</span>
-              </label>
-              <textarea
-                value={otherData}
-                onChange={(e) => setOtherData(e.target.value)}
-                placeholder="Any other relevant information — e.g. SEND needs, EAL status, attendance, pastoral notes, family context"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <OtherDataField value={otherData} onChange={setOtherData} />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -226,16 +163,12 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
                 onConfirm={handleReset}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
-import { Loader2, Sparkles } from "lucide-react";
+import { TargetsField } from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 const REFINE_CHIPS = [
@@ -68,9 +70,6 @@ export default function SmartTargetsForm({ sidebar }: { sidebar: React.ReactNode
     }
   };
 
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,27 +85,10 @@ export default function SmartTargetsForm({ sidebar }: { sidebar: React.ReactNode
               yearGroupNote
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Targets</label>
-              <textarea
-                value={targets}
-                onChange={(e) => setTargets(e.target.value)}
-                placeholder="e.g. Improve reading fluency, complete independent tasks without prompting, manage transitions calmly between lessons"
-                rows={5}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TargetsField value={targets} onChange={setTargets} />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -123,16 +105,12 @@ export default function SmartTargetsForm({ sidebar }: { sidebar: React.ReactNode
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>

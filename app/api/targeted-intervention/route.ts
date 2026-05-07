@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     ? `\n- Other relevant data: ${otherData.trim()}`
     : "";
 
-  const userPrompt = `You are an expert educational practitioner and intervention specialist. Generate a set of targeted, evidence-based intervention strategies for the following student profile:
+  const userPrompt = `You are an expert educational practitioner and intervention specialist. Generate a set of targeted, practical intervention strategies for the following student profile:
 
 - Curriculum: ${curriculum}
 - Year Group: ${yearGroup}
@@ -45,27 +45,31 @@ export async function POST(req: NextRequest) {
 Analyse the full student profile carefully. Identify the key strengths, gaps, and tensions in the data — then generate between 8 and 10 specific, personalised intervention strategies to close those gaps.
 
 For each strategy:
-- Draw directly on the specific data provided (reference scores, comments, or observations from the data where relevant)
+- Draw directly on the specific data provided (reference scores, comments, or observations where relevant)
 - Ensure the strategy is realistic and practical for a classroom teacher or SENCO to implement
-- Cite relevant education research or evidence to justify the approach
+- Include 2–3 concrete activities that put the strategy into practice
 
 Format the output using markdown as follows:
 
 # Intervention Strategies
 
-For each strategy, use this structure:
+For each strategy, use this exact structure:
 
 ## [Number]. [Strategy Name]
 
 **Strategy Summary:**
 [2–3 sentences describing exactly what the teacher or school should do. Be specific and actionable.]
 
-**Rationale & Evidence:**
-[2–3 sentences explaining why this strategy is appropriate for this student specifically, referencing the data provided. Include at least one research citation in Author-Year format, e.g. (Hattie, 2009).]
+**How to implement:**
+- [Concrete classroom activity or task — specific enough to use in a lesson or session]
+- [Second activity]
+- [Third activity]
+
+[Create a worksheet for this strategy →](/tools/worksheet-generator)
 
 ---
 
-Do not include a preamble, introduction, or closing summary. Start immediately with "# Intervention Strategies" and the first numbered strategy.`;
+Do not include a preamble, introduction, or closing summary. Do not include any research citations or references. Start immediately with "# Intervention Strategies" and the first numbered strategy.`;
 
   const encoder = new TextEncoder();
   const anthropicStream = client.messages.stream({

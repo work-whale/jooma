@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { TopicField, AdditionalContextField, CurriculumField, OutputTypeField } from "@/app/components/fields";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ResultPanel from "@/app/components/ResultPanel";
-import { CURRICULA } from "@/app/lib/formOptions";
+import RefinePanel from "@/app/components/RefinePanel";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
-
-type OutputType = "full" | "structure";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -19,29 +20,142 @@ const REFINE_CHIPS = [
   "Change the tone to be more...",
 ];
 
-const selectClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
+const POLICY_CATEGORIES = [
+  {
+    label: "Safeguarding & Welfare",
+    policies: [
+      "Child Protection & Safeguarding Policy",
+      "Anti-Bullying Policy",
+      "Online Safety (E-Safety) Policy",
+      "Attendance Policy",
+      "Mental Health & Wellbeing Policy",
+    ],
+  },
+  {
+    label: "Curriculum & Learning",
+    policies: [
+      "Teaching & Learning Policy",
+      "Assessment, Marking & Feedback Policy",
+      "Curriculum Policy",
+      "Homework Policy",
+      "Reading Policy",
+    ],
+  },
+  {
+    label: "SEND & Inclusion",
+    policies: [
+      "SEND Policy",
+      "Equality & Inclusion Policy",
+      "English as an Additional Language (EAL) Policy",
+      "Accessibility Plan",
+    ],
+  },
+  {
+    label: "Behaviour & Pastoral",
+    policies: [
+      "Behaviour Policy",
+      "Exclusions Policy",
+      "Relationships & Sex Education (RSE) Policy",
+      "Personal, Social & Health Education (PSHE) Policy",
+      "Anti-Racism Policy",
+    ],
+  },
+  {
+    label: "Health & Safety",
+    policies: [
+      "Health & Safety Policy",
+      "First Aid Policy",
+      "Medicines in School Policy",
+      "Educational Visits Policy",
+    ],
+  },
+  {
+    label: "Staff & HR",
+    policies: [
+      "Staff Code of Conduct",
+      "Performance Management Policy",
+      "Whistleblowing Policy",
+      "Safer Recruitment Policy",
+      "Staff Wellbeing Policy",
+    ],
+  },
+  {
+    label: "Data & Privacy",
+    policies: [
+      "Data Protection Policy (GDPR)",
+      "Freedom of Information Policy",
+      "CCTV Policy",
+    ],
+  },
+  {
+    label: "Governance & Administration",
+    policies: [
+      "Admissions Policy",
+      "Complaints Policy",
+      "Pay Policy",
+      "Financial Regulations Policy",
+    ],
+  },
+];
+
+function PolicyCategoriesPanel({ onSelect }: { onSelect: (name: string) => void }) {
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <Card className="p-0 overflow-hidden">
+      <div className="px-5 py-4 border-b border-gray-100">
+        <h2 className="text-sm font-semibold text-gray-800">Policy Categories</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Click a policy to fill in the form</p>
+      </div>
+      <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+        {POLICY_CATEGORIES.map((cat) => (
+          <div key={cat.label}>
+            <button
+              type="button"
+              onClick={() => setOpen(open === cat.label ? null : cat.label)}
+              className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left"
+            >
+              {cat.label}
+              <ChevronDown
+                className={`w-4 h-4 text-gray-400 shrink-0 ml-2 transition-transform duration-200 ${open === cat.label ? "rotate-180" : ""}`}
+              />
+            </button>
+            {open === cat.label && (
+              <div className="px-5 pb-3 flex flex-col gap-0.5 bg-gray-50">
+                {cat.policies.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => { onSelect(p); setOpen(null); }}
+                    className="text-left text-xs text-gray-600 hover:text-gray-900 py-1.5 hover:underline transition-colors"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
   const [policy, setPolicy] = useState("");
   const [additionalRequirements, setAdditionalRequirements] = useState("");
-  const [outputType, setOutputType] = useState<OutputType>("full");
+  const [outputType, setOutputType] = useState<"full" | "structure">("full");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const [refineInstruction, setRefineInstruction] = useState("");
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
 
   const canGenerate = curriculum.trim() && policy.trim();
   const formSnapshot = JSON.stringify({ curriculum, policy, additionalRequirements, outputType });
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
-
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
   const streamResponse = async (url: string, body: object, onChunk: (chunk: string) => void) => {
     const res = await fetch(url, {
@@ -95,84 +209,51 @@ export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactN
       // silently ignore
     } finally {
       setIsRefining(false);
-      setRefineInstruction("");
     }
   };
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1 space-y-4">
+          {sidebar}
+          <PolicyCategoriesPanel onSelect={setPolicy} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-              <select value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={selectClass}>
-                <option value="" disabled>Select curriculum</option>
-                {CURRICULA.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
+            <CurriculumField value={curriculum} onChange={setCurriculum} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Policy</label>
-              <textarea
-                value={policy}
-                onChange={(e) => setPolicy(e.target.value)}
-                placeholder="Enter the name of the policy, e.g. Anti-Bullying Policy"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="Policy"
+              value={policy}
+              onChange={setPolicy}
+              placeholders={[
+                "e.g. Anti-Bullying Policy",
+                "e.g. Online Safety (E-Safety) Policy",
+                "e.g. SEND Policy",
+                "e.g. Behaviour Policy",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Additional requirements <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={additionalRequirements}
-                onChange={(e) => setAdditionalRequirements(e.target.value)}
-                placeholder="e.g. Include reporting procedures, staff responsibilities, links to statutory guidance, and a review schedule"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <AdditionalContextField
+              label="Additional requirements"
+              value={additionalRequirements}
+              onChange={setAdditionalRequirements}
+              rows={3}
+              placeholders={[
+                "e.g. Include reporting procedures and staff responsibilities",
+                "e.g. Reference the Keeping Children Safe in Education guidance",
+                "e.g. Include a review schedule and links to statutory guidance",
+                "e.g. Add school-specific details and named roles",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Output type</label>
-              <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                {([
-                  { value: "full", label: "Draft full policy" },
-                  { value: "structure", label: "Draft policy section structure" },
-                ] as { value: OutputType; label: string }[]).map(({ value, label }) => (
-                  <label key={value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="outputType"
-                      checked={outputType === value}
-                      onChange={() => setOutputType(value)}
-                      className="accent-gray-900"
-                    />
-                    <span className="text-sm text-gray-700">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <OutputTypeField value={outputType} onChange={setOutputType} />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -188,16 +269,12 @@ export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactN
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -220,37 +297,11 @@ export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactN
       />
 
       {result && !isGenerating && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
-          <h3 className="text-base font-semibold text-gray-900">Want to refine your results?</h3>
-          <p className="text-sm font-medium text-gray-600">What would you like to change?</p>
-          <textarea
-            value={refineInstruction}
-            onChange={(e) => setRefineInstruction(e.target.value)}
-            placeholder="Type changes here"
-            rows={2}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent resize-none bg-white"
-          />
-          <div className="flex flex-wrap gap-2">
-            {REFINE_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setRefineInstruction(chip)}
-                className="text-xs text-gray-600 border border-gray-200 rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => handleRefine(refineInstruction)}
-            disabled={isRefining || !refineInstruction.trim()}
-            className="bg-[#1a1a1a] text-white py-2 px-6 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {isRefining ? <><Loader2 className="w-4 h-4 animate-spin" />Refining...</> : "Refine results"}
-          </button>
-        </div>
+        <RefinePanel
+          isRefining={isRefining}
+          chips={REFINE_CHIPS}
+          onRefine={handleRefine}
+        />
       )}
     </div>
   );

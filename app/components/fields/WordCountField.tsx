@@ -50,7 +50,7 @@ export default function WordCountField({
           type="button"
           onClick={() => adjust(-step)}
           disabled={num <= min}
-          className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-default transition-colors"
         >
           <Minus className="w-3.5 h-3.5" />
         </button>
@@ -58,7 +58,7 @@ export default function WordCountField({
           type="button"
           onClick={() => adjust(step)}
           disabled={num >= max}
-          className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-default transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>

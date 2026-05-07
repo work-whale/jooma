@@ -7,14 +7,25 @@ export interface HomeworkRequest {
   yearGroup: string;
   subject: string;
   learningObjective: string;
+  abilityLevel: string;
+  questionTypes?: string[];
+  questionCounts?: Record<string, number>;
   homeworkType: string;
   length: string;
   includeAnswers: boolean;
   additionalInstructions?: string;
   lessonContent?: string;
+  imageBase64?: string;
+  imageMediaType?: string;
 }
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const ABILITY_LABELS: Record<string, string> = {
+  WTS: "Working Towards Standard — provide additional scaffolding, simpler language, and smaller steps",
+  EXS: "Expected Standard — pitch at the expected level for the year group",
+  GDS: "Greater Depth Standard — extend with greater challenge, open-ended reasoning, and deeper thinking",
+};
 
 export async function POST(req: NextRequest) {
   const body: HomeworkRequest = await req.json();
@@ -24,11 +35,16 @@ export async function POST(req: NextRequest) {
     yearGroup,
     subject,
     learningObjective,
+    abilityLevel,
+    questionTypes,
+    questionCounts,
     homeworkType,
     length,
     includeAnswers,
     additionalInstructions,
     lessonContent,
+    imageBase64,
+    imageMediaType,
   } = body;
 
   if (!curriculum || !yearGroup || !subject?.trim() || !learningObjective?.trim() || !homeworkType || !length) {
@@ -39,6 +55,17 @@ export async function POST(req: NextRequest) {
     ? `\n\nThe teacher has provided the following lesson material to base the homework on:\n\n${lessonContent.trim()}`
     : "";
 
+  const imageSection = imageBase64
+    ? `\n\nAn image has been provided by the teacher. Use it as visual context — reference it in the homework task where appropriate (e.g. "Look at the image and...").`
+    : "";
+
+  const questionTypesSection = questionTypes?.length
+    ? `\n- Question Types to use: ${questionTypes.map((t) => {
+        const count = questionCounts?.[t];
+        return count ? `${t} (${count})` : t;
+      }).join(", ")}`
+    : "";
+
   const additionalSection = additionalInstructions?.trim()
     ? `\n\nAdditional instructions from the teacher: ${additionalInstructions.trim()}`
     : "";
@@ -47,17 +74,20 @@ export async function POST(req: NextRequest) {
     ? "Include a full answer sheet / mark scheme at the end, clearly separated from the pupil-facing content."
     : "Do NOT include answers — this is a student-only version.";
 
+  const abilityNote = ABILITY_LABELS[abilityLevel] ?? ABILITY_LABELS["EXS"];
+
   const userPrompt = `Create a high-quality, classroom-ready homework task for the following:
 
 - Curriculum: ${curriculum}
 - Year Group: ${yearGroup}
 - Subject: ${subject}
 - Learning Objective: ${learningObjective}
+- Differentiation level: ${abilityNote}
 - Homework Type: ${homeworkType}
 - Length / Effort Level: ${length}
-- Include Answers: ${includeAnswers ? "Yes" : "No"}${lessonContentSection}${additionalSection}
+- Include Answers: ${includeAnswers ? "Yes" : "No"}${questionTypesSection}${lessonContentSection}${imageSection}${additionalSection}
 
-This homework is for use in a UK school. It must be precisely pitched for ${yearGroup} students and directly address the learning objective. The task should be sized to match the effort level (${length}).
+This homework is for use in a UK school. It must be precisely pitched for ${yearGroup} students at ${abilityLevel} level and directly address the learning objective. The task should be sized to match the effort level (${length}).
 
 Structure the homework using markdown as follows:
 
@@ -88,7 +118,7 @@ List 4–6 key terms or concepts the student should know to complete this task. 
 
 ## Task
 
-Generate the main homework task appropriate for the homework type (${homeworkType}). Apply differentiation where appropriate:
+Generate the main homework task appropriate for the homework type (${homeworkType})${questionTypes?.length ? ` using these question types: ${questionTypes.map((t) => { const c = questionCounts?.[t]; return c ? `${t} ×${c}` : t; }).join(", ")}` : ""}. Apply differentiation in line with ${abilityLevel}:
 
 - **Support** (for students who need extra scaffolding): a simplified version, sentence starters, or a word bank
 - **Core** (standard expectation for ${yearGroup}): the main task
@@ -114,6 +144,20 @@ Provide 3–5 bullet points the student can tick off when they have completed th
 
 ${answerSection}`;
 
+  const messageContent: Anthropic.MessageParam["content"] = imageBase64 && imageMediaType
+    ? [
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: imageMediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+            data: imageBase64,
+          },
+        },
+        { type: "text", text: userPrompt },
+      ]
+    : userPrompt;
+
   const encoder = new TextEncoder();
   const anthropicStream = client.messages.stream({
     model: "claude-sonnet-4-6",
@@ -121,7 +165,7 @@ ${answerSection}`;
     system: buildSystem(
       `You are an expert UK teacher and curriculum designer with extensive experience creating high-quality homework tasks for KS1 through KS5. You understand how to pitch work accurately for different year groups, apply Bloom's Taxonomy, and scaffold without reducing challenge. You produce homework that is purposeful, clearly structured, and appropriately differentiated. You write in professional UK English. Never use emojis. When labelling sub-questions use plain text: (a), (b), (c) — never use the © symbol.`
     ),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [{ role: "user", content: messageContent }],
   });
 
   const readable = new ReadableStream({

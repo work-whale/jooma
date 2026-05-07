@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import {
+  CurriculumField,
+  LearningWalkDateField,
+  LearningWalkClassesField,
+  LearningWalkFocusField,
+  LearningWalkOptionsField,
+  TopicField,
+} from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-import { CURRICULA } from "@/app/lib/formOptions";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
 
 const REFINE_CHIPS = [
@@ -16,11 +25,110 @@ const REFINE_CHIPS = [
   "Include reference to...",
 ];
 
-const selectClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
+const FOCUS_CATEGORIES = [
+  {
+    label: "Quality of Education",
+    items: [
+      "Curriculum intent and sequencing across subjects",
+      "Quality of teaching, explanation and modelling",
+      "Pupil understanding, retention and recall",
+      "Literacy and reading across the curriculum",
+      "Use of assessment to inform teaching",
+    ],
+  },
+  {
+    label: "Behaviour and Attitudes",
+    items: [
+      "Pupil conduct in lessons and around school",
+      "On-task engagement and focus during independent work",
+      "Attitudes to learning and resilience",
+      "Pupil-teacher relationships and classroom climate",
+      "Consistency in applying behaviour expectations",
+    ],
+  },
+  {
+    label: "Personal Development",
+    items: [
+      "Cultural capital and enrichment opportunities",
+      "Student leadership and pupil voice",
+      "PSHE and character education delivery",
+      "Extracurricular and wider school life",
+    ],
+  },
+  {
+    label: "SEND and Inclusion",
+    items: [
+      "Adaptive teaching strategies in practice",
+      "Deployment and impact of support staff",
+      "Accessibility of resources and tasks",
+      "Progress and engagement of pupils with SEND",
+    ],
+  },
+  {
+    label: "Early Years (EYFS)",
+    items: [
+      "Child-initiated learning and independence",
+      "Quality of adult interactions during provision",
+      "Learning environment indoors and outdoors",
+      "Assessment and next steps in practice",
+    ],
+  },
+  {
+    label: "Safeguarding and Welfare",
+    items: [
+      "Safeguarding culture visible in classrooms",
+      "Pupil wellbeing and pastoral visibility",
+      "Pupils' sense of safety and belonging",
+    ],
+  },
+];
 
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
+function LearningWalkFocusPanel({ onSelect }: { onSelect: (v: string) => void }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(open === -1 ? null : -1)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+      >
+        Focus categories
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open !== null ? "rotate-180" : ""}`} />
+      </button>
+      {open !== null && (
+        <div className="border-t border-gray-100">
+          {FOCUS_CATEGORIES.map((cat, i) => (
+            <div key={cat.label} className="border-b border-gray-100 last:border-0">
+              <button
+                type="button"
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {cat.label}
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open === i ? "rotate-180" : ""}`} />
+              </button>
+              {open === i && (
+                <ul className="pb-2 px-4 space-y-1">
+                  {cat.items.map((item) => (
+                    <li key={item}>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(item)}
+                        className="w-full text-left text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition-colors"
+                      >
+                        {item}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function LearningWalkReportForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
@@ -73,119 +181,87 @@ export default function LearningWalkReportForm({ sidebar }: { sidebar: React.Rea
     }
   };
 
+  const handleRefine = async (instruction: string) => {
+    if (!result) return;
+    setIsRefining(true);
+    try {
+      const res = await fetch("/api/modify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentContent: result, instruction }),
+      });
+      if (!res.ok) throw new Error("Refinement failed");
+      let refined = "";
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        refined += decoder.decode(value, { stream: true });
+        setResult(refined);
+      }
+    } catch {
+      // result stays as-is
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1 space-y-4">
+          {sidebar}
+          <LearningWalkFocusPanel onSelect={setFocus} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-                <select value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={selectClass}>
-                  <option value="" disabled>Select curriculum</option>
-                  {CURRICULA.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Date</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
+              <CurriculumField value={curriculum} onChange={setCurriculum} />
+              <LearningWalkDateField value={date} onChange={setDate} />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Classes visited <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={classesVisited}
-                onChange={(e) => setClassesVisited(e.target.value)}
-                placeholder="e.g. 3L, 4B, Year 6"
-                className={inputClass}
-              />
-            </div>
+            <LearningWalkClassesField value={classesVisited} onChange={setClassesVisited} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Focus of learning walk <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={focus}
-                onChange={(e) => setFocus(e.target.value)}
-                placeholder="e.g. students' progress, teachers' subject knowledge, behaviour, SEND & adaptation"
-                rows={2}
-                className={`${inputClass} resize-none`}
-              />
-            </div>
+            <LearningWalkFocusField value={focus} onChange={setFocus} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Observed strengths</label>
-              <textarea
-                value={strengths}
-                onChange={(e) => setStrengths(e.target.value)}
-                placeholder="e.g. Direct instruction by teachers helped students' progress; work was appropriately pitched to support students at different levels; positive relationships between staff and pupils were evident throughout"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="Observed strengths"
+              value={strengths}
+              onChange={setStrengths}
+              rows={4}
+              placeholders={[
+                "e.g. Direct instruction helped students' progress; work was appropriately pitched to different levels",
+                "e.g. Positive relationships between staff and pupils were evident throughout",
+                "e.g. Strong use of questioning to check understanding across all classes visited",
+                "e.g. Consistent application of the behaviour policy and calm, purposeful classrooms",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Areas for development</label>
-              <textarea
-                value={areasForDevelopment}
-                onChange={(e) => setAreasForDevelopment(e.target.value)}
-                placeholder="e.g. Some students were demonstrating off-task behaviour during independent work; displays and word mats were underused to support students' progress; opportunities for peer collaboration were missed"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="Areas for development"
+              value={areasForDevelopment}
+              onChange={setAreasForDevelopment}
+              rows={4}
+              placeholders={[
+                "e.g. Some students demonstrated off-task behaviour during independent work",
+                "e.g. Displays and word mats were underused to support students' progress",
+                "e.g. Opportunities for peer collaboration were missed in several lessons",
+                "e.g. Differentiation for higher-attaining pupils was inconsistent across classes",
+              ]}
+            />
 
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-800">Additional options</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeRecommendations}
-                    onChange={(e) => setIncludeRecommendations(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Suggest professional recommendations</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeNextSteps}
-                    onChange={(e) => setIncludeNextSteps(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Include next steps and timeline</span>
-                </label>
-              </div>
-            </div>
+            <LearningWalkOptionsField
+              includeRecommendations={includeRecommendations}
+              includeNextSteps={includeNextSteps}
+              onChangeRecommendations={setIncludeRecommendations}
+              onChangeNextSteps={setIncludeNextSteps}
+            />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -205,16 +281,12 @@ export default function LearningWalkReportForm({ sidebar }: { sidebar: React.Rea
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -240,30 +312,7 @@ export default function LearningWalkReportForm({ sidebar }: { sidebar: React.Rea
         <RefinePanel
           isRefining={isRefining}
           chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
-            } catch {
-              // silently fail — result stays as-is
-            } finally {
-              setIsRefining(false);
-            }
-          }}
+          onRefine={handleRefine}
         />
       )}
     </div>

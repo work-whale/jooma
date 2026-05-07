@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Sparkles, Minus, Plus, Copy, Check, ChevronDown } from "lucide-react";
+import { Loader2, Copy, Check, ChevronDown } from "lucide-react";
+import { TopicField, LessonCountField, AdditionalContextField } from "@/app/components/fields";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 interface SlideData {
@@ -572,9 +575,6 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
   const showResults = slides !== null && (slides.length > 0 || isGenerating);
   const expectedCount = slideCount;
 
@@ -586,52 +586,38 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Topic</label>
-              <textarea
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. Adaptive teaching strategies for mixed-ability classrooms"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              value={topic}
+              onChange={setTopic}
+              placeholders={[
+                "e.g. Adaptive teaching strategies for mixed-ability classrooms",
+                "e.g. Metacognition and self-regulated learning",
+                "e.g. Effective feedback and marking strategies",
+                "e.g. Supporting SEND pupils in mainstream classrooms",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Number of slides</label>
-              <div className="flex items-center gap-0">
-                <input
-                  type="number"
-                  min={2}
-                  max={20}
-                  value={slideCount}
-                  onChange={(e) => setSlideCount(Number(e.target.value))}
-                  onBlur={() => setSlideCount(Math.min(20, Math.max(2, slideCount || 4)))}
-                  className="w-20 border border-gray-200 rounded-l-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent text-center"
-                />
-                <button type="button" onClick={() => setSlideCount((n) => Math.max(2, n - 1))} disabled={slideCount <= 2}
-                  className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <button type="button" onClick={() => setSlideCount((n) => Math.min(20, n + 1))} disabled={slideCount >= 20}
-                  className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+            <LessonCountField
+              value={slideCount}
+              onChange={setSlideCount}
+              label="Number of slides"
+              unit="slides"
+              min={2}
+              max={20}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Additional focus areas</label>
-              <textarea
-                value={additionalFocus}
-                onChange={(e) => setAdditionalFocus(e.target.value)}
-                placeholder="e.g. Include practical activities, focus on KS3 application, add time for group reflection"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <AdditionalContextField
+              value={additionalFocus}
+              onChange={setAdditionalFocus}
+              label="Additional focus areas"
+              rows={3}
+              placeholders={[
+                "e.g. Include practical activities, focus on KS3 application",
+                "e.g. Add time for group reflection and discussion",
+                "e.g. Reference the Teachers' Standards throughout",
+                "e.g. Include a slide on common misconceptions",
+              ]}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">
@@ -672,10 +658,7 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setConfirmingReset(true)} disabled={!slides}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50">
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!slides} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -690,13 +673,12 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button type="button" onClick={handleGenerate}
+              <GenerateButton
+                onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{slides ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={slides !== null}
+              />
             </div>
           </Card>
         </div>

@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles, Minus, Plus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import {
+  MeetingPurposeField,
+  MeetingDurationField,
+  MeetingParticipantsField,
+  MeetingTopicsField,
+  MeetingOptionsField,
+} from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 const REFINE_CHIPS = [
@@ -16,8 +25,113 @@ const REFINE_CHIPS = [
   "Make the meeting shorter",
 ];
 
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
+const MEETING_CATEGORIES = [
+  {
+    label: "Staff Meetings",
+    items: [
+      "Whole-staff weekly briefing",
+      "End-of-term staff review",
+      "New staff induction session",
+      "Whole-school CPD and professional development",
+      "Staff wellbeing and workload review",
+    ],
+  },
+  {
+    label: "Curriculum and Teaching",
+    items: [
+      "Heads of department / subject leads meeting",
+      "Curriculum planning and sequencing session",
+      "Assessment data review",
+      "Marking moderation and standardisation",
+      "Lesson study and professional learning community",
+    ],
+  },
+  {
+    label: "Pupil Progress and Welfare",
+    items: [
+      "Pupil progress review",
+      "SEND review and provision mapping",
+      "Attendance and punctuality review",
+      "Safeguarding and welfare update",
+      "Looked-after children review",
+    ],
+  },
+  {
+    label: "Pastoral and Behaviour",
+    items: [
+      "Tutor team / form group review",
+      "Behaviour and exclusions review",
+      "Year group pastoral team meeting",
+      "Anti-bullying and student conduct review",
+    ],
+  },
+  {
+    label: "Leadership and Strategy",
+    items: [
+      "Senior leadership team (SLT) meeting",
+      "School improvement planning session",
+      "Budget and resources review",
+      "Governors / governing body meeting",
+      "Ofsted preparation and self-evaluation",
+    ],
+  },
+  {
+    label: "Transitions",
+    items: [
+      "Year 6 to Year 7 transition planning",
+      "EYFS to KS1 transition meeting",
+      "Sixth form entry and options evening planning",
+      "New intake induction planning",
+    ],
+  },
+];
+
+function MeetingTypesPanel({ onSelect }: { onSelect: (v: string) => void }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(open === -1 ? null : -1)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
+      >
+        Meeting types
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open !== null ? "rotate-180" : ""}`} />
+      </button>
+      {open !== null && (
+        <div className="border-t border-gray-100">
+          {MEETING_CATEGORIES.map((cat, i) => (
+            <div key={cat.label} className="border-b border-gray-100 last:border-0">
+              <button
+                type="button"
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {cat.label}
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${open === i ? "rotate-180" : ""}`} />
+              </button>
+              {open === i && (
+                <ul className="pb-2 px-4 space-y-1">
+                  {cat.items.map((item) => (
+                    <li key={item}>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(item)}
+                        className="w-full text-left text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition-colors"
+                      >
+                        {item}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [purpose, setPurpose] = useState("");
@@ -38,11 +152,6 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
   const canGenerate = purpose.trim() && participants.trim() && !isNaN(durationNum) && durationNum >= 5 && durationNum <= 480;
   const formSnapshot = JSON.stringify({ purpose, duration, participants, topics, includeIcebreaker, includeActionItems });
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
-
-  const adjustDuration = (delta: number) => {
-    const current = parseInt(duration, 10) || 60;
-    setDuration(String(Math.min(480, Math.max(5, current + delta))));
-  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -74,114 +183,61 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
     }
   };
 
+  const handleRefine = async (instruction: string) => {
+    if (!result) return;
+    setIsRefining(true);
+    try {
+      const res = await fetch("/api/modify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentContent: result, instruction }),
+      });
+      if (!res.ok) throw new Error("Refinement failed");
+      let refined = "";
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        refined += decoder.decode(value, { stream: true });
+        setResult(refined);
+      }
+    } catch {
+      // result stays as-is
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1 space-y-4">
+          {sidebar}
+          <MeetingTypesPanel onSelect={setPurpose} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Meeting purpose</label>
-              <textarea
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                placeholder="e.g. End-of-term staff review, Year 6 transition planning, whole-school behaviour policy update"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <MeetingPurposeField value={purpose} onChange={setPurpose} />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Meeting duration (minutes)</label>
-                <div className="flex items-center gap-0">
-                  <input
-                    type="number"
-                    min={5}
-                    max={480}
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    onBlur={() => {
-                      const n = parseInt(duration, 10);
-                      setDuration(String(isNaN(n) ? 60 : Math.min(480, Math.max(5, n))));
-                    }}
-                    className="w-20 border border-gray-200 rounded-l-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent text-center"
-                  />
-                  <button type="button" onClick={() => adjustDuration(-5)} disabled={durationNum <= 5} className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <button type="button" onClick={() => adjustDuration(5)} disabled={durationNum >= 480} className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Participants</label>
-                <input
-                  type="text"
-                  value={participants}
-                  onChange={(e) => setParticipants(e.target.value)}
-                  placeholder="e.g. Heads of department, whole staff, Year 6 team"
-                  className={inputClass}
-                />
-              </div>
+              <MeetingDurationField value={duration} onChange={setDuration} />
+              <MeetingParticipantsField value={participants} onChange={setParticipants} />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Topics to cover <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={topics}
-                onChange={(e) => setTopics(e.target.value)}
-                placeholder="e.g. Assessment data review, upcoming parents' evening, changes to the SEND referral process"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <MeetingTopicsField value={topics} onChange={setTopics} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-800">Include icebreaker</p>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeIcebreaker}
-                    onChange={(e) => setIncludeIcebreaker(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-800">Include action items section</p>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={includeActionItems}
-                    onChange={(e) => setIncludeActionItems(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-gray-900"
-                  />
-                  <span className="text-sm text-gray-700">Yes</span>
-                </label>
-              </div>
-            </div>
+            <MeetingOptionsField
+              includeIcebreaker={includeIcebreaker}
+              includeActionItems={includeActionItems}
+              onChangeIcebreaker={setIncludeIcebreaker}
+              onChangeActionItems={setIncludeActionItems}
+            />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -200,16 +256,12 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -235,30 +287,7 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
         <RefinePanel
           isRefining={isRefining}
           chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
-            } catch {
-              // silently fail
-            } finally {
-              setIsRefining(false);
-            }
-          }}
+          onRefine={handleRefine}
         />
       )}
     </div>

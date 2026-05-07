@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  CurriculumField,
+  EyfsObjectiveField,
+} from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-import { CURRICULA } from "@/app/lib/formOptions";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
 
 const REFINE_CHIPS = [
@@ -17,12 +21,6 @@ const REFINE_CHIPS = [
   "Extend the timeline",
   "Focus more on staff development",
 ];
-
-const selectClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
@@ -69,6 +67,32 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
     }
   };
 
+  const handleRefine = async (instruction: string) => {
+    if (!result) return;
+    setIsRefining(true);
+    try {
+      const res = await fetch("/api/modify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentContent: result, instruction }),
+      });
+      if (!res.ok) throw new Error("Refinement failed");
+      let refined = "";
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        refined += decoder.decode(value, { stream: true });
+        setResult(refined);
+      }
+    } catch {
+      // result stays as-is
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -77,37 +101,12 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-              <select value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={selectClass}>
-                <option value="" disabled>Select curriculum</option>
-                {CURRICULA.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
+            <CurriculumField value={curriculum} onChange={setCurriculum} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">EYFS Objective</label>
-              <textarea
-                value={objective}
-                onChange={(e) => setObjective(e.target.value)}
-                placeholder="e.g. Improve opportunities for child-initiated outdoor learning across all 7 areas of the EYFS curriculum"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <EyfsObjectiveField value={objective} onChange={setObjective} />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -121,16 +120,12 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -156,30 +151,7 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
         <RefinePanel
           isRefining={isRefining}
           chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
-            } catch {
-              // silently fail — result stays as-is
-            } finally {
-              setIsRefining(false);
-            }
-          }}
+          onRefine={handleRefine}
         />
       )}
     </div>

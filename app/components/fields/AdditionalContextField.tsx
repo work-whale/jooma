@@ -15,18 +15,41 @@ interface Props {
   value: string;
   onChange: (v: string) => void;
   placeholders?: string[];
+  label?: string;
+  rows?: number;
+  labelSlot?: React.ReactNode;
 }
 
-export default function AdditionalContextField({ value, onChange, placeholders = DEFAULT_PLACEHOLDERS }: Props) {
+export default function AdditionalContextField({
+  value,
+  onChange,
+  placeholders = DEFAULT_PLACEHOLDERS,
+  label = "Additional context",
+  rows,
+  labelSlot,
+}: Props) {
   const placeholder = useTypingPlaceholder(placeholders);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">
-        Additional context <span className="text-xs font-normal text-gray-400">(optional)</span>
-      </label>
+      <div className="flex items-center justify-between">
+        <label className="block text-sm font-semibold text-gray-800">
+          {label} <span className="text-xs font-normal text-gray-400">(optional)</span>
+        </label>
+        {labelSlot}
+      </div>
       <div className="relative">
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
-        {!value && <PlaceholderOverlay text={placeholder} />}
+        {rows ? (
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder=""
+            rows={rows}
+            className={`${inputClass} resize-none`}
+          />
+        ) : (
+          <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
+        )}
+        {!value && <PlaceholderOverlay text={placeholder} area={!!rows} />}
       </div>
     </div>
   );

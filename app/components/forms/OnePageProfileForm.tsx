@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  PupilNameField,
+  TopicField,
+  AdditionalContextField,
+  IncludeAdditionalSupportField,
+} from "@/app/components/fields";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ResultPanel from "@/app/components/ResultPanel";
+import RefinePanel from "@/app/components/RefinePanel";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 
 const REFINE_CHIPS = [
@@ -34,16 +42,12 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
   const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const [refineInstruction, setRefineInstruction] = useState("");
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
   const canGenerate = curriculum.trim() && resolvedYearGroup.trim() && name.trim() && likes.trim() && supportNeeds.trim();
   const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, name, likes, happy, supportNeeds, supportStyle, hopes, interventionGroups, outsideAgency, includeAdditionalSupport });
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
-
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
   const streamResponse = async (body: object, onChunk: (c: string) => void) => {
     const res = await fetch("/api/one-page-profile", {
@@ -95,7 +99,6 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
       // silently ignore
     } finally {
       setIsRefining(false);
-      setRefineInstruction("");
     }
   };
 
@@ -117,87 +120,101 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
               yearGroupNote
             />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Name <span className="text-gray-400 font-normal">(first name only)</span></label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Alex"
-                className={`${inputClass} resize-none`}
-              />
-            </div>
+            <PupilNameField value={name} onChange={setName} />
 
-            {[
-              { label: "What people like and admire about the student", value: likes, onChange: setLikes, placeholder: "e.g. Kind and caring, always willing to help others, great sense of humour, works hard in practical lessons" },
-              { label: "What makes the student happy", value: happy, onChange: setHappy, placeholder: "e.g. Working with friends, art projects, football, being given responsibility, using a computer" },
-              { label: "What the student needs support with", value: supportNeeds, onChange: setSupportNeeds, placeholder: "e.g. Managing transitions, processing written instructions, staying focused during long tasks" },
-              { label: "How the student likes to be supported", value: supportStyle, onChange: setSupportStyle, placeholder: "e.g. Prefers quiet 1:1 check-ins, likes verbal instructions broken into steps, responds well to visual prompts" },
-              { label: "The student's hopes and wishes for the future", value: hopes, onChange: setHopes, placeholder: "e.g. Would like to work with animals, wants to improve reading, hopes to make more friends" },
-            ].map(({ label, value, onChange, placeholder }) => (
-              <div key={label} className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">{label}</label>
-                <textarea
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  placeholder={placeholder}
-                  rows={3}
-                  className={`${inputClass} resize-none`}
-                />
-                <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-              </div>
-            ))}
+            <TopicField
+              label="What people like and admire about the student"
+              value={likes}
+              onChange={setLikes}
+              placeholders={[
+                "e.g. Kind and caring, always willing to help others",
+                "e.g. Great sense of humour, works hard in practical lessons",
+                "e.g. Creative thinker, brilliant with younger children",
+                "e.g. Enthusiastic about science, very resilient",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Intervention groups <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={interventionGroups}
-                onChange={(e) => setInterventionGroups(e.target.value)}
-                placeholder="e.g. Reading intervention, Speech and Language group, Social Skills group"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="What makes the student happy"
+              value={happy}
+              onChange={setHappy}
+              placeholders={[
+                "e.g. Working with friends, art projects, football",
+                "e.g. Being given responsibility, using a computer",
+                "e.g. Listening to music, hands-on activities",
+                "e.g. Reading, animals, spending time outdoors",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
-                Outside agency input <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={outsideAgency}
-                onChange={(e) => setOutsideAgency(e.target.value)}
-                placeholder="e.g. CAMHS, Educational Psychologist, Speech and Language Therapy, Occupational Therapy"
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="What the student needs support with"
+              value={supportNeeds}
+              onChange={setSupportNeeds}
+              placeholders={[
+                "e.g. Managing transitions, processing written instructions",
+                "e.g. Staying focused during long tasks, asking for help",
+                "e.g. Working in busy or noisy environments",
+                "e.g. Organising work and managing time in lessons",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Include additional support suggestions</label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={includeAdditionalSupport}
-                  onChange={(e) => setIncludeAdditionalSupport(e.target.checked)}
-                  className="accent-gray-900 w-4 h-4"
-                />
-                <span className="text-sm text-gray-700">Include additional support suggestions</span>
-              </label>
-            </div>
+            <TopicField
+              label="How the student likes to be supported"
+              value={supportStyle}
+              onChange={setSupportStyle}
+              placeholders={[
+                "e.g. Prefers quiet 1:1 check-ins, likes verbal instructions broken into steps",
+                "e.g. Responds well to visual prompts and advance warnings of change",
+                "e.g. Likes to sit near the front, away from distractions",
+                "e.g. Benefits from a calm, predictable routine",
+              ]}
+            />
+
+            <TopicField
+              label="The student's hopes and wishes for the future"
+              value={hopes}
+              onChange={setHopes}
+              placeholders={[
+                "e.g. Would like to work with animals, wants to improve reading",
+                "e.g. Hopes to make more friends, wants to feel more confident",
+                "e.g. Interested in becoming an artist or working with computers",
+                "e.g. Wants to be able to manage independently in secondary school",
+              ]}
+            />
+
+            <AdditionalContextField
+              label="Intervention groups"
+              value={interventionGroups}
+              onChange={setInterventionGroups}
+              rows={3}
+              placeholders={[
+                "e.g. Reading intervention, Speech and Language group",
+                "e.g. Social Skills group, Maths catch-up programme",
+                "e.g. Nurture group, Emotional Literacy Support",
+                "e.g. Fine motor skills group, Phonics intervention",
+              ]}
+            />
+
+            <AdditionalContextField
+              label="Outside agency input"
+              value={outsideAgency}
+              onChange={setOutsideAgency}
+              rows={3}
+              placeholders={[
+                "e.g. CAMHS, Educational Psychologist",
+                "e.g. Speech and Language Therapy, Occupational Therapy",
+                "e.g. Visual impairment team, Hearing support service",
+                "e.g. Early Help, Children and Families team",
+              ]}
+            />
+
+            <IncludeAdditionalSupportField
+              value={includeAdditionalSupport}
+              onChange={setIncludeAdditionalSupport}
+            />
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmingReset(true)}
-                disabled={!result}
-                className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -211,16 +228,12 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>
-                  : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
@@ -243,37 +256,11 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
       />
 
       {result && !isGenerating && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
-          <h3 className="text-base font-semibold text-gray-900">Want to refine your results?</h3>
-          <p className="text-sm font-medium text-gray-600">What would you like to change?</p>
-          <textarea
-            value={refineInstruction}
-            onChange={(e) => setRefineInstruction(e.target.value)}
-            placeholder="Type changes here"
-            rows={2}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent resize-none bg-white"
-          />
-          <div className="flex flex-wrap gap-2">
-            {REFINE_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setRefineInstruction(chip)}
-                className="text-xs text-gray-600 border border-gray-200 rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => handleRefine(refineInstruction)}
-            disabled={isRefining || !refineInstruction.trim()}
-            className="bg-[#1a1a1a] text-white py-2 px-6 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-          >
-            {isRefining ? <><Loader2 className="w-4 h-4 animate-spin" />Refining...</> : "Refine results"}
-          </button>
-        </div>
+        <RefinePanel
+          isRefining={isRefining}
+          chips={REFINE_CHIPS}
+          onRefine={handleRefine}
+        />
       )}
     </div>
   );

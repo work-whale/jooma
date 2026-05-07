@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lesson Lift",
+  title: "Jooma",
   description: "AI-powered tools built for teachers",
 };
 

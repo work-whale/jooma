@@ -5,6 +5,7 @@ interface Props {
   onChange: (v: number) => void;
   min?: number;
   max?: number;
+  step?: number;
   label?: string;
   unit?: string;
 }
@@ -14,11 +15,12 @@ export default function LessonCountField({
   onChange,
   min = 1,
   max = 20,
+  step = 1,
   label = "Number of lessons",
   unit = "lessons",
 }: Props) {
-  const dec = () => onChange(Math.max(min, value - 1));
-  const inc = () => onChange(Math.min(max, value + 1));
+  const dec = () => onChange(Math.max(min, value - step));
+  const inc = () => onChange(Math.min(max, value + step));
 
   return (
     <div className="space-y-2">

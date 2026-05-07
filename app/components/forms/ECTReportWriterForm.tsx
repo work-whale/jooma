@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { CURRICULA } from "@/app/lib/formOptions";
-import { Loader2, Sparkles } from "lucide-react";
+import {
+  CurriculumField,
+  EctNameField,
+  SubjectField,
+  TopicField,
+  IncludePdpField,
+} from "@/app/components/fields";
 import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
+import GenerateButton from "@/app/components/ui/GenerateButton";
+import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 const REFINE_CHIPS = [
@@ -15,9 +22,6 @@ const REFINE_CHIPS = [
   "Make the language more formal",
   "Translate to French",
 ];
-
-const inputClass =
-  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
 export default function ECTReportWriterForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [curriculum, setCurriculum] = useState("2014 National Curriculum");
@@ -65,8 +69,7 @@ export default function ECTReportWriterForm({ sidebar }: { sidebar: React.ReactN
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
+        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }).replace(/©/g, "(c)"));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -111,78 +114,42 @@ export default function ECTReportWriterForm({ sidebar }: { sidebar: React.ReactN
           <Card className="space-y-6">
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-                <select value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={inputClass}>
-                  {CURRICULA.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">ECT name</label>
-                <input
-                  type="text"
-                  value={ectName}
-                  onChange={(e) => setEctName(e.target.value)}
-                  placeholder="e.g. Sarah Johnson"
-                  className={inputClass}
-                />
-              </div>
+              <CurriculumField value={curriculum} onChange={setCurriculum} />
+              <EctNameField value={ectName} onChange={setEctName} />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Subject <span className="text-gray-400 font-normal">(optional)</span></label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. Mathematics"
-                className={inputClass}
-              />
-            </div>
+            <SubjectField value={subject} onChange={setSubject} />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Strengths</label>
-              <textarea
-                value={strengths}
-                onChange={(e) => setStrengths(e.target.value)}
-                placeholder="e.g. Strong subject knowledge in Mathematics, effective use of assessment to inform planning, positive classroom environment"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="Strengths"
+              value={strengths}
+              onChange={setStrengths}
+              rows={4}
+              placeholders={[
+                "e.g. Strong subject knowledge, effective use of assessment to inform planning",
+                "e.g. Positive classroom environment, pupils respond well to instructions",
+                "e.g. Clear explanations, good use of questioning to check understanding",
+                "e.g. Builds strong relationships with pupils and parents",
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Areas for development</label>
-              <textarea
-                value={areasForDevelopment}
-                onChange={(e) => setAreasForDevelopment(e.target.value)}
-                placeholder="e.g. Differentiation strategies for SEND pupils, use of formative assessment in Chemistry lessons"
-                rows={4}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="text-xs text-gray-400">100,000 character maximum input text</p>
-            </div>
+            <TopicField
+              label="Areas for development"
+              value={areasForDevelopment}
+              onChange={setAreasForDevelopment}
+              rows={4}
+              placeholders={[
+                "e.g. Differentiation strategies for SEND pupils",
+                "e.g. Use of formative assessment during lessons",
+                "e.g. Managing low-level disruption more consistently",
+                "e.g. Extending higher-attaining pupils with challenge tasks",
+              ]}
+            />
 
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">Additional sections</label>
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={includePDP}
-                  onChange={(e) => setIncludePDP(e.target.checked)}
-                  className="accent-gray-900 w-4 h-4"
-                />
-                Include professional development plan
-              </label>
-            </div>
+            <IncludePdpField value={includePDP} onChange={setIncludePDP} />
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => setConfirmingReset(true)} disabled={!result} className="border border-gray-200 text-gray-600 py-3 px-5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50">
-                Reset
-              </button>
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -195,14 +162,12 @@ export default function ECTReportWriterForm({ sidebar }: { sidebar: React.ReactN
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <button
-                type="button"
+              <GenerateButton
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                className="flex-1 bg-[#1a1a1a] text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-gray-800 active:bg-gray-900 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</> : <><Sparkles className="w-4 h-4" />{result ? "Regenerate" : "Generate"}</>}
-              </button>
+                isGenerating={isGenerating}
+                hasResult={result !== null}
+              />
             </div>
           </Card>
         </div>
