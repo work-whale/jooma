@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SlideData {
@@ -30,7 +30,7 @@ interface RefineBody {
 
 type RequestBody = GenerateBody | RefineBody;
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildGeneratePrompt(body: GenerateBody): string {
   const imageLine = body.includeImageSuggestions
@@ -112,21 +112,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const anthropicStream = client.messages.stream({
-      model: "claude-sonnet-4-6",
+    const encoder = new TextEncoder();
+    const openaiStream = await client.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 8192,
-      system: buildSystem("You are an expert UK CPD facilitator, school leader, and teacher educator with extensive experience designing and delivering professional development for teachers across all phases. You understand what makes CPD effective — it must be specific, evidence-informed, relevant to classroom practice, and actionable. Your slideshows are substantive and authoritative, referencing current educational research, the Teachers' Standards, and DfE or Ofsted guidance where appropriate. Output each slide as a single JSON object on its own line with no other text. No markdown, no code fences, no arrays, no separators. One valid JSON object per line only."),
-      messages: [{ role: "user", content: buildGeneratePrompt(body) }],
+      messages: [
+        { role: "system", content: buildSystem("You are an expert UK CPD facilitator, school leader, and teacher educator with extensive experience designing and delivering professional development for teachers across all phases. You understand what makes CPD effective — it must be specific, evidence-informed, relevant to classroom practice, and actionable. Your slideshows are substantive and authoritative, referencing current educational research, the Teachers' Standards, and DfE or Ofsted guidance where appropriate. Output each slide as a single JSON object on its own line with no other text. No markdown, no code fences, no arrays, no separators. One valid JSON object per line only.") },
+        { role: "user", content: buildGeneratePrompt(body) },
+      ],
+      stream: true,
     });
 
-    const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of anthropicStream) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              controller.enqueue(encoder.encode(event.delta.text));
-            }
+          for await (const chunk of openaiStream) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) controller.enqueue(encoder.encode(text));
           }
         } catch (err) {
           controller.error(err);
@@ -135,7 +137,7 @@ export async function POST(req: NextRequest) {
         }
       },
       cancel() {
-        anthropicStream.abort();
+        openaiStream.controller.abort();
       },
     });
 
@@ -154,19 +156,22 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const message = await client.messages.create({
-        model: "claude-sonnet-4-6",
+      const message = await client.chat.completions.create({
+        model: "gpt-4o",
         max_tokens: 8192,
-        system: buildSystem("You are an expert UK CPD facilitator editing an existing teacher professional development slideshow. Apply the requested changes precisely and consistently while maintaining the quality, accuracy, and professional tone of the original content. Return valid JSON exactly as requested — no additional text, markdown, or code fences."),
-        messages: [{ role: "user", content: buildRefinePrompt(body) }],
+        messages: [
+          { role: "system", content: buildSystem("You are an expert UK CPD facilitator editing an existing teacher professional development slideshow. Apply the requested changes precisely and consistently while maintaining the quality, accuracy, and professional tone of the original content. Return valid JSON exactly as requested — no additional text, markdown, or code fences.") },
+          { role: "user", content: buildRefinePrompt(body) },
+        ],
+        stream: false,
       });
 
-      const textBlock = message.content.find((b) => b.type === "text");
-      if (!textBlock || textBlock.type !== "text") {
+      const text = message.choices[0]?.message?.content ?? "";
+      if (!text) {
         return NextResponse.json({ error: "No response from AI" }, { status: 500 });
       }
 
-      const slides = parseSlides(textBlock.text);
+      const slides = parseSlides(text);
       return NextResponse.json({ slides });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to refine slideshow";

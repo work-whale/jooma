@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildPrompt(body: {
   curriculum: string;
@@ -112,22 +112,24 @@ Return the full updated profile in the same markdown format. No preamble.`;
 }
 
 async function streamText(system: string, userContent: string) {
-  const stream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system,
-    messages: [{ role: "user", content: userContent }],
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: userContent },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   return new Response(
     new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of stream) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              controller.enqueue(encoder.encode(event.delta.text));
-            }
+          for await (const chunk of openaiStream) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) controller.enqueue(encoder.encode(text));
           }
         } catch (err) {
           controller.error(err);
@@ -135,7 +137,7 @@ async function streamText(system: string, userContent: string) {
           controller.close();
         }
       },
-      cancel() { stream.abort(); },
+      cancel() { openaiStream.controller.abort(); },
     }),
     { headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff" } },
   );

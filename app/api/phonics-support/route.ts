@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface PhonicsSupportRequest {
@@ -8,7 +8,7 @@ export interface PhonicsSupportRequest {
   grapheme: string;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: PhonicsSupportRequest = await req.json();
@@ -243,20 +243,22 @@ Rules:
 - Do not add any text before the main title or after the last assessment idea.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK phonics specialist, Reading Lead, and early years literacy teacher with in-depth knowledge of systematic synthetic phonics, the DfE's phonics guidance, the National Curriculum for English at KS1, and validated SSP programmes including Letters and Sounds and widely used systematic programmes. Your grapheme-phoneme knowledge is phonetically precise and accurate. Your word lists contain only correctly spelled, real English words (except designated pseudo-word sections). Your decodable texts are coherent, engaging, and genuinely aligned with the GPC being taught. Your teaching activities are practical, evidence-informed, and immediately usable in a UK primary classroom. You write in professional UK English."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK phonics specialist, Reading Lead, and early years literacy teacher with in-depth knowledge of systematic synthetic phonics, the DfE's phonics guidance, the National Curriculum for English at KS1, and validated SSP programmes including Letters and Sounds and widely used systematic programmes. Your grapheme-phoneme knowledge is phonetically precise and accurate. Your word lists contain only correctly spelled, real English words (except designated pseudo-word sections). Your decodable texts are coherent, engaging, and genuinely aligned with the GPC being taught. Your teaching activities are practical, evidence-informed, and immediately usable in a UK primary classroom. You write in professional UK English.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -265,7 +267,7 @@ Rules:
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface GenerateRequest {
@@ -16,7 +16,7 @@ export interface GenerateRequest {
   includeAnswerKey?: boolean;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: GenerateRequest = await req.json();
@@ -111,20 +111,22 @@ PASSAGE:
 ${ownText}`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem("You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and KS1–KS4 reading assessment frameworks. You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills — from retrieval and inference through to evaluation and critical response. Your passages are well-crafted, purposeful, and rich enough to sustain genuine comprehension work. Your questions are precise, unambiguous, and matched to the content domain they are assessing. Write in professional UK English."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and KS1–KS4 reading assessment frameworks. You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills — from retrieval and inference through to evaluation and critical response. Your passages are well-crafted, purposeful, and rich enough to sustain genuine comprehension work. Your questions are precise, unambiguous, and matched to the content domain they are assessing. Write in professional UK English.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -133,7 +135,7 @@ ${ownText}`;
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

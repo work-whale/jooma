@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -81,25 +81,32 @@ Write 3–4 bullet points, each using this format:
 **[Specific Area for Development]**: 3–4 sentences describing the gap or inconsistency observed, providing specific evidence, explaining the impact on pupil learning or progress, and framing the development need constructively (e.g. "While questioning was strong in Year 9, in two Year 7 classes pupils were not consistently required to...").${recommendationsSection}${nextStepsSection}`;
 
 
-  const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4000,
-    system: buildSystem("You are an expert UK school leader, assistant headteacher, and quality assurance specialist with extensive experience conducting learning walks, lesson observations, and professional monitoring activities in primary and secondary schools. You write professional, evidence-based learning walk reports that are specific, fair, and immediately useful to leadership teams and classroom teachers. Your reports reflect genuine knowledge of what high-quality teaching and learning looks like and how it connects to pupil outcomes. You write in professional UK English."),
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK school leader, assistant headteacher, and quality assurance specialist with extensive experience conducting learning walks, lesson observations, and professional monitoring activities in primary and secondary schools. You write professional, evidence-based learning walk reports that are specific, fair, and immediately useful to leadership teams and classroom teachers. Your reports reflect genuine knowledge of what high-quality teaching and learning looks like and how it connects to pupil outcomes. You write in professional UK English.") },
+      { role: "user", content: prompt },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(chunk.delta.text));
+      try {
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        controller.close();
       }
-      controller.close();
+    },
+    cancel() {
+      openaiStream.controller.abort();
     },
   });
 

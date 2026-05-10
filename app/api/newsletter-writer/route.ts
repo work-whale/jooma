@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -47,22 +47,32 @@ Apply the "${tone || "Professional and formal"}" tone consistently across all se
 
 Use the school name "${schoolName?.trim() || "our school"}" naturally in the text where appropriate. Use UK English throughout.`;
 
-  const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4000,
-    system: buildSystem("You are an expert school communications specialist and newsletter writer with extensive experience producing high-quality, engaging school newsletters for UK primary and secondary schools. You write clearly, warmly, and professionally, adapting tone to the audience — whether parents, staff, or the wider community. Your newsletters are free of clichés, genuinely informative, and reflect the values and culture of the school."),
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert school communications specialist and newsletter writer with extensive experience producing high-quality, engaging school newsletters for UK primary and secondary schools. You write clearly, warmly, and professionally, adapting tone to the audience — whether parents, staff, or the wider community. Your newsletters are free of clichés, genuinely informative, and reflect the values and culture of the school.") },
+      { role: "user", content: prompt },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-          controller.enqueue(encoder.encode(chunk.delta.text));
+      try {
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        controller.close();
       }
-      controller.close();
+    },
+    cancel() {
+      openaiStream.controller.abort();
     },
   });
 

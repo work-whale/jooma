@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface ECTReportWriterRequest {
@@ -11,7 +11,7 @@ export interface ECTReportWriterRequest {
   includeProfessionalDevelopmentPlan: boolean;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: ECTReportWriterRequest = await req.json();
@@ -106,20 +106,22 @@ Throughout the report:
 
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK school leader, induction tutor, and ECT mentor with comprehensive knowledge of the Early Career Framework (ECF), the Teachers' Standards (DfE, 2011), and the statutory requirements for ECT induction. You have written many formal ECT assessment reports that have been reviewed by appropriate bodies and used in professional review meetings. Your reports are evidence-based, precisely referenced to the Teachers' Standards by number and full title, and written in formal third-person language that meets the standard of an official professional document. You write in professional UK English."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK school leader, induction tutor, and ECT mentor with comprehensive knowledge of the Early Career Framework (ECF), the Teachers' Standards (DfE, 2011), and the statutory requirements for ECT induction. You have written many formal ECT assessment reports that have been reviewed by appropriate bodies and used in professional review meetings. Your reports are evidence-based, precisely referenced to the Teachers' Standards by number and full title, and written in formal third-person language that meets the standard of an official professional document. You write in professional UK English.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -128,7 +130,7 @@ Throughout the report:
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

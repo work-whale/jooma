@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const isOfsted = (body: string) => /ofsted/i.test(body);
 
@@ -99,25 +99,32 @@ ${evidenceNote}${successNote}${policyNote}
 
 Write in a professional, authoritative tone appropriate for a senior leadership team. Questions must be genuinely thought-provoking — not surface-level checklist items. Actions must be specific and immediately actionable. Use UK English and accurate inspection terminology throughout.`;
 
-  const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4000,
-    system: buildSystem("You are an expert UK school leader, former Ofsted inspector, and inspection readiness consultant with precise, up-to-date knowledge of Ofsted's Education Inspection Framework (EIF) — including the changes introduced following the Ofsted Big Listen consultation (2024) and the move to a report card model. You also have extensive knowledge of ISI, SIAMS, CIS, BSO, KHDA, and other UK and international educational inspection and accreditation processes. You know what inspectors look for, how they triangulate evidence, what language appears in judgement descriptors, and where schools most commonly have weaknesses. You write authoritative, specific, and immediately practical guidance for senior leadership teams preparing for inspections. You write in professional UK English and use accurate, framework-aligned inspection terminology."),
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK school leader, former Ofsted inspector, and inspection readiness consultant with precise, up-to-date knowledge of Ofsted's Education Inspection Framework (EIF) — including the changes introduced following the Ofsted Big Listen consultation (2024) and the move to a report card model. You also have extensive knowledge of ISI, SIAMS, CIS, BSO, KHDA, and other UK and international educational inspection and accreditation processes. You know what inspectors look for, how they triangulate evidence, what language appears in judgement descriptors, and where schools most commonly have weaknesses. You write authoritative, specific, and immediately practical guidance for senior leadership teams preparing for inspections. You write in professional UK English and use accurate, framework-aligned inspection terminology.") },
+      { role: "user", content: prompt },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(chunk.delta.text));
+      try {
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        controller.close();
       }
-      controller.close();
+    },
+    cancel() {
+      openaiStream.controller.abort();
     },
   });
 

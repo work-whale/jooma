@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SmartTargetsRequest {
@@ -8,7 +8,7 @@ export interface SmartTargetsRequest {
   targets: string;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: SmartTargetsRequest = await req.json();
@@ -48,20 +48,22 @@ Additional rules:
 
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem("You are an expert UK SENCO and inclusion specialist with extensive experience writing SMART targets within the framework of the SEND Code of Practice (2015) and EHCPs. You understand that genuinely SMART targets must be outcomes-focused, specific enough to act on, and measurable in a practical classroom context. You write targets that are accessible to pupils and useful to teachers — not bureaucratic tick-boxes. You are skilled at taking vague teacher input and converting it into precise, actionable, pupil-facing targets. You write in professional UK English."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK SENCO and inclusion specialist with extensive experience writing SMART targets within the framework of the SEND Code of Practice (2015) and EHCPs. You understand that genuinely SMART targets must be outcomes-focused, specific enough to act on, and measurable in a practical classroom context. You write targets that are accessible to pupils and useful to teachers — not bureaucratic tick-boxes. You are skilled at taking vague teacher input and converting it into precise, actionable, pupil-facing targets. You write in professional UK English.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -70,7 +72,7 @@ Additional rules:
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

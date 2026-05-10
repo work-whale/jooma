@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface TopicOverviewRequest {
@@ -12,7 +12,7 @@ export interface TopicOverviewRequest {
   additionalInfo?: string | null;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: TopicOverviewRequest = await req.json();
@@ -78,20 +78,22 @@ Describe 3 concrete assessment opportunities across the topic as a bullet list. 
 Write in a clear, professional tone suitable for ${yearGroup} in a UK school context. Do not use any emojis. When labelling items use plain text letters: (a), (b), (c) — never use the © symbol.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem("You are an expert UK teacher and curriculum designer with deep knowledge of the National Curriculum and subject-specific pedagogy across primary and secondary phases. You specialise in creating coherent, well-sequenced topic overviews that reflect curriculum intent — where each lesson builds deliberately on the last. Your output must include a properly formatted markdown table with columns: Lesson, Learning Objective, Starter, Input, Activity, Plenary, Resources, Questions, Key Vocabulary. Write clearly and at an appropriate level for the year group specified, using professional UK English. Never use the © symbol — always write labels as plain text: (a), (b), (c), (d)."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK teacher and curriculum designer with deep knowledge of the National Curriculum and subject-specific pedagogy across primary and secondary phases. You specialise in creating coherent, well-sequenced topic overviews that reflect curriculum intent — where each lesson builds deliberately on the last. Your output must include a properly formatted markdown table with columns: Lesson, Learning Objective, Starter, Input, Activity, Plenary, Resources, Questions, Key Vocabulary. Write clearly and at an appropriate level for the year group specified, using professional UK English. Never use the © symbol — always write labels as plain text: (a), (b), (c), (d).") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -100,7 +102,7 @@ Write in a clear, professional tone suitable for ${yearGroup} in a UK school con
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

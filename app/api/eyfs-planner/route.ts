@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface EYFSPlannerRequest {
@@ -11,7 +11,7 @@ export interface EYFSPlannerRequest {
   includeWeeklyOverview: boolean;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: EYFSPlannerRequest = await req.json();
@@ -100,20 +100,22 @@ All activities must be clearly, specifically linked to the topic "${topic}" — 
 Do not use any emojis. Write in a professional, practitioner-friendly tone appropriate for EYFS settings.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert Early Years Foundation Stage (EYFS) practitioner and curriculum leader with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, and best practice in child development. You design rich, purposeful provision that balances child-initiated play with adult-led learning across all seven areas of the EYFS. Your ELG references are always accurate and drawn directly from the 2021 framework. You understand the importance of the enabling environment, sustained shared thinking, and the key person approach. You write in professional UK English using EYFS-specific terminology."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert Early Years Foundation Stage (EYFS) practitioner and curriculum leader with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, and best practice in child development. You design rich, purposeful provision that balances child-initiated play with adult-led learning across all seven areas of the EYFS. Your ELG references are always accurate and drawn directly from the 2021 framework. You understand the importance of the enabling environment, sustained shared thinking, and the key person approach. You write in professional UK English using EYFS-specific terminology.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -122,7 +124,7 @@ Do not use any emojis. Write in a professional, practitioner-friendly tone appro
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

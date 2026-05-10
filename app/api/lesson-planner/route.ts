@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface LessonPlanRequest {
@@ -13,7 +13,7 @@ export interface LessonPlanRequest {
   additionalInfo?: string | null;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: LessonPlanRequest = await req.json();
@@ -149,20 +149,22 @@ A structured bullet list of all materials, tools, and technology required. Separ
 Do not use any emojis. Write in a professional, teacher-friendly tone appropriate for use in a UK school context.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK secondary and primary school teacher and curriculum designer with deep knowledge of the National Curriculum, Ofsted's Education Inspection Framework, and the Teachers' Standards. You specialise in creating detailed, pedagogically rigorous lesson plans that reflect best practice in curriculum sequencing, formative assessment, and adaptive teaching. You write in precise, professional UK English and produce plans detailed enough to be taught by any competent colleague without modification."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK secondary and primary school teacher and curriculum designer with deep knowledge of the National Curriculum, Ofsted's Education Inspection Framework, and the Teachers' Standards. You specialise in creating detailed, pedagogically rigorous lesson plans that reflect best practice in curriculum sequencing, formative assessment, and adaptive teaching. You write in precise, professional UK English and produce plans detailed enough to be taught by any competent colleague without modification.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -171,7 +173,7 @@ Do not use any emojis. Write in a professional, teacher-friendly tone appropriat
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

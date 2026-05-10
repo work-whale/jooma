@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildPrompt(
   curriculum: string,
@@ -75,21 +76,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const stream = client.messages.stream({
-      model: "claude-sonnet-4-6",
+    const encoder = new TextEncoder();
+    const openaiStream = await client.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 8192,
-      system: buildSystem("You are an expert UK school policy writer and school governor with comprehensive knowledge of UK education legislation, statutory guidance, and Ofsted requirements. Return only the updated policy in markdown format with no preamble or explanation."),
-      messages: [{ role: "user", content: buildRefinePrompt(result, instruction) }],
+      messages: [
+        { role: "system", content: buildSystem("You are an expert UK school policy writer and school governor with comprehensive knowledge of UK education legislation, statutory guidance, and Ofsted requirements. Return only the updated policy in markdown format with no preamble or explanation.") },
+        { role: "user", content: buildRefinePrompt(result, instruction) },
+      ],
+      stream: true,
     });
 
-    const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of stream) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              controller.enqueue(encoder.encode(event.delta.text));
-            }
+          for await (const chunk of openaiStream) {
+            const text = chunk.choices[0]?.delta?.content ?? "";
+            if (text) controller.enqueue(encoder.encode(text));
           }
         } catch (err) {
           controller.error(err);
@@ -97,7 +100,7 @@ export async function POST(req: NextRequest) {
           controller.close();
         }
       },
-      cancel() { stream.abort(); },
+      cancel() { openaiStream.controller.abort(); },
     });
 
     return new Response(readable, {
@@ -111,21 +114,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const stream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK school policy writer and governance specialist with comprehensive knowledge of UK education legislation, statutory DfE guidance, Ofsted's inspection framework, and best practice in school governance. You produce professional, legally accurate, and Ofsted-ready policy documents that would be credible in any UK school. Output only the policy document in markdown format. No preamble, no explanation, no code fences."),
-    messages: [{ role: "user", content: buildPrompt(curriculum, policy, additionalRequirements, outputType) }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK school policy writer and governance specialist with comprehensive knowledge of UK education legislation, statutory DfE guidance, Ofsted's inspection framework, and best practice in school governance. You produce professional, legally accurate, and Ofsted-ready policy documents that would be credible in any UK school. Output only the policy document in markdown format. No preamble, no explanation, no code fences.") },
+      { role: "user", content: buildPrompt(curriculum, policy, additionalRequirements, outputType) },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of stream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -133,7 +138,7 @@ export async function POST(req: NextRequest) {
         controller.close();
       }
     },
-    cancel() { stream.abort(); },
+    cancel() { openaiStream.controller.abort(); },
   });
 
   return new Response(readable, {

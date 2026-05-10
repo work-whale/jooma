@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SensoryActivitiesRequest {
@@ -9,7 +9,7 @@ export interface SensoryActivitiesRequest {
   topic: string;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: SensoryActivitiesRequest = await req.json();
@@ -84,20 +84,22 @@ Then for each of the 5 activities use this exact structure:
 Do not use any emojis. Do not add any text before the title or after the last activity.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK SENCO, inclusion specialist, and classroom teacher with extensive experience designing multisensory learning activities for pupils across the SEND spectrum, including autism, dyslexia, sensory processing differences, and DCD. You understand the SEND Code of Practice and how multisensory approaches increase engagement, retention, and access for all learners. Your activities are always curriculum-aligned, practically achievable in a UK school, and genuinely informed by knowledge of sensory learning theory. You write in professional UK English."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK SENCO, inclusion specialist, and classroom teacher with extensive experience designing multisensory learning activities for pupils across the SEND spectrum, including autism, dyslexia, sensory processing differences, and DCD. You understand the SEND Code of Practice and how multisensory approaches increase engagement, retention, and access for all learners. Your activities are always curriculum-aligned, practically achievable in a UK school, and genuinely informed by knowledge of sensory learning theory. You write in professional UK English.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -106,7 +108,7 @@ Do not use any emojis. Do not add any text before the title or after the last ac
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

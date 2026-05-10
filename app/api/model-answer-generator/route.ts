@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface ModelAnswerRequest {
@@ -12,7 +12,7 @@ export interface ModelAnswerRequest {
   totalMarks: number;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: ModelAnswerRequest = await req.json();
@@ -108,20 +108,22 @@ Write a full, exam-worthy model answer pitched at the level of a high-achieving 
 Do not use any emojis. Do not add any text before the main title or after the last teaching opportunity.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK examiner, subject specialist, and classroom teacher with extensive experience across GCSE, A-level, and primary/secondary assessment frameworks. You have a precise understanding of what examiners reward at each level and how mark schemes are structured. You write model answers that are genuinely exam-worthy — accurate, well-structured, and pitched at the level of a high-achieving pupil — and teacher notes that are specific, evidence-informed, and immediately useful in a UK classroom. You write in professional UK English."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK examiner, subject specialist, and classroom teacher with extensive experience across GCSE, A-level, and primary/secondary assessment frameworks. You have a precise understanding of what examiners reward at each level and how mark schemes are structured. You write model answers that are genuinely exam-worthy — accurate, well-structured, and pitched at the level of a high-achieving pupil — and teacher notes that are specific, evidence-informed, and immediately useful in a UK classroom. You write in professional UK English.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -130,7 +132,7 @@ Do not use any emojis. Do not add any text before the main title or after the la
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface CoverLessonRequest {
@@ -12,7 +12,7 @@ export interface CoverLessonRequest {
   additionalContext?: string;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: CoverLessonRequest = await req.json();
@@ -106,22 +106,22 @@ Provide 4–5 bullet points for the cover teacher to action before leaving the r
 Ensure the total timing adds up to ${lessonLength}. Write in a warm, professional tone that makes the cover teacher feel confident.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem(
-      `You are an expert UK teacher with extensive experience writing cover lessons that any non-specialist can deliver confidently. You write in clear, friendly, step-by-step language. Your cover lessons are fully self-contained — no preparation required, no subject knowledge assumed. You are precise about timings, explicit about instructions, and always include word-for-word scripts where helpful. You write in professional UK English.`
-    ),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem(`You are an expert UK teacher with extensive experience writing cover lessons that any non-specialist can deliver confidently. You write in clear, friendly, step-by-step language. Your cover lessons are fully self-contained — no preparation required, no subject knowledge assumed. You are precise about timings, explicit about instructions, and always include word-for-word scripts where helpful. You write in professional UK English.`) },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -130,7 +130,7 @@ Ensure the total timing adds up to ${lessonLength}. Write in a warm, professiona
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

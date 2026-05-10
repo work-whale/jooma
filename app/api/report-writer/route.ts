@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SubjectFocus {
@@ -18,7 +18,7 @@ export interface ReportWriterRequest {
   subjects: SubjectFocus[];
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function getPronouns(gender: ReportWriterRequest["gender"]) {
   if (gender === "Male") return { subject: "He", object: "him", possessive: "his" };
@@ -92,20 +92,22 @@ Writing guidelines:
 
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem("You are an expert UK teacher and form tutor with many years of experience writing high-quality end-of-year and termly school reports for parents and carers. You understand that school reports serve a dual purpose: they celebrate genuine achievement and communicate honest, constructive feedback in a way that motivates pupils and informs parents. Your reports are specific, never generic — every compliment is evidenced and every area for development is framed as an achievable next step. You write in polished UK English and produce reports that reflect well on the school and the teacher."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK teacher and form tutor with many years of experience writing high-quality end-of-year and termly school reports for parents and carers. You understand that school reports serve a dual purpose: they celebrate genuine achievement and communicate honest, constructive feedback in a way that motivates pupils and informs parents. Your reports are specific, never generic — every compliment is evidenced and every area for development is framed as an achievable next step. You write in polished UK English and produce reports that reflect well on the school and the teacher.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -114,7 +116,7 @@ Writing guidelines:
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

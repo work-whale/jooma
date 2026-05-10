@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -56,22 +56,32 @@ Tier definitions:
 
 Keep each bullet point to one or two short sentences. Be specific and avoid generic advice. Reference EEF evidence where relevant. Use UK English throughout. Be specific to the education phase: ${educationPhase || "the school phase"}.`;
 
-  const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4000,
-    system: buildSystem("You are an expert UK school improvement adviser and Pupil Premium specialist with deep knowledge of the EEF Teaching and Learning Toolkit, DfE Pupil Premium guidance, and evidence-based approaches to closing the disadvantage gap. You help school leaders write rigorous, evidence-informed Pupil Premium strategy plans that meet DfE requirements and genuinely improve outcomes for disadvantaged pupils."),
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK school improvement adviser and Pupil Premium specialist with deep knowledge of the EEF Teaching and Learning Toolkit, DfE Pupil Premium guidance, and evidence-based approaches to closing the disadvantage gap. You help school leaders write rigorous, evidence-informed Pupil Premium strategy plans that meet DfE requirements and genuinely improve outcomes for disadvantaged pupils.") },
+      { role: "user", content: prompt },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
-          controller.enqueue(encoder.encode(chunk.delta.text));
+      try {
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        controller.close();
       }
-      controller.close();
+    },
+    cancel() {
+      openaiStream.controller.abort();
     },
   });
 

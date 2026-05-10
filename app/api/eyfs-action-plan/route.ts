@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -124,25 +124,32 @@ A brief, practical summary of likely costs and how they might be funded (e.g. Pu
 
 Write in a professional, action-oriented tone appropriate for a formal school improvement document. Every action must be specific, named, and practical — avoid vague generalities. Write in UK English.`;
 
-  const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
+  const encoder = new TextEncoder();
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 2000,
-    system: buildSystem("You are an expert UK EYFS Lead and school improvement specialist with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, Ofsted's inspection of early years provision, and best practice in early childhood education. You write formal, specific, and practically grounded EYFS action plans that would withstand scrutiny from governors, headteachers, and Ofsted inspectors. Your plans are never vague — every action is named, assigned, and measurable. You write in professional UK English."),
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK EYFS Lead and school improvement specialist with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, Ofsted's inspection of early years provision, and best practice in early childhood education. You write formal, specific, and practically grounded EYFS action plans that would withstand scrutiny from governors, headteachers, and Ofsted inspectors. Your plans are never vague — every action is named, assigned, and measurable. You write in professional UK English.") },
+      { role: "user", content: prompt },
+    ],
+    stream: true,
   });
 
-  const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(chunk.delta.text));
+      try {
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        controller.close();
       }
-      controller.close();
+    },
+    cancel() {
+      openaiStream.controller.abort();
     },
   });
 

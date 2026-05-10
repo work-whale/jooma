@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface HomeworkRequest {
@@ -19,7 +19,7 @@ export interface HomeworkRequest {
   imageMediaType?: string;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const ABILITY_LABELS: Record<string, string> = {
   WTS: "Working Towards Standard — provide additional scaffolding, simpler language, and smaller steps",
@@ -144,37 +144,37 @@ Provide 3–5 bullet points the student can tick off when they have completed th
 
 ${answerSection}`;
 
-  const messageContent: Anthropic.MessageParam["content"] = imageBase64 && imageMediaType
+  type OpenAIUserContent = Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
+
+  const userMessageContent: string | OpenAIUserContent = imageBase64 && imageMediaType
     ? [
-        {
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: imageMediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-            data: imageBase64,
-          },
-        },
+        { type: "image_url", image_url: { url: `data:${imageMediaType};base64,${imageBase64}` } },
         { type: "text", text: userPrompt },
       ]
     : userPrompt;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem(
-      `You are an expert UK teacher and curriculum designer with extensive experience creating high-quality homework tasks for KS1 through KS5. You understand how to pitch work accurately for different year groups, apply Bloom's Taxonomy, and scaffold without reducing challenge. You produce homework that is purposeful, clearly structured, and appropriately differentiated. You write in professional UK English. Never use emojis. When labelling sub-questions use plain text: (a), (b), (c) — never use the © symbol.`
-    ),
-    messages: [{ role: "user", content: messageContent }],
+    messages: [
+      {
+        role: "system",
+        content: buildSystem(
+          `You are an expert UK teacher and curriculum designer with extensive experience creating high-quality homework tasks for KS1 through KS5. You understand how to pitch work accurately for different year groups, apply Bloom's Taxonomy, and scaffold without reducing challenge. You produce homework that is purposeful, clearly structured, and appropriately differentiated. You write in professional UK English. Never use emojis. When labelling sub-questions use plain text: (a), (b), (c) — never use the © symbol.`
+        ),
+      },
+      { role: "user", content: userMessageContent },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -183,7 +183,7 @@ ${answerSection}`;
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

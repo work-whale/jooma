@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface TargetedInterventionRequest {
@@ -12,7 +12,7 @@ export interface TargetedInterventionRequest {
   otherData?: string;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: TargetedInterventionRequest = await req.json();
@@ -72,22 +72,27 @@ For each strategy, use this exact structure:
 Do not include a preamble, introduction, or closing summary. Do not include any research citations or references. Start immediately with "# Intervention Strategies" and the first numbered strategy.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system: buildSystem(
-      `You are an expert educational practitioner, intervention specialist, and SENCO advisor with deep knowledge of UK schools. You produce targeted, evidence-based intervention strategies grounded in educational research (Hattie, EEF, Rosenshine, etc.). Your strategies are specific, actionable, and directly tied to the student data provided. You write in clear, professional UK English for a teacher audience.`
-    ),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      {
+        role: "system",
+        content: buildSystem(
+          `You are an expert educational practitioner, intervention specialist, and SENCO advisor with deep knowledge of UK schools. You produce targeted, evidence-based intervention strategies grounded in educational research (Hattie, EEF, Rosenshine, etc.). Your strategies are specific, actionable, and directly tied to the student data provided. You write in clear, professional UK English for a teacher audience.`
+        ),
+      },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -96,7 +101,7 @@ Do not include a preamble, introduction, or closing summary. Do not include any 
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 

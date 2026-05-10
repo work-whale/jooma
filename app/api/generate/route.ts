@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
 export interface GenerateRequest {
   curriculum: string;
@@ -13,7 +13,7 @@ export interface GenerateRequest {
   includeAnswerKey?: boolean;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: GenerateRequest = await req.json();
@@ -51,18 +51,16 @@ Group the questions clearly by reading focus with a heading for each group.${ans
 PASSAGE:
 ${ownText}`;
 
-  const stream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const response = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 4096,
-    system:
-      "You are an expert teacher and curriculum designer. You create high-quality, age-appropriate reading comprehension activities. Write clearly and engagingly. Do not use any emojis anywhere in your output.",
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: "You are an expert teacher and curriculum designer. You create high-quality, age-appropriate reading comprehension activities. Write clearly and engagingly. Do not use any emojis anywhere in your output." },
+      { role: "user", content: userPrompt },
+    ],
+    stream: false,
   });
-
-  const message = await stream.finalMessage();
-
-  const textBlock = message.content.find((b): b is Anthropic.TextBlock => b.type === "text");
-  const output = textBlock?.text ?? "";
+  const output = response.choices[0].message.content ?? "";
 
   return NextResponse.json({ output });
 }

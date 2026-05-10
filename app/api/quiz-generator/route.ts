@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface QuizQuestion {
@@ -37,7 +37,7 @@ interface RefineBody {
 
 type RequestBody = GenerateBody | AddBody | RefineBody;
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildGeneratePrompt(body: GenerateBody): string {
   return `Generate a multiple choice quiz with exactly ${body.numQuestions} questions about "${body.topic}" for ${body.yearGroup} pupils following the ${body.curriculum} in ${body.subject}.
@@ -152,19 +152,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+    const message = await client.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 4096,
-      system: buildSystem("You are an expert UK teacher and assessment specialist creating multiple choice quizzes for school pupils across all year groups and subjects. You have a thorough understanding of what constitutes a well-designed multiple choice question: a clear, unambiguous stem; exactly one unambiguously correct answer; plausible distractors based on common misconceptions; and options that are grammatically parallel. You always return valid JSON exactly as requested, with no additional text, markdown, or code fences. Your questions are subject-accurate, age-appropriate, and test genuine curriculum knowledge rather than trivial recall."),
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: buildSystem("You are an expert UK teacher and assessment specialist creating multiple choice quizzes for school pupils across all year groups and subjects. You have a thorough understanding of what constitutes a well-designed multiple choice question: a clear, unambiguous stem; exactly one unambiguously correct answer; plausible distractors based on common misconceptions; and options that are grammatically parallel. You always return valid JSON exactly as requested, with no additional text, markdown, or code fences. Your questions are subject-accurate, age-appropriate, and test genuine curriculum knowledge rather than trivial recall.") },
+        { role: "user", content: prompt },
+      ],
+      stream: false,
     });
 
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
+    const text = message.choices[0]?.message?.content ?? "";
+    if (!text) {
       return NextResponse.json({ error: "No response from AI" }, { status: 500 });
     }
 
-    const questions = parseQuestions(textBlock.text);
+    const questions = parseQuestions(text);
     return NextResponse.json({ questions });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to generate quiz";

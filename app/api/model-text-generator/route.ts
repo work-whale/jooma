@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface ModelTextGeneratorRequest {
@@ -12,7 +12,7 @@ export interface ModelTextGeneratorRequest {
   lengthWords: number;
 }
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
   const body: ModelTextGeneratorRequest = await req.json();
@@ -67,20 +67,22 @@ For each of 5–7 significant writing features used in the text, provide:
 Do not use any emojis. Write the model text in the appropriate register and style for ${write}. Write the analysis section in a clear, teacher-friendly tone.`;
 
   const encoder = new TextEncoder();
-  const anthropicStream = client.messages.stream({
-    model: "claude-sonnet-4-6",
+  const openaiStream = await client.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 8192,
-    system: buildSystem("You are an expert UK literacy teacher and accomplished writer who creates high-quality model texts for classroom use across KS1, KS2, KS3, and KS4. You have a deep understanding of the National Curriculum for English, the writing features expected at each key stage, and how to craft texts that genuinely inspire pupils. You write with real craft and intentionality — your model texts are not generic demonstrations but carefully composed pieces that exemplify excellence in the specified text type. You annotate your work with precise, accurate literary and grammatical terminology."),
-    messages: [{ role: "user", content: userPrompt }],
+    messages: [
+      { role: "system", content: buildSystem("You are an expert UK literacy teacher and accomplished writer who creates high-quality model texts for classroom use across KS1, KS2, KS3, and KS4. You have a deep understanding of the National Curriculum for English, the writing features expected at each key stage, and how to craft texts that genuinely inspire pupils. You write with real craft and intentionality — your model texts are not generic demonstrations but carefully composed pieces that exemplify excellence in the specified text type. You annotate your work with precise, accurate literary and grammatical terminology.") },
+      { role: "user", content: userPrompt },
+    ],
+    stream: true,
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        for await (const event of anthropicStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
+        for await (const chunk of openaiStream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         controller.error(err);
@@ -89,7 +91,7 @@ Do not use any emojis. Write the model text in the appropriate register and styl
       }
     },
     cancel() {
-      anthropicStream.abort();
+      openaiStream.controller.abort();
     },
   });
 
