@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120;
 
-const PRESENTON_URL = "https://api.presenton.ai";
+const PRESENTON_URL = process.env.PRESENTON_SELF_HOSTED_URL ?? "http://localhost:5000";
 
 export async function POST(req: NextRequest) {
   const { topic, nSlides, tone, additionalNotes } = await req.json();
@@ -15,21 +15,17 @@ export async function POST(req: NextRequest) {
     ? `${topic.trim()}\n\nAdditional instructions: ${additionalNotes.trim()}`
     : topic.trim();
 
-  let generateData: { path?: string; presentation_id?: string };
+  let generateData: { path?: string; presentation_id?: string; edit_path?: string };
   try {
-    const generateRes = await fetch(`${PRESENTON_URL}/api/v3/presentation/generate`, {
+    const generateRes = await fetch(`${PRESENTON_URL}/api/v1/ppt/presentation/generate`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.PRESENTON_API_KEY}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content,
         n_slides: nSlides ?? 10,
-        tone: tone ?? "educational",
         language: "English",
         export_as: "pptx",
-        standard_template: "general",
+        template: "general",
       }),
       signal: AbortSignal.timeout(110_000),
     });
@@ -53,12 +49,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!generateData.path) {
-    return NextResponse.json({ error: "No presentation path returned" }, { status: 500 });
+  if (!generateData.presentation_id && !generateData.path) {
+    return NextResponse.json({ error: "No presentation returned" }, { status: 500 });
   }
 
-  return NextResponse.json({
-    editPath: (generateData as { edit_path?: string }).edit_path ?? null,
-    downloadPath: generateData.path,
-  });
+  const editPath = generateData.edit_path
+    ? `${PRESENTON_URL}${generateData.edit_path}`
+    : generateData.presentation_id
+    ? `${PRESENTON_URL}/presentation?id=${generateData.presentation_id}`
+    : null;
+
+  const downloadPath = generateData.path
+    ? generateData.path.startsWith("http")
+      ? generateData.path
+      : `${PRESENTON_URL}${generateData.path}`
+    : null;
+
+  return NextResponse.json({ editPath, downloadPath });
 }
