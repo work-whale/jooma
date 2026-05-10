@@ -245,6 +245,13 @@ export const TOOLS: Tool[] = [
     description: "Draft a detailed, inspection-ready SIP with objectives, action steps, timelines, budget, monitoring schedule, and risk assessment — in table or narrative format.",
     tag: "Leadership",
   },
+  {
+    href: "/tools/presentation-generator",
+    icon: "presentation",
+    label: "Presentation Generator",
+    description: "Generate a fully designed PowerPoint presentation with AI-created images — ready to download and edit in PowerPoint or Google Slides.",
+    tag: "Planning",
+  },
 ];
 
 export const PINNED_HREFS = ["/tools/lesson-planner", "/tools/worksheet-generator"];

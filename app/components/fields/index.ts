@@ -79,3 +79,7 @@ export { default as SIPAreasField } from "./SIPAreasField";
 export { default as SIPContextField } from "./SIPContextField";
 export { default as SIPTimeframeField } from "./SIPTimeframeField";
 export { default as SIPOutputFormatField } from "./SIPOutputFormatField";
+export { default as PresentationTopicField } from "./PresentationTopicField";
+export { default as PresentationSlidesField } from "./PresentationSlidesField";
+export { default as PresentationToneField } from "./PresentationToneField";
+export { default as PresentationNotesField } from "./PresentationNotesField";
