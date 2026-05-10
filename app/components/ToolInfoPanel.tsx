@@ -34,7 +34,7 @@ export default function ToolInfoPanel({
         </div>
         <p className="text-sm font-light">{description}</p>
       </div>
-      <div className="pt-5 pb-6">
+      <div className="pt-5 pb-6 px-8">
         <div className="h-px bg-gray-200 mb-5" />
         <h2 className="text-md font-semibold text-gray-900 mb-5">How to use it</h2>
         <ol className="space-y-0">
