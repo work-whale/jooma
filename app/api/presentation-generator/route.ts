@@ -65,5 +65,5 @@ export async function POST(req: NextRequest) {
       : `${PRESENTON_URL}${generateData.path}`
     : null;
 
-  return NextResponse.json({ editPath, downloadPath });
+  return NextResponse.json({ editPath, downloadPath, presentationId: generateData.presentation_id ?? null });
 }

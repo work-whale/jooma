@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   PresentationTopicField,
   PresentationSlidesField,
@@ -14,6 +14,8 @@ import ResetButton from "@/app/components/ui/ResetButton";
 import ConfirmModal from "@/app/components/ConfirmModal";
 
 export default function PresentationGeneratorForm({ sidebar }: { sidebar: React.ReactNode }) {
+  const router = useRouter();
+
   const [topic, setTopic] = useState("");
   const [nSlides, setNSlides] = useState(10);
   const [tone, setTone] = useState("educational");
@@ -21,19 +23,17 @@ export default function PresentationGeneratorForm({ sidebar }: { sidebar: React.
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editPath, setEditPath] = useState<string | null>(null);
-  const [downloadPath, setDownloadPath] = useState<string | null>(null);
+  const [generated, setGenerated] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
 
   const canGenerate = topic.trim();
   const formSnapshot = JSON.stringify({ topic, nSlides, tone, additionalNotes });
-  const unchangedSinceGeneration = !!editPath && lastGenerated === formSnapshot;
+  const unchangedSinceGeneration = generated && lastGenerated === formSnapshot;
 
   const handleGenerate = async () => {
     setError(null);
-    setEditPath(null);
-    setDownloadPath(null);
+    setGenerated(false);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
     try {
@@ -47,11 +47,14 @@ export default function PresentationGeneratorForm({ sidebar }: { sidebar: React.
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
       const data = await res.json();
-      setEditPath(data.editPath ?? null);
-      setDownloadPath(data.downloadPath ?? null);
+      if (data.presentationId) {
+        router.push(`/presentation/${data.presentationId}`);
+      } else {
+        setGenerated(true);
+        setIsGenerating(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -62,8 +65,7 @@ export default function PresentationGeneratorForm({ sidebar }: { sidebar: React.
     setTone("educational");
     setAdditionalNotes("");
     setError(null);
-    setEditPath(null);
-    setDownloadPath(null);
+    setGenerated(false);
     setLastGenerated(null);
     setConfirmingReset(false);
   };
@@ -96,7 +98,7 @@ export default function PresentationGeneratorForm({ sidebar }: { sidebar: React.
             )}
 
             <div className="flex gap-3">
-              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!editPath && !error} />
+              <ResetButton onClick={() => setConfirmingReset(true)} disabled={!generated && !error} />
               <ConfirmModal
                 open={confirmingReset}
                 title="Reset form?"
@@ -109,38 +111,12 @@ export default function PresentationGeneratorForm({ sidebar }: { sidebar: React.
                 onClick={handleGenerate}
                 disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
                 isGenerating={isGenerating}
-                hasResult={!!editPath}
+                hasResult={generated}
               />
             </div>
           </Card>
         </div>
       </div>
-
-      {editPath && !isGenerating && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-800">Your presentation is ready — edit it below.</p>
-            {downloadPath && (
-              <a
-                href={downloadPath}
-                download
-                className="flex items-center gap-2 border border-gray-200 text-gray-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Download .pptx
-              </a>
-            )}
-          </div>
-          <div className="rounded-2xl overflow-hidden border border-gray-200" style={{ height: "75vh" }}>
-            <iframe
-              src={editPath}
-              className="w-full h-full"
-              title="Presentation Editor"
-              allow="clipboard-read; clipboard-write"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
