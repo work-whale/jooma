@@ -1,10 +1,12 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import MiniSlide from "./MiniSlide";
+import type { SlideJSON } from "@/app/lib/presentations";
 
 export interface SlideEntry {
   id: string;
-  thumbnail: string | null;
+  slide: SlideJSON;
 }
 
 interface Props {
@@ -15,30 +17,24 @@ interface Props {
   onDelete: (i: number) => void;
 }
 
+const THUMB_W = 128;
+
 export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDelete }: Props) {
   return (
     <div
-      className="h-28 shrink-0 border-t flex items-center gap-3 px-4 overflow-x-auto"
-      style={{ borderColor: "#DAD8D0", backgroundColor: "#F1EFE3" }}
+      className="inline-flex items-center gap-3 px-3 py-3 bg-white rounded-2xl shadow-lg border border-gray-200 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden"
+      style={{ scrollbarWidth: "none" }}
     >
-      {slides.map((s, i) => (
-        <div key={s.id} className="relative group shrink-0">
+      {slides.map((entry, i) => (
+        <div key={entry.id} className="relative group shrink-0">
           <button
             onClick={() => onSelect(i)}
-            className={`relative w-32 aspect-video rounded-lg overflow-hidden border-2 bg-white transition-colors ${
+            className={`relative rounded-lg overflow-hidden border-2 bg-white transition-colors ${
               i === activeIndex ? "border-violet-600" : "border-gray-200 hover:border-gray-400"
             }`}
           >
-            {s.thumbnail ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={s.thumbnail} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full" />
-            )}
+            <MiniSlide slide={entry.slide} width={THUMB_W} />
           </button>
-          <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-500">
-            {i + 1}
-          </span>
           {slides.length > 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(i); }}
@@ -52,7 +48,8 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
       ))}
       <button
         onClick={onAdd}
-        className="shrink-0 w-32 aspect-video rounded-lg border-2 border-dashed border-gray-300 text-gray-500 hover:border-violet-400 hover:text-violet-600 flex items-center justify-center gap-1.5 text-sm font-medium transition-colors"
+        className="shrink-0 rounded-lg border-2 border-dashed border-gray-300 text-gray-500 hover:border-violet-400 hover:text-violet-600 flex items-center justify-center gap-1.5 text-sm font-medium transition-colors"
+        style={{ width: THUMB_W, height: THUMB_W * (720 / 1280) }}
       >
         <Plus className="w-4 h-4" />
         Add slide

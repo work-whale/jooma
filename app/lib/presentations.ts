@@ -1,10 +1,64 @@
 import { supabase } from "./supabase";
 
-export type SlideJSON = {
-  background?: string;
-  objects?: unknown[];
-  version?: string;
-  [key: string]: unknown;
+export interface TextObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  text: string;
+  fontSize: number;
+  fontWeight: string;
+  fontStyle: "normal" | "italic";
+  underline: boolean;
+  fontFamily: string;
+  color: string;
+  textAlign: "left" | "center" | "right";
+}
+
+export type ShapeType = "rect" | "ellipse" | "triangle" | "line";
+
+export interface ShapeObject {
+  id: string;
+  type: ShapeType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+  opacity: number;
+  cornerRadius?: number;
+}
+
+export interface ImageObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  src: string;
+  opacity: number;
+}
+
+export interface SlideJSON {
+  shapes: ShapeObject[];
+  texts: TextObject[];
+  images: ImageObject[];
+  background?: string;                // CSS color
+  backgroundImage?: string;           // data URL or http URL — covers the color when set
+  backgroundImageWidth?: number;      // natural image dimensions, used to clamp pan
+  backgroundImageHeight?: number;
+  backgroundOffsetX?: number;         // px offset from center, for bg image pan
+  backgroundOffsetY?: number;
+  backgroundScale?: number;           // multiplier on top of cover scale; >= 1 always
+}
+
+export const BLANK_SLIDE: SlideJSON = {
+  shapes: [],
+  texts: [],
+  images: [],
+  background: "#ffffff",
 };
 
 export interface Presentation {
@@ -37,10 +91,9 @@ export async function getPresentation(id: string): Promise<Presentation | null> 
 }
 
 export async function createPresentation(): Promise<Presentation> {
-  const blank: SlideJSON = { background: "#ffffff", objects: [], version: "7.0.0" };
   const { data, error } = await supabase
     .from(TABLE)
-    .insert({ title: "Untitled Slideshow", slides: [blank] })
+    .insert({ title: "Untitled Slideshow", slides: [BLANK_SLIDE] })
     .select()
     .single();
   if (error) throw error;
