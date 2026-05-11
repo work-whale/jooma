@@ -246,10 +246,10 @@ export const TOOLS: Tool[] = [
     tag: "Leadership",
   },
   {
-    href: "/tools/presentation-generator",
+    href: "/tools/slideshow",
     icon: "presentation",
-    label: "Presentation Generator",
-    description: "Generate a fully designed PowerPoint presentation with AI-created images — ready to download and edit in PowerPoint or Google Slides.",
+    label: "Slideshow",
+    description: "Create a presentation from scratch with text, shapes, and images. Export to PowerPoint.",
     tag: "Planning",
   },
 ];

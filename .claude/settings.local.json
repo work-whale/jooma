@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch",
-      "PowerShell(docker exec presenton grep -n \"generate\" /app/servers/fastapi/api/v1/ppt/endpoints/presentation.py 2>&1)",
-      "PowerShell(head -30)"
+      "WebSearch"
     ]
   }
 }

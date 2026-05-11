@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
+    "@supabase/supabase-js": "^2.105.4",
     "@tiptap/core": "3.22.1",
     "@tiptap/extension-color": "^3.22.1",
     "@tiptap/extension-highlight": "^3.22.1",
@@ -25,6 +26,7 @@
     "@tiptap/react": "^3.22.1",
     "@tiptap/starter-kit": "^3.22.1",
     "docx": "^9.6.1",
+    "fabric": "^7.3.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",

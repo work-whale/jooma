@@ -14,7 +14,7 @@ import {
   MdVisibility, MdTrendingUp, MdSearch, MdAssignmentTurnedIn,
   MdDescription, MdPlaylistAdd, MdWarning, MdBadge, MdShowChart,
   MdNewspaper, MdGroups, MdBarChart, MdSecurity, MdTrackChanges,
-  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll, MdSchool,
+  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll, MdSchool, MdSlideshow,
 } from "react-icons/md";
 
 const TAG_COLORS: Record<string, { bg: string; icon: string }> = {
@@ -153,6 +153,7 @@ const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   "policy": MdSecurity,
   "smart-targets": MdTrackChanges,
   "report": MdSummarize,
+  "presentation": MdSlideshow,
 };
 
 function ToolIcon({ name, className }: { name: string; className?: string }) {
