@@ -11,6 +11,7 @@ import ShapeLayer from "./ShapeLayer";
 import ImageLayer from "./ImageLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
+import ContextMenu, { type ContextMenuState } from "./ContextMenu";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
   BLANK_SLIDE,
@@ -63,6 +64,8 @@ export default function Editor({ presentation }: Props) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [zoom, setZoom] = useState(1);
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
+  const [dragGuides, setDragGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const slideWrapperRef = useRef<HTMLDivElement>(null);
@@ -175,6 +178,32 @@ export default function Editor({ presentation }: Props) {
     setSelectedShapeId(null);
     setSelectedImageId(null);
     setSlideSelected(false);
+  };
+
+  const bgFileInputRef = useRef<HTMLInputElement>(null);
+
+  const openBackgroundFilePicker = useCallback(() => {
+    bgFileInputRef.current?.click();
+  }, []);
+
+  const handleSlideContextMenu = (e: React.MouseEvent) => {
+    // Only open slide context menu if the user right-clicked the empty slide background.
+    if (e.target !== slideWrapperRef.current) return;
+    e.preventDefault();
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return;
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSlideSelected(true);
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      kind: "slide",
+      locked: false,
+      hasBackgroundImage: !!slide.backgroundImage,
+      canDeleteSlide: slidesRef.current.length > 1,
+    });
   };
 
   // Compute the rendered background-image dimensions (cover * user scale), the max pan
@@ -446,17 +475,21 @@ export default function Editor({ presentation }: Props) {
       ellipse:  { width: 240, height: 240 },
       triangle: { width: 240, height: 240 },
       line:     { width: 400, height: 4 },
+      arrow:    { width: 400, height: 32 },
+      star:     { width: 240, height: 240 },
+      hexagon:  { width: 240, height: 220 },
     };
     const { width: w, height: h } = presets[type];
+    const isLineLike = type === "line" || type === "arrow";
     const newShape: ShapeObject = {
       id: newId("sh"),
       type,
       x: SLIDE_W / 2 - w / 2,
       y: SLIDE_H / 2 - h / 2,
       width: w, height: h,
-      fill: type === "line" ? "transparent" : "#7c3aed",
-      stroke: type === "line" ? "#1a1a2e" : "transparent",
-      strokeWidth: type === "line" ? 4 : 0,
+      fill: isLineLike ? "transparent" : "#7c3aed",
+      stroke: isLineLike ? "#1a1a2e" : "transparent",
+      strokeWidth: isLineLike ? 4 : 0,
       opacity: 1,
       cornerRadius: type === "rect" ? 0 : undefined,
     };
@@ -484,11 +517,23 @@ export default function Editor({ presentation }: Props) {
     img.onload = () => {
       const naturalW = img.naturalWidth || 400;
       const naturalH = img.naturalHeight || 300;
-      const maxW = SLIDE_W * 0.6;
-      const maxH = SLIDE_H * 0.6;
-      const s = Math.min(maxW / naturalW, maxH / naturalH, 1);
-      const w = naturalW * s;
-      const h = naturalH * s;
+      // SVGs (Iconify icons, uploaded svgs) typically report tiny intrinsic sizes
+      // (e.g. 24×24). Treat them as icons: place at a comfortable default size and
+      // preserve aspect ratio. Raster images use the original "scale to fit" path.
+      const isSvg = src.startsWith("data:image/svg+xml") || src.startsWith("data:image/svg");
+      let w: number, h: number;
+      if (isSvg) {
+        const ICON_SIZE = 220;
+        const ratio = naturalW / naturalH;
+        if (ratio >= 1) { w = ICON_SIZE; h = ICON_SIZE / ratio; }
+        else { h = ICON_SIZE; w = ICON_SIZE * ratio; }
+      } else {
+        const maxW = SLIDE_W * 0.6;
+        const maxH = SLIDE_H * 0.6;
+        const s = Math.min(maxW / naturalW, maxH / naturalH, 1);
+        w = naturalW * s;
+        h = naturalH * s;
+      }
       const newImage: ImageObject = {
         id: newId("im"),
         x: SLIDE_W / 2 - w / 2,
@@ -516,6 +561,206 @@ export default function Editor({ presentation }: Props) {
     setSelectedImageId(null);
   }, [selectedImageId, mutateActiveSlide]);
 
+  // ── Z-order ───────────────────────────────────────────────────────────────
+  // Reorders within the object's own array (texts/shapes/images). Note: cross-type
+  // layering is fixed (images bottom, shapes middle, texts top) by render order.
+  const applyReorder = useCallback(<T extends { id: string }>(
+    arr: T[],
+    id: string,
+    op: "front" | "back" | "forward" | "backward",
+  ): T[] => {
+    const idx = arr.findIndex((x) => x.id === id);
+    if (idx === -1) return arr;
+    const next = arr.slice();
+    const [item] = next.splice(idx, 1);
+    if (op === "front") next.push(item);
+    else if (op === "back") next.unshift(item);
+    else if (op === "forward") next.splice(Math.min(idx + 1, next.length), 0, item);
+    else next.splice(Math.max(idx - 1, 0), 0, item);
+    return next;
+  }, []);
+
+  const reorderSelection = useCallback((op: "front" | "back" | "forward" | "backward") => {
+    mutateActiveSlide((s) => {
+      if (selectedTextId) return { ...s, texts: applyReorder(s.texts, selectedTextId, op) };
+      if (selectedShapeId) return { ...s, shapes: applyReorder(s.shapes, selectedShapeId, op) };
+      if (selectedImageId) return { ...s, images: applyReorder(s.images, selectedImageId, op) };
+      return s;
+    });
+  }, [selectedTextId, selectedShapeId, selectedImageId, mutateActiveSlide, applyReorder]);
+
+  // ── Duplicate ─────────────────────────────────────────────────────────────
+  const duplicateSelection = useCallback(() => {
+    const OFFSET = 20;
+    if (selectedTextId) {
+      const orig = slidesRef.current[activeIndexRef.current]?.texts.find((t) => t.id === selectedTextId);
+      if (!orig) return;
+      const copy: TextObject = { ...orig, id: newId("t"), x: orig.x + OFFSET, y: orig.y + OFFSET };
+      mutateActiveSlide((s) => ({ ...s, texts: [...s.texts, copy] }));
+      handleTextSelect(copy.id);
+    } else if (selectedShapeId) {
+      const orig = slidesRef.current[activeIndexRef.current]?.shapes.find((sh) => sh.id === selectedShapeId);
+      if (!orig) return;
+      const copy: ShapeObject = { ...orig, id: newId("sh"), x: orig.x + OFFSET, y: orig.y + OFFSET };
+      mutateActiveSlide((s) => ({ ...s, shapes: [...s.shapes, copy] }));
+      handleShapeSelect(copy.id);
+    } else if (selectedImageId) {
+      const orig = slidesRef.current[activeIndexRef.current]?.images.find((im) => im.id === selectedImageId);
+      if (!orig) return;
+      const copy: ImageObject = { ...orig, id: newId("im"), x: orig.x + OFFSET, y: orig.y + OFFSET };
+      mutateActiveSlide((s) => ({ ...s, images: [...s.images, copy] }));
+      handleImageSelect(copy.id);
+    }
+  }, [selectedTextId, selectedShapeId, selectedImageId, mutateActiveSlide, handleTextSelect, handleShapeSelect, handleImageSelect]);
+
+  // ── Smart alignment snap during drag ──────────────────────────────────────
+  // Snaps the proposed (x, y) of an element so its left/centerX/right or top/centerY/bottom
+  // lines up with the slide edges/center or another element's edges/center, when within
+  // SNAP_THRESHOLD slide-pixels. Updates the visible guide overlay state as a side effect.
+  const SNAP_THRESHOLD = 5;
+  const snapPosition = useCallback((
+    id: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ): { x: number; y: number } => {
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return { x, y };
+
+    const xTargets: number[] = [0, SLIDE_W / 2, SLIDE_W];
+    const yTargets: number[] = [0, SLIDE_H / 2, SLIDE_H];
+
+    const addBoundsX = (ox: number, ow: number) => {
+      xTargets.push(ox, ox + ow / 2, ox + ow);
+    };
+    const addBoundsY = (oy: number, oh: number) => {
+      yTargets.push(oy, oy + oh / 2, oy + oh);
+    };
+
+    for (const sh of slide.shapes) {
+      if (sh.id === id || (sh.rotation ?? 0) !== 0) continue;
+      addBoundsX(sh.x, sh.width);
+      addBoundsY(sh.y, sh.height);
+    }
+    for (const im of slide.images) {
+      if (im.id === id || (im.rotation ?? 0) !== 0) continue;
+      addBoundsX(im.x, im.width);
+      addBoundsY(im.y, im.height);
+    }
+    for (const t of slide.texts) {
+      if (t.id === id || (t.rotation ?? 0) !== 0) continue;
+      addBoundsX(t.x, t.width);
+      addBoundsY(t.y, t.fontSize * 1.2);
+    }
+
+    const myXs: [string, number][] = [
+      ["left", x],
+      ["center", x + w / 2],
+      ["right", x + w],
+    ];
+    const myYs: [string, number][] = [
+      ["top", y],
+      ["middle", y + h / 2],
+      ["bottom", y + h],
+    ];
+
+    let bestDx = { d: Infinity, line: 0, myEdge: "" };
+    for (const target of xTargets) {
+      for (const [edge, value] of myXs) {
+        const d = Math.abs(target - value);
+        if (d < SNAP_THRESHOLD && d < bestDx.d) bestDx = { d, line: target, myEdge: edge };
+      }
+    }
+    let bestDy = { d: Infinity, line: 0, myEdge: "" };
+    for (const target of yTargets) {
+      for (const [edge, value] of myYs) {
+        const d = Math.abs(target - value);
+        if (d < SNAP_THRESHOLD && d < bestDy.d) bestDy = { d, line: target, myEdge: edge };
+      }
+    }
+
+    let newX = x, newY = y;
+    const guideV: number[] = [];
+    const guideH: number[] = [];
+    if (bestDx.myEdge) {
+      if (bestDx.myEdge === "left") newX = bestDx.line;
+      else if (bestDx.myEdge === "center") newX = bestDx.line - w / 2;
+      else if (bestDx.myEdge === "right") newX = bestDx.line - w;
+      guideV.push(bestDx.line);
+    }
+    if (bestDy.myEdge) {
+      if (bestDy.myEdge === "top") newY = bestDy.line;
+      else if (bestDy.myEdge === "middle") newY = bestDy.line - h / 2;
+      else if (bestDy.myEdge === "bottom") newY = bestDy.line - h;
+      guideH.push(bestDy.line);
+    }
+    setDragGuides({ v: guideV, h: guideH });
+    return { x: newX, y: newY };
+  }, []);
+
+  const clearDragGuides = useCallback(() => {
+    setDragGuides({ v: [], h: [] });
+  }, []);
+
+  // ── Context menu handlers ─────────────────────────────────────────────────
+  const openShapeContextMenu = useCallback((id: string, clientX: number, clientY: number) => {
+    const sh = slidesRef.current[activeIndexRef.current]?.shapes.find((x) => x.id === id);
+    if (!sh) return;
+    setContextMenu({
+      x: clientX,
+      y: clientY,
+      kind: "shape",
+      locked: !!sh.locked,
+      flipX: !!sh.flipX,
+      flipY: !!sh.flipY,
+      shadow: !!sh.shadow,
+    });
+  }, []);
+  const openTextContextMenu = useCallback((id: string, clientX: number, clientY: number) => {
+    const t = slidesRef.current[activeIndexRef.current]?.texts.find((x) => x.id === id);
+    if (!t) return;
+    setContextMenu({
+      x: clientX,
+      y: clientY,
+      kind: "text",
+      locked: !!t.locked,
+    });
+  }, []);
+  const openImageContextMenu = useCallback((id: string, clientX: number, clientY: number) => {
+    const im = slidesRef.current[activeIndexRef.current]?.images.find((x) => x.id === id);
+    if (!im) return;
+    setContextMenu({
+      x: clientX,
+      y: clientY,
+      kind: "image",
+      locked: !!im.locked,
+      flipX: !!im.flipX,
+      flipY: !!im.flipY,
+      shadow: !!im.shadow,
+    });
+  }, []);
+
+  // ── Nudge with arrow keys ─────────────────────────────────────────────────
+  const nudgeSelection = useCallback((dx: number, dy: number) => {
+    if (selectedTextId) {
+      mutateActiveSlide((s) => ({
+        ...s,
+        texts: s.texts.map((t) => t.id === selectedTextId ? { ...t, x: t.x + dx, y: t.y + dy } : t),
+      }));
+    } else if (selectedShapeId) {
+      mutateActiveSlide((s) => ({
+        ...s,
+        shapes: s.shapes.map((sh) => sh.id === selectedShapeId ? { ...sh, x: sh.x + dx, y: sh.y + dy } : sh),
+      }));
+    } else if (selectedImageId) {
+      mutateActiveSlide((s) => ({
+        ...s,
+        images: s.images.map((im) => im.id === selectedImageId ? { ...im, x: im.x + dx, y: im.y + dy } : im),
+      }));
+    }
+  }, [selectedTextId, selectedShapeId, selectedImageId, mutateActiveSlide]);
+
   const removeBackgroundImage = useCallback(() => {
     updateSlide({
       backgroundImage: undefined,
@@ -528,11 +773,35 @@ export default function Editor({ presentation }: Props) {
     setAdjustingBackground(false);
   }, [updateSlide]);
 
-  // Keyboard delete
+  const handleBackgroundFile = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (!dataUrl) return;
+      const img = new window.Image();
+      img.onload = () => {
+        updateSlide({
+          backgroundImage: dataUrl,
+          backgroundImageWidth: img.naturalWidth,
+          backgroundImageHeight: img.naturalHeight,
+          backgroundOffsetX: 0,
+          backgroundOffsetY: 0,
+          backgroundScale: 1,
+        });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }, [updateSlide]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (inField) return;
+      const hasSelection = selectedTextId || selectedShapeId || selectedImageId;
+
       if (e.key === "Delete" || e.key === "Backspace") {
         if (adjustingBackground) removeBackgroundImage();
         else if (selectedTextId) deleteSelectedText();
@@ -545,10 +814,25 @@ export default function Editor({ presentation }: Props) {
         if (e.shiftKey) redo();
         else undo();
       }
+      // Cmd/Ctrl + D — duplicate selection
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+        if (hasSelection) {
+          e.preventDefault();
+          duplicateSelection();
+        }
+      }
+      // Arrow keys — nudge selected (1px, or 10px with Shift)
+      if (hasSelection && (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
+        const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+        nudgeSelection(dx, dy);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo]);
+  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection]);
 
   // ── Slide management ──────────────────────────────────────────────────────
 
@@ -583,6 +867,25 @@ export default function Editor({ presentation }: Props) {
     });
     const newActive = Math.min(activeIndexRef.current, slidesRef.current.length - 1);
     setActiveIndex(newActive);
+    clearSelection();
+    scheduleSave();
+  }, [scheduleSave, clearSelection]);
+
+  const duplicateSlide = useCallback((index: number) => {
+    const src = slidesRef.current[index];
+    if (!src) return;
+    // Deep-clone via JSON so nested arrays/objects are independent; assign new ids.
+    const clone: SlideState = JSON.parse(JSON.stringify(src));
+    clone.id = newId("s");
+    clone.shapes = clone.shapes.map((sh) => ({ ...sh, id: newId("sh") }));
+    clone.texts = clone.texts.map((t) => ({ ...t, id: newId("t") }));
+    clone.images = clone.images.map((im) => ({ ...im, id: newId("im") }));
+    setSlides((prev) => {
+      const next = [...prev.slice(0, index + 1), clone, ...prev.slice(index + 1)];
+      slidesRef.current = next;
+      return next;
+    });
+    setActiveIndex(index + 1);
     clearSelection();
     scheduleSave();
   }, [scheduleSave, clearSelection]);
@@ -657,6 +960,8 @@ export default function Editor({ presentation }: Props) {
 
         // Images first (background layer)
         for (const im of s.images) {
+          // pptxgenjs rotate is in degrees (0-360)
+          const rot = ((im.rotation ?? 0) % 360 + 360) % 360;
           slide.addImage({
             data: im.src.startsWith("data:") ? im.src : undefined,
             path: !im.src.startsWith("data:") ? im.src : undefined,
@@ -665,11 +970,16 @@ export default function Editor({ presentation }: Props) {
             w: toIn(im.width, "w"),
             h: toIn(im.height, "h"),
             transparency: Math.round((1 - im.opacity) * 100),
+            rotate: rot || undefined,
+            flipH: im.flipX || undefined,
+            flipV: im.flipY || undefined,
+            shadow: im.shadow ? { type: "outer", color: "000000", blur: 8, offset: 4, angle: 45, opacity: 0.4 } : undefined,
           });
         }
 
         // Shapes
         for (const sh of s.shapes) {
+          const rot = ((sh.rotation ?? 0) % 360 + 360) % 360;
           const shapeType =
             sh.type === "rect"
               ? sh.cornerRadius && sh.cornerRadius > 0 ? "roundRect" : "rect"
@@ -677,26 +987,38 @@ export default function Editor({ presentation }: Props) {
               ? "ellipse"
               : sh.type === "triangle"
               ? "triangle"
+              : sh.type === "star"
+              ? "star5"
+              : sh.type === "hexagon"
+              ? "hexagon"
+              : sh.type === "arrow"
+              ? "rightArrow"
               : "line";
+          const isLineLike = sh.type === "line";
           slide.addShape(shapeType, {
             x: toIn(sh.x, "w"),
             y: toIn(sh.y, "h"),
             w: toIn(sh.width, "w"),
             h: toIn(sh.height, "h"),
-            fill: sh.type === "line" ? undefined : { color: noHash(sh.fill), transparency: Math.round((1 - sh.opacity) * 100) },
+            fill: isLineLike ? undefined : { color: noHash(sh.fill), transparency: Math.round((1 - sh.opacity) * 100) },
             line: sh.strokeWidth > 0
               ? { color: noHash(sh.stroke), width: sh.strokeWidth / 1.333 }
-              : sh.type === "line"
+              : isLineLike
               ? { color: noHash(sh.stroke) || "000000", width: (sh.strokeWidth || 4) / 1.333 }
               : { type: "none" },
             rectRadius: sh.type === "rect" && sh.cornerRadius
               ? Math.min(0.5, sh.cornerRadius / Math.min(sh.width, sh.height))
               : undefined,
+            rotate: rot || undefined,
+            flipH: sh.flipX || undefined,
+            flipV: sh.flipY || undefined,
+            shadow: sh.shadow ? { type: "outer", color: "000000", blur: 8, offset: 4, angle: 45, opacity: 0.4 } : undefined,
           });
         }
 
         // Texts on top
         for (const t of s.texts) {
+          const rot = ((t.rotation ?? 0) % 360 + 360) % 360;
           slide.addText(t.text, {
             x: toIn(t.x, "w"),
             y: toIn(t.y, "h"),
@@ -711,6 +1033,7 @@ export default function Editor({ presentation }: Props) {
             align: t.textAlign,
             valign: "top",
             margin: 0,
+            rotate: rot || undefined,
           });
         }
       }
@@ -758,6 +1081,15 @@ export default function Editor({ presentation }: Props) {
           onAddShape={addShape}
           onAddText={addText}
           onAddImage={addImage}
+          hasImageSelected={!!selectedImageId}
+          selectedImageFrame={
+            selectedImageId
+              ? slides[activeIndex]?.images.find((i) => i.id === selectedImageId)?.frame
+              : undefined
+          }
+          onApplyFrameToSelected={(frame) => {
+            if (selectedImageId) updateImage(selectedImageId, { frame });
+          }}
         />
         {fontPanelOpen && selection?.kind === "text" && (
           <FontPanel
@@ -779,6 +1111,7 @@ export default function Editor({ presentation }: Props) {
                   ref={slideWrapperRef}
                   onMouseDown={handleSlideMouseDown}
                   onDoubleClick={handleSlideDoubleClick}
+                  onContextMenu={handleSlideContextMenu}
                   className="relative shadow-2xl"
                   style={{
                     width: SLIDE_W,
@@ -852,6 +1185,9 @@ export default function Editor({ presentation }: Props) {
                           onSelect={handleImageSelect}
                           onUpdate={updateImage}
                           onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                          onContextMenu={openImageContextMenu}
                         />
                         <ShapeLayer
                           shapes={currentSlide.shapes}
@@ -860,6 +1196,9 @@ export default function Editor({ presentation }: Props) {
                           onSelect={handleShapeSelect}
                           onUpdate={updateShape}
                           onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                          onContextMenu={openShapeContextMenu}
                         />
                         <TextLayer
                           texts={currentSlide.texts}
@@ -868,7 +1207,27 @@ export default function Editor({ presentation }: Props) {
                           onSelect={handleTextSelect}
                           onUpdate={updateText}
                           onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                          onContextMenu={openTextContextMenu}
                         />
+
+                        {/* Alignment guides while dragging */}
+                        {(dragGuides.v.length > 0 || dragGuides.h.length > 0) && (
+                          <svg
+                            className="absolute inset-0 pointer-events-none"
+                            width={SLIDE_W}
+                            height={SLIDE_H}
+                            style={{ overflow: "visible", zIndex: 50 }}
+                          >
+                            {dragGuides.v.map((vx, i) => (
+                              <line key={`v${i}`} x1={vx} y1={0} x2={vx} y2={SLIDE_H} stroke="#ec4899" strokeWidth={1} />
+                            ))}
+                            {dragGuides.h.map((hy, i) => (
+                              <line key={`h${i}`} x1={0} y1={hy} x2={SLIDE_W} y2={hy} stroke="#ec4899" strokeWidth={1} />
+                            ))}
+                          </svg>
+                        )}
 
                         {/* Adjust-mode UI on top: drag overlay covering the entire visible image,
                             rule-of-thirds grid on the slide bounds, corner handles at image corners. */}
@@ -985,6 +1344,71 @@ export default function Editor({ presentation }: Props) {
           <ZoomControls zoom={zoom} onChange={setZoom} onFit={handleFit} />
         </div>
       </div>
+
+      {contextMenu && (
+        <ContextMenu
+          state={contextMenu}
+          onDuplicate={contextMenu.kind !== "slide" ? duplicateSelection : undefined}
+          onReorder={contextMenu.kind !== "slide" ? reorderSelection : undefined}
+          onToggleFlipX={
+            contextMenu.kind === "shape"
+              ? () => selectedShapeId && updateShape(selectedShapeId, { flipX: !contextMenu.flipX })
+              : contextMenu.kind === "image"
+              ? () => selectedImageId && updateImage(selectedImageId, { flipX: !contextMenu.flipX })
+              : undefined
+          }
+          onToggleFlipY={
+            contextMenu.kind === "shape"
+              ? () => selectedShapeId && updateShape(selectedShapeId, { flipY: !contextMenu.flipY })
+              : contextMenu.kind === "image"
+              ? () => selectedImageId && updateImage(selectedImageId, { flipY: !contextMenu.flipY })
+              : undefined
+          }
+          onToggleShadow={
+            contextMenu.kind === "shape"
+              ? () => selectedShapeId && updateShape(selectedShapeId, { shadow: !contextMenu.shadow })
+              : contextMenu.kind === "image"
+              ? () => selectedImageId && updateImage(selectedImageId, { shadow: !contextMenu.shadow })
+              : undefined
+          }
+          onToggleLock={
+            contextMenu.kind === "slide"
+              ? undefined
+              : () => {
+                  if (contextMenu.kind === "text" && selectedTextId) updateText(selectedTextId, { locked: !contextMenu.locked });
+                  else if (contextMenu.kind === "shape" && selectedShapeId) updateShape(selectedShapeId, { locked: !contextMenu.locked });
+                  else if (contextMenu.kind === "image" && selectedImageId) updateImage(selectedImageId, { locked: !contextMenu.locked });
+                }
+          }
+          onDelete={
+            contextMenu.kind === "slide"
+              ? undefined
+              : () => {
+                  if (contextMenu.kind === "text") deleteSelectedText();
+                  else if (contextMenu.kind === "shape") deleteSelectedShape();
+                  else if (contextMenu.kind === "image") deleteSelectedImage();
+                }
+          }
+          onAddSlide={contextMenu.kind === "slide" ? addSlide : undefined}
+          onDuplicateSlide={contextMenu.kind === "slide" ? () => duplicateSlide(activeIndexRef.current) : undefined}
+          onDeleteSlide={contextMenu.kind === "slide" ? () => deleteSlide(activeIndexRef.current) : undefined}
+          onChangeBackgroundImage={contextMenu.kind === "slide" ? openBackgroundFilePicker : undefined}
+          onRemoveBackgroundImage={contextMenu.kind === "slide" ? removeBackgroundImage : undefined}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      <input
+        ref={bgFileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleBackgroundFile(file);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }

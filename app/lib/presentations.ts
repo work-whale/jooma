@@ -13,9 +13,11 @@ export interface TextObject {
   fontFamily: string;
   color: string;
   textAlign: "left" | "center" | "right";
+  rotation?: number;
+  locked?: boolean;
 }
 
-export type ShapeType = "rect" | "ellipse" | "triangle" | "line";
+export type ShapeType = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon";
 
 export interface ShapeObject {
   id: string;
@@ -29,7 +31,22 @@ export interface ShapeObject {
   strokeWidth: number;
   opacity: number;
   cornerRadius?: number;
+  rotation?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+  shadow?: boolean;
+  locked?: boolean;
 }
+
+export type ImageFrame =
+  | "none"
+  | "circle"
+  | "rounded"
+  | "pill"
+  | "diamond"
+  | "hexagon"
+  | "star"
+  | "arch";
 
 export interface ImageObject {
   id: string;
@@ -39,6 +56,12 @@ export interface ImageObject {
   height: number;
   src: string;
   opacity: number;
+  rotation?: number;
+  flipX?: boolean;
+  flipY?: boolean;
+  shadow?: boolean;
+  locked?: boolean;
+  frame?: ImageFrame;
 }
 
 export interface SlideJSON {

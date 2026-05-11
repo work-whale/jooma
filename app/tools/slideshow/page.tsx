@@ -1,9 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, Plus, Monitor, LayoutGrid, Trash2 } from "lucide-react";
-import { listPresentations, deletePresentation, type Presentation } from "@/app/lib/presentations";
+import { listPresentations, deletePresentation, type Presentation, type SlideJSON } from "@/app/lib/presentations";
+import MiniSlide from "@/app/components/editor/MiniSlide";
+
+function SlideThumbnail({ slide }: { slide: SlideJSON }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width;
+      if (w > 0) setWidth(w);
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="w-full aspect-video overflow-hidden bg-white">
+      {width > 0 && <MiniSlide slide={slide} width={width} />}
+    </div>
+  );
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -124,21 +146,20 @@ export default function SlideshowListPage() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map((p) => {
-              const firstSlide = p.slides?.[0] as { thumbnail?: string } | undefined;
+              const firstSlide = p.slides?.[0];
               return (
                 <Link
                   key={p.id}
                   href={`/editor/${p.id}`}
                   className="group bg-[#FAF9F5] rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
                 >
-                  <div className="aspect-video bg-linear-to-br from-violet-400 to-purple-600 flex items-center justify-center">
-                    {firstSlide?.thumbnail ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={firstSlide.thumbnail} alt={p.title} className="w-full h-full object-cover" />
-                    ) : (
+                  {firstSlide ? (
+                    <SlideThumbnail slide={firstSlide} />
+                  ) : (
+                    <div className="aspect-video bg-linear-to-br from-violet-400 to-purple-600 flex items-center justify-center">
                       <Monitor className="w-8 h-8 text-white/60" />
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <div className="p-4">
                     <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-violet-700 transition-colors">
                       {p.title}

@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X } from "lucide-react";
+import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon } from "lucide-react";
+import GraphicsPanel from "./GraphicsPanel";
+import PicturesPanel from "./PicturesPanel";
+import FramePicker from "./FramePicker";
+import type { FrameShape } from "./frames";
 
 type TabId = "elements" | "text" | "uploads";
 
+type SidebarShape = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon";
+
 interface Props {
-  onAddShape: (type: "rect" | "ellipse" | "triangle" | "line") => void;
+  onAddShape: (type: SidebarShape) => void;
   onAddText: (preset: "heading" | "subheading" | "body") => void;
   onAddImage: (dataUrl: string) => void;
+  onApplyFrameToSelected?: (frame: FrameShape) => void;
+  selectedImageFrame?: FrameShape;
+  hasImageSelected?: boolean;
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -17,12 +26,22 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "uploads", label: "Uploads", icon: <ImageIcon className="w-5 h-5" /> },
 ];
 
-export default function Sidebar({ onAddShape, onAddText, onAddImage }: Props) {
+type ElementSubTab = "shapes" | "graphics" | "pictures" | "frames";
+
+export default function Sidebar({
+  onAddShape,
+  onAddText,
+  onAddImage,
+  onApplyFrameToSelected,
+  selectedImageFrame,
+  hasImageSelected,
+}: Props) {
   // active = which tab is currently displayed (if any)
   // locked = panel was opened explicitly via click; mouse-leave doesn't auto-close it.
   //          When false, the panel is "hover-preview" mode and closes on mouse leave.
   const [active, setActive] = useState<TabId | null>(null);
   const [locked, setLocked] = useState(false);
+  const [elementSubTab, setElementSubTab] = useState<ElementSubTab>("shapes");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<string[]>([]);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -129,35 +148,100 @@ export default function Sidebar({ onAddShape, onAddText, onAddImage }: Props) {
 
           <div className="flex-1 overflow-y-auto p-4">
             {active === "elements" && (
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => onAddShape("rect")}
-                  className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
-                  title="Rectangle"
+              <div className="space-y-3">
+                {/* Sub-tabs (horizontally scrollable) */}
+                <div
+                  className="flex gap-1 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none" }}
                 >
-                  <Square className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
-                </button>
-                <button
-                  onClick={() => onAddShape("ellipse")}
-                  className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
-                  title="Ellipse"
-                >
-                  <Circle className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
-                </button>
-                <button
-                  onClick={() => onAddShape("triangle")}
-                  className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
-                  title="Triangle"
-                >
-                  <TriangleIcon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
-                </button>
-                <button
-                  onClick={() => onAddShape("line")}
-                  className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
-                  title="Line"
-                >
-                  <Minus className="w-7 h-7 text-gray-700" strokeWidth={2} />
-                </button>
+                  {(["shapes", "graphics", "pictures", "frames"] as ElementSubTab[]).map((id) => (
+                    <button
+                      key={id}
+                      onClick={() => setElementSubTab(id)}
+                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
+                        elementSubTab === id
+                          ? "bg-violet-100 text-violet-700"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {id}
+                    </button>
+                  ))}
+                </div>
+
+                {elementSubTab === "shapes" && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => onAddShape("rect")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Rectangle"
+                    >
+                      <Square className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("ellipse")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Ellipse"
+                    >
+                      <Circle className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("triangle")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Triangle"
+                    >
+                      <TriangleIcon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("hexagon")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Hexagon"
+                    >
+                      <Hexagon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("star")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Star"
+                    >
+                      <Star className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("line")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Line"
+                    >
+                      <Minus className="w-7 h-7 text-gray-700" strokeWidth={2} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("arrow")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Arrow"
+                    >
+                      <MoveRight className="w-7 h-7 text-gray-700" strokeWidth={1.75} />
+                    </button>
+                  </div>
+                )}
+
+                {elementSubTab === "graphics" && <GraphicsPanel onAdd={onAddImage} />}
+
+                {elementSubTab === "pictures" && <PicturesPanel onAdd={onAddImage} />}
+
+                {elementSubTab === "frames" && (
+                  <div className="space-y-3">
+                    {!hasImageSelected && (
+                      <p className="text-[11px] text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                        Select an image first, then pick a frame to clip it to that shape.
+                      </p>
+                    )}
+                    <FramePicker
+                      value={selectedImageFrame}
+                      onSelect={(f) => onApplyFrameToSelected?.(f)}
+                      columns={3}
+                      showLabels
+                    />
+                  </div>
+                )}
               </div>
             )}
 
