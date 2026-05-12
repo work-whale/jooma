@@ -12,6 +12,7 @@ import ImageLayer from "./ImageLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
 import ContextMenu, { type ContextMenuState } from "./ContextMenu";
+import type { FrameShape } from "./frames";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
   BLANK_SLIDE,
@@ -66,6 +67,7 @@ export default function Editor({ presentation }: Props) {
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
   const [dragGuides, setDragGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [editingInnerImageId, setEditingInnerImageId] = useState<string | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const slideWrapperRef = useRef<HTMLDivElement>(null);
@@ -318,6 +320,28 @@ export default function Editor({ presentation }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [adjustingBackground]);
 
+  // Same for inner-image frame editing
+  useEffect(() => {
+    if (!editingInnerImageId) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        setEditingInnerImageId(null);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [editingInnerImageId]);
+
+  // Exit inner-edit when the image is deselected
+  useEffect(() => {
+    if (editingInnerImageId && selectedImageId !== editingInnerImageId) {
+      setEditingInnerImageId(null);
+    }
+  }, [editingInnerImageId, selectedImageId]);
+
+  const exitInnerEdit = useCallback(() => setEditingInnerImageId(null), []);
+
   const handleViewportMouseDown = (e: React.MouseEvent) => {
     if (slideWrapperRef.current && !slideWrapperRef.current.contains(e.target as Node)) {
       clearSelection();
@@ -429,7 +453,7 @@ export default function Editor({ presentation }: Props) {
 
   // ── Text actions ───────────────────────────────────────────────────────────
 
-  const addText = useCallback((preset: "heading" | "subheading" | "body") => {
+  const addText = useCallback((preset: "heading" | "subheading" | "body", fontFamily?: string) => {
     const presets = {
       heading: { fontSize: 72, fontWeight: "700", text: "Heading" },
       subheading: { fontSize: 48, fontWeight: "600", text: "Subheading" },
@@ -446,7 +470,7 @@ export default function Editor({ presentation }: Props) {
       fontWeight: p.fontWeight,
       fontStyle: "normal",
       underline: false,
-      fontFamily: "Inter, sans-serif",
+      fontFamily: fontFamily ?? "Inter, sans-serif",
       color: "#1a1a2e",
       textAlign: "left",
     };
@@ -548,6 +572,22 @@ export default function Editor({ presentation }: Props) {
     img.src = src;
   }, [mutateActiveSlide, handleImageSelect]);
 
+  const addFrame = useCallback((frame: FrameShape) => {
+    const SIZE = 280;
+    const newImage: ImageObject = {
+      id: newId("im"),
+      x: SLIDE_W / 2 - SIZE / 2,
+      y: SLIDE_H / 2 - SIZE / 2,
+      width: SIZE,
+      height: SIZE,
+      src: "",
+      opacity: 1,
+      frame,
+    };
+    mutateActiveSlide((s) => ({ ...s, images: [...s.images, newImage] }));
+    handleImageSelect(newImage.id);
+  }, [mutateActiveSlide, handleImageSelect]);
+
   const updateImage = useCallback((id: string, patch: Partial<ImageObject>) => {
     mutateActiveSlide((s) => ({
       ...s,
@@ -560,6 +600,19 @@ export default function Editor({ presentation }: Props) {
     mutateActiveSlide((s) => ({ ...s, images: s.images.filter((x) => x.id !== selectedImageId) }));
     setSelectedImageId(null);
   }, [selectedImageId, mutateActiveSlide]);
+
+  const removeInnerImage = useCallback(() => {
+    if (!editingInnerImageId) return;
+    updateImage(editingInnerImageId, {
+      src: "",
+      innerOffsetX: undefined,
+      innerOffsetY: undefined,
+      innerScale: undefined,
+      naturalWidth: undefined,
+      naturalHeight: undefined,
+    });
+    setEditingInnerImageId(null);
+  }, [editingInnerImageId, updateImage]);
 
   // ── Z-order ───────────────────────────────────────────────────────────────
   // Reorders within the object's own array (texts/shapes/images). Note: cross-type
@@ -1081,15 +1134,7 @@ export default function Editor({ presentation }: Props) {
           onAddShape={addShape}
           onAddText={addText}
           onAddImage={addImage}
-          hasImageSelected={!!selectedImageId}
-          selectedImageFrame={
-            selectedImageId
-              ? slides[activeIndex]?.images.find((i) => i.id === selectedImageId)?.frame
-              : undefined
-          }
-          onApplyFrameToSelected={(frame) => {
-            if (selectedImageId) updateImage(selectedImageId, { frame });
-          }}
+          onAddFrame={addFrame}
         />
         {fontPanelOpen && selection?.kind === "text" && (
           <FontPanel
@@ -1188,6 +1233,10 @@ export default function Editor({ presentation }: Props) {
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
                           onContextMenu={openImageContextMenu}
+                          editingInnerImageId={editingInnerImageId}
+                          onEnterEditInner={setEditingInnerImageId}
+                          onExitEditInner={exitInnerEdit}
+                          onRemoveInnerImage={removeInnerImage}
                         />
                         <ShapeLayer
                           shapes={currentSlide.shapes}

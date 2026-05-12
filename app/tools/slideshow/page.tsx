@@ -40,6 +40,8 @@ export default function SlideshowListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Presentation | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     listPresentations()
@@ -55,18 +57,36 @@ export default function SlideshowListPage() {
     p.title.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const requestDelete = (presentation: Presentation, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Delete this slideshow?")) return;
+    setPendingDelete(presentation);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      await deletePresentation(id);
-      setPresentations((prev) => prev.filter((p) => p.id !== id));
+      await deletePresentation(pendingDelete.id);
+      setPresentations((prev) => prev.filter((p) => p.id !== pendingDelete.id));
+      setPendingDelete(null);
     } catch (err) {
       console.error(err);
-      alert("Failed to delete");
+      setError("Failed to delete. Please try again.");
+    } finally {
+      setDeleting(false);
     }
   };
+
+  // Close the modal on Escape
+  useEffect(() => {
+    if (!pendingDelete) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !deleting) setPendingDelete(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [pendingDelete, deleting]);
 
   return (
     <div className="space-y-8">
@@ -169,7 +189,7 @@ export default function SlideshowListPage() {
                     </p>
                   </div>
                   <button
-                    onClick={(e) => handleDelete(p.id, e)}
+                    onClick={(e) => requestDelete(p, e)}
                     className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-opacity"
                     title="Delete"
                   >
@@ -180,6 +200,55 @@ export default function SlideshowListPage() {
             })}
           </div>
         </>
+      )}
+
+      {/* Delete confirmation modal */}
+      {pendingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-modal-title"
+        >
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => { if (!deleting) setPendingDelete(null); }}
+          />
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+            style={{ borderColor: "#DAD8D0" }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 id="delete-modal-title" className="text-base font-semibold text-gray-900">
+                  Delete this slideshow?
+                </h2>
+                <p className="text-sm text-gray-600 mt-1 wrap-break-word">
+                  &ldquo;{pendingDelete.title || "Untitled Slideshow"}&rdquo; will be permanently removed. This can&rsquo;t be undone.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setPendingDelete(null)}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

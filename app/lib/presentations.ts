@@ -54,7 +54,7 @@ export interface ImageObject {
   y: number;
   width: number;
   height: number;
-  src: string;
+  src: string;            // empty string indicates an empty frame waiting for an image drop
   opacity: number;
   rotation?: number;
   flipX?: boolean;
@@ -62,6 +62,17 @@ export interface ImageObject {
   shadow?: boolean;
   locked?: boolean;
   frame?: ImageFrame;
+  cornerRadius?: number;  // % roundness, applies to rounded/pill/none frames (0-50)
+  strokeColor?: string;
+  strokeWidth?: number;   // px, 0 = no stroke
+  strokeAlign?: "inside" | "outside" | "center";  // default "inside"
+  tint?: string;          // Recolors single-color SVGs (icons, simple graphics)
+  // Pan/zoom of the photo INSIDE the frame. Only meaningful when `frame` is set and src is non-empty.
+  innerOffsetX?: number;  // px offset from frame center (clamped so frame stays filled)
+  innerOffsetY?: number;
+  innerScale?: number;    // multiplier on top of cover-fit, >= 1
+  naturalWidth?: number;  // measured on first load — drives edit-mode math
+  naturalHeight?: number;
 }
 
 export interface SlideJSON {

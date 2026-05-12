@@ -16,14 +16,19 @@ export interface FrameStyle {
   borderRadius?: string;
 }
 
-export function getFrameStyle(frame: FrameShape | undefined): FrameStyle {
+// `cornerRadius` is a percentage (0-50) that applies to shapes which use border-radius
+// (rounded, pill, none). The other shapes use a fixed clip-path and ignore it.
+export function getFrameStyle(
+  frame: FrameShape | undefined,
+  cornerRadius?: number,
+): FrameStyle {
   switch (frame) {
     case "circle":
       return { clipPath: "circle(50% at 50% 50%)" };
     case "rounded":
-      return { borderRadius: "16%" };
+      return { borderRadius: `${cornerRadius ?? 16}%` };
     case "pill":
-      return { borderRadius: "9999px" };
+      return { borderRadius: `${cornerRadius ?? 50}%` };
     case "diamond":
       return { clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" };
     case "hexagon":
@@ -40,8 +45,13 @@ export function getFrameStyle(frame: FrameShape | undefined): FrameStyle {
       return { borderRadius: "50% 50% 8% 8% / 60% 60% 8% 8%" };
     case "none":
     default:
-      return {};
+      return cornerRadius ? { borderRadius: `${cornerRadius}%` } : {};
   }
+}
+
+// Which frame shapes accept a custom corner-radius slider
+export function frameSupportsRoundness(frame: FrameShape | undefined): boolean {
+  return frame === "rounded" || frame === "pill" || frame === "none" || frame === undefined;
 }
 
 // Used to render preview thumbnails on the Frames picker (the swatch shapes).

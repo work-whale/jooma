@@ -31,7 +31,7 @@ export default function FramePicker({ value = "none", onSelect, columns = 4, sho
               isActive ? "bg-violet-100" : "hover:bg-gray-100"
             }`}
           >
-            <div className="aspect-square w-full bg-gray-100 overflow-hidden">
+            <div className="aspect-square w-full overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={PREVIEW_SRC}

@@ -43,8 +43,27 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
 
   if (!presentation) {
     return (
-      <div className="flex items-center justify-center h-screen text-sm text-gray-500" style={{ backgroundColor: "#F1EFE3" }}>
-        Loading…
+      <div
+        className="flex flex-col items-center justify-center h-screen gap-6"
+        style={{ backgroundColor: "#F1EFE3" }}
+      >
+        {/* Three layered slide cards with a staggered pulse */}
+        <div className="relative w-32 h-20">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="absolute inset-0 rounded-md bg-white shadow-md animate-pulse"
+              style={{
+                transform: `translate(${(i - 1) * 6}px, ${(i - 1) * 6}px) rotate(${(i - 1) * 2.5}deg)`,
+                animationDelay: `${i * 180}ms`,
+                animationDuration: "1.4s",
+                border: "1px solid #DAD8D0",
+                zIndex: 3 - i,
+              }}
+            />
+          ))}
+        </div>
+        <p className="text-xs uppercase tracking-widest text-gray-500 font-medium">Loading slideshow</p>
       </div>
     );
   }

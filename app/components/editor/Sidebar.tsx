@@ -6,6 +6,7 @@ import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
 import FramePicker from "./FramePicker";
 import type { FrameShape } from "./frames";
+import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
 
 type TabId = "elements" | "text" | "uploads";
 
@@ -13,11 +14,9 @@ type SidebarShape = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" 
 
 interface Props {
   onAddShape: (type: SidebarShape) => void;
-  onAddText: (preset: "heading" | "subheading" | "body") => void;
+  onAddText: (preset: "heading" | "subheading" | "body", fontFamily?: string) => void;
   onAddImage: (dataUrl: string) => void;
-  onApplyFrameToSelected?: (frame: FrameShape) => void;
-  selectedImageFrame?: FrameShape;
-  hasImageSelected?: boolean;
+  onAddFrame?: (frame: FrameShape) => void;
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -32,57 +31,36 @@ export default function Sidebar({
   onAddShape,
   onAddText,
   onAddImage,
-  onApplyFrameToSelected,
-  selectedImageFrame,
-  hasImageSelected,
+  onAddFrame,
 }: Props) {
-  // active = which tab is currently displayed (if any)
-  // locked = panel was opened explicitly via click; mouse-leave doesn't auto-close it.
-  //          When false, the panel is "hover-preview" mode and closes on mouse leave.
+  // Click-toggle only. The panel stays open until the user clicks the same icon,
+  // the close button, or anywhere outside the sidebar.
   const [active, setActive] = useState<TabId | null>(null);
-  const [locked, setLocked] = useState(false);
+
+  // Lazy-inject the Google Fonts <link> the first time the sidebar mounts.
+  useEffect(() => { injectGoogleFonts(); }, []);
   const [elementSubTab, setElementSubTab] = useState<ElementSubTab>("shapes");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<string[]>([]);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Close panel when clicking outside the sidebar (covers both hover + locked modes)
+  // Close when clicking outside the sidebar
   useEffect(() => {
     if (!active) return;
     const handler = (e: MouseEvent) => {
       if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
         setActive(null);
-        setLocked(false);
       }
     };
     window.addEventListener("mousedown", handler);
     return () => window.removeEventListener("mousedown", handler);
   }, [active]);
 
-  const handleHoverOpen = (id: TabId) => {
-    if (!locked) setActive(id);
-  };
-
   const handleClick = (id: TabId) => {
-    if (active === id && locked) {
-      // Clicked the same icon while locked → close + unlock.
-      setActive(null);
-      setLocked(false);
-    } else {
-      setActive(id);
-      setLocked(true);
-    }
+    setActive((prev) => (prev === id ? null : id));
   };
 
-  const handleMouseLeave = () => {
-    // Only auto-close on leave if the user never clicked to lock it open.
-    if (!locked) setActive(null);
-  };
-
-  const handleClose = () => {
-    setActive(null);
-    setLocked(false);
-  };
+  const handleClose = () => setActive(null);
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
@@ -99,9 +77,8 @@ export default function Sidebar({
   return (
     <div
       ref={sidebarRef}
-      className="flex shrink-0 relative z-20"
+      className="flex shrink-0 relative z-20 [&_button]:cursor-pointer [&_a]:cursor-pointer [&_label]:cursor-pointer"
       style={{ backgroundColor: "#F1EFE3" }}
-      onMouseLeave={handleMouseLeave}
     >
       {/* Vertical icon strip */}
       <div
@@ -113,7 +90,6 @@ export default function Sidebar({
           return (
             <button
               key={t.id}
-              onMouseEnter={() => handleHoverOpen(t.id)}
               onClick={() => handleClick(t.id)}
               className={`w-14 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-colors ${
                 isActive
@@ -131,7 +107,7 @@ export default function Sidebar({
       {/* Expanded panel — only rendered when a tab is active. Floats over canvas. */}
       {active && (
         <div
-          className="absolute top-0 bottom-0 w-64 border-r shadow-lg flex flex-col"
+          className="absolute top-0 bottom-0 w-72 border-r shadow-lg flex flex-col"
           style={{ borderColor: "#DAD8D0", backgroundColor: "#F1EFE3", left: 72 }}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#DAD8D0" }}>
@@ -158,7 +134,7 @@ export default function Sidebar({
                     <button
                       key={id}
                       onClick={() => setElementSubTab(id)}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
                         elementSubTab === id
                           ? "bg-violet-100 text-violet-700"
                           : "text-gray-600 hover:bg-gray-100"
@@ -229,14 +205,11 @@ export default function Sidebar({
 
                 {elementSubTab === "frames" && (
                   <div className="space-y-3">
-                    {!hasImageSelected && (
-                      <p className="text-[11px] text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-2">
-                        Select an image first, then pick a frame to clip it to that shape.
-                      </p>
-                    )}
+                    <p className="text-[11px] text-gray-500">
+                      Click a frame to drop it on the slide. Then drag any photo from Pictures, Graphics, or Uploads onto it.
+                    </p>
                     <FramePicker
-                      value={selectedImageFrame}
-                      onSelect={(f) => onApplyFrameToSelected?.(f)}
+                      onSelect={(f) => onAddFrame?.(f)}
                       columns={3}
                       showLabels
                     />
@@ -246,25 +219,44 @@ export default function Sidebar({
             )}
 
             {active === "text" && (
-              <div className="space-y-2">
-                <button
-                  onClick={() => onAddText("heading")}
-                  className="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-50"
-                >
-                  <p className="text-xl font-bold text-gray-900">Add a heading</p>
-                </button>
-                <button
-                  onClick={() => onAddText("subheading")}
-                  className="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-50"
-                >
-                  <p className="text-base font-semibold text-gray-700">Add a subheading</p>
-                </button>
-                <button
-                  onClick={() => onAddText("body")}
-                  className="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-50"
-                >
-                  <p className="text-sm text-gray-600">Add body text</p>
-                </button>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <button
+                    onClick={() => onAddText("heading")}
+                    className="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-50"
+                  >
+                    <p className="text-xl font-bold text-gray-900">Add a heading</p>
+                  </button>
+                  <button
+                    onClick={() => onAddText("subheading")}
+                    className="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-50"
+                  >
+                    <p className="text-base font-semibold text-gray-700">Add a subheading</p>
+                  </button>
+                  <button
+                    onClick={() => onAddText("body")}
+                    className="w-full text-left bg-white border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-50"
+                  >
+                    <p className="text-sm text-gray-600">Add body text</p>
+                  </button>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Fonts</p>
+                  <div className="space-y-1">
+                    {GOOGLE_FONTS.map((f) => (
+                      <button
+                        key={f.name}
+                        onClick={() => onAddText("heading", f.family)}
+                        title={`Add heading in ${f.name}`}
+                        className="w-full text-left px-3 py-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 truncate"
+                        style={{ fontFamily: f.family, fontSize: 16 }}
+                      >
+                        {f.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -295,6 +287,8 @@ export default function Sidebar({
                         key={i}
                         src={u}
                         alt=""
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", u)}
                         onClick={() => onAddImage(u)}
                         className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
                       />

@@ -13,9 +13,13 @@ interface Props {
   onSnap?: (id: string, x: number, y: number, w: number, h: number) => { x: number; y: number };
   onDragEnd?: () => void;
   onContextMenu?: (id: string, clientX: number, clientY: number) => void;
+  editingInnerImageId?: string | null;
+  onEnterEditInner?: (id: string) => void;
+  onExitEditInner?: () => void;
+  onRemoveInnerImage?: () => void;
 }
 
-export default function ImageLayer({ images, selectedId, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu }: Props) {
+export default function ImageLayer({ images, selectedId, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, editingInnerImageId, onEnterEditInner, onExitEditInner, onRemoveInnerImage }: Props) {
   return (
     <div className="absolute inset-0" style={{ pointerEvents: "none" }}>
       {images.map((img) => (
@@ -30,6 +34,10 @@ export default function ImageLayer({ images, selectedId, zoom, onSelect, onUpdat
           onSnap={onSnap}
           onDragEnd={onDragEnd}
           onContextMenu={onContextMenu}
+          editingInner={editingInnerImageId === img.id}
+          onEnterEditInner={onEnterEditInner}
+          onExitEditInner={onExitEditInner}
+          onRemoveInnerImage={onRemoveInnerImage}
         />
       ))}
     </div>

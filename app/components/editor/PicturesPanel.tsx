@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Search, Loader2, MoreHorizontal, ExternalLink } from "lucide-react";
 
 interface Props {
   onAdd: (dataUrl: string) => void;
@@ -9,14 +9,14 @@ interface Props {
 
 interface Photo {
   id: string;
+  provider: Provider;
   thumb: string;
   full: string;
   alt: string;
-  // Attribution (required by Unsplash & Pexels production terms)
   photographerName?: string;
   photographerUrl?: string;
-  sourceUrl?: string;          // link back to the photo on the provider
-  downloadLocation?: string;   // Unsplash: must be pinged when photo is used
+  sourceUrl?: string;
+  downloadLocation?: string;
 }
 
 type Provider = "pexels" | "unsplash" | "pixabay";
@@ -37,21 +37,17 @@ const PROVIDER_KEYS: Record<Provider, string | undefined> = {
   pixabay: PIXABAY_KEY,
 };
 
-const PROVIDER_URLS: Record<Provider, string> = {
-  pexels: "https://www.pexels.com",
-  unsplash: "https://unsplash.com",
-  pixabay: "https://pixabay.com",
-};
-
 const PROVIDER_DOCS: Record<Provider, { envVar: string; site: string }> = {
   pexels: { envVar: "NEXT_PUBLIC_PEXELS_API_KEY", site: "pexels.com/api" },
   unsplash: { envVar: "NEXT_PUBLIC_UNSPLASH_ACCESS_KEY", site: "unsplash.com/developers" },
   pixabay: { envVar: "NEXT_PUBLIC_PIXABAY_KEY", site: "pixabay.com/api/docs/" },
 };
 
-// Marketing/referral parameters Unsplash asks integrators to append to their links
-// so attribution links carry credit back to the app.
 const UTM = "utm_source=jooma&utm_medium=referral";
+
+// Initial batch ~ 14 photos. With 2-3 providers configured this lands at 14-21
+// (we fetch the same per-provider amount each page so subsequent loads stay balanced).
+const PER_PROVIDER = 7;
 
 async function fetchAsDataUrl(url: string): Promise<string> {
   const res = await fetch(url);
@@ -67,7 +63,7 @@ async function fetchAsDataUrl(url: string): Promise<string> {
 
 interface PexelsPhoto {
   id: number;
-  src: { medium: string; large: string };
+  src: { tiny: string; medium: string; large: string };
   alt: string;
   url: string;
   photographer: string;
@@ -75,13 +71,14 @@ interface PexelsPhoto {
 }
 interface UnsplashPhoto {
   id: string;
-  urls: { small: string; regular: string };
+  urls: { thumb: string; small: string; regular: string };
   alt_description: string | null;
   links: { html: string; download_location: string };
   user: { name: string; links: { html: string } };
 }
 interface PixabayPhoto {
   id: number;
+  previewURL: string;
   webformatURL: string;
   largeImageURL: string;
   pageURL: string;
@@ -89,18 +86,19 @@ interface PixabayPhoto {
   user: string;
 }
 
-async function search(provider: Provider, query: string, signal: AbortSignal): Promise<Photo[]> {
+async function search(provider: Provider, query: string, page: number, signal: AbortSignal): Promise<Photo[]> {
   const key = PROVIDER_KEYS[provider];
   if (!key) return [];
   if (provider === "pexels") {
     const url = query
-      ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=30`
-      : `https://api.pexels.com/v1/curated?per_page=30`;
+      ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${PER_PROVIDER}&page=${page}`
+      : `https://api.pexels.com/v1/curated?per_page=${PER_PROVIDER}&page=${page}`;
     const r = await fetch(url, { headers: { Authorization: key }, signal });
     const data: { photos?: PexelsPhoto[] } = await r.json();
     return (data.photos ?? []).map((p) => ({
-      id: String(p.id),
-      thumb: p.src.medium,
+      id: `pexels-${p.id}`,
+      provider: "pexels" as Provider,
+      thumb: p.src.tiny,
       full: p.src.large,
       alt: p.alt,
       photographerName: p.photographer,
@@ -110,14 +108,15 @@ async function search(provider: Provider, query: string, signal: AbortSignal): P
   }
   if (provider === "unsplash") {
     const url = query
-      ? `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=30`
-      : `https://api.unsplash.com/photos?per_page=30`;
+      ? `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${PER_PROVIDER}&page=${page}`
+      : `https://api.unsplash.com/photos?per_page=${PER_PROVIDER}&page=${page}`;
     const r = await fetch(url, { headers: { Authorization: `Client-ID ${key}` }, signal });
     const data: { results?: UnsplashPhoto[] } | UnsplashPhoto[] = await r.json();
     const list = Array.isArray(data) ? data : data.results ?? [];
     return list.map((p) => ({
-      id: p.id,
-      thumb: p.urls.small,
+      id: `unsplash-${p.id}`,
+      provider: "unsplash" as Provider,
+      thumb: p.urls.thumb,
       full: p.urls.regular,
       alt: p.alt_description ?? "",
       photographerName: p.user.name,
@@ -128,12 +127,13 @@ async function search(provider: Provider, query: string, signal: AbortSignal): P
   }
   if (provider === "pixabay") {
     const q = query || "landscape";
-    const url = `https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(q)}&per_page=30&image_type=photo&safesearch=true`;
+    const url = `https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(q)}&per_page=${PER_PROVIDER}&page=${page}&image_type=photo&safesearch=true`;
     const r = await fetch(url, { signal });
     const data: { hits?: PixabayPhoto[] } = await r.json();
     return (data.hits ?? []).map((p) => ({
-      id: String(p.id),
-      thumb: p.webformatURL,
+      id: `pixabay-${p.id}`,
+      provider: "pixabay" as Provider,
+      thumb: p.previewURL,
       full: p.largeImageURL,
       alt: p.tags,
       photographerName: p.user,
@@ -143,9 +143,40 @@ async function search(provider: Provider, query: string, signal: AbortSignal): P
   return [];
 }
 
-// Unsplash requires that we hit the photo's `download_location` whenever a user
-// "uses" the photo (i.e. inserts it into their slide). Fire-and-forget; failures
-// shouldn't block adding the photo.
+// Round-robin interleave so results from each provider are mixed evenly.
+function interleave<T>(lists: T[][]): T[] {
+  const result: T[] = [];
+  const maxLen = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < maxLen; i++) {
+    for (const list of lists) {
+      if (list[i] !== undefined) result.push(list[i]);
+    }
+  }
+  return result;
+}
+
+function dedupeById<T extends { id: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const item of items) {
+    if (!seen.has(item.id)) {
+      seen.add(item.id);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+function findScrollParent(el: HTMLElement | null): HTMLElement | Window {
+  let cur = el?.parentElement ?? null;
+  while (cur) {
+    const style = window.getComputedStyle(cur);
+    if (/(auto|scroll|overlay)/.test(style.overflowY)) return cur;
+    cur = cur.parentElement;
+  }
+  return window;
+}
+
 async function trackUnsplashDownload(downloadLocation: string) {
   if (!UNSPLASH_KEY) return;
   try {
@@ -161,31 +192,105 @@ export default function PicturesPanel({ onAdd }: Props) {
     [],
   );
 
-  const [provider, setProvider] = useState<Provider>(availableProviders[0] ?? "pexels");
   const [query, setQuery] = useState("");
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [infoOpenId, setInfoOpenId] = useState<string | null>(null);
+  const infoRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
 
+  // Close the photo-info popover when clicking elsewhere
   useEffect(() => {
-    if (!PROVIDER_KEYS[provider]) return;
+    if (!infoOpenId) return;
+    const handler = (e: MouseEvent) => {
+      if (infoRef.current && !infoRef.current.contains(e.target as Node)) setInfoOpenId(null);
+    };
+    window.addEventListener("mousedown", handler);
+    return () => window.removeEventListener("mousedown", handler);
+  }, [infoOpenId]);
+
+  useEffect(() => { setInfoOpenId(null); }, [query]);
+
+  // Reset + load first page whenever the query changes
+  useEffect(() => {
+    if (availableProviders.length === 0) return;
     setLoading(true);
     setError(null);
+    setPhotos([]);
+    setPage(1);
+    setHasMore(true);
     const controller = new AbortController();
-    const id = setTimeout(() => {
-      search(provider, query.trim(), controller.signal)
-        .then(setPhotos)
-        .catch((err) => {
-          if (err.name !== "AbortError") setError("Failed to load photos");
-        })
-        .finally(() => setLoading(false));
+    const id = setTimeout(async () => {
+      try {
+        const results = await Promise.all(
+          availableProviders.map((p) => search(p, query.trim(), 1, controller.signal).catch(() => [] as Photo[])),
+        );
+        const merged = dedupeById(interleave(results));
+        setPhotos(merged);
+        // If nothing comes back (or close to it), stop fetching more
+        if (merged.length < PER_PROVIDER) setHasMore(false);
+      } catch (err) {
+        const e = err as { name?: string };
+        if (e.name !== "AbortError") setError("Failed to load photos");
+      } finally {
+        setLoading(false);
+      }
     }, 250);
     return () => {
       clearTimeout(id);
       controller.abort();
     };
-  }, [query, provider]);
+  }, [query, availableProviders]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingRef.current || !hasMore || availableProviders.length === 0) return;
+    loadingRef.current = true;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const controller = new AbortController();
+      const results = await Promise.all(
+        availableProviders.map((p) => search(p, query.trim(), nextPage, controller.signal).catch(() => [] as Photo[])),
+      );
+      const merged = interleave(results);
+      if (merged.length === 0) {
+        setHasMore(false);
+      } else {
+        setPhotos((prev) => {
+          const seen = new Set(prev.map((x) => x.id));
+          const fresh = merged.filter((x) => !seen.has(x.id));
+          return fresh.length ? [...prev, ...fresh] : prev;
+        });
+        setPage(nextPage);
+        if (merged.length < PER_PROVIDER) setHasMore(false);
+      }
+    } finally {
+      setLoadingMore(false);
+      loadingRef.current = false;
+    }
+  }, [hasMore, page, availableProviders, query]);
+
+  // Infinite scroll — observe a sentinel inside whichever ancestor actually scrolls.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const root = findScrollParent(sentinel);
+    const rootEl = root instanceof Window ? null : root;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { root: rootEl, rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   if (availableProviders.length === 0) {
     return (
@@ -208,9 +313,7 @@ export default function PicturesPanel({ onAdd }: Props) {
   const handleAdd = async (photo: Photo) => {
     setAdding(photo.id);
     try {
-      // For Unsplash, ping the download_location BEFORE fetching the image — this
-      // is required by their API terms and powers their internal usage stats.
-      if (provider === "unsplash" && photo.downloadLocation) {
+      if (photo.provider === "unsplash" && photo.downloadLocation) {
         trackUnsplashDownload(photo.downloadLocation);
       }
       const dataUrl = await fetchAsDataUrl(photo.full);
@@ -224,28 +327,6 @@ export default function PicturesPanel({ onAdd }: Props) {
 
   return (
     <div>
-      {/* Provider switcher (only when more than one key is configured) */}
-      {availableProviders.length > 1 && (
-        <div
-          className="flex gap-1 overflow-x-auto mb-2 -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {availableProviders.map((p) => (
-            <button
-              key={p}
-              onClick={() => setProvider(p)}
-              className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide transition-colors ${
-                provider === p
-                  ? "bg-violet-100 text-violet-700"
-                  : "text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              {PROVIDER_LABELS[p]}
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
         <input
@@ -264,12 +345,19 @@ export default function PicturesPanel({ onAdd }: Props) {
 
       <div className="mt-3 grid grid-cols-2 gap-1.5">
         {photos.map((p) => (
-          <div key={p.id} className="space-y-0.5">
+          <div key={p.id} className="relative group">
             <button
               onClick={() => handleAdd(p)}
               disabled={adding === p.id}
-              title={p.alt || p.photographerName}
+              title={p.alt}
               className="aspect-square w-full overflow-hidden rounded-lg border border-gray-200 hover:border-violet-400 relative disabled:opacity-60 block"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("application/x-jooma-image", p.full);
+                if (p.provider === "unsplash" && p.downloadLocation) {
+                  trackUnsplashDownload(p.downloadLocation);
+                }
+              }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -286,20 +374,50 @@ export default function PicturesPanel({ onAdd }: Props) {
               )}
             </button>
             {p.photographerName && (
-              <p className="text-[9px] text-gray-500 truncate" title={p.photographerName}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInfoOpenId((cur) => (cur === p.id ? null : p.id));
+                }}
+                title="Photo info"
+                className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/55 backdrop-blur-sm text-white flex items-center justify-center transition-opacity ${
+                  infoOpenId === p.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {infoOpenId === p.id && p.photographerName && (
+              <div
+                ref={infoRef}
+                className="absolute top-9 right-1.5 z-50 bg-white border rounded-lg shadow-lg p-2 text-[11px] w-44"
+                style={{ borderColor: "#DAD8D0" }}
+              >
+                <p className="text-gray-500 leading-tight">Photo by</p>
                 {p.photographerUrl ? (
                   <a
                     href={p.photographerUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:underline hover:text-gray-700"
+                    className="font-semibold text-gray-800 hover:underline truncate block"
                   >
                     {p.photographerName}
                   </a>
                 ) : (
-                  p.photographerName
+                  <p className="font-semibold text-gray-800 truncate">{p.photographerName}</p>
                 )}
-              </p>
+                {p.sourceUrl && (
+                  <a
+                    href={p.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1.5 flex items-center gap-1 text-violet-700 hover:underline"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    View on {PROVIDER_LABELS[p.provider]}
+                  </a>
+                )}
+              </div>
             )}
           </div>
         ))}
@@ -308,20 +426,16 @@ export default function PicturesPanel({ onAdd }: Props) {
         )}
       </div>
 
-      <p className="text-[10px] text-gray-400 text-center mt-3">
-        Photos by{" "}
-        <a
-          href={
-            provider === "unsplash"
-              ? `${PROVIDER_URLS.unsplash}?${UTM}`
-              : PROVIDER_URLS[provider]
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-gray-600"
-        >
-          {PROVIDER_LABELS[provider]}
-        </a>
+      {/* Infinite-scroll sentinel + spinner */}
+      <div ref={sentinelRef} className="flex items-center justify-center py-4">
+        {loadingMore && <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />}
+        {!hasMore && photos.length > 0 && (
+          <span className="text-[10px] text-gray-400">No more results</span>
+        )}
+      </div>
+
+      <p className="text-[10px] text-gray-400 text-center mt-1">
+        Photos from {availableProviders.map((p) => PROVIDER_LABELS[p]).join(", ")}
       </p>
     </div>
   );

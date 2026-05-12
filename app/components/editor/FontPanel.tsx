@@ -2,24 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, Search } from "lucide-react";
+import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
 
-const FONTS = [
-  "Inter, sans-serif",
-  "Arial",
-  "Helvetica, sans-serif",
-  "Georgia",
-  "Times New Roman",
-  "Courier New",
-  "Verdana",
-  "Tahoma",
-  "Trebuchet MS",
-  "Comic Sans MS",
-  "Impact",
-  "Bricolage Grotesque, sans-serif",
-  "Lucida Console",
-  "Palatino",
-  "Garamond",
-];
+export const FONTS = GOOGLE_FONTS.map((f) => f.family);
 
 interface Props {
   current: string;
@@ -30,6 +15,8 @@ interface Props {
 export default function FontPanel({ current, onSelect, onClose }: Props) {
   const [query, setQuery] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { injectGoogleFonts(); }, []);
 
   // Click outside closes
   useEffect(() => {

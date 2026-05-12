@@ -1,7 +1,7 @@
 "use client";
 
-import { memo, useRef } from "react";
-import { RotateCw } from "lucide-react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { RotateCw, ImagePlus, Trash2 } from "lucide-react";
 import type { ImageObject } from "@/app/lib/presentations";
 import { getFrameStyle } from "./frames";
 
@@ -15,6 +15,10 @@ interface Props {
   onSnap?: (id: string, x: number, y: number, w: number, h: number) => { x: number; y: number };
   onDragEnd?: () => void;
   onContextMenu?: (id: string, clientX: number, clientY: number) => void;
+  editingInner?: boolean;
+  onEnterEditInner?: (id: string) => void;
+  onExitEditInner?: () => void;
+  onRemoveInnerImage?: () => void;
 }
 
 const MIN_SIZE = 12;
@@ -37,15 +41,61 @@ const cursorFor: Record<HandlePos, string> = {
   se: "nwse-resize",
 };
 
-function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu }: Props) {
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+async function urlToDataUrl(url: string): Promise<string> {
+  if (url.startsWith("data:")) return url;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Fetch failed");
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Read failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, editingInner = false, onEnterEditInner, onExitEditInner, onRemoveInnerImage }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dragOver, setDragOver] = useState(false);
   const rotation = image.rotation ?? 0;
   const rad = (rotation * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
 
+  const isFrame = !!image.frame && image.frame !== "none";
+  const isEmptyFrame = isFrame && !image.src;
+
+  // Auto-measure naturals when the photo first arrives (or older saves missed them).
+  useEffect(() => {
+    if (!image.src || isEmptyFrame) return;
+    if (image.naturalWidth && image.naturalHeight) return;
+    const img = new window.Image();
+    img.onload = () => {
+      onUpdate(image.id, { naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight });
+    };
+    img.src = image.src;
+  }, [image.src, image.naturalWidth, image.naturalHeight, image.id, isEmptyFrame, onUpdate]);
+
+  // Inner-photo metrics — mirrors the slide-background editor's bgMetrics.
+  const inner = useMemo(() => {
+    const nW = image.naturalWidth ?? image.width;
+    const nH = image.naturalHeight ?? image.height;
+    const userScale = Math.max(1, image.innerScale ?? 1);
+    const coverScale = Math.max(image.width / nW, image.height / nH);
+    const finalScale = coverScale * userScale;
+    const scaledW = nW * finalScale;
+    const scaledH = nH * finalScale;
+    const maxX = Math.max(0, (scaledW - image.width) / 2);
+    const maxY = Math.max(0, (scaledH - image.height) / 2);
+    const offsetX = clamp(image.innerOffsetX ?? 0, -maxX, maxX);
+    const offsetY = clamp(image.innerOffsetY ?? 0, -maxY, maxY);
+    return { coverScale, userScale, finalScale, scaledW, scaledH, maxX, maxY, offsetX, offsetY };
+  }, [image.naturalWidth, image.naturalHeight, image.width, image.height, image.innerScale, image.innerOffsetX, image.innerOffsetY]);
+
   const handleBodyMouseDown = (e: React.MouseEvent) => {
-    if (image.locked) return;
+    if (image.locked || editingInner) return;
     e.stopPropagation();
     if (!selected) onSelect(image.id);
     const startX = e.clientX;
@@ -89,12 +139,11 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
     const origCX = origX + origW / 2;
     const origCY = origY + origH / 2;
     const aspect = origW / origH;
-    const lockAspect = pos.length === 2;
+    const lockAspect = pos.length === 2 && !isEmptyFrame;
 
     const move = (ev: MouseEvent) => {
       const dx = (ev.clientX - startX) / zoom;
       const dy = (ev.clientY - startY) / zoom;
-      // Project to local frame
       const localDx = dx * cos + dy * sin;
       const localDy = -dx * sin + dy * cos;
       let w = origW, h = origH;
@@ -120,9 +169,7 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
 
       const dCxScreen = cxLocal * cos - cyLocal * sin;
       const dCyScreen = cxLocal * sin + cyLocal * cos;
-      const newCX = origCX + dCxScreen;
-      const newCY = origCY + dCyScreen;
-      onUpdate(image.id, { x: newCX - w / 2, y: newCY - h / 2, width: w, height: h });
+      onUpdate(image.id, { x: origCX + dCxScreen - w / 2, y: origCY + dCyScreen - h / 2, width: w, height: h });
     };
     const up = () => {
       window.removeEventListener("mousemove", move);
@@ -161,6 +208,114 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
     window.addEventListener("mouseup", up);
   };
 
+  // ── Drop-into-frame ────────────────────────────────────────────────────────
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isFrame) return;
+    if (!e.dataTransfer.types.includes("application/x-jooma-image")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragOver) setDragOver(true);
+  };
+  const handleDragLeave = () => setDragOver(false);
+  const handleDrop = async (e: React.DragEvent) => {
+    if (!isFrame) return;
+    const url = e.dataTransfer.getData("application/x-jooma-image");
+    if (!url) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    try {
+      const dataUrl = await urlToDataUrl(url);
+      const img = new window.Image();
+      img.onload = () => {
+        onUpdate(image.id, {
+          src: dataUrl,
+          innerOffsetX: 0,
+          innerOffsetY: 0,
+          innerScale: 1,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+        });
+        onCommit();
+      };
+      img.src = dataUrl;
+    } catch (err) {
+      console.error("Failed to drop into frame", err);
+    }
+  };
+
+  // ── Pan inner image (edit mode) ────────────────────────────────────────────
+  const handleInnerPanStart = (e: React.MouseEvent) => {
+    if (!editingInner) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const origX = inner.offsetX;
+    const origY = inner.offsetY;
+    const { maxX, maxY } = inner;
+    const move = (ev: MouseEvent) => {
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      onUpdate(image.id, {
+        innerOffsetX: clamp(origX + dx, -maxX, maxX),
+        innerOffsetY: clamp(origY + dy, -maxY, maxY),
+      });
+    };
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      onCommit();
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
+
+  // ── Scale via corner handles (edit mode) ───────────────────────────────────
+  // Distance-from-frame-center sets the scale, same approach as the slide bg editor.
+  const handleInnerScaleStart = (e: React.MouseEvent) => {
+    if (!editingInner) return;
+    e.stopPropagation();
+    e.preventDefault();
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const startDist = Math.hypot(e.clientX - cx, e.clientY - cy);
+    if (startDist === 0) return;
+    const origScale = inner.userScale;
+    const origOx = inner.offsetX;
+    const origOy = inner.offsetY;
+    const nW = image.naturalWidth ?? image.width;
+    const nH = image.naturalHeight ?? image.height;
+    const coverScale = inner.coverScale;
+
+    const move = (ev: MouseEvent) => {
+      const currentDist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+      const newScale = clamp(origScale * (currentDist / startDist), 1, 5);
+      const scaledW = nW * coverScale * newScale;
+      const scaledH = nH * coverScale * newScale;
+      const maxX = Math.max(0, (scaledW - image.width) / 2);
+      const maxY = Math.max(0, (scaledH - image.height) / 2);
+      onUpdate(image.id, {
+        innerScale: newScale,
+        innerOffsetX: clamp(origOx, -maxX, maxX),
+        innerOffsetY: clamp(origOy, -maxY, maxY),
+      });
+    };
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      onCommit();
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
+
+  const frameStyle = getFrameStyle(image.frame, image.cornerRadius);
+  const imgLeft = (image.width - inner.scaledW) / 2 + inner.offsetX;
+  const imgTop = (image.height - inner.scaledH) / 2 + inner.offsetY;
+
   return (
     <div
       ref={containerRef}
@@ -171,13 +326,22 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
         width: image.width,
         height: image.height,
         opacity: image.opacity,
-        cursor: image.locked ? "default" : selected ? "move" : "pointer",
+        cursor: image.locked ? "default" : editingInner ? "default" : selected ? "move" : "pointer",
         pointerEvents: "auto",
         transform: `rotate(${rotation}deg)`,
         transformOrigin: "center center",
         filter: image.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
       }}
       onMouseDown={handleBodyMouseDown}
+      onDoubleClick={(e) => {
+        if (image.locked || !isFrame || !image.src) return;
+        e.stopPropagation();
+        if (!selected) onSelect(image.id);
+        onEnterEditInner?.(image.id);
+      }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       onContextMenu={(e) => {
         if (!onContextMenu) return;
         e.preventDefault();
@@ -186,33 +350,203 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
         onContextMenu(image.id, e.clientX, e.clientY);
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={image.src}
-        alt=""
-        draggable={false}
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "block",
-          objectFit: image.frame && image.frame !== "none" ? "cover" : "fill",
-          userSelect: "none",
-          transform: `scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
-          transformOrigin: "center center",
-          ...getFrameStyle(image.frame),
-        }}
-      />
+      {isEmptyFrame ? (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            background: dragOver ? "#ddd6fe" : "#e7e5e0",
+            border: `2px dashed ${dragOver ? "#7c3aed" : "#9ca3af"}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: 6,
+            color: "#6b7280",
+            fontSize: 11,
+            ...frameStyle,
+          }}
+        >
+          <ImagePlus className="w-7 h-7" strokeWidth={1.5} />
+          <span>Drop image</span>
+        </div>
+      ) : !editingInner ? (
+        // Normal display: clipped to frame, with optional stroke (inside/outside/center).
+        (() => {
+          const sw = image.strokeWidth ?? 0;
+          const sc = image.strokeColor ?? "#1a1a2e";
+          const sa = image.strokeAlign ?? "inside";
+          const useOuter = sw > 0 && (sa === "outside" || sa === "center");
+          const outerPad = useOuter ? (sa === "outside" ? sw : sw / 2) : 0;
+          const insetW = sw > 0 ? (sa === "inside" ? sw : sa === "center" ? sw / 2 : 0) : 0;
+          return (
+            <>
+              {/* Outer ring (clipped to the frame's bigger shape) for outside/center stroke */}
+              {useOuter && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -outerPad,
+                    top: -outerPad,
+                    right: -outerPad,
+                    bottom: -outerPad,
+                    background: sc,
+                    ...frameStyle,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+              {/* Frame clip with image */}
+              <div style={{ position: "absolute", inset: 0, overflow: "hidden", ...frameStyle }}>
+                {image.src && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={image.src}
+                    alt=""
+                    draggable={false}
+                    style={{
+                      position: "absolute",
+                      left: imgLeft,
+                      top: imgTop,
+                      width: inner.scaledW,
+                      height: inner.scaledH,
+                      maxWidth: "none",
+                      maxHeight: "none",
+                      display: "block",
+                      userSelect: "none",
+                      transform: `scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
+                      transformOrigin: "center center",
+                    }}
+                  />
+                )}
+                {insetW > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      boxShadow: `inset 0 0 0 ${insetW}px ${sc}`,
+                      pointerEvents: "none",
+                    }}
+                  />
+                )}
+              </div>
+            </>
+          );
+        })()
+      ) : (
+        // Edit-inner mode: image extends beyond frame, dark mask covers outside,
+        // drag overlay covers full image extent, corner handles at image corners,
+        // rule-of-thirds grid inside frame.
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image.src}
+            alt=""
+            draggable={false}
+            style={{
+              position: "absolute",
+              left: imgLeft,
+              top: imgTop,
+              width: inner.scaledW,
+              height: inner.scaledH,
+              maxWidth: "none",
+              maxHeight: "none",
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          />
+          {/* Dark mask outside the frame's bounding box */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.55)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Rule-of-thirds grid inside frame */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 bottom-0" style={{ left: "33.333%", width: 1, background: "rgba(255,255,255,0.6)" }} />
+            <div className="absolute top-0 bottom-0" style={{ left: "66.666%", width: 1, background: "rgba(255,255,255,0.6)" }} />
+            <div className="absolute left-0 right-0" style={{ top: "33.333%", height: 1, background: "rgba(255,255,255,0.6)" }} />
+            <div className="absolute left-0 right-0" style={{ top: "66.666%", height: 1, background: "rgba(255,255,255,0.6)" }} />
+          </div>
+          {/* Drag overlay covering the full image extent */}
+          <div
+            onMouseDown={handleInnerPanStart}
+            style={{
+              position: "absolute",
+              left: imgLeft,
+              top: imgTop,
+              width: inner.scaledW,
+              height: inner.scaledH,
+              cursor: "move",
+              pointerEvents: "auto",
+            }}
+          />
+          {/* Corner handles at the IMAGE corners */}
+          {(["nw", "ne", "sw", "se"] as const).map((pos) => {
+            const cursor = pos === "nw" || pos === "se" ? "nwse-resize" : "nesw-resize";
+            const left = pos.includes("e") ? imgLeft + inner.scaledW : imgLeft;
+            const top = pos.includes("s") ? imgTop + inner.scaledH : imgTop;
+            return (
+              <div
+                key={pos}
+                onMouseDown={handleInnerScaleStart}
+                style={{
+                  position: "absolute",
+                  left,
+                  top,
+                  width: 14,
+                  height: 14,
+                  background: "#ffffff",
+                  border: "2px solid #7c3aed",
+                  borderRadius: 3,
+                  cursor,
+                  pointerEvents: "auto",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 2,
+                }}
+              />
+            );
+          })}
+        </>
+      )}
+
+      {editingInner && (
+        <div
+          className="absolute left-1/2 -top-12 bg-violet-600 text-white text-xs px-2 py-1.5 rounded-md shadow-md whitespace-nowrap flex items-center gap-1.5"
+          style={{ transform: "translate(-50%, 0)", zIndex: 3 }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemoveInnerImage?.(); }}
+            className="text-[10px] font-semibold uppercase tracking-wide bg-white/15 hover:bg-red-500/80 px-2 py-0.5 rounded flex items-center gap-1"
+            title="Remove photo"
+          >
+            <Trash2 className="w-3 h-3" />
+            Remove
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onExitEditInner?.(); }}
+            className="text-[10px] font-semibold uppercase tracking-wide bg-white/15 hover:bg-white/25 px-2 py-0.5 rounded"
+          >
+            Done
+          </button>
+        </div>
+      )}
+
       {selected && (
         <>
           <div
             style={{
               position: "absolute",
               inset: -2,
-              border: "2px solid #7c3aed",
+              border: `2px ${editingInner ? "dashed" : "solid"} #7c3aed`,
               pointerEvents: "none",
             }}
           />
-          {!image.locked && HANDLES.map((pos) => {
+          {!image.locked && !editingInner && HANDLES.map((pos) => {
             const horiz = pos.includes("w") ? 0 : pos.includes("e") ? image.width : image.width / 2;
             const vert = pos.includes("n") ? 0 : pos.includes("s") ? image.height : image.height / 2;
             return (
@@ -235,7 +569,7 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
               />
             );
           })}
-          {!image.locked && (
+          {!image.locked && !editingInner && (
             <div
               onMouseDown={handleRotateMouseDown}
               title="Rotate (hold Shift to snap)"

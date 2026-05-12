@@ -167,6 +167,25 @@ const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
 });
 
 const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
+  const isFrame = !!image.frame && image.frame !== "none";
+  const isEmptyFrame = isFrame && !image.src;
+  const frameStyle = getFrameStyle(image.frame, image.cornerRadius);
+
+  // Same metrics as the editor's ImageElement (pixel-space pan/zoom).
+  const nW = image.naturalWidth ?? image.width;
+  const nH = image.naturalHeight ?? image.height;
+  const userScale = Math.max(1, image.innerScale ?? 1);
+  const coverScale = isFrame ? Math.max(image.width / nW, image.height / nH) : 1;
+  const finalScale = coverScale * userScale;
+  const scaledW = isFrame ? nW * finalScale : image.width;
+  const scaledH = isFrame ? nH * finalScale : image.height;
+  const maxX = Math.max(0, (scaledW - image.width) / 2);
+  const maxY = Math.max(0, (scaledH - image.height) / 2);
+  const offsetX = Math.max(-maxX, Math.min(maxX, image.innerOffsetX ?? 0));
+  const offsetY = Math.max(-maxY, Math.min(maxY, image.innerOffsetY ?? 0));
+  const imgLeft = (image.width - scaledW) / 2 + offsetX;
+  const imgTop = (image.height - scaledH) / 2 + offsetY;
+
   return (
     <div
       style={{
@@ -181,22 +200,67 @@ const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
         filter: image.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={image.src}
-        alt=""
-        draggable={false}
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "block",
-          objectFit: image.frame && image.frame !== "none" ? "cover" : "fill",
-          userSelect: "none",
-          transform: `scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
-          transformOrigin: "center center",
-          ...getFrameStyle(image.frame),
-        }}
-      />
+      {isEmptyFrame ? (
+        <div style={{ width: "100%", height: "100%", background: "#e7e5e0", ...frameStyle }} />
+      ) : (() => {
+        const sw = image.strokeWidth ?? 0;
+        const sc = image.strokeColor ?? "#1a1a2e";
+        const sa = image.strokeAlign ?? "inside";
+        const useOuter = sw > 0 && (sa === "outside" || sa === "center");
+        const outerPad = useOuter ? (sa === "outside" ? sw : sw / 2) : 0;
+        const insetW = sw > 0 ? (sa === "inside" ? sw : sa === "center" ? sw / 2 : 0) : 0;
+        return (
+          <>
+            {useOuter && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: -outerPad,
+                  top: -outerPad,
+                  right: -outerPad,
+                  bottom: -outerPad,
+                  background: sc,
+                  ...frameStyle,
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+            <div style={{ position: "absolute", inset: 0, overflow: "hidden", ...frameStyle }}>
+              {image.src && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={image.src}
+                  alt=""
+                  draggable={false}
+                  style={{
+                    position: "absolute",
+                    left: imgLeft,
+                    top: imgTop,
+                    width: scaledW,
+                    height: scaledH,
+                    maxWidth: "none",
+                    maxHeight: "none",
+                    display: "block",
+                    userSelect: "none",
+                    transform: `scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
+                    transformOrigin: "center center",
+                  }}
+                />
+              )}
+              {insetW > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    boxShadow: `inset 0 0 0 ${insetW}px ${sc}`,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 });

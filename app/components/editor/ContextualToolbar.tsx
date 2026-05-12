@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Move, Frame as FrameIcon } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush } from "lucide-react";
 import FramePicker from "./FramePicker";
-import type { FrameShape } from "./frames";
+import { type FrameShape } from "./frames";
+import { isSvgDataUrl, recolorSvgSrc } from "./svg-recolor";
+import ColorPicker from "./ColorPicker";
 import type { TextObject, ShapeObject, ImageObject, SlideJSON } from "@/app/lib/presentations";
 
 // Swatch-only button. Clicking opens a popover containing the native color picker,
@@ -22,41 +24,45 @@ function ColorPopover({
   extra?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [hex, setHex] = useState(value);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
-  const ref = useRef<HTMLDivElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ x: number; y: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setHex(value), [value]);
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (popoverRef.current?.contains(t)) return;
+      if (buttonRef.current?.contains(t)) return;
+      setOpen(false);
     };
     window.addEventListener("mousedown", h);
     return () => window.removeEventListener("mousedown", h);
   }, [open]);
 
-  const commit = () => {
-    let v = hex.trim();
-    if (!v.startsWith("#")) v = "#" + v;
-    if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v)) {
-      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
-      onChange(v.toLowerCase());
-    } else {
-      setHex(value);
-    }
-  };
-
   // Transparent / no-color indicator: render a tiny diagonal slash on the swatch.
   const isTransparent = value === "transparent" || value === "#00000000";
 
+  const handleClick = () => {
+    if (open) { setOpen(false); return; }
+    if (!buttonRef.current) return;
+    const r = buttonRef.current.getBoundingClientRect();
+    const POPOVER_W = 260;
+    // Center popover under the button, clamped so it never spills off either viewport edge.
+    const centered = r.left + r.width / 2 - POPOVER_W / 2;
+    const clamped = Math.max(8, Math.min(window.innerWidth - POPOVER_W - 8, centered));
+    setPopoverPos({ x: clamped, y: r.bottom + 8 });
+    setTooltipPos(null);
+    setOpen(true);
+  };
+
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div className="relative inline-flex">
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={handleClick}
         onMouseEnter={() => {
           if (open || !buttonRef.current) return;
           const r = buttonRef.current.getBoundingClientRect();
@@ -97,44 +103,27 @@ function ColorPopover({
           </div>
         )}
       </button>
-      {open && (
+      {open && popoverPos && (
         <div
-          className="absolute top-full mt-2 left-0 bg-white rounded-xl shadow-lg p-3 z-50 w-56 border"
-          style={{ borderColor: "#DAD8D0" }}
+          ref={popoverRef}
+          className="fixed bg-white rounded-xl shadow-lg p-3 z-100 border"
+          style={{ left: popoverPos.x, top: popoverPos.y, width: 260, borderColor: "#DAD8D0" }}
         >
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={isTransparent ? "#ffffff" : value}
-              onChange={(e) => onChange(e.target.value)}
-              className="h-10 w-10 rounded-md border border-gray-200 cursor-pointer p-0.5 shrink-0"
-            />
-            <input
-              type="text"
-              value={hex}
-              onChange={(e) => setHex(e.target.value)}
-              onBlur={commit}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-                if (e.key === "Escape") {
-                  setHex(value);
-                  (e.currentTarget as HTMLInputElement).blur();
-                }
-              }}
-              maxLength={7}
-              spellCheck={false}
-              className="flex-1 h-10 px-2 text-xs font-mono border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 uppercase"
-            />
+          <ColorPicker
+            value={isTransparent ? "#FFFFFF" : value}
+            onChange={onChange}
+          />
+          <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-100">
             <button
               type="button"
               onClick={() => onChange("transparent")}
               title="Clear color"
-              className="h-10 w-10 rounded-md border border-gray-200 hover:border-gray-300 flex items-center justify-center text-gray-500 hover:text-gray-700 shrink-0"
+              className="text-[11px] text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
             >
-              <X className="w-4 h-4" />
+              Clear
             </button>
           </div>
-          {extra && <div className="mt-3 pt-3 border-t border-gray-100">{extra}</div>}
+          {extra && <div className="mt-2 pt-2 border-t border-gray-100">{extra}</div>}
         </div>
       )}
     </div>
@@ -158,112 +147,9 @@ interface Props {
   onOpenFontPanel: () => void;
 }
 
-function PositionPopover({
-  x,
-  y,
-  width,
-  height,
-  onChange,
-}: {
-  x: number;
-  y: number;
-  width: number;
-  height?: number;
-  onChange: (patch: { x?: number; y?: number; width?: number; height?: number }) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    window.addEventListener("mousedown", handler);
-    return () => window.removeEventListener("mousedown", handler);
-  }, [open]);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button onClick={() => setOpen((o) => !o)} className={toggleBtn(open)} title="Position & size">
-        <Move className="w-3.5 h-3.5" />
-      </button>
-      {open && (
-        <div
-          className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-lg p-3 z-50 w-56 border"
-          style={{ borderColor: "#DAD8D0" }}
-        >
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-xs text-gray-600">
-              X
-              <input
-                type="number"
-                value={Math.round(x)}
-                onChange={(e) => onChange({ x: Number(e.target.value) })}
-                className={`${inputClass} w-full mt-1`}
-              />
-            </label>
-            <label className="text-xs text-gray-600">
-              Y
-              <input
-                type="number"
-                value={Math.round(y)}
-                onChange={(e) => onChange({ y: Number(e.target.value) })}
-                className={`${inputClass} w-full mt-1`}
-              />
-            </label>
-            <label className="text-xs text-gray-600">
-              W
-              <input
-                type="number"
-                value={Math.round(width)}
-                min={1}
-                onChange={(e) => onChange({ width: Math.max(1, Number(e.target.value)) })}
-                className={`${inputClass} w-full mt-1`}
-              />
-            </label>
-            {height !== undefined && (
-              <label className="text-xs text-gray-600">
-                H
-                <input
-                  type="number"
-                  value={Math.round(height)}
-                  min={1}
-                  onChange={(e) => onChange({ height: Math.max(1, Number(e.target.value)) })}
-                  className={`${inputClass} w-full mt-1`}
-                />
-              </label>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ObjectActions({
-  onDelete,
-  position,
-}: {
-  onDelete: () => void;
-  position?: {
-    x: number;
-    y: number;
-    width: number;
-    height?: number;
-    onChange: (patch: { x?: number; y?: number; width?: number; height?: number }) => void;
-  };
-}) {
+function ObjectActions({ onDelete }: { onDelete: () => void }) {
   return (
     <div className="ml-auto flex items-center gap-1">
-      {position && (
-        <PositionPopover
-          x={position.x}
-          y={position.y}
-          width={position.width}
-          height={position.height}
-          onChange={position.onChange}
-        />
-      )}
       <button onClick={onDelete} className={toggleBtn(false)} title="Delete">
         <Trash2 className="w-3.5 h-3.5" />
       </button>
@@ -356,10 +242,7 @@ export default function ContextualToolbar({
         <button onClick={() => onUpdateText({ textAlign: "right" })} className={toggleBtn(t.textAlign === "right")}>
           <AlignRight className="w-3.5 h-3.5" />
         </button>
-        <ObjectActions
-          onDelete={onDelete}
-          position={{ x: t.x, y: t.y, width: t.width, onChange: onUpdateText }}
-        />
+        <ObjectActions onDelete={onDelete} />
       </div>
     );
   }
@@ -426,74 +309,233 @@ export default function ContextualToolbar({
             className="accent-violet-600 w-24"
           />
         </label>
-        <ObjectActions
-          onDelete={onDelete}
-          position={{ x: sh.x, y: sh.y, width: sh.width, height: sh.height, onChange: onUpdateShape }}
-        />
+        <ObjectActions onDelete={onDelete} />
       </div>
     );
   }
 
   // image
   const im = selection.image;
+  const imFrame = (im.frame ?? "none") as FrameShape;
+  const cornerRadius = im.cornerRadius ?? (imFrame === "rounded" ? 16 : imFrame === "pill" ? 50 : 0);
+  const strokeWidth = im.strokeWidth ?? 0;
+  const strokeColor = im.strokeColor ?? "#1a1a2e";
+  const tint = im.tint ?? "#1a1a2e";
+  const isSvg = isSvgDataUrl(im.src);
   return (
     <div className={pillClass} style={{ scrollbarWidth: "none" }}>
+      {isSvg && (
+        <ColorPopover
+          value={tint}
+          onChange={(c) => {
+            const newSrc = recolorSvgSrc(im.src, c);
+            if (newSrc) onUpdateImage({ src: newSrc, tint: c });
+            else onUpdateImage({ tint: c });
+          }}
+          title="Icon color"
+        />
+      )}
       <FramePopover
-        value={(im.frame ?? "none") as FrameShape}
+        value={imFrame}
         onSelect={(f) => onUpdateImage({ frame: f })}
       />
-      <label className="flex items-center gap-1.5 text-xs text-gray-600">
-        Opacity
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={im.opacity}
-          onChange={(e) => onUpdateImage({ opacity: Number(e.target.value) })}
-          className="accent-violet-600 w-24"
-        />
-      </label>
-      <ObjectActions
-        onDelete={onDelete}
-        position={{ x: im.x, y: im.y, width: im.width, height: im.height, onChange: onUpdateImage }}
-      />
+      <IconPopover
+        icon={<Spline className="w-3.5 h-3.5" />}
+        label="Roundness"
+        isActive={cornerRadius > 0}
+      >
+        {() => (
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={50}
+              step={1}
+              value={cornerRadius}
+              onChange={(e) => onUpdateImage({ cornerRadius: Number(e.target.value) })}
+              className="accent-violet-600 flex-1"
+            />
+            <span className="text-xs font-mono text-gray-600 w-8 text-right">{cornerRadius}</span>
+          </div>
+        )}
+      </IconPopover>
+      <IconPopover
+        icon={<Brush className="w-3.5 h-3.5" />}
+        label="Border"
+        isActive={strokeWidth > 0}
+      >
+        {() => {
+          const strokeAlign = im.strokeAlign ?? "inside";
+          return (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <ColorPopover
+                  value={strokeColor}
+                  onChange={(c) => onUpdateImage({ strokeColor: c })}
+                  appearance="stroke"
+                />
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={strokeWidth}
+                    onChange={(e) => onUpdateImage({ strokeWidth: Number(e.target.value) })}
+                    className="accent-violet-600 flex-1"
+                  />
+                  <span className="text-xs font-mono text-gray-600 w-8 text-right">{strokeWidth}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Position</p>
+                <div className="grid grid-cols-3 gap-1">
+                  {(["inside", "center", "outside"] as const).map((pos) => (
+                    <button
+                      key={pos}
+                      onClick={() => onUpdateImage({ strokeAlign: pos })}
+                      className={`px-2 py-1 text-[11px] rounded-md border capitalize transition-colors ${
+                        strokeAlign === pos
+                          ? "bg-violet-100 border-violet-300 text-violet-700"
+                          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        }}
+      </IconPopover>
+      <IconPopover
+        icon={<Droplet className="w-3.5 h-3.5" />}
+        label="Opacity"
+        isActive={im.opacity < 1}
+      >
+        {() => (
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={im.opacity}
+              onChange={(e) => onUpdateImage({ opacity: Number(e.target.value) })}
+              className="accent-violet-600 flex-1"
+            />
+            <span className="text-xs font-mono text-gray-600 w-10 text-right">{Math.round(im.opacity * 100)}%</span>
+          </div>
+        )}
+      </IconPopover>
+      <ObjectActions onDelete={onDelete} />
     </div>
   );
 }
 
-function FramePopover({ value, onSelect }: { value: FrameShape; onSelect: (f: FrameShape) => void }) {
+// Generic icon-only button that opens a popover with the given children, and shows a
+// dark tooltip beneath on hover. The popover uses fixed positioning to escape the
+// toolbar's overflow-x-auto (which would otherwise clip it).
+function IconPopover({
+  icon,
+  label,
+  widthPx = 224,
+  children,
+  isActive,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  widthPx?: number;
+  children: (close: () => void) => React.ReactNode;
+  isActive?: boolean;
+}) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (popoverRef.current?.contains(t)) return;
+      if (buttonRef.current?.contains(t)) return;
+      setOpen(false);
     };
     window.addEventListener("mousedown", h);
     return () => window.removeEventListener("mousedown", h);
   }, [open]);
+
+  const handleClick = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    if (!buttonRef.current) return;
+    const r = buttonRef.current.getBoundingClientRect();
+    // Center popover under the button, clamped to viewport so it never spills off either edge.
+    const centered = r.left + r.width / 2 - widthPx / 2;
+    const clamped = Math.max(8, Math.min(window.innerWidth - widthPx - 8, centered));
+    setPopoverPos({ x: clamped, y: r.bottom + 8 });
+    setTooltipPos(null);
+    setOpen(true);
+  };
+
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
-        onClick={() => setOpen((o) => !o)}
-        className={`h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium rounded-md border bg-white transition-colors ${
-          open ? "border-violet-400 text-violet-700" : "border-gray-200 text-gray-700 hover:bg-gray-50"
+        ref={buttonRef}
+        type="button"
+        onClick={handleClick}
+        onMouseEnter={() => {
+          if (open || !buttonRef.current) return;
+          const r = buttonRef.current.getBoundingClientRect();
+          setTooltipPos({ x: r.left + r.width / 2, y: r.bottom + 8 });
+        }}
+        onMouseLeave={() => setTooltipPos(null)}
+        className={`h-8 w-8 flex items-center justify-center rounded-md border transition-colors ${
+          isActive || open
+            ? "bg-violet-100 border-violet-300 text-violet-700"
+            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
         }`}
-        title="Frame"
       >
-        <FrameIcon className="w-3.5 h-3.5" />
-        Frame
+        {icon}
       </button>
-      {open && (
-        <div
-          className="absolute top-full mt-2 left-0 bg-white rounded-xl shadow-lg p-3 z-50 w-64 border"
-          style={{ borderColor: "#DAD8D0" }}
+      {tooltipPos && !open && (
+        <span
+          className="fixed -translate-x-1/2 px-2.5 py-1 rounded-md border text-[11px] font-medium whitespace-nowrap z-100 pointer-events-none shadow-md"
+          style={{ left: tooltipPos.x, top: tooltipPos.y, backgroundColor: "#F1EFE3", borderColor: "#DAD8D0", color: "#030303" }}
         >
-          <FramePicker value={value} onSelect={(f) => { onSelect(f); setOpen(false); }} columns={4} showLabels />
+          {label}
+        </span>
+      )}
+      {open && popoverPos && (
+        <div
+          ref={popoverRef}
+          className="fixed bg-white rounded-xl shadow-lg p-3 z-100 border"
+          style={{ left: popoverPos.x, top: popoverPos.y, width: widthPx, borderColor: "#DAD8D0" }}
+        >
+          {children(() => setOpen(false))}
         </div>
       )}
-    </div>
+    </>
+  );
+}
+
+function FramePopover({ value, onSelect }: { value: FrameShape; onSelect: (f: FrameShape) => void }) {
+  return (
+    <IconPopover
+      icon={<FrameIcon className="w-3.5 h-3.5" />}
+      label="Frame"
+      widthPx={256}
+      isActive={value !== "none"}
+    >
+      {(close) => (
+        <FramePicker value={value} onSelect={(f) => { onSelect(f); close(); }} columns={4} showLabels />
+      )}
+    </IconPopover>
   );
 }
 

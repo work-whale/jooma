@@ -248,7 +248,7 @@ export const TOOLS: Tool[] = [
   {
     href: "/tools/slideshow",
     icon: "presentation",
-    label: "Slideshow",
+    label: "Slideshow Generator",
     description: "Create a presentation from scratch with text, shapes, and images. Export to PowerPoint.",
     tag: "Planning",
   },
