@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface QuizQuestion {
@@ -37,7 +37,6 @@ interface RefineBody {
 
 type RequestBody = GenerateBody | AddBody | RefineBody;
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildGeneratePrompt(body: GenerateBody): string {
   return `Generate a multiple choice quiz with exactly ${body.numQuestions} questions about "${body.topic}" for ${body.yearGroup} pupils following the ${body.curriculum} in ${body.subject}.
@@ -124,6 +123,7 @@ function parseQuestions(text: string): QuizQuestion[] {
 }
 
 export async function POST(req: NextRequest) {
+  const client = getOpenAI();
   const body: RequestBody = await req.json();
 
   if (!body.action) {

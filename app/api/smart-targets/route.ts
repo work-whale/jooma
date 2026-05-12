@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SmartTargetsRequest {
@@ -8,9 +8,9 @@ export interface SmartTargetsRequest {
   targets: string;
 }
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: NextRequest) {
+  const client = getOpenAI();
   const body: SmartTargetsRequest = await req.json();
 
   const { curriculum, yearGroup, targets } = body;

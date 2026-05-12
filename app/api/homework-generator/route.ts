@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface HomeworkRequest {
@@ -19,7 +19,6 @@ export interface HomeworkRequest {
   imageMediaType?: string;
 }
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const ABILITY_LABELS: Record<string, string> = {
   WTS: "Working Towards Standard — provide additional scaffolding, simpler language, and smaller steps",
@@ -28,6 +27,7 @@ const ABILITY_LABELS: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  const client = getOpenAI();
   const body: HomeworkRequest = await req.json();
 
   const {

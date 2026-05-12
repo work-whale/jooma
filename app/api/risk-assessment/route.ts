@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildPrompt(body: {
   curriculum: string;
@@ -60,7 +59,7 @@ Return the full updated risk assessment as a markdown table in the same format. 
 
 async function streamText(system: string, userContent: string) {
   const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  const openaiStream = await getOpenAI().chat.completions.create({
     model: "gpt-4o",
     max_tokens: 4096,
     messages: [
@@ -91,6 +90,7 @@ async function streamText(system: string, userContent: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const client = getOpenAI();
   const body = await req.json();
 
   if (body.action === "refine") {
