@@ -19,6 +19,14 @@ body {
   font-family: var(--font-bricolage), Arial, Helvetica, sans-serif;
 }
 
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+label:has(> input[type="checkbox"]),
+label:has(> input[type="radio"]),
+summary {
+  cursor: pointer;
+}
+
 .bold-border {
   border: 2px solid #1C1B1B;
 }

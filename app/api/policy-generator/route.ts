@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function buildPrompt(
   curriculum: string,
@@ -67,6 +66,7 @@ Return the full updated policy in the same markdown format. Apply only the chang
 }
 
 export async function POST(req: NextRequest) {
+  const client = getOpenAI();
   const body = await req.json();
   const { action } = body;
 

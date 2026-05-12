@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SubjectFocus {
@@ -18,7 +18,6 @@ export interface ReportWriterRequest {
   subjects: SubjectFocus[];
 }
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function getPronouns(gender: ReportWriterRequest["gender"]) {
   if (gender === "Male") return { subject: "He", object: "him", possessive: "his" };
@@ -27,6 +26,7 @@ function getPronouns(gender: ReportWriterRequest["gender"]) {
 }
 
 export async function POST(req: NextRequest) {
+  const client = getOpenAI();
   const body: ReportWriterRequest = await req.json();
 
   const { name, gender, wordCount, includeTargets, tone, subjects } = body;

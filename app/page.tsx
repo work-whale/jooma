@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CiSearch } from "react-icons/ci";
+import { Pin } from "lucide-react";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import Card from "@/app/components/ui/Card";
@@ -14,7 +15,7 @@ import {
   MdVisibility, MdTrendingUp, MdSearch, MdAssignmentTurnedIn,
   MdDescription, MdPlaylistAdd, MdWarning, MdBadge, MdShowChart,
   MdNewspaper, MdGroups, MdBarChart, MdSecurity, MdTrackChanges,
-  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll, MdSchool,
+  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll, MdSchool, MdSlideshow,
 } from "react-icons/md";
 
 const TAG_COLORS: Record<string, { bg: string; icon: string }> = {
@@ -26,12 +27,31 @@ const TAG_COLORS: Record<string, { bg: string; icon: string }> = {
   Leadership: { bg: "bg-rose-100", icon: "text-rose-600" },
 };
 
+const PIN_STORAGE_KEY = "jooma:pinned-tools";
+
 export default function Home() {
   const [query, setQuery] = useState("");
+  // Pinned tools persist to localStorage; defaults to PINNED_HREFS for first-time visitors.
+  // SSR returns the defaults; an effect upgrades to the saved value after hydration.
+  const [pinnedHrefs, setPinnedHrefs] = useState<string[]>(PINNED_HREFS);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PIN_STORAGE_KEY);
+      if (stored) setPinnedHrefs(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const togglePin = useCallback((href: string) => {
+    setPinnedHrefs((prev) => {
+      const next = prev.includes(href) ? prev.filter((h) => h !== href) : [...prev, href];
+      try { localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   const q = query.toLowerCase().trim();
-  const pinned = TOOLS.filter((t) => PINNED_HREFS.includes(t.href));
-  const rest = TOOLS.filter((t) => !PINNED_HREFS.includes(t.href));
+  const pinned = TOOLS.filter((t) => pinnedHrefs.includes(t.href));
+  const rest = TOOLS.filter((t) => !pinnedHrefs.includes(t.href));
 
   const filteredPinned = pinned.filter(
     (t) => !q || t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
@@ -72,7 +92,9 @@ export default function Home() {
                   <div className="h-px bg-muted/30 w-full" />
                 </div>
                 <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))" }}>
-                  {filteredPinned.map((tool) => <ToolCard key={tool.href} tool={tool} />)}
+                  {filteredPinned.map((tool) => (
+                    <ToolCard key={tool.href} tool={tool} isPinned onTogglePin={togglePin} />
+                  ))}
                 </div>
               </section>
             )}
@@ -85,7 +107,9 @@ export default function Home() {
                   <div className="h-px bg-muted/30 w-full" />
                 </div>
                 <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))" }}>
-                  {filteredRest.map((tool) => <ToolCard key={tool.href} tool={tool} />)}
+                  {filteredRest.map((tool) => (
+                    <ToolCard key={tool.href} tool={tool} isPinned={false} onTogglePin={togglePin} />
+                  ))}
                 </div>
               </section>
             )}
@@ -100,21 +124,45 @@ export default function Home() {
   );
 }
 
-function ToolCard({ tool }: { tool: typeof TOOLS[number] }) {
+function ToolCard({
+  tool,
+  isPinned,
+  onTogglePin,
+}: {
+  tool: typeof TOOLS[number];
+  isPinned: boolean;
+  onTogglePin: (href: string) => void;
+}) {
   const colors = TAG_COLORS[tool.tag] ?? { bg: "bg-gray-100", icon: "text-gray-600" };
   return (
-    <Link
-      href={tool.href}
-      className="group flex gap-4 items-start p-5 border border-line rounded-2xl cursor-pointer hover:bg-[#F1EFE3] hover:border-[#F1EFE3]"
-    >
-      <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl transition-colors bg-[#F1EFE3] group-hover:bg-white">
+    // Link is a SIBLING overlay (not a parent), so clicking the pin button never
+    // hits the anchor element — that's what prevents nextjs-toploader from firing.
+    <div className="group relative flex gap-4 items-start p-5 border border-line rounded-2xl hover:bg-[#F1EFE3] hover:border-[#F1EFE3]">
+      <Link
+        href={tool.href}
+        aria-label={tool.label}
+        className="absolute inset-0 rounded-2xl z-0"
+      />
+      <div className="relative z-10 w-10 h-10 shrink-0 flex items-center justify-center rounded-xl transition-colors bg-[#F1EFE3] group-hover:bg-white pointer-events-none">
         <ToolIcon name={tool.icon} className={`w-5 h-5 ${colors.icon}`} />
       </div>
-      <div className="min-w-0">
+      <div className="relative z-10 min-w-0 flex-1 pointer-events-none">
         <h5 className="font-semibold text-md mb-0.5">{tool.label}</h5>
         <p className="text-sm text-muted font-light line-clamp-2">{tool.description}</p>
       </div>
-    </Link>
+      <button
+        onClick={() => onTogglePin(tool.href)}
+        title={isPinned ? "Unpin" : "Pin to top"}
+        aria-label={isPinned ? "Unpin tool" : "Pin tool to top"}
+        className={`relative z-20 w-7 h-7 rounded-full flex items-center justify-center transition-all shrink-0 ${
+          isPinned
+            ? "text-violet-600 opacity-100"
+            : "text-gray-400 opacity-0 group-hover:opacity-100 hover:text-violet-600 hover:bg-white"
+        }`}
+      >
+        <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-current" : ""}`} />
+      </button>
+    </div>
   );
 }
 
@@ -153,6 +201,7 @@ const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   "policy": MdSecurity,
   "smart-targets": MdTrackChanges,
   "report": MdSummarize,
+  "presentation": MdSlideshow,
 };
 
 function ToolIcon({ name, className }: { name: string; className?: string }) {
