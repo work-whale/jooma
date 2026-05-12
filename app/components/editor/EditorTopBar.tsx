@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Undo2, Redo2, Download } from "lucide-react";
+import { Undo2, Redo2, Download, ArrowLeft } from "lucide-react";
 
 interface Props {
   title: string;
@@ -29,7 +29,15 @@ export default function EditorTopBar({
       className="h-14 shrink-0 flex items-center justify-between px-4 border-b"
       style={{ borderColor: "#DAD8D0", backgroundColor: "#F1EFE3" }}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/tools/slideshow"
+          className="p-2 -ml-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+          title="Back to slideshows"
+          aria-label="Back to slideshows"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
         <Link href="/tools/slideshow" className="text-xl font-bold text-gray-900 hover:opacity-70">
           Jooma
         </Link>

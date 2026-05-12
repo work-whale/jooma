@@ -68,6 +68,7 @@ export default function Editor({ presentation }: Props) {
   const [dragGuides, setDragGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [editingInnerImageId, setEditingInnerImageId] = useState<string | null>(null);
+  const [dropLoading, setDropLoading] = useState<{ x: number; y: number } | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const slideWrapperRef = useRef<HTMLDivElement>(null);
@@ -187,6 +188,55 @@ export default function Editor({ presentation }: Props) {
   const openBackgroundFilePicker = useCallback(() => {
     bgFileInputRef.current?.click();
   }, []);
+
+  // ── Drag-and-drop from sidebar onto the slide canvas ────────────────────
+  // Frames intercept their own drops via stopPropagation; anything that bubbles
+  // up here creates a brand-new image at the drop point.
+  const handleSlideDragOver = (e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes("application/x-jooma-image")) return;
+    e.preventDefault();
+  };
+
+  const handleSlideDrop = async (e: React.DragEvent) => {
+    const url = e.dataTransfer.getData("application/x-jooma-image");
+    if (!url) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = slideWrapperRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    // Slide is scaled by `zoom`. Convert client coords → slide-local coords.
+    const cx = (e.clientX - rect.left) / zoom;
+    const cy = (e.clientY - rect.top) / zoom;
+
+    // Show a spinner at the drop point while we fetch + decode the asset.
+    setDropLoading({ x: cx, y: cy });
+    try {
+      const dataUrl = url.startsWith("data:")
+        ? url
+        : await (async () => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Fetch failed");
+            const blob = await res.blob();
+            if (blob.type.includes("svg")) {
+              const text = await blob.text();
+              const utf8 = unescape(encodeURIComponent(text));
+              return `data:image/svg+xml;base64,${btoa(utf8)}`;
+            }
+            return await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(new Error("Read failed"));
+              reader.readAsDataURL(blob);
+            });
+          })();
+      addImage(dataUrl, { x: cx, y: cy });
+    } catch (err) {
+      console.warn("Drop failed", err);
+    } finally {
+      setDropLoading(null);
+    }
+  };
 
   const handleSlideContextMenu = (e: React.MouseEvent) => {
     // Only open slide context menu if the user right-clicked the empty slide background.
@@ -536,7 +586,7 @@ export default function Editor({ presentation }: Props) {
 
   // ── Image actions ─────────────────────────────────────────────────────────
 
-  const addImage = useCallback((src: string) => {
+  const addImage = useCallback((src: string, centerAt?: { x: number; y: number }) => {
     const img = new window.Image();
     img.onload = () => {
       const naturalW = img.naturalWidth || 400;
@@ -558,10 +608,12 @@ export default function Editor({ presentation }: Props) {
         w = naturalW * s;
         h = naturalH * s;
       }
+      const cx = centerAt?.x ?? SLIDE_W / 2;
+      const cy = centerAt?.y ?? SLIDE_H / 2;
       const newImage: ImageObject = {
         id: newId("im"),
-        x: SLIDE_W / 2 - w / 2,
-        y: SLIDE_H / 2 - h / 2,
+        x: cx - w / 2,
+        y: cy - h / 2,
         width: w, height: h,
         src,
         opacity: 1,
@@ -1157,6 +1209,8 @@ export default function Editor({ presentation }: Props) {
                   onMouseDown={handleSlideMouseDown}
                   onDoubleClick={handleSlideDoubleClick}
                   onContextMenu={handleSlideContextMenu}
+                  onDragOver={handleSlideDragOver}
+                  onDrop={handleSlideDrop}
                   className="relative shadow-2xl"
                   style={{
                     width: SLIDE_W,
@@ -1276,6 +1330,22 @@ export default function Editor({ presentation }: Props) {
                               <line key={`h${i}`} x1={0} y1={hy} x2={SLIDE_W} y2={hy} stroke="#ec4899" strokeWidth={1} />
                             ))}
                           </svg>
+                        )}
+
+                        {/* Drop-loading spinner at the drop point while we fetch the asset */}
+                        {dropLoading && (
+                          <div
+                            className="absolute pointer-events-none flex items-center justify-center rounded-2xl bg-white/90 border border-violet-300 shadow-lg"
+                            style={{
+                              left: dropLoading.x - 60,
+                              top: dropLoading.y - 60,
+                              width: 120,
+                              height: 120,
+                              zIndex: 51,
+                            }}
+                          >
+                            <div className="w-10 h-10 border-3 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+                          </div>
                         )}
 
                         {/* Adjust-mode UI on top: drag overlay covering the entire visible image,
