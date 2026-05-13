@@ -139,6 +139,7 @@ const MiniShape = memo(function MiniShape({ shape }: { shape: ShapeObject }) {
 });
 
 const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
+  const isList = text.listType === "bullet" || text.listType === "number";
   return (
     <div
       style={{
@@ -155,13 +156,24 @@ const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
         textAlign: text.textAlign,
         lineHeight: 1.2,
         wordWrap: "break-word",
-        whiteSpace: "pre-wrap",
+        whiteSpace: isList ? "normal" : "pre-wrap",
         userSelect: "none",
         transform: `rotate(${text.rotation ?? 0}deg)`,
         transformOrigin: "center center",
       }}
     >
-      {text.text}
+      {isList ? (
+        text.text.split("\n").map((line, i) => (
+          <div key={i} style={{ display: "flex", gap: "0.6em", alignItems: "baseline" }}>
+            <span style={{ flexShrink: 0 }}>
+              {text.listType === "bullet" ? "•" : `${i + 1}.`}
+            </span>
+            <span>{line}</span>
+          </div>
+        ))
+      ) : (
+        text.text
+      )}
     </div>
   );
 });
@@ -172,13 +184,15 @@ const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
   const frameStyle = getFrameStyle(image.frame, image.cornerRadius);
 
   // Same metrics as the editor's ImageElement (pixel-space pan/zoom).
+  // ImageElement always cover-fits regardless of frame, so MiniSlide must too —
+  // otherwise framed canvas crops won't match the tray thumbnail.
   const nW = image.naturalWidth ?? image.width;
   const nH = image.naturalHeight ?? image.height;
   const userScale = Math.max(1, image.innerScale ?? 1);
-  const coverScale = isFrame ? Math.max(image.width / nW, image.height / nH) : 1;
+  const coverScale = Math.max(image.width / nW, image.height / nH);
   const finalScale = coverScale * userScale;
-  const scaledW = isFrame ? nW * finalScale : image.width;
-  const scaledH = isFrame ? nH * finalScale : image.height;
+  const scaledW = nW * finalScale;
+  const scaledH = nH * finalScale;
   const maxX = Math.max(0, (scaledW - image.width) / 2);
   const maxY = Math.max(0, (scaledH - image.height) / 2);
   const offsetX = Math.max(-maxX, Math.min(maxX, image.innerOffsetX ?? 0));

@@ -23,26 +23,45 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
   const rotation = text.rotation ?? 0;
 
   useEffect(() => {
-    if (ref.current && !editing) {
+    if (!ref.current || editing) return;
+    // When a list type is set, render each newline-delimited line with a leading
+    // bullet/number. The raw text in the data model stays clean (no prefixes);
+    // entering edit mode swaps innerHTML back to plain textContent so the user
+    // sees what they'll actually save.
+    if (text.listType === "bullet" || text.listType === "number") {
+      const escape = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const lines = text.text.split("\n");
+      ref.current.innerHTML = lines
+        .map((line, i) => {
+          const marker = text.listType === "bullet" ? "•" : `${i + 1}.`;
+          return `<div style="display:flex;gap:0.6em;align-items:baseline"><span style="flex-shrink:0">${marker}</span><span>${escape(line)}</span></div>`;
+        })
+        .join("");
+    } else {
       ref.current.textContent = text.text;
     }
-  }, [text.text, editing]);
+  }, [text.text, text.listType, editing]);
 
   useEffect(() => {
     if (!editing || !ref.current) return;
+    // Drop the bullet/number markup for editing so the user types plain text.
+    ref.current.textContent = text.text;
     ref.current.focus();
     const range = document.createRange();
     range.selectNodeContents(ref.current);
     const sel = window.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (text.locked) return;
     if (editing) return;
     e.stopPropagation();
     if (!selected) onSelect(text.id);
+    // Locked: select only so the user can unlock from the toolbar.
+    if (text.locked) return;
 
     const startX = e.clientX;
     const startY = e.clientY;

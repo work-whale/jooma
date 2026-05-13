@@ -11,6 +11,7 @@ interface Props {
   onExport: () => void;
   isExporting: boolean;
   saveStatus: "idle" | "saving" | "saved" | "error";
+  disableHistory?: boolean;
 }
 
 const iconBtn = "p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40";
@@ -23,6 +24,7 @@ export default function EditorTopBar({
   onExport,
   isExporting,
   saveStatus,
+  disableHistory,
 }: Props) {
   return (
     <div
@@ -57,10 +59,20 @@ export default function EditorTopBar({
       </div>
 
       <div className="flex items-center gap-1">
-        <button onClick={onUndo} className={iconBtn} title="Undo">
+        <button
+          onClick={onUndo}
+          disabled={disableHistory}
+          className={iconBtn}
+          title={disableHistory ? "Undo unavailable while generating" : "Undo"}
+        >
           <Undo2 className="w-4 h-4" />
         </button>
-        <button onClick={onRedo} className={iconBtn} title="Redo">
+        <button
+          onClick={onRedo}
+          disabled={disableHistory}
+          className={iconBtn}
+          title={disableHistory ? "Redo unavailable while generating" : "Redo"}
+        >
           <Redo2 className="w-4 h-4" />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-2" />

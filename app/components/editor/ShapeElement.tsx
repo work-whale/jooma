@@ -175,9 +175,10 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
   const sin = Math.sin(rad);
 
   const handleBodyMouseDown = (e: React.MouseEvent) => {
-    if (shape.locked) return;
     e.stopPropagation();
     if (!selected) onSelect(shape.id);
+    // Locked: select only so the user can unlock from the toolbar.
+    if (shape.locked) return;
     const startX = e.clientX;
     const startY = e.clientY;
     const origX = shape.x;

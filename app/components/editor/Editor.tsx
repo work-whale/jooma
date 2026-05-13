@@ -12,6 +12,7 @@ import ImageLayer from "./ImageLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
 import ContextMenu, { type ContextMenuState } from "./ContextMenu";
+import RegenerateImageDialog from "./RegenerateImageDialog";
 import type { FrameShape } from "./frames";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
@@ -24,6 +25,7 @@ import {
   type ShapeType,
   type ImageObject,
 } from "@/app/lib/presentations";
+import { saveGeneratedImage } from "@/app/lib/generatedImages";
 
 interface SlideState extends SlideJSON {
   id: string;
@@ -31,13 +33,26 @@ interface SlideState extends SlideJSON {
 
 const newId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
+interface GenerationParams {
+  topic: string;
+  year?: string;
+  readingLevel?: string;
+  slideCount?: number;
+  additionalInstructions?: string;
+  includeObjectives?: boolean;
+  includeVocab?: boolean;
+  imageSource?: "auto" | "ai" | "web";
+  imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
+}
+
 interface Props {
   presentation: Presentation;
+  generationParams?: GenerationParams;
 }
 
 const HISTORY_MAX = 50;
 
-export default function Editor({ presentation }: Props) {
+export default function Editor({ presentation, generationParams }: Props) {
   const [title, setTitle] = useState(presentation.title);
   const [slides, setSlides] = useState<SlideState[]>(() => {
     const src = presentation.slides?.length ? presentation.slides : [BLANK_SLIDE];
@@ -67,8 +82,26 @@ export default function Editor({ presentation }: Props) {
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
   const [dragGuides, setDragGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  // Image id currently being regenerated via the AI dialog (null when closed).
+  const [regenerateTargetId, setRegenerateTargetId] = useState<string | null>(null);
   const [editingInnerImageId, setEditingInnerImageId] = useState<string | null>(null);
   const [dropLoading, setDropLoading] = useState<{ x: number; y: number } | null>(null);
+  const [generating, setGenerating] = useState<{ current: number; total: number; title?: string; slideTitles?: string[] } | null>(
+    generationParams ? { current: 0, total: generationParams.slideCount ?? 0 } : null,
+  );
+  // Bumped each time we persist a new AI image to the cross-project gallery
+  // (Supabase `generated_images`). Triggers a refetch in the Sidebar.
+  const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
+
+  // Marquee (rubber-band) multi-selection state. While the user is dragging
+  // an empty area of the slide, `marquee` holds the rect in slide-local coords;
+  // on mouse-up we compute hit-tests and stash the result in `multiSelection`.
+  type MultiSelectionItem =
+    | { kind: "text"; id: string }
+    | { kind: "shape"; id: string }
+    | { kind: "image"; id: string };
+  const [marquee, setMarquee] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [multiSelection, setMultiSelection] = useState<MultiSelectionItem[]>([]);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const slideWrapperRef = useRef<HTMLDivElement>(null);
@@ -123,17 +156,17 @@ export default function Editor({ presentation }: Props) {
 
   const handleTextSelect = useCallback((id: string | null) => {
     setSelectedTextId(id);
-    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSlideSelected(false); }
+    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleShapeSelect = useCallback((id: string | null) => {
     setSelectedShapeId(id);
-    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSlideSelected(false); }
+    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleImageSelect = useCallback((id: string | null) => {
     setSelectedImageId(id);
-    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSlideSelected(false); }
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const selection: EditorSelection = useMemo(() => {
@@ -160,16 +193,188 @@ export default function Editor({ presentation }: Props) {
     setSelectedShapeId(null);
     setSelectedImageId(null);
     setSlideSelected(false);
+    setMultiSelection([]);
   }, []);
 
-  const handleSlideMouseDown = (e: React.MouseEvent) => {
-    // Only when the user clicked the slide background itself, not an element on it.
-    if (e.target === slideWrapperRef.current) {
-      setSelectedTextId(null);
-      setSelectedShapeId(null);
-      setSelectedImageId(null);
-      setSlideSelected(true);
+  // Bbox helper — text has no stored height, so estimate from font-size × lines.
+  const textBbox = (t: TextObject) => {
+    const lines = (t.text.match(/\n/g)?.length ?? 0) + 1;
+    return { x: t.x, y: t.y, w: t.width, h: Math.max(t.fontSize * 1.4 * lines, t.fontSize * 1.4) };
+  };
+
+  // Point hit-test in slide-local coords. Returns the topmost element at the
+  // point, respecting z-order: text > shapes > images, and within each layer
+  // later entries render on top.
+  const hitTestPoint = useCallback((x: number, y: number): MultiSelectionItem | null => {
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return null;
+    const inside = (b: { x: number; y: number; w: number; h: number }) =>
+      x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+    for (let i = slide.texts.length - 1; i >= 0; i--) {
+      const t = slide.texts[i];
+      if (!t.locked && inside(textBbox(t))) return { kind: "text", id: t.id };
     }
+    for (let i = slide.shapes.length - 1; i >= 0; i--) {
+      const s = slide.shapes[i];
+      if (!s.locked && inside({ x: s.x, y: s.y, w: s.width, h: s.height })) return { kind: "shape", id: s.id };
+    }
+    for (let i = slide.images.length - 1; i >= 0; i--) {
+      const im = slide.images[i];
+      if (!im.locked && inside({ x: im.x, y: im.y, w: im.width, h: im.height })) return { kind: "image", id: im.id };
+    }
+    return null;
+  }, []);
+
+  // Compute hit-test once the user releases the marquee drag. Any text, shape
+  // or image whose bbox intersects the marquee rect joins the multi-selection.
+  // When `additive` (shift drag), hits are merged with the existing selection;
+  // otherwise they replace it.
+  const finishMarquee = useCallback((rect: { x: number; y: number; w: number; h: number }, additive: boolean) => {
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide || rect.w < 2 || rect.h < 2) {
+      if (!additive) setMultiSelection([]);
+      return;
+    }
+    const intersects = (b: { x: number; y: number; w: number; h: number }) =>
+      !(rect.x + rect.w < b.x || b.x + b.w < rect.x || rect.y + rect.h < b.y || b.y + b.h < rect.y);
+
+    const hits: MultiSelectionItem[] = [];
+    for (const im of slide.images) {
+      if (im.locked) continue;
+      if (intersects({ x: im.x, y: im.y, w: im.width, h: im.height })) hits.push({ kind: "image", id: im.id });
+    }
+    for (const sh of slide.shapes) {
+      if (sh.locked) continue;
+      if (intersects({ x: sh.x, y: sh.y, w: sh.width, h: sh.height })) hits.push({ kind: "shape", id: sh.id });
+    }
+    for (const t of slide.texts) {
+      if (t.locked) continue;
+      if (intersects(textBbox(t))) hits.push({ kind: "text", id: t.id });
+    }
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSlideSelected(false);
+    setMultiSelection((prev) => {
+      if (!additive) return hits;
+      const key = (m: MultiSelectionItem) => `${m.kind}:${m.id}`;
+      const seen = new Set(prev.map(key));
+      const merged = prev.slice();
+      for (const h of hits) if (!seen.has(key(h))) { seen.add(key(h)); merged.push(h); }
+      return merged;
+    });
+  }, []);
+
+  // Shift+click on an element toggles its membership in the multi-selection.
+  // Plus: if the click is on top of an existing single-selection (text/shape/image
+  // id), we promote that to a multi-selection of [previousSingle, clicked].
+  const toggleMultiSelectionAt = useCallback((x: number, y: number) => {
+    const hit = hitTestPoint(x, y);
+    if (!hit) return;
+    const key = (m: MultiSelectionItem) => `${m.kind}:${m.id}`;
+    const k = key(hit);
+    setMultiSelection((prev) => {
+      // Seed from any single selection that's about to be lost.
+      const seed: MultiSelectionItem[] = prev.length > 0
+        ? prev.slice()
+        : selectedTextId ? [{ kind: "text", id: selectedTextId }]
+        : selectedShapeId ? [{ kind: "shape", id: selectedShapeId }]
+        : selectedImageId ? [{ kind: "image", id: selectedImageId }]
+        : [];
+      const idx = seed.findIndex((m) => key(m) === k);
+      if (idx >= 0) {
+        const next = seed.slice();
+        next.splice(idx, 1);
+        return next;
+      }
+      return [...seed, hit];
+    });
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSlideSelected(false);
+  }, [hitTestPoint, selectedTextId, selectedShapeId, selectedImageId]);
+
+  const startMarqueeDrag = (e: React.MouseEvent | MouseEvent) => {
+    if (adjustingBackground) return;
+    if (!slideWrapperRef.current) return;
+    if (e.button !== 0) return;
+
+    const rect = slideWrapperRef.current.getBoundingClientRect();
+    const startX = (e.clientX - rect.left) / zoom;
+    const startY = (e.clientY - rect.top) / zoom;
+    let moved = false;
+    const shiftStart = e.shiftKey;
+
+    const onMove = (ev: MouseEvent) => {
+      const cx = (ev.clientX - rect.left) / zoom;
+      const cy = (ev.clientY - rect.top) / zoom;
+      const dx = cx - startX;
+      const dy = cy - startY;
+      if (!moved && Math.hypot(dx, dy) < 3) return;
+      moved = true;
+      const x = Math.max(0, Math.min(startX, cx));
+      const y = Math.max(0, Math.min(startY, cy));
+      const w = Math.min(SLIDE_W - x, Math.abs(dx));
+      const h = Math.min(SLIDE_H - y, Math.abs(dy));
+      setMarquee({ x, y, w, h });
+    };
+
+    const onUp = (ev: MouseEvent) => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if (moved) {
+        // Finalize via setState callback so we read the latest committed rect
+        // even if React batched the last move into the same frame as the up.
+        setMarquee((cur) => {
+          if (cur) finishMarquee(cur, shiftStart);
+          return null;
+        });
+      } else if (shiftStart) {
+        // Shift+click without movement: toggle the element under the cursor.
+        // If it landed on empty space, do nothing (preserve current selection).
+        const upRect = slideWrapperRef.current?.getBoundingClientRect();
+        if (upRect) {
+          const ux = (ev.clientX - upRect.left) / zoom;
+          const uy = (ev.clientY - upRect.top) / zoom;
+          toggleMultiSelectionAt(ux, uy);
+        }
+        setMarquee(null);
+      } else {
+        // Plain click on empty area → clear selection like before.
+        setSelectedTextId(null);
+        setSelectedShapeId(null);
+        setSelectedImageId(null);
+        setMultiSelection([]);
+        setSlideSelected(true);
+        setMarquee(null);
+      }
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  const handleSlideMouseDown = (e: React.MouseEvent) => {
+    // Plain mousedown on the slide background: start the marquee. Clicks on
+    // child elements (images, shapes, text) bubble up here only after the
+    // child's own handler has fired, so plain clicks on elements still select
+    // them normally. Shift+drag from anywhere is intercepted in capture-phase
+    // below (see onMouseDownCapture) so it works even over elements.
+    if (e.target !== slideWrapperRef.current) return;
+    startMarqueeDrag(e);
+  };
+
+  const handleSlideMouseDownCapture = (e: React.MouseEvent) => {
+    // Shift held → force marquee mode regardless of what was clicked.
+    // We capture before child handlers run and stop propagation so the
+    // image/shape/text underneath isn't selected.
+    if (!e.shiftKey) return;
+    if (e.button !== 0) return;
+    if (adjustingBackground) return;
+    e.stopPropagation();
+    e.preventDefault();
+    startMarqueeDrag(e);
   };
 
   const handleSlideDoubleClick = (e: React.MouseEvent) => {
@@ -458,6 +663,20 @@ export default function Editor({ presentation }: Props) {
     // on every mousemove / color-picker tick.
     scheduleSave();
   }, [scheduleSave]);
+
+  const deleteMultiSelection = useCallback(() => {
+    if (multiSelection.length === 0) return;
+    const textIds = new Set(multiSelection.filter((m) => m.kind === "text").map((m) => m.id));
+    const shapeIds = new Set(multiSelection.filter((m) => m.kind === "shape").map((m) => m.id));
+    const imageIds = new Set(multiSelection.filter((m) => m.kind === "image").map((m) => m.id));
+    mutateActiveSlide((s) => ({
+      ...s,
+      texts: s.texts.filter((t) => !textIds.has(t.id)),
+      shapes: s.shapes.filter((sh) => !shapeIds.has(sh.id)),
+      images: s.images.filter((im) => !imageIds.has(im.id)),
+    }));
+    setMultiSelection([]);
+  }, [multiSelection, mutateActiveSlide]);
 
   // ── Slide-level updates ───────────────────────────────────────────────────
 
@@ -909,13 +1128,16 @@ export default function Editor({ presentation }: Props) {
 
       if (e.key === "Delete" || e.key === "Backspace") {
         if (adjustingBackground) removeBackgroundImage();
+        else if (multiSelection.length > 0) deleteMultiSelection();
         else if (selectedTextId) deleteSelectedText();
         else if (selectedShapeId) deleteSelectedShape();
         else if (selectedImageId) deleteSelectedImage();
       }
-      // Cmd/Ctrl + Z / Shift+Z
+      // Cmd/Ctrl + Z / Shift+Z — disabled during AI generation so a stray undo
+      // doesn't wipe out slides that just streamed in.
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
+        if (generating) return;
         if (e.shiftKey) redo();
         else undo();
       }
@@ -926,18 +1148,46 @@ export default function Editor({ presentation }: Props) {
           duplicateSelection();
         }
       }
-      // Arrow keys — nudge selected (1px, or 10px with Shift)
-      if (hasSelection && (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight")) {
-        e.preventDefault();
-        const step = e.shiftKey ? 10 : 1;
-        const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
-        const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
-        nudgeSelection(dx, dy);
+      // Cmd/Ctrl + L — toggle lock on the currently selected element.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") {
+        if (selectedTextId) {
+          const t = slidesRef.current[activeIndexRef.current]?.texts.find((x) => x.id === selectedTextId);
+          if (t) { e.preventDefault(); updateText(selectedTextId, { locked: !t.locked }); }
+        } else if (selectedShapeId) {
+          const sh = slidesRef.current[activeIndexRef.current]?.shapes.find((x) => x.id === selectedShapeId);
+          if (sh) { e.preventDefault(); updateShape(selectedShapeId, { locked: !sh.locked }); }
+        } else if (selectedImageId) {
+          const im = slidesRef.current[activeIndexRef.current]?.images.find((x) => x.id === selectedImageId);
+          if (im) { e.preventDefault(); updateImage(selectedImageId, { locked: !im.locked }); }
+        }
+      }
+      // Arrow keys — context-dependent:
+      // - When an element is selected: nudge it (1px / 10px with Shift).
+      // - Otherwise: ←/→ navigate prev/next slide.
+      if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        if (hasSelection) {
+          e.preventDefault();
+          const step = e.shiftKey ? 10 : 1;
+          const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
+          const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+          nudgeSelection(dx, dy);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          const total = slidesRef.current.length;
+          if (total <= 1) return;
+          const cur = activeIndexRef.current;
+          const nextIndex = e.key === "ArrowLeft"
+            ? (cur - 1 + total) % total
+            : (cur + 1) % total;
+          if (nextIndex === cur) return;
+          setActiveIndex(nextIndex);
+          clearSelection();
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection]);
+  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, multiSelection, deleteMultiSelection, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection, clearSelection, generating, updateText, updateShape, updateImage]);
 
   // ── Slide management ──────────────────────────────────────────────────────
 
@@ -975,6 +1225,27 @@ export default function Editor({ presentation }: Props) {
     clearSelection();
     scheduleSave();
   }, [scheduleSave, clearSelection]);
+
+  const reorderSlides = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setSlides((prev) => {
+      if (fromIndex < 0 || fromIndex >= prev.length || toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = prev.slice();
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      slidesRef.current = next;
+      return next;
+    });
+    // Keep the moved slide as the active one so the user can see where it ended up.
+    setActiveIndex((curActive) => {
+      if (curActive === fromIndex) return toIndex;
+      // If we moved a slide past curActive, indexes shift around curActive.
+      if (fromIndex < curActive && toIndex >= curActive) return curActive - 1;
+      if (fromIndex > curActive && toIndex <= curActive) return curActive + 1;
+      return curActive;
+    });
+    scheduleSave();
+  }, [scheduleSave]);
 
   const duplicateSlide = useCallback((index: number) => {
     const src = slidesRef.current[index];
@@ -1150,6 +1421,135 @@ export default function Editor({ presentation }: Props) {
     }
   }, []);
 
+  // ── AI generation streaming (initial deck only) ────────────────────────────
+  // When generationParams is passed in (handed off from the Generate modal via
+  // sessionStorage on /tools/slideshow), open an SSE stream and append slides
+  // as they arrive. The first slide replaces the initial blank deck.
+  useEffect(() => {
+    if (!generationParams) return;
+    let cancelled = false;
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const r = await fetch("/api/generate-slideshow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(generationParams),
+          signal: controller.signal,
+        });
+        if (!r.ok || !r.body) throw new Error("Generation failed");
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let first = true;
+        while (!cancelled) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buffer.indexOf("\n\n")) !== -1) {
+            const raw = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 2);
+            if (!raw.trim()) continue;
+            let eventName = "message";
+            let dataLine = "";
+            for (const line of raw.split("\n")) {
+              if (line.startsWith("event:")) eventName = line.slice(6).trim();
+              else if (line.startsWith("data:")) dataLine += line.slice(5).trim();
+            }
+            let payload: unknown = {};
+            try { payload = JSON.parse(dataLine); } catch { continue; }
+
+            if (eventName === "meta") {
+              const p = payload as { title?: string; total?: number; slideTitles?: string[] };
+              if (p.title) setTitle(p.title);
+              if (typeof p.total === "number" && p.total > 0) {
+                // Pre-fill N empty placeholder slides. They show a loading animation
+                // until the actual slide event arrives and replaces them in-place.
+                const placeholders: SlideState[] = Array.from({ length: p.total }).map(() => ({
+                  id: newId("s"),
+                  shapes: [],
+                  texts: [],
+                  images: [],
+                  background: "#ffffff",
+                }));
+                setSlides(placeholders);
+                slidesRef.current = placeholders;
+                setActiveIndex(0);
+                setGenerating({ current: 0, total: p.total, slideTitles: p.slideTitles });
+                first = false; // placeholders fill the role of "first"
+              }
+            } else if (eventName === "slide") {
+              const p = payload as {
+                index: number;
+                total: number;
+                slide: SlideJSON;
+                title?: string;
+                galleryImage?: { prompt: string; style?: string; dataUrl: string };
+              };
+              // Persist AI-generated slide images into the cross-project gallery
+              // so they can be searched and re-used on other slideshows. Web
+              // (Pixabay) images are skipped server-side.
+              if (p.galleryImage) {
+                saveGeneratedImage(p.galleryImage)
+                  .then(() => setGalleryRefreshTrigger((n) => n + 1))
+                  .catch((err) => console.warn("Gallery save failed:", err));
+              }
+              setSlides((prev) => {
+                const next = prev.slice();
+                const placeholderId = prev[p.index]?.id ?? newId("s");
+                const replaced: SlideState = {
+                  id: placeholderId,           // preserve id so React keeps the DOM node + animates
+                  shapes: p.slide.shapes ?? [],
+                  texts: p.slide.texts ?? [],
+                  images: p.slide.images ?? [],
+                  background: p.slide.background ?? "#ffffff",
+                  backgroundImage: p.slide.backgroundImage,
+                  backgroundImageWidth: p.slide.backgroundImageWidth,
+                  backgroundImageHeight: p.slide.backgroundImageHeight,
+                  backgroundOffsetX: p.slide.backgroundOffsetX,
+                  backgroundOffsetY: p.slide.backgroundOffsetY,
+                  backgroundScale: p.slide.backgroundScale,
+                };
+                if (p.index < next.length) next[p.index] = replaced;
+                else next.push(replaced);
+                slidesRef.current = next;
+                return next;
+              });
+              setActiveIndex(p.index);
+              // Advance the "currently generating" pointer to the next slide.
+              setGenerating((prev) => ({
+                current: Math.min(p.index + 1, p.total),
+                total: p.total,
+                title: p.title,
+                slideTitles: prev?.slideTitles,
+              }));
+              scheduleSave();
+            } else if (eventName === "complete") {
+              setGenerating(null);
+            } else if (eventName === "error") {
+              const p = payload as { message?: string };
+              console.error("Stream error:", p.message);
+              setGenerating(null);
+            }
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Generation stream failed", err);
+          setGenerating(null);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generationParams]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const currentSlide = slides[activeIndex];
@@ -1180,6 +1580,7 @@ export default function Editor({ presentation }: Props) {
         onExport={handleExport}
         isExporting={isExporting}
         saveStatus={saveStatus}
+        disableHistory={!!generating}
       />
       <div className="flex flex-1 min-h-0 relative">
         <Sidebar
@@ -1187,6 +1588,7 @@ export default function Editor({ presentation }: Props) {
           onAddText={addText}
           onAddImage={addImage}
           onAddFrame={addFrame}
+          galleryRefreshTrigger={galleryRefreshTrigger}
         />
         {fontPanelOpen && selection?.kind === "text" && (
           <FontPanel
@@ -1206,6 +1608,7 @@ export default function Editor({ presentation }: Props) {
               <div className="shrink-0" style={{ width: SLIDE_W * zoom, height: SLIDE_H * zoom }}>
                 <div
                   ref={slideWrapperRef}
+                  onMouseDownCapture={handleSlideMouseDownCapture}
                   onMouseDown={handleSlideMouseDown}
                   onDoubleClick={handleSlideDoubleClick}
                   onContextMenu={handleSlideContextMenu}
@@ -1332,6 +1735,59 @@ export default function Editor({ presentation }: Props) {
                           </svg>
                         )}
 
+                        {/* Marquee + multi-selection outlines */}
+                        {(marquee || multiSelection.length > 0) && (
+                          <svg
+                            className="absolute inset-0 pointer-events-none"
+                            width={SLIDE_W}
+                            height={SLIDE_H}
+                            style={{ overflow: "visible", zIndex: 60 }}
+                          >
+                            {multiSelection.map((m) => {
+                              let b: { x: number; y: number; w: number; h: number } | null = null;
+                              if (m.kind === "image") {
+                                const im = currentSlide.images.find((x) => x.id === m.id);
+                                if (im) b = { x: im.x, y: im.y, w: im.width, h: im.height };
+                              } else if (m.kind === "shape") {
+                                const sh = currentSlide.shapes.find((x) => x.id === m.id);
+                                if (sh) b = { x: sh.x, y: sh.y, w: sh.width, h: sh.height };
+                              } else if (m.kind === "text") {
+                                const t = currentSlide.texts.find((x) => x.id === m.id);
+                                if (t) {
+                                  const lines = (t.text.match(/\n/g)?.length ?? 0) + 1;
+                                  b = { x: t.x, y: t.y, w: t.width, h: Math.max(t.fontSize * 1.4 * lines, t.fontSize * 1.4) };
+                                }
+                              }
+                              if (!b) return null;
+                              return (
+                                <rect
+                                  key={`${m.kind}-${m.id}`}
+                                  x={b.x - 2}
+                                  y={b.y - 2}
+                                  width={b.w + 4}
+                                  height={b.h + 4}
+                                  fill="none"
+                                  stroke="#7c3aed"
+                                  strokeWidth={2 / zoom}
+                                  rx={2}
+                                />
+                              );
+                            })}
+                            {marquee && (
+                              <rect
+                                x={marquee.x}
+                                y={marquee.y}
+                                width={marquee.w}
+                                height={marquee.h}
+                                fill="rgba(124, 58, 237, 0.08)"
+                                stroke="#7c3aed"
+                                strokeWidth={1 / zoom}
+                                strokeDasharray={`${4 / zoom} ${3 / zoom}`}
+                              />
+                            )}
+                          </svg>
+                        )}
+
                         {/* Drop-loading spinner at the drop point while we fetch the asset */}
                         {dropLoading && (
                           <div
@@ -1345,6 +1801,56 @@ export default function Editor({ presentation }: Props) {
                             }}
                           >
                             <div className="w-10 h-10 border-3 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+                          </div>
+                        )}
+
+                        {/* AI generation placeholder overlay — shows on slides that are
+                            still pending or actively being generated. Slides past the
+                            current one are static; the active one shimmers + spins.
+                            Uses opacity transition so the overlay fades out smoothly
+                            when its slide's real content arrives. */}
+                        {generating && (
+                          <div
+                            className="absolute inset-0 pointer-events-none flex items-center justify-center transition-opacity duration-500"
+                            style={{
+                              zIndex: 60,
+                              backgroundColor: "rgba(255, 255, 255, 0.92)",
+                              opacity: activeIndex >= generating.current ? 1 : 0,
+                            }}
+                          >
+                            {activeIndex === generating.current && (
+                              <div className="absolute inset-0 jooma-shimmer" />
+                            )}
+                            <div className="relative flex flex-col items-center gap-4">
+                              <div className="w-14 h-14 rounded-full bg-white shadow-md border flex items-center justify-center" style={{ borderColor: "#DAD8D0" }}>
+                                <div
+                                  className="w-7 h-7 rounded-full border-4 animate-spin"
+                                  style={{ borderColor: "#FFCC33", borderTopColor: "transparent" }}
+                                />
+                              </div>
+                              {(() => {
+                                // Only show text once we know the slide titles (post-meta).
+                                // Before that the spinner stands alone so the user isn't
+                                // told "designing slide 1..." while we're still planning
+                                // the deck. Fades in via key+opacity transition.
+                                const isCurrent = activeIndex === generating.current;
+                                const slideTitle = generating.slideTitles?.[activeIndex]?.trim();
+                                const label = !slideTitle
+                                  ? null
+                                  : isCurrent
+                                  ? `Designing ${slideTitle}…`
+                                  : `${slideTitle} · waiting`;
+                                return (
+                                  <p
+                                    key={label ?? "empty"}
+                                    className={`text-sm font-semibold text-gray-700 text-center px-6 max-w-md transition-opacity duration-500 ${label ? "opacity-100" : "opacity-0"}`}
+                                    style={{ minHeight: "1.25rem" }}
+                                  >
+                                    {label ?? ""}
+                                  </p>
+                                );
+                              })()}
+                            </div>
                           </div>
                         )}
 
@@ -1443,6 +1949,11 @@ export default function Editor({ presentation }: Props) {
                     else if (selectedShapeId) deleteSelectedShape();
                     else if (selectedImageId) deleteSelectedImage();
                   }}
+                  onToggleLock={() => {
+                    if (selection?.kind === "text" && selectedTextId) updateText(selectedTextId, { locked: !selection.text.locked });
+                    else if (selection?.kind === "shape" && selectedShapeId) updateShape(selectedShapeId, { locked: !selection.shape.locked });
+                    else if (selection?.kind === "image" && selectedImageId) updateImage(selectedImageId, { locked: !selection.image.locked });
+                  }}
                   onOpenFontPanel={() => setFontPanelOpen(true)}
                 />
               )}
@@ -1457,10 +1968,35 @@ export default function Editor({ presentation }: Props) {
                 onSelect={switchSlide}
                 onAdd={addSlide}
                 onDelete={deleteSlide}
+                onReorder={reorderSlides}
+                generatingIndex={generating?.current}
               />
             </div>
           </div>
           <ZoomControls zoom={zoom} onChange={setZoom} onFit={handleFit} />
+
+          {/* AI generation banner — visible while the SSE stream is producing slides */}
+          {generating && (
+            <div className="absolute top-2 right-4 z-50 pointer-events-none">
+              <div
+                className="inline-flex items-center gap-3 rounded-2xl border shadow-lg px-4 py-2 text-sm pointer-events-auto"
+                style={{ backgroundColor: "#1a1a1a", color: "#fff", borderColor: "#1a1a1a" }}
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: "#FFCC33" }} />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: "#FFCC33" }} />
+                </span>
+                <span className="font-medium">
+                  {generating.title ? `Generated: ${generating.title}` : "Designing your deck…"}
+                </span>
+                {generating.total > 0 && (
+                  <span className="font-mono text-xs opacity-70">
+                    {generating.current}/{generating.total}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1513,6 +2049,7 @@ export default function Editor({ presentation }: Props) {
           onDeleteSlide={contextMenu.kind === "slide" ? () => deleteSlide(activeIndexRef.current) : undefined}
           onChangeBackgroundImage={contextMenu.kind === "slide" ? openBackgroundFilePicker : undefined}
           onRemoveBackgroundImage={contextMenu.kind === "slide" ? removeBackgroundImage : undefined}
+          onRegenerate={contextMenu.kind === "image" && selectedImageId ? () => setRegenerateTargetId(selectedImageId) : undefined}
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -1528,6 +2065,18 @@ export default function Editor({ presentation }: Props) {
           e.target.value = "";
         }}
       />
+
+      {regenerateTargetId && (
+        <RegenerateImageDialog
+          onClose={() => setRegenerateTargetId(null)}
+          onGenerated={({ dataUrl, prompt, style }) => {
+            updateImage(regenerateTargetId, { src: dataUrl });
+            saveGeneratedImage({ prompt, style, dataUrl })
+              .then(() => setGalleryRefreshTrigger((n) => n + 1))
+              .catch((err) => console.warn("Gallery save failed:", err));
+          }}
+        />
+      )}
     </div>
   );
 }

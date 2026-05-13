@@ -15,6 +15,7 @@ export interface TextObject {
   textAlign: "left" | "center" | "right";
   rotation?: number;
   locked?: boolean;
+  listType?: "bullet" | "number";
 }
 
 export type ShapeType = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon";
@@ -124,10 +125,13 @@ export async function getPresentation(id: string): Promise<Presentation | null> 
   return data as Presentation | null;
 }
 
-export async function createPresentation(): Promise<Presentation> {
+export async function createPresentation(opts?: { title?: string; slides?: SlideJSON[] }): Promise<Presentation> {
   const { data, error } = await supabase
     .from(TABLE)
-    .insert({ title: "Untitled Slideshow", slides: [BLANK_SLIDE] })
+    .insert({
+      title: opts?.title ?? "Untitled Slideshow",
+      slides: opts?.slides?.length ? opts.slides : [BLANK_SLIDE],
+    })
     .select()
     .single();
   if (error) throw error;

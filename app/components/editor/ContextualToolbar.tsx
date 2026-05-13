@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen } from "lucide-react";
 import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
-import { isSvgDataUrl, recolorSvgSrc } from "./svg-recolor";
+import { isSvgDataUrl, extractSvgColors, swapSvgColor } from "./svg-recolor";
 import ColorPicker from "./ColorPicker";
 import type { TextObject, ShapeObject, ImageObject, SlideJSON } from "@/app/lib/presentations";
 
@@ -144,12 +144,16 @@ interface Props {
   onUpdateImage: (patch: Partial<ImageObject>) => void;
   onUpdateSlide: (patch: Partial<SlideJSON>) => void;
   onDelete: () => void;
+  onToggleLock: () => void;
   onOpenFontPanel: () => void;
 }
 
-function ObjectActions({ onDelete }: { onDelete: () => void }) {
+function ObjectActions({ locked, onToggleLock, onDelete }: { locked: boolean; onToggleLock: () => void; onDelete: () => void }) {
   return (
     <div className="ml-auto flex items-center gap-1">
+      <button onClick={onToggleLock} className={toggleBtn(locked)} title={locked ? "Unlock" : "Lock"}>
+        {locked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
+      </button>
       <button onClick={onDelete} className={toggleBtn(false)} title="Delete">
         <Trash2 className="w-3.5 h-3.5" />
       </button>
@@ -175,6 +179,7 @@ export default function ContextualToolbar({
   onUpdateImage,
   onUpdateSlide,
   onDelete,
+  onToggleLock,
   onOpenFontPanel,
 }: Props) {
   if (!selection) return null;
@@ -242,7 +247,22 @@ export default function ContextualToolbar({
         <button onClick={() => onUpdateText({ textAlign: "right" })} className={toggleBtn(t.textAlign === "right")}>
           <AlignRight className="w-3.5 h-3.5" />
         </button>
-        <ObjectActions onDelete={onDelete} />
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+        <button
+          onClick={() => onUpdateText({ listType: t.listType === "bullet" ? undefined : "bullet" })}
+          className={toggleBtn(t.listType === "bullet")}
+          title="Bullet list"
+        >
+          <List className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => onUpdateText({ listType: t.listType === "number" ? undefined : "number" })}
+          className={toggleBtn(t.listType === "number")}
+          title="Numbered list"
+        >
+          <ListOrdered className="w-3.5 h-3.5" />
+        </button>
+        <ObjectActions locked={!!t.locked} onToggleLock={onToggleLock} onDelete={onDelete} />
       </div>
     );
   }
@@ -309,7 +329,7 @@ export default function ContextualToolbar({
             className="accent-violet-600 w-24"
           />
         </label>
-        <ObjectActions onDelete={onDelete} />
+        <ObjectActions locked={!!sh.locked} onToggleLock={onToggleLock} onDelete={onDelete} />
       </div>
     );
   }
@@ -320,21 +340,24 @@ export default function ContextualToolbar({
   const cornerRadius = im.cornerRadius ?? (imFrame === "rounded" ? 16 : imFrame === "pill" ? 50 : 0);
   const strokeWidth = im.strokeWidth ?? 0;
   const strokeColor = im.strokeColor ?? "#1a1a2e";
-  const tint = im.tint ?? "#1a1a2e";
   const isSvg = isSvgDataUrl(im.src);
+  // Distinct colors used inside the SVG. Each gets its own swatch in the toolbar
+  // so multi-color graphics (unDraw scenes, fluent-emoji) can be recolored channel
+  // by channel instead of being flattened to a single tint.
+  const svgColors = isSvg ? extractSvgColors(im.src).slice(0, 6) : [];
   return (
     <div className={pillClass} style={{ scrollbarWidth: "none" }}>
-      {isSvg && (
+      {svgColors.map((c) => (
         <ColorPopover
-          value={tint}
-          onChange={(c) => {
-            const newSrc = recolorSvgSrc(im.src, c);
-            if (newSrc) onUpdateImage({ src: newSrc, tint: c });
-            else onUpdateImage({ tint: c });
+          key={c}
+          value={c}
+          onChange={(newC) => {
+            const newSrc = swapSvgColor(im.src, c, newC);
+            if (newSrc) onUpdateImage({ src: newSrc });
           }}
-          title="Icon color"
+          title="Color"
         />
-      )}
+      ))}
       <FramePopover
         value={imFrame}
         onSelect={(f) => onUpdateImage({ frame: f })}
@@ -429,7 +452,7 @@ export default function ContextualToolbar({
           </div>
         )}
       </IconPopover>
-      <ObjectActions onDelete={onDelete} />
+      <ObjectActions locked={!!im.locked} onToggleLock={onToggleLock} onDelete={onDelete} />
     </div>
   );
 }

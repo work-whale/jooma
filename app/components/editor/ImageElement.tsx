@@ -95,9 +95,12 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
   }, [image.naturalWidth, image.naturalHeight, image.width, image.height, image.innerScale, image.innerOffsetX, image.innerOffsetY]);
 
   const handleBodyMouseDown = (e: React.MouseEvent) => {
-    if (image.locked || editingInner) return;
+    if (editingInner) return;
     e.stopPropagation();
     if (!selected) onSelect(image.id);
+    // Locked: select only — the user needs to be able to pick the element
+    // to see the toolbar and click Unlock. Drag/resize stay disabled.
+    if (image.locked) return;
     const startX = e.clientX;
     const startY = e.clientY;
     const origX = image.x;
