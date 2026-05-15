@@ -185,6 +185,25 @@ function renderTitleCover(spec: SlideSpec, t: Theme): SlideJSON {
       strokeWidth: 0,
       opacity: 0.5,
     });
+  } else {
+    // No image → decorate the slide with large soft accent circles so it doesn't
+    // look like an empty colored rectangle. Two off-canvas circles at opposite
+    // corners give a clean editorial feel.
+    shapes.push({
+      id: nid("sh"), type: "ellipse",
+      x: -180, y: -180, width: 480, height: 480,
+      fill: accent, stroke: "transparent", strokeWidth: 0, opacity: 0.18,
+    });
+    shapes.push({
+      id: nid("sh"), type: "ellipse",
+      x: SLIDE_W - 320, y: SLIDE_H - 320, width: 600, height: 600,
+      fill: accent, stroke: "transparent", strokeWidth: 0, opacity: 0.12,
+    });
+    shapes.push({
+      id: nid("sh"), type: "ellipse",
+      x: SLIDE_W - 140, y: 80, width: 80, height: 80,
+      fill: accent, stroke: "transparent", strokeWidth: 0, opacity: 0.4,
+    });
   }
   shapes.push(makeAccentBar(accent, 100, titleY - 36, 120, 6));
 
@@ -380,13 +399,11 @@ function renderQuote(spec: SlideSpec, t: Theme): SlideJSON {
 export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJSON {
   // Use the user-picked theme's accent if available, otherwise the AI-chosen one.
   const accent = baseTheme?.palette.accent || spec.accentColor || "#7c3aed";
-  // If a theme is provided, force the colorScheme to its preferred default for slides
-  // where the AI picked "light" (most slides). Dark/accent slides keep their variation
-  // so the deck still feels visually varied.
-  const scheme: ColorScheme = baseTheme && spec.colorScheme === "light"
-    ? baseTheme.preferredScheme
-    : spec.colorScheme;
-  const t = themeFor(scheme, accent, baseTheme);
+  // The theme's natural palette already encodes its look — for Dark theme that
+  // means a dark background and light text on "light" (default) slides. Just
+  // pass the AI's scheme through; themeFor handles the variation for "dark"
+  // (inverted contrast slide) and "accent" (accent bg) sprinkled in for emphasis.
+  const t = themeFor(spec.colorScheme, accent, baseTheme);
   activeTheme = baseTheme;
   try {
     return renderForLayout(spec, t);
@@ -396,6 +413,13 @@ export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJ
 }
 
 function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
+  // If the AI sent a bullet/body slide with a fetched image, promote it to an
+  // image-side layout so the slide doesn't look half-empty. Alternate side based
+  // on title length parity so consecutive promoted slides don't all match.
+  if (spec.imageDataUrl && (spec.layout === "title-bullets" || spec.layout === "title-body")) {
+    const side: "left" | "right" = spec.title.length % 2 === 0 ? "right" : "left";
+    return renderImageSide(spec, t, side);
+  }
   switch (spec.layout) {
     case "title-cover": return renderTitleCover(spec, t);
     case "section-header": return renderSectionHeader(spec, t);

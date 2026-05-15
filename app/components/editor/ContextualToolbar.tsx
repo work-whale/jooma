@@ -172,6 +172,26 @@ const toggleBtn = (active: boolean) =>
 const pillClass =
   "inline-flex items-center gap-2 px-3 py-2 bg-white rounded-2xl shadow-lg border border-gray-200 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden";
 
+// Strip any pre-existing list markers from each line so the toolbar's bullet/
+// number rendering doesn't double up. Catches "•   foo", "- foo", "* foo",
+// "1. foo", "1) foo", and the common unicode bullet variants.
+//
+// Also handles the case where multiple bullets are baked into ONE line without
+// newlines (common when text is copied from a pasted block) — we split on
+// mid-line bullet markers so each becomes its own list item.
+function stripListPrefixes(text: string): string {
+  // Insert a newline before any bullet/numbered marker that appears mid-line.
+  // Pattern: a non-newline character, then whitespace + a marker.
+  const normalized = text
+    .replace(/([^\n])[ \t]+([•·▪‣◦●○■])[ \t]+/g, "$1\n$2 ")
+    .replace(/([^\n])[ \t]+(\d+[.)])[ \t]+/g, "$1\n$2 ");
+  return normalized
+    .split("\n")
+    .map((line) => line.replace(/^\s*(?:[•·▪‣◦●○■\-*]+|\d+[.)])\s+/, "").trim())
+    .filter((line, i, arr) => line || i < arr.length - 1) // drop trailing empty lines only
+    .join("\n");
+}
+
 export default function ContextualToolbar({
   selection,
   onUpdateText,
@@ -249,14 +269,26 @@ export default function ContextualToolbar({
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1" />
         <button
-          onClick={() => onUpdateText({ listType: t.listType === "bullet" ? undefined : "bullet" })}
+          onClick={() => {
+            const enabling = t.listType !== "bullet";
+            onUpdateText({
+              listType: enabling ? "bullet" : undefined,
+              ...(enabling ? { text: stripListPrefixes(t.text) } : {}),
+            });
+          }}
           className={toggleBtn(t.listType === "bullet")}
           title="Bullet list"
         >
           <List className="w-3.5 h-3.5" />
         </button>
         <button
-          onClick={() => onUpdateText({ listType: t.listType === "number" ? undefined : "number" })}
+          onClick={() => {
+            const enabling = t.listType !== "number";
+            onUpdateText({
+              listType: enabling ? "number" : undefined,
+              ...(enabling ? { text: stripListPrefixes(t.text) } : {}),
+            });
+          }}
           className={toggleBtn(t.listType === "number")}
           title="Numbered list"
         >

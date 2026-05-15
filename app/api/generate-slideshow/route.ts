@@ -183,7 +183,10 @@ function buildPrompt(body: RequestBody): string {
     ? `Additional instructions from the teacher: ${body.additionalInstructions.trim()}`
     : "";
   const themeLine = `Visual theme: "${theme.name}". ${theme.promptHint}`;
-  const preferredSchemeLine = `Prefer colorScheme "${theme.preferredScheme}" on most slides (the renderer will apply the theme's palette).`;
+  // The renderer treats "light" colorScheme as "use the theme's natural palette",
+  // which for the Dark theme means a dark background + light text. "dark" and
+  // "accent" are reserved for sprinkled contrast slides.
+  const preferredSchemeLine = `Use colorScheme "light" on MOST slides (the renderer applies the theme's natural palette — for the Dark theme this still produces dark slides). Sprinkle one or two slides with "dark" or "accent" for visual contrast.`;
   const accentLine = `Use the theme's accent colour "${theme.palette.accent}" as accentColor on every slide for consistency.`;
   const objectivesLine = body.includeObjectives
     ? `- Make slide 2 a "title-bullets" layout titled "Learning objectives" with 3-5 bullets describing what pupils will know or be able to do.`
@@ -202,20 +205,21 @@ ${extraLine}
 You're a senior presentation designer. Plan a deck that varies layouts so it doesn't feel monotonous. Use this layout vocabulary:
 - "title-cover": opener slide. Use ONCE as slide 1.
 - "section-header": divider between sections. Use sparingly.
-- "title-bullets": title + 3-5 punchy bullets (max 6 words each).
-- "title-body": title + one paragraph of body text.
-- "image-left" / "image-right": title + body/bullets on one side, photo on the other.
+- "title-bullets": title + 3-5 punchy bullets (max 6 words each). AVOID — prefer image-left/image-right.
+- "title-body": title + one paragraph of body text. AVOID — prefer image-left/image-right.
+- "image-left" / "image-right": title + body/bullets on one side, photo on the other. STRONGLY PREFERRED for content slides.
 - "image-full": dramatic full-bleed photo with a title overlay. Use 1-2 times for emphasis.
 - "two-column": compare/contrast two ideas side-by-side.
 - "quote": a single memorable quote, with optional attribution. Use at most ONCE.
 
 Design rules:
 - Vary layouts; avoid repeating the same layout more than twice in a row.
-- ~40% of content slides should include an imageQuery (2-4 word search query) for image-* and image-full layouts.
+- EVERY content slide must visually rich — at least 70% of slides (excluding section-header and quote) MUST use image-left, image-right, or image-full. Empty-looking slides are forbidden.
+- Only use "title-bullets" or "title-body" when an image truly does not fit (e.g. an objectives list or vocab table). Even then, supply an imageQuery — the renderer will fall back gracefully if no image is found.
 - ${accentLine}
 - ${preferredSchemeLine} Sprinkle one or two slides with a contrasting scheme for emphasis.
 - All non-applicable fields MUST be empty string ("") or empty array ([]) — never omit fields.
-- imageQuery should be empty unless layout is image-left / image-right / image-full / title-cover.
+- imageQuery is REQUIRED for: title-cover, image-left, image-right, image-full. Set it on bullet/body slides too whenever a relevant photo could enrich the slide.
 - The title-cover slide (slide 1) MUST include a vivid, atmospheric imageQuery for its background. Think hero photo — not a generic concept but a concrete scene that evokes the topic.
 - attribution should be empty unless layout is "quote".
 - twoCol fields should be empty unless layout is "two-column".

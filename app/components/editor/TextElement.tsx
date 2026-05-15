@@ -4,6 +4,53 @@ import { memo, useEffect, useRef, useState } from "react";
 import { RotateCw } from "lucide-react";
 import type { TextObject } from "@/app/lib/presentations";
 
+// Each list line: a <div> containing a non-editable marker <span> followed by an
+// editable content <span>. contenteditable="false" prevents the user from
+// deleting the marker via backspace, even at the start of the line. On save we
+// read only the editable spans and rejoin with \n.
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function markerFor(kind: "bullet" | "number", index: number): string {
+  return kind === "bullet" ? "•" : `${index + 1}.`;
+}
+function renderListHTML(text: string, kind: "bullet" | "number"): string {
+  const lines = text.split("\n");
+  return lines
+    .map((line, i) => {
+      const content = line ? escapeHtml(line) : "<br>";
+      return `<div data-jl="1" style="display:flex;gap:0.6em;align-items:baseline"><span contenteditable="false" data-jl-mark="1" style="flex-shrink:0;user-select:none;-webkit-user-select:none;cursor:default">${markerFor(kind, i)}</span><span data-jl-content="1" style="flex:1">${content}</span></div>`;
+    })
+    .join("");
+}
+// Robust: handles a mix of our marker-structured divs and any browser-created
+// plain divs/brs/text-nodes that snuck in (e.g. from a Shift+Enter the browser
+// inserted, or an Enter that landed outside a content span).
+function readListLines(root: HTMLElement): string[] {
+  const lines: string[] = [];
+  for (const node of Array.from(root.childNodes)) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const t = node.textContent ?? "";
+      if (lines.length === 0) lines.push(t);
+      else lines[lines.length - 1] += t;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (el.tagName === "BR") {
+        lines.push("");
+      } else {
+        const editable = el.querySelector<HTMLElement>("[data-jl-content]");
+        lines.push(editable ? (editable.textContent ?? "") : (el.textContent ?? ""));
+      }
+    }
+  }
+  return lines.length > 0 ? lines : [root.textContent ?? ""];
+}
+function renumberMarkers(root: HTMLElement, kind: "bullet" | "number") {
+  if (kind === "bullet") return;
+  const markers = root.querySelectorAll<HTMLElement>("[data-jl-mark]");
+  markers.forEach((m, i) => { m.textContent = markerFor(kind, i); });
+}
+
 interface Props {
   text: TextObject;
   selected: boolean;
@@ -24,20 +71,8 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
 
   useEffect(() => {
     if (!ref.current || editing) return;
-    // When a list type is set, render each newline-delimited line with a leading
-    // bullet/number. The raw text in the data model stays clean (no prefixes);
-    // entering edit mode swaps innerHTML back to plain textContent so the user
-    // sees what they'll actually save.
     if (text.listType === "bullet" || text.listType === "number") {
-      const escape = (s: string) =>
-        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const lines = text.text.split("\n");
-      ref.current.innerHTML = lines
-        .map((line, i) => {
-          const marker = text.listType === "bullet" ? "•" : `${i + 1}.`;
-          return `<div style="display:flex;gap:0.6em;align-items:baseline"><span style="flex-shrink:0">${marker}</span><span>${escape(line)}</span></div>`;
-        })
-        .join("");
+      ref.current.innerHTML = renderListHTML(text.text, text.listType);
     } else {
       ref.current.textContent = text.text;
     }
@@ -45,8 +80,20 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
 
   useEffect(() => {
     if (!editing || !ref.current) return;
-    // Drop the bullet/number markup for editing so the user types plain text.
-    ref.current.textContent = text.text;
+    if (text.listType === "bullet" || text.listType === "number") {
+      ref.current.innerHTML = renderListHTML(text.text, text.listType);
+    } else {
+      // contenteditable collapses \n in textContent — wrap each line in a <div>
+      // so the browser preserves the line break and treats Enter consistently.
+      const lines = text.text.split("\n");
+      if (lines.length > 1) {
+        ref.current.innerHTML = lines
+          .map((l) => `<div>${l ? escapeHtml(l) : "<br>"}</div>`)
+          .join("");
+      } else {
+        ref.current.textContent = text.text;
+      }
+    }
     ref.current.focus();
     const range = document.createRange();
     range.selectNodeContents(ref.current);
@@ -100,7 +147,16 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
 
   const handleBlur = () => {
     if (ref.current) {
-      const newText = ref.current.textContent ?? "";
+      let newText: string;
+      if (text.listType === "bullet" || text.listType === "number") {
+        const lines = readListLines(ref.current);
+        newText = lines.length > 0 ? lines.join("\n") : (ref.current.textContent ?? "");
+      } else {
+        // innerText respects block-level line breaks (each <div> the browser
+        // inserts for Enter becomes \n). textContent would concatenate without
+        // newlines.
+        newText = (ref.current.innerText ?? "").replace(/\r\n/g, "\n");
+      }
       if (newText !== text.text) onUpdate(text.id, { text: newText });
     }
     setEditing(false);
@@ -111,6 +167,131 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
     if (editing && e.key === "Escape") {
       e.preventDefault();
       ref.current?.blur();
+      return;
+    }
+    // For list lines: Enter creates a new line with its own marker so the
+    // bullets/numbers stay continuous. We ALWAYS preventDefault here so the
+    // browser doesn't sneak in a markerless <div>. If the caret can't be
+    // located inside one of our content spans (e.g. it landed in the marker or
+    // outside everything), we just append a fresh bullet line at the end.
+    if (
+      editing && e.key === "Enter" && !e.shiftKey &&
+      (text.listType === "bullet" || text.listType === "number") &&
+      ref.current
+    ) {
+      e.preventDefault();
+      const sel = window.getSelection();
+      const tmp = document.createElement("div");
+
+      const insertNewLineAtEnd = (content: string) => {
+        if (!ref.current) return;
+        tmp.innerHTML = renderListHTML(content, text.listType as "bullet" | "number");
+        const newLine = tmp.firstElementChild as HTMLElement | null;
+        if (!newLine) return;
+        ref.current.appendChild(newLine);
+        renumberMarkers(ref.current, text.listType as "bullet" | "number");
+        const newContent = newLine.querySelector<HTMLElement>("[data-jl-content]");
+        if (newContent && sel) {
+          const r = document.createRange();
+          r.setStart(newContent, 0);
+          r.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(r);
+        }
+      };
+
+      if (!sel || sel.rangeCount === 0) {
+        insertNewLineAtEnd("");
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      // Find the content span the caret is in.
+      let node: Node | null = range.startContainer;
+      while (node && node !== ref.current) {
+        if (node.nodeType === Node.ELEMENT_NODE && (node as Element).hasAttribute?.("data-jl-content")) break;
+        node = node.parentNode;
+      }
+      if (!node || node === ref.current) {
+        insertNewLineAtEnd("");
+        return;
+      }
+      const contentSpan = node as HTMLElement;
+      const lineDiv = contentSpan.parentElement;
+      if (!lineDiv) {
+        insertNewLineAtEnd("");
+        return;
+      }
+
+      // Split text at the caret: keep `before` in the current line, push `after`
+      // into a new line.
+      const fullText = contentSpan.textContent ?? "";
+      const preRange = range.cloneRange();
+      preRange.selectNodeContents(contentSpan);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      const caretOffset = preRange.toString().length;
+      const before = fullText.slice(0, caretOffset);
+      const after = fullText.slice(caretOffset);
+      contentSpan.textContent = before;
+
+      tmp.innerHTML = renderListHTML(after, text.listType as "bullet" | "number");
+      const newLine = tmp.firstElementChild as HTMLElement | null;
+      if (!newLine) return;
+      lineDiv.insertAdjacentElement("afterend", newLine);
+      renumberMarkers(ref.current, text.listType as "bullet" | "number");
+
+      // Place caret at the start of the new line's content span.
+      const newContent = newLine.querySelector<HTMLElement>("[data-jl-content]");
+      if (newContent) {
+        const r = document.createRange();
+        r.setStart(newContent, 0);
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+    }
+    // Backspace at the very start of a list line: merge it with the previous line.
+    if (
+      editing && e.key === "Backspace" &&
+      (text.listType === "bullet" || text.listType === "number") &&
+      ref.current
+    ) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (!range.collapsed) return;
+      let node: Node | null = range.startContainer;
+      while (node && node !== ref.current) {
+        if (node.nodeType === Node.ELEMENT_NODE && (node as Element).hasAttribute?.("data-jl-content")) break;
+        node = node.parentNode;
+      }
+      if (!node || node === ref.current) return;
+      const contentSpan = node as HTMLElement;
+      // Only intercept if caret is at offset 0 of the content.
+      const preRange = range.cloneRange();
+      preRange.selectNodeContents(contentSpan);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      if (preRange.toString().length !== 0) return;
+      const lineDiv = contentSpan.parentElement;
+      const prevDiv = lineDiv?.previousElementSibling as HTMLElement | null;
+      if (!prevDiv) return;
+      e.preventDefault();
+      const prevContent = prevDiv.querySelector<HTMLElement>("[data-jl-content]");
+      if (!prevContent) return;
+      const prevLen = (prevContent.textContent ?? "").length;
+      prevContent.textContent = (prevContent.textContent ?? "") + (contentSpan.textContent ?? "");
+      lineDiv?.remove();
+      renumberMarkers(ref.current, text.listType);
+      // Place caret at the merge point in the previous line.
+      const textNode = prevContent.firstChild ?? prevContent;
+      const r = document.createRange();
+      if (textNode.nodeType === Node.TEXT_NODE) {
+        r.setStart(textNode, Math.min(prevLen, (textNode.textContent ?? "").length));
+      } else {
+        r.setStart(prevContent, 0);
+      }
+      r.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(r);
     }
   };
 

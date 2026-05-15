@@ -633,7 +633,16 @@ export default function Editor({ presentation, generationParams }: Props) {
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
     } catch (err) {
-      console.error("Save failed:", err);
+      // Supabase error objects have non-enumerable fields — pluck them out
+      // explicitly so we actually see what failed.
+      const e = err as { message?: string; code?: string; details?: string; hint?: string };
+      console.error("Save failed:", {
+        message: e?.message,
+        code: e?.code,
+        details: e?.details,
+        hint: e?.hint,
+        raw: err,
+      });
       setSaveStatus("error");
     }
   }, [presentation.id, pushHistory]);
