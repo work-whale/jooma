@@ -331,6 +331,7 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
         opacity: image.opacity,
         cursor: image.locked ? "default" : editingInner ? "default" : selected ? "move" : "pointer",
         pointerEvents: "auto",
+        zIndex: image.z,
         transform: `rotate(${rotation}deg)`,
         transformOrigin: "center center",
         filter: image.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
@@ -353,7 +354,22 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
         onContextMenu(image.id, e.clientX, e.clientY);
       }}
     >
-      {isEmptyFrame ? (
+      {image.isPending && !image.src ? (
+        // Shimmer placeholder while the AI is fetching the image. Same shape
+        // as the final image (frame-clipped) so layout doesn't jump on swap.
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            background: "#e7e5e0",
+            position: "relative",
+            overflow: "hidden",
+            ...frameStyle,
+          }}
+        >
+          <div className="absolute inset-0 jooma-shimmer" />
+        </div>
+      ) : isEmptyFrame ? (
         <div
           style={{
             width: "100%",

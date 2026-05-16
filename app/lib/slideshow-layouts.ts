@@ -37,6 +37,9 @@ export interface SlideSpec {
   imageDataUrl?: string;   // injected server-side after Pixabay fetch
   imageWidth?: number;     // natural dims, if known
   imageHeight?: number;
+  /** Set when the AI hasn't fetched the image yet — renderer puts a shimmer
+   * placeholder in the image frame instead of skipping the image element. */
+  imagePending?: boolean;
   attribution?: string;    // for quote layout
   twoColLeftTitle?: string;
   twoColLeftBody?: string;
@@ -68,13 +71,20 @@ function themeFor(scheme: ColorScheme, accent: string, base?: SlideshowTheme): T
   // The per-slide colorScheme then chooses between bg/dark/accent variants.
   if (base) {
     switch (scheme) {
-      case "dark":
+      case "dark": {
+        // When inverting to the dark scheme, the new bg is the theme's text
+        // colour. If the theme's accent matches that (e.g. Mono has black for
+        // both text and accent), the accent becomes invisible against the new
+        // bg, so we swap to the original background colour for contrast.
+        const newBg = base.palette.text;
+        const sameAsBg = base.palette.accent.toLowerCase() === newBg.toLowerCase();
         return {
-          bg: base.palette.text, // dark = use text color as bg, invert
+          bg: newBg,
           text: base.palette.background,
           muted: "rgba(255,255,255,0.7)",
-          accent: base.palette.accent,
+          accent: sameAsBg ? base.palette.background : base.palette.accent,
         };
+      }
       case "accent":
         return {
           bg: base.palette.accent,
@@ -239,6 +249,8 @@ function renderTitleCover(spec: SlideSpec, t: Theme): SlideJSON {
           backgroundOffsetY: 0,
           backgroundScale: 1,
         }
+      : spec.imagePending
+      ? { backgroundImagePending: true }
       : {}),
   };
 }
@@ -303,11 +315,20 @@ function renderImageSide(spec: SlideSpec, t: Theme, side: "left" | "right"): Sli
   // The image rect spans the full slot and the photo is cropped (cover-fit)
   // to fill it. Setting frame: "none" with cornerRadius=0 is what triggers the
   // cover branch in the renderer; we use a tiny radius to enable it cleanly.
+  // When `imagePending` is set we still create the image element so the slide
+  // reserves space and renders a shimmer overlay — the real src arrives later.
   const images: ImageObject[] = spec.imageDataUrl
     ? [{
         ...makeImage(spec.imageDataUrl, imageX, imgY, imgWidth, imgHeight, spec.imageWidth, spec.imageHeight),
         frame: "rounded",
         cornerRadius: 0,
+      }]
+    : spec.imagePending
+    ? [{
+        ...makeImage("", imageX, imgY, imgWidth, imgHeight),
+        frame: "rounded",
+        cornerRadius: 0,
+        isPending: true,
       }]
     : [];
 
@@ -354,12 +375,14 @@ function renderImageFull(spec: SlideSpec, t: Theme): SlideJSON {
     ],
     images: [],
     background: t.bg,
-    backgroundImage: spec.imageDataUrl,
-    backgroundImageWidth: spec.imageWidth,
-    backgroundImageHeight: spec.imageHeight,
-    backgroundOffsetX: 0,
-    backgroundOffsetY: 0,
-    backgroundScale: 1,
+    ...(spec.imageDataUrl ? {
+      backgroundImage: spec.imageDataUrl,
+      backgroundImageWidth: spec.imageWidth,
+      backgroundImageHeight: spec.imageHeight,
+      backgroundOffsetX: 0,
+      backgroundOffsetY: 0,
+      backgroundScale: 1,
+    } : spec.imagePending ? { backgroundImagePending: true } : {}),
   };
 }
 

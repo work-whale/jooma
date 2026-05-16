@@ -54,12 +54,11 @@ const scriptSchema = {
   },
 } as const;
 
-function pickVoice(year?: string): Voice {
-  // Younger years → friendlier "nova"; older years → more grounded "alloy".
-  if (!year) return "alloy";
-  const m = year.match(/\d+/);
-  const n = m ? parseInt(m[0], 10) : 99;
-  return n <= 6 ? "nova" : "alloy";
+// Use the British-accented voice across all year groups so listening clips
+// match the UK English script. "fable" is OpenAI tts-1's RP-style voice;
+// the others (alloy/nova/echo/onyx/shimmer) are American.
+function pickVoice(_year?: string): Voice {
+  return "fable";
 }
 
 export async function POST(req: NextRequest) {
@@ -118,10 +117,37 @@ Return only the questions array along with a brief title and one-sentence descri
 
   // 1) Write the script + activity (unless caller supplied one).
   if (body.scriptOverride) {
-    title = body.titleOverride || "Listening activity";
-    description = "Listen carefully and answer the questions below.";
+    // User-supplied script: use it verbatim for TTS, but still ask gpt-4o for
+    // a fitting title, description, and activity questions so the slide isn't
+    // bare.
     script = body.scriptOverride;
-    questions = [];
+    const qPrompt = `A teacher has supplied this listening script for a classroom audio activity:
+
+"${body.scriptOverride.trim()}"
+
+Topic / context: "${body.topic}".
+
+Write:
+- A short title (max 6 words) summarising the clip.
+- A one-sentence description telling pupils what they'll hear.
+- Activity questions tied to the script. ${activityInstruction}${extraInstr}
+
+Do NOT rewrite the script — leave the "script" field equal to the supplied text. Use British English in everything you write.`;
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-2024-08-06",
+      messages: [
+        { role: "system", content: "You design clear, age-appropriate UK classroom listening activities." },
+        { role: "user", content: qPrompt },
+      ],
+      response_format: { type: "json_schema", json_schema: scriptSchema },
+    });
+    const content = completion.choices[0]?.message?.content;
+    if (!content) return NextResponse.json({ error: "Empty AI response" }, { status: 500 });
+    const parsed: { title: string; description: string; script: string; questions: string[] } = JSON.parse(content);
+    title = body.titleOverride || parsed.title;
+    description = parsed.description;
+    questions = parsed.questions;
   } else {
     const yearLine = body.year ? `Audience: UK ${body.year} pupils.` : "";
     const readingLine = body.readingLevel && body.readingLevel !== "Same as Year"
@@ -135,7 +161,7 @@ ${readingLine}
 Write:
 - A short title (max 6 words) for the activity.
 - A one-sentence description telling pupils what they will hear.
-- A "script" of 25-50 seconds spoken aloud — a first-person account, a vivid scene, a narrated explanation, or a short dialogue. Use UK English. Concrete and engaging — no filler.
+- A "script" of 25-50 seconds spoken aloud — a first-person account, a vivid scene, a narrated explanation, or a short dialogue. Concrete and engaging — no filler. Use British English: spellings (colour, organise, realise, learnt), idiom (rubbish bin, lift, pavement, lorry, queue, holiday), and British settings/place names where the topic allows. Avoid American Englishisms (color, organize, sidewalk, vacation, trash can).
 - Activity questions for pupils to complete while/after listening. ${activityInstruction}${extraInstr}
 
 The "script" must be plain spoken text only — no stage directions, sound effects, or speaker tags.`;

@@ -389,6 +389,7 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
         pointerEvents: "auto",
         transform: `rotate(${rotation}deg)`,
         transformOrigin: "center center",
+        zIndex: shape.z,
         filter: shape.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
       }}
       onMouseDown={handleBodyMouseDown}

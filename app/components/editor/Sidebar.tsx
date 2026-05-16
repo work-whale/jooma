@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond } from "lucide-react";
+import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film } from "lucide-react";
+import { parseYouTubeId } from "./youtube";
 import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
 import FramePicker from "./FramePicker";
@@ -9,7 +10,23 @@ import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
 import { listGeneratedImages, saveGeneratedImage, type GeneratedImage } from "@/app/lib/generatedImages";
 
-type TabId = "elements" | "text" | "uploads" | "ai";
+type TabId = "elements" | "text" | "uploads" | "ai" | "audio" | "video";
+
+export interface SidebarAudioActivity {
+  src: string;
+  title: string;
+  description: string;
+  transcript?: string;
+  questions: string[];
+}
+
+type AudioActivityType = "comprehension" | "true-false" | "gap-fills";
+
+const AUDIO_ACTIVITY_TYPES: { id: AudioActivityType; label: string }[] = [
+  { id: "comprehension", label: "Comprehension" },
+  { id: "true-false", label: "True/False" },
+  { id: "gap-fills", label: "Gap fills" },
+];
 
 type SidebarShape =
   | "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon"
@@ -20,6 +37,8 @@ interface Props {
   onAddText: (preset: "heading" | "subheading" | "body", fontFamily?: string) => void;
   onAddImage: (dataUrl: string) => void;
   onAddFrame?: (frame: FrameShape) => void;
+  onAddAudioActivity?: (audio: SidebarAudioActivity) => void;
+  onAddVideo?: (source: "youtube" | "upload", src: string, title?: string) => void;
   // Bumped by the Editor whenever it saves a new image to the gallery (e.g. from
   // the SSE wizard stream or right-click regenerate). Triggers a refetch here.
   galleryRefreshTrigger?: number;
@@ -39,6 +58,8 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "text", label: "Text", icon: <Type className="w-5 h-5" /> },
   { id: "uploads", label: "Uploads", icon: <ImageIcon className="w-5 h-5" /> },
   { id: "ai", label: "AI", icon: <Sparkles className="w-5 h-5" /> },
+  { id: "audio", label: "Audio", icon: <Headphones className="w-5 h-5" /> },
+  { id: "video", label: "Video", icon: <Film className="w-5 h-5" /> },
 ];
 
 type ElementSubTab = "shapes" | "graphics" | "pictures" | "frames";
@@ -55,8 +76,94 @@ export default function Sidebar({
   onAddText,
   onAddImage,
   onAddFrame,
+  onAddAudioActivity,
+  onAddVideo,
   galleryRefreshTrigger = 0,
 }: Props) {
+  // ── Video tab ─────────────────────────────────────────────────────────────
+  const videoFileRef = useRef<HTMLInputElement>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoUrlError, setVideoUrlError] = useState<string | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+
+  const handleAddYouTube = () => {
+    const id = parseYouTubeId(videoUrl);
+    if (!id) {
+      setVideoUrlError("Couldn't find a YouTube video id in that URL");
+      return;
+    }
+    setVideoUrlError(null);
+    onAddVideo?.("youtube", id);
+    setVideoUrl("");
+  };
+
+  const handleVideoFile = async (file: File) => {
+    setVideoUploading(true);
+    setVideoUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/upload-video", { method: "POST", body: fd });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Upload failed");
+      }
+      const data: { src: string } = await r.json();
+      onAddVideo?.("upload", data.src, file.name);
+    } catch (err) {
+      setVideoUploadError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setVideoUploading(false);
+    }
+  };
+  // Audio tab state
+  const [audioTopic, setAudioTopic] = useState("");
+  const [audioScript, setAudioScript] = useState("");
+  const [audioActivityType, setAudioActivityType] = useState<AudioActivityType>("comprehension");
+  const [audioInstructions, setAudioInstructions] = useState("");
+  const [audioBusy, setAudioBusy] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+
+  const handleAudioGenerate = async () => {
+    const hasTopic = audioTopic.trim().length > 0;
+    const hasScript = audioScript.trim().length > 0;
+    if (!hasTopic && !hasScript) return;
+    if (audioBusy) return;
+    setAudioBusy(true);
+    setAudioError(null);
+    try {
+      const r = await fetch("/api/generate-audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: audioTopic.trim() || "Custom script",
+          activityType: audioActivityType,
+          additionalInstructions: audioInstructions.trim() || undefined,
+          scriptOverride: hasScript ? audioScript.trim() : undefined,
+        }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Generation failed");
+      }
+      const data = await r.json();
+      onAddAudioActivity?.({
+        src: data.src,
+        title: data.title,
+        description: data.description,
+        transcript: data.transcript,
+        questions: data.questions ?? [],
+      });
+      setAudioTopic("");
+      setAudioScript("");
+      setAudioInstructions("");
+    } catch (err) {
+      setAudioError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setAudioBusy(false);
+    }
+  };
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiStyle, setAiStyle] = useState<typeof AI_STYLES[number]["id"]>("photographic");
   const [aiBusy, setAiBusy] = useState(false);
@@ -116,6 +223,35 @@ export default function Sidebar({
   const [elementSubTab, setElementSubTab] = useState<ElementSubTab>("shapes");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<string[]>([]);
+  const [uploadUrl, setUploadUrl] = useState("");
+  const [uploadUrlBusy, setUploadUrlBusy] = useState(false);
+  const [uploadUrlError, setUploadUrlError] = useState<string | null>(null);
+
+  const handleAddByUrl = async () => {
+    const u = uploadUrl.trim();
+    if (!u || uploadUrlBusy) return;
+    setUploadUrlBusy(true);
+    setUploadUrlError(null);
+    try {
+      const r = await fetch("/api/fetch-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: u }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to fetch image");
+      }
+      const data: { dataUrl: string } = await r.json();
+      setUploads((prev) => [data.dataUrl, ...prev]);
+      onAddImage(data.dataUrl);
+      setUploadUrl("");
+    } catch (err) {
+      setUploadUrlError(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setUploadUrlBusy(false);
+    }
+  };
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Track which sub-tabs have ever been opened. Graphics + Pictures keep their
@@ -482,6 +618,169 @@ export default function Sidebar({
               </div>
             )}
 
+            {active === "audio" && (
+              <div className="space-y-3">
+                <p className="text-[11px] text-gray-500">
+                  Generate a listening activity — a TTS clip plus comprehension questions — and drop it onto a new slide.
+                </p>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-gray-700">
+                    Topic <span className="text-gray-400 font-normal">{audioScript.trim() ? "(used for AI questions)" : ""}</span>
+                  </span>
+                  <input
+                    type="text"
+                    value={audioTopic}
+                    onChange={(e) => setAudioTopic(e.target.value)}
+                    placeholder="E.g. The water cycle"
+                    disabled={audioBusy}
+                    className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                    style={{ borderColor: "#DAD8D0" }}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-gray-700">
+                    Script <span className="text-gray-400 font-normal">(optional)</span>
+                  </span>
+                  <textarea
+                    value={audioScript}
+                    onChange={(e) => setAudioScript(e.target.value)}
+                    placeholder="Paste your own script here — it'll be read aloud exactly. Leave blank and AI will write one."
+                    rows={4}
+                    disabled={audioBusy}
+                    className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 resize-none"
+                    style={{ borderColor: "#DAD8D0" }}
+                  />
+                </label>
+                <div>
+                  <span className="text-[11px] font-semibold text-gray-700 block mb-1">Activity type</span>
+                  <div className="flex flex-wrap gap-1">
+                    {AUDIO_ACTIVITY_TYPES.map((a) => {
+                      const selected = audioActivityType === a.id;
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => setAudioActivityType(a.id)}
+                          disabled={audioBusy}
+                          className="px-2 py-1 text-[11px] font-semibold rounded-full border transition-colors"
+                          style={
+                            selected
+                              ? { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a", color: "#fff" }
+                              : { backgroundColor: "#fff", borderColor: "#DAD8D0", color: "#1a1a1a" }
+                          }
+                        >
+                          {a.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-gray-700">
+                    Notes <span className="text-gray-400 font-normal">(optional)</span>
+                  </span>
+                  <textarea
+                    value={audioInstructions}
+                    onChange={(e) => setAudioInstructions(e.target.value)}
+                    placeholder="E.g. include key vocabulary..."
+                    rows={2}
+                    disabled={audioBusy}
+                    className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 resize-none"
+                    style={{ borderColor: "#DAD8D0" }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAudioGenerate}
+                  disabled={audioBusy || (!audioTopic.trim() && !audioScript.trim())}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                >
+                  {audioBusy ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate audio activity
+                    </>
+                  )}
+                </button>
+                {audioError && (
+                  <p className="text-[10px] text-red-600">{audioError}</p>
+                )}
+                <p className="text-[10px] text-gray-400 mt-2">
+                  Generation takes ~10–15 seconds. A new slide will be inserted into your deck with the audio player, transcript, and questions.
+                </p>
+              </div>
+            )}
+
+            {active === "video" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">YouTube</p>
+                  <div className="space-y-1.5">
+                    <input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => { setVideoUrl(e.target.value); setVideoUrlError(null); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddYouTube(); } }}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddYouTube}
+                      disabled={!videoUrl.trim()}
+                      className="w-full px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+                    >
+                      Add YouTube video
+                    </button>
+                    {videoUrlError && <p className="text-[10px] text-red-600">{videoUrlError}</p>}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Upload video</p>
+                  <button
+                    onClick={() => videoFileRef.current?.click()}
+                    disabled={videoUploading}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                    style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                  >
+                    {videoUploading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Uploading…
+                      </>
+                    ) : (
+                      <>
+                        <Film className="w-3.5 h-3.5" />
+                        Choose a video file
+                      </>
+                    )}
+                  </button>
+                  <input
+                    ref={videoFileRef}
+                    type="file"
+                    accept="video/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleVideoFile(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  {videoUploadError && <p className="text-[10px] text-red-600 mt-1">{videoUploadError}</p>}
+                  <p className="text-[10px] text-gray-400 mt-2">MP4 / WebM up to ~50 MB. Stored in your Supabase project.</p>
+                </div>
+              </div>
+            )}
+
             {active === "text" && (
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -525,7 +824,7 @@ export default function Sidebar({
             )}
 
             {active === "uploads" && (
-              <div>
+              <div className="space-y-3">
                 <button
                   onClick={() => fileRef.current?.click()}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2 rounded-xl transition-colors"
@@ -543,8 +842,32 @@ export default function Sidebar({
                     e.target.value = "";
                   }}
                 />
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
+                  <p className="text-[11px] font-semibold text-gray-700 mb-1">Add by URL</p>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="url"
+                      value={uploadUrl}
+                      onChange={(e) => setUploadUrl(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddByUrl(); } }}
+                      placeholder="https://..."
+                      disabled={uploadUrlBusy}
+                      className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                    <button
+                      onClick={handleAddByUrl}
+                      disabled={uploadUrlBusy || !uploadUrl.trim()}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+                    >
+                      {uploadUrlBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Add"}
+                    </button>
+                  </div>
+                  {uploadUrlError && <p className="text-[10px] text-red-600 mt-1">{uploadUrlError}</p>}
+                </div>
                 {uploads.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 mt-4">
+                  <div className="grid grid-cols-2 gap-2 mt-2">
                     {uploads.map((u, i) => (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img

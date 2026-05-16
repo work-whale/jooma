@@ -18,6 +18,8 @@ interface RequestBody {
   includeObjectives?: boolean;
   includeVocab?: boolean;
   includeAudio?: boolean;
+  includeYouTube?: boolean;
+  youtubeLength?: "short" | "medium" | "long" | "any";
   imageSource?: ImageSource;
   imageStyle?: ImageStyle;
   themeId?: string;
@@ -361,55 +363,79 @@ export async function POST(req: NextRequest) {
           slideTitles: parsed.slides.map((s) => s.title),
         });
 
-        // Process slides sequentially so the client can render them as they arrive.
-        // Image fetches happen per slide; the text content of each slide ships
-        // immediately (before its image) so the user sees structure first.
-        for (let idx = 0; idx < parsed.slides.length; idx++) {
-          const s = parsed.slides[idx];
-          const spec: SlideSpec = {
-            layout: s.layout,
-            colorScheme: s.colorScheme,
-            accentColor: s.accentColor,
-            title: s.title,
-            subtitle: s.subtitle || undefined,
-            body: s.body || undefined,
-            bullets: s.bullets.length ? s.bullets : undefined,
-            imageQuery: s.imageQuery || undefined,
-            attribution: s.attribution || undefined,
-            twoColLeftTitle: s.twoColLeftTitle || undefined,
-            twoColLeftBody: s.twoColLeftBody || undefined,
-            twoColRightTitle: s.twoColRightTitle || undefined,
-            twoColRightBody: s.twoColRightBody || undefined,
-            statValue: s.statValue || undefined,
-            statCaption: s.statCaption || undefined,
-            col1Title: s.col1Title || undefined, col1Body: s.col1Body || undefined,
-            col2Title: s.col2Title || undefined, col2Body: s.col2Body || undefined,
-            col3Title: s.col3Title || undefined, col3Body: s.col3Body || undefined,
-            quadrants: s.quadrants.length ? s.quadrants : undefined,
-            timelineItems: s.timelineItems.length ? s.timelineItems : undefined,
-          };
-          let imageProvider: "ai" | "web" | null = null;
-          if (spec.imageQuery) {
-            const img = await fetchImageForSlide(spec.imageQuery, imageSource, imageStyle, idx);
-            if (img) {
-              spec.imageDataUrl = img.dataUrl;
-              spec.imageWidth = img.width;
-              spec.imageHeight = img.height;
-              imageProvider = img.provider;
-            }
-          }
-          const slide: SlideJSON = renderSlide(spec, theme);
+        // ── Phase 1: ship every slide's TEXT immediately ──────────────────
+        // Slides with imageQuery render with `imagePending: true` so the image
+        // frame shows a shimmer placeholder until the real photo arrives via
+        // the "slide-image" event below. This lets the user read the deck
+        // while OpenAI / Pixabay calls run in the background.
+        const specs: SlideSpec[] = parsed.slides.map((s) => ({
+          layout: s.layout,
+          colorScheme: s.colorScheme,
+          accentColor: s.accentColor,
+          title: s.title,
+          subtitle: s.subtitle || undefined,
+          body: s.body || undefined,
+          bullets: s.bullets.length ? s.bullets : undefined,
+          imageQuery: s.imageQuery || undefined,
+          attribution: s.attribution || undefined,
+          twoColLeftTitle: s.twoColLeftTitle || undefined,
+          twoColLeftBody: s.twoColLeftBody || undefined,
+          twoColRightTitle: s.twoColRightTitle || undefined,
+          twoColRightBody: s.twoColRightBody || undefined,
+          statValue: s.statValue || undefined,
+          statCaption: s.statCaption || undefined,
+          col1Title: s.col1Title || undefined, col1Body: s.col1Body || undefined,
+          col2Title: s.col2Title || undefined, col2Body: s.col2Body || undefined,
+          col3Title: s.col3Title || undefined, col3Body: s.col3Body || undefined,
+          quadrants: s.quadrants.length ? s.quadrants : undefined,
+          timelineItems: s.timelineItems.length ? s.timelineItems : undefined,
+          imagePending: !!s.imageQuery,
+        }));
+        for (let idx = 0; idx < specs.length; idx++) {
+          if (closed) break;
+          const slide: SlideJSON = renderSlide(specs[idx], theme);
           send("slide", {
             index: idx,
-            total: parsed.slides.length,
+            total: specs.length,
             slide,
-            title: s.title,
-            // Only AI images flow into the AI gallery; web (Pixabay) ones don't.
-            galleryImage: imageProvider === "ai" && spec.imageDataUrl && spec.imageQuery
-              ? { prompt: spec.imageQuery, style: imageStyle, dataUrl: spec.imageDataUrl }
-              : undefined,
+            title: specs[idx].title,
           });
         }
+
+        // ── Phase 2: fetch all images in parallel ─────────────────────────
+        // Each image's "slide-image" event includes the re-rendered slide so
+        // the client can drop the new JSON in place (preserves layout +
+        // background-image vs image-layer placement).
+        const imageJobs = specs.map((spec, idx) => (async () => {
+          if (!spec.imageQuery || closed) return;
+          const img = await fetchImageForSlide(spec.imageQuery, imageSource, imageStyle, idx);
+          if (closed) return;
+          if (!img) {
+            // No image came back — clear the pending flag so the shimmer stops.
+            const cleared: SlideSpec = { ...spec, imagePending: false };
+            send("slide-image", {
+              index: idx,
+              slide: renderSlide(cleared, theme),
+            });
+            return;
+          }
+          const filled: SlideSpec = {
+            ...spec,
+            imagePending: false,
+            imageDataUrl: img.dataUrl,
+            imageWidth: img.width,
+            imageHeight: img.height,
+          };
+          const updated = renderSlide(filled, theme);
+          send("slide-image", {
+            index: idx,
+            slide: updated,
+            galleryImage: img.provider === "ai" && spec.imageQuery
+              ? { prompt: spec.imageQuery, style: imageStyle, dataUrl: img.dataUrl }
+              : undefined,
+          });
+        })());
+        await Promise.allSettled(imageJobs);
 
         // Optional audio activity (one per deck). Generated AFTER all slides
         // stream in so the user can see the deck while TTS runs in the background.
@@ -462,6 +488,48 @@ export async function POST(req: NextRequest) {
           }
         } else {
           console.log("[generate-slideshow] includeAudio is", body.includeAudio, "— skipping audio");
+        }
+
+        // Optional YouTube video. Same pattern as audio: kicks off AFTER text
+        // slides have streamed in. Inserts a new dedicated slide with the video.
+        if (body.includeYouTube && !closed) {
+          try {
+            send("status", { message: "Finding a YouTube video..." });
+            const ytRes = await fetch(`${req.nextUrl.origin}/api/find-youtube`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                topic: body.topic,
+                year: body.year,
+                readingLevel: body.readingLevel,
+                length: body.youtubeLength ?? "any",
+              }),
+            });
+            if (ytRes.ok) {
+              const yt: { videoId: string; title: string; channel: string; description: string } = await ytRes.json();
+              // Pick a target slot near the start (after slide 2 if it exists).
+              const targetIndex = Math.min(2, specs.length - 1);
+              send("video", {
+                targetIndex,
+                video: {
+                  videoId: yt.videoId,
+                  title: yt.title,
+                  channel: yt.channel,
+                  description: yt.description,
+                },
+                slideBg: theme.palette.background,
+                titleColor: theme.palette.text,
+                mutedColor: theme.palette.muted,
+                accent: theme.palette.accent,
+                headingFont: theme.fonts.heading,
+              });
+            } else {
+              const err = await ytRes.json().catch(() => ({}));
+              console.warn("[generate-slideshow] /api/find-youtube failed:", ytRes.status, err);
+            }
+          } catch (err) {
+            console.warn("[generate-slideshow] youtube fetch threw:", err);
+          }
         }
 
         send("complete", { title: parsed.title });

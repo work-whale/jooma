@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones } from "lucide-react";
+import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import { SLIDESHOW_THEMES } from "@/app/lib/slideshowThemes";
 
 // sessionStorage key used to hand the generation params from this modal to the
 // editor page, which kicks off the SSE stream after navigation.
 export const GENERATION_STORAGE_KEY = "jooma:generation-params";
+
+export type YoutubeLength = "short" | "medium" | "long" | "any";
 
 export interface GenerationParams {
   topic: string;
@@ -19,6 +21,8 @@ export interface GenerationParams {
   includeObjectives?: boolean;
   includeVocab?: boolean;
   includeAudio?: boolean;
+  includeYouTube?: boolean;
+  youtubeLength?: YoutubeLength;
   imageSource?: "auto" | "ai" | "web";
   imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
   themeId?: string;
@@ -68,11 +72,44 @@ export default function GenerateModal({ onClose }: Props) {
   const [includeObjectives, setIncludeObjectives] = useState(false);
   const [includeVocab, setIncludeVocab] = useState(false);
   const [includeAudio, setIncludeAudio] = useState(false);
+  const [includeYouTube, setIncludeYouTube] = useState(false);
+  const [youtubeLength, setYoutubeLength] = useState<"short" | "medium" | "long" | "any">("short");
   const [imageSource, setImageSource] = useState<ImageSource>("auto");
-  const [imageStyle, setImageStyle] = useState<ImageStyle>("photographic");
+  // Default to "illustration" — works better for classroom decks than realistic
+  // photography (and DALL·E/gpt-image's safety filter rejects fewer prompts).
+  const [imageStyle, setImageStyle] = useState<ImageStyle>("illustration");
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [outlineBusy, setOutlineBusy] = useState(false);
+  const [outlineError, setOutlineError] = useState<string | null>(null);
+
+  const handleGenerateOutline = async () => {
+    if (!topic.trim() || outlineBusy) return;
+    setOutlineBusy(true);
+    setOutlineError(null);
+    try {
+      const r = await fetch("/api/generate-lesson-outline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: topic.trim(),
+          year: year || undefined,
+          readingLevel,
+        }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Failed");
+      }
+      const data: { outline: string } = await r.json();
+      setAdditionalInstructions(data.outline);
+    } catch (err) {
+      setOutlineError(err instanceof Error ? err.message : "Failed to generate outline");
+    } finally {
+      setOutlineBusy(false);
+    }
+  };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -101,6 +138,8 @@ export default function GenerateModal({ onClose }: Props) {
         includeObjectives,
         includeVocab,
         includeAudio,
+        includeYouTube,
+        youtubeLength: includeYouTube ? youtubeLength : undefined,
         imageSource,
         imageStyle: imageSource === "web" ? undefined : imageStyle,
         themeId,
@@ -288,20 +327,43 @@ export default function GenerateModal({ onClose }: Props) {
                 </label>
               </div>
 
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-700">
-                  Additional instructions <span className="text-gray-400 font-normal">(optional)</span>
-                </span>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-gray-700">
+                    Additional instructions <span className="text-gray-400 font-normal">(optional)</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleGenerateOutline}
+                    disabled={outlineBusy || busy || !topic.trim()}
+                    title={!topic.trim() ? "Enter a lesson topic first" : "Let AI sketch an outline for you"}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors disabled:opacity-50"
+                    style={{ borderColor: "#0f5f3a", color: "#0f5f3a", backgroundColor: "#fff" }}
+                  >
+                    {outlineBusy ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Generating…
+                      </>
+                    ) : (
+                      <>
+                        Generate lesson outline
+                        <Sparkles className="w-3 h-3" />
+                      </>
+                    )}
+                  </button>
+                </div>
                 <textarea
                   value={additionalInstructions}
                   onChange={(e) => setAdditionalInstructions(e.target.value)}
                   placeholder="You can include specific topics, learning objectives or paste in existing lesson plans..."
                   rows={3}
-                  disabled={busy}
-                  className="mt-1 w-full px-3 py-2 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
+                  disabled={busy || outlineBusy}
+                  className="w-full px-3 py-2 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
                   style={{ borderColor: "#DAD8D0" }}
                 />
-              </label>
+                {outlineError && <p className="text-[11px] text-red-600 mt-1">{outlineError}</p>}
+              </div>
             </>
           ) : (
             <>
@@ -332,6 +394,63 @@ export default function GenerateModal({ onClose }: Props) {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Resources</p>
                 <div className="space-y-2">
+                  <div
+                    className="rounded-xl border transition-colors overflow-hidden"
+                    style={
+                      includeYouTube
+                        ? { backgroundColor: "#fff", borderColor: "#1a1a1a" }
+                        : { backgroundColor: "#fff", borderColor: "#DAD8D0" }
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setIncludeYouTube(!includeYouTube)}
+                      disabled={busy}
+                      className="w-full flex items-center gap-3 p-3 text-left disabled:opacity-60"
+                    >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-red-100">
+                        <VideoIcon className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>YouTube video</p>
+                        <p className="text-xs text-gray-500 truncate">We&apos;ll include a relevant video for you</p>
+                      </div>
+                      <div
+                        className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
+                        style={
+                          includeYouTube
+                            ? { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a" }
+                            : { borderColor: "#DAD8D0" }
+                        }
+                      >
+                        {includeYouTube && (
+                          <svg viewBox="0 0 20 20" className="w-3 h-3 text-white fill-current">
+                            <path d="M7.6 13.6 4 10l1.4-1.4 2.2 2.2 7-7L16 5.2z" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                    {includeYouTube && (
+                      <div
+                        className="px-3 pb-3 pt-2 flex items-center gap-3"
+                        style={{ borderTop: "1px solid #F0EFE8" }}
+                      >
+                        <p className="text-xs font-semibold text-gray-700 shrink-0">Video length</p>
+                        <select
+                          value={youtubeLength}
+                          onChange={(e) => setYoutubeLength(e.target.value as typeof youtubeLength)}
+                          disabled={busy}
+                          className="flex-1 px-2.5 py-1.5 text-xs bg-white border rounded-lg focus:outline-none disabled:opacity-60"
+                          style={{ borderColor: "#DAD8D0" }}
+                        >
+                          <option value="short">Under 5 mins</option>
+                          <option value="medium">5 – 20 mins</option>
+                          <option value="long">20+ mins</option>
+                          <option value="any">Any length</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
                   <ToggleCard
                     icon={<Headphones className="w-4 h-4 text-gray-700" />}
                     iconBg="bg-gray-100"

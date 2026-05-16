@@ -1,9 +1,10 @@
 "use client";
 
 import { memo } from "react";
-import type { SlideJSON, ShapeObject, TextObject, ImageObject } from "@/app/lib/presentations";
+import type { SlideJSON, ShapeObject, TextObject, ImageObject, AudioObject, VideoObject } from "@/app/lib/presentations";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import { getFrameStyle } from "./frames";
+import { youtubeThumbnail } from "./youtube";
 
 interface Props {
   slide: SlideJSON;
@@ -214,7 +215,11 @@ const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
         filter: image.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
       }}
     >
-      {isEmptyFrame ? (
+      {image.isPending && !image.src ? (
+        <div style={{ width: "100%", height: "100%", background: "#e7e5e0", overflow: "hidden", position: "relative", ...frameStyle }}>
+          <div className="absolute inset-0 jooma-shimmer" />
+        </div>
+      ) : isEmptyFrame ? (
         <div style={{ width: "100%", height: "100%", background: "#e7e5e0", ...frameStyle }} />
       ) : (() => {
         const sw = image.strokeWidth ?? 0;
@@ -279,6 +284,126 @@ const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
   );
 });
 
+// Tiny audio player representation for thumbnails: a coloured pill with a
+// solid play-button square on the left + a translucent progress track. Skips
+// playback logic — this is purely a static visual.
+const MiniAudio = memo(function MiniAudio({ audio }: { audio: AudioObject }) {
+  const barBg = audio.panelBg ?? "rgba(255,232,200,0.18)";
+  const accent = audio.playBg ?? "#34A853";
+  const accentInk = audio.playInk ?? "#ffffff";
+  const ink = audio.panelInk ?? "#FFE8C8";
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: audio.x,
+        top: audio.y,
+        width: audio.width,
+        height: audio.height,
+        transform: `rotate(${audio.rotation ?? 0}deg)`,
+        transformOrigin: "center center",
+        zIndex: audio.z,
+        borderRadius: 16,
+        backgroundColor: barBg,
+        padding: "12px 16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        boxSizing: "border-box",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 8,
+            backgroundColor: accent,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {/* Play triangle */}
+          <svg viewBox="0 0 24 24" width="16" height="16" fill={accentInk}>
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            fontSize: 14,
+            color: ink,
+            fontStyle: "italic",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            opacity: 0.95,
+          }}
+        >
+          {audio.title || "Audio clip"}
+        </div>
+      </div>
+      <div
+        style={{
+          height: 6,
+          borderRadius: 999,
+          backgroundColor: "rgba(0,0,0,0.15)",
+          position: "relative",
+        }}
+      />
+    </div>
+  );
+});
+
+const MiniVideo = memo(function MiniVideo({ video }: { video: VideoObject }) {
+  const poster = video.source === "youtube" ? youtubeThumbnail(video.src) : null;
+  const frameStyle = getFrameStyle(video.frame, video.cornerRadius);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: video.x,
+        top: video.y,
+        width: video.width,
+        height: video.height,
+        transform: `rotate(${video.rotation ?? 0}deg)`,
+        transformOrigin: "center center",
+        zIndex: video.z,
+        overflow: "hidden",
+        backgroundColor: "#000",
+        ...frameStyle,
+      }}
+    >
+      {poster && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={poster}
+          alt=""
+          draggable={false}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      )}
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            width: Math.min(video.width, video.height) * 0.25,
+            height: Math.min(video.width, video.height) * 0.25,
+            borderRadius: 999,
+            backgroundColor: "rgba(255, 0, 0, 0.92)",
+          }}
+        />
+      </div>
+    </div>
+  );
+});
+
 function MiniSlideBase({ slide, width }: Props) {
   const scale = width / SLIDE_W;
   const height = SLIDE_H * scale;
@@ -331,6 +456,8 @@ function MiniSlideBase({ slide, width }: Props) {
         {(slide.images ?? []).map((i) => <MiniImage key={i.id} image={i} />)}
         {(slide.shapes ?? []).map((s) => <MiniShape key={s.id} shape={s} />)}
         {(slide.texts ?? []).map((t) => <MiniText key={t.id} text={t} />)}
+        {(slide.audios ?? []).map((a) => <MiniAudio key={a.id} audio={a} />)}
+        {(slide.videos ?? []).map((v) => <MiniVideo key={v.id} video={v} />)}
       </div>
     </div>
   );

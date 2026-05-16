@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon } from "lucide-react";
+import { SLIDE_W, SLIDE_H } from "./constants";
 import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
 import { isSvgDataUrl, extractSvgColors, swapSvgColor } from "./svg-recolor";
 import ColorPicker from "./ColorPicker";
-import type { TextObject, ShapeObject, ImageObject, SlideJSON } from "@/app/lib/presentations";
+import type { TextObject, ShapeObject, ImageObject, SlideJSON, VideoObject } from "@/app/lib/presentations";
 
 // Swatch-only button. Clicking opens a popover containing the native color picker,
 // a hex input, and any caller-provided extra controls (e.g. stroke thickness).
@@ -134,6 +135,7 @@ export type EditorSelection =
   | { kind: "text"; text: TextObject }
   | { kind: "shape"; shape: ShapeObject }
   | { kind: "image"; image: ImageObject }
+  | { kind: "video"; video: VideoObject }
   | { kind: "slide"; slide: SlideJSON }
   | null;
 
@@ -142,6 +144,7 @@ interface Props {
   onUpdateText: (patch: Partial<TextObject>) => void;
   onUpdateShape: (patch: Partial<ShapeObject>) => void;
   onUpdateImage: (patch: Partial<ImageObject>) => void;
+  onUpdateVideo: (patch: Partial<VideoObject>) => void;
   onUpdateSlide: (patch: Partial<SlideJSON>) => void;
   onDelete: () => void;
   onToggleLock: () => void;
@@ -197,6 +200,7 @@ export default function ContextualToolbar({
   onUpdateText,
   onUpdateShape,
   onUpdateImage,
+  onUpdateVideo,
   onUpdateSlide,
   onDelete,
   onToggleLock,
@@ -366,6 +370,41 @@ export default function ContextualToolbar({
     );
   }
 
+  if (selection.kind === "video") {
+    const v = selection.video;
+    const vFrame = (v.frame ?? "none") as FrameShape;
+    const vCorner = v.cornerRadius ?? (vFrame === "rounded" ? 16 : vFrame === "pill" ? 50 : 0);
+    const showRadiusSlider = vFrame === "rounded" || vFrame === "pill" || vFrame === "none";
+    return (
+      <div className={pillClass} style={{ scrollbarWidth: "none" }}>
+        <IconPopover icon={<FrameIcon className="w-3.5 h-3.5" />} label="Frame">
+          {() => (
+            <FramePicker
+              value={vFrame}
+              onSelect={(f) => onUpdateVideo({ frame: f, cornerRadius: undefined })}
+              columns={3}
+            />
+          )}
+        </IconPopover>
+        {showRadiusSlider && (
+          <label className="flex items-center gap-1.5 text-xs text-gray-600">
+            Radius
+            <input
+              type="range"
+              min={0}
+              max={50}
+              value={vCorner}
+              onChange={(e) => onUpdateVideo({ cornerRadius: Number(e.target.value) })}
+              className="accent-violet-600 w-24"
+            />
+            <span className="text-xs font-mono text-gray-600 w-8 text-right">{vCorner}%</span>
+          </label>
+        )}
+        <ObjectActions locked={!!v.locked} onToggleLock={onToggleLock} onDelete={onDelete} />
+      </div>
+    );
+  }
+
   // image
   const im = selection.image;
   const imFrame = (im.frame ?? "none") as FrameShape;
@@ -484,6 +523,47 @@ export default function ContextualToolbar({
           </div>
         )}
       </IconPopover>
+      <button
+        type="button"
+        onClick={() => {
+          // Fill the entire slide; reset any inner pan/zoom + rotation so it
+          // lands flush.
+          onUpdateImage({
+            x: 0, y: 0, width: SLIDE_W, height: SLIDE_H,
+            innerOffsetX: 0, innerOffsetY: 0, innerScale: 1,
+            rotation: 0,
+          });
+        }}
+        className={toggleBtn(false)}
+        title="Fit to slide"
+      >
+        <Maximize2 className="w-3.5 h-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          // Match the image's natural aspect ratio at its current width so it
+          // no longer looks stretched. Falls back to a square if natural dims
+          // aren't known yet.
+          const nw = im.naturalWidth, nh = im.naturalHeight;
+          if (nw && nh) {
+            const ratio = nh / nw;
+            onUpdateImage({
+              height: Math.round(im.width * ratio),
+              innerOffsetX: 0, innerOffsetY: 0, innerScale: 1,
+            });
+          } else {
+            onUpdateImage({
+              height: im.width,
+              innerOffsetX: 0, innerOffsetY: 0, innerScale: 1,
+            });
+          }
+        }}
+        className={toggleBtn(false)}
+        title="Fit to original ratio"
+      >
+        <SquareIcon className="w-3.5 h-3.5" />
+      </button>
       <ObjectActions locked={!!im.locked} onToggleLock={onToggleLock} onDelete={onDelete} />
     </div>
   );

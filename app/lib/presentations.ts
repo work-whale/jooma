@@ -16,6 +16,8 @@ export interface TextObject {
   rotation?: number;
   locked?: boolean;
   listType?: "bullet" | "number";
+  /** Global stacking order. Higher = on top. Used by Bring-to-front etc. */
+  z?: number;
 }
 
 export type ShapeType =
@@ -39,6 +41,7 @@ export interface ShapeObject {
   flipY?: boolean;
   shadow?: boolean;
   locked?: boolean;
+  z?: number;
 }
 
 export type ImageFrame =
@@ -84,6 +87,10 @@ export interface ImageObject {
   innerScale?: number;    // multiplier on top of cover-fit, >= 1
   naturalWidth?: number;  // measured on first load — drives edit-mode math
   naturalHeight?: number;
+  z?: number;
+  /** True while the AI is still fetching/generating this image. The renderer
+   * shows a shimmer overlay in the frame until the real src arrives. */
+  isPending?: boolean;
 }
 
 export interface AudioObject {
@@ -108,6 +115,29 @@ export interface AudioObject {
   playInk?: string;        // play button icon color
   /** Heading font-family (CSS string). Picked from the active SlideshowTheme. */
   headingFont?: string;
+  z?: number;
+}
+
+export interface VideoObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** "youtube" → src is a youtube video ID; "upload" → src is a Supabase
+   *  Storage URL (or any direct video file URL). */
+  source: "youtube" | "upload";
+  src: string;
+  title?: string;
+  startSeconds?: number;   // youtube only
+  endSeconds?: number;     // youtube only
+  autoplay?: boolean;
+  rotation?: number;
+  locked?: boolean;
+  z?: number;
+  /** Same frame shapes as ImageObject. Applied via CSS clip-path/border-radius. */
+  frame?: ImageFrame;
+  cornerRadius?: number;
 }
 
 export interface SlideJSON {
@@ -115,6 +145,7 @@ export interface SlideJSON {
   texts: TextObject[];
   images: ImageObject[];
   audios?: AudioObject[];             // optional so existing decks load unchanged
+  videos?: VideoObject[];             // optional so existing decks load unchanged
   background?: string;                // CSS color
   backgroundImage?: string;           // data URL or http URL — covers the color when set
   backgroundImageWidth?: number;      // natural image dimensions, used to clamp pan
@@ -122,6 +153,8 @@ export interface SlideJSON {
   backgroundOffsetX?: number;         // px offset from center, for bg image pan
   backgroundOffsetY?: number;
   backgroundScale?: number;           // multiplier on top of cover scale; >= 1 always
+  /** Shimmer overlay on the slide background while the AI fetches the bg image. */
+  backgroundImagePending?: boolean;
 }
 
 export const BLANK_SLIDE: SlideJSON = {

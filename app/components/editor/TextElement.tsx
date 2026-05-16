@@ -334,6 +334,7 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
         transform: `rotate(${rotation}deg)`,
         transformOrigin: "center center",
         pointerEvents: "auto",
+        zIndex: text.z,
       }}
       onContextMenu={(e) => {
         if (!onContextMenu || editing) return;

@@ -19,28 +19,32 @@ interface Photo {
   downloadLocation?: string;
 }
 
-type Provider = "pexels" | "unsplash" | "pixabay";
+type Provider = "pexels" | "unsplash" | "pixabay" | "giphy";
 
 const PEXELS_KEY = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
 const UNSPLASH_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
 const PIXABAY_KEY = process.env.NEXT_PUBLIC_PIXABAY_KEY;
+const GIPHY_KEY = process.env.NEXT_PUBLIC_GIPHY_KEY;
 
 const PROVIDER_LABELS: Record<Provider, string> = {
   pexels: "Pexels",
   unsplash: "Unsplash",
   pixabay: "Pixabay",
+  giphy: "GIPHY",
 };
 
 const PROVIDER_KEYS: Record<Provider, string | undefined> = {
   pexels: PEXELS_KEY,
   unsplash: UNSPLASH_KEY,
   pixabay: PIXABAY_KEY,
+  giphy: GIPHY_KEY,
 };
 
 const PROVIDER_DOCS: Record<Provider, { envVar: string; site: string }> = {
   pexels: { envVar: "NEXT_PUBLIC_PEXELS_API_KEY", site: "pexels.com/api" },
   unsplash: { envVar: "NEXT_PUBLIC_UNSPLASH_ACCESS_KEY", site: "unsplash.com/developers" },
   pixabay: { envVar: "NEXT_PUBLIC_PIXABAY_KEY", site: "pixabay.com/api/docs/" },
+  giphy: { envVar: "NEXT_PUBLIC_GIPHY_KEY", site: "developers.giphy.com" },
 };
 
 const UTM = "utm_source=jooma&utm_medium=referral";
@@ -84,6 +88,22 @@ interface PixabayPhoto {
   pageURL: string;
   tags: string;
   user: string;
+}
+interface GiphyImage {
+  url: string;
+  width?: string;
+  height?: string;
+}
+interface GiphyGif {
+  id: string;
+  title: string;
+  url: string;
+  username?: string;
+  images: {
+    fixed_height_small?: GiphyImage;
+    fixed_height?: GiphyImage;
+    original: GiphyImage;
+  };
 }
 
 async function search(provider: Provider, query: string, page: number, signal: AbortSignal): Promise<Photo[]> {
@@ -140,6 +160,25 @@ async function search(provider: Provider, query: string, page: number, signal: A
       sourceUrl: p.pageURL,
     }));
   }
+  if (provider === "giphy") {
+    // GIPHY uses an offset, not a page. Convert: offset = (page-1) * per_page.
+    const offset = (page - 1) * PER_PROVIDER;
+    const endpoint = query ? "search" : "trending";
+    const url = query
+      ? `https://api.giphy.com/v1/gifs/${endpoint}?api_key=${key}&q=${encodeURIComponent(query)}&limit=${PER_PROVIDER}&offset=${offset}&rating=g`
+      : `https://api.giphy.com/v1/gifs/${endpoint}?api_key=${key}&limit=${PER_PROVIDER}&offset=${offset}&rating=g`;
+    const r = await fetch(url, { signal });
+    const data: { data?: GiphyGif[] } = await r.json();
+    return (data.data ?? []).map((g) => ({
+      id: `giphy-${g.id}`,
+      provider: "giphy" as Provider,
+      thumb: g.images.fixed_height_small?.url || g.images.fixed_height?.url || g.images.original.url,
+      full: g.images.original.url,
+      alt: g.title,
+      photographerName: g.username || undefined,
+      sourceUrl: g.url,
+    }));
+  }
   return [];
 }
 
@@ -188,7 +227,7 @@ async function trackUnsplashDownload(downloadLocation: string) {
 
 export default function PicturesPanel({ onAdd }: Props) {
   const availableProviders = useMemo<Provider[]>(
-    () => (["pexels", "unsplash", "pixabay"] as Provider[]).filter((p) => !!PROVIDER_KEYS[p]),
+    () => (["pexels", "unsplash", "pixabay", "giphy"] as Provider[]).filter((p) => !!PROVIDER_KEYS[p]),
     [],
   );
 

@@ -188,6 +188,7 @@ export default function AudioElement({ audio, selected, zoom, onSelect, onUpdate
         pointerEvents: "auto",
         outline: selected ? "2px solid #7c3aed" : "none",
         outlineOffset: 4,
+        zIndex: audio.z,
         cursor: audio.locked ? "default" : selected ? "move" : "pointer",
         userSelect: "none",
         WebkitUserSelect: "none",
