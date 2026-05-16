@@ -17,6 +17,7 @@ interface RequestBody {
   additionalInstructions?: string;
   includeObjectives?: boolean;
   includeVocab?: boolean;
+  includeAudio?: boolean;
   imageSource?: ImageSource;
   imageStyle?: ImageStyle;
   themeId?: string;
@@ -51,6 +52,13 @@ const slideshowSchema = {
             "twoColLeftBody",
             "twoColRightTitle",
             "twoColRightBody",
+            "statValue",
+            "statCaption",
+            "col1Title", "col1Body",
+            "col2Title", "col2Body",
+            "col3Title", "col3Body",
+            "quadrants",
+            "timelineItems",
           ],
           properties: {
             layout: {
@@ -58,6 +66,7 @@ const slideshowSchema = {
               enum: [
                 "title-cover", "section-header", "title-bullets", "title-body",
                 "image-left", "image-right", "image-full", "two-column", "quote",
+                "big-stat", "three-column", "comparison-grid", "timeline",
               ],
             },
             colorScheme: { type: "string", enum: ["light", "dark", "accent"] },
@@ -72,6 +81,36 @@ const slideshowSchema = {
             twoColLeftBody: { type: "string" },
             twoColRightTitle: { type: "string" },
             twoColRightBody: { type: "string" },
+            statValue: { type: "string" },
+            statCaption: { type: "string" },
+            col1Title: { type: "string" }, col1Body: { type: "string" },
+            col2Title: { type: "string" }, col2Body: { type: "string" },
+            col3Title: { type: "string" }, col3Body: { type: "string" },
+            quadrants: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["title", "body"],
+                properties: {
+                  title: { type: "string" },
+                  body: { type: "string" },
+                },
+              },
+            },
+            timelineItems: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["date", "title", "body"],
+                properties: {
+                  date: { type: "string" },
+                  title: { type: "string" },
+                  body: { type: "string" },
+                },
+              },
+            },
           },
         },
       },
@@ -93,6 +132,13 @@ interface AISlideSpec {
   twoColLeftBody: string;
   twoColRightTitle: string;
   twoColRightBody: string;
+  statValue: string;
+  statCaption: string;
+  col1Title: string; col1Body: string;
+  col2Title: string; col2Body: string;
+  col3Title: string; col3Body: string;
+  quadrants: { title: string; body: string }[];
+  timelineItems: { date: string; title: string; body: string }[];
 }
 
 // ── Image fetching ───────────────────────────────────────────────────────
@@ -209,13 +255,18 @@ You're a senior presentation designer. Plan a deck that varies layouts so it doe
 - "title-body": title + one paragraph of body text. AVOID — prefer image-left/image-right.
 - "image-left" / "image-right": title + body/bullets on one side, photo on the other. STRONGLY PREFERRED for content slides.
 - "image-full": dramatic full-bleed photo with a title overlay. Use 1-2 times for emphasis.
-- "two-column": compare/contrast two ideas side-by-side.
+- "two-column": compare/contrast two ideas side-by-side (fills twoCol* fields).
 - "quote": a single memorable quote, with optional attribution. Use at most ONCE.
+- "big-stat": ONE huge headline figure + caption. Fill statValue ("73%") and statCaption ("of UK pupils prefer visual aids"). Great for grabbing attention.
+- "three-column": three short titled blurbs side-by-side. Fill col1Title/col1Body, col2Title/col2Body, col3Title/col3Body.
+- "comparison-grid": 2x2 grid of titled blurbs. Fill the "quadrants" array with 2-4 items, each having (title, body). Good for pros/cons or four-part frameworks.
+- "timeline": chronological events. Fill "timelineItems" (2-5 items, each having date, title, body). Use for history, processes, or sequenced learning.
 
 Design rules:
 - Vary layouts; avoid repeating the same layout more than twice in a row.
-- EVERY content slide must visually rich — at least 70% of slides (excluding section-header and quote) MUST use image-left, image-right, or image-full. Empty-looking slides are forbidden.
+- EVERY content slide must visually rich — at least 70% of slides (excluding section-header and quote) MUST use image-left, image-right, image-full, big-stat, three-column, comparison-grid, or timeline. Empty-looking slides are forbidden.
 - Only use "title-bullets" or "title-body" when an image truly does not fit (e.g. an objectives list or vocab table). Even then, supply an imageQuery — the renderer will fall back gracefully if no image is found.
+- Sprinkle 1 big-stat and 1 timeline/comparison-grid when the topic supports them — they make decks feel professional.
 - ${accentLine}
 - ${preferredSchemeLine} Sprinkle one or two slides with a contrasting scheme for emphasis.
 - All non-applicable fields MUST be empty string ("") or empty array ([]) — never omit fields.
@@ -225,6 +276,10 @@ Design rules:
 - twoCol fields should be empty unless layout is "two-column".
 - bullets array must be empty unless layout uses bullets.
 - subtitle and body should be empty when not used by the layout.
+- statValue and statCaption must be empty unless layout is "big-stat".
+- col1Title/col1Body, col2Title/col2Body, col3Title/col3Body must be empty unless layout is "three-column".
+- quadrants array must be empty unless layout is "comparison-grid".
+- timelineItems array must be empty unless layout is "timeline".
 ${objectivesLine}
 ${vocabLine}
 
@@ -261,11 +316,28 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
+      // The client may close the connection (navigate away, refresh) while the
+      // server is still doing slow work (image gen, TTS). When that happens, the
+      // ReadableStream controller is closed by Next.js and any subsequent
+      // `controller.enqueue` throws "Invalid state: Controller is already
+      // closed". We track a local flag so:
+      //   1. `send` never throws — it just drops the event silently.
+      //   2. Slow steps (audio gen, image fetches) bail out early instead of
+      //      doing expensive work nobody will read.
+      let closed = false;
       const send = (event: string, data: unknown) => {
-        controller.enqueue(
-          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
-        );
+        if (closed) return;
+        try {
+          controller.enqueue(
+            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+          );
+        } catch {
+          closed = true;
+        }
       };
+      // If the inbound request aborts (client disconnect), mark closed so we
+      // skip the rest of the work in this turn.
+      req.signal.addEventListener("abort", () => { closed = true; });
 
       try {
         send("status", { message: "Designing your deck..." });
@@ -308,6 +380,13 @@ export async function POST(req: NextRequest) {
             twoColLeftBody: s.twoColLeftBody || undefined,
             twoColRightTitle: s.twoColRightTitle || undefined,
             twoColRightBody: s.twoColRightBody || undefined,
+            statValue: s.statValue || undefined,
+            statCaption: s.statCaption || undefined,
+            col1Title: s.col1Title || undefined, col1Body: s.col1Body || undefined,
+            col2Title: s.col2Title || undefined, col2Body: s.col2Body || undefined,
+            col3Title: s.col3Title || undefined, col3Body: s.col3Body || undefined,
+            quadrants: s.quadrants.length ? s.quadrants : undefined,
+            timelineItems: s.timelineItems.length ? s.timelineItems : undefined,
           };
           let imageProvider: "ai" | "web" | null = null;
           if (spec.imageQuery) {
@@ -332,12 +411,65 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        // Optional audio activity (one per deck). Generated AFTER all slides
+        // stream in so the user can see the deck while TTS runs in the background.
+        if (body.includeAudio && !closed) {
+          console.log("[generate-slideshow] includeAudio=true — calling /api/generate-audio");
+          try {
+            send("status", { message: "Recording the audio activity..." });
+            const audioRes = await fetch(`${req.nextUrl.origin}/api/generate-audio`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                topic: body.topic,
+                year: body.year,
+                readingLevel: body.readingLevel,
+              }),
+            });
+            if (audioRes.ok) {
+              const audioData = await audioRes.json();
+              console.log("[generate-slideshow] audio generated:", { src: audioData.src, title: audioData.title });
+              // Attach to a content slide near the start (slide 2 if it exists,
+              // otherwise slide 1). Lets the client place it appropriately.
+              const targetIndex = Math.min(1, parsed.slides.length - 1);
+              // Bake theme colours into the audio object so the panel matches
+              // the deck's visual style instead of hardcoded maroon.
+              const palette = theme.palette;
+              send("audio", {
+                targetIndex,
+                audio: {
+                  ...audioData,
+                  panelBg: palette.accent,
+                  panelInk: palette.overlayText,
+                  playBg: palette.background,
+                  playInk: palette.text,
+                  headingFont: theme.fonts.heading,
+                  // Background colour for the dedicated audio slide.
+                  // Use the theme's "text" colour as the slide bg so the
+                  // accent-coloured audio panel pops against it (works for
+                  // both light and dark themes).
+                  slideBg: palette.text,
+                },
+              });
+            } else {
+              const err = await audioRes.json().catch(() => ({}));
+              console.error("[generate-slideshow] /api/generate-audio failed:", audioRes.status, err);
+              send("error", { message: `Audio generation failed: ${err.error ?? err.message ?? audioRes.statusText}` });
+            }
+          } catch (err) {
+            console.error("[generate-slideshow] audio fetch threw:", err);
+            send("error", { message: `Audio generation error: ${err instanceof Error ? err.message : "unknown"}` });
+          }
+        } else {
+          console.log("[generate-slideshow] includeAudio is", body.includeAudio, "— skipping audio");
+        }
+
         send("complete", { title: parsed.title });
       } catch (err) {
         console.error("Generation failed", err);
         send("error", { message: err instanceof Error ? err.message : "Generation failed" });
       } finally {
-        controller.close();
+        try { controller.close(); } catch { /* already closed by abort */ }
       }
     },
   });

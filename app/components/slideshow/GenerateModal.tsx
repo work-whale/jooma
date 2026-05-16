@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import { SLIDESHOW_THEMES } from "@/app/lib/slideshowThemes";
 
@@ -18,6 +18,7 @@ export interface GenerationParams {
   additionalInstructions?: string;
   includeObjectives?: boolean;
   includeVocab?: boolean;
+  includeAudio?: boolean;
   imageSource?: "auto" | "ai" | "web";
   imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
   themeId?: string;
@@ -66,6 +67,7 @@ export default function GenerateModal({ onClose }: Props) {
 
   const [includeObjectives, setIncludeObjectives] = useState(false);
   const [includeVocab, setIncludeVocab] = useState(false);
+  const [includeAudio, setIncludeAudio] = useState(false);
   const [imageSource, setImageSource] = useState<ImageSource>("auto");
   const [imageStyle, setImageStyle] = useState<ImageStyle>("photographic");
 
@@ -98,6 +100,7 @@ export default function GenerateModal({ onClose }: Props) {
         additionalInstructions: additionalInstructions.trim() || undefined,
         includeObjectives,
         includeVocab,
+        includeAudio,
         imageSource,
         imageStyle: imageSource === "web" ? undefined : imageStyle,
         themeId,
@@ -327,6 +330,22 @@ export default function GenerateModal({ onClose }: Props) {
               </div>
 
               <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Resources</p>
+                <div className="space-y-2">
+                  <ToggleCard
+                    icon={<Headphones className="w-4 h-4 text-gray-700" />}
+                    iconBg="bg-gray-100"
+                    title="Audio activities"
+                    description="Listening clips with activities. Not just for language lessons!"
+                    badge="New"
+                    checked={includeAudio}
+                    onChange={setIncludeAudio}
+                    disabled={busy}
+                  />
+                </div>
+              </div>
+
+              <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Images</p>
                 <div className="bg-white border rounded-xl p-4 space-y-4" style={{ borderColor: "#DAD8D0" }}>
                   <div className="flex items-start gap-3">
@@ -488,7 +507,7 @@ export default function GenerateModal({ onClose }: Props) {
 }
 
 function ToggleCard({
-  icon, iconBg, title, description, checked, onChange, disabled,
+  icon, iconBg, title, description, checked, onChange, disabled, badge,
 }: {
   icon: React.ReactNode;
   iconBg: string;
@@ -497,6 +516,7 @@ function ToggleCard({
   checked: boolean;
   onChange: (v: boolean) => void;
   disabled?: boolean;
+  badge?: string;
 }) {
   return (
     <button
@@ -514,7 +534,17 @@ function ToggleCard({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>{title}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>{title}</p>
+          {badge && (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+            >
+              {badge}
+            </span>
+          )}
+        </div>
         <p className="text-xs text-gray-500 truncate">{description}</p>
       </div>
       <div

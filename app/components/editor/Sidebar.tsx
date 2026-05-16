@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search } from "lucide-react";
+import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond } from "lucide-react";
 import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
 import FramePicker from "./FramePicker";
@@ -11,7 +11,9 @@ import { listGeneratedImages, saveGeneratedImage, type GeneratedImage } from "@/
 
 type TabId = "elements" | "text" | "uploads" | "ai";
 
-type SidebarShape = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon";
+type SidebarShape =
+  | "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon"
+  | "pentagon" | "octagon" | "diamond" | "heart" | "cloud" | "speech" | "plus" | "bolt";
 
 interface Props {
   onAddShape: (type: SidebarShape) => void;
@@ -284,6 +286,62 @@ export default function Sidebar({
                       title="Arrow"
                     >
                       <MoveRight className="w-7 h-7 text-gray-700" strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("pentagon")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Pentagon"
+                    >
+                      <Pentagon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("octagon")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Octagon"
+                    >
+                      <Octagon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("diamond")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Diamond"
+                    >
+                      <Diamond className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("heart")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Heart"
+                    >
+                      <Heart className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("cloud")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Cloud"
+                    >
+                      <Cloud className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("speech")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Speech bubble"
+                    >
+                      <MessageCircle className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("plus")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Plus"
+                    >
+                      <PlusIcon className="w-7 h-7 text-gray-700" strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("bolt")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Lightning bolt"
+                    >
+                      <Zap className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
                     </button>
                   </div>
                 )}

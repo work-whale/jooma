@@ -11,6 +11,9 @@
   --font-sans: var(--font-bricolage), Arial, Helvetica, sans-serif;
   --font-headline: var(--font-bricolage), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono);
+
+  --container-8xl: 88rem;
+  --container-9xl: 96rem;
 }
 
 body {
@@ -93,4 +96,16 @@ summary {
 
 .jooma-slide-fade-in {
   animation: jooma-slide-fade-in 0.4s ease-out both;
+}
+
+/* Pop-in animation for newly-appended slide tray thumbnails during AI
+   generation — the next slot's placeholder grows into view as the previous
+   one finishes, instead of all N thumbs appearing at once. */
+@keyframes jooma-thumb-pop {
+  0%   { opacity: 0; transform: scale(0.5) translateX(-12px); }
+  60%  { opacity: 1; transform: scale(1.05) translateX(0); }
+  100% { opacity: 1; transform: scale(1) translateX(0); }
+}
+.jooma-thumb-pop {
+  animation: jooma-thumb-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }

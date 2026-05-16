@@ -50,7 +50,7 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
         return (
           <div
             key={entry.id}
-            className="relative group shrink-0 flex items-center"
+            className={`relative group shrink-0 flex items-center ${generatingIndex !== undefined ? "jooma-thumb-pop" : ""}`}
             // Drop position indicator (left side) — a vertical violet bar at the gap.
             onDragOver={(e) => {
               if (!canDrag || dragIndex === null) return;

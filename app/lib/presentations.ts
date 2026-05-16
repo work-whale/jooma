@@ -18,7 +18,9 @@ export interface TextObject {
   listType?: "bullet" | "number";
 }
 
-export type ShapeType = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon";
+export type ShapeType =
+  | "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon"
+  | "pentagon" | "octagon" | "diamond" | "heart" | "cloud" | "speech" | "plus" | "bolt";
 
 export interface ShapeObject {
   id: string;
@@ -47,7 +49,15 @@ export type ImageFrame =
   | "diamond"
   | "hexagon"
   | "star"
-  | "arch";
+  | "arch"
+  | "chevron"
+  | "parallelogram"
+  | "blob"
+  | "scalloped"
+  | "heart"
+  | "octagon"
+  | "shield"
+  | "triangle";
 
 export interface ImageObject {
   id: string;
@@ -76,10 +86,35 @@ export interface ImageObject {
   naturalHeight?: number;
 }
 
+export interface AudioObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  src: string;             // public URL (Supabase Storage) to an audio file (mp3/wav)
+  title: string;           // short title shown at the top of the card
+  description: string;     // 1-2 line explainer of what the clip is about
+  questions: string[];     // comprehension prompts the student should answer
+  transcript?: string;     // optional — shown when the user clicks "Show transcript"
+  rotation?: number;
+  locked?: boolean;
+  // Theme-derived colours, baked in at generation time so the card stays on-brand
+  // even after themes change or the user copies a deck around. All optional —
+  // missing values fall back to neutral defaults in the renderer.
+  panelBg?: string;        // panel background
+  panelInk?: string;       // title + body text color on panel
+  playBg?: string;         // play button bg
+  playInk?: string;        // play button icon color
+  /** Heading font-family (CSS string). Picked from the active SlideshowTheme. */
+  headingFont?: string;
+}
+
 export interface SlideJSON {
   shapes: ShapeObject[];
   texts: TextObject[];
   images: ImageObject[];
+  audios?: AudioObject[];             // optional so existing decks load unchanged
   background?: string;                // CSS color
   backgroundImage?: string;           // data URL or http URL — covers the color when set
   backgroundImageWidth?: number;      // natural image dimensions, used to clamp pan

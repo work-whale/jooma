@@ -49,13 +49,15 @@ export async function generateAIImage(
 
   for (const att of attempts) {
     try {
+      // Newer OpenAI SDKs reject `response_format` for both gpt-image-1 and
+      // dall-e-3, so we don't pass it — we fall back to fetching the returned
+      // URL ourselves below when needed.
       const r = await client.images.generate({
         model: att.model,
         prompt,
         size: att.size,
         quality: att.quality,
         n: 1,
-        ...(att.model === "dall-e-3" ? { response_format: "b64_json" } : {}),
       });
       const item = r.data?.[0];
       if (!item) continue;

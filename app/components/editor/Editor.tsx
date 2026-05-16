@@ -9,10 +9,12 @@ import SlideTray, { type SlideEntry } from "./SlideTray";
 import TextLayer from "./TextLayer";
 import ShapeLayer from "./ShapeLayer";
 import ImageLayer from "./ImageLayer";
+import AudioLayer from "./AudioLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
 import ContextMenu, { type ContextMenuState } from "./ContextMenu";
 import RegenerateImageDialog from "./RegenerateImageDialog";
+import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
 import type { FrameShape } from "./frames";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
@@ -24,6 +26,7 @@ import {
   type ShapeObject,
   type ShapeType,
   type ImageObject,
+  type AudioObject,
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
 
@@ -41,6 +44,7 @@ interface GenerationParams {
   additionalInstructions?: string;
   includeObjectives?: boolean;
   includeVocab?: boolean;
+  includeAudio?: boolean;
   imageSource?: "auto" | "ai" | "web";
   imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
 }
@@ -61,6 +65,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       shapes: s.shapes ?? [],
       texts: s.texts ?? [],
       images: s.images ?? [],
+      audios: s.audios ?? [],
       background: s.background ?? "#ffffff",
       backgroundImage: s.backgroundImage,
       backgroundImageWidth: s.backgroundImageWidth,
@@ -74,6 +79,9 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null);
+  // Audio id whose "Edit audio" side panel is currently open (null when closed).
+  const [editingAudioId, setEditingAudioId] = useState<string | null>(null);
   const [slideSelected, setSlideSelected] = useState(false);
   const [adjustingBackground, setAdjustingBackground] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -156,17 +164,22 @@ export default function Editor({ presentation, generationParams }: Props) {
 
   const handleTextSelect = useCallback((id: string | null) => {
     setSelectedTextId(id);
-    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleShapeSelect = useCallback((id: string | null) => {
     setSelectedShapeId(id);
-    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleImageSelect = useCallback((id: string | null) => {
     setSelectedImageId(id);
-    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
+  }, []);
+
+  const handleAudioSelect = useCallback((id: string | null) => {
+    setSelectedAudioId(id);
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const selection: EditorSelection = useMemo(() => {
@@ -192,6 +205,7 @@ export default function Editor({ presentation, generationParams }: Props) {
     setSelectedTextId(null);
     setSelectedShapeId(null);
     setSelectedImageId(null);
+    setSelectedAudioId(null);
     setSlideSelected(false);
     setMultiSelection([]);
   }, []);
@@ -618,6 +632,7 @@ export default function Editor({ presentation, generationParams }: Props) {
         shapes: s.shapes,
         texts: s.texts,
         images: s.images,
+        audios: s.audios ?? [],
         background: s.background,
         backgroundImage: s.backgroundImage,
         backgroundImageWidth: s.backgroundImageWidth,
@@ -780,6 +795,14 @@ export default function Editor({ presentation, generationParams }: Props) {
       arrow:    { width: 400, height: 32 },
       star:     { width: 240, height: 240 },
       hexagon:  { width: 240, height: 220 },
+      pentagon: { width: 240, height: 240 },
+      octagon:  { width: 240, height: 240 },
+      diamond:  { width: 240, height: 240 },
+      heart:    { width: 240, height: 220 },
+      cloud:    { width: 320, height: 220 },
+      speech:   { width: 320, height: 240 },
+      plus:     { width: 220, height: 220 },
+      bolt:     { width: 180, height: 260 },
     };
     const { width: w, height: h } = presets[type];
     const isLineLike = type === "line" || type === "arrow";
@@ -880,6 +903,19 @@ export default function Editor({ presentation, generationParams }: Props) {
     mutateActiveSlide((s) => ({ ...s, images: s.images.filter((x) => x.id !== selectedImageId) }));
     setSelectedImageId(null);
   }, [selectedImageId, mutateActiveSlide]);
+
+  const updateAudio = useCallback((id: string, patch: Partial<AudioObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      audios: (s.audios ?? []).map((a) => a.id === id ? { ...a, ...patch } : a),
+    }));
+  }, [mutateActiveSlide]);
+
+  const deleteSelectedAudio = useCallback(() => {
+    if (!selectedAudioId) return;
+    mutateActiveSlide((s) => ({ ...s, audios: (s.audios ?? []).filter((a) => a.id !== selectedAudioId) }));
+    setSelectedAudioId(null);
+  }, [selectedAudioId, mutateActiveSlide]);
 
   const removeInnerImage = useCallback(() => {
     if (!editingInnerImageId) return;
@@ -1141,6 +1177,7 @@ export default function Editor({ presentation, generationParams }: Props) {
         else if (selectedTextId) deleteSelectedText();
         else if (selectedShapeId) deleteSelectedShape();
         else if (selectedImageId) deleteSelectedImage();
+        else if (selectedAudioId) deleteSelectedAudio();
       }
       // Cmd/Ctrl + Z / Shift+Z — disabled during AI generation so a stray undo
       // doesn't wipe out slides that just streamed in.
@@ -1474,20 +1511,22 @@ export default function Editor({ presentation, generationParams }: Props) {
               const p = payload as { title?: string; total?: number; slideTitles?: string[] };
               if (p.title) setTitle(p.title);
               if (typeof p.total === "number" && p.total > 0) {
-                // Pre-fill N empty placeholder slides. They show a loading animation
-                // until the actual slide event arrives and replaces them in-place.
-                const placeholders: SlideState[] = Array.from({ length: p.total }).map(() => ({
+                // Seed just ONE placeholder for slot 0 so the tray starts small.
+                // Each `slide` event below will replace the current placeholder
+                // and append a fresh one for the next slot, so the tray "grows"
+                // one card at a time with the CSS pop-in animation.
+                const firstPlaceholder: SlideState = {
                   id: newId("s"),
                   shapes: [],
                   texts: [],
                   images: [],
                   background: "#ffffff",
-                }));
-                setSlides(placeholders);
-                slidesRef.current = placeholders;
+                };
+                setSlides([firstPlaceholder]);
+                slidesRef.current = [firstPlaceholder];
                 setActiveIndex(0);
                 setGenerating({ current: 0, total: p.total, slideTitles: p.slideTitles });
-                first = false; // placeholders fill the role of "first"
+                first = false;
               }
             } else if (eventName === "slide") {
               const p = payload as {
@@ -1523,6 +1562,20 @@ export default function Editor({ presentation, generationParams }: Props) {
                 };
                 if (p.index < next.length) next[p.index] = replaced;
                 else next.push(replaced);
+                // Grow the deck progressively: as soon as we have a real slide
+                // for slot N and the deck has fewer than `total` cards, append
+                // one fresh placeholder so the user sees slide N+1's loader
+                // pop in. CSS animation on the slide-tray thumbs handles the
+                // visual reveal.
+                if (next.length < p.total && p.index + 1 >= next.length) {
+                  next.push({
+                    id: newId("s"),
+                    shapes: [],
+                    texts: [],
+                    images: [],
+                    background: "#ffffff",
+                  });
+                }
                 slidesRef.current = next;
                 return next;
               });
@@ -1534,6 +1587,94 @@ export default function Editor({ presentation, generationParams }: Props) {
                 title: p.title,
                 slideTitles: prev?.slideTitles,
               }));
+              scheduleSave();
+            } else if (eventName === "audio") {
+              const p = payload as {
+                targetIndex: number;
+                audio: {
+                  src: string; title: string; description: string;
+                  transcript?: string; questions: string[];
+                  panelBg?: string; panelInk?: string;
+                  playBg?: string; playInk?: string;
+                  headingFont?: string;
+                  slideBg?: string;
+                };
+              };
+              setSlides((prev) => {
+                // The audio activity gets a dedicated slide. We lay out four
+                // discrete elements so the teacher can edit any of them
+                // independently: a title heading, a description, the audio
+                // player bar, and a numbered questions list.
+                const titleColor = p.audio.panelInk ?? "#FFE8C8";
+                const headingFont = p.audio.headingFont ?? "'Bricolage Grotesque', sans-serif";
+
+                const titleText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: 60, width: SLIDE_W - 160,
+                  text: (p.audio.title || "Audio Activity").toUpperCase(),
+                  fontSize: 56, fontWeight: "800",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: headingFont,
+                  color: titleColor,
+                  textAlign: "left",
+                };
+                const descText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: 144, width: SLIDE_W - 160,
+                  text: p.audio.description || "Listen to the audio and answer the questions.",
+                  fontSize: 22, fontWeight: "500",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: "'Inter', sans-serif",
+                  color: titleColor,
+                  textAlign: "left",
+                };
+
+                const playerW = SLIDE_W - 160;
+                const playerH = 80;
+                const playerY = 210;
+                const newAudio: AudioObject = {
+                  id: newId("a"),
+                  x: 80, y: playerY,
+                  width: playerW, height: playerH,
+                  src: p.audio.src,
+                  title: p.audio.title,
+                  description: p.audio.description,
+                  questions: p.audio.questions ?? [],
+                  transcript: p.audio.transcript,
+                  panelBg: p.audio.panelBg,
+                  panelInk: p.audio.panelInk,
+                  playBg: p.audio.playBg,
+                  playInk: p.audio.playInk,
+                  headingFont: p.audio.headingFont,
+                };
+
+                // Numbered comprehension list — one text element with listType
+                // so the teacher gets the toolbar's bullet/number controls.
+                const questionsText: TextObject | null = (p.audio.questions?.length ?? 0) > 0 ? {
+                  id: newId("t"),
+                  x: 80, y: playerY + playerH + 40,
+                  width: SLIDE_W - 160,
+                  text: (p.audio.questions ?? []).join("\n"),
+                  fontSize: 22, fontWeight: "500",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: "'Inter', sans-serif",
+                  color: titleColor,
+                  textAlign: "left",
+                  listType: "number",
+                } : null;
+
+                const newSlide: SlideState = {
+                  id: newId("s"),
+                  shapes: [], images: [],
+                  texts: questionsText ? [titleText, descText, questionsText] : [titleText, descText],
+                  audios: [newAudio],
+                  background: p.audio.slideBg ?? "#0f172a",
+                };
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), newSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
               scheduleSave();
             } else if (eventName === "complete") {
               setGenerating(null);
@@ -1725,6 +1866,17 @@ export default function Editor({ presentation, generationParams }: Props) {
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
                           onContextMenu={openTextContextMenu}
+                        />
+                        <AudioLayer
+                          audios={currentSlide.audios ?? []}
+                          selectedId={selectedAudioId}
+                          zoom={zoom}
+                          onSelect={handleAudioSelect}
+                          onUpdate={updateAudio}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                          onEdit={setEditingAudioId}
                         />
 
                         {/* Alignment guides while dragging */}
@@ -2086,6 +2238,52 @@ export default function Editor({ presentation, generationParams }: Props) {
           }}
         />
       )}
+
+      {editingAudioId && (() => {
+        // Find the audio + the slide it lives on so we can update both the
+        // AudioObject's questions and the numbered text element next to it.
+        const slide = slidesRef.current[activeIndexRef.current];
+        const audio = slide?.audios?.find((a) => a.id === editingAudioId);
+        if (!audio) return null;
+        return (
+          <EditAudioPanel
+            onClose={() => setEditingAudioId(null)}
+            onSubmit={async ({ activityType, additionalInstructions }) => {
+              const res = await fetch("/api/generate-audio", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  topic: audio.title || "audio activity",
+                  activityType,
+                  additionalInstructions,
+                  questionsOnly: true,
+                  existingTranscript: audio.transcript ?? "",
+                }),
+              });
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || err.message || "Failed");
+              }
+              const data: { title: string; description: string; questions: string[] } = await res.json();
+
+              // Update the audio object's stored fields.
+              updateAudio(editingAudioId, {
+                title: data.title,
+                description: data.description,
+                questions: data.questions,
+              });
+
+              // Refresh the on-slide question text (the one with listType:"number").
+              mutateActiveSlide((s) => ({
+                ...s,
+                texts: s.texts.map((t) => t.listType === "number"
+                  ? { ...t, text: data.questions.join("\n") }
+                  : t),
+              }));
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

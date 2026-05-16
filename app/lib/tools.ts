@@ -254,4 +254,4 @@ export const TOOLS: Tool[] = [
   },
 ];
 
-export const PINNED_HREFS = ["/tools/lesson-planner", "/tools/worksheet-generator"];
+export const PINNED_HREFS: string[] = [];

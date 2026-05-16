@@ -17,7 +17,11 @@ export type SlideLayout =
   | "image-full"
   | "two-column"
   | "quote"
-  | "section-header";
+  | "section-header"
+  | "big-stat"
+  | "three-column"
+  | "comparison-grid"
+  | "timeline";
 
 export type ColorScheme = "light" | "dark" | "accent";
 
@@ -38,6 +42,17 @@ export interface SlideSpec {
   twoColLeftBody?: string;
   twoColRightTitle?: string;
   twoColRightBody?: string;
+  // big-stat: one giant headline number + caption
+  statValue?: string;      // e.g. "73%"
+  statCaption?: string;    // e.g. "of UK pupils prefer visual aids"
+  // three-column: three short titled blurbs
+  col1Title?: string; col1Body?: string;
+  col2Title?: string; col2Body?: string;
+  col3Title?: string; col3Body?: string;
+  // comparison-grid: 2x2 with quadrant labels
+  quadrants?: { title: string; body: string }[];
+  // timeline: chronological list of events
+  timelineItems?: { date: string; title: string; body?: string }[];
 }
 
 // ── Theme palette per color scheme ─────────────────────────────────────────
@@ -394,6 +409,135 @@ function renderQuote(spec: SlideSpec, t: Theme): SlideJSON {
   };
 }
 
+function renderBigStat(spec: SlideSpec, t: Theme): SlideJSON {
+  // One huge headline figure (e.g. "73%") with a short caption underneath.
+  // Falls back to spec.subtitle / spec.body when stat fields are missing.
+  const value = spec.statValue || spec.subtitle || "—";
+  const caption = spec.statCaption || spec.body || spec.title;
+  return {
+    shapes: [makeAccentBar(t.accent, SLIDE_W / 2 - 60, 130, 120, 6)],
+    texts: [
+      makeText(spec.title, 100, 60, SLIDE_W - 200, 28, "600", t.muted, "center"),
+      makeText(value, 100, 220, SLIDE_W - 200, 200, "800", t.accent, "center"),
+      makeText(caption, 200, 480, SLIDE_W - 400, 32, "400", t.text, "center"),
+    ],
+    images: [],
+    background: t.bg,
+  };
+}
+
+function renderThreeColumn(spec: SlideSpec, t: Theme): SlideJSON {
+  const colW = (SLIDE_W - 240) / 3;
+  const gap = 30;
+  const colX = (i: number) => 100 + i * (colW + gap);
+  const titles = [spec.col1Title, spec.col2Title, spec.col3Title];
+  const bodies = [spec.col1Body, spec.col2Body, spec.col3Body];
+  const shapes = titles
+    .filter((_, i) => titles[i] || bodies[i])
+    .map((_, i) => ({
+      id: nid("sh"),
+      type: "rect" as const,
+      x: colX(i), y: 200, width: colW, height: SLIDE_H - 280,
+      fill: "transparent",
+      stroke: t.accent,
+      strokeWidth: 3,
+      opacity: 1,
+      cornerRadius: 12,
+    }));
+  const texts = [
+    makeAccentText(spec.title, 100, 60, SLIDE_W - 200, 44, "700", t.text, "left"),
+    ...titles.flatMap((title, i) => {
+      const out: TextObject[] = [];
+      if (title) out.push(makeText(title, colX(i) + 20, 230, colW - 40, 26, "700", t.accent, "left"));
+      const body = bodies[i];
+      if (body) out.push(makeText(body, colX(i) + 20, 280, colW - 40, 18, "400", t.text, "left"));
+      return out;
+    }),
+  ];
+  return { shapes: [makeAccentBar(t.accent, 100, 130, 80, 4), ...shapes], texts, images: [], background: t.bg };
+}
+function makeAccentText(text: string, x: number, y: number, w: number, size: number, weight: string, color: string, align: "left" | "center" | "right") {
+  return makeText(text, x, y, w, size, weight, color, align);
+}
+
+function renderComparisonGrid(spec: SlideSpec, t: Theme): SlideJSON {
+  // 2x2 grid of titled blurbs. Falls back gracefully if fewer than 4 supplied.
+  const items = (spec.quadrants && spec.quadrants.length > 0)
+    ? spec.quadrants.slice(0, 4)
+    : [
+        { title: spec.twoColLeftTitle ?? "", body: spec.twoColLeftBody ?? "" },
+        { title: spec.twoColRightTitle ?? "", body: spec.twoColRightBody ?? "" },
+      ];
+  const cellW = (SLIDE_W - 240) / 2;
+  const cellH = (SLIDE_H - 280) / 2;
+  const gap = 30;
+  const startY = 180;
+  const cellX = (i: number) => 100 + (i % 2) * (cellW + gap);
+  const cellY = (i: number) => startY + Math.floor(i / 2) * (cellH + gap);
+  const shapes = items.map((_, i) => ({
+    id: nid("sh"),
+    type: "rect" as const,
+    x: cellX(i), y: cellY(i), width: cellW, height: cellH,
+    fill: i % 3 === 0 ? t.accent : "transparent",
+    stroke: t.accent,
+    strokeWidth: 2,
+    opacity: i % 3 === 0 ? 0.08 : 1,
+    cornerRadius: 12,
+  }));
+  const texts = [
+    makeText(spec.title, 100, 60, SLIDE_W - 200, 40, "700", t.text, "left"),
+    ...items.flatMap((q, i) => {
+      const out: TextObject[] = [];
+      if (q.title) out.push(makeText(q.title, cellX(i) + 24, cellY(i) + 20, cellW - 48, 22, "700", t.accent, "left"));
+      if (q.body) out.push(makeText(q.body, cellX(i) + 24, cellY(i) + 60, cellW - 48, 18, "400", t.text, "left"));
+      return out;
+    }),
+  ];
+  return { shapes: [makeAccentBar(t.accent, 100, 130, 80, 4), ...shapes], texts, images: [], background: t.bg };
+}
+
+function renderTimeline(spec: SlideSpec, t: Theme): SlideJSON {
+  const items = (spec.timelineItems ?? []).slice(0, 5);
+  const fallback = (spec.bullets ?? []).map((b) => ({ date: "", title: b, body: "" }));
+  const events = items.length > 0 ? items : fallback;
+  const n = Math.max(1, events.length);
+  const usableW = SLIDE_W - 200;
+  const step = usableW / Math.max(1, n - 1 || 1);
+  const lineY = 380;
+  const dotR = 14;
+
+  const shapes: ShapeObject[] = [
+    makeAccentBar(t.accent, 100, 130, 80, 4),
+    // Horizontal line
+    {
+      id: nid("sh"), type: "rect",
+      x: 100, y: lineY - 1, width: usableW, height: 2,
+      fill: t.accent, stroke: "transparent", strokeWidth: 0, opacity: 0.5,
+    },
+    // Dots
+    ...events.map((_, i) => ({
+      id: nid("sh"), type: "ellipse" as const,
+      x: 100 + (n === 1 ? usableW / 2 : i * step) - dotR,
+      y: lineY - dotR,
+      width: dotR * 2, height: dotR * 2,
+      fill: t.accent, stroke: "transparent", strokeWidth: 0, opacity: 1,
+    })),
+  ];
+  const texts = [
+    makeText(spec.title, 100, 60, SLIDE_W - 200, 40, "700", t.text, "left"),
+    ...events.flatMap((e, i) => {
+      const cx = 100 + (n === 1 ? usableW / 2 : i * step);
+      const colW = Math.min(220, n > 1 ? step - 20 : 320);
+      const out: TextObject[] = [];
+      if (e.date) out.push(makeText(e.date, cx - colW / 2, lineY - 90, colW, 18, "700", t.accent, "center"));
+      out.push(makeText(e.title, cx - colW / 2, lineY - 60, colW, 18, "700", t.text, "center"));
+      if (e.body) out.push(makeText(e.body, cx - colW / 2, lineY + 30, colW, 14, "400", t.muted, "center"));
+      return out;
+    }),
+  ];
+  return { shapes, texts, images: [], background: t.bg };
+}
+
 // ── Public renderer ────────────────────────────────────────────────────────
 
 export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJSON {
@@ -430,6 +574,10 @@ function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
     case "image-full": return renderImageFull(spec, t);
     case "two-column": return renderTwoColumn(spec, t);
     case "quote": return renderQuote(spec, t);
+    case "big-stat": return renderBigStat(spec, t);
+    case "three-column": return renderThreeColumn(spec, t);
+    case "comparison-grid": return renderComparisonGrid(spec, t);
+    case "timeline": return renderTimeline(spec, t);
     default: return renderTitleBody(spec, t);
   }
 }
