@@ -221,7 +221,13 @@ async function fetchImageForSlide(
 // ── Prompt builder ───────────────────────────────────────────────────────
 
 function buildPrompt(body: RequestBody): string {
-  const count = Math.max(3, Math.min(15, body.slideCount ?? 8));
+  // The user's "slide count" is the FINAL deck size. Audio activity and YouTube
+  // video each occupy their own slide, so subtract them from the AI-generated
+  // content slides so the totals match what the user asked for. Always leave
+  // at least 1 content slide so the AI has something to design.
+  const requestedTotal = Math.max(3, Math.min(15, body.slideCount ?? 8));
+  const extras = (body.includeAudio ? 1 : 0) + (body.includeYouTube ? 1 : 0);
+  const count = Math.max(1, requestedTotal - extras);
   const theme = getTheme(body.themeId);
   const yearLine = body.year ? `Audience: UK ${body.year} pupils.` : "";
   const readingLine = body.readingLevel && body.readingLevel !== "Same as Year"
@@ -357,10 +363,20 @@ export async function POST(req: NextRequest) {
         if (!content) throw new Error("Empty AI response");
         const parsed: { title: string; slides: AISlideSpec[] } = JSON.parse(content);
 
+        // The user's "slide count" target includes the audio + video slides.
+        // Surface the FINAL total to the client so its progress UI / slide tray
+        // shows e.g. "of 8" rather than "of 6" while we wait for TTS + YouTube.
+        const extras =
+          (body.includeAudio ? 1 : 0) + (body.includeYouTube ? 1 : 0);
+        const finalTotal = parsed.slides.length + extras;
+        const extraTitles: string[] = [];
+        if (body.includeAudio) extraTitles.push("Audio activity");
+        if (body.includeYouTube) extraTitles.push("YouTube video");
+
         send("meta", {
           title: parsed.title,
-          total: parsed.slides.length,
-          slideTitles: parsed.slides.map((s) => s.title),
+          total: finalTotal,
+          slideTitles: [...parsed.slides.map((s) => s.title), ...extraTitles],
         });
 
         // ── Phase 1: ship every slide's TEXT immediately ──────────────────
@@ -396,7 +412,7 @@ export async function POST(req: NextRequest) {
           const slide: SlideJSON = renderSlide(specs[idx], theme);
           send("slide", {
             index: idx,
-            total: specs.length,
+            total: finalTotal,
             slide,
             title: specs[idx].title,
           });
@@ -441,6 +457,20 @@ export async function POST(req: NextRequest) {
         // stream in so the user can see the deck while TTS runs in the background.
         if (body.includeAudio && !closed) {
           console.log("[generate-slideshow] includeAudio=true — calling /api/generate-audio");
+          // Send a placeholder slide immediately so the user sees a shimmer
+          // while TTS is running, matching how images appear during generation.
+          const audioPlaceholderId = `s_audio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          const audioTargetIndex = Math.min(1, parsed.slides.length - 1);
+          send("audio-placeholder", {
+            placeholderId: audioPlaceholderId,
+            targetIndex: audioTargetIndex,
+            slideBg: theme.palette.text,
+            panelBg: theme.palette.accent,
+            panelInk: theme.palette.overlayText,
+            playBg: theme.palette.background,
+            playInk: theme.palette.text,
+            headingFont: theme.fonts.heading,
+          });
           try {
             send("status", { message: "Recording the audio activity..." });
             const audioRes = await fetch(`${req.nextUrl.origin}/api/generate-audio`, {
@@ -455,14 +485,12 @@ export async function POST(req: NextRequest) {
             if (audioRes.ok) {
               const audioData = await audioRes.json();
               console.log("[generate-slideshow] audio generated:", { src: audioData.src, title: audioData.title });
-              // Attach to a content slide near the start (slide 2 if it exists,
-              // otherwise slide 1). Lets the client place it appropriately.
-              const targetIndex = Math.min(1, parsed.slides.length - 1);
               // Bake theme colours into the audio object so the panel matches
               // the deck's visual style instead of hardcoded maroon.
               const palette = theme.palette;
               send("audio", {
-                targetIndex,
+                placeholderId: audioPlaceholderId,
+                targetIndex: audioTargetIndex,
                 audio: {
                   ...audioData,
                   panelBg: palette.accent,
@@ -493,6 +521,17 @@ export async function POST(req: NextRequest) {
         // Optional YouTube video. Same pattern as audio: kicks off AFTER text
         // slides have streamed in. Inserts a new dedicated slide with the video.
         if (body.includeYouTube && !closed) {
+          const videoPlaceholderId = `s_video_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          const videoTargetIndex = Math.min(2, specs.length - 1);
+          send("video-placeholder", {
+            placeholderId: videoPlaceholderId,
+            targetIndex: videoTargetIndex,
+            slideBg: theme.palette.text,
+            titleColor: theme.palette.accent,
+            mutedColor: theme.palette.overlayText,
+            accent: theme.palette.accent,
+            headingFont: theme.fonts.heading,
+          });
           try {
             send("status", { message: "Finding a YouTube video..." });
             const ytRes = await fetch(`${req.nextUrl.origin}/api/find-youtube`, {
@@ -506,20 +545,27 @@ export async function POST(req: NextRequest) {
               }),
             });
             if (ytRes.ok) {
-              const yt: { videoId: string; title: string; channel: string; description: string } = await ytRes.json();
-              // Pick a target slot near the start (after slide 2 if it exists).
-              const targetIndex = Math.min(2, specs.length - 1);
+              const yt: {
+                videoId: string; title: string; channel: string; description: string;
+                slideHeading?: string; slideSubtitle?: string;
+              } = await ytRes.json();
               send("video", {
-                targetIndex,
+                placeholderId: videoPlaceholderId,
+                targetIndex: videoTargetIndex,
                 video: {
                   videoId: yt.videoId,
                   title: yt.title,
                   channel: yt.channel,
                   description: yt.description,
+                  slideHeading: yt.slideHeading ?? `WATCH: ${body.topic.toUpperCase()}`,
+                  slideSubtitle: yt.slideSubtitle ?? "Let's watch this together to deepen our understanding.",
                 },
-                slideBg: theme.palette.background,
-                titleColor: theme.palette.text,
-                mutedColor: theme.palette.muted,
+                // Scene-styled slide: dramatic dark/themed background with cream
+                // overlay text and the heading in the theme accent. Mirrors the
+                // pattern used by the audio activity slide.
+                slideBg: theme.palette.text,
+                titleColor: theme.palette.accent,
+                mutedColor: theme.palette.overlayText,
                 accent: theme.palette.accent,
                 headingFont: theme.fonts.heading,
               });

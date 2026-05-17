@@ -39,9 +39,14 @@ const querySchema = {
   schema: {
     type: "object",
     additionalProperties: false,
-    required: ["query"],
+    required: ["query", "slideHeading", "slideSubtitle"],
     properties: {
       query: { type: "string" },
+      // Short ALL-CAPS slide title, e.g. "WATCH: READING BETWEEN THE LINES".
+      // Used as the heading on the dedicated video slide.
+      slideHeading: { type: "string" },
+      // One-sentence intro that sets up why pupils are watching.
+      slideSubtitle: { type: "string" },
     },
   },
 } as const;
@@ -65,12 +70,17 @@ export async function POST(req: NextRequest) {
   // 1) Ask gpt-4o for a focused, educational search query.
   const client = getOpenAI();
   const yearLine = body.year ? `Audience: UK ${body.year} pupils.` : "";
-  const prompt = `Write a focused YouTube search query for a classroom lesson on: "${body.topic}".
+  const prompt = `For a classroom lesson on: "${body.topic}".
 
 ${yearLine}
 
-Aim for educational channels (BBC Bitesize, CrashCourse, Kurzgesagt, TED-Ed, etc.). 4-8 words. No quotes around the query.`;
+Return three things:
+1. "query" — a focused YouTube search query (4-8 words, no quotes). Aim for educational channels (BBC Bitesize, CrashCourse, Kurzgesagt, TED-Ed, etc.).
+2. "slideHeading" — a short ALL-CAPS slide title that previews the video, e.g. "WATCH: READING BETWEEN THE LINES" or "WATCH: HOW VOLCANOES ERUPT". Start with "WATCH:" and keep the whole heading under 40 characters so it fits on one line.
+3. "slideSubtitle" — one warm, classroom-friendly sentence that introduces why pupils are watching. Under 90 characters. Example: "Let's see how inference works in action with some helpful tips!"`;
   let searchQuery = body.topic;
+  let slideHeading = `WATCH: ${body.topic.toUpperCase()}`;
+  let slideSubtitle = "Let's watch this together to deepen our understanding.";
   try {
     const completion = await client.chat.completions.create({
       model: "gpt-4o-2024-08-06",
@@ -82,8 +92,10 @@ Aim for educational channels (BBC Bitesize, CrashCourse, Kurzgesagt, TED-Ed, etc
     });
     const content = completion.choices[0]?.message?.content;
     if (content) {
-      const parsed: { query: string } = JSON.parse(content);
+      const parsed: { query: string; slideHeading: string; slideSubtitle: string } = JSON.parse(content);
       if (parsed.query?.trim()) searchQuery = parsed.query.trim();
+      if (parsed.slideHeading?.trim()) slideHeading = parsed.slideHeading.trim();
+      if (parsed.slideSubtitle?.trim()) slideSubtitle = parsed.slideSubtitle.trim();
     }
   } catch (err) {
     // Fall through to using the raw topic.
@@ -121,5 +133,7 @@ Aim for educational channels (BBC Bitesize, CrashCourse, Kurzgesagt, TED-Ed, etc
     description: hit.snippet.description,
     thumbnail: hit.snippet.thumbnails?.high?.url ?? hit.snippet.thumbnails?.medium?.url,
     query: searchQuery,
+    slideHeading,
+    slideSubtitle,
   });
 }

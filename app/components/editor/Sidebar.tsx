@@ -86,6 +86,9 @@ export default function Sidebar({
   const [videoUrlError, setVideoUrlError] = useState<string | null>(null);
   const [videoUploading, setVideoUploading] = useState(false);
   const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const [videoSuggestTopic, setVideoSuggestTopic] = useState("");
+  const [videoSuggestBusy, setVideoSuggestBusy] = useState(false);
+  const [videoSuggestError, setVideoSuggestError] = useState<string | null>(null);
 
   const handleAddYouTube = () => {
     const id = parseYouTubeId(videoUrl);
@@ -96,6 +99,34 @@ export default function Sidebar({
     setVideoUrlError(null);
     onAddVideo?.("youtube", id);
     setVideoUrl("");
+  };
+
+  const handleSuggestVideo = async () => {
+    const topic = videoSuggestTopic.trim();
+    if (!topic) {
+      setVideoSuggestError("Tell us what the video should be about");
+      return;
+    }
+    setVideoSuggestBusy(true);
+    setVideoSuggestError(null);
+    try {
+      const r = await fetch("/api/find-youtube", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, length: "any" }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Couldn't find a video");
+      }
+      const data: { videoId: string; title: string } = await r.json();
+      onAddVideo?.("youtube", data.videoId, data.title);
+      setVideoSuggestTopic("");
+    } catch (err) {
+      setVideoSuggestError(err instanceof Error ? err.message : "Couldn't find a video");
+    } finally {
+      setVideoSuggestBusy(false);
+    }
   };
 
   const handleVideoFile = async (file: File) => {
@@ -720,6 +751,42 @@ export default function Sidebar({
             {active === "video" && (
               <div className="space-y-4">
                 <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Suggest with AI</p>
+                  <div className="space-y-1.5">
+                    <input
+                      type="text"
+                      value={videoSuggestTopic}
+                      onChange={(e) => { setVideoSuggestTopic(e.target.value); setVideoSuggestError(null); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSuggestVideo(); } }}
+                      placeholder="e.g. how volcanoes erupt"
+                      disabled={videoSuggestBusy}
+                      className="w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSuggestVideo}
+                      disabled={!videoSuggestTopic.trim() || videoSuggestBusy}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#7c3aed", color: "#fff" }}
+                    >
+                      {videoSuggestBusy ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Finding a video…
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Suggest a video
+                        </>
+                      )}
+                    </button>
+                    {videoSuggestError && <p className="text-[10px] text-red-600">{videoSuggestError}</p>}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">YouTube</p>
                   <div className="space-y-1.5">
                     <input

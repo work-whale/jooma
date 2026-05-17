@@ -155,7 +155,7 @@ const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
         textDecoration: text.underline ? "underline" : "none",
         color: text.color,
         textAlign: text.textAlign,
-        lineHeight: 1.2,
+        lineHeight: text.lineHeight ?? 1.2,
         wordWrap: "break-word",
         whiteSpace: isList ? "normal" : "pre-wrap",
         userSelect: "none",

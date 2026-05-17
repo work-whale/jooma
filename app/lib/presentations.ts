@@ -5,6 +5,10 @@ export interface TextObject {
   x: number;
   y: number;
   width: number;
+  /** Optional explicit height. Unset → box auto-fits the wrapped content.
+   *  Set (via the top/bottom resize handles) → box uses it as a min-height so
+   *  the text frame stays the chosen size even if content is shorter. */
+  height?: number;
   text: string;
   fontSize: number;
   fontWeight: string;
@@ -13,6 +17,8 @@ export interface TextObject {
   fontFamily: string;
   color: string;
   textAlign: "left" | "center" | "right";
+  /** CSS line-height multiplier (e.g. 1.0 = tight, 1.5 = relaxed). Defaults to 1.2. */
+  lineHeight?: number;
   rotation?: number;
   locked?: boolean;
   listType?: "bullet" | "number";
@@ -76,7 +82,7 @@ export interface ImageObject {
   shadow?: boolean;
   locked?: boolean;
   frame?: ImageFrame;
-  cornerRadius?: number;  // % roundness, applies to rounded/pill/none frames (0-50)
+  cornerRadius?: number;  // px corner radius, applies to rounded/none frames
   strokeColor?: string;
   strokeWidth?: number;   // px, 0 = no stroke
   strokeAlign?: "inside" | "outside" | "center";  // default "inside"
@@ -116,6 +122,9 @@ export interface AudioObject {
   /** Heading font-family (CSS string). Picked from the active SlideshowTheme. */
   headingFont?: string;
   z?: number;
+  /** True while the AI is still generating this audio. Renderer shows a
+   *  shimmer overlay over the card until the real src arrives. */
+  isPending?: boolean;
 }
 
 export interface VideoObject {
@@ -138,6 +147,9 @@ export interface VideoObject {
   /** Same frame shapes as ImageObject. Applied via CSS clip-path/border-radius. */
   frame?: ImageFrame;
   cornerRadius?: number;
+  /** True while the AI is still finding/fetching this video. Renderer shows a
+   *  shimmer overlay over the player until the real src arrives. */
+  isPending?: boolean;
 }
 
 export interface SlideJSON {

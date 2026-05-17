@@ -24,8 +24,16 @@ export interface FrameStyle {
   borderRadius?: string;
 }
 
-// `cornerRadius` is a percentage (0-50) that applies to shapes which use border-radius
+// `cornerRadius` is a pixel value that applies to shapes which use border-radius
 // (rounded, pill, none). The other shapes use a fixed clip-path and ignore it.
+//
+// Note: rounded-rect frames return BOTH `borderRadius` and `clipPath`. The
+// border-radius is needed so inset box-shadow (used for the "inside" stroke
+// alignment) follows the rounded shape. The clip-path is needed because
+// `overflow: hidden + border-radius` doesn't reliably clip transformed
+// descendants (e.g. the <img> below which has its own scale transform for
+// flipX/flipY) — descendants create a stacking context that escapes the
+// border-radius clip in some engines.
 export function getFrameStyle(
   frame: FrameShape | undefined,
   cornerRadius?: number,
@@ -33,10 +41,15 @@ export function getFrameStyle(
   switch (frame) {
     case "circle":
       return { clipPath: "circle(50% at 50% 50%)" };
-    case "rounded":
-      return { borderRadius: `${cornerRadius ?? 16}%` };
-    case "pill":
-      return { borderRadius: `${cornerRadius ?? 50}%` };
+    case "rounded": {
+      const r = cornerRadius ?? 32;
+      return { borderRadius: `${r}px`, clipPath: `inset(0 round ${r}px)` };
+    }
+    case "pill": {
+      // Pill = always max-rounded ends. A huge value works regardless of size.
+      const r = cornerRadius ?? 9999;
+      return { borderRadius: `${r}px`, clipPath: `inset(0 round ${r}px)` };
+    }
     case "diamond":
       return { clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" };
     case "hexagon":
@@ -92,7 +105,30 @@ export function getFrameStyle(
       };
     case "none":
     default:
-      return cornerRadius ? { borderRadius: `${cornerRadius}%` } : {};
+      return cornerRadius
+        ? { borderRadius: `${cornerRadius}px`, clipPath: `inset(0 round ${cornerRadius}px)` }
+        : {};
+  }
+}
+
+// Returns the effective corner radius in px for borderRadius-based frames, or
+// null for clip-path frames (where a concentric outer stroke can't be derived
+// from a single radius). Used by the image renderer to size the outer stroke
+// ring so the border follows the rounded corners concentrically.
+export function getFrameCornerPx(
+  frame: FrameShape | undefined,
+  cornerRadius?: number,
+): number | null {
+  switch (frame) {
+    case "rounded":
+      return cornerRadius ?? 32;
+    case "pill":
+      return cornerRadius ?? 9999;
+    case "none":
+    case undefined:
+      return cornerRadius ?? 0;
+    default:
+      return null;
   }
 }
 

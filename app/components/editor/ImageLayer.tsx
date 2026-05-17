@@ -17,9 +17,15 @@ interface Props {
   onEnterEditInner?: (id: string) => void;
   onExitEditInner?: () => void;
   onRemoveInnerImage?: () => void;
+  /** Returns true if this image is part of the active multi-selection. */
+  isInMultiSelection?: (id: string) => boolean;
+  /** Called on mousedown over a multi-selected image to start the group drag. */
+  onGroupDragStart?: (e: React.MouseEvent) => void;
+  /** Called on Alt+mousedown to spawn a duplicate and drag it. */
+  onCloneAndDrag?: (id: string, e: React.MouseEvent) => void;
 }
 
-export default function ImageLayer({ images, selectedId, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, editingInnerImageId, onEnterEditInner, onExitEditInner, onRemoveInnerImage }: Props) {
+export default function ImageLayer({ images, selectedId, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, editingInnerImageId, onEnterEditInner, onExitEditInner, onRemoveInnerImage, isInMultiSelection, onGroupDragStart, onCloneAndDrag }: Props) {
   return (
     <div className="absolute inset-0" style={{ pointerEvents: "none" }}>
       {images.map((img) => (
@@ -38,6 +44,9 @@ export default function ImageLayer({ images, selectedId, zoom, onSelect, onUpdat
           onEnterEditInner={onEnterEditInner}
           onExitEditInner={onExitEditInner}
           onRemoveInnerImage={onRemoveInnerImage}
+          inMultiSelection={isInMultiSelection?.(img.id) ?? false}
+          onGroupDragStart={onGroupDragStart}
+          onCloneAndDrag={onCloneAndDrag ? (e) => onCloneAndDrag(img.id, e) : undefined}
         />
       ))}
     </div>

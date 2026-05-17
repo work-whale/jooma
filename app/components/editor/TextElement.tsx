@@ -61,9 +61,12 @@ interface Props {
   onSnap?: (id: string, x: number, y: number, w: number, h: number) => { x: number; y: number };
   onDragEnd?: () => void;
   onContextMenu?: (id: string, clientX: number, clientY: number) => void;
+  inMultiSelection?: boolean;
+  onGroupDragStart?: (e: React.MouseEvent) => void;
+  onCloneAndDrag?: (e: React.MouseEvent) => void;
 }
 
-function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu }: Props) {
+function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, inMultiSelection = false, onGroupDragStart, onCloneAndDrag }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(false);
@@ -105,6 +108,17 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (editing) return;
+    // Alt+mousedown: spawn a duplicate at the same position and drag it.
+    if (e.altKey && onCloneAndDrag && !text.locked) {
+      onCloneAndDrag(e);
+      return;
+    }
+    // Route to group drag when part of a multi-selection so the whole group
+    // moves together and the selection isn't dropped.
+    if (inMultiSelection && onGroupDragStart && !e.shiftKey) {
+      onGroupDragStart(e);
+      return;
+    }
     e.stopPropagation();
     if (!selected) onSelect(text.id);
     // Locked: select only so the user can unlock from the toolbar.
@@ -295,6 +309,84 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
     }
   };
 
+  // Resize handles. `w`/`e` change width (height auto-fits content); `n`/`s`
+  // set an explicit height on the text box (acts as a min-height in the
+  // renderer). Alt held → symmetric resize from the centre.
+  const MIN_TEXT_W = 40;
+  const MIN_TEXT_H = 20;
+  const handleResizeMouseDown = (side: "w" | "e" | "n" | "s") => (e: React.MouseEvent) => {
+    if (text.locked) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const origX = text.x;
+    const origY = text.y;
+    const origW = text.width;
+    // For top/bottom resize we need a current height to extend from. If the
+    // box has no explicit height yet, fall back to the actual rendered height
+    // (containerRef gives us the wrapped content height).
+    const measuredH = containerRef.current
+      ? containerRef.current.getBoundingClientRect().height / zoom
+      : text.fontSize * (text.lineHeight ?? 1.2);
+    const origH = text.height ?? measuredH;
+    const origCX = origX + origW / 2;
+    const origCY = origY + origH / 2;
+    const rad = ((text.rotation ?? 0) * Math.PI) / 180;
+    const cos2 = Math.cos(rad);
+    const sin2 = Math.sin(rad);
+
+    const move = (ev: MouseEvent) => {
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      // Project screen delta into the text's local (unrotated) frame.
+      const localDx = dx * cos2 + dy * sin2;
+      const localDy = -dx * sin2 + dy * cos2;
+      const fromCenter = ev.altKey;
+      const k = fromCenter ? 2 : 1;
+
+      let w = origW;
+      let h = origH;
+      let cxLocal = 0;
+      let cyLocal = 0;
+      if (side === "e") {
+        w = Math.max(MIN_TEXT_W, origW + k * localDx);
+        cxLocal = fromCenter ? 0 : (w - origW) / 2;
+      } else if (side === "w") {
+        w = Math.max(MIN_TEXT_W, origW - k * localDx);
+        cxLocal = fromCenter ? 0 : -(w - origW) / 2;
+      } else if (side === "s") {
+        h = Math.max(MIN_TEXT_H, origH + k * localDy);
+        cyLocal = fromCenter ? 0 : (h - origH) / 2;
+      } else { // "n"
+        h = Math.max(MIN_TEXT_H, origH - k * localDy);
+        cyLocal = fromCenter ? 0 : -(h - origH) / 2;
+      }
+
+      // Project the centre shift back into screen space.
+      const dCxScreen = cxLocal * cos2 - cyLocal * sin2;
+      const dCyScreen = cxLocal * sin2 + cyLocal * cos2;
+      const patch: Partial<TextObject> = {};
+      if (side === "e" || side === "w") {
+        patch.x = origCX + dCxScreen - w / 2;
+        patch.y = origCY + dCyScreen - origH / 2;
+        patch.width = w;
+      } else {
+        patch.x = origCX + dCxScreen - origW / 2;
+        patch.y = origCY + dCyScreen - h / 2;
+        patch.height = h;
+      }
+      onUpdate(text.id, patch);
+    };
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      onCommit();
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
+
   const handleRotateMouseDown = (e: React.MouseEvent) => {
     if (text.locked) return;
     e.stopPropagation();
@@ -362,7 +454,7 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
           textDecoration: text.underline ? "underline" : "none",
           color: text.color,
           textAlign: text.textAlign,
-          lineHeight: 1.2,
+          lineHeight: text.lineHeight ?? 1.2,
           cursor: text.locked ? "default" : editing ? "text" : selected ? "move" : "pointer",
           outline: selected ? "2px solid #7c3aed" : "none",
           outlineOffset: 4,
@@ -370,33 +462,67 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
           whiteSpace: "pre-wrap",
           userSelect: editing ? "text" : "none",
           WebkitUserSelect: editing ? "text" : "none",
-          minHeight: text.fontSize,
+          // Explicit height from top/bottom resize handles wins; otherwise
+          // fall back to one line so a brand-new empty text box is still
+          // visible/clickable. The selection outline is on this div, so the
+          // user sees the box grow as soon as they drag a top/bottom handle.
+          minHeight: text.height ?? text.fontSize,
         }}
       />
       {selected && !editing && !text.locked && (
-        <div
-          onMouseDown={handleRotateMouseDown}
-          title="Rotate (hold Shift to snap)"
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: -32,
-            width: 22,
-            height: 22,
-            background: "#ffffff",
-            border: "1.5px solid #7c3aed",
-            borderRadius: "50%",
-            cursor: "grab",
-            pointerEvents: "auto",
-            transform: "translate(-50%, -50%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#7c3aed",
-          }}
-        >
-          <RotateCw className="w-3 h-3" />
-        </div>
+        <>
+          {/* Resize handles. The text element's selection outline sits 4px
+              outside the box (outlineOffset: 4), so each handle is centred ON
+              that outline rather than the text edge — looks flush with the
+              visible selection box. */}
+          {([
+            { side: "w", cursor: "ew-resize", left: "-4px",         top: "50%" },
+            { side: "e", cursor: "ew-resize", left: "calc(100% + 4px)", top: "50%" },
+            { side: "n", cursor: "ns-resize", left: "50%",          top: "-4px" },
+            { side: "s", cursor: "ns-resize", left: "50%",          top: "calc(100% + 4px)" },
+          ] as const).map(({ side, cursor, left, top }) => (
+            <div
+              key={side}
+              onMouseDown={handleResizeMouseDown(side)}
+              style={{
+                position: "absolute",
+                left,
+                top,
+                width: 10,
+                height: 10,
+                background: "#ffffff",
+                border: "1.5px solid #7c3aed",
+                borderRadius: 2,
+                cursor,
+                pointerEvents: "auto",
+                transform: "translate(-50%, -50%)",
+              }}
+            />
+          ))}
+          <div
+            onMouseDown={handleRotateMouseDown}
+            title="Rotate (hold Shift to snap)"
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: -32,
+              width: 22,
+              height: 22,
+              background: "#ffffff",
+              border: "1.5px solid #7c3aed",
+              borderRadius: "50%",
+              cursor: "grab",
+              pointerEvents: "auto",
+              transform: "translate(-50%, -50%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#7c3aed",
+            }}
+          >
+            <RotateCw className="w-3 h-3" />
+          </div>
+        </>
       )}
     </div>
   );

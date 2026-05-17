@@ -195,9 +195,12 @@ export default function AudioElement({ audio, selected, zoom, onSelect, onUpdate
       }}
     >
       <div
-        className="w-full h-full rounded-2xl flex flex-col overflow-hidden"
+        className="w-full h-full rounded-2xl flex flex-col overflow-hidden relative"
         style={{ backgroundColor: BAR_BG }}
       >
+        {audio.isPending && (
+          <div className="absolute inset-0 jooma-shimmer rounded-2xl pointer-events-none z-10" />
+        )}
         <div className="flex items-center gap-3 px-4 py-3 flex-1">
           <button
             type="button"

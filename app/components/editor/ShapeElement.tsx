@@ -14,6 +14,9 @@ interface Props {
   onSnap?: (id: string, x: number, y: number, w: number, h: number) => { x: number; y: number };
   onDragEnd?: () => void;
   onContextMenu?: (id: string, clientX: number, clientY: number) => void;
+  inMultiSelection?: boolean;
+  onGroupDragStart?: (e: React.MouseEvent) => void;
+  onCloneAndDrag?: (e: React.MouseEvent) => void;
 }
 
 const MIN_SIZE = 8;
@@ -261,7 +264,7 @@ function renderShape(s: ShapeObject) {
   return null;
 }
 
-function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu }: Props) {
+function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, inMultiSelection = false, onGroupDragStart, onCloneAndDrag }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rotation = shape.rotation ?? 0;
   const rad = (rotation * Math.PI) / 180;
@@ -269,6 +272,17 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
   const sin = Math.sin(rad);
 
   const handleBodyMouseDown = (e: React.MouseEvent) => {
+    // Alt+mousedown: spawn a duplicate at the same position and drag it.
+    if (e.altKey && onCloneAndDrag && !shape.locked) {
+      onCloneAndDrag(e);
+      return;
+    }
+    // Route to group drag when part of a multi-selection so the whole group
+    // moves together and the selection isn't dropped.
+    if (inMultiSelection && onGroupDragStart && !e.shiftKey) {
+      onGroupDragStart(e);
+      return;
+    }
     e.stopPropagation();
     if (!selected) onSelect(shape.id);
     // Locked: select only so the user can unlock from the toolbar.
@@ -320,13 +334,17 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
       // Project screen delta into the shape's local (unrotated) frame
       const localDx = dx * cos + dy * sin;
       const localDy = -dx * sin + dy * cos;
+      // Alt held → symmetric resize: double the delta on the dragged edge and
+      // keep the centre fixed so the opposite edge mirrors the movement.
+      const fromCenter = ev.altKey;
+      const k = fromCenter ? 2 : 1;
 
       let w = origW, h = origH;
       let cxLocal = 0, cyLocal = 0;
-      if (pos.includes("e")) { w = Math.max(MIN_SIZE, origW + localDx); cxLocal = (w - origW) / 2; }
-      if (pos.includes("w")) { w = Math.max(MIN_SIZE, origW - localDx); cxLocal = -(w - origW) / 2; }
-      if (pos.includes("s")) { h = Math.max(MIN_SIZE, origH + localDy); cyLocal = (h - origH) / 2; }
-      if (pos.includes("n")) { h = Math.max(MIN_SIZE, origH - localDy); cyLocal = -(h - origH) / 2; }
+      if (pos.includes("e")) { w = Math.max(MIN_SIZE, origW + k * localDx); cxLocal = fromCenter ? 0 : (w - origW) / 2; }
+      if (pos.includes("w")) { w = Math.max(MIN_SIZE, origW - k * localDx); cxLocal = fromCenter ? 0 : -(w - origW) / 2; }
+      if (pos.includes("s")) { h = Math.max(MIN_SIZE, origH + k * localDy); cyLocal = fromCenter ? 0 : (h - origH) / 2; }
+      if (pos.includes("n")) { h = Math.max(MIN_SIZE, origH - k * localDy); cyLocal = fromCenter ? 0 : -(h - origH) / 2; }
 
       // Center shift back in screen frame
       const dCxScreen = cxLocal * cos - cyLocal * sin;

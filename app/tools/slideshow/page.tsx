@@ -49,8 +49,21 @@ export default function SlideshowListPage() {
     listPresentations()
       .then((data) => setPresentations(data))
       .catch((err) => {
-        console.error(err);
-        setError("Could not load presentations. Check Supabase env vars.");
+        // Supabase's PostgrestError isn't an Error instance and its useful
+        // fields (message/code/details/hint) aren't enumerable — `console.error(err)`
+        // alone prints `{}` in the Next.js overlay. Surface each field explicitly.
+        console.error("Failed to load presentations:", {
+          message: err?.message,
+          code: err?.code,
+          details: err?.details,
+          hint: err?.hint,
+          name: err?.name,
+        });
+        setError(
+          err?.message
+            ? `Could not load presentations: ${err.message}`
+            : "Could not load presentations. Check Supabase env vars.",
+        );
       })
       .finally(() => setLoading(false));
   }, []);
@@ -72,9 +85,12 @@ export default function SlideshowListPage() {
       await deletePresentation(pendingDelete.id);
       setPresentations((prev) => prev.filter((p) => p.id !== pendingDelete.id));
       setPendingDelete(null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to delete. Please try again.");
+    } catch (err: unknown) {
+      const e = err as { message?: string; code?: string; details?: string; hint?: string; name?: string };
+      console.error("Failed to delete presentation:", {
+        message: e?.message, code: e?.code, details: e?.details, hint: e?.hint, name: e?.name,
+      });
+      setError(e?.message ? `Failed to delete: ${e.message}` : "Failed to delete. Please try again.");
     } finally {
       setDeleting(false);
     }

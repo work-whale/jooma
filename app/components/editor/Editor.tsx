@@ -58,6 +58,46 @@ interface Props {
 
 const HISTORY_MAX = 50;
 
+// Canvas-based text measurement used to estimate how many wrapped lines a
+// TextObject spans at a given width. Greedy word-wrap matches what the
+// browser does for CSS `word-wrap: break-word; white-space: pre-wrap`.
+let _measureCanvas: HTMLCanvasElement | null = null;
+function measureTextLines(
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+  fontWeight: string,
+  fontStyle: "normal" | "italic",
+  fontFamily: string,
+): number {
+  if (typeof document === "undefined") return 1;
+  if (!_measureCanvas) _measureCanvas = document.createElement("canvas");
+  const ctx = _measureCanvas.getContext("2d");
+  if (!ctx) return 1;
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+  const paragraphs = text.split("\n");
+  let total = 0;
+  for (const p of paragraphs) {
+    if (!p) { total += 1; continue; }
+    // Greedy line break: keep packing words until the next would overflow.
+    const words = p.split(/(\s+)/); // keep whitespace tokens
+    let line = "";
+    let lineCount = 0;
+    for (const w of words) {
+      const test = line + w;
+      if (ctx.measureText(test).width > maxWidth && line.length > 0) {
+        lineCount += 1;
+        line = w.trimStart();
+      } else {
+        line = test;
+      }
+    }
+    if (line.length > 0) lineCount += 1;
+    total += Math.max(1, lineCount);
+  }
+  return Math.max(1, total);
+}
+
 export default function Editor({ presentation, generationParams }: Props) {
   const [title, setTitle] = useState(presentation.title);
   const [slides, setSlides] = useState<SlideState[]>(() => {
@@ -241,10 +281,16 @@ export default function Editor({ presentation, generationParams }: Props) {
     setMultiSelection([]);
   }, []);
 
-  // Bbox helper — text has no stored height, so estimate from font-size × lines.
+  // Bbox helper — text has no stored height by default, so estimate from font
+  // metrics + word-wrap at the element's width. If the user has explicitly
+  // resized the text box vertically (t.height set), the bbox respects that as
+  // a floor: max(content height, explicit height).
   const textBbox = (t: TextObject) => {
-    const lines = (t.text.match(/\n/g)?.length ?? 0) + 1;
-    return { x: t.x, y: t.y, w: t.width, h: Math.max(t.fontSize * 1.4 * lines, t.fontSize * 1.4) };
+    const lh = t.lineHeight ?? 1.2;
+    const lineCount = measureTextLines(t.text, t.width, t.fontSize, t.fontWeight, t.fontStyle, t.fontFamily);
+    const contentH = Math.max(t.fontSize * lh * lineCount, t.fontSize * lh);
+    const h = t.height ? Math.max(contentH, t.height) : contentH;
+    return { x: t.x, y: t.y, w: t.width, h };
   };
 
   // Point hit-test in slide-local coords. Returns the topmost element at the
@@ -747,6 +793,139 @@ export default function Editor({ presentation, generationParams }: Props) {
     }));
     setMultiSelection([]);
   }, [multiSelection, mutateActiveSlide]);
+
+  // Drag a multi-selection as a group. Mousedown on any selected element calls
+  // this; we snapshot each item's original position, then apply the same dx/dy
+  // to all of them on every mousemove so they move in lockstep.
+  const startGroupDrag = useCallback((e: React.MouseEvent) => {
+    if (multiSelection.length === 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return;
+
+    type Origin = { kind: "text" | "shape" | "image"; id: string; x0: number; y0: number };
+    const origins: Origin[] = [];
+    for (const m of multiSelection) {
+      if (m.kind === "image") {
+        const im = slide.images.find((x) => x.id === m.id);
+        if (im && !im.locked) origins.push({ kind: "image", id: im.id, x0: im.x, y0: im.y });
+      } else if (m.kind === "shape") {
+        const sh = slide.shapes.find((x) => x.id === m.id);
+        if (sh && !sh.locked) origins.push({ kind: "shape", id: sh.id, x0: sh.x, y0: sh.y });
+      } else if (m.kind === "text") {
+        const t = slide.texts.find((x) => x.id === m.id);
+        if (t && !t.locked) origins.push({ kind: "text", id: t.id, x0: t.x, y0: t.y });
+      }
+    }
+    if (origins.length === 0) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let moved = false;
+
+    const onMove = (ev: MouseEvent) => {
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      if (!moved && Math.hypot(dx, dy) < 1) return;
+      moved = true;
+      const textMap = new Map(origins.filter((o) => o.kind === "text").map((o) => [o.id, o]));
+      const shapeMap = new Map(origins.filter((o) => o.kind === "shape").map((o) => [o.id, o]));
+      const imageMap = new Map(origins.filter((o) => o.kind === "image").map((o) => [o.id, o]));
+      mutateActiveSlide((s) => ({
+        ...s,
+        texts: s.texts.map((t) => {
+          const o = textMap.get(t.id);
+          return o ? { ...t, x: o.x0 + dx, y: o.y0 + dy } : t;
+        }),
+        shapes: s.shapes.map((sh) => {
+          const o = shapeMap.get(sh.id);
+          return o ? { ...sh, x: o.x0 + dx, y: o.y0 + dy } : sh;
+        }),
+        images: s.images.map((im) => {
+          const o = imageMap.get(im.id);
+          return o ? { ...im, x: o.x0 + dx, y: o.y0 + dy } : im;
+        }),
+      }));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if (moved) scheduleSave();
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [multiSelection, zoom, mutateActiveSlide, scheduleSave]);
+
+  // Quick lookups for element renderers — true if the given element id is part
+  // of the active multi-selection (so its mousedown should route to the group
+  // drag instead of the single-element drag).
+  const isInMultiSelection = useCallback((kind: "text" | "shape" | "image", id: string) => {
+    return multiSelection.some((m) => m.kind === kind && m.id === id);
+  }, [multiSelection]);
+
+  // Alt+mousedown on an element: spawn a duplicate at the exact same position,
+  // select the duplicate, and start dragging it. The original stays put. Matches
+  // standard editor behaviour (Figma/Sketch/Canva). Held shift/multi-selection
+  // checks have already run by the time this is called.
+  const startCloneAndDrag = useCallback((kind: "text" | "shape" | "image", id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return;
+
+    let origX = 0, origY = 0;
+    let cloneId = "";
+    if (kind === "text") {
+      const orig = slide.texts.find((x) => x.id === id);
+      if (!orig) return;
+      const copy: TextObject = { ...orig, id: newId("t") };
+      cloneId = copy.id; origX = orig.x; origY = orig.y;
+      mutateActiveSlide((s) => ({ ...s, texts: [...s.texts, copy] }));
+      handleTextSelect(copy.id);
+    } else if (kind === "shape") {
+      const orig = slide.shapes.find((x) => x.id === id);
+      if (!orig) return;
+      const copy: ShapeObject = { ...orig, id: newId("sh") };
+      cloneId = copy.id; origX = orig.x; origY = orig.y;
+      mutateActiveSlide((s) => ({ ...s, shapes: [...s.shapes, copy] }));
+      handleShapeSelect(copy.id);
+    } else if (kind === "image") {
+      const orig = slide.images.find((x) => x.id === id);
+      if (!orig) return;
+      const copy: ImageObject = { ...orig, id: newId("im") };
+      cloneId = copy.id; origX = orig.x; origY = orig.y;
+      mutateActiveSlide((s) => ({ ...s, images: [...s.images, copy] }));
+      handleImageSelect(copy.id);
+    }
+    if (!cloneId) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let moved = false;
+    const onMove = (ev: MouseEvent) => {
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      if (!moved && Math.hypot(dx, dy) < 1) return;
+      moved = true;
+      mutateActiveSlide((s) => {
+        if (kind === "text") {
+          return { ...s, texts: s.texts.map((t) => t.id === cloneId ? { ...t, x: origX + dx, y: origY + dy } : t) };
+        }
+        if (kind === "shape") {
+          return { ...s, shapes: s.shapes.map((sh) => sh.id === cloneId ? { ...sh, x: origX + dx, y: origY + dy } : sh) };
+        }
+        return { ...s, images: s.images.map((im) => im.id === cloneId ? { ...im, x: origX + dx, y: origY + dy } : im) };
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if (moved) scheduleSave();
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [zoom, mutateActiveSlide, handleTextSelect, handleShapeSelect, handleImageSelect, scheduleSave]);
 
   // ── Slide-level updates ───────────────────────────────────────────────────
 
@@ -1736,8 +1915,12 @@ export default function Editor({ presentation, generationParams }: Props) {
               scheduleSave();
             } else if (eventName === "video") {
               const p = payload as {
+                placeholderId?: string;
                 targetIndex: number;
-                video: { videoId: string; title: string; channel: string; description: string };
+                video: {
+                  videoId: string; title: string; channel: string; description: string;
+                  slideHeading?: string; slideSubtitle?: string;
+                };
                 slideBg?: string;
                 titleColor?: string;
                 mutedColor?: string;
@@ -1745,61 +1928,196 @@ export default function Editor({ presentation, generationParams }: Props) {
                 headingFont?: string;
               };
               setSlides((prev) => {
-                // Dedicated slide for the YouTube video: big title + channel +
-                // the iframe sitting beneath them. Insert after `targetIndex`
-                // so it doesn't overlap an existing content slide.
-                const titleColor = p.titleColor ?? "#1a1a1a";
-                const mutedColor = p.mutedColor ?? "#5b6478";
+                // Dedicated scene-styled slide for the YouTube video. Mirrors
+                // the audio activity layout: dramatic background, large title
+                // in the theme accent, cream subtitle, and a rounded 16:9
+                // player centered with side margins.
+                const titleColor = p.titleColor ?? "#FFE8C8";
+                const subtitleColor = p.mutedColor ?? "#ffffff";
                 const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
+                const heading = (p.video.slideHeading ?? `WATCH: ${p.video.title}`).toUpperCase();
+                const subtitle = p.video.slideSubtitle ?? "Let's watch this together to deepen our understanding.";
+
+                // Measure each text block at its width so wrapped headings
+                // (long YouTube titles) push the subtitle + video below them
+                // instead of overlapping. Mirrors the canvas measurement used
+                // by textBbox / hit-testing.
+                const blockWidth = SLIDE_W - 160;
+                const titleFontSize = 56;
+                const titleLH = 1.1;
+                const subtitleFontSize = 22;
+                const subtitleLH = 1.3;
+                const titleLines = measureTextLines(
+                  heading, blockWidth, titleFontSize, "800", "normal", headingFont,
+                );
+                const titleH = titleFontSize * titleLH * titleLines;
+                const subtitleLines = measureTextLines(
+                  subtitle, blockWidth, subtitleFontSize, "500", "normal", "'Inter', sans-serif",
+                );
+                const subtitleH = subtitleFontSize * subtitleLH * subtitleLines;
+
+                const titleY = 60;
+                const subtitleGap = 16;
+                const subtitleY = titleY + titleH + subtitleGap;
+                const videoGap = 32;
+                const vidTop = Math.round(subtitleY + subtitleH + videoGap);
 
                 const titleText: TextObject = {
                   id: newId("t"),
-                  x: 80, y: 60, width: SLIDE_W - 160,
-                  text: p.video.title,
-                  fontSize: 44, fontWeight: "800",
+                  x: 80, y: titleY, width: blockWidth,
+                  text: heading,
+                  fontSize: titleFontSize, fontWeight: "800",
                   fontStyle: "normal", underline: false,
                   fontFamily: headingFont,
                   color: titleColor,
                   textAlign: "left",
+                  lineHeight: titleLH,
                 };
-                const channelText: TextObject = {
+                const subtitleText: TextObject = {
                   id: newId("t"),
-                  x: 80, y: 130, width: SLIDE_W - 160,
-                  text: `Watch on YouTube · ${p.video.channel}`,
-                  fontSize: 18, fontWeight: "500",
+                  x: 80, y: Math.round(subtitleY), width: blockWidth,
+                  text: subtitle,
+                  fontSize: subtitleFontSize, fontWeight: "500",
                   fontStyle: "normal", underline: false,
                   fontFamily: "'Inter', sans-serif",
-                  color: mutedColor,
+                  color: subtitleColor,
                   textAlign: "left",
+                  lineHeight: subtitleLH,
                 };
-                // 16:9 video player taking most of the slide width.
-                const vidW = SLIDE_W - 160;
-                const vidH = Math.round(vidW * 9 / 16);
+                // 16:9 player. Sized to fill what's left below the text block,
+                // centered horizontally with comfortable side margins.
+                const sideMargin = 160;
+                const maxW = SLIDE_W - sideMargin * 2;
+                const maxH = Math.max(120, SLIDE_H - vidTop - 40);
+                let vidW = maxW;
+                let vidH = Math.round(vidW * 9 / 16);
+                if (vidH > maxH) {
+                  vidH = maxH;
+                  vidW = Math.round(vidH * 16 / 9);
+                }
+                const vidX = Math.round((SLIDE_W - vidW) / 2);
                 const newVid: VideoObject = {
                   id: newId("v"),
                   source: "youtube",
                   src: p.video.videoId,
                   title: p.video.title,
-                  x: 80,
-                  y: 180,
+                  x: vidX,
+                  y: vidTop,
                   width: vidW,
-                  height: Math.min(vidH, SLIDE_H - 220),
+                  height: vidH,
+                  cornerRadius: 3,
                 };
-                const newSlide: SlideState = {
-                  id: newId("s"),
+                const realSlide: SlideState = {
+                  id: p.placeholderId ?? newId("s"),
                   shapes: [], images: [], audios: [],
-                  texts: [titleText, channelText],
+                  texts: [titleText, subtitleText],
                   videos: [newVid],
-                  background: p.slideBg ?? "#ffffff",
+                  background: p.slideBg ?? "#1a1a1a",
                 };
+                if (p.placeholderId) {
+                  const idx = prev.findIndex((s) => s.id === p.placeholderId);
+                  if (idx >= 0) {
+                    const next = prev.slice();
+                    next[idx] = realSlide;
+                    slidesRef.current = next;
+                    return next;
+                  }
+                }
                 const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
-                const next = [...prev.slice(0, insertAt), newSlide, ...prev.slice(insertAt)];
+                const next = [...prev.slice(0, insertAt), realSlide, ...prev.slice(insertAt)];
                 slidesRef.current = next;
                 return next;
               });
               scheduleSave();
+            } else if (eventName === "audio-placeholder") {
+              const p = payload as {
+                placeholderId: string;
+                targetIndex: number;
+                slideBg?: string;
+                panelBg?: string;
+                panelInk?: string;
+                playBg?: string;
+                playInk?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Pending audio slide: an AudioObject with isPending=true so
+                // AudioElement renders shimmer over the player area. Real data
+                // replaces this slide when the "audio" event fires.
+                const playerW = SLIDE_W - 160;
+                const playerH = 80;
+                const playerY = 210;
+                const pendingAudio: AudioObject = {
+                  id: newId("a"),
+                  x: 80, y: playerY,
+                  width: playerW, height: playerH,
+                  src: "",
+                  title: "",
+                  description: "",
+                  questions: [],
+                  panelBg: p.panelBg,
+                  panelInk: p.panelInk,
+                  playBg: p.playBg,
+                  playInk: p.playInk,
+                  headingFont: p.headingFont,
+                  isPending: true,
+                };
+                const placeholderSlide: SlideState = {
+                  id: p.placeholderId,
+                  shapes: [], images: [],
+                  texts: [],
+                  audios: [pendingAudio],
+                  background: p.slideBg ?? "#0f172a",
+                };
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), placeholderSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
+            } else if (eventName === "video-placeholder") {
+              const p = payload as {
+                placeholderId: string;
+                targetIndex: number;
+                slideBg?: string;
+                titleColor?: string;
+                mutedColor?: string;
+                accent?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Pending video slide: a VideoObject with isPending=true so
+                // VideoElement renders shimmer in the player frame. Replaced by
+                // the real "video" event once /api/find-youtube returns.
+                const sideMargin = 160;
+                const vidW = SLIDE_W - sideMargin * 2;
+                const vidH = Math.round(vidW * 9 / 16);
+                const vidX = Math.round((SLIDE_W - vidW) / 2);
+                const pendingVideo: VideoObject = {
+                  id: newId("v"),
+                  source: "youtube",
+                  src: "",
+                  x: vidX,
+                  y: 210,
+                  width: vidW,
+                  height: vidH,
+                  cornerRadius: 3,
+                  isPending: true,
+                };
+                const placeholderSlide: SlideState = {
+                  id: p.placeholderId,
+                  shapes: [], images: [], audios: [],
+                  texts: [],
+                  videos: [pendingVideo],
+                  background: p.slideBg ?? "#1a1a1a",
+                };
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), placeholderSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
             } else if (eventName === "audio") {
               const p = payload as {
+                placeholderId?: string;
                 targetIndex: number;
                 audio: {
                   src: string; title: string; description: string;
@@ -1873,15 +2191,28 @@ export default function Editor({ presentation, generationParams }: Props) {
                   listType: "number",
                 } : null;
 
-                const newSlide: SlideState = {
-                  id: newId("s"),
+                const realSlide: SlideState = {
+                  // Preserve the placeholder slide id so React's reconciliation
+                  // is stable across the swap — avoids a flash from key change.
+                  id: p.placeholderId ?? newId("s"),
                   shapes: [], images: [],
                   texts: questionsText ? [titleText, descText, questionsText] : [titleText, descText],
                   audios: [newAudio],
                   background: p.audio.slideBg ?? "#0f172a",
                 };
+                // If a placeholder was inserted earlier, replace it in place;
+                // otherwise fall back to inserting a new slide at targetIndex+1.
+                if (p.placeholderId) {
+                  const idx = prev.findIndex((s) => s.id === p.placeholderId);
+                  if (idx >= 0) {
+                    const next = prev.slice();
+                    next[idx] = realSlide;
+                    slidesRef.current = next;
+                    return next;
+                  }
+                }
                 const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
-                const next = [...prev.slice(0, insertAt), newSlide, ...prev.slice(insertAt)];
+                const next = [...prev.slice(0, insertAt), realSlide, ...prev.slice(insertAt)];
                 slidesRef.current = next;
                 return next;
               });
@@ -2061,6 +2392,11 @@ export default function Editor({ presentation, generationParams }: Props) {
                       ? "2px solid #7c3aed"
                       : "none",
                     outlineOffset: 2,
+                    // Clip content to the slide so elements positioned past the
+                    // edges don't bleed into the surrounding workspace. Stay
+                    // visible while panning the background image (that flow
+                    // intentionally renders the bg extending beyond the slide).
+                    overflow: adjustingBackground ? "visible" : "hidden",
                   }}
                 >
                   {/* Background-image shimmer while the AI is still fetching
@@ -2123,6 +2459,9 @@ export default function Editor({ presentation, generationParams }: Props) {
                           onEnterEditInner={setEditingInnerImageId}
                           onExitEditInner={exitInnerEdit}
                           onRemoveInnerImage={removeInnerImage}
+                          isInMultiSelection={(id) => isInMultiSelection("image", id)}
+                          onGroupDragStart={startGroupDrag}
+                          onCloneAndDrag={(id, e) => startCloneAndDrag("image", id, e)}
                         />
                         <ShapeLayer
                           shapes={currentSlide.shapes}
@@ -2134,6 +2473,9 @@ export default function Editor({ presentation, generationParams }: Props) {
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
                           onContextMenu={openShapeContextMenu}
+                          isInMultiSelection={(id) => isInMultiSelection("shape", id)}
+                          onGroupDragStart={startGroupDrag}
+                          onCloneAndDrag={(id, e) => startCloneAndDrag("shape", id, e)}
                         />
                         <TextLayer
                           texts={currentSlide.texts}
@@ -2145,6 +2487,9 @@ export default function Editor({ presentation, generationParams }: Props) {
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
                           onContextMenu={openTextContextMenu}
+                          isInMultiSelection={(id) => isInMultiSelection("text", id)}
+                          onGroupDragStart={startGroupDrag}
+                          onCloneAndDrag={(id, e) => startCloneAndDrag("text", id, e)}
                         />
                         <AudioLayer
                           audios={currentSlide.audios ?? []}
@@ -2203,10 +2548,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                                 if (sh) b = { x: sh.x, y: sh.y, w: sh.width, h: sh.height };
                               } else if (m.kind === "text") {
                                 const t = currentSlide.texts.find((x) => x.id === m.id);
-                                if (t) {
-                                  const lines = (t.text.match(/\n/g)?.length ?? 0) + 1;
-                                  b = { x: t.x, y: t.y, w: t.width, h: Math.max(t.fontSize * 1.4 * lines, t.fontSize * 1.4) };
-                                }
+                                if (t) b = textBbox(t);
                               }
                               if (!b) return null;
                               return (

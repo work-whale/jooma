@@ -3,7 +3,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { RotateCw, ImagePlus, Trash2 } from "lucide-react";
 import type { ImageObject } from "@/app/lib/presentations";
-import { getFrameStyle } from "./frames";
+import { getFrameStyle, getFrameCornerPx } from "./frames";
 
 interface Props {
   image: ImageObject;
@@ -19,6 +19,12 @@ interface Props {
   onEnterEditInner?: (id: string) => void;
   onExitEditInner?: () => void;
   onRemoveInnerImage?: () => void;
+  /** True if this image is part of the active multi-selection. */
+  inMultiSelection?: boolean;
+  /** Called instead of the normal single-element drag when inMultiSelection is true. */
+  onGroupDragStart?: (e: React.MouseEvent) => void;
+  /** Called on Alt+mousedown to spawn a duplicate and drag it. */
+  onCloneAndDrag?: (e: React.MouseEvent) => void;
 }
 
 const MIN_SIZE = 12;
@@ -56,7 +62,7 @@ async function urlToDataUrl(url: string): Promise<string> {
   });
 }
 
-function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, editingInner = false, onEnterEditInner, onExitEditInner, onRemoveInnerImage }: Props) {
+function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, editingInner = false, onEnterEditInner, onExitEditInner, onRemoveInnerImage, inMultiSelection = false, onGroupDragStart, onCloneAndDrag }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const rotation = image.rotation ?? 0;
@@ -96,6 +102,20 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
 
   const handleBodyMouseDown = (e: React.MouseEvent) => {
     if (editingInner) return;
+    // Alt+mousedown: spawn a duplicate at the same position and drag it.
+    // Original stays put. Standard editor behaviour.
+    if (e.altKey && onCloneAndDrag && !image.locked) {
+      onCloneAndDrag(e);
+      return;
+    }
+    // If part of an active multi-selection, route to the group drag instead.
+    // This preserves the multi-selection and moves every selected item with
+    // the same dx/dy — without it, mousedown would trigger onSelect → clear
+    // the multi-selection.
+    if (inMultiSelection && onGroupDragStart && !e.shiftKey) {
+      onGroupDragStart(e);
+      return;
+    }
     e.stopPropagation();
     if (!selected) onSelect(image.id);
     // Locked: select only — the user needs to be able to pick the element
@@ -149,6 +169,11 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
       const dy = (ev.clientY - startY) / zoom;
       const localDx = dx * cos + dy * sin;
       const localDy = -dx * sin + dy * cos;
+      // Alt held → resize symmetrically: keep the centre fixed and extend the
+      // opposite edge by the same amount. Achieved by doubling the size delta
+      // and zeroing the centre offset (so the centre doesn't shift).
+      const fromCenter = ev.altKey;
+      const k = fromCenter ? 2 : 1;
       let w = origW, h = origH;
       let cxLocal = 0, cyLocal = 0;
 
@@ -157,17 +182,19 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
         const signX = pos.includes("e") ? 1 : pos.includes("w") ? -1 : 0;
         const signY = pos.includes("s") ? 1 : pos.includes("n") ? -1 : 0;
         const deltaW = useX ? signX * localDx : signY * localDy * aspect;
-        w = Math.max(MIN_SIZE, origW + deltaW);
+        w = Math.max(MIN_SIZE, origW + k * deltaW);
         h = w / aspect;
-        if (pos.includes("e")) cxLocal = (w - origW) / 2;
-        if (pos.includes("w")) cxLocal = -(w - origW) / 2;
-        if (pos.includes("s")) cyLocal = (h - origH) / 2;
-        if (pos.includes("n")) cyLocal = -(h - origH) / 2;
+        if (!fromCenter) {
+          if (pos.includes("e")) cxLocal = (w - origW) / 2;
+          if (pos.includes("w")) cxLocal = -(w - origW) / 2;
+          if (pos.includes("s")) cyLocal = (h - origH) / 2;
+          if (pos.includes("n")) cyLocal = -(h - origH) / 2;
+        }
       } else {
-        if (pos.includes("e")) { w = Math.max(MIN_SIZE, origW + localDx); cxLocal = (w - origW) / 2; }
-        if (pos.includes("w")) { w = Math.max(MIN_SIZE, origW - localDx); cxLocal = -(w - origW) / 2; }
-        if (pos.includes("s")) { h = Math.max(MIN_SIZE, origH + localDy); cyLocal = (h - origH) / 2; }
-        if (pos.includes("n")) { h = Math.max(MIN_SIZE, origH - localDy); cyLocal = -(h - origH) / 2; }
+        if (pos.includes("e")) { w = Math.max(MIN_SIZE, origW + k * localDx); cxLocal = fromCenter ? 0 : (w - origW) / 2; }
+        if (pos.includes("w")) { w = Math.max(MIN_SIZE, origW - k * localDx); cxLocal = fromCenter ? 0 : -(w - origW) / 2; }
+        if (pos.includes("s")) { h = Math.max(MIN_SIZE, origH + k * localDy); cyLocal = fromCenter ? 0 : (h - origH) / 2; }
+        if (pos.includes("n")) { h = Math.max(MIN_SIZE, origH - k * localDy); cyLocal = fromCenter ? 0 : -(h - origH) / 2; }
       }
 
       const dCxScreen = cxLocal * cos - cyLocal * sin;
@@ -395,20 +422,38 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
           const sw = image.strokeWidth ?? 0;
           const sc = image.strokeColor ?? "#1a1a2e";
           const sa = image.strokeAlign ?? "inside";
-          const useOuter = sw > 0 && (sa === "outside" || sa === "center");
-          const outerPad = useOuter ? (sa === "outside" ? sw : sw / 2) : 0;
+          const outsidePart = sw > 0 ? (sa === "outside" ? sw : sa === "center" ? sw / 2 : 0) : 0;
           const insetW = sw > 0 ? (sa === "inside" ? sw : sa === "center" ? sw / 2 : 0) : 0;
+          const innerCornerPx = getFrameCornerPx(image.frame, image.cornerRadius);
+          // For borderRadius-based frames, draw the outside stroke as a
+          // box-shadow on a transparent wrapper that matches the rounded
+          // shape. Box-shadow paints OUTSIDE the rounded edge only, so it
+          // can't bleed through any transparent pixels in the image (which
+          // would happen if we used a solid outer rectangle behind the image).
+          // Falls back to a separate outer-ring div for clip-path frames
+          // (circle, hexagon, etc.) where box-shadow can't follow the shape.
+          const usesBorderRadius = innerCornerPx !== null;
           return (
             <>
-              {/* Outer ring (clipped to the frame's bigger shape) for outside/center stroke */}
-              {useOuter && (
+              {outsidePart > 0 && usesBorderRadius && (
                 <div
                   style={{
                     position: "absolute",
-                    left: -outerPad,
-                    top: -outerPad,
-                    right: -outerPad,
-                    bottom: -outerPad,
+                    inset: 0,
+                    borderRadius: `${innerCornerPx}px`,
+                    boxShadow: `0 0 0 ${outsidePart}px ${sc}`,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+              {outsidePart > 0 && !usesBorderRadius && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -outsidePart,
+                    top: -outsidePart,
+                    right: -outsidePart,
+                    bottom: -outsidePart,
                     background: sc,
                     ...frameStyle,
                     pointerEvents: "none",
@@ -443,6 +488,7 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
                     style={{
                       position: "absolute",
                       inset: 0,
+                      borderRadius: usesBorderRadius ? `${innerCornerPx}px` : undefined,
                       boxShadow: `inset 0 0 0 ${insetW}px ${sc}`,
                       pointerEvents: "none",
                     }}
@@ -555,19 +601,40 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
         </div>
       )}
 
-      {selected && (
+      {selected && (() => {
+        // Selection outline hugs the visible picture, not the bounding rect:
+        // a rounded image gets a rounded outline. Outline is offset 2px outward,
+        // so its radius must be inner-radius + offset to stay concentric.
+        const innerCornerPx = getFrameCornerPx(image.frame, image.cornerRadius);
+        const OFFSET = 2;
+        const outlineRadius = innerCornerPx !== null ? innerCornerPx + OFFSET : 0;
+        return (
         <>
           <div
             style={{
               position: "absolute",
-              inset: -2,
+              inset: -OFFSET,
               border: `2px ${editingInner ? "dashed" : "solid"} #7c3aed`,
+              borderRadius: outlineRadius || undefined,
               pointerEvents: "none",
             }}
           />
           {!image.locked && !editingInner && HANDLES.map((pos) => {
-            const horiz = pos.includes("w") ? 0 : pos.includes("e") ? image.width : image.width / 2;
-            const vert = pos.includes("n") ? 0 : pos.includes("s") ? image.height : image.height / 2;
+            // Corner handles sit on the rounded corner's 45° point so the
+            // selection ring stays flush with the visible picture. Edge
+            // handles stay on the straight edges (no adjustment).
+            const isCorner = pos.length === 2;
+            const cornerOffset = isCorner ? (innerCornerPx ?? 0) * (1 - 1 / Math.SQRT2) : 0;
+            const horiz = pos.includes("w")
+              ? cornerOffset
+              : pos.includes("e")
+              ? image.width - cornerOffset
+              : image.width / 2;
+            const vert = pos.includes("n")
+              ? cornerOffset
+              : pos.includes("s")
+              ? image.height - cornerOffset
+              : image.height / 2;
             return (
               <div
                 key={pos}
@@ -614,7 +681,8 @@ function ImageElement({ image, selected, zoom, onSelect, onUpdate, onCommit, onS
             </div>
           )}
         </>
-      )}
+        );
+      })()}
     </div>
   );
 }

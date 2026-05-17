@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Play } from "lucide-react";
 import type { VideoObject } from "@/app/lib/presentations";
 import { youtubeEmbedUrl, youtubeThumbnail } from "./youtube";
-import { getFrameStyle } from "./frames";
+import { getFrameStyle, getFrameCornerPx } from "./frames";
 import type { FrameShape } from "./frames";
 
 interface Props {
@@ -75,13 +75,24 @@ export default function VideoElement({ video, selected, zoom, onSelect, onUpdate
     const move = (ev: MouseEvent) => {
       const dx = (ev.clientX - startX) / zoom;
       const dy = (ev.clientY - startY) / zoom;
+      // Alt held → symmetric resize: opposite edge extends by the same amount,
+      // so the centre stays fixed. Achieved by doubling the size delta and
+      // shifting x/y by half the extra growth.
+      const fromCenter = ev.altKey;
       let nx = origX, ny = origY, nw = origW, nh = origH;
-      if (pos === "tl") { nx = origX + dx; ny = origY + dy; nw = origW - dx; nh = origH - dy; }
-      if (pos === "tr") { ny = origY + dy; nw = origW + dx; nh = origH - dy; }
-      if (pos === "bl") { nx = origX + dx; nw = origW - dx; nh = origH + dy; }
-      if (pos === "br") { nw = origW + dx; nh = origH + dy; }
-      if (nw < MIN_W) { if (pos === "tl" || pos === "bl") nx = origX + (origW - MIN_W); nw = MIN_W; }
-      if (nh < MIN_H) { if (pos === "tl" || pos === "tr") ny = origY + (origH - MIN_H); nh = MIN_H; }
+      if (fromCenter) {
+        if (pos === "tl") { nx = origX + dx; ny = origY + dy; nw = origW - 2 * dx; nh = origH - 2 * dy; }
+        if (pos === "tr") { nx = origX - dx; ny = origY + dy; nw = origW + 2 * dx; nh = origH - 2 * dy; }
+        if (pos === "bl") { nx = origX + dx; ny = origY - dy; nw = origW - 2 * dx; nh = origH + 2 * dy; }
+        if (pos === "br") { nx = origX - dx; ny = origY - dy; nw = origW + 2 * dx; nh = origH + 2 * dy; }
+      } else {
+        if (pos === "tl") { nx = origX + dx; ny = origY + dy; nw = origW - dx; nh = origH - dy; }
+        if (pos === "tr") { ny = origY + dy; nw = origW + dx; nh = origH - dy; }
+        if (pos === "bl") { nx = origX + dx; nw = origW - dx; nh = origH + dy; }
+        if (pos === "br") { nw = origW + dx; nh = origH + dy; }
+      }
+      if (nw < MIN_W) { if (pos === "tl" || pos === "bl") nx = origX + (origW - MIN_W) / (fromCenter ? 2 : 1); nw = MIN_W; }
+      if (nh < MIN_H) { if (pos === "tl" || pos === "tr") ny = origY + (origH - MIN_H) / (fromCenter ? 2 : 1); nh = MIN_H; }
       onUpdate(video.id, { x: nx, y: ny, width: nw, height: nh });
     };
     const up = () => {
@@ -102,6 +113,12 @@ export default function VideoElement({ video, selected, zoom, onSelect, onUpdate
   // clip-path / border-radius applied to the inner content wrapper so the
   // outline (drawn on the outer element) still hugs the rect.
   const frameStyle = getFrameStyle(
+    (video.frame ?? "none") as FrameShape,
+    video.cornerRadius,
+  );
+  // Mirror the frame's rounded corners onto the outer container so the
+  // selection outline curves with the picture instead of being a square box.
+  const outerCornerPx = getFrameCornerPx(
     (video.frame ?? "none") as FrameShape,
     video.cornerRadius,
   );
@@ -128,6 +145,7 @@ export default function VideoElement({ video, selected, zoom, onSelect, onUpdate
         pointerEvents: "auto",
         outline: selected ? "2px solid #7c3aed" : "none",
         outlineOffset: 4,
+        borderRadius: outerCornerPx ?? undefined,
         zIndex: video.z,
         cursor: video.locked ? "default" : selected ? "move" : "pointer",
         userSelect: "none",
@@ -144,7 +162,9 @@ export default function VideoElement({ video, selected, zoom, onSelect, onUpdate
           ...frameStyle,
         }}
       >
-        {isYoutube ? (
+        {video.isPending ? (
+          <div className="absolute inset-0 jooma-shimmer" />
+        ) : isYoutube ? (
           activated ? (
             <iframe
               src={ytEmbed ?? ""}
@@ -204,22 +224,27 @@ export default function VideoElement({ video, selected, zoom, onSelect, onUpdate
         )}
       </div>
 
-      {selected && !video.locked && HANDLES.map((pos) => (
-        <div
-          key={pos}
-          onMouseDown={handleHandleMouseDown(pos)}
-          style={{
-            position: "absolute",
-            width: 14, height: 14,
-            background: "#fff", border: "2px solid #7c3aed", borderRadius: 4,
-            cursor: pos === "tl" || pos === "br" ? "nwse-resize" : "nesw-resize",
-            top: pos[0] === "t" ? -7 : "auto",
-            bottom: pos[0] === "b" ? -7 : "auto",
-            left: pos[1] === "l" ? -7 : "auto",
-            right: pos[1] === "r" ? -7 : "auto",
-          }}
-        />
-      ))}
+      {selected && !video.locked && HANDLES.map((pos) => {
+        // Pull corner handles inward by R*(1 - 1/√2) so they sit on the
+        // rounded corner's 45° point instead of the square bounding box.
+        const cornerInset = (outerCornerPx ?? 0) * (1 - 1 / Math.SQRT2);
+        return (
+          <div
+            key={pos}
+            onMouseDown={handleHandleMouseDown(pos)}
+            style={{
+              position: "absolute",
+              width: 14, height: 14,
+              background: "#fff", border: "2px solid #7c3aed", borderRadius: 4,
+              cursor: pos === "tl" || pos === "br" ? "nwse-resize" : "nesw-resize",
+              top: pos[0] === "t" ? -7 + cornerInset : "auto",
+              bottom: pos[0] === "b" ? -7 + cornerInset : "auto",
+              left: pos[1] === "l" ? -7 + cornerInset : "auto",
+              right: pos[1] === "r" ? -7 + cornerInset : "auto",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
