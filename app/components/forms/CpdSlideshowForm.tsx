@@ -9,13 +9,30 @@ import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 
 interface SlideData {
-  type: "title" | "content";
+  type: "title" | "content" | "quote" | "stat" | "two-column" | "activity";
   title: string;
   presentationTitle: string;
+  // title / content
   subtitle?: string;
   body?: string;
   bullets?: string[];
   imageSuggestion?: string;
+  callout?: { type: "key-point" | "reflection" | "try-this" | "discussion"; text: string };
+  // quote
+  quote?: string;
+  quoteAuthor?: string;
+  // stat
+  stat?: string;
+  statLabel?: string;
+  statContext?: string;
+  // two-column
+  leftTitle?: string;
+  leftContent?: string;
+  rightTitle?: string;
+  rightContent?: string;
+  // activity
+  activityPrompt?: string;
+  activitySubtask?: string;
 }
 
 type PresentationFocus = "Practical application" | "Research and theory";
@@ -91,6 +108,154 @@ async function exportSlidesToPdf(slides: SlideData[], filename: string) {
       const bottomBar = document.createElement("div");
       bottomBar.style.cssText = `height:3px;flex-shrink:0;background:${C_GRAY};`;
       el.appendChild(bottomBar);
+    } else if (s.type === "quote") {
+      const body = document.createElement("div");
+      body.style.cssText = `flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 80px;overflow:hidden;`;
+      const openQ = document.createElement("p");
+      openQ.style.cssText = `font-family:var(--font-spectral),serif;font-size:72px;line-height:0.8;color:${C_RED};align-self:flex-start;`;
+      openQ.textContent = "“";
+      const qt = document.createElement("p");
+      qt.style.cssText = `font-family:var(--font-spectral),serif;font-size:26px;line-height:1.4;color:${C_TEXT};text-align:center;font-weight:500;`;
+      qt.textContent = s.quote ?? "";
+      const closeQ = document.createElement("p");
+      closeQ.style.cssText = `font-family:var(--font-spectral),serif;font-size:72px;line-height:0.8;color:${C_RED};align-self:flex-end;`;
+      closeQ.textContent = "”";
+      body.appendChild(openQ);
+      body.appendChild(qt);
+      body.appendChild(closeQ);
+      if (s.quoteAuthor) {
+        const auth = document.createElement("p");
+        auth.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:${C_GRAY};margin-top:12px;text-align:center;`;
+        auth.textContent = `— ${s.quoteAuthor}`;
+        body.appendChild(auth);
+      }
+      if (s.body) {
+        const div = document.createElement("div");
+        div.style.cssText = `height:1px;width:60px;background:${C_RED};opacity:0.35;margin:16px auto 12px;`;
+        const ctx = document.createElement("p");
+        ctx.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:13px;color:${C_GRAY};text-align:center;line-height:1.6;`;
+        ctx.textContent = s.body;
+        body.appendChild(div);
+        body.appendChild(ctx);
+      }
+      el.appendChild(body);
+      const bottomBar = document.createElement("div");
+      bottomBar.style.cssText = `height:2px;flex-shrink:0;background:${C_GRAY};`;
+      el.appendChild(bottomBar);
+
+    } else if (s.type === "stat") {
+      const body = document.createElement("div");
+      body.style.cssText = `flex:1;display:flex;flex-direction:column;padding:40px 76px 36px;overflow:hidden;`;
+      const hb = document.createElement("div");
+      hb.style.cssText = `margin-bottom:16px;flex-shrink:0;`;
+      const h2 = document.createElement("h2");
+      h2.style.cssText = `font-family:var(--font-spectral),serif;font-size:26px;font-weight:600;color:${C_TEXT};`;
+      h2.textContent = s.title;
+      const pt = document.createElement("p");
+      pt.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:12px;color:${C_RED};margin-top:6px;`;
+      pt.textContent = s.presentationTitle;
+      const div2 = document.createElement("div");
+      div2.style.cssText = `height:1px;margin-top:12px;background:${C_RED};opacity:0.4;`;
+      hb.appendChild(h2); hb.appendChild(pt); hb.appendChild(div2);
+      body.appendChild(hb);
+      const centre = document.createElement("div");
+      centre.style.cssText = `flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;`;
+      const statNum = document.createElement("p");
+      statNum.style.cssText = `font-family:var(--font-spectral),serif;font-size:96px;font-weight:700;line-height:1;color:${C_RED};text-align:center;`;
+      statNum.textContent = s.stat ?? "";
+      centre.appendChild(statNum);
+      if (s.statLabel) {
+        const sl = document.createElement("p");
+        sl.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:18px;color:${C_TEXT};font-weight:500;text-align:center;`;
+        sl.textContent = s.statLabel;
+        centre.appendChild(sl);
+      }
+      if (s.statContext) {
+        const sdiv = document.createElement("div");
+        sdiv.style.cssText = `height:1px;width:48px;background:${C_RED};opacity:0.35;margin:4px auto 0;`;
+        const sc = document.createElement("p");
+        sc.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:13px;color:${C_GRAY};text-align:center;line-height:1.6;margin-top:8px;`;
+        sc.textContent = s.statContext;
+        centre.appendChild(sdiv);
+        centre.appendChild(sc);
+      }
+      body.appendChild(centre);
+      el.appendChild(body);
+
+    } else if (s.type === "two-column") {
+      const body = document.createElement("div");
+      body.style.cssText = `flex:1;display:flex;flex-direction:column;padding:40px 76px 36px;overflow:hidden;`;
+      const hb = document.createElement("div");
+      hb.style.cssText = `margin-bottom:16px;flex-shrink:0;`;
+      const h2 = document.createElement("h2");
+      h2.style.cssText = `font-family:var(--font-spectral),serif;font-size:30px;font-weight:700;color:${C_TEXT};`;
+      h2.textContent = s.title;
+      const pt = document.createElement("p");
+      pt.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:12px;color:${C_RED};margin-top:6px;`;
+      pt.textContent = s.presentationTitle;
+      const div3 = document.createElement("div");
+      div3.style.cssText = `height:1px;margin-top:12px;background:${C_RED};opacity:0.4;`;
+      hb.appendChild(h2); hb.appendChild(pt); hb.appendChild(div3);
+      body.appendChild(hb);
+      const cols = document.createElement("div");
+      cols.style.cssText = `flex:1;display:flex;gap:0;overflow:hidden;`;
+      const mkCol = (title: string | undefined, content: string | undefined, border: boolean) => {
+        const col = document.createElement("div");
+        col.style.cssText = `flex:1;display:flex;flex-direction:column;${border ? `padding-right:32px;border-right:1px solid rgba(102,74,50,0.2);` : "padding-left:32px;"}`;
+        if (title) {
+          const t = document.createElement("p");
+          t.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${C_RED};margin-bottom:10px;`;
+          t.textContent = title;
+          col.appendChild(t);
+        }
+        if (content) {
+          const c = document.createElement("p");
+          c.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:13px;line-height:1.6;color:${C_TEXT};`;
+          c.textContent = content.replace(/\n- /g, "\n• ");
+          col.appendChild(c);
+        }
+        return col;
+      };
+      cols.appendChild(mkCol(s.leftTitle, s.leftContent, true));
+      cols.appendChild(mkCol(s.rightTitle, s.rightContent, false));
+      body.appendChild(cols);
+      el.appendChild(body);
+
+    } else if (s.type === "activity") {
+      const body = document.createElement("div");
+      body.style.cssText = `flex:1;display:flex;flex-direction:column;padding:40px 76px 36px;overflow:hidden;`;
+      const hb = document.createElement("div");
+      hb.style.cssText = `margin-bottom:16px;flex-shrink:0;`;
+      const label = document.createElement("p");
+      label.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:${C_RED};`;
+      label.textContent = "Activity";
+      const h2 = document.createElement("h2");
+      h2.style.cssText = `font-family:var(--font-spectral),serif;font-size:30px;font-weight:700;color:${C_TEXT};margin-top:4px;`;
+      h2.textContent = s.title;
+      const div4 = document.createElement("div");
+      div4.style.cssText = `height:1px;margin-top:12px;background:${C_RED};opacity:0.4;`;
+      hb.appendChild(label); hb.appendChild(h2); hb.appendChild(div4);
+      body.appendChild(hb);
+      const centre = document.createElement("div");
+      centre.style.cssText = `flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;`;
+      if (s.activityPrompt) {
+        const box = document.createElement("div");
+        box.style.cssText = `background:rgba(102,74,50,0.07);border:1.5px solid rgba(102,74,50,0.2);border-radius:12px;padding:28px 40px;text-align:center;`;
+        const pt = document.createElement("p");
+        pt.style.cssText = `font-family:var(--font-spectral),serif;font-size:20px;font-weight:500;color:${C_TEXT};line-height:1.5;`;
+        pt.textContent = s.activityPrompt;
+        box.appendChild(pt);
+        centre.appendChild(box);
+      }
+      if (s.activitySubtask) {
+        const sub = document.createElement("p");
+        sub.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:13px;color:${C_GRAY};text-align:center;`;
+        sub.textContent = s.activitySubtask;
+        centre.appendChild(sub);
+      }
+      body.appendChild(centre);
+      el.appendChild(body);
+
     } else {
       const body = document.createElement("div");
       body.style.cssText = `flex:1;display:flex;flex-direction:column;padding:44px 76px 36px;overflow:hidden;`;
@@ -209,6 +374,65 @@ async function exportSlidesToPptx(slides: SlideData[], filename: string) {
         x: 0, y: 7.47, w: "100%", h: 0.03,
         fill: { color: SEC }, line: { color: SEC, width: 0 },
       });
+    } else if (slide.type === "quote") {
+      s.addText("“", { x: 0.5, y: 0.6, w: 1.5, h: 1.2, fontSize: 60, bold: true, color: ACC, fontFace: "Spectral" });
+      s.addText(slide.quote ?? "", {
+        x: 1.5, y: 1.5, w: 10.33, h: 2.5,
+        fontSize: 22, bold: true, color: TXT, fontFace: "Spectral",
+        align: "center", wrap: true, valign: "middle",
+      });
+      s.addText("”", { x: 11.3, y: 3.5, w: 1.5, h: 1.2, fontSize: 60, bold: true, color: ACC, fontFace: "Spectral" });
+      if (slide.quoteAuthor) {
+        s.addText(`— ${slide.quoteAuthor}`, {
+          x: 1.5, y: 4.3, w: 10.33, h: 0.4,
+          fontSize: 10, color: SEC, fontFace: "Karla",
+          align: "center", charSpacing: 2,
+        });
+      }
+      if (slide.body) {
+        s.addShape(prs.ShapeType.rect, { x: 5.67, y: 4.9, w: 2, h: 0.02, fill: { color: ACC }, line: { color: ACC, width: 0 } });
+        s.addText(slide.body, {
+          x: 1.5, y: 5.1, w: 10.33, h: 0.8,
+          fontSize: 12, color: SEC, fontFace: "Karla", align: "center", wrap: true,
+        });
+      }
+      s.addShape(prs.ShapeType.rect, { x: 0, y: 7.47, w: "100%", h: 0.03, fill: { color: SEC }, line: { color: SEC, width: 0 } });
+
+    } else if (slide.type === "stat") {
+      s.addText(slide.title, { x: 0.9, y: 0.45, w: 11.53, h: 0.7, fontSize: 22, bold: true, color: TXT, fontFace: "Spectral", wrap: true });
+      s.addText(slide.presentationTitle, { x: 0.9, y: 1.2, w: 11.53, h: 0.28, fontSize: 10, color: ACC, fontFace: "Karla" });
+      s.addShape(prs.ShapeType.rect, { x: 0.9, y: 1.52, w: 11.53, h: 0.02, fill: { color: SEC }, line: { color: SEC, width: 0 } });
+      s.addText(slide.stat ?? "", { x: 1.5, y: 1.8, w: 10.33, h: 2.8, fontSize: 80, bold: true, color: ACC, fontFace: "Spectral", align: "center", valign: "middle" });
+      if (slide.statLabel) {
+        s.addText(slide.statLabel, { x: 1.5, y: 4.6, w: 10.33, h: 0.6, fontSize: 16, bold: true, color: TXT, fontFace: "Karla", align: "center" });
+      }
+      if (slide.statContext) {
+        s.addShape(prs.ShapeType.rect, { x: 5.67, y: 5.35, w: 2, h: 0.02, fill: { color: ACC }, line: { color: ACC, width: 0 } });
+        s.addText(slide.statContext, { x: 1.5, y: 5.5, w: 10.33, h: 0.8, fontSize: 12, color: SEC, fontFace: "Karla", align: "center", wrap: true });
+      }
+
+    } else if (slide.type === "two-column") {
+      s.addText(slide.title, { x: 0.9, y: 0.45, w: 11.53, h: 0.7, fontSize: 26, bold: true, color: TXT, fontFace: "Spectral", wrap: true });
+      s.addText(slide.presentationTitle, { x: 0.9, y: 1.2, w: 11.53, h: 0.28, fontSize: 10, color: ACC, fontFace: "Karla" });
+      s.addShape(prs.ShapeType.rect, { x: 0.9, y: 1.52, w: 11.53, h: 0.02, fill: { color: SEC }, line: { color: SEC, width: 0 } });
+      s.addShape(prs.ShapeType.rect, { x: 6.67, y: 1.7, w: 0.02, h: 5.5, fill: { color: SEC }, line: { color: SEC, width: 0 } });
+      if (slide.leftTitle) s.addText(slide.leftTitle.toUpperCase(), { x: 0.9, y: 1.7, w: 5.5, h: 0.35, fontSize: 9, bold: true, color: ACC, fontFace: "Karla", charSpacing: 2 });
+      if (slide.leftContent) s.addText(slide.leftContent.replace(/\n- /g, "\n• "), { x: 0.9, y: 2.1, w: 5.5, h: 4.8, fontSize: 13, color: TXT, fontFace: "Karla", wrap: true, valign: "top" });
+      if (slide.rightTitle) s.addText(slide.rightTitle.toUpperCase(), { x: 7.0, y: 1.7, w: 5.5, h: 0.35, fontSize: 9, bold: true, color: ACC, fontFace: "Karla", charSpacing: 2 });
+      if (slide.rightContent) s.addText(slide.rightContent.replace(/\n- /g, "\n• "), { x: 7.0, y: 2.1, w: 5.5, h: 4.8, fontSize: 13, color: TXT, fontFace: "Karla", wrap: true, valign: "top" });
+
+    } else if (slide.type === "activity") {
+      s.addText("ACTIVITY", { x: 0.9, y: 0.45, w: 11.53, h: 0.3, fontSize: 9, bold: true, color: ACC, fontFace: "Karla", charSpacing: 3 });
+      s.addText(slide.title, { x: 0.9, y: 0.75, w: 11.53, h: 0.75, fontSize: 26, bold: true, color: TXT, fontFace: "Spectral", wrap: true });
+      s.addShape(prs.ShapeType.rect, { x: 0.9, y: 1.52, w: 11.53, h: 0.02, fill: { color: SEC }, line: { color: SEC, width: 0 } });
+      if (slide.activityPrompt) {
+        s.addShape(prs.ShapeType.roundRect, { x: 1.5, y: 2.0, w: 10.33, h: 2.8, fill: { color: toHex("rgb(240,234,226)") }, line: { color: toHex("rgb(170,145,120)"), width: 1.5 }, rectRadius: 0.15 });
+        s.addText(slide.activityPrompt, { x: 1.7, y: 2.2, w: 9.93, h: 2.4, fontSize: 18, bold: true, color: TXT, fontFace: "Spectral", align: "center", valign: "middle", wrap: true });
+      }
+      if (slide.activitySubtask) {
+        s.addText(slide.activitySubtask, { x: 1.5, y: 5.1, w: 10.33, h: 0.5, fontSize: 12, color: SEC, fontFace: "Karla", align: "center" });
+      }
+
     } else {
       s.addText(slide.title, {
         x: 0.9, y: 0.45, w: 11.53, h: 0.85,
@@ -263,8 +487,30 @@ function slidesToMarkdown(slides: SlideData[]): string {
       if (s.type === "title") {
         return `# ${s.title}\n\n${s.subtitle ?? ""}`;
       }
+      if (s.type === "quote") {
+        const lines = [`## Quote`];
+        if (s.quote) lines.push(`> "${s.quote}"\n>\n> — ${s.quoteAuthor ?? ""}`);
+        if (s.body) lines.push(s.body);
+        return lines.join("\n\n");
+      }
+      if (s.type === "stat") {
+        const lines = [`## ${s.title}`, `**${s.stat}** — ${s.statLabel ?? ""}`];
+        if (s.statContext) lines.push(s.statContext);
+        return lines.join("\n\n");
+      }
+      if (s.type === "two-column") {
+        const lines = [`## ${s.title}`, `**${s.leftTitle ?? ""}**\n${s.leftContent ?? ""}`, `**${s.rightTitle ?? ""}**\n${s.rightContent ?? ""}`];
+        return lines.join("\n\n");
+      }
+      if (s.type === "activity") {
+        const lines = [`## Activity: ${s.title}`];
+        if (s.activityPrompt) lines.push(s.activityPrompt);
+        if (s.activitySubtask) lines.push(`*${s.activitySubtask}*`);
+        return lines.join("\n\n");
+      }
       const lines: string[] = [`## ${s.title}`];
       if (s.body) lines.push(s.body);
+      if (s.callout) lines.push(`> **${s.callout.type === "key-point" ? "Key Point" : s.callout.type === "reflection" ? "Reflect" : s.callout.type === "try-this" ? "Try This" : "Discussion"}:** ${s.callout.text}`);
       if (s.bullets?.length) lines.push(s.bullets.map((b) => `- ${b}`).join("\n"));
       if (s.imageSuggestion) lines.push(`*Suggested image: "${s.imageSuggestion}"*`);
       return lines.join("\n\n");
@@ -379,6 +625,21 @@ function ContentSlide({ slide, index, total }: { slide: SlideData; index: number
             </ul>
           ) : null}
 
+          {slide.callout && (
+            <div
+              className="flex flex-col gap-1 rounded-lg px-4 py-3"
+              style={{ backgroundColor: "rgba(102,74,50,0.07)", borderLeft: `3px solid ${C_RED}` }}
+            >
+              <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: C_RED }}>
+                {slide.callout.type === "key-point" ? "Key Point"
+                  : slide.callout.type === "reflection" ? "Reflect"
+                  : slide.callout.type === "try-this" ? "Try This"
+                  : "Discussion"}
+              </p>
+              <p className="text-sm leading-relaxed" style={BODY_FONT}>{slide.callout.text}</p>
+            </div>
+          )}
+
           {slide.imageSuggestion && (
             <div className="mt-auto">
               <div
@@ -397,28 +658,219 @@ function ContentSlide({ slide, index, total }: { slide: SlideData; index: number
   );
 }
 
-function SlideSkeleton() {
+function QuoteSlide({ slide, index, total }: { slide: SlideData; index: number; total: number }) {
   return (
-    <div className="flex flex-col items-center">
-      <div
-        className="w-full max-w-5xl rounded-lg overflow-hidden shadow-xl animate-pulse"
-        style={{ aspectRatio: "16 / 9", backgroundColor: C_BG }}
-      >
-        <div className="h-1" style={{ backgroundColor: C_RED, opacity: 0.4 }} />
-        <div className="px-16 pt-10 pb-10 h-full flex flex-col gap-5">
-          <div className="space-y-2 shrink-0">
-            <div className="h-6 rounded w-1/2" style={{ backgroundColor: "rgba(38,25,17,0.1)" }} />
-            <div className="h-3 rounded w-1/4" style={{ backgroundColor: "rgba(38,25,17,0.07)" }} />
-            <div className="h-px mt-3" style={{ backgroundColor: C_RED, opacity: 0.4 }} />
-          </div>
-          <div className="space-y-3 flex-1">
-            {[1, 0.92, 0.82, 0.7].map((w, i) => (
-              <div key={i} className="h-3 rounded" style={{ width: `${w * 100}%`, backgroundColor: "rgba(38,25,17,0.07)" }} />
+    <SlideCanvas footer={<SlideNumber n={index + 1} total={total} />}>
+      <div className="h-1 shrink-0" style={{ backgroundColor: C_RED }} />
+      <div className="flex-1 flex flex-col items-center justify-center px-20 py-10 overflow-hidden">
+        <p
+          className="self-start leading-none font-bold"
+          style={{ fontFamily: "var(--font-spectral)", color: C_RED, fontSize: "5rem", lineHeight: 0.8 }}
+        >
+          &ldquo;
+        </p>
+        <p className="text-2xl leading-snug text-center font-medium max-w-2xl" style={HEADING_FONT}>
+          {slide.quote}
+        </p>
+        <p
+          className="self-end leading-none font-bold"
+          style={{ fontFamily: "var(--font-spectral)", color: C_RED, fontSize: "5rem", lineHeight: 0.8 }}
+        >
+          &rdquo;
+        </p>
+        {slide.quoteAuthor && (
+          <p className="text-xs tracking-widest uppercase mt-3 text-center" style={{ ...BODY_FONT, color: C_GRAY }}>
+            — {slide.quoteAuthor}
+          </p>
+        )}
+        {slide.body && (
+          <>
+            <div className="mt-5 h-px w-20" style={{ backgroundColor: C_RED, opacity: 0.35 }} />
+            <p className="text-sm text-center max-w-xl leading-relaxed mt-4" style={{ ...BODY_FONT, color: C_GRAY }}>
+              {slide.body}
+            </p>
+          </>
+        )}
+      </div>
+      <div className="h-0.5 shrink-0" style={{ backgroundColor: C_GRAY }} />
+    </SlideCanvas>
+  );
+}
+
+function StatSlide({ slide, index, total }: { slide: SlideData; index: number; total: number }) {
+  return (
+    <SlideCanvas footer={<SlideNumber n={index + 1} total={total} />}>
+      <div className="h-1 shrink-0" style={{ backgroundColor: C_RED }} />
+      <div className="flex-1 flex flex-col px-20 py-10 overflow-hidden">
+        <div className="mb-4 shrink-0">
+          <h3 className="text-2xl font-semibold leading-snug" style={HEADING_FONT}>{slide.title}</h3>
+          <p className="text-sm tracking-wide mt-1" style={{ ...BODY_FONT, color: C_RED }}>{slide.presentationTitle}</p>
+          <div className="mt-3 h-px" style={{ backgroundColor: C_RED, opacity: 0.4 }} />
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+          <p className="font-bold leading-none text-center" style={{ ...HEADING_FONT, color: C_RED, fontSize: "6rem" }}>
+            {slide.stat}
+          </p>
+          {slide.statLabel && (
+            <p className="text-xl font-medium text-center max-w-md" style={BODY_FONT}>
+              {slide.statLabel}
+            </p>
+          )}
+          {slide.statContext && (
+            <>
+              <div className="h-px w-16 mt-2" style={{ backgroundColor: C_RED, opacity: 0.35 }} />
+              <p className="text-sm text-center max-w-lg leading-relaxed" style={{ ...BODY_FONT, color: C_GRAY }}>
+                {slide.statContext}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    </SlideCanvas>
+  );
+}
+
+function TwoColumnSlide({ slide, index, total }: { slide: SlideData; index: number; total: number }) {
+  const renderContent = (content: string) => {
+    if (content.includes("\n- ")) {
+      const parts = content.split("\n- ");
+      const intro = parts[0].trim();
+      const items = parts.slice(1);
+      return (
+        <>
+          {intro && <p className="text-sm leading-relaxed mb-2" style={BODY_FONT}>{intro}</p>}
+          <ul className="space-y-2">
+            {items.map((b, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: C_RED }} />
+                <span className="text-sm leading-snug" style={BODY_FONT}>{b.trim()}</span>
+              </li>
             ))}
+          </ul>
+        </>
+      );
+    }
+    return <p className="text-sm leading-relaxed" style={BODY_FONT}>{content}</p>;
+  };
+
+  return (
+    <SlideCanvas footer={<SlideNumber n={index + 1} total={total} />}>
+      <div className="h-1 shrink-0" style={{ backgroundColor: C_RED }} />
+      <div className="flex-1 flex flex-col px-20 py-10 overflow-hidden">
+        <div className="mb-4 shrink-0">
+          <h3 className="text-3xl font-bold leading-snug" style={HEADING_FONT}>{slide.title}</h3>
+          <p className="text-sm tracking-wide mt-1" style={{ ...BODY_FONT, color: C_RED }}>{slide.presentationTitle}</p>
+          <div className="mt-3 h-px" style={{ backgroundColor: C_RED, opacity: 0.4 }} />
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-0 overflow-hidden">
+          <div className="flex flex-col pr-8 border-r" style={{ borderColor: `rgba(102,74,50,0.2)` }}>
+            {slide.leftTitle && (
+              <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: C_RED }}>
+                {slide.leftTitle}
+              </p>
+            )}
+            {slide.leftContent && renderContent(slide.leftContent)}
+          </div>
+          <div className="flex flex-col pl-8">
+            {slide.rightTitle && (
+              <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: C_RED }}>
+                {slide.rightTitle}
+              </p>
+            )}
+            {slide.rightContent && renderContent(slide.rightContent)}
           </div>
         </div>
       </div>
-      <div className="w-full max-w-5xl px-1 pt-2 flex items-center gap-2">
+    </SlideCanvas>
+  );
+}
+
+function ActivitySlide({ slide, index, total }: { slide: SlideData; index: number; total: number }) {
+  return (
+    <SlideCanvas footer={<SlideNumber n={index + 1} total={total} />}>
+      <div className="h-1 shrink-0" style={{ backgroundColor: C_RED }} />
+      <div className="flex-1 flex flex-col px-20 py-10 overflow-hidden">
+        <div className="mb-4 shrink-0">
+          <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: C_RED }}>Activity</p>
+          <h3 className="text-3xl font-bold leading-snug mt-1" style={HEADING_FONT}>{slide.title}</h3>
+          <div className="mt-3 h-px" style={{ backgroundColor: C_RED, opacity: 0.4 }} />
+        </div>
+        <div className="flex-1 flex flex-col justify-center gap-5">
+          {slide.activityPrompt && (
+            <div
+              className="rounded-xl px-8 py-7"
+              style={{ backgroundColor: "rgba(102,74,50,0.07)", border: `1.5px solid rgba(102,74,50,0.2)` }}
+            >
+              <p className="text-xl leading-relaxed font-medium text-center" style={HEADING_FONT}>
+                {slide.activityPrompt}
+              </p>
+            </div>
+          )}
+          {slide.activitySubtask && (
+            <p className="text-sm text-center" style={{ ...BODY_FONT, color: C_GRAY }}>
+              {slide.activitySubtask}
+            </p>
+          )}
+        </div>
+      </div>
+    </SlideCanvas>
+  );
+}
+
+function SlideSkeleton() {
+  const cards = [
+    { delay: "0s", scale: 1, zIndex: 4, opacity: 1 },
+    { delay: "0.15s", scale: 0.97, zIndex: 3, opacity: 0.75 },
+    { delay: "0.3s", scale: 0.94, zIndex: 2, opacity: 0.5 },
+    { delay: "0.45s", scale: 0.91, zIndex: 1, opacity: 0.3 },
+  ];
+
+  return (
+    <div className="flex flex-col items-center">
+      <style>{`
+        @keyframes float-card {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
+
+      <div className="w-full max-w-5xl" style={{ aspectRatio: "16 / 9", position: "relative" }}>
+        {cards.map((card, i) => (
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "0.5rem",
+              overflow: "hidden",
+              backgroundColor: C_BG,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+              transform: `scale(${card.scale})`,
+              transformOrigin: "bottom center",
+              zIndex: card.zIndex,
+              opacity: card.opacity,
+              animation: `float-card 2s ease-in-out infinite`,
+              animationDelay: card.delay,
+            }}
+          >
+            <div style={{ height: 4, backgroundColor: C_RED, opacity: 0.4 }} />
+            <div style={{ padding: "2.5rem 4rem", height: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div style={{ height: 24, borderRadius: 4, width: "50%", backgroundColor: "rgba(38,25,17,0.1)" }} />
+                <div style={{ height: 12, borderRadius: 4, width: "28%", backgroundColor: "rgba(38,25,17,0.07)" }} />
+                <div style={{ height: 1, marginTop: 8, backgroundColor: C_RED, opacity: 0.3 }} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", flex: 1 }}>
+                {[1, 0.9, 0.8, 0.65].map((w, j) => (
+                  <div key={j} style={{ height: 12, borderRadius: 4, width: `${w * 100}%`, backgroundColor: "rgba(38,25,17,0.07)" }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="w-full max-w-5xl px-1 pt-2 flex items-center gap-2" style={{ marginTop: "0.5rem" }}>
         <Loader2 className="w-3 h-3 animate-spin" style={{ color: C_RED }} />
         <span className="text-xs" style={{ color: C_RED }}>Generating slide...</span>
       </div>
@@ -736,11 +1188,15 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
           </div>
 
           <div className="bg-stone-400 rounded-xl px-16 py-14 space-y-8">
-            {slides!.map((slide, i) =>
-              slide.type === "title"
-                ? <TitleSlide key={i} slide={slide} index={i} total={isGenerating ? expectedCount : slides!.length} />
-                : <ContentSlide key={i} slide={slide} index={i} total={isGenerating ? expectedCount : slides!.length} />
-            )}
+            {slides!.map((slide, i) => {
+              const props = { key: i, slide, index: i, total: isGenerating ? expectedCount : slides!.length };
+              if (slide.type === "title")      return <TitleSlide      {...props} />;
+              if (slide.type === "quote")      return <QuoteSlide      {...props} />;
+              if (slide.type === "stat")       return <StatSlide       {...props} />;
+              if (slide.type === "two-column") return <TwoColumnSlide  {...props} />;
+              if (slide.type === "activity")   return <ActivitySlide   {...props} />;
+              return <ContentSlide {...props} />;
+            })}
             {isGenerating && <SlideSkeleton />}
           </div>
         </div>

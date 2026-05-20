@@ -17,6 +17,7 @@ import VideoRegenerateModal from "./VideoRegenerateModal";
 import ContextMenu, { type ContextMenuState } from "./ContextMenu";
 import RegenerateImageDialog from "./RegenerateImageDialog";
 import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
+import SlideshowLoadingAnimation from "./SlideshowLoadingAnimation";
 import type { FrameShape } from "./frames";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
@@ -144,6 +145,10 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [generating, setGenerating] = useState<{ current: number; total: number; title?: string; slideTitles?: string[] } | null>(
     generationParams ? { current: 0, total: generationParams.slideCount ?? 0 } : null,
   );
+  // True from the moment generationParams arrives until the first SSE "meta" event,
+  // meaning OpenAI has responded. During this window a full-screen overlay is shown
+  // so the user never sees a blank slide + spinner during the AI wait.
+  const [preMeta, setPreMeta] = useState(!!generationParams);
   // Bumped each time we persist a new AI image to the cross-project gallery
   // (Supabase `generated_images`). Triggers a refetch in the Sidebar.
   const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
@@ -1866,6 +1871,79 @@ export default function Editor({ presentation, generationParams }: Props) {
     let cancelled = false;
     const controller = new AbortController();
 
+    // Reveal queue — buffers incoming "slide" SSE events and surfaces them one
+    // at a time with a 500 ms stagger. Without this, OpenAI's structured-output
+    // response arrives in a single burst and all slides would appear simultaneously.
+    type SlidePayloadType = {
+      index: number; total: number; contentTotal?: number;
+      slide: SlideJSON; title?: string;
+      galleryImage?: { prompt: string; style?: string; dataUrl: string };
+    };
+    const reveal = {
+      queue: [] as SlidePayloadType[],
+      timer: null as ReturnType<typeof setTimeout> | null,
+    };
+
+    function processRevealItem() {
+      const p = reveal.queue.shift();
+      if (!p || cancelled) { reveal.timer = null; return; }
+      if (p.galleryImage) {
+        saveGeneratedImage(p.galleryImage)
+          .then(() => setGalleryRefreshTrigger((n) => n + 1))
+          .catch((err) => console.warn("Gallery save failed:", err));
+      }
+      setSlides((prev) => {
+        const next = prev.slice();
+        const placeholderId = prev[p.index]?.id ?? newId("s");
+        const replaced: SlideState = {
+          id: placeholderId,
+          shapes: p.slide.shapes ?? [],
+          texts: p.slide.texts ?? [],
+          images: p.slide.images ?? [],
+          background: p.slide.background ?? "#ffffff",
+          backgroundImage: p.slide.backgroundImage,
+          backgroundImageWidth: p.slide.backgroundImageWidth,
+          backgroundImageHeight: p.slide.backgroundImageHeight,
+          backgroundOffsetX: p.slide.backgroundOffsetX,
+          backgroundOffsetY: p.slide.backgroundOffsetY,
+          backgroundScale: p.slide.backgroundScale,
+          backgroundImagePending: p.slide.backgroundImagePending,
+          skeleton: p.slide.skeleton,
+          themeId: p.slide.themeId,
+        };
+        if (p.index < next.length) next[p.index] = replaced;
+        else next.push(replaced);
+        const streamingCap = p.contentTotal ?? p.total;
+        if (next.length < streamingCap && p.index + 1 >= next.length) {
+          next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+        }
+        slidesRef.current = next;
+        return next;
+      });
+      setActiveIndex(p.index);
+      setGenerating((prev) => ({
+        current: Math.min(p.index + 1, p.total),
+        total: p.total,
+        title: p.title,
+        slideTitles: prev?.slideTitles,
+      }));
+      scheduleSave();
+      if (reveal.queue.length > 0) {
+        reveal.timer = setTimeout(processRevealItem, 500);
+      } else {
+        reveal.timer = null;
+      }
+    }
+
+    function enqueueSlide(p: SlidePayloadType) {
+      reveal.queue.push(p);
+      if (!reveal.timer) {
+        // First item: short lead-in so the placeholder has time to mount and
+        // the entrance animation can play; subsequent items at 500 ms each.
+        reveal.timer = setTimeout(processRevealItem, 100);
+      }
+    }
+
     (async () => {
       try {
         const r = await fetch("/api/generate-slideshow", {
@@ -1900,6 +1978,7 @@ export default function Editor({ presentation, generationParams }: Props) {
             if (eventName === "meta") {
               const p = payload as { title?: string; total?: number; slideTitles?: string[] };
               if (p.title) setTitle(p.title);
+              setPreMeta(false);
               if (typeof p.total === "number" && p.total > 0) {
                 // Seed just ONE placeholder for slot 0 so the tray starts small.
                 // Each `slide` event below will replace the current placeholder
@@ -1919,77 +1998,9 @@ export default function Editor({ presentation, generationParams }: Props) {
                 first = false;
               }
             } else if (eventName === "slide") {
-              const p = payload as {
-                index: number;
-                total: number;
-                // Streaming-only content slide count. Server sets this to
-                // specs.length so we know when to STOP appending empty
-                // placeholders — audio/video extras come as their own events.
-                contentTotal?: number;
-                slide: SlideJSON;
-                title?: string;
-                galleryImage?: { prompt: string; style?: string; dataUrl: string };
-              };
-              // Persist AI-generated slide images into the cross-project gallery
-              // so they can be searched and re-used on other slideshows. Web
-              // (Pixabay) images are skipped server-side.
-              if (p.galleryImage) {
-                saveGeneratedImage(p.galleryImage)
-                  .then(() => setGalleryRefreshTrigger((n) => n + 1))
-                  .catch((err) => console.warn("Gallery save failed:", err));
-              }
-              setSlides((prev) => {
-                const next = prev.slice();
-                const placeholderId = prev[p.index]?.id ?? newId("s");
-                const replaced: SlideState = {
-                  id: placeholderId,           // preserve id so React keeps the DOM node + animates
-                  shapes: p.slide.shapes ?? [],
-                  texts: p.slide.texts ?? [],
-                  images: p.slide.images ?? [],
-                  background: p.slide.background ?? "#ffffff",
-                  backgroundImage: p.slide.backgroundImage,
-                  backgroundImageWidth: p.slide.backgroundImageWidth,
-                  backgroundImageHeight: p.slide.backgroundImageHeight,
-                  backgroundOffsetX: p.slide.backgroundOffsetX,
-                  backgroundOffsetY: p.slide.backgroundOffsetY,
-                  backgroundScale: p.slide.backgroundScale,
-                  backgroundImagePending: p.slide.backgroundImagePending,
-                  // Carry the skeleton + deck-level themeId through so we can
-                  // re-render under a different theme later.
-                  skeleton: p.slide.skeleton,
-                  themeId: p.slide.themeId,
-                };
-                if (p.index < next.length) next[p.index] = replaced;
-                else next.push(replaced);
-                // Grow the deck progressively: as soon as we have a real slide
-                // for slot N and there are more content slides still streaming,
-                // append one fresh placeholder so the user sees the next slot's
-                // loader pop in. Cap at `contentTotal` (the streaming-only
-                // count) — past that, audio/video events insert their own
-                // placeholders so we'd otherwise end up with a trailing empty
-                // slide.
-                const streamingCap = p.contentTotal ?? p.total;
-                if (next.length < streamingCap && p.index + 1 >= next.length) {
-                  next.push({
-                    id: newId("s"),
-                    shapes: [],
-                    texts: [],
-                    images: [],
-                    background: "#ffffff",
-                  });
-                }
-                slidesRef.current = next;
-                return next;
-              });
-              setActiveIndex(p.index);
-              // Advance the "currently generating" pointer to the next slide.
-              setGenerating((prev) => ({
-                current: Math.min(p.index + 1, p.total),
-                total: p.total,
-                title: p.title,
-                slideTitles: prev?.slideTitles,
-              }));
-              scheduleSave();
+              // Push into the reveal queue so slides appear one at a time with
+              // a 500 ms stagger (processRevealItem handles setSlides, etc.).
+              enqueueSlide(payload as SlidePayloadType);
             } else if (eventName === "slide-image") {
               const p = payload as {
                 index: number;
@@ -2340,10 +2351,12 @@ export default function Editor({ presentation, generationParams }: Props) {
               scheduleSave();
             } else if (eventName === "complete") {
               setGenerating(null);
+              setPreMeta(false);
             } else if (eventName === "error") {
               const p = payload as { message?: string };
               console.error("Stream error:", p.message);
               setGenerating(null);
+              setPreMeta(false);
             }
           }
         }
@@ -2351,12 +2364,14 @@ export default function Editor({ presentation, generationParams }: Props) {
         if (!cancelled) {
           console.error("Generation stream failed", err);
           setGenerating(null);
+          setPreMeta(false);
         }
       }
     })();
 
     return () => {
       cancelled = true;
+      if (reveal.timer) clearTimeout(reveal.timer);
       controller.abort();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2383,7 +2398,19 @@ export default function Editor({ presentation, generationParams }: Props) {
   const slideEntries: SlideEntry[] = slides.map((s) => ({ id: s.id, slide: s }));
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "#F1EFE3" }}>
+    <div className="relative flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "#F1EFE3" }}>
+      {/* Full-screen overlay shown while waiting for OpenAI to respond (pre-meta phase).
+          Covers the whole editor so the user sees an engaging animation rather than
+          a blank slide + spinner during the 10-20 second AI wait. */}
+      {preMeta && (
+        <div
+          className="absolute inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none"
+          style={{ backgroundColor: "#F1EFE3" }}
+        >
+          <SlideshowLoadingAnimation label="Planning your deck…" />
+          <p className="text-xs text-gray-400 mt-3">This usually takes about 15 seconds</p>
+        </div>
+      )}
       <EditorTopBar
         title={title}
         onTitleChange={handleTitleChange}

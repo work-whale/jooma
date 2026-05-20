@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import MiniSlide from "./MiniSlide";
 import type { SlideJSON } from "@/app/lib/presentations";
@@ -30,6 +30,21 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
   // slide, slides.length = after the last slide.
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
+  // Track which slide IDs are "newly added" so the entrance animation fires
+  // only on new slides, not on every re-render during generation.
+  const seenIdsRef = useRef<Set<string>>(new Set(slides.map((s) => s.id)));
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const newIds = slides.map((s) => s.id).filter((id) => !seenIdsRef.current.has(id));
+    if (newIds.length > 0) {
+      newIds.forEach((id) => seenIdsRef.current.add(id));
+      setAnimatingIds(new Set(newIds));
+      const t = setTimeout(() => setAnimatingIds(new Set()), 400);
+      return () => clearTimeout(t);
+    }
+  }, [slides]);
+
   // Reordering is disabled while the AI is streaming new slides — placeholders
   // would shift under their incoming events otherwise.
   const reorderingDisabled = generatingIndex !== undefined;
@@ -47,10 +62,11 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
         const isActiveGenerate = generatingIndex !== undefined && i === generatingIndex;
         const canDrag = !reorderingDisabled && !!onReorder;
         const isBeingDragged = dragIndex === i;
+        const isAnimating = animatingIds.has(entry.id);
         return (
           <div
             key={entry.id}
-            className={`relative group shrink-0 flex items-center ${generatingIndex !== undefined ? "jooma-thumb-pop" : ""}`}
+            className={`relative group shrink-0 flex items-center ${isAnimating ? "jooma-thumb-pop" : ""}`}
             // Drop position indicator (left side) — a vertical violet bar at the gap.
             onDragOver={(e) => {
               if (!canDrag || dragIndex === null) return;

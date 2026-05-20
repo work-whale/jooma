@@ -3,6 +3,7 @@
 import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, TopicField, LearningObjectiveField, AdditionalContextField, OutputDetailField, AbilityLevelField, type OutputDetail } from "@/app/components/fields";
+import GenerateOutlineButton from "@/app/components/ui/GenerateOutlineButton";
 import { toTitleCase } from "@/app/lib/formOptions";
 import ResultPanel from "@/app/components/ResultPanel";
 import Card from "@/app/components/ui/Card";
@@ -96,7 +97,19 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
             <OutputDetailField value={outputDetail} onChange={setOutputDetail} />
             <AbilityLevelField value={abilityLevel} onChange={setAbilityLevel} />
 
-            <AdditionalContextField value={additionalInfo} onChange={setAdditionalInfo} />
+            <AdditionalContextField
+              value={additionalInfo}
+              onChange={setAdditionalInfo}
+              rows={4}
+              labelSlot={
+                <GenerateOutlineButton
+                  topic={topic}
+                  subject={subject}
+                  yearGroup={mixed ? "Mixed" : yearGroup}
+                  onGenerate={setAdditionalInfo}
+                />
+              }
+            />
 
             <div className="flex gap-3">
               <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />

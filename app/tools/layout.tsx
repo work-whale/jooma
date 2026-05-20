@@ -24,6 +24,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/tools/quiz-generator": "Quiz Generator",
   "/tools/report-writer": "Report Writer",
   "/tools/smart-targets": "SMART Targets",
+  "/tools/lesson-slideshow": "Lesson Slideshow Generator",
   "/tools/cpd-slideshow": "CPD Slideshow Generator",
   "/tools/policy-generator": "Policy Generator",
   "/tools/one-page-profile": "One Page Support Profile",
