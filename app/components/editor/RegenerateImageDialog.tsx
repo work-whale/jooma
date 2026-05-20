@@ -14,11 +14,16 @@ const STYLES: { id: "photographic" | "illustration" | "storybook" | "painted" | 
 
 interface Props {
   initialPrompt?: string;
+  /** Width/height of the image being regenerated. Passed through to the API
+   *  so the AI picks square / landscape / portrait to match the slide frame
+   *  the new image is replacing. */
+  frameWidth?: number;
+  frameHeight?: number;
   onClose: () => void;
   onGenerated: (result: { dataUrl: string; prompt: string; style: string }) => void;
 }
 
-export default function RegenerateImageDialog({ initialPrompt = "", onClose, onGenerated }: Props) {
+export default function RegenerateImageDialog({ initialPrompt = "", frameWidth, frameHeight, onClose, onGenerated }: Props) {
   const [prompt, setPrompt] = useState(initialPrompt);
   const [style, setStyle] = useState<typeof STYLES[number]["id"]>("photographic");
   const [busy, setBusy] = useState(false);
@@ -38,7 +43,7 @@ export default function RegenerateImageDialog({ initialPrompt = "", onClose, onG
       const r = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), style }),
+        body: JSON.stringify({ prompt: prompt.trim(), style, frameWidth, frameHeight }),
       });
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));

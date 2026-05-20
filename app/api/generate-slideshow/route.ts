@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout, type ColorScheme } from "@/app/lib/slideshow-layouts";
 import { getTheme } from "@/app/lib/slideshowThemes";
-import { generateAIImage, type ImageStyle } from "@/app/lib/ai-image";
+import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
 import type { SlideJSON } from "@/app/lib/presentations";
 
 export const maxDuration = 120; // AI image gen can push past the default
@@ -23,6 +23,22 @@ interface RequestBody {
   imageSource?: ImageSource;
   imageStyle?: ImageStyle;
   themeId?: string;
+  /** Text extracted from a teacher-supplied resource (URL or uploaded file)
+   *  via /api/extract-resource. Anchors the AI to the actual lesson content. */
+  resourceText?: string;
+  /** Short label for the resource shown in the prompt header ("report.pdf",
+   *  "wikipedia.org/wiki/..."). */
+  resourceSource?: string;
+  /** Curriculum alignment from the GenerateModal — country, named curriculum,
+   *  grade, subject, strand. Used purely as AI prompt context so the deck
+   *  targets the right area. */
+  curriculum?: {
+    countryName: string;
+    curriculumName: string;
+    grade: string;
+    subject: string;
+    strand: string;
+  };
 }
 
 // ── OpenAI structured-output schema ──────────────────────────────────────
@@ -200,10 +216,11 @@ async function fetchImageForSlide(
   query: string,
   source: ImageSource,
   style: ImageStyle,
+  orientation: AIImageOrientation,
   index: number,
 ): Promise<(FetchedImage & { provider: "ai" | "web" }) | null> {
   const tryAI = async () => {
-    const r = await generateAIImage(query, style);
+    const r = await generateAIImage(query, style, orientation);
     return r ? { ...r, provider: "ai" as const } : null;
   };
   const tryWeb = async () => {
@@ -216,6 +233,22 @@ async function fetchImageForSlide(
   return index % 2 === 0
     ? (await tryAI()) ?? tryWeb()
     : (await tryWeb()) ?? tryAI();
+}
+
+// Map a slide's layout to the orientation that best fits where the AI image
+// will land. Anything that occupies the whole slide (title cover hero,
+// image-full) is landscape — the slide canvas is 1280×720 (1.78). Anything
+// that fits in a side panel (image-left/right, promoted bullets/body) lands
+// in a ~560×600 frame (0.93), which is best generated as square so the
+// composition doesn't get cropped.
+function orientationForLayout(layout: SlideLayout): AIImageOrientation {
+  switch (layout) {
+    case "title-cover":
+    case "image-full":
+      return "landscape";
+    default:
+      return "square";
+  }
 }
 
 // ── Prompt builder ───────────────────────────────────────────────────────
@@ -236,11 +269,26 @@ function buildPrompt(body: RequestBody): string {
   const extraLine = body.additionalInstructions?.trim()
     ? `Additional instructions from the teacher: ${body.additionalInstructions.trim()}`
     : "";
-  const themeLine = `Visual theme: "${theme.name}". ${theme.promptHint}`;
-  // The renderer treats "light" colorScheme as "use the theme's natural palette",
-  // which for the Dark theme means a dark background + light text. "dark" and
-  // "accent" are reserved for sprinkled contrast slides.
-  const preferredSchemeLine = `Use colorScheme "light" on MOST slides (the renderer applies the theme's natural palette — for the Dark theme this still produces dark slides). Sprinkle one or two slides with "dark" or "accent" for visual contrast.`;
+  // Curriculum alignment — only emitted when the user toggled it on in the
+  // generate modal AND picked subject + strand. Tells the AI to ground the
+  // deck in a specific syllabus area.
+  const curriculumLine = body.curriculum && body.curriculum.subject && body.curriculum.strand
+    ? `Curriculum alignment: ${body.curriculum.countryName} · ${body.curriculum.curriculumName}${body.curriculum.grade ? " · " + body.curriculum.grade : ""} · subject "${body.curriculum.subject}", strand "${body.curriculum.strand}". Anchor the deck's vocabulary, examples, and depth in this strand — DO NOT drift into other strands or subjects.`
+    : "";
+  // Teacher-supplied resource (URL / PDF / DOCX / TXT) extracted server-side.
+  // Pasted verbatim into the prompt as base material so the AI uses the
+  // teacher's actual content rather than improvising from the topic alone.
+  const resourceBlock = body.resourceText?.trim()
+    ? `\n\n--- LESSON MATERIAL (provided by the teacher${body.resourceSource ? " from " + body.resourceSource : ""}) ---\n${body.resourceText.trim()}\n--- END MATERIAL ---\n\nBase the deck's facts, examples, and structure on this material. Where the material is silent on something, you may add general context — but the material's content is the source of truth.`
+    : "";
+  // Themes are now purely a visual skin (background, fonts, colors) applied
+  // at render time — they no longer bias the AI's word choices, tone, or
+  // colour palette. The same skeleton slides should look right under every
+  // theme. The renderer applies the theme's natural background and palette to
+  // every slide — there is no per-slide "dark" / "accent" sprinkle anymore.
+  // Just set colorScheme to "light" for every slide; the renderer ignores it
+  // either way, but keeping the field in the schema avoids touching the AI's
+  // response contract.
   const accentLine = `Use the theme's accent colour "${theme.palette.accent}" as accentColor on every slide for consistency.`;
   const objectivesLine = body.includeObjectives
     ? `- Make slide 2 a "title-bullets" layout titled "Learning objectives" with 3-5 bullets describing what pupils will know or be able to do.`
@@ -253,8 +301,9 @@ function buildPrompt(body: RequestBody): string {
 
 ${yearLine}
 ${readingLine}
-${themeLine}
+${curriculumLine}
 ${extraLine}
+${resourceBlock}
 
 You're a senior presentation designer. Plan a deck that varies layouts so it doesn't feel monotonous. Use this layout vocabulary:
 - "title-cover": opener slide. Use ONCE as slide 1.
@@ -276,7 +325,7 @@ Design rules:
 - Only use "title-bullets" or "title-body" when an image truly does not fit (e.g. an objectives list or vocab table). Even then, supply an imageQuery — the renderer will fall back gracefully if no image is found.
 - Sprinkle 1 big-stat and 1 timeline/comparison-grid when the topic supports them — they make decks feel professional.
 - ${accentLine}
-- ${preferredSchemeLine} Sprinkle one or two slides with a contrasting scheme for emphasis.
+- Set colorScheme to "light" on EVERY slide. Do not vary it — the renderer applies the deck's single chosen theme to every slide so backgrounds and text colour are uniform.
 - All non-applicable fields MUST be empty string ("") or empty array ([]) — never omit fields.
 - imageQuery is REQUIRED for: title-cover, image-left, image-right, image-full. Set it on bullet/body slides too whenever a relevant photo could enrich the slide.
 - The title-cover slide (slide 1) MUST include a vivid, atmospheric imageQuery for its background. Think hero photo — not a generic concept but a concrete scene that evokes the topic.
@@ -407,12 +456,30 @@ export async function POST(req: NextRequest) {
           timelineItems: s.timelineItems.length ? s.timelineItems : undefined,
           imagePending: !!s.imageQuery,
         }));
+        // Extract the layout-and-content half of each SlideSpec so the client
+        // can re-render under a different theme later. We strip per-render
+        // fields (image data + accent) because those come from theme/fetch.
+        const toSkeleton = (s: SlideSpec) => {
+          const { imageDataUrl: _idu, imageWidth: _iw, imageHeight: _ih, imagePending: _ip, accentColor: _ac, ...rest } = s;
+          return rest;
+        };
+
         for (let idx = 0; idx < specs.length; idx++) {
           if (closed) break;
           const slide: SlideJSON = renderSlide(specs[idx], theme);
+          // Carry the skeleton + active theme on slide 0 so re-theming is
+          // possible from just the saved deck JSON.
+          slide.skeleton = toSkeleton(specs[idx]);
+          if (idx === 0) slide.themeId = theme.id;
           send("slide", {
             index: idx,
+            // `total` is the FINAL deck size (content + audio + video) — what
+            // the progress bar should show.
             total: finalTotal,
+            // `contentTotal` is just the streaming-slide count. The client
+            // uses this to stop pushing empty placeholders after the last AI
+            // slide; audio/video extras arrive as their own placeholder events.
+            contentTotal: specs.length,
             slide,
             title: specs[idx].title,
           });
@@ -424,7 +491,13 @@ export async function POST(req: NextRequest) {
         // background-image vs image-layer placement).
         const imageJobs = specs.map((spec, idx) => (async () => {
           if (!spec.imageQuery || closed) return;
-          const img = await fetchImageForSlide(spec.imageQuery, imageSource, imageStyle, idx);
+          const img = await fetchImageForSlide(
+            spec.imageQuery,
+            imageSource,
+            imageStyle,
+            orientationForLayout(spec.layout),
+            idx,
+          );
           if (closed) return;
           if (!img) {
             // No image came back — clear the pending flag so the shimmer stops.
@@ -464,7 +537,11 @@ export async function POST(req: NextRequest) {
           send("audio-placeholder", {
             placeholderId: audioPlaceholderId,
             targetIndex: audioTargetIndex,
-            slideBg: theme.palette.text,
+            // Use the theme's natural background so the audio slide matches
+            // the rest of the deck. The accent-coloured player panel still
+            // pops against it; slide-level text uses palette.text for contrast.
+            slideBg: theme.palette.background,
+            slideTextColor: theme.palette.text,
             panelBg: theme.palette.accent,
             panelInk: theme.palette.overlayText,
             playBg: theme.palette.background,
@@ -498,11 +575,10 @@ export async function POST(req: NextRequest) {
                   playBg: palette.background,
                   playInk: palette.text,
                   headingFont: theme.fonts.heading,
-                  // Background colour for the dedicated audio slide.
-                  // Use the theme's "text" colour as the slide bg so the
-                  // accent-coloured audio panel pops against it (works for
-                  // both light and dark themes).
-                  slideBg: palette.text,
+                  // Match the rest of the deck's background. Slide-level
+                  // headings/desc/questions use slideTextColor for contrast.
+                  slideBg: palette.background,
+                  slideTextColor: palette.text,
                 },
               });
             } else {
@@ -526,9 +602,11 @@ export async function POST(req: NextRequest) {
           send("video-placeholder", {
             placeholderId: videoPlaceholderId,
             targetIndex: videoTargetIndex,
-            slideBg: theme.palette.text,
+            // Same as content slides — single theme background. Heading still
+            // pops in the accent colour; subtitle uses the muted palette.
+            slideBg: theme.palette.background,
             titleColor: theme.palette.accent,
-            mutedColor: theme.palette.overlayText,
+            mutedColor: theme.palette.muted,
             accent: theme.palette.accent,
             headingFont: theme.fonts.heading,
           });
@@ -541,7 +619,14 @@ export async function POST(req: NextRequest) {
                 topic: body.topic,
                 year: body.year,
                 readingLevel: body.readingLevel,
-                length: body.youtubeLength ?? "any",
+                // Default to medium-length (4-20 min) rather than "any" so the
+                // YouTube API itself filters out Shorts and lecture-length
+                // videos. Users can still override via the modal.
+                length: body.youtubeLength ?? "medium",
+                // Pass the deck's title + slide titles so the search query
+                // matches what the presentation actually covers.
+                deckTitle: parsed.title,
+                slideTitles: parsed.slides.map((s) => s.title).slice(0, 8),
               }),
             });
             if (ytRes.ok) {
@@ -560,12 +645,11 @@ export async function POST(req: NextRequest) {
                   slideHeading: yt.slideHeading ?? `WATCH: ${body.topic.toUpperCase()}`,
                   slideSubtitle: yt.slideSubtitle ?? "Let's watch this together to deepen our understanding.",
                 },
-                // Scene-styled slide: dramatic dark/themed background with cream
-                // overlay text and the heading in the theme accent. Mirrors the
-                // pattern used by the audio activity slide.
-                slideBg: theme.palette.text,
+                // Match the rest of the deck: single theme bg, heading in
+                // accent, subtitle in muted.
+                slideBg: theme.palette.background,
                 titleColor: theme.palette.accent,
-                mutedColor: theme.palette.overlayText,
+                mutedColor: theme.palette.muted,
                 accent: theme.palette.accent,
                 headingFont: theme.fonts.heading,
               });

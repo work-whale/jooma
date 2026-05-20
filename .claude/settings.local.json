@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "mcp__plugin_supabase_supabase__apply_migration"
     ]
   }
 }

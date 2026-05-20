@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Undo2, Redo2, Download, ArrowLeft } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Undo2, Redo2, Download, ArrowLeft, Palette, Check } from "lucide-react";
+import { SLIDESHOW_THEMES } from "@/app/lib/slideshowThemes";
 
 interface Props {
   title: string;
@@ -12,6 +14,8 @@ interface Props {
   isExporting: boolean;
   saveStatus: "idle" | "saving" | "saved" | "error";
   disableHistory?: boolean;
+  themeId?: string;
+  onThemeChange?: (id: string) => void;
 }
 
 const iconBtn = "p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40";
@@ -25,7 +29,26 @@ export default function EditorTopBar({
   isExporting,
   saveStatus,
   disableHistory,
+  themeId,
+  onThemeChange,
 }: Props) {
+  const [themeOpen, setThemeOpen] = useState(false);
+  const themeBtnRef = useRef<HTMLButtonElement>(null);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+  const activeTheme = SLIDESHOW_THEMES.find((t) => t.id === themeId) ?? SLIDESHOW_THEMES[0];
+
+  useEffect(() => {
+    if (!themeOpen) return;
+    const h = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (themeMenuRef.current?.contains(t)) return;
+      if (themeBtnRef.current?.contains(t)) return;
+      setThemeOpen(false);
+    };
+    window.addEventListener("mousedown", h);
+    return () => window.removeEventListener("mousedown", h);
+  }, [themeOpen]);
+
   return (
     <div
       className="h-14 shrink-0 flex items-center justify-between px-4 border-b"
@@ -75,6 +98,54 @@ export default function EditorTopBar({
         >
           <Redo2 className="w-4 h-4" />
         </button>
+        <div className="w-px h-6 bg-gray-300 mx-2" />
+        {onThemeChange && (
+          <div className="relative">
+            <button
+              ref={themeBtnRef}
+              type="button"
+              onClick={() => setThemeOpen((v) => !v)}
+              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              title="Switch theme"
+            >
+              <Palette className="w-3.5 h-3.5" />
+              <span
+                className="inline-block w-3 h-3 rounded-sm border"
+                style={{ backgroundColor: activeTheme.palette.background, borderColor: "#DAD8D0" }}
+              />
+              <span>{activeTheme.name}</span>
+            </button>
+            {themeOpen && (
+              <div
+                ref={themeMenuRef}
+                className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg p-1 z-50"
+              >
+                {SLIDESHOW_THEMES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => { onThemeChange(t.id); setThemeOpen(false); }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-left rounded-md hover:bg-gray-50"
+                  >
+                    <span
+                      className="inline-block w-5 h-5 rounded-md border shrink-0"
+                      style={{ backgroundColor: t.palette.background, borderColor: "#DAD8D0" }}
+                    />
+                    <span
+                      className="inline-block w-1.5 h-5 rounded-sm shrink-0"
+                      style={{ backgroundColor: t.palette.accent }}
+                    />
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-medium text-gray-800 truncate">{t.name}</span>
+                      <span className="block text-[10px] text-gray-500 truncate">{t.description}</span>
+                    </span>
+                    {t.id === activeTheme.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="w-px h-6 bg-gray-300 mx-2" />
         <button
           onClick={onExport}

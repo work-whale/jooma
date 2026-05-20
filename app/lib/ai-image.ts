@@ -27,27 +27,67 @@ const STYLE_PROMPTS: Record<ImageStyle, string> = {
   "comic-book": "Comic book illustration, bold outlines, halftone shading, vibrant colors",
 };
 
-// Tries gpt-image-1 first (better quality, supports 1536x1024). Falls back to
-// DALL·E 3 (1792x1024) if the org isn't verified for gpt-image-1.
+// AI image orientations supported by both gpt-image-1 and dall-e-3.
+//   square    — slide image-left/right frames (~0.93 ratio) and any frame that
+//               sits between 0.77 and 1.30 (mostly square).
+//   landscape — image-full slides and the title-cover hero (1.78 ratio).
+//   portrait  — for tall frames if we ever introduce them; mapped from <0.77.
+export type AIImageOrientation = "square" | "landscape" | "portrait";
+
+/** Pick the orientation that best matches a frame's width / height ratio. */
+export function orientationForFrame(width: number, height: number): AIImageOrientation {
+  const r = width / Math.max(1, height);
+  if (r >= 1.30) return "landscape";
+  if (r <= 0.77) return "portrait";
+  return "square";
+}
+
+// Tries gpt-image-1 first (better quality). Falls back to DALL·E 3 if the org
+// isn't verified for gpt-image-1. Picks the size for each model that matches
+// the requested orientation so the AI doesn't generate a landscape image for
+// a roughly-square slide frame and vice versa.
 export async function generateAIImage(
   query: string,
   style: ImageStyle = "photographic",
+  orientation: AIImageOrientation = "landscape",
 ): Promise<GeneratedImage | null> {
   if (!query.trim()) return null;
   const client = getOpenAI();
-  const prompt = `${STYLE_PROMPTS[style]}. Subject: ${query}. Horizontal composition, suitable for a presentation slide.`;
+  const composition =
+    orientation === "square"
+      ? "Square composition, balanced framing, centred subject"
+      : orientation === "portrait"
+      ? "Vertical / portrait composition, tall framing"
+      : "Horizontal / landscape composition, wide framing";
+  const prompt = `${STYLE_PROMPTS[style]}. Subject: ${query}. ${composition}, suitable for a presentation slide.`;
 
-  const attempts: Array<{
-    model: "gpt-image-1" | "dall-e-3";
-    size: "1536x1024" | "1792x1024";
-    w: number; h: number;
-    quality: "medium" | "standard";
-  }> = [
-    { model: "gpt-image-1", size: "1536x1024", w: 1536, h: 1024, quality: "medium" },
-    { model: "dall-e-3",    size: "1792x1024", w: 1792, h: 1024, quality: "standard" },
-  ];
+  // Supported sizes per model:
+  //   gpt-image-1 → 1024x1024 (sq), 1024x1536 (port), 1536x1024 (land)
+  //   dall-e-3   → 1024x1024 (sq), 1024x1792 (port), 1792x1024 (land)
+  const sizes: Record<
+    AIImageOrientation,
+    Array<{
+      model: "gpt-image-1" | "dall-e-3";
+      size: "1024x1024" | "1536x1024" | "1024x1536" | "1792x1024" | "1024x1792";
+      w: number; h: number;
+      quality: "medium" | "standard";
+    }>
+  > = {
+    square: [
+      { model: "gpt-image-1", size: "1024x1024", w: 1024, h: 1024, quality: "medium" },
+      { model: "dall-e-3",    size: "1024x1024", w: 1024, h: 1024, quality: "standard" },
+    ],
+    landscape: [
+      { model: "gpt-image-1", size: "1536x1024", w: 1536, h: 1024, quality: "medium" },
+      { model: "dall-e-3",    size: "1792x1024", w: 1792, h: 1024, quality: "standard" },
+    ],
+    portrait: [
+      { model: "gpt-image-1", size: "1024x1536", w: 1024, h: 1536, quality: "medium" },
+      { model: "dall-e-3",    size: "1024x1792", w: 1024, h: 1792, quality: "standard" },
+    ],
+  };
 
-  for (const att of attempts) {
+  for (const att of sizes[orientation]) {
     try {
       // Newer OpenAI SDKs reject `response_format` for both gpt-image-1 and
       // dall-e-3, so we don't pass it — we fall back to fetching the returned

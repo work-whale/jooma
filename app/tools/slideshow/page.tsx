@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, Plus, Monitor, LayoutGrid, Trash2, Sparkles } from "lucide-react";
-import { listPresentations, deletePresentation, type Presentation, type SlideJSON } from "@/app/lib/presentations";
+import { listPresentations, deletePresentation, type PresentationListItem, type SlideJSON } from "@/app/lib/presentations";
 import MiniSlide from "@/app/components/editor/MiniSlide";
 import GenerateModal from "@/app/components/slideshow/GenerateModal";
 
@@ -37,11 +37,11 @@ function formatDate(iso: string) {
 }
 
 export default function SlideshowListPage() {
-  const [presentations, setPresentations] = useState<Presentation[]>([]);
+  const [presentations, setPresentations] = useState<PresentationListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Presentation | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PresentationListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
 
@@ -203,7 +203,7 @@ export default function SlideshowListPage() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map((p) => {
-              const firstSlide = p.slides?.[0];
+              const firstSlide = p.first_slide ?? undefined;
               return (
                 // Link is a SIBLING overlay (not a parent), so clicking the delete
                 // button never reaches the anchor element — keeps nextjs-toploader silent.
@@ -232,7 +232,7 @@ export default function SlideshowListPage() {
                         {p.title}
                       </p>
                       <p className="text-xs text-gray-400 mt-1.5">
-                        {p.slides.length} slide{p.slides.length !== 1 ? "s" : ""} · {formatDate(p.updated_at)}
+                        {p.slide_count} slide{p.slide_count !== 1 ? "s" : ""} · {formatDate(p.updated_at)}
                       </p>
                     </div>
                   </div>

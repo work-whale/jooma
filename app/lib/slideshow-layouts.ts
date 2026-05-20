@@ -66,52 +66,20 @@ interface Theme {
   accent: string;
 }
 
-function themeFor(scheme: ColorScheme, accent: string, base?: SlideshowTheme): Theme {
-  // If a user-picked theme is provided, use its palette as the foundation.
-  // The per-slide colorScheme then chooses between bg/dark/accent variants.
+function themeFor(_scheme: ColorScheme, accent: string, base?: SlideshowTheme): Theme {
+  // Every slide uses the theme's natural palette — no per-slide bg variation.
+  // The colorScheme parameter is kept on SlideSpec for backwards compatibility
+  // with existing decks but is intentionally ignored here.
   if (base) {
-    switch (scheme) {
-      case "dark": {
-        // When inverting to the dark scheme, the new bg is the theme's text
-        // colour. If the theme's accent matches that (e.g. Mono has black for
-        // both text and accent), the accent becomes invisible against the new
-        // bg, so we swap to the original background colour for contrast.
-        const newBg = base.palette.text;
-        const sameAsBg = base.palette.accent.toLowerCase() === newBg.toLowerCase();
-        return {
-          bg: newBg,
-          text: base.palette.background,
-          muted: "rgba(255,255,255,0.7)",
-          accent: sameAsBg ? base.palette.background : base.palette.accent,
-        };
-      }
-      case "accent":
-        return {
-          bg: base.palette.accent,
-          text: base.palette.overlayText,
-          muted: "rgba(255,255,255,0.85)",
-          accent: base.palette.overlayText,
-        };
-      case "light":
-      default:
-        return {
-          bg: base.palette.background,
-          text: base.palette.text,
-          muted: base.palette.muted,
-          accent: base.palette.accent,
-        };
-    }
+    return {
+      bg: base.palette.background,
+      text: base.palette.text,
+      muted: base.palette.muted,
+      accent: base.palette.accent,
+    };
   }
-  // No theme — original behaviour with neutral defaults + AI's accentColor.
-  switch (scheme) {
-    case "dark":
-      return { bg: "#1a1a2e", text: "#ffffff", muted: "#cbd5e1", accent };
-    case "accent":
-      return { bg: accent, text: "#ffffff", muted: "rgba(255,255,255,0.85)", accent: "#ffffff" };
-    case "light":
-    default:
-      return { bg: "#ffffff", text: "#1a1a2e", muted: "#475569", accent };
-  }
+  // No theme provided — neutral defaults + the AI's accent.
+  return { bg: "#ffffff", text: "#1a1a2e", muted: "#475569", accent };
 }
 
 // ── id helpers ─────────────────────────────────────────────────────────────
@@ -573,9 +541,62 @@ export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJ
   const t = themeFor(spec.colorScheme, accent, baseTheme);
   activeTheme = baseTheme;
   try {
-    return renderForLayout(spec, t);
+    const slide = renderForLayout(spec, t);
+    return applyThemeDecorations(slide, spec, baseTheme);
   } finally {
     activeTheme = undefined;
+  }
+}
+
+// Subtle bubble decorations that sit in the corners of every slide for a
+// given theme. Currently only the Light theme uses them — its signature look.
+// Other themes return [] (clean / minimal). Decorations are prepended to the
+// slide's shapes array so they paint BEHIND any content the layout produced.
+function applyThemeDecorations(
+  slide: SlideJSON,
+  spec: SlideSpec,
+  theme: SlideshowTheme | undefined,
+): SlideJSON {
+  if (!theme) return slide;
+  const decorations = getThemeDecorations(theme, spec, slide);
+  if (decorations.length === 0) return slide;
+  return { ...slide, shapes: [...decorations, ...slide.shapes] };
+}
+
+function getThemeDecorations(
+  theme: SlideshowTheme,
+  spec: SlideSpec,
+  slide: SlideJSON,
+): ShapeObject[] {
+  // Skip if the slide has a full-bleed bg image — decorations would be
+  // invisible behind it AND clash with the dark scrim.
+  if (slide.backgroundImage) return [];
+  // The title-cover renderer already places its own larger bubble cluster.
+  // Skip to avoid stacking two sets of shapes.
+  if (spec.layout === "title-cover") return [];
+  switch (theme.id) {
+    case "light":
+      return [
+        // Top-left small bubble — sits in the corner, barely visible.
+        {
+          id: nid("dec"), type: "ellipse",
+          x: -80, y: -80, width: 200, height: 200,
+          fill: theme.palette.accent,
+          stroke: "transparent", strokeWidth: 0,
+          opacity: 0.08,
+        },
+        // Bottom-right larger bubble — anchors the slide visually without
+        // clashing with content.
+        {
+          id: nid("dec"), type: "ellipse",
+          x: SLIDE_W - 220, y: SLIDE_H - 220, width: 340, height: 340,
+          fill: theme.palette.accent,
+          stroke: "transparent", strokeWidth: 0,
+          opacity: 0.07,
+        },
+      ];
+    default:
+      return [];
   }
 }
 
@@ -603,4 +624,43 @@ function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
     case "timeline": return renderTimeline(spec, t);
     default: return renderTitleBody(spec, t);
   }
+}
+
+// ── Re-theme an existing slide ───────────────────────────────────────────
+// Given a saved SlideJSON that carries a `skeleton` (set at generation time),
+// rebuild it under a different theme. The existing image src is preserved so
+// we don't have to re-fetch from Pixabay / regenerate AI images. Slides
+// without a skeleton (audio/video/user-created) are returned untouched so
+// theme switching doesn't blow them away.
+export function rerenderSlideWithTheme(
+  slide: SlideJSON,
+  theme: SlideshowTheme,
+): SlideJSON {
+  if (!slide.skeleton) return slide;
+  // The slide's photo can live in one of two places:
+  //   - slide.backgroundImage — title-cover and image-full layouts use this
+  //     as a full-bleed slide background.
+  //   - slide.images[0]       — image-left / image-right / bullets-with-image
+  //     layouts place it as a positioned ImageObject.
+  // Check both so neither kind of photo is lost during a theme switch.
+  const existingImage = slide.images?.[0];
+  const existingImageSrc = slide.backgroundImage || existingImage?.src;
+  const existingW = slide.backgroundImageWidth ?? existingImage?.naturalWidth;
+  const existingH = slide.backgroundImageHeight ?? existingImage?.naturalHeight;
+  const spec: SlideSpec = {
+    ...(slide.skeleton as SlideSpec),
+    accentColor: theme.palette.accent,
+    imageDataUrl: existingImageSrc || undefined,
+    imageWidth: existingW,
+    imageHeight: existingH,
+    imagePending: false,
+  };
+  const rebuilt = renderSlide(spec, theme);
+  // Preserve audios/videos and the deck-level themeId (the caller will update
+  // it after the rerender); skeleton is re-attached so future re-themes work.
+  rebuilt.audios = slide.audios;
+  rebuilt.videos = slide.videos;
+  rebuilt.skeleton = slide.skeleton;
+  if (slide.themeId !== undefined) rebuilt.themeId = slide.themeId;
+  return rebuilt;
 }

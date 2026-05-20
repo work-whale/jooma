@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3 } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3, Pencil } from "lucide-react";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
@@ -397,12 +397,17 @@ function BorderTool({
 function ObjectActions({ locked, onToggleLock, onDelete }: { locked: boolean; onToggleLock: () => void; onDelete: () => void }) {
   return (
     <div className="ml-auto flex items-center gap-1">
-      <button onClick={onToggleLock} className={toggleBtn(locked)} title={locked ? "Unlock" : "Lock"}>
-        {locked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
-      </button>
-      <button onClick={onDelete} className={toggleBtn(false)} title="Delete">
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      <ToolbarButton
+        icon={locked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
+        label={locked ? "Unlock" : "Lock"}
+        onClick={onToggleLock}
+        active={locked}
+      />
+      <ToolbarButton
+        icon={<Trash2 className="w-3.5 h-3.5" />}
+        label="Delete"
+        onClick={onDelete}
+      />
     </div>
   );
 }
@@ -410,10 +415,65 @@ function ObjectActions({ locked, onToggleLock, onDelete }: { locked: boolean; on
 const inputClass =
   "h-8 px-2 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0";
 
+// Single source of truth for the idle/hover/active styling of every 8×8
+// toolbar button. IconPopover and the standalone action buttons (lock,
+// delete, regenerate, fit, …) both use this so the bar looks uniform.
 const toggleBtn = (active: boolean) =>
-  `h-8 w-8 flex items-center justify-center rounded-md border text-xs transition-colors ${
-    active ? "bg-violet-100 border-violet-300 text-violet-700" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+  `h-8 w-8 flex items-center justify-center rounded-md border transition-colors ${
+    active
+      ? "bg-violet-100 border-violet-300 text-violet-700"
+      : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
   }`;
+
+// Plain action button with the SAME hover/active styling AND the SAME custom
+// tooltip as IconPopover. Used for lock, delete, regenerate, fit-to-slide,
+// fit-to-ratio — anything that fires an action immediately instead of opening
+// a popover. Without this, the lock/delete/etc. buttons fell back to the
+// native browser `title` tooltip, which felt slow and differently styled
+// compared to the IconPopover ones.
+function ToolbarButton({
+  icon,
+  label,
+  onClick,
+  active,
+  disabled,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+}) {
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        onMouseEnter={() => {
+          if (!buttonRef.current || disabled) return;
+          const r = buttonRef.current.getBoundingClientRect();
+          setTooltipPos({ x: r.left + r.width / 2, y: r.bottom + 8 });
+        }}
+        onMouseLeave={() => setTooltipPos(null)}
+        className={toggleBtn(!!active) + " disabled:opacity-50"}
+      >
+        {icon}
+      </button>
+      {tooltipPos && (
+        <span
+          className="fixed -translate-x-1/2 px-2.5 py-1 rounded-md border text-[11px] font-medium whitespace-nowrap z-100 pointer-events-none shadow-md"
+          style={{ left: tooltipPos.x, top: tooltipPos.y, backgroundColor: "#F1EFE3", borderColor: "#DAD8D0", color: "#030303" }}
+        >
+          {label}
+        </span>
+      )}
+    </>
+  );
+}
 
 const pillClass =
   "inline-flex items-center gap-2 px-3 py-2 bg-white rounded-2xl shadow-lg border border-gray-200 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden";
@@ -453,6 +513,9 @@ interface Props {
   onDelete: () => void;
   onToggleLock: () => void;
   onOpenFontPanel: () => void;
+  /** Opens the right-side "Edit video" panel — which contains both the URL
+   *  paste flow and the AI-search flow. Toolbar just triggers it. */
+  onOpenEditVideo?: () => void;
 }
 
 // One toolbar to rule them all. Tools that don't apply to the current selection
@@ -469,6 +532,7 @@ export default function ContextualToolbar({
   onDelete,
   onToggleLock,
   onOpenFontPanel,
+  onOpenEditVideo,
 }: Props) {
   if (!selection) return null;
 
@@ -524,40 +588,48 @@ export default function ContextualToolbar({
             onChange={(e) => onUpdateText({ fontSize: Number(e.target.value) })}
             className={`${inputClass} w-16`}
           />
-          <button
+          <ToolbarButton
+            icon={<Bold className="w-3.5 h-3.5" />}
+            label="Bold"
             onClick={() => onUpdateText({ fontWeight: t.fontWeight === "700" || t.fontWeight === "bold" ? "400" : "700" })}
-            className={toggleBtn(t.fontWeight === "700" || t.fontWeight === "bold")}
-            title="Bold"
-          >
-            <Bold className="w-3.5 h-3.5" />
-          </button>
-          <button
+            active={t.fontWeight === "700" || t.fontWeight === "bold"}
+          />
+          <ToolbarButton
+            icon={<Italic className="w-3.5 h-3.5" />}
+            label="Italic"
             onClick={() => onUpdateText({ fontStyle: t.fontStyle === "italic" ? "normal" : "italic" })}
-            className={toggleBtn(t.fontStyle === "italic")}
-            title="Italic"
-          >
-            <Italic className="w-3.5 h-3.5" />
-          </button>
-          <button
+            active={t.fontStyle === "italic"}
+          />
+          <ToolbarButton
+            icon={<Underline className="w-3.5 h-3.5" />}
+            label="Underline"
             onClick={() => onUpdateText({ underline: !t.underline })}
-            className={toggleBtn(t.underline)}
-            title="Underline"
-          >
-            <Underline className="w-3.5 h-3.5" />
-          </button>
+            active={t.underline}
+          />
           <ColorPopover value={t.color} onChange={(c) => onUpdateText({ color: c })} title="Text color" />
           <div className="w-px h-6 bg-gray-300 mx-1" />
-          <button onClick={() => onUpdateText({ textAlign: "left" })} className={toggleBtn(t.textAlign === "left")} title="Align left">
-            <AlignLeft className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => onUpdateText({ textAlign: "center" })} className={toggleBtn(t.textAlign === "center")} title="Align center">
-            <AlignCenter className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => onUpdateText({ textAlign: "right" })} className={toggleBtn(t.textAlign === "right")} title="Align right">
-            <AlignRight className="w-3.5 h-3.5" />
-          </button>
+          <ToolbarButton
+            icon={<AlignLeft className="w-3.5 h-3.5" />}
+            label="Align left"
+            onClick={() => onUpdateText({ textAlign: "left" })}
+            active={t.textAlign === "left"}
+          />
+          <ToolbarButton
+            icon={<AlignCenter className="w-3.5 h-3.5" />}
+            label="Align center"
+            onClick={() => onUpdateText({ textAlign: "center" })}
+            active={t.textAlign === "center"}
+          />
+          <ToolbarButton
+            icon={<AlignRight className="w-3.5 h-3.5" />}
+            label="Align right"
+            onClick={() => onUpdateText({ textAlign: "right" })}
+            active={t.textAlign === "right"}
+          />
           <div className="w-px h-6 bg-gray-300 mx-1" />
-          <button
+          <ToolbarButton
+            icon={<List className="w-3.5 h-3.5" />}
+            label="Bullet list"
             onClick={() => {
               const enabling = t.listType !== "bullet";
               onUpdateText({
@@ -565,12 +637,11 @@ export default function ContextualToolbar({
                 ...(enabling ? { text: stripListPrefixes(t.text) } : {}),
               });
             }}
-            className={toggleBtn(t.listType === "bullet")}
-            title="Bullet list"
-          >
-            <List className="w-3.5 h-3.5" />
-          </button>
-          <button
+            active={t.listType === "bullet"}
+          />
+          <ToolbarButton
+            icon={<ListOrdered className="w-3.5 h-3.5" />}
+            label="Numbered list"
             onClick={() => {
               const enabling = t.listType !== "number";
               onUpdateText({
@@ -578,11 +649,8 @@ export default function ContextualToolbar({
                 ...(enabling ? { text: stripListPrefixes(t.text) } : {}),
               });
             }}
-            className={toggleBtn(t.listType === "number")}
-            title="Numbered list"
-          >
-            <ListOrdered className="w-3.5 h-3.5" />
-          </button>
+            active={t.listType === "number"}
+          />
           <LineHeightTool
             value={t.lineHeight ?? 1.2}
             onChange={(v2) => onUpdateText({ lineHeight: v2 })}
@@ -637,6 +705,15 @@ export default function ContextualToolbar({
         />
       )}
 
+      {/* ── Video: open the Edit-video side panel (URL paste + AI search) ── */}
+      {v && onOpenEditVideo && (
+        <ToolbarButton
+          icon={<Pencil className="w-3.5 h-3.5" />}
+          label="Edit video"
+          onClick={onOpenEditVideo}
+        />
+      )}
+
       {/* ── Border (shape + image) ──────────────────────────────────────── */}
       {sh && (
         <BorderTool
@@ -666,8 +743,9 @@ export default function ContextualToolbar({
       {/* ── Image-only fit controls ─────────────────────────────────────── */}
       {im && (
         <>
-          <button
-            type="button"
+          <ToolbarButton
+            icon={<Maximize2 className="w-3.5 h-3.5" />}
+            label="Fit to slide"
             onClick={() => {
               onUpdateImage({
                 x: 0, y: 0, width: SLIDE_W, height: SLIDE_H,
@@ -675,13 +753,10 @@ export default function ContextualToolbar({
                 rotation: 0,
               });
             }}
-            className={toggleBtn(false)}
-            title="Fit to slide"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
+          />
+          <ToolbarButton
+            icon={<SquareIcon className="w-3.5 h-3.5" />}
+            label="Fit to original ratio"
             onClick={() => {
               const nw = im.naturalWidth, nh = im.naturalHeight;
               if (nw && nh) {
@@ -696,11 +771,7 @@ export default function ContextualToolbar({
                 });
               }
             }}
-            className={toggleBtn(false)}
-            title="Fit to original ratio"
-          >
-            <SquareIcon className="w-3.5 h-3.5" />
-          </button>
+          />
         </>
       )}
 
@@ -765,8 +836,9 @@ function SlideToolbar({
           >
             Replace
           </button>
-          <button
-            type="button"
+          <ToolbarButton
+            icon={<X className="w-3.5 h-3.5" />}
+            label="Remove background image"
             onClick={() => onUpdateSlide({
               backgroundImage: undefined,
               backgroundImageWidth: undefined,
@@ -775,11 +847,7 @@ function SlideToolbar({
               backgroundOffsetY: undefined,
               backgroundScale: undefined,
             })}
-            className={toggleBtn(false)}
-            title="Remove background image"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+          />
         </>
       ) : (
         <button

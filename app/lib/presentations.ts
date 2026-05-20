@@ -167,6 +167,16 @@ export interface SlideJSON {
   backgroundScale?: number;           // multiplier on top of cover scale; >= 1 always
   /** Shimmer overlay on the slide background while the AI fetches the bg image. */
   backgroundImagePending?: boolean;
+  /** AI-generated skeleton (content + layout) used to re-render the slide under
+   *  a different theme. Loose type to avoid a circular import with
+   *  slideshow-layouts.ts. Image data isn't stored here — re-render plucks the
+   *  src from this slide's `images[0]`. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  skeleton?: Record<string, any>;
+  /** Deck-level active theme. Only meaningful on slides[0] — the first slide
+   *  acts as the carrier for deck-wide metadata so we don't need a new DB
+   *  column. Read via getDeckTheme / write via setDeckTheme. */
+  themeId?: string;
 }
 
 export const BLANK_SLIDE: SlideJSON = {
@@ -184,15 +194,39 @@ export interface Presentation {
   updated_at: string;
 }
 
+/** Lightweight row for the Slideshows index page. Drops the heavy `slides`
+ *  JSONB column (which can be many MB once it contains base64 image data) in
+ *  favour of just the first slide for the thumbnail + a slide count. */
+export interface PresentationListItem {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  slide_count: number;
+  first_slide: SlideJSON | null;
+}
+
+/** Helpers for the deck-level theme. Stored in slides[0].themeId so we don't
+ *  need an extra DB column. */
+export function getDeckTheme(slides: SlideJSON[]): string {
+  return slides[0]?.themeId ?? "light";
+}
+
+export function setDeckTheme(slides: SlideJSON[], themeId: string): SlideJSON[] {
+  if (slides.length === 0) return slides;
+  return slides.map((s, i) => i === 0 ? { ...s, themeId } : s);
+}
+
 const TABLE = "presentations";
 
-export async function listPresentations(): Promise<Presentation[]> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("*")
-    .order("updated_at", { ascending: false });
+export async function listPresentations(): Promise<PresentationListItem[]> {
+  // Use the `list_presentations_lite` SQL function so we don't pull the full
+  // `slides` JSONB for every deck — that was tripping the statement timeout
+  // (Postgres code 57014) once decks accumulated inlined base64 images.
+  // See supabase/migrations/20260520000000_list_presentations_lite.sql.
+  const { data, error } = await supabase.rpc("list_presentations_lite");
   if (error) throw error;
-  return (data ?? []) as Presentation[];
+  return (data ?? []) as PresentationListItem[];
 }
 
 export async function getPresentation(id: string): Promise<Presentation | null> {

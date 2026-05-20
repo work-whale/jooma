@@ -13,6 +13,7 @@ import AudioLayer from "./AudioLayer";
 import VideoLayer from "./VideoLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
+import VideoRegenerateModal from "./VideoRegenerateModal";
 import ContextMenu, { type ContextMenuState } from "./ContextMenu";
 import RegenerateImageDialog from "./RegenerateImageDialog";
 import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
@@ -31,6 +32,8 @@ import {
   type VideoObject,
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
+import { getTheme } from "@/app/lib/slideshowThemes";
+import { rerenderSlideWithTheme } from "@/app/lib/slideshow-layouts";
 
 interface SlideState extends SlideJSON {
   id: string;
@@ -717,24 +720,42 @@ export default function Editor({ presentation, generationParams }: Props) {
         backgroundOffsetX: s.backgroundOffsetX,
         backgroundOffsetY: s.backgroundOffsetY,
         backgroundScale: s.backgroundScale,
+        // Persist the AI skeleton + deck-level themeId so theme switching
+        // works after the page is reloaded.
+        skeleton: s.skeleton,
+        themeId: s.themeId,
       }));
+      // While we still inline base64 image data in slides, a save can be many
+      // MB. Log the payload size so it's obvious when Postgres' statement
+      // timeout is being tripped by sheer volume rather than logic errors.
+      if (typeof console !== "undefined" && process.env.NODE_ENV === "development") {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+        if (bytes > 1_000_000) {
+          console.warn(`[persist] Large slides payload: ${(bytes / 1024 / 1024).toFixed(2)} MB`);
+        }
+      }
       await updatePresentation(presentation.id, {
         title: titleRef.current,
         slides: payload,
       });
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
-    } catch (err) {
-      // Supabase error objects have non-enumerable fields — pluck them out
-      // explicitly so we actually see what failed.
-      const e = err as { message?: string; code?: string; details?: string; hint?: string };
-      console.error("Save failed:", {
-        message: e?.message,
-        code: e?.code,
-        details: e?.details,
-        hint: e?.hint,
-        raw: err,
-      });
+    } catch (err: unknown) {
+      // Logging an error object via console.error sometimes prints `{}` in
+      // Next.js's overlay because Supabase/PostgREST errors have non-enumerable
+      // fields. Stringify with `Object.getOwnPropertyNames` so every property
+      // (including non-enumerable ones) shows up. Also log the original error
+      // separately so it appears in the browser DevTools console with its
+      // native formatting.
+      console.error("Save failed (raw):", err);
+      try {
+        const ownProps = err && typeof err === "object"
+          ? JSON.stringify(err, Object.getOwnPropertyNames(err as object))
+          : String(err);
+        console.error("Save failed (fields):", ownProps);
+      } catch {
+        console.error("Save failed (couldn't stringify):", String(err));
+      }
       setSaveStatus("error");
     }
   }, [presentation.id]);
@@ -1154,6 +1175,21 @@ export default function Editor({ presentation, generationParams }: Props) {
     mutateActiveSlide((s) => ({ ...s, videos: (s.videos ?? []).filter((v) => v.id !== selectedVideoId) }));
     setSelectedVideoId(null);
   }, [selectedVideoId, mutateActiveSlide]);
+
+  // "Edit video" right-side panel — owns its own URL-paste form, AI search
+  // form, and result-pick UX. The Editor only holds open/close state and
+  // apply callbacks that swap the chosen video into the selected slide.
+  const [editVideoPanelOpen, setEditVideoPanelOpen] = useState(false);
+  const applyVideoId = useCallback((videoId: string) => {
+    if (!selectedVideoId) return;
+    updateVideo(selectedVideoId, { source: "youtube", src: videoId });
+  }, [selectedVideoId, updateVideo]);
+  const applyVideoCandidate = useCallback((v: {
+    videoId: string; title: string; channel?: string; description?: string;
+  }) => {
+    if (!selectedVideoId) return;
+    updateVideo(selectedVideoId, { source: "youtube", src: v.videoId, title: v.title });
+  }, [selectedVideoId, updateVideo]);
 
   const addVideo = useCallback((source: "youtube" | "upload", src: string, title?: string) => {
     // Default placement: centered, 640x360 (16:9). User can drag/resize after.
@@ -1607,6 +1643,72 @@ export default function Editor({ presentation, generationParams }: Props) {
     scheduleSave();
   };
 
+  // ── Theme switching ────────────────────────────────────────────────────────
+  // Re-renders every slide that carries a `skeleton` (i.e. AI-generated slides)
+  // under the new theme, preserving images and audio/video objects. Edits the
+  // user has made to text content, positions, or colors WILL be overwritten —
+  // that's the trade-off for true "skin" behaviour. Dedicated audio/video
+  // placeholder slides are left alone since they don't have a re-renderable
+  // skeleton.
+  const handleThemeChange = useCallback((nextThemeId: string) => {
+    const theme = getTheme(nextThemeId);
+    setSlides((prev) => {
+      const next = prev.map((s, i) => {
+        // Audio activity slide: re-colour bg, panel, and any slide-level
+        // texts so it follows the new theme.
+        if ((s.audios?.length ?? 0) > 0) {
+          const slideTextColor = theme.palette.text;
+          return {
+            ...s,
+            background: theme.palette.background,
+            texts: s.texts.map((t) => ({ ...t, color: slideTextColor })),
+            audios: (s.audios ?? []).map((a) => ({
+              ...a,
+              panelBg: theme.palette.accent,
+              panelInk: theme.palette.overlayText,
+              playBg: theme.palette.background,
+              playInk: theme.palette.text,
+              headingFont: theme.fonts.heading,
+            })),
+            themeId: i === 0 ? nextThemeId : s.themeId,
+          };
+        }
+        // YouTube video slide: re-colour bg + slide-level texts. The first
+        // text element (heading) uses the accent for emphasis; the rest
+        // (subtitle) use muted.
+        if ((s.videos?.length ?? 0) > 0) {
+          return {
+            ...s,
+            background: theme.palette.background,
+            texts: s.texts.map((t, ti) => ({
+              ...t,
+              color: ti === 0 ? theme.palette.accent : theme.palette.muted,
+              fontFamily: ti === 0 ? theme.fonts.heading : t.fontFamily,
+            })),
+            themeId: i === 0 ? nextThemeId : s.themeId,
+          };
+        }
+        if (!s.skeleton) {
+          // No skeleton and not audio/video: just stamp the themeId on slide
+          // 0 so the deck records the active theme. User-built slides keep
+          // their custom colours since we can't know the intent.
+          return i === 0 ? { ...s, themeId: nextThemeId } : s;
+        }
+        // AI content slide: re-render from skeleton, preserve id.
+        const rebuilt = rerenderSlideWithTheme(s, theme);
+        return {
+          ...rebuilt,
+          id: s.id,
+          themeId: i === 0 ? nextThemeId : rebuilt.themeId,
+        } as SlideState;
+      });
+      if (next[0]) next[0] = { ...next[0], themeId: nextThemeId };
+      slidesRef.current = next;
+      return next;
+    });
+    scheduleSave();
+  }, [scheduleSave]);
+
   // ── Zoom ───────────────────────────────────────────────────────────────────
 
   const handleFit = useCallback(() => {
@@ -1820,6 +1922,10 @@ export default function Editor({ presentation, generationParams }: Props) {
               const p = payload as {
                 index: number;
                 total: number;
+                // Streaming-only content slide count. Server sets this to
+                // specs.length so we know when to STOP appending empty
+                // placeholders — audio/video extras come as their own events.
+                contentTotal?: number;
                 slide: SlideJSON;
                 title?: string;
                 galleryImage?: { prompt: string; style?: string; dataUrl: string };
@@ -1848,15 +1954,22 @@ export default function Editor({ presentation, generationParams }: Props) {
                   backgroundOffsetY: p.slide.backgroundOffsetY,
                   backgroundScale: p.slide.backgroundScale,
                   backgroundImagePending: p.slide.backgroundImagePending,
+                  // Carry the skeleton + deck-level themeId through so we can
+                  // re-render under a different theme later.
+                  skeleton: p.slide.skeleton,
+                  themeId: p.slide.themeId,
                 };
                 if (p.index < next.length) next[p.index] = replaced;
                 else next.push(replaced);
                 // Grow the deck progressively: as soon as we have a real slide
-                // for slot N and the deck has fewer than `total` cards, append
-                // one fresh placeholder so the user sees slide N+1's loader
-                // pop in. CSS animation on the slide-tray thumbs handles the
-                // visual reveal.
-                if (next.length < p.total && p.index + 1 >= next.length) {
+                // for slot N and there are more content slides still streaming,
+                // append one fresh placeholder so the user sees the next slot's
+                // loader pop in. Cap at `contentTotal` (the streaming-only
+                // count) — past that, audio/video events insert their own
+                // placeholders so we'd otherwise end up with a trailing empty
+                // slide.
+                const streamingCap = p.contentTotal ?? p.total;
+                if (next.length < streamingCap && p.index + 1 >= next.length) {
                   next.push({
                     id: newId("s"),
                     shapes: [],
@@ -1908,6 +2021,10 @@ export default function Editor({ presentation, generationParams }: Props) {
                   backgroundOffsetY: p.slide.backgroundOffsetY,
                   backgroundScale: p.slide.backgroundScale,
                   backgroundImagePending: p.slide.backgroundImagePending,
+                  // Keep skeleton + themeId carried by the previous slide so
+                  // image arrival doesn't strip the re-theming metadata.
+                  skeleton: target.skeleton,
+                  themeId: target.themeId,
                 };
                 slidesRef.current = next;
                 return next;
@@ -2126,6 +2243,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                   playBg?: string; playInk?: string;
                   headingFont?: string;
                   slideBg?: string;
+                  slideTextColor?: string;
                 };
               };
               setSlides((prev) => {
@@ -2133,7 +2251,10 @@ export default function Editor({ presentation, generationParams }: Props) {
                 // discrete elements so the teacher can edit any of them
                 // independently: a title heading, a description, the audio
                 // player bar, and a numbered questions list.
-                const titleColor = p.audio.panelInk ?? "#FFE8C8";
+                // Slide texts use slideTextColor (palette.text) so they read
+                // against the natural theme bg. Panel internals (player bar)
+                // still use panelInk because they sit on the accent panel.
+                const titleColor = p.audio.slideTextColor ?? p.audio.panelInk ?? "#1a1a2e";
                 const headingFont = p.audio.headingFont ?? "'Bricolage Grotesque', sans-serif";
 
                 const titleText: TextObject = {
@@ -2272,6 +2393,8 @@ export default function Editor({ presentation, generationParams }: Props) {
         isExporting={isExporting}
         saveStatus={saveStatus}
         disableHistory={!!generating}
+        themeId={slides[0]?.themeId ?? "light"}
+        onThemeChange={handleThemeChange}
       />
       <div className="flex flex-1 min-h-0 relative">
         <Sidebar
@@ -2750,6 +2873,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                     else if (selection?.kind === "video" && selectedVideoId) updateVideo(selectedVideoId, { locked: !selection.video.locked });
                   }}
                   onOpenFontPanel={() => setFontPanelOpen(true)}
+                  onOpenEditVideo={selectedVideoId ? () => setEditVideoPanelOpen(true) : undefined}
                 />
               )}
             </div>
@@ -2793,6 +2917,22 @@ export default function Editor({ presentation, generationParams }: Props) {
             </div>
           )}
         </div>
+        {/* Right-side "Edit video" panel — URL paste + AI search. Lives as a
+            flex sibling so the canvas auto-shrinks when the panel is open. */}
+        <VideoRegenerateModal
+          open={editVideoPanelOpen}
+          onClose={() => setEditVideoPanelOpen(false)}
+          context={{
+            deckTitle: titleRef.current?.trim() || "Lesson",
+            slideTitles: slidesRef.current
+              .flatMap((s) => s.texts.map((t) => t.text))
+              .filter((t) => !!t?.trim())
+              .slice(0, 8),
+          }}
+          defaults={{ length: "medium" }}
+          onApplyVideoId={applyVideoId}
+          onApply={applyVideoCandidate}
+        />
       </div>
 
       {contextMenu && (
@@ -2861,17 +3001,26 @@ export default function Editor({ presentation, generationParams }: Props) {
         }}
       />
 
-      {regenerateTargetId && (
-        <RegenerateImageDialog
-          onClose={() => setRegenerateTargetId(null)}
-          onGenerated={({ dataUrl, prompt, style }) => {
-            updateImage(regenerateTargetId, { src: dataUrl });
-            saveGeneratedImage({ prompt, style, dataUrl })
-              .then(() => setGalleryRefreshTrigger((n) => n + 1))
-              .catch((err) => console.warn("Gallery save failed:", err));
-          }}
-        />
-      )}
+      {regenerateTargetId && (() => {
+        // Look up the slide frame the new image will replace so the AI gets
+        // generated at the same aspect ratio — no more landscape images
+        // squeezed into a near-square slide frame.
+        const slide = slidesRef.current[activeIndexRef.current];
+        const target = slide?.images.find((im) => im.id === regenerateTargetId);
+        return (
+          <RegenerateImageDialog
+            frameWidth={target?.width}
+            frameHeight={target?.height}
+            onClose={() => setRegenerateTargetId(null)}
+            onGenerated={({ dataUrl, prompt, style }) => {
+              updateImage(regenerateTargetId, { src: dataUrl });
+              saveGeneratedImage({ prompt, style, dataUrl })
+                .then(() => setGalleryRefreshTrigger((n) => n + 1))
+                .catch((err) => console.warn("Gallery save failed:", err));
+            }}
+          />
+        );
+      })()}
 
       {editingAudioId && (() => {
         // Find the audio + the slide it lives on so we can update both the
