@@ -210,16 +210,8 @@ export default function Sidebar({
     return () => clearTimeout(t);
   }, [gallerySearch]);
 
-  // Re-fetch when search changes or the Editor signals a new save.
-  useEffect(() => {
-    let cancelled = false;
-    setGalleryLoading(true);
-    listGeneratedImages({ search: debouncedSearch, limit: 100 })
-      .then((rows) => { if (!cancelled) setGallery(rows); })
-      .catch((err) => { if (!cancelled) console.warn("Gallery fetch failed:", err); })
-      .finally(() => { if (!cancelled) setGalleryLoading(false); });
-    return () => { cancelled = true; };
-  }, [debouncedSearch, galleryRefreshTrigger]);
+  // Gallery fetch is moved below the `active` state declaration so we can
+  // gate it on the AI tab being open. See the useEffect after `setActive`.
 
   const handleAiGenerate = async () => {
     if (!aiPrompt.trim() || aiBusy) return;
@@ -248,6 +240,23 @@ export default function Sidebar({
   // Click-toggle only. The panel stays open until the user clicks the same icon,
   // the close button, or anywhere outside the sidebar.
   const [active, setActive] = useState<TabId | null>(null);
+
+  // Gallery fetch — gated on the AI tab being open. The gallery rows hold
+  // full base64 image data (~2.7 MB each), so loading on every editor mount
+  // was crushing free-tier Postgres compute (saturated CPU + timeouts on
+  // unrelated queries). Now the fetch only fires when the user actually
+  // opens the AI tab. Limit dropped from 100 → 30 to keep worst-case at
+  // ~80 MB instead of ~270 MB per request.
+  useEffect(() => {
+    if (active !== "ai") return;
+    let cancelled = false;
+    setGalleryLoading(true);
+    listGeneratedImages({ search: debouncedSearch, limit: 30 })
+      .then((rows) => { if (!cancelled) setGallery(rows); })
+      .catch((err) => { if (!cancelled) console.warn("Gallery fetch failed:", err); })
+      .finally(() => { if (!cancelled) setGalleryLoading(false); });
+    return () => { cancelled = true; };
+  }, [active, debouncedSearch, galleryRefreshTrigger]);
 
   // Lazy-inject the Google Fonts <link> the first time the sidebar mounts.
   useEffect(() => { injectGoogleFonts(); }, []);

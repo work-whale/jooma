@@ -3,6 +3,7 @@
 // from the editor's AI tab or right-click "Regenerate").
 
 import { getOpenAI } from "./openai";
+import { uploadImageBytes } from "./imageStorage";
 
 export type ImageStyle =
   | "storybook"
@@ -101,15 +102,29 @@ export async function generateAIImage(
       });
       const item = r.data?.[0];
       if (!item) continue;
+
+      // Grab the raw image bytes, however the model returned them, then push
+      // them straight to Supabase Storage. `dataUrl` on the result becomes a
+      // public CDN URL — the slide JSON only ever stores URLs, never base64.
+      let bytes: Uint8Array | null = null;
       if (item.b64_json) {
-        return { dataUrl: `data:image/png;base64,${item.b64_json}`, width: att.w, height: att.h };
-      }
-      if (item.url) {
+        bytes = new Uint8Array(Buffer.from(item.b64_json, "base64"));
+      } else if (item.url) {
         const imgRes = await fetch(item.url);
         if (!imgRes.ok) continue;
-        const buf = await imgRes.arrayBuffer();
-        const b64 = Buffer.from(buf).toString("base64");
-        return { dataUrl: `data:image/png;base64,${b64}`, width: att.w, height: att.h };
+        bytes = new Uint8Array(await imgRes.arrayBuffer());
+      }
+      if (!bytes) continue;
+
+      try {
+        const publicUrl = await uploadImageBytes(bytes, "image/png", "ai");
+        return { dataUrl: publicUrl, width: att.w, height: att.h };
+      } catch (uploadErr) {
+        console.error("AI image storage upload failed:", uploadErr);
+        // Bail rather than fall back to base64 — base64 is exactly what we're
+        // trying to keep out of Postgres. Better to fail the image fetch and
+        // let the slide render its placeholder than to bloat the deck.
+        return null;
       }
     } catch (err) {
       const e = err as { status?: number; message?: string };

@@ -106,13 +106,23 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [title, setTitle] = useState(presentation.title);
   const [slides, setSlides] = useState<SlideState[]>(() => {
     const src = presentation.slides?.length ? presentation.slides : [BLANK_SLIDE];
+    // Scrub any `isPending: true` flags off media that never got a `src` —
+    // those are stuck shimmers from a generation run that didn't finish
+    // before the row was saved. Clearing the flag drops them back to a
+    // normal empty frame the user can fill or regenerate manually.
     return src.map((s) => ({
       id: newId("s"),
       shapes: s.shapes ?? [],
       texts: s.texts ?? [],
-      images: s.images ?? [],
-      audios: s.audios ?? [],
-      videos: s.videos ?? [],
+      images: (s.images ?? []).map((i) =>
+        i.isPending && !i.src ? { ...i, isPending: false } : i,
+      ),
+      audios: (s.audios ?? []).map((a) =>
+        a.isPending && !a.src ? { ...a, isPending: false } : a,
+      ),
+      videos: (s.videos ?? []).map((v) =>
+        v.isPending && !v.src ? { ...v, isPending: false } : v,
+      ),
       background: s.background ?? "#ffffff",
       backgroundImage: s.backgroundImage,
       backgroundImageWidth: s.backgroundImageWidth,
@@ -120,6 +130,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       backgroundOffsetX: s.backgroundOffsetX,
       backgroundOffsetY: s.backgroundOffsetY,
       backgroundScale: s.backgroundScale,
+      backgroundImagePending: s.backgroundImagePending && !s.backgroundImage ? false : s.backgroundImagePending,
     }));
   });
   const [activeIndex, setActiveIndex] = useState(0);

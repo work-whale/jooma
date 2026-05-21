@@ -5,10 +5,15 @@ import type { SlideJSON, ShapeObject, TextObject, ImageObject, AudioObject, Vide
 import { SLIDE_W, SLIDE_H } from "./constants";
 import { getFrameStyle } from "./frames";
 import { youtubeThumbnail } from "./youtube";
+import { toThumbnailUrl } from "@/app/lib/imageStorage";
 
 interface Props {
   slide: SlideJSON;
   width: number;
+  /** When true, rewrite Supabase Storage URLs to the image-transformation
+   *  endpoint at the thumbnail's render width. Used by the Slideshows index
+   *  card grid so it doesn't pull full-res slide images for every row. */
+  thumbnailMode?: boolean;
 }
 
 // Each inner mini-element is memo'd separately so unchanged elements skip re-render
@@ -179,7 +184,7 @@ const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
   );
 });
 
-const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
+const MiniImage = memo(function MiniImage({ image, srcOverride }: { image: ImageObject; srcOverride?: string }) {
   const isFrame = !!image.frame && image.frame !== "none";
   const isEmptyFrame = isFrame && !image.src;
   const frameStyle = getFrameStyle(image.frame, image.cornerRadius);
@@ -248,7 +253,7 @@ const MiniImage = memo(function MiniImage({ image }: { image: ImageObject }) {
               {image.src && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={image.src}
+                  src={srcOverride ?? image.src}
                   alt=""
                   draggable={false}
                   style={{
@@ -404,28 +409,38 @@ const MiniVideo = memo(function MiniVideo({ video }: { video: VideoObject }) {
   );
 });
 
-function MiniSlideBase({ slide, width }: Props) {
+function MiniSlideBase({ slide, width, thumbnailMode }: Props) {
   const scale = width / SLIDE_W;
   const height = SLIDE_H * scale;
 
+  // When rendering as a thumbnail, rewrite Supabase Storage URLs to the
+  // image-transformation endpoint so the browser pulls a CDN-cached small
+  // image instead of the full source. Non-Supabase URLs pass through.
+  const bgImgSrc = thumbnailMode ? toThumbnailUrl(slide.backgroundImage, width) : slide.backgroundImage;
+
   // Mirror the editor's bgMetrics so thumbnails clamp offsets the same way.
+  // Fallback path: if the slide doesn't carry intrinsic image dimensions
+  // (older rows, or rows where the RPC didn't ship them), defer to native
+  // CSS `background-size: cover` so the image still cover-fits instead of
+  // being stretched to the slide's 16:9.
   let backgroundSize: string = "cover";
   let offX = 0;
   let offY = 0;
+  let useCssCover = false;
   if (slide.backgroundImage) {
-    const userScale = Math.max(1, slide.backgroundScale ?? 1);
-    let scaledW = SLIDE_W * userScale;
-    let scaledH = SLIDE_H * userScale;
     if (slide.backgroundImageWidth && slide.backgroundImageHeight) {
+      const userScale = Math.max(1, slide.backgroundScale ?? 1);
       const coverScale = Math.max(SLIDE_W / slide.backgroundImageWidth, SLIDE_H / slide.backgroundImageHeight);
-      scaledW = slide.backgroundImageWidth * coverScale * userScale;
-      scaledH = slide.backgroundImageHeight * coverScale * userScale;
+      const scaledW = slide.backgroundImageWidth * coverScale * userScale;
+      const scaledH = slide.backgroundImageHeight * coverScale * userScale;
+      const maxX = Math.max(0, (scaledW - SLIDE_W) / 2);
+      const maxY = Math.max(0, (scaledH - SLIDE_H) / 2);
+      offX = Math.max(-maxX, Math.min(maxX, slide.backgroundOffsetX ?? 0));
+      offY = Math.max(-maxY, Math.min(maxY, slide.backgroundOffsetY ?? 0));
+      backgroundSize = `${scaledW * scale}px ${scaledH * scale}px`;
+    } else {
+      useCssCover = true;
     }
-    const maxX = Math.max(0, (scaledW - SLIDE_W) / 2);
-    const maxY = Math.max(0, (scaledH - SLIDE_H) / 2);
-    offX = Math.max(-maxX, Math.min(maxX, slide.backgroundOffsetX ?? 0));
-    offY = Math.max(-maxY, Math.min(maxY, slide.backgroundOffsetY ?? 0));
-    backgroundSize = `${scaledW * scale}px ${scaledH * scale}px`;
   }
 
   return (
@@ -436,10 +451,10 @@ function MiniSlideBase({ slide, width }: Props) {
         overflow: "hidden",
         position: "relative",
         backgroundColor: slide.background ?? "#ffffff",
-        backgroundImage: slide.backgroundImage ? `url(${slide.backgroundImage})` : undefined,
-        backgroundSize,
+        backgroundImage: bgImgSrc ? `url(${bgImgSrc})` : undefined,
+        backgroundSize: useCssCover ? "cover" : backgroundSize,
         backgroundRepeat: "no-repeat",
-        backgroundPosition: slide.backgroundImage
+        backgroundPosition: slide.backgroundImage && !useCssCover
           ? `calc(50% + ${offX * scale}px) calc(50% + ${offY * scale}px)`
           : "center",
       }}
@@ -453,7 +468,13 @@ function MiniSlideBase({ slide, width }: Props) {
           position: "absolute",
         }}
       >
-        {(slide.images ?? []).map((i) => <MiniImage key={i.id} image={i} />)}
+        {(slide.images ?? []).map((i) => (
+          <MiniImage
+            key={i.id}
+            image={i}
+            srcOverride={thumbnailMode ? toThumbnailUrl(i.src, Math.max(80, i.width * scale)) : undefined}
+          />
+        ))}
         {(slide.shapes ?? []).map((s) => <MiniShape key={s.id} shape={s} />)}
         {(slide.texts ?? []).map((t) => <MiniText key={t.id} text={t} />)}
         {(slide.audios ?? []).map((a) => <MiniAudio key={a.id} audio={a} />)}

@@ -202,6 +202,13 @@ export interface PresentationListItem {
   title: string;
   created_at: string;
   updated_at: string;
+  /** Number of slides in the deck. Returned by list_presentations_lite()
+   *  via jsonb_array_length(slides). */
+  slide_count: number;
+  /** First slide as a stripped-down JSONB blob — backgroundImage and inline
+   *  image src have been removed by the RPC to keep the payload tiny. Used
+   *  by the list page to render MiniSlide thumbnails. */
+  first_slide: SlideJSON | null;
 }
 
 /** Helpers for the deck-level theme. Stored in slides[0].themeId so we don't
@@ -218,9 +225,13 @@ export function setDeckTheme(slides: SlideJSON[], themeId: string): SlideJSON[] 
 const TABLE = "presentations";
 
 export async function listPresentations(): Promise<PresentationListItem[]> {
+  // Use the RPC, not a plain select. The RPC returns first_slide (stripped of
+  // backgroundImage and images[].src to keep the payload tiny) plus a
+  // jsonb_array_length-derived slide_count. A plain select on the table
+  // would either drop these fields or pull the entire `slides` JSONB blob —
+  // both useless for the list view.
   const { data, error } = await supabase
-    .from(TABLE)
-    .select("id, title, created_at, updated_at")
+    .rpc("list_presentations_lite")
     .order("updated_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as PresentationListItem[];

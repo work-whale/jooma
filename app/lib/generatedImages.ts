@@ -8,11 +8,15 @@
 // supabase/migrations/20260513000000_create_generated_images.sql.
 
 import { supabase } from "./supabase";
+import { uploadDataUrlToStorage } from "./imageStorage";
 
 export interface GeneratedImage {
   id: string;
   prompt: string;
   style: string | null;
+  /** Now actually a Storage public URL (https://...supabase.co/storage/v1/...).
+   *  Column name kept for backwards-compatibility with already-saved rows
+   *  that hold base64. The migration backfills those into Storage URLs too. */
   data_url: string;
   created_at: string;
 }
@@ -24,12 +28,18 @@ export async function saveGeneratedImage(opts: {
   style?: string;
   dataUrl: string;
 }): Promise<GeneratedImage> {
+  // Belt-and-braces: if a caller still passes raw base64 (legacy path or
+  // bug), upload it to Storage here before inserting. Existing http(s) URLs
+  // pass through unchanged. Keeps base64 out of Postgres regardless of who's
+  // calling us.
+  const url = (await uploadDataUrlToStorage(opts.dataUrl, opts.prompt)) ?? opts.dataUrl;
+
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
       prompt: opts.prompt,
       style: opts.style ?? null,
-      data_url: opts.dataUrl,
+      data_url: url,
     })
     .select()
     .single();
