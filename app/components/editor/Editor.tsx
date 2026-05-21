@@ -1938,8 +1938,6 @@ export default function Editor({ presentation, generationParams }: Props) {
     function enqueueSlide(p: SlidePayloadType) {
       reveal.queue.push(p);
       if (!reveal.timer) {
-        // First item: short lead-in so the placeholder has time to mount and
-        // the entrance animation can play; subsequent items at 500 ms each.
         reveal.timer = setTimeout(processRevealItem, 100);
       }
     }

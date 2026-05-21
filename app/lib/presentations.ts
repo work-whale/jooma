@@ -202,8 +202,6 @@ export interface PresentationListItem {
   title: string;
   created_at: string;
   updated_at: string;
-  slide_count: number;
-  first_slide: SlideJSON | null;
 }
 
 /** Helpers for the deck-level theme. Stored in slides[0].themeId so we don't
@@ -220,11 +218,10 @@ export function setDeckTheme(slides: SlideJSON[], themeId: string): SlideJSON[] 
 const TABLE = "presentations";
 
 export async function listPresentations(): Promise<PresentationListItem[]> {
-  // Use the `list_presentations_lite` SQL function so we don't pull the full
-  // `slides` JSONB for every deck — that was tripping the statement timeout
-  // (Postgres code 57014) once decks accumulated inlined base64 images.
-  // See supabase/migrations/20260520000000_list_presentations_lite.sql.
-  const { data, error } = await supabase.rpc("list_presentations_lite");
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("id, title, created_at, updated_at")
+    .order("updated_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as PresentationListItem[];
 }

@@ -1,32 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Plus, Monitor, LayoutGrid, Trash2, Sparkles } from "lucide-react";
-import { listPresentations, deletePresentation, type PresentationListItem, type SlideJSON } from "@/app/lib/presentations";
-import MiniSlide from "@/app/components/editor/MiniSlide";
+import { listPresentations, deletePresentation, type PresentationListItem } from "@/app/lib/presentations";
 import GenerateModal from "@/app/components/slideshow/GenerateModal";
-
-function SlideThumbnail({ slide }: { slide: SlideJSON }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const observer = new ResizeObserver((entries) => {
-      const w = entries[0].contentRect.width;
-      if (w > 0) setWidth(w);
-    });
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} className="w-full aspect-video overflow-hidden bg-white">
-      {width > 0 && <MiniSlide slide={slide} width={width} />}
-    </div>
-  );
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -49,9 +27,6 @@ export default function SlideshowListPage() {
     listPresentations()
       .then((data) => setPresentations(data))
       .catch((err) => {
-        // Supabase's PostgrestError isn't an Error instance and its useful
-        // fields (message/code/details/hint) aren't enumerable — `console.error(err)`
-        // alone prints `{}` in the Next.js overlay. Surface each field explicitly.
         console.error("Failed to load presentations:", {
           message: err?.message,
           code: err?.code,
@@ -72,7 +47,7 @@ export default function SlideshowListPage() {
     p.title.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const requestDelete = (presentation: Presentation, e: React.MouseEvent) => {
+  const requestDelete = (presentation: PresentationListItem, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setPendingDelete(presentation);
@@ -96,7 +71,6 @@ export default function SlideshowListPage() {
     }
   };
 
-  // Close the modal on Escape
   useEffect(() => {
     if (!pendingDelete) return;
     const handler = (e: KeyboardEvent) => {
@@ -202,55 +176,45 @@ export default function SlideshowListPage() {
             </p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((p) => {
-              const firstSlide = p.first_slide ?? undefined;
-              return (
-                // Link is a SIBLING overlay (not a parent), so clicking the delete
-                // button never reaches the anchor element — keeps nextjs-toploader silent.
-                <div
-                  key={p.id}
-                  className="group bg-[#FAF9F5] rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
-                >
-                  <Link
-                    href={`/editor/${p.id}`}
-                    aria-label={p.title || "Open slideshow"}
-                    className="absolute inset-0 z-0 rounded-2xl"
-                  />
-                  <div className="relative z-10 pointer-events-none">
-                    {firstSlide ? (
-                      <SlideThumbnail slide={firstSlide} />
-                    ) : (
-                      <div
-                        className="aspect-video flex items-center justify-center"
-                        style={{ backgroundColor: "#F1EFE3" }}
-                      >
-                        <Monitor className="w-8 h-8" style={{ color: "#1a1a1a", opacity: 0.4 }} />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug transition-colors">
-                        {p.title}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1.5">
-                        {p.slide_count} slide{p.slide_count !== 1 ? "s" : ""} · {formatDate(p.updated_at)}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => requestDelete(p, e)}
-                    className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-opacity"
-                    title="Delete"
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                className="group bg-[#FAF9F5] rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
+              >
+                <Link
+                  href={`/editor/${p.id}`}
+                  aria-label={p.title || "Open slideshow"}
+                  className="absolute inset-0 z-0 rounded-2xl"
+                />
+                <div className="relative z-10 pointer-events-none">
+                  <div
+                    className="aspect-video flex items-center justify-center"
+                    style={{ backgroundColor: "#F1EFE3" }}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                    <Monitor className="w-8 h-8" style={{ color: "#1a1a1a", opacity: 0.4 }} />
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
+                      {p.title}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      {formatDate(p.updated_at)}
+                    </p>
+                  </div>
                 </div>
-              );
-            })}
+                <button
+                  onClick={(e) => requestDelete(p, e)}
+                  className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-opacity"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
           </div>
         </>
       )}
 
-      {/* Delete confirmation modal */}
       {pendingDelete && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
