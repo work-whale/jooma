@@ -3,22 +3,27 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { RotateCw } from "lucide-react";
 import type { TextObject } from "@/app/lib/presentations";
+import { escapeHtml, inlineBoldToHtml, inlineBoldToHtmlKeepMarkers } from "@/app/lib/utils";
 
 // Each list line: a <div> containing a non-editable marker <span> followed by an
 // editable content <span>. contenteditable="false" prevents the user from
 // deleting the marker via backspace, even at the start of the line. On save we
 // read only the editable spans and rejoin with \n.
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 function markerFor(kind: "bullet" | "number", index: number): string {
   return kind === "bullet" ? "•" : `${index + 1}.`;
 }
-function renderListHTML(text: string, kind: "bullet" | "number"): string {
+/** Renders list HTML for the non-editing path. Each line's text is run through
+ *  the inline-bold parser so `**word**` shows as <strong> inside the list. */
+function renderListHTML(text: string, kind: "bullet" | "number", parseBold: boolean): string {
   const lines = text.split("\n");
   return lines
     .map((line, i) => {
-      const content = line ? escapeHtml(line) : "<br>";
+      // Always strip markers and render bold cleanly — edit mode and non-edit
+      // mode both use the same path. The `**` markers stay in the underlying
+      // `text.text` string but are invisible in the rendered HTML so the user
+      // sees a clean view.
+      void parseBold;
+      const content = line ? inlineBoldToHtml(line) : "<br>";
       return `<div data-jl="1" style="display:flex;gap:0.6em;align-items:baseline"><span contenteditable="false" data-jl-mark="1" style="flex-shrink:0;user-select:none;-webkit-user-select:none;cursor:default">${markerFor(kind, i)}</span><span data-jl-content="1" style="flex:1">${content}</span></div>`;
     })
     .join("");
@@ -51,6 +56,36 @@ function renumberMarkers(root: HTMLElement, kind: "bullet" | "number") {
   markers.forEach((m, i) => { m.textContent = markerFor(kind, i); });
 }
 
+/** Walks a contentEditable DOM tree and reconstructs the underlying text
+ *  WITH `**...**` markers around <strong> content. Used in handleBlur so
+ *  the edit-mode view (which renders bold cleanly without showing markers)
+ *  still round-trips its markers back into the stored text. */
+function extractTextWithBoldMarkers(root: HTMLElement): string {
+  let result = "";
+  const walk = (node: Node, blockTag: boolean) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      result += node.textContent ?? "";
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    const el = node as HTMLElement;
+    if (el.tagName === "STRONG") {
+      result += "**" + (el.textContent ?? "") + "**";
+      return;
+    }
+    if (el.tagName === "BR") {
+      result += "\n";
+      return;
+    }
+    const isBlock = el.tagName === "DIV" || el.tagName === "P";
+    if (isBlock && result && !result.endsWith("\n")) result += "\n";
+    for (const child of Array.from(el.childNodes)) walk(child, isBlock);
+    void blockTag;
+  };
+  for (const child of Array.from(root.childNodes)) walk(child, false);
+  return result;
+}
+
 interface Props {
   text: TextObject;
   selected: boolean;
@@ -74,27 +109,36 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
 
   useEffect(() => {
     if (!ref.current || editing) return;
+    // Non-editing path: parse `**bold**` markers into <strong> runs so the
+    // AI's body text (which carries the markers verbatim) reads with proper
+    // emphasis. Edit mode below keeps the raw `**` markers visible.
     if (text.listType === "bullet" || text.listType === "number") {
-      ref.current.innerHTML = renderListHTML(text.text, text.listType);
+      ref.current.innerHTML = renderListHTML(text.text, text.listType, true);
     } else {
-      ref.current.textContent = text.text;
+      ref.current.innerHTML = inlineBoldToHtml(text.text);
     }
   }, [text.text, text.listType, editing]);
 
   useEffect(() => {
     if (!editing || !ref.current) return;
     if (text.listType === "bullet" || text.listType === "number") {
-      ref.current.innerHTML = renderListHTML(text.text, text.listType);
+      // Edit mode keeps raw `**` markers visible (parseBold=false) so the user
+      // can edit them as plain text.
+      ref.current.innerHTML = renderListHTML(text.text, text.listType, false);
     } else {
       // contenteditable collapses \n in textContent — wrap each line in a <div>
       // so the browser preserves the line break and treats Enter consistently.
+      // Use `inlineBoldToHtml` (NOT the marker-preserving variant) so the
+      // user sees a clean rendered view while editing — `**Kuiper Belt**` in
+      // the underlying text appears as just "Kuiper Belt" bold. The markers
+      // live invisibly in the stored string and are restored on every render.
       const lines = text.text.split("\n");
       if (lines.length > 1) {
         ref.current.innerHTML = lines
-          .map((l) => `<div>${l ? escapeHtml(l) : "<br>"}</div>`)
+          .map((l) => `<div>${l ? inlineBoldToHtml(l) : "<br>"}</div>`)
           .join("");
       } else {
-        ref.current.textContent = text.text;
+        ref.current.innerHTML = inlineBoldToHtml(text.text);
       }
     }
     ref.current.focus();
@@ -166,10 +210,11 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
         const lines = readListLines(ref.current);
         newText = lines.length > 0 ? lines.join("\n") : (ref.current.textContent ?? "");
       } else {
-        // innerText respects block-level line breaks (each <div> the browser
-        // inserts for Enter becomes \n). textContent would concatenate without
-        // newlines.
-        newText = (ref.current.innerText ?? "").replace(/\r\n/g, "\n");
+        // Walk the DOM and reconstruct `**...**` around any <strong> tags.
+        // The edit-mode view renders bold without showing markers — without
+        // this round-trip the markers would be permanently lost on first
+        // edit (innerText strips them along with the <strong> wrapper).
+        newText = extractTextWithBoldMarkers(ref.current).replace(/\r\n/g, "\n");
       }
       if (newText !== text.text) onUpdate(text.id, { text: newText });
     }
@@ -199,7 +244,7 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
 
       const insertNewLineAtEnd = (content: string) => {
         if (!ref.current) return;
-        tmp.innerHTML = renderListHTML(content, text.listType as "bullet" | "number");
+        tmp.innerHTML = renderListHTML(content, text.listType as "bullet" | "number", false);
         const newLine = tmp.firstElementChild as HTMLElement | null;
         if (!newLine) return;
         ref.current.appendChild(newLine);
@@ -247,7 +292,7 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
       const after = fullText.slice(caretOffset);
       contentSpan.textContent = before;
 
-      tmp.innerHTML = renderListHTML(after, text.listType as "bullet" | "number");
+      tmp.innerHTML = renderListHTML(after, text.listType as "bullet" | "number", false);
       const newLine = tmp.firstElementChild as HTMLElement | null;
       if (!newLine) return;
       lineDiv.insertAdjacentElement("afterend", newLine);

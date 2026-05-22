@@ -1,11 +1,22 @@
 "use client";
 
 import { memo } from "react";
-import type { SlideJSON, ShapeObject, TextObject, ImageObject, AudioObject, VideoObject } from "@/app/lib/presentations";
+import type { SlideJSON, ShapeObject, TextObject, ImageObject, AudioObject, VideoObject, CalloutObject, BadgeObject, BlockquoteObject, ActivityObject } from "@/app/lib/presentations";
+import { getTheme, type SlideshowTheme } from "@/app/lib/slideshowThemes";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import { getFrameStyle } from "./frames";
 import { youtubeThumbnail } from "./youtube";
 import { toThumbnailUrl } from "@/app/lib/imageStorage";
+import { parseInlineBold } from "@/app/lib/utils";
+
+/** Splits a string into <strong>...</strong> + plain spans so `**bold**`
+ *  markers in body text render correctly inside thumbnails. */
+function renderInlineBold(s: string) {
+  const runs = parseInlineBold(s);
+  return runs.map((r, i) =>
+    r.bold ? <strong key={i}>{r.text}</strong> : <span key={i}>{r.text}</span>,
+  );
+}
 
 interface Props {
   slide: SlideJSON;
@@ -14,6 +25,11 @@ interface Props {
    *  endpoint at the thumbnail's render width. Used by the Slideshows index
    *  card grid so it doesn't pull full-res slide images for every row. */
   thumbnailMode?: boolean;
+  /** Optional deck-level theme id. The callout/badge/blockquote/activity
+   *  primitives need theme colors; we accept it as a prop so the slide tray
+   *  and list page can pass the deck's theme even when rendering a non-first
+   *  slide (only slides[0] carries themeId in the SlideJSON itself). */
+  themeId?: string;
 }
 
 // Each inner mini-element is memo'd separately so unchanged elements skip re-render
@@ -61,6 +77,10 @@ const MiniShape = memo(function MiniShape({ shape }: { shape: ShapeObject }) {
         width: shape.width,
         height: shape.height,
         opacity: shape.opacity,
+        // Honor the shape's explicit z so the paper backdrop (z: -1) sinks
+        // below images. Without this, thumbnails stack in DOM order and the
+        // cream paper card paints over every photo.
+        zIndex: shape.z,
         transform: `rotate(${rotation}deg)`,
         transformOrigin: "center center",
         filter: shape.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
@@ -174,11 +194,11 @@ const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
             <span style={{ flexShrink: 0 }}>
               {text.listType === "bullet" ? "•" : `${i + 1}.`}
             </span>
-            <span>{line}</span>
+            <span>{renderInlineBold(line)}</span>
           </div>
         ))
       ) : (
-        text.text
+        renderInlineBold(text.text)
       )}
     </div>
   );
@@ -409,9 +429,222 @@ const MiniVideo = memo(function MiniVideo({ video }: { video: VideoObject }) {
   );
 });
 
-function MiniSlideBase({ slide, width, thumbnailMode }: Props) {
+function calloutVariantColors(variant: CalloutObject["variant"], theme: SlideshowTheme) {
+  const p = theme.palette;
+  switch (variant) {
+    case "remember": return { bg: p.calloutBgRemember ?? "#e2eef9", ink: p.calloutInkRemember ?? p.text };
+    case "fun":      return { bg: p.calloutBgFun ?? "#ece1f3", ink: p.calloutInkFun ?? p.text };
+    case "key":
+    default:         return { bg: p.calloutBgKey ?? "#fcecc7", ink: p.calloutInkKey ?? p.text };
+  }
+}
+function calloutVariantEmoji(v: CalloutObject["variant"]) {
+  if (v === "remember") return "🧠";
+  if (v === "fun") return "🦉";
+  return "🔑";
+}
+
+const MiniCallout = memo(function MiniCallout({ callout, theme }: { callout: CalloutObject; theme: SlideshowTheme }) {
+  const { bg, ink } = calloutVariantColors(callout.variant, theme);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: callout.x,
+        top: callout.y,
+        width: callout.width,
+        height: callout.height,
+        transform: `rotate(${callout.rotation ?? 0}deg)`,
+        transformOrigin: "center center",
+        zIndex: callout.z,
+        borderRadius: 16,
+        backgroundColor: bg,
+        color: ink,
+        padding: "20px 22px",
+        boxSizing: "border-box",
+        fontFamily: theme.fonts.body,
+      }}
+    >
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+        <span style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{calloutVariantEmoji(callout.variant)}</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 4 }}>{callout.label}</div>
+          <div style={{ fontSize: 18, lineHeight: 1.45, whiteSpace: "pre-wrap" }}>
+            {renderInlineBold(callout.body)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const MiniBadge = memo(function MiniBadge({ badge, theme }: { badge: BadgeObject; theme: SlideshowTheme }) {
+  const bg = theme.palette.badgeBg ?? theme.palette.accent;
+  const ink = theme.palette.badgeInk ?? theme.palette.overlayText;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: badge.x,
+        top: badge.y,
+        height: 36,
+        transform: `rotate(${badge.rotation ?? 0}deg)`,
+        transformOrigin: "left top",
+        zIndex: badge.z,
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "0 14px",
+        borderRadius: 6,
+        backgroundColor: bg,
+        color: ink,
+        fontFamily: theme.fonts.body,
+        fontSize: 14,
+        fontWeight: 800,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {badge.text || "BADGE"}
+    </div>
+  );
+});
+
+const MiniBlockquote = memo(function MiniBlockquote({ quote, theme }: { quote: BlockquoteObject; theme: SlideshowTheme }) {
+  const rule = theme.palette.blockquoteRule ?? theme.palette.accent;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: quote.x,
+        top: quote.y,
+        width: quote.width,
+        transform: `rotate(${quote.rotation ?? 0}deg)`,
+        transformOrigin: "left top",
+        zIndex: quote.z,
+        borderLeft: `4px solid ${rule}`,
+        paddingLeft: 18,
+        paddingTop: 4,
+        paddingBottom: 4,
+        fontFamily: theme.fonts.body,
+        fontStyle: "italic",
+        fontSize: 22,
+        lineHeight: 1.4,
+        color: theme.palette.text,
+      }}
+    >
+      <div style={{ whiteSpace: "pre-wrap" }}>{renderInlineBold(quote.text)}</div>
+      {quote.attribution && (
+        <div style={{ marginTop: 8, fontStyle: "normal", fontSize: 16, color: theme.palette.muted }}>
+          — {quote.attribution}
+        </div>
+      )}
+    </div>
+  );
+});
+
+const MiniActivity = memo(function MiniActivity({ activity, theme }: { activity: ActivityObject; theme: SlideshowTheme }) {
+  const cardBg = theme.palette.activityCardBg ?? "#e7eef7";
+  const cardInk = theme.palette.activityCardInk ?? theme.palette.text;
+  const stroke = theme.palette.speechBubbleStroke ?? "#1a1a1a";
+  const checkBg = theme.palette.checkBadgeBg ?? "#2e9d54";
+  const checkInk = theme.palette.checkBadgeInk ?? "#ffffff";
+
+  const cards = activity.answerMode ? (activity.answerItems ?? activity.items) : activity.items;
+  const gap = 14;
+  const cardH = Math.max(40, (activity.height - 24 - gap * Math.max(0, cards.length - 1)) / Math.max(1, cards.length));
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: activity.x,
+        top: activity.y,
+        width: activity.width,
+        height: activity.height,
+        transform: `rotate(${activity.rotation ?? 0}deg)`,
+        transformOrigin: "center center",
+        zIndex: activity.z,
+      }}
+    >
+      {activity.kind === "order" ? (
+        <div style={{ width: "100%", height: "100%", padding: 12, boxSizing: "border-box", display: "flex", gap: 24 }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap, justifyContent: "center" }}>
+            {cards.map((label, i) => (
+              <div key={i} style={{
+                height: cardH,
+                borderRadius: 12,
+                backgroundColor: cardBg,
+                color: cardInk,
+                border: `1.5px solid rgba(0,0,0,0.18)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 700, fontSize: 22, padding: "0 24px", textAlign: "center",
+                fontFamily: theme.fonts.body,
+              }}>{label}</div>
+            ))}
+          </div>
+          {activity.answerMode && (
+            <div style={{ width: 64, display: "flex", flexDirection: "column", gap, justifyContent: "center" }}>
+              {cards.map((_, i) => (
+                <div key={i} style={{
+                  height: cardH,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 800, fontSize: 28, color: theme.palette.text,
+                }}>{i + 1}.</div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+            <ellipse cx="50" cy="46" rx="48" ry="40" fill="white" stroke={stroke} strokeWidth="1.5" />
+            <polygon points="20,82 32,75 28,92" fill="white" stroke={stroke} strokeWidth="1.5" />
+          </svg>
+          <div style={{ position: "absolute", inset: 0, padding: "8% 12% 14% 12%", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {activity.answerMode ? (
+              <div style={{ fontFamily: theme.fonts.body, color: theme.palette.text, textAlign: "center", width: "100%" }}>
+                <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 10 }}>You might have said…</div>
+                <div style={{ fontSize: 18, lineHeight: 1.55 }}>
+                  {(activity.answerItems ?? []).map((item, i) => (<div key={i}>{item}</div>))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 24, alignItems: "center", width: "100%" }}>
+                {activity.image?.src && (
+                  <div style={{ width: "40%", aspectRatio: "1 / 1", borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "#000" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={activity.image.src} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  </div>
+                )}
+                <div style={{ flex: 1, fontFamily: theme.fonts.body, color: theme.palette.text, fontSize: 20, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+                  {activity.questionText || "Add a question…"}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {activity.answerMode && (
+        <div style={{
+          position: "absolute", top: -8, right: -8,
+          width: 44, height: 44, borderRadius: 10,
+          backgroundColor: checkBg, color: checkInk,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+          fontWeight: 900, fontSize: 26,
+        }}>✓</div>
+      )}
+    </div>
+  );
+});
+
+function MiniSlideBase({ slide, width, thumbnailMode, themeId }: Props) {
   const scale = width / SLIDE_W;
   const height = SLIDE_H * scale;
+  // Resolve a theme for the new primitives. Prefer the prop, then the slide's
+  // own themeId (only set on slides[0]), then the default.
+  const theme = getTheme(themeId ?? slide.themeId);
 
   // When rendering as a thumbnail, rewrite Supabase Storage URLs to the
   // image-transformation endpoint so the browser pulls a CDN-cached small
@@ -479,6 +712,10 @@ function MiniSlideBase({ slide, width, thumbnailMode }: Props) {
         {(slide.texts ?? []).map((t) => <MiniText key={t.id} text={t} />)}
         {(slide.audios ?? []).map((a) => <MiniAudio key={a.id} audio={a} />)}
         {(slide.videos ?? []).map((v) => <MiniVideo key={v.id} video={v} />)}
+        {(slide.callouts ?? []).map((c) => <MiniCallout key={c.id} callout={c} theme={theme} />)}
+        {(slide.badges ?? []).map((b) => <MiniBadge key={b.id} badge={b} theme={theme} />)}
+        {(slide.blockquotes ?? []).map((q) => <MiniBlockquote key={q.id} quote={q} theme={theme} />)}
+        {(slide.activities ?? []).map((a) => <MiniActivity key={a.id} activity={a} theme={theme} />)}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { DEFAULT_THEME_ID } from "./slideshowThemes";
 
 export interface TextObject {
   id: string;
@@ -152,12 +153,89 @@ export interface VideoObject {
   isPending?: boolean;
 }
 
+/** "Key point" / "Remember" / "Fun fact" tinted callout box. Pulls theme
+ *  colours per variant. `body` supports `**bold**` markers. */
+export interface CalloutObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  /** Optional explicit height. When unset the renderer auto-fits to the
+   *  content height. When set, the box uses it as a min-height. */
+  height?: number;
+  variant: "key" | "remember" | "fun";
+  label: string;          // "Key point" / "Remember" / "Fun fact"
+  body: string;           // supports **bold** runs
+  rotation?: number;
+  locked?: boolean;
+  z?: number;
+}
+
+/** Small uppercase sub-genre pill (e.g. "STAR DYNAMICS"). Auto-width from
+ *  text. Theme provides badgeBg / badgeInk. */
+export interface BadgeObject {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  rotation?: number;
+  locked?: boolean;
+  z?: number;
+}
+
+/** Italic blockquote with a left rule and optional attribution prefixed `— `. */
+export interface BlockquoteObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  text: string;
+  attribution?: string;
+  rotation?: number;
+  locked?: boolean;
+  z?: number;
+}
+
+/** Composite activity primitive — single type, two `kind`s.
+ *  - `order` + !answerMode → stacked light-blue cards in given `items` order.
+ *  - `order` + answerMode  → cards in `answerItems` order with right-side
+ *    numbers + green check badge top-right.
+ *  - `question` + !answerMode → speech bubble with inline image + question.
+ *  - `question` + answerMode  → speech bubble with "You might have said..."
+ *    + `answerItems` as a bullet list + green check badge top-right.
+ */
+export interface ActivityObject {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  kind: "order" | "question";
+  items: string[];
+  questionText?: string;
+  image?: {
+    src: string;
+    naturalWidth?: number;
+    naturalHeight?: number;
+  };
+  answerMode: boolean;
+  /** order: the correct order. question: "you might have said" bullets. */
+  answerItems?: string[];
+  rotation?: number;
+  locked?: boolean;
+  z?: number;
+}
+
 export interface SlideJSON {
   shapes: ShapeObject[];
   texts: TextObject[];
   images: ImageObject[];
   audios?: AudioObject[];             // optional so existing decks load unchanged
   videos?: VideoObject[];             // optional so existing decks load unchanged
+  callouts?: CalloutObject[];         // Key point / Remember / Fun fact cards
+  badges?: BadgeObject[];             // sub-genre pills (e.g. STAR DYNAMICS)
+  blockquotes?: BlockquoteObject[];   // italic quotes with left rule
+  activities?: ActivityObject[];      // ordering + question/answer composites
   background?: string;                // CSS color
   backgroundImage?: string;           // data URL or http URL — covers the color when set
   backgroundImageWidth?: number;      // natural image dimensions, used to clamp pan
@@ -214,7 +292,7 @@ export interface PresentationListItem {
 /** Helpers for the deck-level theme. Stored in slides[0].themeId so we don't
  *  need an extra DB column. */
 export function getDeckTheme(slides: SlideJSON[]): string {
-  return slides[0]?.themeId ?? "light";
+  return slides[0]?.themeId ?? DEFAULT_THEME_ID;
 }
 
 export function setDeckTheme(slides: SlideJSON[], themeId: string): SlideJSON[] {

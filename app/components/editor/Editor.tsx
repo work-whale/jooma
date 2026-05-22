@@ -11,6 +11,10 @@ import ShapeLayer from "./ShapeLayer";
 import ImageLayer from "./ImageLayer";
 import AudioLayer from "./AudioLayer";
 import VideoLayer from "./VideoLayer";
+import CalloutLayer from "./CalloutLayer";
+import BadgeLayer from "./BadgeLayer";
+import BlockquoteLayer from "./BlockquoteLayer";
+import ActivityLayer from "./ActivityLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
 import VideoRegenerateModal from "./VideoRegenerateModal";
@@ -31,9 +35,13 @@ import {
   type ImageObject,
   type AudioObject,
   type VideoObject,
+  type CalloutObject,
+  type BadgeObject,
+  type BlockquoteObject,
+  type ActivityObject,
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
-import { getTheme } from "@/app/lib/slideshowThemes";
+import { getTheme, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
 import { rerenderSlideWithTheme } from "@/app/lib/slideshow-layouts";
 
 interface SlideState extends SlideJSON {
@@ -123,6 +131,10 @@ export default function Editor({ presentation, generationParams }: Props) {
       videos: (s.videos ?? []).map((v) =>
         v.isPending && !v.src ? { ...v, isPending: false } : v,
       ),
+      callouts: s.callouts ?? [],
+      badges: s.badges ?? [],
+      blockquotes: s.blockquotes ?? [],
+      activities: s.activities ?? [],
       background: s.background ?? "#ffffff",
       backgroundImage: s.backgroundImage,
       backgroundImageWidth: s.backgroundImageWidth,
@@ -131,6 +143,12 @@ export default function Editor({ presentation, generationParams }: Props) {
       backgroundOffsetY: s.backgroundOffsetY,
       backgroundScale: s.backgroundScale,
       backgroundImagePending: s.backgroundImagePending && !s.backgroundImage ? false : s.backgroundImagePending,
+      // Carry the AI skeleton + deck-level themeId through page reloads.
+      // Without these, theme-switching becomes a no-op for AI-generated
+      // slides (rerenderSlideWithTheme requires a skeleton to rebuild from)
+      // and the next save would persist them as missing.
+      skeleton: s.skeleton,
+      themeId: s.themeId,
     }));
   });
   const [activeIndex, setActiveIndex] = useState(0);
@@ -139,6 +157,11 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  // Selection state for the new primitive types — mirror the pattern above.
+  const [selectedCalloutId, setSelectedCalloutId] = useState<string | null>(null);
+  const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
+  const [selectedBlockquoteId, setSelectedBlockquoteId] = useState<string | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   // Audio id whose "Edit audio" side panel is currently open (null when closed).
   const [editingAudioId, setEditingAudioId] = useState<string | null>(null);
   const [slideSelected, setSlideSelected] = useState(false);
@@ -244,28 +267,65 @@ export default function Editor({ presentation, generationParams }: Props) {
 
   const handleTextSelect = useCallback((id: string | null) => {
     setSelectedTextId(id);
-    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleShapeSelect = useCallback((id: string | null) => {
     setSelectedShapeId(id);
-    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSelectedAudioId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleImageSelect = useCallback((id: string | null) => {
     setSelectedImageId(id);
-    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedAudioId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleAudioSelect = useCallback((id: string | null) => {
     setSelectedAudioId(id);
-    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSelectedVideoId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleVideoSelect = useCallback((id: string | null) => {
     setSelectedVideoId(id);
-    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSlideSelected(false); setMultiSelection([]); }
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
+
+  // Helper that clears all single-element selections except the one passed in.
+  // The new-primitive select handlers below use it to avoid the same five-line
+  // wall of `setSelected*(null)` calls.
+  const clearOtherSelections = useCallback((except: "callout" | "badge" | "blockquote" | "activity") => {
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSelectedAudioId(null);
+    setSelectedVideoId(null);
+    if (except !== "callout")    setSelectedCalloutId(null);
+    if (except !== "badge")      setSelectedBadgeId(null);
+    if (except !== "blockquote") setSelectedBlockquoteId(null);
+    if (except !== "activity")   setSelectedActivityId(null);
+    setSlideSelected(false);
+    setMultiSelection([]);
+  }, []);
+
+  const handleCalloutSelect = useCallback((id: string | null) => {
+    setSelectedCalloutId(id);
+    if (id) clearOtherSelections("callout");
+  }, [clearOtherSelections]);
+
+  const handleBadgeSelect = useCallback((id: string | null) => {
+    setSelectedBadgeId(id);
+    if (id) clearOtherSelections("badge");
+  }, [clearOtherSelections]);
+
+  const handleBlockquoteSelect = useCallback((id: string | null) => {
+    setSelectedBlockquoteId(id);
+    if (id) clearOtherSelections("blockquote");
+  }, [clearOtherSelections]);
+
+  const handleActivitySelect = useCallback((id: string | null) => {
+    setSelectedActivityId(id);
+    if (id) clearOtherSelections("activity");
+  }, [clearOtherSelections]);
 
   const selection: EditorSelection = useMemo(() => {
     const slide = slides[activeIndex];
@@ -296,6 +356,10 @@ export default function Editor({ presentation, generationParams }: Props) {
     setSelectedImageId(null);
     setSelectedAudioId(null);
     setSelectedVideoId(null);
+    setSelectedCalloutId(null);
+    setSelectedBadgeId(null);
+    setSelectedBlockquoteId(null);
+    setSelectedActivityId(null);
     setSlideSelected(false);
     setMultiSelection([]);
   }, []);
@@ -729,6 +793,10 @@ export default function Editor({ presentation, generationParams }: Props) {
         images: s.images,
         audios: s.audios ?? [],
         videos: s.videos ?? [],
+        callouts: s.callouts ?? [],
+        badges: s.badges ?? [],
+        blockquotes: s.blockquotes ?? [],
+        activities: s.activities ?? [],
         background: s.background,
         backgroundImage: s.backgroundImage,
         backgroundImageWidth: s.backgroundImageWidth,
@@ -1191,6 +1259,54 @@ export default function Editor({ presentation, generationParams }: Props) {
     mutateActiveSlide((s) => ({ ...s, videos: (s.videos ?? []).filter((v) => v.id !== selectedVideoId) }));
     setSelectedVideoId(null);
   }, [selectedVideoId, mutateActiveSlide]);
+
+  const updateCallout = useCallback((id: string, patch: Partial<CalloutObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      callouts: (s.callouts ?? []).map((c) => c.id === id ? { ...c, ...patch } : c),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedCallout = useCallback(() => {
+    if (!selectedCalloutId) return;
+    mutateActiveSlide((s) => ({ ...s, callouts: (s.callouts ?? []).filter((c) => c.id !== selectedCalloutId) }));
+    setSelectedCalloutId(null);
+  }, [selectedCalloutId, mutateActiveSlide]);
+
+  const updateBadge = useCallback((id: string, patch: Partial<BadgeObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      badges: (s.badges ?? []).map((b) => b.id === id ? { ...b, ...patch } : b),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedBadge = useCallback(() => {
+    if (!selectedBadgeId) return;
+    mutateActiveSlide((s) => ({ ...s, badges: (s.badges ?? []).filter((b) => b.id !== selectedBadgeId) }));
+    setSelectedBadgeId(null);
+  }, [selectedBadgeId, mutateActiveSlide]);
+
+  const updateBlockquote = useCallback((id: string, patch: Partial<BlockquoteObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      blockquotes: (s.blockquotes ?? []).map((q) => q.id === id ? { ...q, ...patch } : q),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedBlockquote = useCallback(() => {
+    if (!selectedBlockquoteId) return;
+    mutateActiveSlide((s) => ({ ...s, blockquotes: (s.blockquotes ?? []).filter((q) => q.id !== selectedBlockquoteId) }));
+    setSelectedBlockquoteId(null);
+  }, [selectedBlockquoteId, mutateActiveSlide]);
+
+  const updateActivity = useCallback((id: string, patch: Partial<ActivityObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      activities: (s.activities ?? []).map((a) => a.id === id ? { ...a, ...patch } : a),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedActivity = useCallback(() => {
+    if (!selectedActivityId) return;
+    mutateActiveSlide((s) => ({ ...s, activities: (s.activities ?? []).filter((a) => a.id !== selectedActivityId) }));
+    setSelectedActivityId(null);
+  }, [selectedActivityId, mutateActiveSlide]);
 
   // "Edit video" right-side panel — owns its own URL-paste form, AI search
   // form, and result-pick UX. The Editor only holds open/close state and
@@ -1705,10 +1821,24 @@ export default function Editor({ presentation, generationParams }: Props) {
           };
         }
         if (!s.skeleton) {
-          // No skeleton and not audio/video: just stamp the themeId on slide
-          // 0 so the deck records the active theme. User-built slides keep
-          // their custom colours since we can't know the intent.
-          return i === 0 ? { ...s, themeId: nextThemeId } : s;
+          // No skeleton (manual slide, audio/video, or pre-skeleton-fix deck):
+          // we can't fully rebuild from scratch, but we can still sweep every
+          // text element and swap its font family to the new theme's
+          // heading/body font based on weight. Colours stay because users
+          // might have customised them — but font swap is the visible part
+          // of a theme change so we always do it.
+          const newTexts = s.texts.map((t) => {
+            const isHeading = parseInt(t.fontWeight, 10) >= 600;
+            return {
+              ...t,
+              fontFamily: isHeading ? theme.fonts.heading : theme.fonts.body,
+            };
+          });
+          return {
+            ...s,
+            texts: newTexts,
+            themeId: i === 0 ? nextThemeId : s.themeId,
+          };
         }
         // AI content slide: re-render from skeleton, preserve id.
         const rebuilt = rerenderSlideWithTheme(s, theme);
@@ -1911,6 +2041,12 @@ export default function Editor({ presentation, generationParams }: Props) {
           shapes: p.slide.shapes ?? [],
           texts: p.slide.texts ?? [],
           images: p.slide.images ?? [],
+          audios: p.slide.audios ?? [],
+          videos: p.slide.videos ?? [],
+          callouts: p.slide.callouts ?? [],
+          badges: p.slide.badges ?? [],
+          blockquotes: p.slide.blockquotes ?? [],
+          activities: p.slide.activities ?? [],
           background: p.slide.background ?? "#ffffff",
           backgroundImage: p.slide.backgroundImage,
           backgroundImageWidth: p.slide.backgroundImageWidth,
@@ -1940,7 +2076,10 @@ export default function Editor({ presentation, generationParams }: Props) {
       }));
       scheduleSave();
       if (reveal.queue.length > 0) {
-        reveal.timer = setTimeout(processRevealItem, 500);
+        // Tight stagger — the server is now streaming slides at OpenAI's
+        // natural cadence (~1-3s/slide), so additional artificial delay is
+        // pure waiting. 80ms keeps the "pop-in" animation perceptible.
+        reveal.timer = setTimeout(processRevealItem, 80);
       } else {
         reveal.timer = null;
       }
@@ -1949,7 +2088,7 @@ export default function Editor({ presentation, generationParams }: Props) {
     function enqueueSlide(p: SlidePayloadType) {
       reveal.queue.push(p);
       if (!reveal.timer) {
-        reveal.timer = setTimeout(processRevealItem, 100);
+        reveal.timer = setTimeout(processRevealItem, 30);
       }
     }
 
@@ -1988,11 +2127,12 @@ export default function Editor({ presentation, generationParams }: Props) {
               const p = payload as { title?: string; total?: number; slideTitles?: string[] };
               if (p.title) setTitle(p.title);
               setPreMeta(false);
-              if (typeof p.total === "number" && p.total > 0) {
-                // Seed just ONE placeholder for slot 0 so the tray starts small.
-                // Each `slide` event below will replace the current placeholder
-                // and append a fresh one for the next slot, so the tray "grows"
-                // one card at a time with the CSS pop-in animation.
+              // ONLY seed the placeholder on the FIRST meta event of a stream.
+              // Subsequent metas would wipe in-flight slides — race-prone with
+              // the reveal queue and the cause of "deck shrinks to 1-3 slides"
+              // when the AI emitted a different count than budgeted. The
+              // server now sends `count-correction` instead for that case.
+              if (first && typeof p.total === "number" && p.total > 0) {
                 const firstPlaceholder: SlideState = {
                   id: newId("s"),
                   shapes: [],
@@ -2005,6 +2145,19 @@ export default function Editor({ presentation, generationParams }: Props) {
                 setActiveIndex(0);
                 setGenerating({ current: 0, total: p.total, slideTitles: p.slideTitles });
                 first = false;
+              }
+            } else if (eventName === "count-correction") {
+              // Post-stream adjustment of the progress UI when the AI emitted
+              // more/fewer slides than budgeted. Updates only `generating`;
+              // never touches the slides array.
+              const p = payload as { total?: number; slideTitles?: string[] };
+              if (typeof p.total === "number" && p.total > 0) {
+                setGenerating((prev) => ({
+                  current: prev?.current ?? 0,
+                  total: p.total ?? 0,
+                  title: prev?.title,
+                  slideTitles: p.slideTitles ?? prev?.slideTitles,
+                }));
               }
             } else if (eventName === "slide") {
               // Push into the reveal queue so slides appear one at a time with
@@ -2033,6 +2186,14 @@ export default function Editor({ presentation, generationParams }: Props) {
                   texts: p.slide.texts ?? target.texts,
                   images: p.slide.images ?? target.images,
                   audios: target.audios,
+                  videos: target.videos,
+                  // Re-rendered slide carries fresh callouts/badges/etc with
+                  // any image data merged into ActivityObject.image. Prefer
+                  // the new slide's arrays, fall back to the target's.
+                  callouts: p.slide.callouts ?? target.callouts,
+                  badges: p.slide.badges ?? target.badges,
+                  blockquotes: p.slide.blockquotes ?? target.blockquotes,
+                  activities: p.slide.activities ?? target.activities,
                   background: p.slide.background ?? target.background,
                   backgroundImage: p.slide.backgroundImage,
                   backgroundImageWidth: p.slide.backgroundImageWidth,
@@ -2413,7 +2574,7 @@ export default function Editor({ presentation, generationParams }: Props) {
           a blank slide + spinner during the 10-20 second AI wait. */}
       {preMeta && (
         <div
-          className="absolute inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none"
+          className="absolute inset-0 z-200 flex flex-col items-center justify-center pointer-events-none"
           style={{ backgroundColor: "#F1EFE3" }}
         >
           <SlideshowLoadingAnimation label="Planning your deck…" />
@@ -2429,7 +2590,7 @@ export default function Editor({ presentation, generationParams }: Props) {
         isExporting={isExporting}
         saveStatus={saveStatus}
         disableHistory={!!generating}
-        themeId={slides[0]?.themeId ?? "light"}
+        themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
         onThemeChange={handleThemeChange}
       />
       <div className="flex flex-1 min-h-0 relative">
@@ -2667,6 +2828,50 @@ export default function Editor({ presentation, generationParams }: Props) {
                           zoom={zoom}
                           onSelect={handleVideoSelect}
                           onUpdate={updateVideo}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <CalloutLayer
+                          callouts={currentSlide.callouts ?? []}
+                          selectedId={selectedCalloutId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleCalloutSelect}
+                          onUpdate={updateCallout}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <BadgeLayer
+                          badges={currentSlide.badges ?? []}
+                          selectedId={selectedBadgeId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleBadgeSelect}
+                          onUpdate={updateBadge}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <BlockquoteLayer
+                          blockquotes={currentSlide.blockquotes ?? []}
+                          selectedId={selectedBlockquoteId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleBlockquoteSelect}
+                          onUpdate={updateBlockquote}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <ActivityLayer
+                          activities={currentSlide.activities ?? []}
+                          selectedId={selectedActivityId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleActivitySelect}
+                          onUpdate={updateActivity}
                           onCommit={scheduleSave}
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
@@ -2925,10 +3130,17 @@ export default function Editor({ presentation, generationParams }: Props) {
                 onDelete={deleteSlide}
                 onReorder={reorderSlides}
                 generatingIndex={generating?.current}
+                themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
               />
             </div>
           </div>
-          <ZoomControls zoom={zoom} onChange={setZoom} onFit={handleFit} />
+          <ZoomControls
+            zoom={zoom}
+            onChange={setZoom}
+            onFit={handleFit}
+            slideIndex={activeIndex}
+            slideCount={slides.length}
+          />
 
           {/* AI generation banner — visible while the SSE stream is producing slides */}
           {generating && (

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
-import { renderSlide, type SlideSpec, type SlideLayout, type ColorScheme } from "@/app/lib/slideshow-layouts";
+import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
 import { getTheme } from "@/app/lib/slideshowThemes";
 import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
 import type { SlideJSON } from "@/app/lib/presentations";
@@ -42,6 +42,10 @@ interface RequestBody {
 }
 
 // ── OpenAI structured-output schema ──────────────────────────────────────
+// New competitor-style schema. Every field is required (OpenAI strict mode);
+// unused fields are passed as empty string / empty array. Legacy layouts are
+// dropped from the AI's vocabulary — old decks still render fine because the
+// renderer in slideshow-layouts.ts keeps the old layout cases for back-compat.
 const slideshowSchema = {
   name: "slideshow",
   strict: true,
@@ -58,77 +62,93 @@ const slideshowSchema = {
           additionalProperties: false,
           required: [
             "layout",
-            "colorScheme",
-            "accentColor",
             "title",
-            "subtitle",
+            "subHook",
             "body",
+            "bulletsLeadIn",
             "bullets",
             "imageQuery",
-            "attribution",
-            "twoColLeftTitle",
-            "twoColLeftBody",
-            "twoColRightTitle",
-            "twoColRightBody",
-            "statValue",
-            "statCaption",
-            "col1Title", "col1Body",
-            "col2Title", "col2Body",
-            "col3Title", "col3Body",
-            "quadrants",
-            "timelineItems",
+            "calloutVariant",
+            "calloutLabel",
+            "calloutBody",
+            "badgeText",
+            "blockquoteText",
+            "blockquoteAttribution",
+            "activityKind",
+            "activityItems",
+            "activityCorrectOrder",
+            "activityImageQuery",
+            "secondaryImageQuery",
+            "secondaryBody",
+            "subtitle",
           ],
           properties: {
             layout: {
               type: "string",
               enum: [
-                "title-cover", "section-header", "title-bullets", "title-body",
-                "image-left", "image-right", "image-full", "two-column", "quote",
-                "big-stat", "three-column", "comparison-grid", "timeline",
+                "title-hero",
+                "paper-image-right",
+                "paper-image-left",
+                "paper-two-images",
+                "paper-image-right-badge",
+                "paper-banner-image-top",
+                "paper-quote",
+                "activity-ordering",
+                "activity-ordering-answer",
+                "activity-question",
+                "activity-question-answer",
               ],
             },
-            colorScheme: { type: "string", enum: ["light", "dark", "accent"] },
-            accentColor: { type: "string" },
             title: { type: "string" },
-            subtitle: { type: "string" },
+            // Italic sub-headline question / declarative under the title.
+            subHook: { type: "string" },
+            // Body paragraph(s); may contain **bold** markers. Use \n\n between
+            // paragraphs. Keep each paragraph short (2-3 sentences).
             body: { type: "string" },
+            // Optional one-line lead-in above bullets (e.g. "Two forces are in
+            // constant battle:"). Empty when no bullets or no lead-in needed.
+            bulletsLeadIn: { type: "string" },
+            // Bullet items. Each item may use **bold** for the leading noun.
+            // Empty array for slides that don't use a list.
             bullets: { type: "array", items: { type: "string" } },
+            // 2-4 concrete nouns describing the slide's photo. Empty for
+            // activity-ordering / activity-ordering-answer (no image).
             imageQuery: { type: "string" },
-            attribution: { type: "string" },
-            twoColLeftTitle: { type: "string" },
-            twoColLeftBody: { type: "string" },
-            twoColRightTitle: { type: "string" },
-            twoColRightBody: { type: "string" },
-            statValue: { type: "string" },
-            statCaption: { type: "string" },
-            col1Title: { type: "string" }, col1Body: { type: "string" },
-            col2Title: { type: "string" }, col2Body: { type: "string" },
-            col3Title: { type: "string" }, col3Body: { type: "string" },
-            quadrants: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["title", "body"],
-                properties: {
-                  title: { type: "string" },
-                  body: { type: "string" },
-                },
-              },
-            },
-            timelineItems: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["date", "title", "body"],
-                properties: {
-                  date: { type: "string" },
-                  title: { type: "string" },
-                  body: { type: "string" },
-                },
-              },
-            },
+            // Callout card. variant is one of "key" | "remember" | "fun" — or
+            // empty string if no callout on this slide. Body may include
+            // **bold**.
+            calloutVariant: { type: "string", enum: ["key", "remember", "fun", ""] },
+            calloutLabel: { type: "string" },
+            calloutBody: { type: "string" },
+            // Sub-genre badge (e.g. "STAR DYNAMICS"). Empty for slides without.
+            badgeText: { type: "string" },
+            // Closing-slide italic quote + attribution. Only on paper-quote
+            // layout; empty otherwise.
+            blockquoteText: { type: "string" },
+            blockquoteAttribution: { type: "string" },
+            // Activity content. activityKind is "order" | "question" | "" for
+            // non-activity slides.
+            activityKind: { type: "string", enum: ["order", "question", ""] },
+            // For "order" question slide: the 4 items in RANDOM presentation
+            // order. For "order" answer slide: same 4 items, same RANDOM order
+            // — `activityCorrectOrder` carries the indices to sort by.
+            // For "question" question slide: empty array (the question lives in
+            // `body`). For "question" answer slide: 3-5 "you might have said"
+            // bullets.
+            activityItems: { type: "array", items: { type: "string" } },
+            // Indices into `activityItems` that put them in the correct order.
+            // Empty unless layout is activity-ordering-answer.
+            activityCorrectOrder: { type: "array", items: { type: "integer" } },
+            // Image for activity-question slides. Empty for other layouts.
+            activityImageQuery: { type: "string" },
+            // Second image for paper-two-images. Empty otherwise.
+            secondaryImageQuery: { type: "string" },
+            // Second body for paper-two-images (the label/paragraph under the
+            // right cell). Empty otherwise. The left cell's label/paragraph is
+            // in the main `body` field.
+            secondaryBody: { type: "string" },
+            // Subtitle line; only used by title-hero (slide 1).
+            subtitle: { type: "string" },
           },
         },
       },
@@ -138,25 +158,25 @@ const slideshowSchema = {
 
 interface AISlideSpec {
   layout: SlideLayout;
-  colorScheme: ColorScheme;
-  accentColor: string;
   title: string;
-  subtitle: string;
+  subHook: string;
   body: string;
+  bulletsLeadIn: string;
   bullets: string[];
   imageQuery: string;
-  attribution: string;
-  twoColLeftTitle: string;
-  twoColLeftBody: string;
-  twoColRightTitle: string;
-  twoColRightBody: string;
-  statValue: string;
-  statCaption: string;
-  col1Title: string; col1Body: string;
-  col2Title: string; col2Body: string;
-  col3Title: string; col3Body: string;
-  quadrants: { title: string; body: string }[];
-  timelineItems: { date: string; title: string; body: string }[];
+  calloutVariant: "key" | "remember" | "fun" | "";
+  calloutLabel: string;
+  calloutBody: string;
+  badgeText: string;
+  blockquoteText: string;
+  blockquoteAttribution: string;
+  activityKind: "order" | "question" | "";
+  activityItems: string[];
+  activityCorrectOrder: number[];
+  activityImageQuery: string;
+  secondaryImageQuery: string;
+  secondaryBody: string;
+  subtitle: string;
 }
 
 // ── Image fetching ───────────────────────────────────────────────────────
@@ -176,9 +196,19 @@ async function fetchHit(hit: PixabayHit): Promise<FetchedImage | null> {
   const imgRes = await fetch(hit.largeImageURL);
   if (!imgRes.ok) return null;
   const buf = await imgRes.arrayBuffer();
-  const b64 = Buffer.from(buf).toString("base64");
   const mime = imgRes.headers.get("content-type") || "image/jpeg";
-  return { dataUrl: `data:${mime};base64,${b64}`, width: hit.imageWidth, height: hit.imageHeight };
+  // Upload to Supabase Storage and return its public URL. We used to inline
+  // the image as a base64 data URL, but that bloated slides to many MB each
+  // and tripped Postgres' statement timeout. URLs are tiny + CDN-cached.
+  try {
+    const { uploadImageBytes } = await import("@/app/lib/imageStorage");
+    const bytes = new Uint8Array(buf);
+    const publicUrl = await uploadImageBytes(bytes, mime, "pixabay");
+    return { dataUrl: publicUrl, width: hit.imageWidth, height: hit.imageHeight };
+  } catch (err) {
+    console.error("Pixabay → Storage upload failed:", err);
+    return null;
+  }
 }
 
 // Score a hit by how well its tags overlap with the search query words.
@@ -245,22 +275,139 @@ function orientationForLayout(layout: SlideLayout): AIImageOrientation {
   switch (layout) {
     case "title-cover":
     case "image-full":
+    case "paper-banner-image-top":
+      return "landscape";
+    case "paper-two-images":
+      // Each cell is 520×280 (1.86:1) — landscape AI (1.5:1) cover-fits much
+      // more naturally than square (1:1), which crops ~50% of the height.
       return "landscape";
     default:
       return "square";
   }
 }
 
+/** Tiny promise-concurrency limiter — caps the number of in-flight
+ *  `slideJob` calls so we don't fire 9+ simultaneous gpt-image-1 calls and
+ *  trip OpenAI's image-gen rate limit. */
+function pLimit(max: number) {
+  let active = 0;
+  const queue: Array<() => void> = [];
+  const next = () => {
+    active--;
+    const fn = queue.shift();
+    if (fn) { active++; fn(); }
+  };
+  return <T>(fn: () => Promise<T>): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      const run = () => fn().then(resolve, reject).finally(next);
+      if (active < max) { active++; run(); }
+      else queue.push(run);
+    });
+}
+
+// ── Streaming JSON parser for OpenAI slide responses ────────────────────
+// OpenAI's structured-output completion can be slow (10-30s for a long deck).
+// Streaming lets us emit each slide to the client as soon as the AI finishes
+// writing it, instead of waiting for the whole response. This parser scans
+// the streamed string for complete top-level slide objects inside the
+// `"slides": [ ... ]` array using brace-depth tracking that survives string
+// literals + escape characters.
+
+class SlideStreamParser {
+  private buffer = "";
+  private scanPos = 0;
+  private inSlides = false;
+  private depth = 0;
+  private inString = false;
+  private escape = false;
+  private objStart = -1;
+  /** First non-empty match for the top-level `"title": "..."` field. */
+  title: string | null = null;
+
+  /** Feeds a chunk of text into the parser and returns any newly-completed
+   *  slide objects. */
+  feed(chunk: string): AISlideSpec[] {
+    this.buffer += chunk;
+    const found: AISlideSpec[] = [];
+
+    if (this.title === null) {
+      // Match the FIRST top-level "title": "..." pair. The `^|\{` ensures we
+      // don't accidentally pick up "title" inside a nested slide object.
+      const m = this.buffer.match(/(?:^|\{)\s*"title"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (m) {
+        try { this.title = JSON.parse(`"${m[1]}"`); } catch { /* ignore */ }
+      }
+    }
+
+    if (!this.inSlides) {
+      const start = this.buffer.indexOf('"slides"');
+      if (start === -1) return found;
+      const openBracket = this.buffer.indexOf("[", start);
+      if (openBracket === -1) return found;
+      this.scanPos = openBracket + 1;
+      this.inSlides = true;
+    }
+
+    while (this.scanPos < this.buffer.length) {
+      const ch = this.buffer[this.scanPos];
+      if (this.escape) {
+        this.escape = false;
+        this.scanPos++;
+        continue;
+      }
+      if (this.inString) {
+        if (ch === "\\") this.escape = true;
+        else if (ch === '"') this.inString = false;
+        this.scanPos++;
+        continue;
+      }
+      if (ch === '"') { this.inString = true; this.scanPos++; continue; }
+      if (ch === "{") {
+        if (this.depth === 0) this.objStart = this.scanPos;
+        this.depth++;
+      } else if (ch === "}") {
+        this.depth--;
+        if (this.depth === 0 && this.objStart !== -1) {
+          const objStr = this.buffer.slice(this.objStart, this.scanPos + 1);
+          try {
+            const slide = JSON.parse(objStr) as AISlideSpec;
+            found.push(slide);
+          } catch {
+            // Malformed — skip it. Strict schema should prevent this from
+            // happening but be defensive.
+          }
+          this.objStart = -1;
+        }
+      }
+      this.scanPos++;
+    }
+    return found;
+  }
+}
+
 // ── Prompt builder ───────────────────────────────────────────────────────
 
+/** How many activity *pairs* (question + answer = 2 slides each) to bake into
+ *  a deck of N content slides. Matches the competitor: ~2 pairs on a 10-slide
+ *  deck. Falls off gracefully for tiny decks so we don't over-pack them. */
+function activityPairsForContentCount(n: number): number {
+  if (n >= 4) return 2;
+  if (n >= 2) return 1;
+  return 0;
+}
+
 function buildPrompt(body: RequestBody): string {
-  // The user's "slide count" is the FINAL deck size. Audio activity and YouTube
-  // video each occupy their own slide, so subtract them from the AI-generated
-  // content slides so the totals match what the user asked for. Always leave
-  // at least 1 content slide so the AI has something to design.
-  const requestedTotal = Math.max(3, Math.min(15, body.slideCount ?? 8));
-  const extras = (body.includeAudio ? 1 : 0) + (body.includeYouTube ? 1 : 0);
-  const count = Math.max(1, requestedTotal - extras);
+  // SLIDE COUNT CONTRACT:
+  // The user asks for N "content slides". We honor that as the requested
+  // content count, then add:
+  //   - 2 activity pairs (4 extra slides) when N >= 4
+  //   - 1 activity pair (2 extra slides) when N is 2-3
+  //   - 0 activity pairs for N=1
+  // Audio + YouTube extras are appended separately (post-AI), so they don't
+  // count toward the AI's emitted slide budget.
+  const contentTarget = Math.max(1, Math.min(15, body.slideCount ?? 8));
+  const activityPairs = activityPairsForContentCount(contentTarget);
+  const totalAiSlides = contentTarget + activityPairs * 2;
   const theme = getTheme(body.themeId);
   const yearLine = body.year ? `Audience: UK ${body.year} pupils.` : "";
   const readingLine = body.readingLevel && body.readingLevel !== "Same as Year"
@@ -281,23 +428,25 @@ function buildPrompt(body: RequestBody): string {
   const resourceBlock = body.resourceText?.trim()
     ? `\n\n--- LESSON MATERIAL (provided by the teacher${body.resourceSource ? " from " + body.resourceSource : ""}) ---\n${body.resourceText.trim()}\n--- END MATERIAL ---\n\nBase the deck's facts, examples, and structure on this material. Where the material is silent on something, you may add general context — but the material's content is the source of truth.`
     : "";
-  // Themes are now purely a visual skin (background, fonts, colors) applied
-  // at render time — they no longer bias the AI's word choices, tone, or
-  // colour palette. The same skeleton slides should look right under every
-  // theme. The renderer applies the theme's natural background and palette to
-  // every slide — there is no per-slide "dark" / "accent" sprinkle anymore.
-  // Just set colorScheme to "light" for every slide; the renderer ignores it
-  // either way, but keeping the field in the schema avoids touching the AI's
-  // response contract.
-  const accentLine = `Use the theme's accent colour "${theme.palette.accent}" as accentColor on every slide for consistency.`;
   const objectivesLine = body.includeObjectives
-    ? `- Make slide 2 a "title-bullets" layout titled "Learning objectives" with 3-5 bullets describing what pupils will know or be able to do.`
+    ? `- Slide 2 should be a content slide that opens with the deck's learning objectives — frame them as a sub-hook ("By the end of this lesson, you'll understand..."), then 3-5 short bold-led bullets covering the key takeaways.`
     : "";
   const vocabLine = body.includeVocab
-    ? `- Include a "title-bullets" layout titled "Key vocabulary" listing key terms with one-line definitions (format: "Term: short definition").`
+    ? `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition.`
     : "";
 
-  return `Design a ${count}-slide visual presentation on: "${body.topic}".
+  // Deck spine description varies with activityPairs to avoid telling the AI
+  // to emit pairs when there's no room for them.
+  const activityDirective = activityPairs === 2
+    ? `Inject TWO activity pairs into the deck — one at roughly 1/3 of the way through, one at roughly 2/3:
+  (1) An "activity-ordering" slide immediately followed by an "activity-ordering-answer" slide. Same title on both. The student is asked to put 4 items in order (closest-to-furthest, smallest-to-largest, oldest-to-newest, etc). imageQuery is EMPTY on both ordering slides.
+  (2) An "activity-question" slide immediately followed by an "activity-question-answer" slide. Same title on both ("Critical Thinking: ..." works well). An open-ended question students should think about, paired with 3-5 plausible "you might have said" responses on the answer slide. activityImageQuery is REQUIRED on the activity-question slide (the photo inside the speech bubble). activityImageQuery is EMPTY on the answer slide.`
+    : activityPairs === 1
+    ? `Inject ONE activity pair into the deck — placed roughly halfway through:
+  An "activity-question" slide immediately followed by an "activity-question-answer" slide. Same title on both. An open-ended critical-thinking question paired with 3-5 plausible "you might have said" responses on the answer slide. activityImageQuery REQUIRED on the question slide; empty on the answer slide.`
+    : `Do not include any activity-ordering or activity-question slides — the deck is too short.`;
+
+  return `You are a senior pedagogical lesson designer for UK classrooms. Produce a single slideshow JSON for the topic: "${body.topic}".
 
 ${yearLine}
 ${readingLine}
@@ -305,52 +454,158 @@ ${curriculumLine}
 ${extraLine}
 ${resourceBlock}
 
-You're a senior presentation designer. Plan a deck that varies layouts so it doesn't feel monotonous. Use this layout vocabulary:
-- "title-cover": opener slide. Use ONCE as slide 1.
-- "section-header": divider between sections. Use sparingly.
-- "title-bullets": title + 3-5 punchy bullets (max 6 words each). AVOID — prefer image-left/image-right.
-- "title-body": title + one paragraph of body text. AVOID — prefer image-left/image-right.
-- "image-left" / "image-right": title + body/bullets on one side, photo on the other. STRONGLY PREFERRED for content slides.
-- "image-full": dramatic full-bleed photo with a title overlay. Use 1-2 times for emphasis.
-- "two-column": compare/contrast two ideas side-by-side (fills twoCol* fields).
-- "quote": a single memorable quote, with optional attribution. Use at most ONCE.
-- "big-stat": ONE huge headline figure + caption. Fill statValue ("73%") and statCaption ("of UK pupils prefer visual aids"). Great for grabbing attention.
-- "three-column": three short titled blurbs side-by-side. Fill col1Title/col1Body, col2Title/col2Body, col3Title/col3Body.
-- "comparison-grid": 2x2 grid of titled blurbs. Fill the "quadrants" array with 2-4 items, each having (title, body). Good for pros/cons or four-part frameworks.
-- "timeline": chronological events. Fill "timelineItems" (2-5 items, each having date, title, body). Use for history, processes, or sequenced learning.
+═══════════════════════════════════════════════════
+DECK SPINE — emit slides in this exact order. EVERY content layout requires an image.
+═══════════════════════════════════════════════════
+1.   "title-hero"   — the opener. Creative deck title + one-line subtitle. **imageQuery REQUIRED**: the hero photo of the topic's most iconic object.
+2..N CONTENT SLIDES — pick layouts from this menu and vary them; do NOT repeat the same layout more than twice in a row. EVERY ONE OF THESE LAYOUTS REQUIRES an imageQuery:
+     · "paper-image-right"          — heading + sub-hook + body (+ optional callout) on the LEFT; PHOTO on the RIGHT. imageQuery REQUIRED.
+     · "paper-image-left"           — image LEFT, text RIGHT (heading + body + bullets + callout). imageQuery REQUIRED.
+     · "paper-two-images"           — heading + intro text on top; TWO image+paragraph cells below. imageQuery AND secondaryImageQuery REQUIRED.
+     · "paper-image-right-badge"    — heading + brown BADGE + body + bullets, with image RIGHT. imageQuery AND badgeText REQUIRED.
+     · "paper-banner-image-top"     — wide banner PHOTO across the top + heading + numbered list below. imageQuery REQUIRED.
+LAST content slide — "paper-quote" — a perspective shift: zoom out from the topic and end with an italic attributed quote (Carl Sagan for cosmology, Darwin for biology, an inventor for technology). imageQuery REQUIRED for the right-side image. blockquoteText AND blockquoteAttribution REQUIRED.
 
-Design rules:
-- Vary layouts; avoid repeating the same layout more than twice in a row.
-- EVERY content slide must visually rich — at least 70% of slides (excluding section-header and quote) MUST use image-left, image-right, image-full, big-stat, three-column, comparison-grid, or timeline. Empty-looking slides are forbidden.
-- Only use "title-bullets" or "title-body" when an image truly does not fit (e.g. an objectives list or vocab table). Even then, supply an imageQuery — the renderer will fall back gracefully if no image is found.
-- Sprinkle 1 big-stat and 1 timeline/comparison-grid when the topic supports them — they make decks feel professional.
-- ${accentLine}
-- Set colorScheme to "light" on EVERY slide. Do not vary it — the renderer applies the deck's single chosen theme to every slide so backgrounds and text colour are uniform.
-- All non-applicable fields MUST be empty string ("") or empty array ([]) — never omit fields.
-- imageQuery is REQUIRED for: title-cover, image-left, image-right, image-full. Set it on bullet/body slides too whenever a relevant photo could enrich the slide.
-- The title-cover slide (slide 1) MUST include a vivid, atmospheric imageQuery for its background. Think hero photo — not a generic concept but a concrete scene that evokes the topic.
-- attribution should be empty unless layout is "quote".
-- twoCol fields should be empty unless layout is "two-column".
-- bullets array must be empty unless layout uses bullets.
-- subtitle and body should be empty when not used by the layout.
-- statValue and statCaption must be empty unless layout is "big-stat".
-- col1Title/col1Body, col2Title/col2Body, col3Title/col3Body must be empty unless layout is "three-column".
-- quadrants array must be empty unless layout is "comparison-grid".
-- timelineItems array must be empty unless layout is "timeline".
+${activityDirective}
+
+═══════════════════════════════════════════════════
+SLIDE BUDGET
+═══════════════════════════════════════════════════
+- ${contentTarget} content slides (slide 1 title-hero + N-1 paper-* layouts including the closing paper-quote)
+- ${activityPairs * 2} activity slides (${activityPairs} pair${activityPairs === 1 ? "" : "s"})
+- TOTAL: emit exactly ${totalAiSlides} slides.
+
+═══════════════════════════════════════════════════
+CONTENT QUALITY RULES — non-negotiable
+═══════════════════════════════════════════════════
+
+TITLES
+- Creative + specific. "A Cosmic Balance" not "Introduction"; "Beyond the Planets" not "Other Objects".
+- Banned words in titles: "Introduction", "Overview", "Conclusion", "Summary", "Lesson", "Topic".
+
+SUB-HOOK (subHook field)
+- Every content slide carries a subHook — a question or punchy declarative ABOVE the body. Examples:
+  · "What keeps us from drifting away?"  · "Order matters in the inner solar system."  · "Two forces locked in battle."
+- The sub-hook is in body weight; the slide title is in heading weight. Don't repeat the title.
+- Empty subHook is ONLY allowed on activity slides and the title-hero.
+
+BODY TEXT (body field)
+- 2-3 short paragraphs MAX. Separate paragraphs with \\n\\n.
+- Every body MUST contain at least TWO **bold** runs marking vocab students should learn. Examples:
+  · "In our Solar System, **gravity** is that invisible string."
+  · "The Sun is a **Main Sequence** star powered by **nuclear fusion**."
+  · "Comets are 'dirty snowballs' of ice and dust that originate in the **Kuiper Belt**."
+- Markers are paired \`**word**\` (two asterisks each side). The renderer parses them.
+
+ANALOGIES (deck-wide, not per slide)
+- The deck MUST include at least ONE concrete analogy grounded in an everyday object. Ball-on-a-string for gravity, peppercorn-vs-beach-ball for cosmic scale, dirty snowballs for comets, recipe for chemical reactions. Wherever possible — TWO or three.
+
+FACTS & NUMBERS
+- Weave specific numbers and named entities into prose. NEVER list them as bare facts.
+- Examples: "99.8% of the total mass", "150 million km", "30 AU", "Mercury, Venus, Earth, Mars".
+
+CALLOUTS (calloutVariant + calloutLabel + calloutBody)
+- Add ONE callout to MOST content slides — vary the variant across the deck:
+  · "key" (default label "Key point") — the so-what / one-line takeaway.
+  · "remember" (default label "Remember") — the mental model students should hold.
+  · "fun" (default label "Fun fact") — a surprising, sticky piece of trivia.
+- Body may include **bold**. 1-2 sentences max.
+- Leave calloutVariant as "" on slides without a callout. activity-* layouts and the title-hero do NOT take callouts.
+
+BADGES (badgeText)
+- Use 1-2 badges in the whole deck to frame a sub-genre. UPPERCASE, 2-3 words. Only on layout "paper-image-right-badge" — empty everywhere else.
+- Examples: "STAR DYNAMICS", "DEEP HISTORY", "KEY CONCEPT".
+
+LISTS (bullets + bulletsLeadIn)
+- Use bullets when listing comparable factors or items. Each item LEADS WITH a **bold noun**:
+  · "**Mass**: Larger masses exert stronger gravity."
+  · "**Distance**: Gravity weakens with distance."
+- "paper-banner-image-top" uses numbered list (the renderer numbers automatically). Lead each item with **bold noun** too.
+- bulletsLeadIn (optional) is a single line above the bullets, e.g. "Two forces are in constant battle:" or "Factors affecting orbit:".
+
+BLOCKQUOTE (blockquoteText + blockquoteAttribution)
+- ONLY on the closing "paper-quote" slide. ALL OTHER slides leave both empty.
+- The quote should be a humbling perspective-shift moment. Carl Sagan's "very small stage in a vast cosmic arena" for cosmology. Choose a real, attributable quote that lands the topic emotionally.
+
+ACTIVITY-ORDERING / ACTIVITY-ORDERING-ANSWER
+- activityKind: "order" on BOTH slides of the pair.
+- title: same on both (e.g. "Planetary Distance").
+- body: instruction text ("Order these planets by their distance from the Sun, starting with the closest.")
+- activityItems: 4 strings in RANDOM presentation order. SAME 4 strings on both slides — do NOT re-order between question and answer slide.
+- activityCorrectOrder: empty array [] on the question slide; on the answer slide, fill with the indices into activityItems that put them in correct order. Example: activityItems = ["Mars","Saturn","Venus","Neptune"] → activityCorrectOrder = [2, 0, 1, 3] (Venus, Mars, Saturn, Neptune).
+- imageQuery: empty on both — these slides are pure activity.
+- No callout, no badge, no blockquote, no body **bold** required.
+
+ACTIVITY-QUESTION / ACTIVITY-QUESTION-ANSWER
+- activityKind: "question" on BOTH slides of the pair.
+- title: same on both (e.g. "Critical Thinking: The Search for Life").
+- body: on the question slide, the open-ended question itself. On the answer slide, empty.
+- activityItems: empty [] on the question slide; on the answer slide, 3-5 "you might have said" responses (one short sentence each).
+- activityImageQuery: 2-4 concrete nouns for the image embedded in the speech bubble (question slide only). Empty on the answer slide.
+- activityCorrectOrder: empty on both.
+- No callout, no badge, no blockquote.
+
+TITLE-HERO (slide 1 only)
+- title: the deck title (3-6 words).
+- subtitle: one tagline that frames the journey, e.g. "Exploring Our Cosmic Neighbourhood and Celestial Dynamics".
+- imageQuery: 2-4 concrete nouns for the hero image of the topic's most iconic object.
+- subHook, body, callout, badge, blockquote, activity*, secondary*, bullets, bulletsLeadIn — all empty.
+
+═══════════════════════════════════════════════════
+IMAGE QUERY RULES — READ CAREFULLY, THIS IS THE #1 RULE
+═══════════════════════════════════════════════════
+EVERY content slide MUST have a non-empty imageQuery. Empty imageQuery is a BUG. The image is what makes the slide visually rich — without it, the slide is half-empty.
+
+Per-layout requirements (FAILURE TO COMPLY IS A BUG):
+- title-hero                    → imageQuery REQUIRED (the hero image).
+- paper-image-right             → imageQuery REQUIRED.
+- paper-image-left              → imageQuery REQUIRED.
+- paper-image-right-badge       → imageQuery REQUIRED.
+- paper-banner-image-top        → imageQuery REQUIRED (wide banner photo).
+- paper-quote                   → imageQuery REQUIRED (the right-side image).
+- paper-two-images              → imageQuery REQUIRED (LEFT cell image) AND secondaryImageQuery REQUIRED (RIGHT cell image).
+- activity-question             → activityImageQuery REQUIRED (the photo inside the speech bubble). imageQuery may be empty.
+- activity-question-answer      → both image queries empty.
+- activity-ordering             → both image queries empty.
+- activity-ordering-answer      → both image queries empty.
+
+Query format (applies to imageQuery, secondaryImageQuery, activityImageQuery):
+- 2-4 CONCRETE NOUNS. Never generic terms like "planets", "people", "science", or "education".
+- Bad: "planets" → returns gas giants when the slide is about rocky planets.
+- Good: "mercury venus mars rocky planet" or "earth surface from space".
+- For DIAGRAMS (orbits, anatomy, cycles), include "diagram" or "infographic", e.g. "elliptical orbit diagram labeled".
+- For activity-question slides, choose an image that complements the question visually (planet surface for "where would life evolve", a microscope for "how would we detect it", etc).
+
+═══════════════════════════════════════════════════
+PAPER-TWO-IMAGES SPECIFIC
+═══════════════════════════════════════════════════
+- body: the paragraph under the LEFT image cell. Lead with **bold noun**.
+- secondaryBody: the paragraph under the RIGHT image cell. Lead with **bold noun**.
+- imageQuery: the LEFT image. secondaryImageQuery: the RIGHT image.
+- title + an intro line (in body's first paragraph) can sit above both cells — use \\n\\n to separate the intro from the left-cell paragraph.
+
+═══════════════════════════════════════════════════
+FIELDS THAT MUST BE EMPTY
+═══════════════════════════════════════════════════
+- ALL fields are required in the schema. Use empty string "" or empty array [] for fields that don't apply.
+- Never omit a field.
+
+═══════════════════════════════════════════════════
+TONE & LANGUAGE
+═══════════════════════════════════════════════════
+- British English. Spell "vaporises", "prioritise", "neighbourhood", "behaviour", "colour", "centre".
+- Vivid, direct verbs. Avoid filler ("As we can see", "It is important to note that").
+- Tone is science-textbook-meets-storyteller: rigorous facts, warm voice.
+
 ${objectivesLine}
 ${vocabLine}
 
-CRITICAL imageQuery rules — image relevance depends on this:
-- Use 2-4 CONCRETE NOUNS. Never generic terms like "planets", "people", "science", or "education".
-- Bad: "planets" → returns gas giants when the slide is about rocky planets.
-- Good: "mercury venus mars rocky planet" or "earth surface from space".
-- Bad: "history" → returns abstract scrolls.
-- Good: "victorian factory workers" or "ancient roman colosseum".
-- If the slide is about a specific entity, name it explicitly in the query.
-- Avoid filler words. Single-image search terms only.
+═══════════════════════════════════════════════════
+DECK TITLE
+═══════════════════════════════════════════════════
+- A short, evocative title (3-6 words). Same kind of title as the title-hero slide title — use the same string.
 
-Write the deck title as a short title (≤ 6 words).
-Write slide content that's substantive, specific, and engaging — no filler. Use UK English spelling.`;
+Now produce the JSON.`;
 }
 
 // ── Handler ─────────────────────────────────────────────────────────────
@@ -399,131 +654,247 @@ export async function POST(req: NextRequest) {
       try {
         send("status", { message: "Designing your deck..." });
 
-        const client = getOpenAI();
-        const completion = await client.chat.completions.create({
-          model: "gpt-4o-2024-08-06",
-          messages: [
-            { role: "system", content: "You design clean, varied, content-rich UK classroom presentation decks." },
-            { role: "user", content: buildPrompt(body) },
-          ],
-          response_format: { type: "json_schema", json_schema: slideshowSchema },
-        });
-        const content = completion.choices[0]?.message?.content;
-        if (!content) throw new Error("Empty AI response");
-        const parsed: { title: string; slides: AISlideSpec[] } = JSON.parse(content);
-
-        // The user's "slide count" target includes the audio + video slides.
-        // Surface the FINAL total to the client so its progress UI / slide tray
-        // shows e.g. "of 8" rather than "of 6" while we wait for TTS + YouTube.
-        const extras =
-          (body.includeAudio ? 1 : 0) + (body.includeYouTube ? 1 : 0);
-        const finalTotal = parsed.slides.length + extras;
-        const extraTitles: string[] = [];
-        if (body.includeAudio) extraTitles.push("Audio activity");
-        if (body.includeYouTube) extraTitles.push("YouTube video");
-
-        send("meta", {
-          title: parsed.title,
-          total: finalTotal,
-          slideTitles: [...parsed.slides.map((s) => s.title), ...extraTitles],
-        });
-
-        // ── Phase 1: ship every slide's TEXT immediately ──────────────────
-        // Slides with imageQuery render with `imagePending: true` so the image
-        // frame shows a shimmer placeholder until the real photo arrives via
-        // the "slide-image" event below. This lets the user read the deck
-        // while OpenAI / Pixabay calls run in the background.
-        const specs: SlideSpec[] = parsed.slides.map((s) => ({
-          layout: s.layout,
-          colorScheme: s.colorScheme,
-          accentColor: s.accentColor,
-          title: s.title,
-          subtitle: s.subtitle || undefined,
-          body: s.body || undefined,
-          bullets: s.bullets.length ? s.bullets : undefined,
-          imageQuery: s.imageQuery || undefined,
-          attribution: s.attribution || undefined,
-          twoColLeftTitle: s.twoColLeftTitle || undefined,
-          twoColLeftBody: s.twoColLeftBody || undefined,
-          twoColRightTitle: s.twoColRightTitle || undefined,
-          twoColRightBody: s.twoColRightBody || undefined,
-          statValue: s.statValue || undefined,
-          statCaption: s.statCaption || undefined,
-          col1Title: s.col1Title || undefined, col1Body: s.col1Body || undefined,
-          col2Title: s.col2Title || undefined, col2Body: s.col2Body || undefined,
-          col3Title: s.col3Title || undefined, col3Body: s.col3Body || undefined,
-          quadrants: s.quadrants.length ? s.quadrants : undefined,
-          timelineItems: s.timelineItems.length ? s.timelineItems : undefined,
-          imagePending: !!s.imageQuery,
-        }));
-        // Extract the layout-and-content half of each SlideSpec so the client
-        // can re-render under a different theme later. We strip per-render
-        // fields (image data + accent) because those come from theme/fetch.
+        // Pre-compute everything the AI->Spec mapping needs that doesn't
+        // depend on a specific slide, so we can reuse it per-slide as the
+        // stream feeds slides in.
+        const imageRequiredLayouts = new Set<SlideLayout>([
+          "title-hero",
+          "paper-image-right",
+          "paper-image-left",
+          "paper-image-right-badge",
+          "paper-banner-image-top",
+          "paper-quote",
+          "paper-two-images",
+        ]);
+        const synthQuery = (slideTitle: string) => {
+          const cleaned = (slideTitle || body.topic)
+            .replace(/[:;,!?]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          return `${body.topic.toLowerCase()} ${cleaned}`.slice(0, 80);
+        };
+        const buildSpec = (s: AISlideSpec): SlideSpec => {
+          const isTwoImages = s.layout === "paper-two-images";
+          const isActivityQuestion = s.layout === "activity-question";
+          const aiQuery = s.imageQuery?.trim();
+          const finalImageQuery = imageRequiredLayouts.has(s.layout) && !aiQuery
+            ? synthQuery(s.title)
+            : aiQuery || undefined;
+          const aiActivityQuery = s.activityImageQuery?.trim();
+          const finalActivityImageQuery = isActivityQuestion && !aiActivityQuery
+            ? synthQuery(s.title)
+            : aiActivityQuery || undefined;
+          const aiSecondaryQuery = s.secondaryImageQuery?.trim();
+          const finalSecondaryImageQuery = isTwoImages && !aiSecondaryQuery
+            ? synthQuery(s.title)
+            : aiSecondaryQuery || undefined;
+          return {
+            layout: s.layout,
+            colorScheme: "light",
+            accentColor: theme.palette.accent,
+            title: s.title,
+            subtitle: s.subtitle || undefined,
+            body: s.body || undefined,
+            bullets: s.bullets.length ? s.bullets : undefined,
+            bulletsLeadIn: s.bulletsLeadIn || undefined,
+            imageQuery: finalImageQuery,
+            subHook: s.subHook || undefined,
+            calloutVariant: s.calloutVariant || undefined,
+            calloutLabel: s.calloutLabel || undefined,
+            calloutBody: s.calloutBody || undefined,
+            badgeText: s.badgeText || undefined,
+            blockquoteText: s.blockquoteText || undefined,
+            blockquoteAttribution: s.blockquoteAttribution || undefined,
+            activityKind: s.activityKind || undefined,
+            activityItems: s.activityItems.length ? s.activityItems : undefined,
+            activityCorrectOrder: s.activityCorrectOrder.length ? s.activityCorrectOrder : undefined,
+            activityImageQuery: finalActivityImageQuery,
+            secondaryImageQuery: finalSecondaryImageQuery,
+            twoColLeftBody: isTwoImages ? (s.body || undefined) : undefined,
+            twoColRightBody: isTwoImages ? (s.secondaryBody || undefined) : undefined,
+            imagePending: !!finalImageQuery,
+          };
+        };
         const toSkeleton = (s: SlideSpec) => {
           const { imageDataUrl: _idu, imageWidth: _iw, imageHeight: _ih, imagePending: _ip, accentColor: _ac, ...rest } = s;
           return rest;
         };
 
-        for (let idx = 0; idx < specs.length; idx++) {
-          if (closed) break;
-          const slide: SlideJSON = renderSlide(specs[idx], theme);
-          // Carry the skeleton + active theme on slide 0 so re-theming is
-          // possible from just the saved deck JSON.
-          slide.skeleton = toSkeleton(specs[idx]);
-          if (idx === 0) slide.themeId = theme.id;
-          send("slide", {
-            index: idx,
-            // `total` is the FINAL deck size (content + audio + video) — what
-            // the progress bar should show.
-            total: finalTotal,
-            // `contentTotal` is just the streaming-slide count. The client
-            // uses this to stop pushing empty placeholders after the last AI
-            // slide; audio/video extras arrive as their own placeholder events.
-            contentTotal: specs.length,
-            slide,
-            title: specs[idx].title,
+        // Compute expected total slide count from the prompt's budget so we
+        // can send "meta" early (before the AI finishes generating).
+        const expectedContentTarget = Math.max(1, Math.min(15, body.slideCount ?? 8));
+        const expectedActivityPairs = activityPairsForContentCount(expectedContentTarget);
+        const expectedTotalAi = expectedContentTarget + expectedActivityPairs * 2;
+        const audioVideoExtras =
+          (body.includeAudio ? 1 : 0) + (body.includeYouTube ? 1 : 0);
+        const expectedFinalTotal = expectedTotalAi + audioVideoExtras;
+        const extraTitles: string[] = [];
+        if (body.includeAudio) extraTitles.push("Audio activity");
+        if (body.includeYouTube) extraTitles.push("YouTube video");
+
+        // Image-fetch helper — kicks off the (up to three) image fetches for
+        // a slide and emits a "slide-image" event when each settles. Defined
+        // here so it's in scope when the streaming loop below calls it as
+        // soon as each slide arrives from the AI. Always sends a final
+        // "slide-image" even on partial failure so the client clears the
+        // shimmer placeholder.
+        const slideJob = async (spec: SlideSpec, idx: number) => {
+          if (closed) return;
+          if (!spec.imageQuery && !spec.secondaryImageQuery && !spec.activityImageQuery) return;
+          const filled: SlideSpec = { ...spec, imagePending: false };
+          const galleryImages: { prompt: string; style?: string; dataUrl: string }[] = [];
+
+          // Wrap each fetch in its own try so one failure doesn't kill the
+          // others. The slide can still render with the partial set of images
+          // that did succeed.
+          const safeFetch = async (q: string, ori: AIImageOrientation, jobIdx: number) => {
+            try {
+              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx);
+            } catch (err) {
+              console.warn(`[slideJob ${idx}] image fetch failed for "${q}":`, err);
+              return null;
+            }
+          };
+
+          // Note: NO `if (closed) return;` between fetches anymore. Bailing
+          // mid-job means the slide stays stuck in its initial `isPending:true`
+          // state on the persisted side because the final "slide-image" event
+          // never fires. We let each fetch complete (cheap async noop if the
+          // network call has already started) and always fire the final event.
+          // `send()` itself silently drops when the controller is closed.
+          if (spec.imageQuery) {
+            const img = await safeFetch(spec.imageQuery, orientationForLayout(spec.layout), idx);
+            if (img) {
+              filled.imageDataUrl = img.dataUrl;
+              filled.imageWidth = img.width;
+              filled.imageHeight = img.height;
+              if (img.provider === "ai") galleryImages.push({ prompt: spec.imageQuery, style: imageStyle, dataUrl: img.dataUrl });
+            }
+          }
+
+          if (spec.secondaryImageQuery) {
+            const img2 = await safeFetch(spec.secondaryImageQuery, "square", idx + 100);
+            if (img2) {
+              filled.secondaryImageDataUrl = img2.dataUrl;
+              filled.secondaryImageWidth = img2.width;
+              filled.secondaryImageHeight = img2.height;
+              if (img2.provider === "ai") galleryImages.push({ prompt: spec.secondaryImageQuery, style: imageStyle, dataUrl: img2.dataUrl });
+            }
+          }
+
+          if (spec.activityImageQuery) {
+            const img3 = await safeFetch(spec.activityImageQuery, "square", idx + 200);
+            if (img3) {
+              filled.activityImageDataUrl = img3.dataUrl;
+              filled.activityImageWidth = img3.width;
+              filled.activityImageHeight = img3.height;
+              if (img3.provider === "ai") galleryImages.push({ prompt: spec.activityImageQuery, style: imageStyle, dataUrl: img3.dataUrl });
+            }
+          }
+
+          // ALWAYS send the final "slide-image" so the client clears the
+          // shimmer, even if every fetch failed (the slide just falls back to
+          // a blank frame instead of staying in the pending state forever).
+          const updated = renderSlide(filled, theme);
+          const primary = galleryImages[0];
+          send("slide-image", { index: idx, slide: updated, galleryImage: primary });
+          for (let g = 1; g < galleryImages.length; g++) {
+            send("slide-image", { index: idx, slide: updated, galleryImage: galleryImages[g] });
+          }
+        };
+
+        const client = getOpenAI();
+        const stream = await client.chat.completions.create({
+          model: "gpt-4o-2024-08-06",
+          messages: [
+            { role: "system", content: "You are a senior pedagogical lesson designer creating UK classroom slideshows. Your output is structured JSON. Your style is vivid, specific, and memorable — every slide should feel like it was designed by a thoughtful teacher who understands their audience." },
+            { role: "user", content: buildPrompt(body) },
+          ],
+          response_format: { type: "json_schema", json_schema: slideshowSchema },
+          stream: true,
+        });
+
+        const parser = new SlideStreamParser();
+        const allAi: AISlideSpec[] = [];
+        const allSpecs: SlideSpec[] = [];
+        const imageJobs: Promise<void>[] = [];
+        // Cap parallel image fetches. AI image gen tier-1 limits are tight
+        // (~5-10 images/min) — firing 9-12 in parallel triggered silent 429s
+        // that left slides stuck in their shimmer state.
+        const imageLimit = pLimit(3);
+        let metaSent = false;
+
+        const sendMetaIfReady = () => {
+          if (metaSent) return;
+          if (!parser.title) return;
+          metaSent = true;
+          send("meta", {
+            title: parser.title,
+            total: expectedFinalTotal,
+            // We don't know the real titles yet — populate placeholders that
+            // get filled in as each slide arrives. The client uses these
+            // for the slide-tray labels during streaming.
+            slideTitles: [
+              ...Array.from({ length: expectedTotalAi }, (_, i) => `Slide ${i + 1}`),
+              ...extraTitles,
+            ],
           });
+        };
+
+        for await (const chunk of stream) {
+          if (closed) break;
+          const delta = chunk.choices[0]?.delta?.content;
+          if (!delta) continue;
+          const newSlides = parser.feed(delta);
+          sendMetaIfReady();
+          for (const ai of newSlides) {
+            const idx = allAi.length;
+            allAi.push(ai);
+            const spec = buildSpec(ai);
+            allSpecs.push(spec);
+
+            // Diagnostic logging on the fly
+            const expectsMain = !ai.layout.startsWith("activity-");
+            if (expectsMain) {
+              console.log(`[generate-slideshow] slide ${idx} (${ai.layout}) imageQuery="${ai.imageQuery}" → "${spec.imageQuery ?? ""}"`);
+            }
+
+            const slide: SlideJSON = renderSlide(spec, theme);
+            slide.skeleton = toSkeleton(spec);
+            if (idx === 0) slide.themeId = theme.id;
+            send("slide", {
+              index: idx,
+              total: expectedFinalTotal,
+              contentTotal: expectedTotalAi,
+              slide,
+              title: ai.title,
+            });
+            // Start fetching this slide's image(s) immediately, capped at
+            // `imageLimit` concurrent jobs so we don't trip rate limits.
+            imageJobs.push(imageLimit(() => slideJob(spec, idx)));
+          }
         }
 
-        // ── Phase 2: fetch all images in parallel ─────────────────────────
-        // Each image's "slide-image" event includes the re-rendered slide so
-        // the client can drop the new JSON in place (preserves layout +
-        // background-image vs image-layer placement).
-        const imageJobs = specs.map((spec, idx) => (async () => {
-          if (!spec.imageQuery || closed) return;
-          const img = await fetchImageForSlide(
-            spec.imageQuery,
-            imageSource,
-            imageStyle,
-            orientationForLayout(spec.layout),
-            idx,
-          );
-          if (closed) return;
-          if (!img) {
-            // No image came back — clear the pending flag so the shimmer stops.
-            const cleared: SlideSpec = { ...spec, imagePending: false };
-            send("slide-image", {
-              index: idx,
-              slide: renderSlide(cleared, theme),
-            });
-            return;
-          }
-          const filled: SlideSpec = {
-            ...spec,
-            imagePending: false,
-            imageDataUrl: img.dataUrl,
-            imageWidth: img.width,
-            imageHeight: img.height,
-          };
-          const updated = renderSlide(filled, theme);
-          send("slide-image", {
-            index: idx,
-            slide: updated,
-            galleryImage: img.provider === "ai" && spec.imageQuery
-              ? { prompt: spec.imageQuery, style: imageStyle, dataUrl: img.dataUrl }
-              : undefined,
+        // The stream has fully finished. allAi now holds every slide in order.
+        // If the AI emitted a different number of slides than we budgeted
+        // (rare but possible — strict schema doesn't lock the array length),
+        // emit a `count-correction` event with the real totals. We CAN'T
+        // re-send `meta` because the client's meta handler wipes all slides
+        // to a single placeholder — it's only safe at the very start. The
+        // dedicated `count-correction` handler only updates the progress UI.
+        const finalTotal = allAi.length + audioVideoExtras;
+        if (allAi.length !== expectedTotalAi) {
+          send("count-correction", {
+            total: finalTotal,
+            slideTitles: [...allAi.map((s) => s.title), ...extraTitles],
           });
-        })());
+        }
+        // Local aliases to keep the audio/video code below readable.
+        const parsed = { title: parser.title ?? body.topic, slides: allAi };
+        const specs = allSpecs;
+
+        // All image jobs were kicked off during the streaming loop above —
+        // wait for any still in flight before generating audio/video.
         await Promise.allSettled(imageJobs);
 
         // Optional audio activity (one per deck). Generated AFTER all slides

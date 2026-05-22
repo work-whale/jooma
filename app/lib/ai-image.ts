@@ -60,7 +60,12 @@ export async function generateAIImage(
       : orientation === "portrait"
       ? "Vertical / portrait composition, tall framing"
       : "Horizontal / landscape composition, wide framing";
-  const prompt = `${STYLE_PROMPTS[style]}. Subject: ${query}. ${composition}, suitable for a presentation slide.`;
+  // Explicit no-text directive — image generators love baking labels into
+  // illustrations (e.g. a multi-planet activity image with "MARS" / "EUROPA"
+  // written across the planets). We want clean photos / illustrations only;
+  // any labelling lives in the slide's text layer.
+  const noText = "Absolutely no text, no letters, no labels, no captions, no watermarks, no logos, no typography of any kind anywhere in the image. Pure visual only.";
+  const prompt = `${STYLE_PROMPTS[style]}. Subject: ${query}. ${composition}, suitable for a presentation slide. ${noText}`;
 
   // Supported sizes per model:
   //   gpt-image-1 → 1024x1024 (sq), 1024x1536 (port), 1536x1024 (land)

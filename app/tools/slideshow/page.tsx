@@ -37,7 +37,7 @@ function SlideThumbnail({ slide }: { slide: SlideJSON }) {
   // stretched until the ResizeObserver fired.
   return (
     <div ref={ref} className="w-full overflow-hidden bg-white" style={{ aspectRatio: "16 / 9" }}>
-      {width > 0 && <MiniSlide slide={slide} width={width} />}
+      {width > 0 && <MiniSlide slide={slide} width={width} themeId={slide.themeId} />}
     </div>
   );
 }

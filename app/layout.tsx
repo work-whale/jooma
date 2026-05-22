@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist_Mono } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Geist_Mono,
+  Lora,
+  Playfair_Display,
+  Inter,
+  Archivo_Black,
+} from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
@@ -14,6 +21,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Slideshow theme fonts — referenced by name in the slide renderers
+// (`makeText` picks `theme.fonts.heading` / `theme.fonts.body` as the CSS
+// font-family). Without these `next/font` imports the browser silently
+// falls back to the same system serif/sans for every theme and theme
+// switching has no visible font effect.
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+});
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+const archivoBlack = Archivo_Black({
+  variable: "--font-archivo-black",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "Jooma",
   description: "AI-powered tools built for teachers",
@@ -25,7 +60,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${bricolage.variable} ${geistMono.variable} ${lora.variable} ${playfair.variable} ${inter.variable} ${archivoBlack.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col" style={{ backgroundColor: "#F1EFE3" }} suppressHydrationWarning>
         <NextTopLoader color="#1a1a1a" showSpinner={false} />
         {children}

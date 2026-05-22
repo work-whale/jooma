@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2 } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
-import { SLIDESHOW_THEMES } from "@/app/lib/slideshowThemes";
+import { SLIDESHOW_THEMES, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
 
 // sessionStorage key used to hand the generation params from this modal to the
@@ -88,7 +88,7 @@ export default function GenerateModal({ onClose }: Props) {
   const [readingLevel, setReadingLevel] = useState(READING_LEVELS[0]);
   const [slideCount, setSlideCount] = useState(8);
   const [additionalInstructions, setAdditionalInstructions] = useState("");
-  const [themeId, setThemeId] = useState<string>("light");
+  const [themeId, setThemeId] = useState<string>(DEFAULT_THEME_ID);
 
   const [includeObjectives, setIncludeObjectives] = useState(false);
   const [includeVocab, setIncludeVocab] = useState(false);
@@ -332,6 +332,13 @@ export default function GenerateModal({ onClose }: Props) {
                   required
                   disabled={busy}
                   autoFocus
+                  // Chrome's autofill misreads this as an identity-card field
+                  // ("Save identity card?" pop-up). Disable browser autofill
+                  // entirely — same goes for the other inputs in this modal.
+                  autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  name="lesson-topic"
                   className="mt-1 w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60"
                   style={{ borderColor: "#DAD8D0" }}
                 />
@@ -409,6 +416,10 @@ export default function GenerateModal({ onClose }: Props) {
                   placeholder="You can include specific topics, learning objectives or paste in existing lesson plans..."
                   rows={3}
                   disabled={busy || outlineBusy}
+                  autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  name="lesson-instructions"
                   className="w-full px-3 py-2 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
                   style={{ borderColor: "#DAD8D0" }}
                 />
@@ -963,6 +974,10 @@ function ResourceAttachmentCard({
                     placeholder="https://en.wikipedia.org/wiki/..."
                     disabled={disabled || busy}
                     autoFocus
+                    autoComplete="off"
+                    data-1p-ignore
+                    data-lpignore="true"
+                    name="resource-url"
                     className="flex-1 px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
                     style={{ borderColor: "#DAD8D0" }}
                   />
