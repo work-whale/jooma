@@ -1,48 +1,309 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon } from "lucide-react";
+import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film } from "lucide-react";
+import { parseYouTubeId } from "./youtube";
 import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
 import FramePicker from "./FramePicker";
 import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
+import { listGeneratedImages, saveGeneratedImage, type GeneratedImage } from "@/app/lib/generatedImages";
 
-type TabId = "elements" | "text" | "uploads";
+type TabId = "elements" | "text" | "uploads" | "ai" | "audio" | "video";
 
-type SidebarShape = "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon";
+export interface SidebarAudioActivity {
+  src: string;
+  title: string;
+  description: string;
+  transcript?: string;
+  questions: string[];
+}
+
+type AudioActivityType = "comprehension" | "true-false" | "gap-fills";
+
+const AUDIO_ACTIVITY_TYPES: { id: AudioActivityType; label: string }[] = [
+  { id: "comprehension", label: "Comprehension" },
+  { id: "true-false", label: "True/False" },
+  { id: "gap-fills", label: "Gap fills" },
+];
+
+type SidebarShape =
+  | "rect" | "ellipse" | "triangle" | "line" | "arrow" | "star" | "hexagon"
+  | "pentagon" | "octagon" | "diamond" | "heart" | "cloud" | "speech" | "plus" | "bolt";
 
 interface Props {
   onAddShape: (type: SidebarShape) => void;
   onAddText: (preset: "heading" | "subheading" | "body", fontFamily?: string) => void;
   onAddImage: (dataUrl: string) => void;
   onAddFrame?: (frame: FrameShape) => void;
+  onAddAudioActivity?: (audio: SidebarAudioActivity) => void;
+  onAddVideo?: (source: "youtube" | "upload", src: string, title?: string) => void;
+  // Bumped by the Editor whenever it saves a new image to the gallery (e.g. from
+  // the SSE wizard stream or right-click regenerate). Triggers a refetch here.
+  galleryRefreshTrigger?: number;
 }
+
+const AI_STYLES: { id: "photographic" | "illustration" | "storybook" | "painted" | "line-drawing" | "comic-book"; label: string }[] = [
+  { id: "photographic", label: "Photo" },
+  { id: "illustration", label: "Illustration" },
+  { id: "storybook", label: "Storybook" },
+  { id: "painted", label: "Painted" },
+  { id: "line-drawing", label: "Line" },
+  { id: "comic-book", label: "Comic" },
+];
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "elements", label: "Elements", icon: <Shapes className="w-5 h-5" /> },
   { id: "text", label: "Text", icon: <Type className="w-5 h-5" /> },
   { id: "uploads", label: "Uploads", icon: <ImageIcon className="w-5 h-5" /> },
+  { id: "ai", label: "AI", icon: <Sparkles className="w-5 h-5" /> },
+  { id: "audio", label: "Audio", icon: <Headphones className="w-5 h-5" /> },
+  { id: "video", label: "Video", icon: <Film className="w-5 h-5" /> },
 ];
 
 type ElementSubTab = "shapes" | "graphics" | "pictures" | "frames";
+
+const SUB_TAB_LABELS: Record<ElementSubTab, string> = {
+  shapes: "Shapes",
+  graphics: "Graphics",
+  pictures: "Pictures",
+  frames: "Frames",
+};
 
 export default function Sidebar({
   onAddShape,
   onAddText,
   onAddImage,
   onAddFrame,
+  onAddAudioActivity,
+  onAddVideo,
+  galleryRefreshTrigger = 0,
 }: Props) {
+  // ── Video tab ─────────────────────────────────────────────────────────────
+  const videoFileRef = useRef<HTMLInputElement>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoUrlError, setVideoUrlError] = useState<string | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState<string | null>(null);
+  const [videoSuggestTopic, setVideoSuggestTopic] = useState("");
+  const [videoSuggestBusy, setVideoSuggestBusy] = useState(false);
+  const [videoSuggestError, setVideoSuggestError] = useState<string | null>(null);
+
+  const handleAddYouTube = () => {
+    const id = parseYouTubeId(videoUrl);
+    if (!id) {
+      setVideoUrlError("Couldn't find a YouTube video id in that URL");
+      return;
+    }
+    setVideoUrlError(null);
+    onAddVideo?.("youtube", id);
+    setVideoUrl("");
+  };
+
+  const handleSuggestVideo = async () => {
+    const topic = videoSuggestTopic.trim();
+    if (!topic) {
+      setVideoSuggestError("Tell us what the video should be about");
+      return;
+    }
+    setVideoSuggestBusy(true);
+    setVideoSuggestError(null);
+    try {
+      const r = await fetch("/api/find-youtube", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, length: "any" }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Couldn't find a video");
+      }
+      const data: { videoId: string; title: string } = await r.json();
+      onAddVideo?.("youtube", data.videoId, data.title);
+      setVideoSuggestTopic("");
+    } catch (err) {
+      setVideoSuggestError(err instanceof Error ? err.message : "Couldn't find a video");
+    } finally {
+      setVideoSuggestBusy(false);
+    }
+  };
+
+  const handleVideoFile = async (file: File) => {
+    setVideoUploading(true);
+    setVideoUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/upload-video", { method: "POST", body: fd });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Upload failed");
+      }
+      const data: { src: string } = await r.json();
+      onAddVideo?.("upload", data.src, file.name);
+    } catch (err) {
+      setVideoUploadError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setVideoUploading(false);
+    }
+  };
+  // Audio tab state
+  const [audioTopic, setAudioTopic] = useState("");
+  const [audioScript, setAudioScript] = useState("");
+  const [audioActivityType, setAudioActivityType] = useState<AudioActivityType>("comprehension");
+  const [audioInstructions, setAudioInstructions] = useState("");
+  const [audioBusy, setAudioBusy] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
+
+  const handleAudioGenerate = async () => {
+    const hasTopic = audioTopic.trim().length > 0;
+    const hasScript = audioScript.trim().length > 0;
+    if (!hasTopic && !hasScript) return;
+    if (audioBusy) return;
+    setAudioBusy(true);
+    setAudioError(null);
+    try {
+      const r = await fetch("/api/generate-audio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: audioTopic.trim() || "Custom script",
+          activityType: audioActivityType,
+          additionalInstructions: audioInstructions.trim() || undefined,
+          scriptOverride: hasScript ? audioScript.trim() : undefined,
+        }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Generation failed");
+      }
+      const data = await r.json();
+      onAddAudioActivity?.({
+        src: data.src,
+        title: data.title,
+        description: data.description,
+        transcript: data.transcript,
+        questions: data.questions ?? [],
+      });
+      setAudioTopic("");
+      setAudioScript("");
+      setAudioInstructions("");
+    } catch (err) {
+      setAudioError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setAudioBusy(false);
+    }
+  };
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiStyle, setAiStyle] = useState<typeof AI_STYLES[number]["id"]>("photographic");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<GeneratedImage[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+  const [gallerySearch, setGallerySearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce the search input so we don't hammer Supabase on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(gallerySearch.trim()), 250);
+    return () => clearTimeout(t);
+  }, [gallerySearch]);
+
+  // Gallery fetch is moved below the `active` state declaration so we can
+  // gate it on the AI tab being open. See the useEffect after `setActive`.
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim() || aiBusy) return;
+    setAiBusy(true);
+    setAiError(null);
+    try {
+      const r = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt.trim(), style: aiStyle }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || "Generation failed");
+      }
+      const data: { dataUrl: string } = await r.json();
+      const saved = await saveGeneratedImage({ prompt: aiPrompt.trim(), style: aiStyle, dataUrl: data.dataUrl });
+      setGallery((prev) => [saved, ...prev]);
+      setAiPrompt("");
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setAiBusy(false);
+    }
+  };
   // Click-toggle only. The panel stays open until the user clicks the same icon,
   // the close button, or anywhere outside the sidebar.
   const [active, setActive] = useState<TabId | null>(null);
+
+  // Gallery fetch — gated on the AI tab being open. The gallery rows hold
+  // full base64 image data (~2.7 MB each), so loading on every editor mount
+  // was crushing free-tier Postgres compute (saturated CPU + timeouts on
+  // unrelated queries). Now the fetch only fires when the user actually
+  // opens the AI tab. Limit dropped from 100 → 30 to keep worst-case at
+  // ~80 MB instead of ~270 MB per request.
+  useEffect(() => {
+    if (active !== "ai") return;
+    let cancelled = false;
+    setGalleryLoading(true);
+    listGeneratedImages({ search: debouncedSearch, limit: 30 })
+      .then((rows) => { if (!cancelled) setGallery(rows); })
+      .catch((err) => { if (!cancelled) console.warn("Gallery fetch failed:", err); })
+      .finally(() => { if (!cancelled) setGalleryLoading(false); });
+    return () => { cancelled = true; };
+  }, [active, debouncedSearch, galleryRefreshTrigger]);
 
   // Lazy-inject the Google Fonts <link> the first time the sidebar mounts.
   useEffect(() => { injectGoogleFonts(); }, []);
   const [elementSubTab, setElementSubTab] = useState<ElementSubTab>("shapes");
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploads, setUploads] = useState<string[]>([]);
+  const [uploadUrl, setUploadUrl] = useState("");
+  const [uploadUrlBusy, setUploadUrlBusy] = useState(false);
+  const [uploadUrlError, setUploadUrlError] = useState<string | null>(null);
+
+  const handleAddByUrl = async () => {
+    const u = uploadUrl.trim();
+    if (!u || uploadUrlBusy) return;
+    setUploadUrlBusy(true);
+    setUploadUrlError(null);
+    try {
+      const r = await fetch("/api/fetch-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: u }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to fetch image");
+      }
+      const data: { dataUrl: string } = await r.json();
+      setUploads((prev) => [data.dataUrl, ...prev]);
+      onAddImage(data.dataUrl);
+      setUploadUrl("");
+    } catch (err) {
+      setUploadUrlError(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setUploadUrlBusy(false);
+    }
+  };
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Track which sub-tabs have ever been opened. Graphics + Pictures keep their
+  // own search/scroll state, so once the user opens them we KEEP them mounted
+  // and only hide them via display:none. Re-opening the sidebar then preserves
+  // whatever the user had typed/scrolled.
+  const [openedSubTabs, setOpenedSubTabs] = useState<Set<ElementSubTab>>(() => new Set(["shapes"]));
+  useEffect(() => {
+    if (active === "elements") {
+      setOpenedSubTabs((prev) => prev.has(elementSubTab) ? prev : new Set(prev).add(elementSubTab));
+    }
+  }, [active, elementSubTab]);
 
   // Close when clicking outside the sidebar
   useEffect(() => {
@@ -104,23 +365,29 @@ export default function Sidebar({
         })}
       </div>
 
-      {/* Expanded panel — only rendered when a tab is active. Floats over canvas. */}
-      {active && (
-        <div
-          className="absolute top-0 bottom-0 w-72 border-r shadow-lg flex flex-col"
-          style={{ borderColor: "#DAD8D0", backgroundColor: "#F1EFE3", left: 72 }}
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#DAD8D0" }}>
-            <h3 className="text-sm font-semibold text-gray-800 capitalize">{active}</h3>
-            <button
-              onClick={handleClose}
-              className="p-1 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
-              title="Close"
-              aria-label="Close panel"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+      {/* Expanded panel — kept in the DOM once mounted, hidden via display:none
+          when no tab is active so stateful sub-panels (Graphics search, Pictures
+          search/scroll) survive close-and-reopen. */}
+      <div
+        className="absolute top-0 bottom-0 w-72 border-r shadow-lg flex flex-col"
+        style={{
+          borderColor: "#DAD8D0",
+          backgroundColor: "#F1EFE3",
+          left: 72,
+          display: active ? "flex" : "none",
+        }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "#DAD8D0" }}>
+          <h3 className="text-sm font-semibold text-gray-800 capitalize">{active ?? ""}</h3>
+          <button
+            onClick={handleClose}
+            className="p-1 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
+            title="Close"
+            aria-label="Close panel"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
           <div className="flex-1 overflow-y-auto p-4">
             {active === "elements" && (
@@ -134,13 +401,13 @@ export default function Sidebar({
                     <button
                       key={id}
                       onClick={() => setElementSubTab(id)}
-                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                         elementSubTab === id
                           ? "bg-violet-100 text-violet-700"
                           : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
-                      {id}
+                      {SUB_TAB_LABELS[id]}
                     </button>
                   ))}
                 </div>
@@ -196,12 +463,79 @@ export default function Sidebar({
                     >
                       <MoveRight className="w-7 h-7 text-gray-700" strokeWidth={1.75} />
                     </button>
+                    <button
+                      onClick={() => onAddShape("pentagon")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Pentagon"
+                    >
+                      <Pentagon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("octagon")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Octagon"
+                    >
+                      <Octagon className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("diamond")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Diamond"
+                    >
+                      <Diamond className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("heart")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Heart"
+                    >
+                      <Heart className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("cloud")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Cloud"
+                    >
+                      <Cloud className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("speech")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Speech bubble"
+                    >
+                      <MessageCircle className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("plus")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Plus"
+                    >
+                      <PlusIcon className="w-7 h-7 text-gray-700" strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => onAddShape("bolt")}
+                      className="aspect-square flex items-center justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50"
+                      title="Lightning bolt"
+                    >
+                      <Zap className="w-7 h-7 text-gray-700" strokeWidth={1.5} />
+                    </button>
                   </div>
                 )}
 
-                {elementSubTab === "graphics" && <GraphicsPanel onAdd={onAddImage} />}
+                {/* Keep Graphics + Pictures mounted once first opened so their
+                    search query, results, and scroll position survive across
+                    close/reopen and sub-tab switches. */}
+                {openedSubTabs.has("graphics") && (
+                  <div style={{ display: elementSubTab === "graphics" ? "block" : "none" }}>
+                    <GraphicsPanel onAdd={onAddImage} />
+                  </div>
+                )}
 
-                {elementSubTab === "pictures" && <PicturesPanel onAdd={onAddImage} />}
+                {openedSubTabs.has("pictures") && (
+                  <div style={{ display: elementSubTab === "pictures" ? "block" : "none" }}>
+                    <PicturesPanel onAdd={onAddImage} />
+                  </div>
+                )}
 
                 {elementSubTab === "frames" && (
                   <div className="space-y-3">
@@ -215,6 +549,311 @@ export default function Sidebar({
                     />
                   </div>
                 )}
+
+              </div>
+            )}
+
+            {active === "ai" && (
+              <div className="space-y-3">
+                <p className="text-[11px] text-gray-500">
+                  Describe an image and AI will generate it. Results join the gallery below.
+                </p>
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAiGenerate();
+                    }
+                  }}
+                  placeholder="A photo of saturn with its rings"
+                  rows={2}
+                  disabled={aiBusy}
+                  className="w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 resize-none"
+                  style={{ borderColor: "#DAD8D0" }}
+                />
+                <div className="flex flex-wrap gap-1">
+                  {AI_STYLES.map((s) => {
+                    const selected = aiStyle === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setAiStyle(s.id)}
+                        disabled={aiBusy}
+                        className="px-2 py-0.5 text-[10px] font-semibold rounded-full border transition-colors"
+                        style={
+                          selected
+                            ? { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a", color: "#fff" }
+                            : { backgroundColor: "#fff", borderColor: "#DAD8D0", color: "#1a1a1a" }
+                        }
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAiGenerate}
+                  disabled={aiBusy || !aiPrompt.trim()}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                >
+                  {aiBusy ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate
+                    </>
+                  )}
+                </button>
+                {aiError && (
+                  <p className="text-[10px] text-red-600">{aiError}</p>
+                )}
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Gallery</p>
+                  <div className="relative mb-2">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+                    <input
+                      type="text"
+                      value={gallerySearch}
+                      onChange={(e) => setGallerySearch(e.target.value)}
+                      placeholder="Search across all slideshows"
+                      className="w-full pl-7 pr-2 py-1.5 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                  </div>
+                  {galleryLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    </div>
+                  ) : gallery.length === 0 ? (
+                    <p className="text-[11px] text-gray-400">
+                      {debouncedSearch ? "No images match that search." : "Generated images from all your slideshows will appear here."}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {gallery.map((g) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={g.id}
+                          src={g.data_url}
+                          alt={g.prompt}
+                          title={g.prompt}
+                          draggable
+                          onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", g.data_url)}
+                          onClick={() => onAddImage(g.data_url)}
+                          className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {active === "audio" && (
+              <div className="space-y-3">
+                <p className="text-[11px] text-gray-500">
+                  Generate a listening activity — a TTS clip plus comprehension questions — and drop it onto a new slide.
+                </p>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-gray-700">
+                    Topic <span className="text-gray-400 font-normal">{audioScript.trim() ? "(used for AI questions)" : ""}</span>
+                  </span>
+                  <input
+                    type="text"
+                    value={audioTopic}
+                    onChange={(e) => setAudioTopic(e.target.value)}
+                    placeholder="E.g. The water cycle"
+                    disabled={audioBusy}
+                    className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                    style={{ borderColor: "#DAD8D0" }}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-gray-700">
+                    Script <span className="text-gray-400 font-normal">(optional)</span>
+                  </span>
+                  <textarea
+                    value={audioScript}
+                    onChange={(e) => setAudioScript(e.target.value)}
+                    placeholder="Paste your own script here — it'll be read aloud exactly. Leave blank and AI will write one."
+                    rows={4}
+                    disabled={audioBusy}
+                    className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 resize-none"
+                    style={{ borderColor: "#DAD8D0" }}
+                  />
+                </label>
+                <div>
+                  <span className="text-[11px] font-semibold text-gray-700 block mb-1">Activity type</span>
+                  <div className="flex flex-wrap gap-1">
+                    {AUDIO_ACTIVITY_TYPES.map((a) => {
+                      const selected = audioActivityType === a.id;
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => setAudioActivityType(a.id)}
+                          disabled={audioBusy}
+                          className="px-2 py-1 text-[11px] font-semibold rounded-full border transition-colors"
+                          style={
+                            selected
+                              ? { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a", color: "#fff" }
+                              : { backgroundColor: "#fff", borderColor: "#DAD8D0", color: "#1a1a1a" }
+                          }
+                        >
+                          {a.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-gray-700">
+                    Notes <span className="text-gray-400 font-normal">(optional)</span>
+                  </span>
+                  <textarea
+                    value={audioInstructions}
+                    onChange={(e) => setAudioInstructions(e.target.value)}
+                    placeholder="E.g. include key vocabulary..."
+                    rows={2}
+                    disabled={audioBusy}
+                    className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 resize-none"
+                    style={{ borderColor: "#DAD8D0" }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAudioGenerate}
+                  disabled={audioBusy || (!audioTopic.trim() && !audioScript.trim())}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                >
+                  {audioBusy ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Generate audio activity
+                    </>
+                  )}
+                </button>
+                {audioError && (
+                  <p className="text-[10px] text-red-600">{audioError}</p>
+                )}
+                <p className="text-[10px] text-gray-400 mt-2">
+                  Generation takes ~10–15 seconds. A new slide will be inserted into your deck with the audio player, transcript, and questions.
+                </p>
+              </div>
+            )}
+
+            {active === "video" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Suggest with AI</p>
+                  <div className="space-y-1.5">
+                    <input
+                      type="text"
+                      value={videoSuggestTopic}
+                      onChange={(e) => { setVideoSuggestTopic(e.target.value); setVideoSuggestError(null); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSuggestVideo(); } }}
+                      placeholder="e.g. how volcanoes erupt"
+                      disabled={videoSuggestBusy}
+                      className="w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSuggestVideo}
+                      disabled={!videoSuggestTopic.trim() || videoSuggestBusy}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#7c3aed", color: "#fff" }}
+                    >
+                      {videoSuggestBusy ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Finding a video…
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Suggest a video
+                        </>
+                      )}
+                    </button>
+                    {videoSuggestError && <p className="text-[10px] text-red-600">{videoSuggestError}</p>}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">YouTube</p>
+                  <div className="space-y-1.5">
+                    <input
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => { setVideoUrl(e.target.value); setVideoUrlError(null); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddYouTube(); } }}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddYouTube}
+                      disabled={!videoUrl.trim()}
+                      className="w-full px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+                    >
+                      Add YouTube video
+                    </button>
+                    {videoUrlError && <p className="text-[10px] text-red-600">{videoUrlError}</p>}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Upload video</p>
+                  <button
+                    onClick={() => videoFileRef.current?.click()}
+                    disabled={videoUploading}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                    style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                  >
+                    {videoUploading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Uploading…
+                      </>
+                    ) : (
+                      <>
+                        <Film className="w-3.5 h-3.5" />
+                        Choose a video file
+                      </>
+                    )}
+                  </button>
+                  <input
+                    ref={videoFileRef}
+                    type="file"
+                    accept="video/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleVideoFile(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  {videoUploadError && <p className="text-[10px] text-red-600 mt-1">{videoUploadError}</p>}
+                  <p className="text-[10px] text-gray-400 mt-2">MP4 / WebM up to ~50 MB. Stored in your Supabase project.</p>
+                </div>
               </div>
             )}
 
@@ -261,7 +900,7 @@ export default function Sidebar({
             )}
 
             {active === "uploads" && (
-              <div>
+              <div className="space-y-3">
                 <button
                   onClick={() => fileRef.current?.click()}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold py-2 rounded-xl transition-colors"
@@ -279,8 +918,32 @@ export default function Sidebar({
                     e.target.value = "";
                   }}
                 />
+                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
+                  <p className="text-[11px] font-semibold text-gray-700 mb-1">Add by URL</p>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="url"
+                      value={uploadUrl}
+                      onChange={(e) => setUploadUrl(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddByUrl(); } }}
+                      placeholder="https://..."
+                      disabled={uploadUrlBusy}
+                      className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                      style={{ borderColor: "#DAD8D0" }}
+                    />
+                    <button
+                      onClick={handleAddByUrl}
+                      disabled={uploadUrlBusy || !uploadUrl.trim()}
+                      className="px-3 py-1.5 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+                    >
+                      {uploadUrlBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Add"}
+                    </button>
+                  </div>
+                  {uploadUrlError && <p className="text-[10px] text-red-600 mt-1">{uploadUrlError}</p>}
+                </div>
                 {uploads.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2 mt-4">
+                  <div className="grid grid-cols-2 gap-2 mt-2">
                     {uploads.map((u, i) => (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -298,8 +961,7 @@ export default function Sidebar({
               </div>
             )}
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

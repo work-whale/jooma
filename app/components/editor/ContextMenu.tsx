@@ -16,6 +16,7 @@ import {
   ImagePlus,
   Image as ImageIcon,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 
 export type ContextMenuKind = "text" | "shape" | "image" | "slide";
@@ -42,6 +43,8 @@ interface Props {
   onToggleShadow?: () => void;
   onToggleLock?: () => void;
   onDelete?: () => void;
+  // Image-only
+  onRegenerate?: () => void;
   // Slide actions
   onAddSlide?: () => void;
   onDuplicateSlide?: () => void;
@@ -73,6 +76,7 @@ export default function ContextMenu({
   onToggleShadow,
   onToggleLock,
   onDelete,
+  onRegenerate,
   onAddSlide,
   onDuplicateSlide,
   onDeleteSlide,
@@ -180,6 +184,15 @@ export default function ContextMenu({
         label: "Drop shadow",
         active: !!state.shadow,
         onClick: click(onToggleShadow),
+      });
+    }
+
+    if (state.kind === "image" && onRegenerate) {
+      items.push("divider");
+      items.push({
+        icon: <RefreshCw className="w-3.5 h-3.5" />,
+        label: "Regenerate with AI",
+        onClick: click(onRegenerate),
       });
     }
 

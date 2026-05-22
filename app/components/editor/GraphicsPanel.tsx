@@ -2,18 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Search, Loader2 } from "lucide-react";
+import { UNDRAW_ILLUSTRATIONS, recolorUndraw, undrawToDataUrl } from "./undrawCatalog";
 
 interface Props {
   onAdd: (dataUrl: string) => void;
 }
 
-// Result type covers both Iconify icons (rendered from Iconify URL) and Pixabay
-// illustrations (raster previews + full image URL).
+// Result type covers Iconify icons, Pixabay illustrations, and bundled unDraw SVGs.
 interface GraphicResult {
   id: string;
-  thumb: string;          // displayed in the grid
-  fetchUrl: string;       // fetched on click and converted to data URL
-  kind: "icon" | "illustration";
+  thumb: string;          // displayed in the grid (URL or data URL)
+  fetchUrl: string;       // either a remote URL or a pre-built data URL (for unDraw)
+  kind: "icon" | "illustration" | "undraw";
   alt: string;
 }
 
@@ -44,13 +44,32 @@ const DEFAULT_ICONS: string[] = [
   "lucide:settings", "lucide:bell", "lucide:search", "lucide:download",
 ];
 
-const DEFAULT_RESULTS: GraphicResult[] = DEFAULT_ICONS.map((icon) => ({
+// unDraw illustrations are bundled as raw SVG strings; we pre-build data URLs
+// using the brand-aligned dark accent so they look intentional out of the box.
+const UNDRAW_ACCENT = "#1a1a2e";
+const UNDRAW_RESULTS: GraphicResult[] = UNDRAW_ILLUSTRATIONS.map((u, i) => {
+  const colored = recolorUndraw(u.svg, UNDRAW_ACCENT);
+  const dataUrl = undrawToDataUrl(colored);
+  return {
+    id: `undraw-${i}-${u.name}`,
+    thumb: dataUrl,
+    fetchUrl: dataUrl,
+    kind: "undraw",
+    alt: u.name,
+  };
+});
+
+const ICON_RESULTS: GraphicResult[] = DEFAULT_ICONS.map((icon) => ({
   id: `icon-${icon}`,
   thumb: `https://api.iconify.design/${icon}.svg?color=${ICON_COLOR}`,
   fetchUrl: `https://api.iconify.design/${icon}.svg?color=${ICON_COLOR}`,
   kind: "icon",
   alt: icon,
 }));
+
+// Show unDraw illustrations FIRST in the empty state so the panel feels less
+// icon-heavy on first open, then mix in the curated icon catalog.
+const DEFAULT_RESULTS: GraphicResult[] = [...UNDRAW_RESULTS, ...ICON_RESULTS];
 
 function svgToDataUrl(svgText: string): string {
   const utf8 = unescape(encodeURIComponent(svgText));
@@ -125,15 +144,27 @@ async function searchPixabay(query: string, page: number, signal: AbortSignal): 
   }));
 }
 
-// Round-robin merge: icon, illustration, icon, illustration, ... so the grid feels mixed.
-function interleave(iconList: GraphicResult[], illusList: GraphicResult[]): GraphicResult[] {
+// Round-robin merge: pulls from each list in turn so the grid stays balanced.
+function interleave(...lists: GraphicResult[][]): GraphicResult[] {
   const result: GraphicResult[] = [];
-  const max = Math.max(iconList.length, illusList.length);
+  const max = Math.max(0, ...lists.map((l) => l.length));
   for (let i = 0; i < max; i++) {
-    if (illusList[i] !== undefined) result.push(illusList[i]);
-    if (iconList[i] !== undefined) result.push(iconList[i]);
+    for (const list of lists) {
+      if (list[i] !== undefined) result.push(list[i]);
+    }
   }
   return result;
+}
+
+// Filter the bundled unDraw catalog by the search query against name + keywords.
+function searchUndraw(query: string): GraphicResult[] {
+  const q = query.toLowerCase();
+  return UNDRAW_RESULTS.filter((r, i) => {
+    const ill = UNDRAW_ILLUSTRATIONS[i];
+    if (!ill) return false;
+    if (ill.name.toLowerCase().includes(q)) return true;
+    return ill.keywords.some((kw) => kw.toLowerCase().includes(q));
+  });
 }
 
 export default function GraphicsPanel({ onAdd }: Props) {
@@ -167,7 +198,9 @@ export default function GraphicsPanel({ onAdd }: Props) {
           searchIconify(q, 0, controller.signal).catch(() => []),
           searchPixabay(q, 1, controller.signal).catch(() => []),
         ]);
-        const merged = interleave(icons, illus);
+        const undraw = searchUndraw(q);
+        // Show matched unDraw illustrations FIRST, then interleave Iconify + Pixabay.
+        const merged = [...undraw, ...interleave(icons, illus)];
         setResults(merged);
         if (icons.length < PER_PAGE_ICON && illus.length < PER_PAGE_ILLUS) setHasMore(false);
       } catch (err) {

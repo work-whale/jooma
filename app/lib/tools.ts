@@ -127,6 +127,13 @@ export const TOOLS: Tool[] = [
     tag: "SEND",
   },
   {
+    href: "/tools/lesson-slideshow",
+    icon: "lesson-slideshow",
+    label: "Lesson Slideshow Generator",
+    description: "Generate a complete classroom presentation for any topic and year group — streamed slide by slide, with activities, key facts, and comparisons. Export to PDF or PowerPoint.",
+    tag: "Planning",
+  },
+  {
     href: "/tools/cpd-slideshow",
     icon: "cpd-slideshow",
     label: "CPD Slideshow Generator",
@@ -254,4 +261,4 @@ export const TOOLS: Tool[] = [
   },
 ];
 
-export const PINNED_HREFS = ["/tools/lesson-planner", "/tools/worksheet-generator"];
+export const PINNED_HREFS: string[] = [];

@@ -14,6 +14,9 @@ interface Props {
   onSnap?: (id: string, x: number, y: number, w: number, h: number) => { x: number; y: number };
   onDragEnd?: () => void;
   onContextMenu?: (id: string, clientX: number, clientY: number) => void;
+  inMultiSelection?: boolean;
+  onGroupDragStart?: (e: React.MouseEvent) => void;
+  onCloneAndDrag?: (e: React.MouseEvent) => void;
 }
 
 const MIN_SIZE = 8;
@@ -164,10 +167,104 @@ function renderShape(s: ShapeObject) {
       />
     );
   }
+  if (type === "pentagon" || type === "octagon") {
+    const sides = type === "pentagon" ? 5 : 8;
+    const cx = w / 2;
+    const cy = h / 2;
+    const rW = w / 2 - strokeWidth / 2;
+    const rH = h / 2 - strokeWidth / 2;
+    const pts: string[] = [];
+    for (let i = 0; i < sides; i++) {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / sides;
+      pts.push(`${cx + rW * Math.cos(a)},${cy + rH * Math.sin(a)}`);
+    }
+    return <polygon points={pts.join(" ")} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
+  if (type === "diamond") {
+    const sw = strokeWidth / 2;
+    const pts = `${w / 2},${sw} ${w - sw},${h / 2} ${w / 2},${h - sw} ${sw},${h / 2}`;
+    return <polygon points={pts} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
+  if (type === "heart") {
+    // Heart via cubic Bézier curves, scaled to the bounding box.
+    const sw = strokeWidth / 2;
+    const W = w - strokeWidth, H = h - strokeWidth;
+    const x0 = sw, y0 = sw + H * 0.25;
+    const d = `M ${x0 + W / 2} ${sw + H} ` +
+      `C ${x0 + W / 2} ${sw + H * 0.75}, ${x0} ${sw + H * 0.55}, ${x0} ${y0 + H * 0.05} ` +
+      `C ${x0} ${sw}, ${x0 + W * 0.5} ${sw}, ${x0 + W / 2} ${sw + H * 0.25} ` +
+      `C ${x0 + W * 0.5} ${sw}, ${x0 + W} ${sw}, ${x0 + W} ${y0 + H * 0.05} ` +
+      `C ${x0 + W} ${sw + H * 0.55}, ${x0 + W / 2} ${sw + H * 0.75}, ${x0 + W / 2} ${sw + H} Z`;
+    return <path d={d} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
+  if (type === "cloud") {
+    // Cloud built from overlapping circles + a flat base.
+    const sw = strokeWidth / 2;
+    const W = w - strokeWidth, H = h - strokeWidth;
+    const d =
+      `M ${sw + W * 0.20} ${sw + H * 0.75} ` +
+      `C ${sw + W * 0.05} ${sw + H * 0.75}, ${sw + W * 0.05} ${sw + H * 0.45}, ${sw + W * 0.22} ${sw + H * 0.45} ` +
+      `C ${sw + W * 0.22} ${sw + H * 0.18}, ${sw + W * 0.55} ${sw + H * 0.15}, ${sw + W * 0.58} ${sw + H * 0.4} ` +
+      `C ${sw + W * 0.78} ${sw + H * 0.25}, ${sw + W * 0.98} ${sw + H * 0.45}, ${sw + W * 0.86} ${sw + H * 0.55} ` +
+      `C ${sw + W * 0.99} ${sw + H * 0.60}, ${sw + W * 0.95} ${sw + H * 0.80}, ${sw + W * 0.80} ${sw + H * 0.75} ` +
+      `Z`;
+    return <path d={d} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
+  if (type === "speech") {
+    // Speech bubble: rounded rect with a tail pointing down-left.
+    const sw = strokeWidth / 2;
+    const W = w - strokeWidth, H = h - strokeWidth;
+    const bodyH = H * 0.78;
+    const r = Math.min(20, Math.min(W, bodyH) * 0.15);
+    const d =
+      `M ${sw + r} ${sw} ` +
+      `L ${sw + W - r} ${sw} ` +
+      `Q ${sw + W} ${sw}, ${sw + W} ${sw + r} ` +
+      `L ${sw + W} ${sw + bodyH - r} ` +
+      `Q ${sw + W} ${sw + bodyH}, ${sw + W - r} ${sw + bodyH} ` +
+      `L ${sw + W * 0.35} ${sw + bodyH} ` +
+      `L ${sw + W * 0.18} ${sw + H} ` +
+      `L ${sw + W * 0.25} ${sw + bodyH} ` +
+      `L ${sw + r} ${sw + bodyH} ` +
+      `Q ${sw} ${sw + bodyH}, ${sw} ${sw + bodyH - r} ` +
+      `L ${sw} ${sw + r} ` +
+      `Q ${sw} ${sw}, ${sw + r} ${sw} Z`;
+    return <path d={d} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
+  if (type === "plus") {
+    const sw = strokeWidth / 2;
+    const W = w - strokeWidth, H = h - strokeWidth;
+    const arm = Math.min(W, H) * 0.32; // half-width of each arm
+    const cx = sw + W / 2, cy = sw + H / 2;
+    const pts = [
+      `${cx - arm},${sw}`, `${cx + arm},${sw}`,
+      `${cx + arm},${cy - arm}`, `${sw + W},${cy - arm}`,
+      `${sw + W},${cy + arm}`, `${cx + arm},${cy + arm}`,
+      `${cx + arm},${sw + H}`, `${cx - arm},${sw + H}`,
+      `${cx - arm},${cy + arm}`, `${sw},${cy + arm}`,
+      `${sw},${cy - arm}`, `${cx - arm},${cy - arm}`,
+    ].join(" ");
+    return <polygon points={pts} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
+  if (type === "bolt") {
+    // Lightning bolt zigzag.
+    const sw = strokeWidth / 2;
+    const W = w - strokeWidth, H = h - strokeWidth;
+    const pts = [
+      `${sw + W * 0.55},${sw}`,
+      `${sw + W * 0.15},${sw + H * 0.55}`,
+      `${sw + W * 0.45},${sw + H * 0.55}`,
+      `${sw + W * 0.30},${sw + H}`,
+      `${sw + W * 0.85},${sw + H * 0.42}`,
+      `${sw + W * 0.55},${sw + H * 0.42}`,
+      `${sw + W * 0.72},${sw}`,
+    ].join(" ");
+    return <polygon points={pts} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />;
+  }
   return null;
 }
 
-function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu }: Props) {
+function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, inMultiSelection = false, onGroupDragStart, onCloneAndDrag }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rotation = shape.rotation ?? 0;
   const rad = (rotation * Math.PI) / 180;
@@ -175,9 +272,21 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
   const sin = Math.sin(rad);
 
   const handleBodyMouseDown = (e: React.MouseEvent) => {
-    if (shape.locked) return;
+    // Alt+mousedown: spawn a duplicate at the same position and drag it.
+    if (e.altKey && onCloneAndDrag && !shape.locked) {
+      onCloneAndDrag(e);
+      return;
+    }
+    // Route to group drag when part of a multi-selection so the whole group
+    // moves together and the selection isn't dropped.
+    if (inMultiSelection && onGroupDragStart && !e.shiftKey) {
+      onGroupDragStart(e);
+      return;
+    }
     e.stopPropagation();
     if (!selected) onSelect(shape.id);
+    // Locked: select only so the user can unlock from the toolbar.
+    if (shape.locked) return;
     const startX = e.clientX;
     const startY = e.clientY;
     const origX = shape.x;
@@ -225,13 +334,17 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
       // Project screen delta into the shape's local (unrotated) frame
       const localDx = dx * cos + dy * sin;
       const localDy = -dx * sin + dy * cos;
+      // Alt held → symmetric resize: double the delta on the dragged edge and
+      // keep the centre fixed so the opposite edge mirrors the movement.
+      const fromCenter = ev.altKey;
+      const k = fromCenter ? 2 : 1;
 
       let w = origW, h = origH;
       let cxLocal = 0, cyLocal = 0;
-      if (pos.includes("e")) { w = Math.max(MIN_SIZE, origW + localDx); cxLocal = (w - origW) / 2; }
-      if (pos.includes("w")) { w = Math.max(MIN_SIZE, origW - localDx); cxLocal = -(w - origW) / 2; }
-      if (pos.includes("s")) { h = Math.max(MIN_SIZE, origH + localDy); cyLocal = (h - origH) / 2; }
-      if (pos.includes("n")) { h = Math.max(MIN_SIZE, origH - localDy); cyLocal = -(h - origH) / 2; }
+      if (pos.includes("e")) { w = Math.max(MIN_SIZE, origW + k * localDx); cxLocal = fromCenter ? 0 : (w - origW) / 2; }
+      if (pos.includes("w")) { w = Math.max(MIN_SIZE, origW - k * localDx); cxLocal = fromCenter ? 0 : -(w - origW) / 2; }
+      if (pos.includes("s")) { h = Math.max(MIN_SIZE, origH + k * localDy); cyLocal = fromCenter ? 0 : (h - origH) / 2; }
+      if (pos.includes("n")) { h = Math.max(MIN_SIZE, origH - k * localDy); cyLocal = fromCenter ? 0 : -(h - origH) / 2; }
 
       // Center shift back in screen frame
       const dCxScreen = cxLocal * cos - cyLocal * sin;
@@ -294,6 +407,7 @@ function ShapeElement({ shape, selected, zoom, onSelect, onUpdate, onCommit, onS
         pointerEvents: "auto",
         transform: `rotate(${rotation}deg)`,
         transformOrigin: "center center",
+        zIndex: shape.z,
         filter: shape.shadow ? "drop-shadow(0 6px 12px rgba(0,0,0,0.25))" : undefined,
       }}
       onMouseDown={handleBodyMouseDown}

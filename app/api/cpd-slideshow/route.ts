@@ -3,13 +3,30 @@ import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SlideData {
-  type: "title" | "content";
+  type: "title" | "content" | "quote" | "stat" | "two-column" | "activity";
   title: string;
   presentationTitle: string;
+  // title / content
   subtitle?: string;
   body?: string;
   bullets?: string[];
   imageSuggestion?: string;
+  callout?: { type: "key-point" | "reflection" | "try-this" | "discussion"; text: string };
+  // quote
+  quote?: string;
+  quoteAuthor?: string;
+  // stat
+  stat?: string;
+  statLabel?: string;
+  statContext?: string;
+  // two-column
+  leftTitle?: string;
+  leftContent?: string;
+  rightTitle?: string;
+  rightContent?: string;
+  // activity
+  activityPrompt?: string;
+  activitySubtask?: string;
 }
 
 interface GenerateBody {
@@ -33,49 +50,74 @@ type RequestBody = GenerateBody | RefineBody;
 
 function buildGeneratePrompt(body: GenerateBody): string {
   const imageLine = body.includeImageSuggestions
-    ? `- Each content slide must include an "imageSuggestion" field with a short, specific image search query (e.g. "teachers collaborating in a staff room"). Omit on the title slide.`
+    ? `- Content slides may include an "imageSuggestion" field with a specific image search query (e.g. "teachers collaborating in a staff room"). Omit on all other slide types.`
     : `- Do not include any "imageSuggestion" field.`;
 
   const bulletLine =
     body.contentFormat === "Text and bullet point summary"
-      ? `- Each content slide must include a "bullets" array with exactly 3 bullet points. Each bullet must be no more than 6 words. They should be punchy, memorable takeaways — not full sentences.`
+      ? `- Content slides may include a "bullets" array with 2–3 bullet points. Each bullet must be no more than 6 words — punchy visual anchors, not sentences.`
       : `- Do not include any "bullets" field.`;
 
   const focusLine =
     body.presentationFocus === "Practical application"
-      ? "Focus on practical classroom application — one concrete strategy or actionable step per slide. Name the technique, describe it in a single clear sentence, and ground it in what it looks like in a UK classroom."
-      : "Focus on the research base and theoretical frameworks — one key finding or concept per slide. Name the researcher or study, state the finding in plain language, and give its direct classroom implication in one sentence.";
+      ? "Focus on practical classroom application — concrete strategies and actionable steps. Name the technique, describe it clearly, ground it in UK classroom reality."
+      : "Focus on the research base and theoretical frameworks — key findings, named researchers, and direct classroom implications in plain language.";
 
   const additionalLine = body.additionalFocus?.trim()
-    ? `Additional focus areas to weave through the presentation: ${body.additionalFocus}`
+    ? `Additional focus areas to weave through: ${body.additionalFocus}`
     : "";
 
   return `Create a high-quality CPD (Continuing Professional Development) slideshow for teachers on: "${body.topic}".
 
 ${focusLine}
-${additionalLine ? additionalLine + "\n" : ""}
-This slideshow is for use in a UK school CPD session. It should reflect current best practice and, where relevant, reference the Teachers' Standards, Ofsted's Education Inspection Framework, or DfE guidance.
+${additionalLine ? additionalLine + "\n" : ""}This slideshow is for a UK school CPD session. Reflect current best practice and reference the Teachers' Standards, Ofsted's Education Inspection Framework, or DfE guidance where relevant.
 
-Output exactly ${body.slideCount} slides: 1 title slide followed by ${body.slideCount - 1} content slides.
+Output exactly ${body.slideCount} slides. Always start with 1 title slide.
 
-IMPORTANT: Output each slide as a single JSON object on its own line. Do not wrap them in an array. Do not output anything else — no brackets, no separators, no explanation. One JSON object per line only.
+IMPORTANT: Output each slide as a single JSON object on its own line. No arrays, brackets, separators, or explanation. One valid JSON object per line only.
 
-Title slide format:
-{"type":"title","title":"[compelling presentation title — maximum 6 words]","presentationTitle":"[same title]","subtitle":"[one sentence beginning with 'By the end of this session, participants will...']"}
+────────────────────────────────
+SLIDE TYPES AND FORMATS
+────────────────────────────────
 
-Content slide format:
-{"type":"content","title":"[action-oriented headline that states the key message of this slide — e.g. 'Retrieval Practice Boosts Long-Term Retention']","presentationTitle":"[same title as above]","body":"[STRICT LIMIT: 2 sentences maximum. First sentence states the single key idea. Second sentence gives one specific example, statistic, or classroom application. Total must not exceed 40 words.]","bullets":["max 6 words","max 6 words","max 6 words"],"imageSuggestion":"[specific image search query]"}
+1. TITLE (always slide 1):
+{"type":"title","title":"[compelling title — max 6 words]","presentationTitle":"[same title]","subtitle":"[one sentence beginning with 'By the end of this session, participants will...']"}
 
-Slide design principles — follow these strictly:
-- ONE key message per slide. If you find yourself writing more than one idea, split it into two slides.
-- The "title" field is the headline — it must communicate the takeaway on its own, not just label the topic. Bad: "Feedback". Good: "Specific Feedback Accelerates Progress".
-- The "body" field is the support — maximum 2 sentences, maximum 40 words total. No padding, no repetition of the title, no filler phrases.
-- Bullet points (if included) are 6 words or fewer each — they are visual anchors, not sentences.
-- Slides must build logically: early slides set the rationale, middle slides deliver the core content, final slides focus on implementation and next steps.
-- "presentationTitle" must be identical on every slide.
+2. CONTENT (standard narrative — use for most slides):
+{"type":"content","title":"[action headline stating the key message — not a topic label]","presentationTitle":"[presentation title]","body":"[max 2 sentences, max 40 words. First: key idea. Second: example or classroom application. No padding.]","bullets":["max 6 words","max 6 words","max 6 words"],"callout":{"type":"key-point","text":"[one punchy sentence]"},"imageSuggestion":"[specific search query]"}
+(bullets, callout, and imageSuggestion are optional — omit when not genuinely useful)
+(callout.type options: "key-point" for key takeaway, "reflection" for self-audit prompt, "try-this" for actionable tip, "discussion" for a discussion nudge)
+
+3. QUOTE (powerful pull quote from a credible source — use 1–2 times):
+{"type":"quote","title":"","presentationTitle":"[presentation title]","quote":"[verbatim or near-verbatim quote — max 30 words. Must be from a real researcher, Ofsted, DfE, or recognised educator.]","quoteAuthor":"[Full Name, Role/Organisation, Year]","body":"[one sentence explaining why this matters for the CPD topic]"}
+
+4. STAT (single compelling statistic as the visual centrepiece — use 1–2 times):
+{"type":"stat","title":"[framing headline that contextualises the stat]","presentationTitle":"[presentation title]","stat":"[the number — e.g. '72%' or '1 in 4']","statLabel":"[what it measures — one short phrase]","statContext":"[one sentence of context, implication, or source]"}
+
+5. TWO-COLUMN (side-by-side comparison — use for contrasts):
+{"type":"two-column","title":"[contrasting or comparative headline]","presentationTitle":"[presentation title]","leftTitle":"[left panel label]","leftContent":"[2–3 sentences or use \\n- for bullet lines: \\n- Point one\\n- Point two]","rightTitle":"[right panel label]","rightContent":"[2–3 sentences or use \\n- for bullets]"}
+Best uses: myth vs. reality, common vs. effective practice, before vs. after, lower vs. higher impact.
+
+6. ACTIVITY (group discussion or reflection task — use 1–2 times):
+{"type":"activity","title":"[activity title — e.g. 'Pair Discussion' or 'Quick Reflection']","presentationTitle":"[presentation title]","activityPrompt":"[the main question or task — 1–2 clear sentences]","activitySubtask":"[timing or grouping note — e.g. '5 minutes — discuss in pairs, then share with the group']"}
+
+────────────────────────────────
+SLIDE SEQUENCE GUIDANCE
+────────────────────────────────
+- Slide 1: title
+- Slide 2: hook — use a stat or quote to establish why this matters
+- Middle slides: core content using content, two-column, quote, stat — ONE key message each
+- Include 1–2 activity slides: one mid-presentation for discussion, optionally one at the end for reflection
+- Final slide: content focused on next steps and implementation
+- Slides must build a coherent narrative. Each title should stand alone as a meaningful statement.
+
+STRICT RULES:
+- ONE key message per slide — if you have two ideas, use two slides
+- "body" field: max 2 sentences, max 40 words — no padding, no repetition of the title
+- "presentationTitle" must be identical on every slide
+- No emojis. No text outside the JSON objects.
 ${bulletLine}
-${imageLine}
-- No emojis. No text outside the JSON objects.`;
+${imageLine}`;
 }
 
 function buildRefinePrompt(body: RefineBody): string {

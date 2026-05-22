@@ -13,9 +13,12 @@ interface Props {
   onSnap?: (id: string, x: number, y: number, w: number, h: number) => { x: number; y: number };
   onDragEnd?: () => void;
   onContextMenu?: (id: string, clientX: number, clientY: number) => void;
+  isInMultiSelection?: (id: string) => boolean;
+  onGroupDragStart?: (e: React.MouseEvent) => void;
+  onCloneAndDrag?: (id: string, e: React.MouseEvent) => void;
 }
 
-export default function TextLayer({ texts, selectedId, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu }: Props) {
+export default function TextLayer({ texts, selectedId, zoom, onSelect, onUpdate, onCommit, onSnap, onDragEnd, onContextMenu, isInMultiSelection, onGroupDragStart, onCloneAndDrag }: Props) {
   return (
     <div
       className="absolute inset-0"
@@ -33,6 +36,9 @@ export default function TextLayer({ texts, selectedId, zoom, onSelect, onUpdate,
           onSnap={onSnap}
           onDragEnd={onDragEnd}
           onContextMenu={onContextMenu}
+          inMultiSelection={isInMultiSelection?.(t.id) ?? false}
+          onGroupDragStart={onGroupDragStart}
+          onCloneAndDrag={onCloneAndDrag ? (e) => onCloneAndDrag(t.id, e) : undefined}
         />
       ))}
     </div>

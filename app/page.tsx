@@ -182,6 +182,7 @@ const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   "homework": MdHomeWork,
   "intervention": MdPersonSearch,
   "quiz": MdHelp,
+  "lesson-slideshow": MdSlideshow,
   "cpd-slideshow": MdDesktopMac,
   "letter-writer": MdEmail,
   "performance-management": MdAccessTime,

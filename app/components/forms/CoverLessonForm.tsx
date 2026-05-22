@@ -16,6 +16,7 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import GenerateOutlineButton from "@/app/components/ui/GenerateOutlineButton";
 
 const REFINE_CHIPS = [
   "Make instructions simpler",
@@ -154,12 +155,21 @@ export default function CoverLessonForm({ sidebar }: { sidebar: React.ReactNode 
             <AdditionalContextField
               value={additionalContext}
               onChange={setAdditionalContext}
+              rows={4}
               placeholders={[
                 `e.g. "This is a top set."`,
                 `e.g. "The class can be challenging — keep activities short."`,
                 `e.g. "Pupils have been revising for an upcoming test."`,
                 `e.g. "There are several SEND pupils — please keep instructions clear."`,
               ]}
+              labelSlot={
+                <GenerateOutlineButton
+                  topic={topic}
+                  subject={subject}
+                  yearGroup={mixed ? "Mixed" : yearGroup}
+                  onGenerate={setAdditionalContext}
+                />
+              }
             />
 
             <div className="flex gap-3">

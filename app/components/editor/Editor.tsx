@@ -9,9 +9,19 @@ import SlideTray, { type SlideEntry } from "./SlideTray";
 import TextLayer from "./TextLayer";
 import ShapeLayer from "./ShapeLayer";
 import ImageLayer from "./ImageLayer";
+import AudioLayer from "./AudioLayer";
+import VideoLayer from "./VideoLayer";
+import CalloutLayer from "./CalloutLayer";
+import BadgeLayer from "./BadgeLayer";
+import BlockquoteLayer from "./BlockquoteLayer";
+import ActivityLayer from "./ActivityLayer";
 import ZoomControls from "./ZoomControls";
 import FontPanel from "./FontPanel";
+import VideoRegenerateModal from "./VideoRegenerateModal";
 import ContextMenu, { type ContextMenuState } from "./ContextMenu";
+import RegenerateImageDialog from "./RegenerateImageDialog";
+import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
+import SlideshowLoadingAnimation from "./SlideshowLoadingAnimation";
 import type { FrameShape } from "./frames";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
@@ -23,7 +33,16 @@ import {
   type ShapeObject,
   type ShapeType,
   type ImageObject,
+  type AudioObject,
+  type VideoObject,
+  type CalloutObject,
+  type BadgeObject,
+  type BlockquoteObject,
+  type ActivityObject,
 } from "@/app/lib/presentations";
+import { saveGeneratedImage } from "@/app/lib/generatedImages";
+import { getTheme, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
+import { rerenderSlideWithTheme } from "@/app/lib/slideshow-layouts";
 
 interface SlideState extends SlideJSON {
   id: string;
@@ -31,21 +50,91 @@ interface SlideState extends SlideJSON {
 
 const newId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
+interface GenerationParams {
+  topic: string;
+  year?: string;
+  readingLevel?: string;
+  slideCount?: number;
+  additionalInstructions?: string;
+  includeObjectives?: boolean;
+  includeVocab?: boolean;
+  includeAudio?: boolean;
+  imageSource?: "auto" | "ai" | "web";
+  imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
+}
+
 interface Props {
   presentation: Presentation;
+  generationParams?: GenerationParams;
 }
 
 const HISTORY_MAX = 50;
 
-export default function Editor({ presentation }: Props) {
+// Canvas-based text measurement used to estimate how many wrapped lines a
+// TextObject spans at a given width. Greedy word-wrap matches what the
+// browser does for CSS `word-wrap: break-word; white-space: pre-wrap`.
+let _measureCanvas: HTMLCanvasElement | null = null;
+function measureTextLines(
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+  fontWeight: string,
+  fontStyle: "normal" | "italic",
+  fontFamily: string,
+): number {
+  if (typeof document === "undefined") return 1;
+  if (!_measureCanvas) _measureCanvas = document.createElement("canvas");
+  const ctx = _measureCanvas.getContext("2d");
+  if (!ctx) return 1;
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+  const paragraphs = text.split("\n");
+  let total = 0;
+  for (const p of paragraphs) {
+    if (!p) { total += 1; continue; }
+    // Greedy line break: keep packing words until the next would overflow.
+    const words = p.split(/(\s+)/); // keep whitespace tokens
+    let line = "";
+    let lineCount = 0;
+    for (const w of words) {
+      const test = line + w;
+      if (ctx.measureText(test).width > maxWidth && line.length > 0) {
+        lineCount += 1;
+        line = w.trimStart();
+      } else {
+        line = test;
+      }
+    }
+    if (line.length > 0) lineCount += 1;
+    total += Math.max(1, lineCount);
+  }
+  return Math.max(1, total);
+}
+
+export default function Editor({ presentation, generationParams }: Props) {
   const [title, setTitle] = useState(presentation.title);
   const [slides, setSlides] = useState<SlideState[]>(() => {
     const src = presentation.slides?.length ? presentation.slides : [BLANK_SLIDE];
+    // Scrub any `isPending: true` flags off media that never got a `src` —
+    // those are stuck shimmers from a generation run that didn't finish
+    // before the row was saved. Clearing the flag drops them back to a
+    // normal empty frame the user can fill or regenerate manually.
     return src.map((s) => ({
       id: newId("s"),
       shapes: s.shapes ?? [],
       texts: s.texts ?? [],
-      images: s.images ?? [],
+      images: (s.images ?? []).map((i) =>
+        i.isPending && !i.src ? { ...i, isPending: false } : i,
+      ),
+      audios: (s.audios ?? []).map((a) =>
+        a.isPending && !a.src ? { ...a, isPending: false } : a,
+      ),
+      videos: (s.videos ?? []).map((v) =>
+        v.isPending && !v.src ? { ...v, isPending: false } : v,
+      ),
+      callouts: s.callouts ?? [],
+      badges: s.badges ?? [],
+      blockquotes: s.blockquotes ?? [],
+      activities: s.activities ?? [],
       background: s.background ?? "#ffffff",
       backgroundImage: s.backgroundImage,
       backgroundImageWidth: s.backgroundImageWidth,
@@ -53,12 +142,28 @@ export default function Editor({ presentation }: Props) {
       backgroundOffsetX: s.backgroundOffsetX,
       backgroundOffsetY: s.backgroundOffsetY,
       backgroundScale: s.backgroundScale,
+      backgroundImagePending: s.backgroundImagePending && !s.backgroundImage ? false : s.backgroundImagePending,
+      // Carry the AI skeleton + deck-level themeId through page reloads.
+      // Without these, theme-switching becomes a no-op for AI-generated
+      // slides (rerenderSlideWithTheme requires a skeleton to rebuild from)
+      // and the next save would persist them as missing.
+      skeleton: s.skeleton,
+      themeId: s.themeId,
     }));
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  // Selection state for the new primitive types — mirror the pattern above.
+  const [selectedCalloutId, setSelectedCalloutId] = useState<string | null>(null);
+  const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
+  const [selectedBlockquoteId, setSelectedBlockquoteId] = useState<string | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  // Audio id whose "Edit audio" side panel is currently open (null when closed).
+  const [editingAudioId, setEditingAudioId] = useState<string | null>(null);
   const [slideSelected, setSlideSelected] = useState(false);
   const [adjustingBackground, setAdjustingBackground] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -67,7 +172,30 @@ export default function Editor({ presentation }: Props) {
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
   const [dragGuides, setDragGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  // Image id currently being regenerated via the AI dialog (null when closed).
+  const [regenerateTargetId, setRegenerateTargetId] = useState<string | null>(null);
   const [editingInnerImageId, setEditingInnerImageId] = useState<string | null>(null);
+  const [dropLoading, setDropLoading] = useState<{ x: number; y: number } | null>(null);
+  const [generating, setGenerating] = useState<{ current: number; total: number; title?: string; slideTitles?: string[] } | null>(
+    generationParams ? { current: 0, total: generationParams.slideCount ?? 0 } : null,
+  );
+  // True from the moment generationParams arrives until the first SSE "meta" event,
+  // meaning OpenAI has responded. During this window a full-screen overlay is shown
+  // so the user never sees a blank slide + spinner during the AI wait.
+  const [preMeta, setPreMeta] = useState(!!generationParams);
+  // Bumped each time we persist a new AI image to the cross-project gallery
+  // (Supabase `generated_images`). Triggers a refetch in the Sidebar.
+  const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
+
+  // Marquee (rubber-band) multi-selection state. While the user is dragging
+  // an empty area of the slide, `marquee` holds the rect in slide-local coords;
+  // on mouse-up we compute hit-tests and stash the result in `multiSelection`.
+  type MultiSelectionItem =
+    | { kind: "text"; id: string }
+    | { kind: "shape"; id: string }
+    | { kind: "image"; id: string };
+  const [marquee, setMarquee] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [multiSelection, setMultiSelection] = useState<MultiSelectionItem[]>([]);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const slideWrapperRef = useRef<HTMLDivElement>(null);
@@ -81,6 +209,10 @@ export default function Editor({ presentation }: Props) {
   const history = useRef<string[]>([JSON.stringify(slides)]);
   const historyIndex = useRef(0);
   const suppressHistory = useRef(false);
+  // Separate from the save debounce (1s). A shorter timer here means undo
+  // captures changes more granularly — e.g. a quick sequence of three drags
+  // produces three undo steps instead of one big coalesced step.
+  const historyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { slidesRef.current = slides; }, [slides]);
   useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
@@ -96,7 +228,19 @@ export default function Editor({ presentation }: Props) {
     else historyIndex.current++;
   }, []);
 
+  // Flush any pending history-debounce so the user's most recent change is
+  // captured BEFORE we step back through history. Without this, undo could
+  // jump over the latest edit.
+  const flushPendingHistory = useCallback(() => {
+    if (historyTimerRef.current) {
+      clearTimeout(historyTimerRef.current);
+      historyTimerRef.current = null;
+      pushHistory(slidesRef.current);
+    }
+  }, [pushHistory]);
+
   const undo = useCallback(() => {
+    flushPendingHistory();
     if (historyIndex.current <= 0) return;
     historyIndex.current--;
     const restored = JSON.parse(history.current[historyIndex.current]) as SlideState[];
@@ -105,9 +249,10 @@ export default function Editor({ presentation }: Props) {
     slidesRef.current = restored;
     queueMicrotask(() => { suppressHistory.current = false; });
     scheduleSave();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flushPendingHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const redo = useCallback(() => {
+    flushPendingHistory();
     if (historyIndex.current >= history.current.length - 1) return;
     historyIndex.current++;
     const restored = JSON.parse(history.current[historyIndex.current]) as SlideState[];
@@ -116,24 +261,71 @@ export default function Editor({ presentation }: Props) {
     slidesRef.current = restored;
     queueMicrotask(() => { suppressHistory.current = false; });
     scheduleSave();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [flushPendingHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Selection coordination ────────────────────────────────────────────────
 
   const handleTextSelect = useCallback((id: string | null) => {
     setSelectedTextId(id);
-    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSlideSelected(false); }
+    if (id) { setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleShapeSelect = useCallback((id: string | null) => {
     setSelectedShapeId(id);
-    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSlideSelected(false); }
+    if (id) { setSelectedTextId(null); setSelectedImageId(null); setSelectedAudioId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
 
   const handleImageSelect = useCallback((id: string | null) => {
     setSelectedImageId(id);
-    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSlideSelected(false); }
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedAudioId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
   }, []);
+
+  const handleAudioSelect = useCallback((id: string | null) => {
+    setSelectedAudioId(id);
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSelectedVideoId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
+  }, []);
+
+  const handleVideoSelect = useCallback((id: string | null) => {
+    setSelectedVideoId(id);
+    if (id) { setSelectedTextId(null); setSelectedShapeId(null); setSelectedImageId(null); setSelectedAudioId(null); setSelectedCalloutId(null); setSelectedBadgeId(null); setSelectedBlockquoteId(null); setSelectedActivityId(null); setSlideSelected(false); setMultiSelection([]); }
+  }, []);
+
+  // Helper that clears all single-element selections except the one passed in.
+  // The new-primitive select handlers below use it to avoid the same five-line
+  // wall of `setSelected*(null)` calls.
+  const clearOtherSelections = useCallback((except: "callout" | "badge" | "blockquote" | "activity") => {
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSelectedAudioId(null);
+    setSelectedVideoId(null);
+    if (except !== "callout")    setSelectedCalloutId(null);
+    if (except !== "badge")      setSelectedBadgeId(null);
+    if (except !== "blockquote") setSelectedBlockquoteId(null);
+    if (except !== "activity")   setSelectedActivityId(null);
+    setSlideSelected(false);
+    setMultiSelection([]);
+  }, []);
+
+  const handleCalloutSelect = useCallback((id: string | null) => {
+    setSelectedCalloutId(id);
+    if (id) clearOtherSelections("callout");
+  }, [clearOtherSelections]);
+
+  const handleBadgeSelect = useCallback((id: string | null) => {
+    setSelectedBadgeId(id);
+    if (id) clearOtherSelections("badge");
+  }, [clearOtherSelections]);
+
+  const handleBlockquoteSelect = useCallback((id: string | null) => {
+    setSelectedBlockquoteId(id);
+    if (id) clearOtherSelections("blockquote");
+  }, [clearOtherSelections]);
+
+  const handleActivitySelect = useCallback((id: string | null) => {
+    setSelectedActivityId(id);
+    if (id) clearOtherSelections("activity");
+  }, [clearOtherSelections]);
 
   const selection: EditorSelection = useMemo(() => {
     const slide = slides[activeIndex];
@@ -150,25 +342,213 @@ export default function Editor({ presentation }: Props) {
       const im = slide.images.find((x) => x.id === selectedImageId);
       return im ? { kind: "image", image: im } : null;
     }
+    if (selectedVideoId) {
+      const v = (slide.videos ?? []).find((x) => x.id === selectedVideoId);
+      return v ? { kind: "video", video: v } : null;
+    }
     if (slideSelected) return { kind: "slide", slide };
     return null;
-  }, [selectedTextId, selectedShapeId, selectedImageId, slideSelected, slides, activeIndex]);
+  }, [selectedTextId, selectedShapeId, selectedImageId, selectedVideoId, slideSelected, slides, activeIndex]);
 
   const clearSelection = useCallback(() => {
     setSelectedTextId(null);
     setSelectedShapeId(null);
     setSelectedImageId(null);
+    setSelectedAudioId(null);
+    setSelectedVideoId(null);
+    setSelectedCalloutId(null);
+    setSelectedBadgeId(null);
+    setSelectedBlockquoteId(null);
+    setSelectedActivityId(null);
     setSlideSelected(false);
+    setMultiSelection([]);
   }, []);
 
-  const handleSlideMouseDown = (e: React.MouseEvent) => {
-    // Only when the user clicked the slide background itself, not an element on it.
-    if (e.target === slideWrapperRef.current) {
-      setSelectedTextId(null);
-      setSelectedShapeId(null);
-      setSelectedImageId(null);
-      setSlideSelected(true);
+  // Bbox helper — text has no stored height by default, so estimate from font
+  // metrics + word-wrap at the element's width. If the user has explicitly
+  // resized the text box vertically (t.height set), the bbox respects that as
+  // a floor: max(content height, explicit height).
+  const textBbox = (t: TextObject) => {
+    const lh = t.lineHeight ?? 1.2;
+    const lineCount = measureTextLines(t.text, t.width, t.fontSize, t.fontWeight, t.fontStyle, t.fontFamily);
+    const contentH = Math.max(t.fontSize * lh * lineCount, t.fontSize * lh);
+    const h = t.height ? Math.max(contentH, t.height) : contentH;
+    return { x: t.x, y: t.y, w: t.width, h };
+  };
+
+  // Point hit-test in slide-local coords. Returns the topmost element at the
+  // point, respecting z-order: text > shapes > images, and within each layer
+  // later entries render on top.
+  const hitTestPoint = useCallback((x: number, y: number): MultiSelectionItem | null => {
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return null;
+    const inside = (b: { x: number; y: number; w: number; h: number }) =>
+      x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+    for (let i = slide.texts.length - 1; i >= 0; i--) {
+      const t = slide.texts[i];
+      if (!t.locked && inside(textBbox(t))) return { kind: "text", id: t.id };
     }
+    for (let i = slide.shapes.length - 1; i >= 0; i--) {
+      const s = slide.shapes[i];
+      if (!s.locked && inside({ x: s.x, y: s.y, w: s.width, h: s.height })) return { kind: "shape", id: s.id };
+    }
+    for (let i = slide.images.length - 1; i >= 0; i--) {
+      const im = slide.images[i];
+      if (!im.locked && inside({ x: im.x, y: im.y, w: im.width, h: im.height })) return { kind: "image", id: im.id };
+    }
+    return null;
+  }, []);
+
+  // Compute hit-test once the user releases the marquee drag. Any text, shape
+  // or image whose bbox intersects the marquee rect joins the multi-selection.
+  // When `additive` (shift drag), hits are merged with the existing selection;
+  // otherwise they replace it.
+  const finishMarquee = useCallback((rect: { x: number; y: number; w: number; h: number }, additive: boolean) => {
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide || rect.w < 2 || rect.h < 2) {
+      if (!additive) setMultiSelection([]);
+      return;
+    }
+    const intersects = (b: { x: number; y: number; w: number; h: number }) =>
+      !(rect.x + rect.w < b.x || b.x + b.w < rect.x || rect.y + rect.h < b.y || b.y + b.h < rect.y);
+
+    const hits: MultiSelectionItem[] = [];
+    for (const im of slide.images) {
+      if (im.locked) continue;
+      if (intersects({ x: im.x, y: im.y, w: im.width, h: im.height })) hits.push({ kind: "image", id: im.id });
+    }
+    for (const sh of slide.shapes) {
+      if (sh.locked) continue;
+      if (intersects({ x: sh.x, y: sh.y, w: sh.width, h: sh.height })) hits.push({ kind: "shape", id: sh.id });
+    }
+    for (const t of slide.texts) {
+      if (t.locked) continue;
+      if (intersects(textBbox(t))) hits.push({ kind: "text", id: t.id });
+    }
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSlideSelected(false);
+    setMultiSelection((prev) => {
+      if (!additive) return hits;
+      const key = (m: MultiSelectionItem) => `${m.kind}:${m.id}`;
+      const seen = new Set(prev.map(key));
+      const merged = prev.slice();
+      for (const h of hits) if (!seen.has(key(h))) { seen.add(key(h)); merged.push(h); }
+      return merged;
+    });
+  }, []);
+
+  // Shift+click on an element toggles its membership in the multi-selection.
+  // Plus: if the click is on top of an existing single-selection (text/shape/image
+  // id), we promote that to a multi-selection of [previousSingle, clicked].
+  const toggleMultiSelectionAt = useCallback((x: number, y: number) => {
+    const hit = hitTestPoint(x, y);
+    if (!hit) return;
+    const key = (m: MultiSelectionItem) => `${m.kind}:${m.id}`;
+    const k = key(hit);
+    setMultiSelection((prev) => {
+      // Seed from any single selection that's about to be lost.
+      const seed: MultiSelectionItem[] = prev.length > 0
+        ? prev.slice()
+        : selectedTextId ? [{ kind: "text", id: selectedTextId }]
+        : selectedShapeId ? [{ kind: "shape", id: selectedShapeId }]
+        : selectedImageId ? [{ kind: "image", id: selectedImageId }]
+        : [];
+      const idx = seed.findIndex((m) => key(m) === k);
+      if (idx >= 0) {
+        const next = seed.slice();
+        next.splice(idx, 1);
+        return next;
+      }
+      return [...seed, hit];
+    });
+    setSelectedTextId(null);
+    setSelectedShapeId(null);
+    setSelectedImageId(null);
+    setSlideSelected(false);
+  }, [hitTestPoint, selectedTextId, selectedShapeId, selectedImageId]);
+
+  const startMarqueeDrag = (e: React.MouseEvent | MouseEvent) => {
+    if (adjustingBackground) return;
+    if (!slideWrapperRef.current) return;
+    if (e.button !== 0) return;
+
+    const rect = slideWrapperRef.current.getBoundingClientRect();
+    const startX = (e.clientX - rect.left) / zoom;
+    const startY = (e.clientY - rect.top) / zoom;
+    let moved = false;
+    const shiftStart = e.shiftKey;
+
+    const onMove = (ev: MouseEvent) => {
+      const cx = (ev.clientX - rect.left) / zoom;
+      const cy = (ev.clientY - rect.top) / zoom;
+      const dx = cx - startX;
+      const dy = cy - startY;
+      if (!moved && Math.hypot(dx, dy) < 3) return;
+      moved = true;
+      const x = Math.max(0, Math.min(startX, cx));
+      const y = Math.max(0, Math.min(startY, cy));
+      const w = Math.min(SLIDE_W - x, Math.abs(dx));
+      const h = Math.min(SLIDE_H - y, Math.abs(dy));
+      setMarquee({ x, y, w, h });
+    };
+
+    const onUp = (ev: MouseEvent) => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if (moved) {
+        // Finalize via setState callback so we read the latest committed rect
+        // even if React batched the last move into the same frame as the up.
+        setMarquee((cur) => {
+          if (cur) finishMarquee(cur, shiftStart);
+          return null;
+        });
+      } else if (shiftStart) {
+        // Shift+click without movement: toggle the element under the cursor.
+        // If it landed on empty space, do nothing (preserve current selection).
+        const upRect = slideWrapperRef.current?.getBoundingClientRect();
+        if (upRect) {
+          const ux = (ev.clientX - upRect.left) / zoom;
+          const uy = (ev.clientY - upRect.top) / zoom;
+          toggleMultiSelectionAt(ux, uy);
+        }
+        setMarquee(null);
+      } else {
+        // Plain click on empty area → clear selection like before.
+        setSelectedTextId(null);
+        setSelectedShapeId(null);
+        setSelectedImageId(null);
+        setMultiSelection([]);
+        setSlideSelected(true);
+        setMarquee(null);
+      }
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+
+  const handleSlideMouseDown = (e: React.MouseEvent) => {
+    // Plain mousedown on the slide background: start the marquee. Clicks on
+    // child elements (images, shapes, text) bubble up here only after the
+    // child's own handler has fired, so plain clicks on elements still select
+    // them normally. Shift+drag from anywhere is intercepted in capture-phase
+    // below (see onMouseDownCapture) so it works even over elements.
+    if (e.target !== slideWrapperRef.current) return;
+    startMarqueeDrag(e);
+  };
+
+  const handleSlideMouseDownCapture = (e: React.MouseEvent) => {
+    // Shift held → force marquee mode regardless of what was clicked.
+    // We capture before child handlers run and stop propagation so the
+    // image/shape/text underneath isn't selected.
+    if (!e.shiftKey) return;
+    if (e.button !== 0) return;
+    if (adjustingBackground) return;
+    e.stopPropagation();
+    e.preventDefault();
+    startMarqueeDrag(e);
   };
 
   const handleSlideDoubleClick = (e: React.MouseEvent) => {
@@ -187,6 +567,55 @@ export default function Editor({ presentation }: Props) {
   const openBackgroundFilePicker = useCallback(() => {
     bgFileInputRef.current?.click();
   }, []);
+
+  // ── Drag-and-drop from sidebar onto the slide canvas ────────────────────
+  // Frames intercept their own drops via stopPropagation; anything that bubbles
+  // up here creates a brand-new image at the drop point.
+  const handleSlideDragOver = (e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes("application/x-jooma-image")) return;
+    e.preventDefault();
+  };
+
+  const handleSlideDrop = async (e: React.DragEvent) => {
+    const url = e.dataTransfer.getData("application/x-jooma-image");
+    if (!url) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = slideWrapperRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    // Slide is scaled by `zoom`. Convert client coords → slide-local coords.
+    const cx = (e.clientX - rect.left) / zoom;
+    const cy = (e.clientY - rect.top) / zoom;
+
+    // Show a spinner at the drop point while we fetch + decode the asset.
+    setDropLoading({ x: cx, y: cy });
+    try {
+      const dataUrl = url.startsWith("data:")
+        ? url
+        : await (async () => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Fetch failed");
+            const blob = await res.blob();
+            if (blob.type.includes("svg")) {
+              const text = await blob.text();
+              const utf8 = unescape(encodeURIComponent(text));
+              return `data:image/svg+xml;base64,${btoa(utf8)}`;
+            }
+            return await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(new Error("Read failed"));
+              reader.readAsDataURL(blob);
+            });
+          })();
+      addImage(dataUrl, { x: cx, y: cy });
+    } catch (err) {
+      console.warn("Drop failed", err);
+    } finally {
+      setDropLoading(null);
+    }
+  };
 
   const handleSlideContextMenu = (e: React.MouseEvent) => {
     // Only open slide context menu if the user right-clicked the empty slide background.
@@ -354,15 +783,20 @@ export default function Editor({ presentation }: Props) {
   const persist = useCallback(async () => {
     if (!dirtyRef.current) return;
     dirtyRef.current = false;
-    // Push history at save time — one entry per "session" of related changes (the 1s debounce
-    // groups rapid mousemoves and color-picker ticks into one undo step).
-    pushHistory(slidesRef.current);
+    // History snapshots are now pushed by `scheduleHistoryPush` (300 ms debounce)
+    // so the user gets finer-grained undo steps instead of one big chunk per save.
     setSaveStatus("saving");
     try {
       const payload: SlideJSON[] = slidesRef.current.map((s) => ({
         shapes: s.shapes,
         texts: s.texts,
         images: s.images,
+        audios: s.audios ?? [],
+        videos: s.videos ?? [],
+        callouts: s.callouts ?? [],
+        badges: s.badges ?? [],
+        blockquotes: s.blockquotes ?? [],
+        activities: s.activities ?? [],
         background: s.background,
         backgroundImage: s.backgroundImage,
         backgroundImageWidth: s.backgroundImageWidth,
@@ -370,24 +804,66 @@ export default function Editor({ presentation }: Props) {
         backgroundOffsetX: s.backgroundOffsetX,
         backgroundOffsetY: s.backgroundOffsetY,
         backgroundScale: s.backgroundScale,
+        // Persist the AI skeleton + deck-level themeId so theme switching
+        // works after the page is reloaded.
+        skeleton: s.skeleton,
+        themeId: s.themeId,
       }));
+      // While we still inline base64 image data in slides, a save can be many
+      // MB. Log the payload size so it's obvious when Postgres' statement
+      // timeout is being tripped by sheer volume rather than logic errors.
+      if (typeof console !== "undefined" && process.env.NODE_ENV === "development") {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload)).length;
+        if (bytes > 1_000_000) {
+          console.warn(`[persist] Large slides payload: ${(bytes / 1024 / 1024).toFixed(2)} MB`);
+        }
+      }
       await updatePresentation(presentation.id, {
         title: titleRef.current,
         slides: payload,
       });
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
-    } catch (err) {
-      console.error("Save failed:", err);
+    } catch (err: unknown) {
+      // Logging an error object via console.error sometimes prints `{}` in
+      // Next.js's overlay because Supabase/PostgREST errors have non-enumerable
+      // fields. Stringify with `Object.getOwnPropertyNames` so every property
+      // (including non-enumerable ones) shows up. Also log the original error
+      // separately so it appears in the browser DevTools console with its
+      // native formatting.
+      console.error("Save failed (raw):", err);
+      try {
+        const ownProps = err && typeof err === "object"
+          ? JSON.stringify(err, Object.getOwnPropertyNames(err as object))
+          : String(err);
+        console.error("Save failed (fields):", ownProps);
+      } catch {
+        console.error("Save failed (couldn't stringify):", String(err));
+      }
       setSaveStatus("error");
     }
-  }, [presentation.id, pushHistory]);
+  }, [presentation.id]);
+
+  // Debounced history snapshot. Short enough (300 ms) that a quick sequence of
+  // distinct edits (e.g. drag → click → recolor) gets three undo steps, but
+  // long enough that a continuous gesture (drag mousemove at 60fps, slider
+  // ticks, keystrokes) coalesces into one step.
+  const scheduleHistoryPush = useCallback(() => {
+    if (historyTimerRef.current) clearTimeout(historyTimerRef.current);
+    historyTimerRef.current = setTimeout(() => {
+      pushHistory(slidesRef.current);
+    }, 300);
+  }, [pushHistory]);
 
   const scheduleSave = useCallback(() => {
     dirtyRef.current = true;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => persist(), 1000);
-  }, [persist]);
+    // History push runs on a separate, shorter timer so the user can step
+    // through individual changes with Ctrl+Z instead of getting them all
+    // coalesced into the 1-second save batch.
+    scheduleHistoryPush();
+  }, [persist, scheduleHistoryPush]);
 
   useEffect(() => {
     const handler = () => { if (dirtyRef.current) persist(); };
@@ -408,6 +884,153 @@ export default function Editor({ presentation }: Props) {
     // on every mousemove / color-picker tick.
     scheduleSave();
   }, [scheduleSave]);
+
+  const deleteMultiSelection = useCallback(() => {
+    if (multiSelection.length === 0) return;
+    const textIds = new Set(multiSelection.filter((m) => m.kind === "text").map((m) => m.id));
+    const shapeIds = new Set(multiSelection.filter((m) => m.kind === "shape").map((m) => m.id));
+    const imageIds = new Set(multiSelection.filter((m) => m.kind === "image").map((m) => m.id));
+    mutateActiveSlide((s) => ({
+      ...s,
+      texts: s.texts.filter((t) => !textIds.has(t.id)),
+      shapes: s.shapes.filter((sh) => !shapeIds.has(sh.id)),
+      images: s.images.filter((im) => !imageIds.has(im.id)),
+    }));
+    setMultiSelection([]);
+  }, [multiSelection, mutateActiveSlide]);
+
+  // Drag a multi-selection as a group. Mousedown on any selected element calls
+  // this; we snapshot each item's original position, then apply the same dx/dy
+  // to all of them on every mousemove so they move in lockstep.
+  const startGroupDrag = useCallback((e: React.MouseEvent) => {
+    if (multiSelection.length === 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return;
+
+    type Origin = { kind: "text" | "shape" | "image"; id: string; x0: number; y0: number };
+    const origins: Origin[] = [];
+    for (const m of multiSelection) {
+      if (m.kind === "image") {
+        const im = slide.images.find((x) => x.id === m.id);
+        if (im && !im.locked) origins.push({ kind: "image", id: im.id, x0: im.x, y0: im.y });
+      } else if (m.kind === "shape") {
+        const sh = slide.shapes.find((x) => x.id === m.id);
+        if (sh && !sh.locked) origins.push({ kind: "shape", id: sh.id, x0: sh.x, y0: sh.y });
+      } else if (m.kind === "text") {
+        const t = slide.texts.find((x) => x.id === m.id);
+        if (t && !t.locked) origins.push({ kind: "text", id: t.id, x0: t.x, y0: t.y });
+      }
+    }
+    if (origins.length === 0) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let moved = false;
+
+    const onMove = (ev: MouseEvent) => {
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      if (!moved && Math.hypot(dx, dy) < 1) return;
+      moved = true;
+      const textMap = new Map(origins.filter((o) => o.kind === "text").map((o) => [o.id, o]));
+      const shapeMap = new Map(origins.filter((o) => o.kind === "shape").map((o) => [o.id, o]));
+      const imageMap = new Map(origins.filter((o) => o.kind === "image").map((o) => [o.id, o]));
+      mutateActiveSlide((s) => ({
+        ...s,
+        texts: s.texts.map((t) => {
+          const o = textMap.get(t.id);
+          return o ? { ...t, x: o.x0 + dx, y: o.y0 + dy } : t;
+        }),
+        shapes: s.shapes.map((sh) => {
+          const o = shapeMap.get(sh.id);
+          return o ? { ...sh, x: o.x0 + dx, y: o.y0 + dy } : sh;
+        }),
+        images: s.images.map((im) => {
+          const o = imageMap.get(im.id);
+          return o ? { ...im, x: o.x0 + dx, y: o.y0 + dy } : im;
+        }),
+      }));
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if (moved) scheduleSave();
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [multiSelection, zoom, mutateActiveSlide, scheduleSave]);
+
+  // Quick lookups for element renderers — true if the given element id is part
+  // of the active multi-selection (so its mousedown should route to the group
+  // drag instead of the single-element drag).
+  const isInMultiSelection = useCallback((kind: "text" | "shape" | "image", id: string) => {
+    return multiSelection.some((m) => m.kind === kind && m.id === id);
+  }, [multiSelection]);
+
+  // Alt+mousedown on an element: spawn a duplicate at the exact same position,
+  // select the duplicate, and start dragging it. The original stays put. Matches
+  // standard editor behaviour (Figma/Sketch/Canva). Held shift/multi-selection
+  // checks have already run by the time this is called.
+  const startCloneAndDrag = useCallback((kind: "text" | "shape" | "image", id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const slide = slidesRef.current[activeIndexRef.current];
+    if (!slide) return;
+
+    let origX = 0, origY = 0;
+    let cloneId = "";
+    if (kind === "text") {
+      const orig = slide.texts.find((x) => x.id === id);
+      if (!orig) return;
+      const copy: TextObject = { ...orig, id: newId("t") };
+      cloneId = copy.id; origX = orig.x; origY = orig.y;
+      mutateActiveSlide((s) => ({ ...s, texts: [...s.texts, copy] }));
+      handleTextSelect(copy.id);
+    } else if (kind === "shape") {
+      const orig = slide.shapes.find((x) => x.id === id);
+      if (!orig) return;
+      const copy: ShapeObject = { ...orig, id: newId("sh") };
+      cloneId = copy.id; origX = orig.x; origY = orig.y;
+      mutateActiveSlide((s) => ({ ...s, shapes: [...s.shapes, copy] }));
+      handleShapeSelect(copy.id);
+    } else if (kind === "image") {
+      const orig = slide.images.find((x) => x.id === id);
+      if (!orig) return;
+      const copy: ImageObject = { ...orig, id: newId("im") };
+      cloneId = copy.id; origX = orig.x; origY = orig.y;
+      mutateActiveSlide((s) => ({ ...s, images: [...s.images, copy] }));
+      handleImageSelect(copy.id);
+    }
+    if (!cloneId) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let moved = false;
+    const onMove = (ev: MouseEvent) => {
+      const dx = (ev.clientX - startX) / zoom;
+      const dy = (ev.clientY - startY) / zoom;
+      if (!moved && Math.hypot(dx, dy) < 1) return;
+      moved = true;
+      mutateActiveSlide((s) => {
+        if (kind === "text") {
+          return { ...s, texts: s.texts.map((t) => t.id === cloneId ? { ...t, x: origX + dx, y: origY + dy } : t) };
+        }
+        if (kind === "shape") {
+          return { ...s, shapes: s.shapes.map((sh) => sh.id === cloneId ? { ...sh, x: origX + dx, y: origY + dy } : sh) };
+        }
+        return { ...s, images: s.images.map((im) => im.id === cloneId ? { ...im, x: origX + dx, y: origY + dy } : im) };
+      });
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      if (moved) scheduleSave();
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [zoom, mutateActiveSlide, handleTextSelect, handleShapeSelect, handleImageSelect, scheduleSave]);
 
   // ── Slide-level updates ───────────────────────────────────────────────────
 
@@ -502,6 +1125,14 @@ export default function Editor({ presentation }: Props) {
       arrow:    { width: 400, height: 32 },
       star:     { width: 240, height: 240 },
       hexagon:  { width: 240, height: 220 },
+      pentagon: { width: 240, height: 240 },
+      octagon:  { width: 240, height: 240 },
+      diamond:  { width: 240, height: 240 },
+      heart:    { width: 240, height: 220 },
+      cloud:    { width: 320, height: 220 },
+      speech:   { width: 320, height: 240 },
+      plus:     { width: 220, height: 220 },
+      bolt:     { width: 180, height: 260 },
     };
     const { width: w, height: h } = presets[type];
     const isLineLike = type === "line" || type === "arrow";
@@ -536,7 +1167,7 @@ export default function Editor({ presentation }: Props) {
 
   // ── Image actions ─────────────────────────────────────────────────────────
 
-  const addImage = useCallback((src: string) => {
+  const addImage = useCallback((src: string, centerAt?: { x: number; y: number }) => {
     const img = new window.Image();
     img.onload = () => {
       const naturalW = img.naturalWidth || 400;
@@ -558,10 +1189,12 @@ export default function Editor({ presentation }: Props) {
         w = naturalW * s;
         h = naturalH * s;
       }
+      const cx = centerAt?.x ?? SLIDE_W / 2;
+      const cy = centerAt?.y ?? SLIDE_H / 2;
       const newImage: ImageObject = {
         id: newId("im"),
-        x: SLIDE_W / 2 - w / 2,
-        y: SLIDE_H / 2 - h / 2,
+        x: cx - w / 2,
+        y: cy - h / 2,
         width: w, height: h,
         src,
         opacity: 1,
@@ -601,6 +1234,112 @@ export default function Editor({ presentation }: Props) {
     setSelectedImageId(null);
   }, [selectedImageId, mutateActiveSlide]);
 
+  const updateAudio = useCallback((id: string, patch: Partial<AudioObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      audios: (s.audios ?? []).map((a) => a.id === id ? { ...a, ...patch } : a),
+    }));
+  }, [mutateActiveSlide]);
+
+  const deleteSelectedAudio = useCallback(() => {
+    if (!selectedAudioId) return;
+    mutateActiveSlide((s) => ({ ...s, audios: (s.audios ?? []).filter((a) => a.id !== selectedAudioId) }));
+    setSelectedAudioId(null);
+  }, [selectedAudioId, mutateActiveSlide]);
+
+  const updateVideo = useCallback((id: string, patch: Partial<VideoObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      videos: (s.videos ?? []).map((v) => v.id === id ? { ...v, ...patch } : v),
+    }));
+  }, [mutateActiveSlide]);
+
+  const deleteSelectedVideo = useCallback(() => {
+    if (!selectedVideoId) return;
+    mutateActiveSlide((s) => ({ ...s, videos: (s.videos ?? []).filter((v) => v.id !== selectedVideoId) }));
+    setSelectedVideoId(null);
+  }, [selectedVideoId, mutateActiveSlide]);
+
+  const updateCallout = useCallback((id: string, patch: Partial<CalloutObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      callouts: (s.callouts ?? []).map((c) => c.id === id ? { ...c, ...patch } : c),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedCallout = useCallback(() => {
+    if (!selectedCalloutId) return;
+    mutateActiveSlide((s) => ({ ...s, callouts: (s.callouts ?? []).filter((c) => c.id !== selectedCalloutId) }));
+    setSelectedCalloutId(null);
+  }, [selectedCalloutId, mutateActiveSlide]);
+
+  const updateBadge = useCallback((id: string, patch: Partial<BadgeObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      badges: (s.badges ?? []).map((b) => b.id === id ? { ...b, ...patch } : b),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedBadge = useCallback(() => {
+    if (!selectedBadgeId) return;
+    mutateActiveSlide((s) => ({ ...s, badges: (s.badges ?? []).filter((b) => b.id !== selectedBadgeId) }));
+    setSelectedBadgeId(null);
+  }, [selectedBadgeId, mutateActiveSlide]);
+
+  const updateBlockquote = useCallback((id: string, patch: Partial<BlockquoteObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      blockquotes: (s.blockquotes ?? []).map((q) => q.id === id ? { ...q, ...patch } : q),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedBlockquote = useCallback(() => {
+    if (!selectedBlockquoteId) return;
+    mutateActiveSlide((s) => ({ ...s, blockquotes: (s.blockquotes ?? []).filter((q) => q.id !== selectedBlockquoteId) }));
+    setSelectedBlockquoteId(null);
+  }, [selectedBlockquoteId, mutateActiveSlide]);
+
+  const updateActivity = useCallback((id: string, patch: Partial<ActivityObject>) => {
+    mutateActiveSlide((s) => ({
+      ...s,
+      activities: (s.activities ?? []).map((a) => a.id === id ? { ...a, ...patch } : a),
+    }));
+  }, [mutateActiveSlide]);
+  const deleteSelectedActivity = useCallback(() => {
+    if (!selectedActivityId) return;
+    mutateActiveSlide((s) => ({ ...s, activities: (s.activities ?? []).filter((a) => a.id !== selectedActivityId) }));
+    setSelectedActivityId(null);
+  }, [selectedActivityId, mutateActiveSlide]);
+
+  // "Edit video" right-side panel — owns its own URL-paste form, AI search
+  // form, and result-pick UX. The Editor only holds open/close state and
+  // apply callbacks that swap the chosen video into the selected slide.
+  const [editVideoPanelOpen, setEditVideoPanelOpen] = useState(false);
+  const applyVideoId = useCallback((videoId: string) => {
+    if (!selectedVideoId) return;
+    updateVideo(selectedVideoId, { source: "youtube", src: videoId });
+  }, [selectedVideoId, updateVideo]);
+  const applyVideoCandidate = useCallback((v: {
+    videoId: string; title: string; channel?: string; description?: string;
+  }) => {
+    if (!selectedVideoId) return;
+    updateVideo(selectedVideoId, { source: "youtube", src: v.videoId, title: v.title });
+  }, [selectedVideoId, updateVideo]);
+
+  const addVideo = useCallback((source: "youtube" | "upload", src: string, title?: string) => {
+    // Default placement: centered, 640x360 (16:9). User can drag/resize after.
+    const w = 640, h = 360;
+    const newVid: VideoObject = {
+      id: newId("v"),
+      source,
+      src,
+      title,
+      x: (SLIDE_W - w) / 2,
+      y: (SLIDE_H - h) / 2,
+      width: w,
+      height: h,
+    };
+    mutateActiveSlide((s) => ({ ...s, videos: [...(s.videos ?? []), newVid] }));
+    handleVideoSelect(newVid.id);
+  }, [mutateActiveSlide, handleVideoSelect]);
+
   const removeInnerImage = useCallback(() => {
     if (!editingInnerImageId) return;
     updateImage(editingInnerImageId, {
@@ -616,31 +1355,63 @@ export default function Editor({ presentation }: Props) {
 
   // ── Z-order ───────────────────────────────────────────────────────────────
   // Reorders within the object's own array (texts/shapes/images). Note: cross-type
-  // layering is fixed (images bottom, shapes middle, texts top) by render order.
-  const applyReorder = useCallback(<T extends { id: string }>(
-    arr: T[],
-    id: string,
-    op: "front" | "back" | "forward" | "backward",
-  ): T[] => {
-    const idx = arr.findIndex((x) => x.id === id);
-    if (idx === -1) return arr;
-    const next = arr.slice();
-    const [item] = next.splice(idx, 1);
-    if (op === "front") next.push(item);
-    else if (op === "back") next.unshift(item);
-    else if (op === "forward") next.splice(Math.min(idx + 1, next.length), 0, item);
-    else next.splice(Math.max(idx - 1, 0), 0, item);
-    return next;
-  }, []);
-
+  // Global z-order reorder. Every element (text, shape, image, audio) carries
+  // an optional `z` field. We compute the union of z's across the slide so
+  // "Bring to front" actually moves the element above siblings in OTHER kinds
+  // too (e.g. a shape above the text on top of it).
   const reorderSelection = useCallback((op: "front" | "back" | "forward" | "backward") => {
     mutateActiveSlide((s) => {
-      if (selectedTextId) return { ...s, texts: applyReorder(s.texts, selectedTextId, op) };
-      if (selectedShapeId) return { ...s, shapes: applyReorder(s.shapes, selectedShapeId, op) };
-      if (selectedImageId) return { ...s, images: applyReorder(s.images, selectedImageId, op) };
-      return s;
+      // Effective z = stored z OR a baseline that mirrors the historical layer
+      // order (images bottom, shapes, texts, audios on top). On the FIRST
+      // reorder for a slide we persist these baseline values onto every
+      // element so all of them participate in explicit zIndex ordering
+      // (otherwise siblings with no stored z fall through to CSS auto = 0 and
+      // the reordered element ends up in the wrong stacking position).
+      const effective = (kind: "image" | "shape" | "text" | "audio", z: number | undefined, idx: number) => {
+        if (typeof z === "number") return z;
+        const base = kind === "image" ? 0 : kind === "shape" ? 1000 : kind === "text" ? 2000 : 3000;
+        return base + idx;
+      };
+      const all: { kind: "image" | "shape" | "text" | "audio"; id: string; z: number }[] = [
+        ...s.images.map((x, i) => ({ kind: "image" as const, id: x.id, z: effective("image", x.z, i) })),
+        ...s.shapes.map((x, i) => ({ kind: "shape" as const, id: x.id, z: effective("shape", x.z, i) })),
+        ...s.texts.map((x, i) => ({ kind: "text" as const, id: x.id, z: effective("text", x.z, i) })),
+        ...(s.audios ?? []).map((x, i) => ({ kind: "audio" as const, id: x.id, z: effective("audio", x.z, i) })),
+      ];
+      const targetId = selectedTextId ?? selectedShapeId ?? selectedImageId ?? selectedAudioId;
+      if (!targetId) return s;
+      const target = all.find((e) => e.id === targetId);
+      if (!target) return s;
+      const others = all.filter((e) => e.id !== targetId);
+      const sorted = others.slice().sort((a, b) => a.z - b.z);
+      let newZ: number;
+      if (op === "front") {
+        newZ = (sorted[sorted.length - 1]?.z ?? target.z) + 1;
+      } else if (op === "back") {
+        newZ = (sorted[0]?.z ?? target.z) - 1;
+      } else if (op === "forward") {
+        const above = sorted.find((e) => e.z > target.z);
+        if (!above) return s;
+        newZ = above.z + 1;
+      } else { // backward
+        const belowList = sorted.filter((e) => e.z < target.z);
+        const below = belowList[belowList.length - 1];
+        if (!below) return s;
+        newZ = below.z - 1;
+      }
+      // Build a lookup of each element's NEW z (target gets newZ; everyone
+      // else keeps their effective z so the relative ordering survives).
+      const zById = new Map<string, number>();
+      for (const e of all) zById.set(e.id, e.id === targetId ? newZ : e.z);
+      return {
+        ...s,
+        texts: s.texts.map((x) => ({ ...x, z: zById.get(x.id) ?? x.z })),
+        shapes: s.shapes.map((x) => ({ ...x, z: zById.get(x.id) ?? x.z })),
+        images: s.images.map((x) => ({ ...x, z: zById.get(x.id) ?? x.z })),
+        audios: (s.audios ?? []).map((x) => ({ ...x, z: zById.get(x.id) ?? x.z })),
+      };
     });
-  }, [selectedTextId, selectedShapeId, selectedImageId, mutateActiveSlide, applyReorder]);
+  }, [selectedTextId, selectedShapeId, selectedImageId, selectedAudioId, mutateActiveSlide]);
 
   // ── Duplicate ─────────────────────────────────────────────────────────────
   const duplicateSelection = useCallback(() => {
@@ -857,13 +1628,18 @@ export default function Editor({ presentation }: Props) {
 
       if (e.key === "Delete" || e.key === "Backspace") {
         if (adjustingBackground) removeBackgroundImage();
+        else if (multiSelection.length > 0) deleteMultiSelection();
         else if (selectedTextId) deleteSelectedText();
         else if (selectedShapeId) deleteSelectedShape();
         else if (selectedImageId) deleteSelectedImage();
+        else if (selectedAudioId) deleteSelectedAudio();
+        else if (selectedVideoId) deleteSelectedVideo();
       }
-      // Cmd/Ctrl + Z / Shift+Z
+      // Cmd/Ctrl + Z / Shift+Z — disabled during AI generation so a stray undo
+      // doesn't wipe out slides that just streamed in.
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
+        if (generating) return;
         if (e.shiftKey) redo();
         else undo();
       }
@@ -874,18 +1650,46 @@ export default function Editor({ presentation }: Props) {
           duplicateSelection();
         }
       }
-      // Arrow keys — nudge selected (1px, or 10px with Shift)
-      if (hasSelection && (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight")) {
-        e.preventDefault();
-        const step = e.shiftKey ? 10 : 1;
-        const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
-        const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
-        nudgeSelection(dx, dy);
+      // Cmd/Ctrl + L — toggle lock on the currently selected element.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") {
+        if (selectedTextId) {
+          const t = slidesRef.current[activeIndexRef.current]?.texts.find((x) => x.id === selectedTextId);
+          if (t) { e.preventDefault(); updateText(selectedTextId, { locked: !t.locked }); }
+        } else if (selectedShapeId) {
+          const sh = slidesRef.current[activeIndexRef.current]?.shapes.find((x) => x.id === selectedShapeId);
+          if (sh) { e.preventDefault(); updateShape(selectedShapeId, { locked: !sh.locked }); }
+        } else if (selectedImageId) {
+          const im = slidesRef.current[activeIndexRef.current]?.images.find((x) => x.id === selectedImageId);
+          if (im) { e.preventDefault(); updateImage(selectedImageId, { locked: !im.locked }); }
+        }
+      }
+      // Arrow keys — context-dependent:
+      // - When an element is selected: nudge it (1px / 10px with Shift).
+      // - Otherwise: ←/→ navigate prev/next slide.
+      if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        if (hasSelection) {
+          e.preventDefault();
+          const step = e.shiftKey ? 10 : 1;
+          const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
+          const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+          nudgeSelection(dx, dy);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          const total = slidesRef.current.length;
+          if (total <= 1) return;
+          const cur = activeIndexRef.current;
+          const nextIndex = e.key === "ArrowLeft"
+            ? (cur - 1 + total) % total
+            : (cur + 1) % total;
+          if (nextIndex === cur) return;
+          setActiveIndex(nextIndex);
+          clearSelection();
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection]);
+  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, multiSelection, deleteMultiSelection, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection, clearSelection, generating, updateText, updateShape, updateImage]);
 
   // ── Slide management ──────────────────────────────────────────────────────
 
@@ -924,6 +1728,27 @@ export default function Editor({ presentation }: Props) {
     scheduleSave();
   }, [scheduleSave, clearSelection]);
 
+  const reorderSlides = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setSlides((prev) => {
+      if (fromIndex < 0 || fromIndex >= prev.length || toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = prev.slice();
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      slidesRef.current = next;
+      return next;
+    });
+    // Keep the moved slide as the active one so the user can see where it ended up.
+    setActiveIndex((curActive) => {
+      if (curActive === fromIndex) return toIndex;
+      // If we moved a slide past curActive, indexes shift around curActive.
+      if (fromIndex < curActive && toIndex >= curActive) return curActive - 1;
+      if (fromIndex > curActive && toIndex <= curActive) return curActive + 1;
+      return curActive;
+    });
+    scheduleSave();
+  }, [scheduleSave]);
+
   const duplicateSlide = useCallback((index: number) => {
     const src = slidesRef.current[index];
     if (!src) return;
@@ -949,6 +1774,86 @@ export default function Editor({ presentation }: Props) {
     setTitle(v);
     scheduleSave();
   };
+
+  // ── Theme switching ────────────────────────────────────────────────────────
+  // Re-renders every slide that carries a `skeleton` (i.e. AI-generated slides)
+  // under the new theme, preserving images and audio/video objects. Edits the
+  // user has made to text content, positions, or colors WILL be overwritten —
+  // that's the trade-off for true "skin" behaviour. Dedicated audio/video
+  // placeholder slides are left alone since they don't have a re-renderable
+  // skeleton.
+  const handleThemeChange = useCallback((nextThemeId: string) => {
+    const theme = getTheme(nextThemeId);
+    setSlides((prev) => {
+      const next = prev.map((s, i) => {
+        // Audio activity slide: re-colour bg, panel, and any slide-level
+        // texts so it follows the new theme.
+        if ((s.audios?.length ?? 0) > 0) {
+          const slideTextColor = theme.palette.text;
+          return {
+            ...s,
+            background: theme.palette.background,
+            texts: s.texts.map((t) => ({ ...t, color: slideTextColor })),
+            audios: (s.audios ?? []).map((a) => ({
+              ...a,
+              panelBg: theme.palette.accent,
+              panelInk: theme.palette.overlayText,
+              playBg: theme.palette.background,
+              playInk: theme.palette.text,
+              headingFont: theme.fonts.heading,
+            })),
+            themeId: i === 0 ? nextThemeId : s.themeId,
+          };
+        }
+        // YouTube video slide: re-colour bg + slide-level texts. The first
+        // text element (heading) uses the accent for emphasis; the rest
+        // (subtitle) use muted.
+        if ((s.videos?.length ?? 0) > 0) {
+          return {
+            ...s,
+            background: theme.palette.background,
+            texts: s.texts.map((t, ti) => ({
+              ...t,
+              color: ti === 0 ? theme.palette.accent : theme.palette.muted,
+              fontFamily: ti === 0 ? theme.fonts.heading : t.fontFamily,
+            })),
+            themeId: i === 0 ? nextThemeId : s.themeId,
+          };
+        }
+        if (!s.skeleton) {
+          // No skeleton (manual slide, audio/video, or pre-skeleton-fix deck):
+          // we can't fully rebuild from scratch, but we can still sweep every
+          // text element and swap its font family to the new theme's
+          // heading/body font based on weight. Colours stay because users
+          // might have customised them — but font swap is the visible part
+          // of a theme change so we always do it.
+          const newTexts = s.texts.map((t) => {
+            const isHeading = parseInt(t.fontWeight, 10) >= 600;
+            return {
+              ...t,
+              fontFamily: isHeading ? theme.fonts.heading : theme.fonts.body,
+            };
+          });
+          return {
+            ...s,
+            texts: newTexts,
+            themeId: i === 0 ? nextThemeId : s.themeId,
+          };
+        }
+        // AI content slide: re-render from skeleton, preserve id.
+        const rebuilt = rerenderSlideWithTheme(s, theme);
+        return {
+          ...rebuilt,
+          id: s.id,
+          themeId: i === 0 ? nextThemeId : rebuilt.themeId,
+        } as SlideState;
+      });
+      if (next[0]) next[0] = { ...next[0], themeId: nextThemeId };
+      slidesRef.current = next;
+      return next;
+    });
+    scheduleSave();
+  }, [scheduleSave]);
 
   // ── Zoom ───────────────────────────────────────────────────────────────────
 
@@ -1098,6 +2003,550 @@ export default function Editor({ presentation }: Props) {
     }
   }, []);
 
+  // ── AI generation streaming (initial deck only) ────────────────────────────
+  // When generationParams is passed in (handed off from the Generate modal via
+  // sessionStorage on /tools/slideshow), open an SSE stream and append slides
+  // as they arrive. The first slide replaces the initial blank deck.
+  useEffect(() => {
+    if (!generationParams) return;
+    let cancelled = false;
+    const controller = new AbortController();
+
+    // Reveal queue — buffers incoming "slide" SSE events and surfaces them one
+    // at a time with a 500 ms stagger. Without this, OpenAI's structured-output
+    // response arrives in a single burst and all slides would appear simultaneously.
+    type SlidePayloadType = {
+      index: number; total: number; contentTotal?: number;
+      slide: SlideJSON; title?: string;
+      galleryImage?: { prompt: string; style?: string; dataUrl: string };
+    };
+    const reveal = {
+      queue: [] as SlidePayloadType[],
+      timer: null as ReturnType<typeof setTimeout> | null,
+    };
+
+    function processRevealItem() {
+      const p = reveal.queue.shift();
+      if (!p || cancelled) { reveal.timer = null; return; }
+      if (p.galleryImage) {
+        saveGeneratedImage(p.galleryImage)
+          .then(() => setGalleryRefreshTrigger((n) => n + 1))
+          .catch((err) => console.warn("Gallery save failed:", err));
+      }
+      setSlides((prev) => {
+        const next = prev.slice();
+        const placeholderId = prev[p.index]?.id ?? newId("s");
+        const replaced: SlideState = {
+          id: placeholderId,
+          shapes: p.slide.shapes ?? [],
+          texts: p.slide.texts ?? [],
+          images: p.slide.images ?? [],
+          audios: p.slide.audios ?? [],
+          videos: p.slide.videos ?? [],
+          callouts: p.slide.callouts ?? [],
+          badges: p.slide.badges ?? [],
+          blockquotes: p.slide.blockquotes ?? [],
+          activities: p.slide.activities ?? [],
+          background: p.slide.background ?? "#ffffff",
+          backgroundImage: p.slide.backgroundImage,
+          backgroundImageWidth: p.slide.backgroundImageWidth,
+          backgroundImageHeight: p.slide.backgroundImageHeight,
+          backgroundOffsetX: p.slide.backgroundOffsetX,
+          backgroundOffsetY: p.slide.backgroundOffsetY,
+          backgroundScale: p.slide.backgroundScale,
+          backgroundImagePending: p.slide.backgroundImagePending,
+          skeleton: p.slide.skeleton,
+          themeId: p.slide.themeId,
+        };
+        if (p.index < next.length) next[p.index] = replaced;
+        else next.push(replaced);
+        const streamingCap = p.contentTotal ?? p.total;
+        if (next.length < streamingCap && p.index + 1 >= next.length) {
+          next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+        }
+        slidesRef.current = next;
+        return next;
+      });
+      setActiveIndex(p.index);
+      setGenerating((prev) => ({
+        current: Math.min(p.index + 1, p.total),
+        total: p.total,
+        title: p.title,
+        slideTitles: prev?.slideTitles,
+      }));
+      scheduleSave();
+      if (reveal.queue.length > 0) {
+        // Tight stagger — the server is now streaming slides at OpenAI's
+        // natural cadence (~1-3s/slide), so additional artificial delay is
+        // pure waiting. 80ms keeps the "pop-in" animation perceptible.
+        reveal.timer = setTimeout(processRevealItem, 80);
+      } else {
+        reveal.timer = null;
+      }
+    }
+
+    function enqueueSlide(p: SlidePayloadType) {
+      reveal.queue.push(p);
+      if (!reveal.timer) {
+        reveal.timer = setTimeout(processRevealItem, 30);
+      }
+    }
+
+    (async () => {
+      try {
+        const r = await fetch("/api/generate-slideshow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(generationParams),
+          signal: controller.signal,
+        });
+        if (!r.ok || !r.body) throw new Error("Generation failed");
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let first = true;
+        while (!cancelled) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx: number;
+          while ((idx = buffer.indexOf("\n\n")) !== -1) {
+            const raw = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 2);
+            if (!raw.trim()) continue;
+            let eventName = "message";
+            let dataLine = "";
+            for (const line of raw.split("\n")) {
+              if (line.startsWith("event:")) eventName = line.slice(6).trim();
+              else if (line.startsWith("data:")) dataLine += line.slice(5).trim();
+            }
+            let payload: unknown = {};
+            try { payload = JSON.parse(dataLine); } catch { continue; }
+
+            if (eventName === "meta") {
+              const p = payload as { title?: string; total?: number; slideTitles?: string[] };
+              if (p.title) setTitle(p.title);
+              setPreMeta(false);
+              // ONLY seed the placeholder on the FIRST meta event of a stream.
+              // Subsequent metas would wipe in-flight slides — race-prone with
+              // the reveal queue and the cause of "deck shrinks to 1-3 slides"
+              // when the AI emitted a different count than budgeted. The
+              // server now sends `count-correction` instead for that case.
+              if (first && typeof p.total === "number" && p.total > 0) {
+                const firstPlaceholder: SlideState = {
+                  id: newId("s"),
+                  shapes: [],
+                  texts: [],
+                  images: [],
+                  background: "#ffffff",
+                };
+                setSlides([firstPlaceholder]);
+                slidesRef.current = [firstPlaceholder];
+                setActiveIndex(0);
+                setGenerating({ current: 0, total: p.total, slideTitles: p.slideTitles });
+                first = false;
+              }
+            } else if (eventName === "count-correction") {
+              // Post-stream adjustment of the progress UI when the AI emitted
+              // more/fewer slides than budgeted. Updates only `generating`;
+              // never touches the slides array.
+              const p = payload as { total?: number; slideTitles?: string[] };
+              if (typeof p.total === "number" && p.total > 0) {
+                setGenerating((prev) => ({
+                  current: prev?.current ?? 0,
+                  total: p.total ?? 0,
+                  title: prev?.title,
+                  slideTitles: p.slideTitles ?? prev?.slideTitles,
+                }));
+              }
+            } else if (eventName === "slide") {
+              // Push into the reveal queue so slides appear one at a time with
+              // a 500 ms stagger (processRevealItem handles setSlides, etc.).
+              enqueueSlide(payload as SlidePayloadType);
+            } else if (eventName === "slide-image") {
+              const p = payload as {
+                index: number;
+                slide: SlideJSON;
+                galleryImage?: { prompt: string; style?: string; dataUrl: string };
+              };
+              if (p.galleryImage) {
+                saveGeneratedImage(p.galleryImage)
+                  .then(() => setGalleryRefreshTrigger((n) => n + 1))
+                  .catch((err) => console.warn("Gallery save failed:", err));
+              }
+              setSlides((prev) => {
+                const next = prev.slice();
+                const target = next[p.index];
+                if (!target) return prev;
+                // Preserve the slide id (so React's key + animations stay
+                // stable) and merge in the new image data.
+                next[p.index] = {
+                  id: target.id,
+                  shapes: p.slide.shapes ?? target.shapes,
+                  texts: p.slide.texts ?? target.texts,
+                  images: p.slide.images ?? target.images,
+                  audios: target.audios,
+                  videos: target.videos,
+                  // Re-rendered slide carries fresh callouts/badges/etc with
+                  // any image data merged into ActivityObject.image. Prefer
+                  // the new slide's arrays, fall back to the target's.
+                  callouts: p.slide.callouts ?? target.callouts,
+                  badges: p.slide.badges ?? target.badges,
+                  blockquotes: p.slide.blockquotes ?? target.blockquotes,
+                  activities: p.slide.activities ?? target.activities,
+                  background: p.slide.background ?? target.background,
+                  backgroundImage: p.slide.backgroundImage,
+                  backgroundImageWidth: p.slide.backgroundImageWidth,
+                  backgroundImageHeight: p.slide.backgroundImageHeight,
+                  backgroundOffsetX: p.slide.backgroundOffsetX,
+                  backgroundOffsetY: p.slide.backgroundOffsetY,
+                  backgroundScale: p.slide.backgroundScale,
+                  backgroundImagePending: p.slide.backgroundImagePending,
+                  // Keep skeleton + themeId carried by the previous slide so
+                  // image arrival doesn't strip the re-theming metadata.
+                  skeleton: target.skeleton,
+                  themeId: target.themeId,
+                };
+                slidesRef.current = next;
+                return next;
+              });
+              scheduleSave();
+            } else if (eventName === "video") {
+              const p = payload as {
+                placeholderId?: string;
+                targetIndex: number;
+                video: {
+                  videoId: string; title: string; channel: string; description: string;
+                  slideHeading?: string; slideSubtitle?: string;
+                };
+                slideBg?: string;
+                titleColor?: string;
+                mutedColor?: string;
+                accent?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Dedicated scene-styled slide for the YouTube video. Mirrors
+                // the audio activity layout: dramatic background, large title
+                // in the theme accent, cream subtitle, and a rounded 16:9
+                // player centered with side margins.
+                const titleColor = p.titleColor ?? "#FFE8C8";
+                const subtitleColor = p.mutedColor ?? "#ffffff";
+                const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
+                const heading = (p.video.slideHeading ?? `WATCH: ${p.video.title}`).toUpperCase();
+                const subtitle = p.video.slideSubtitle ?? "Let's watch this together to deepen our understanding.";
+
+                // Measure each text block at its width so wrapped headings
+                // (long YouTube titles) push the subtitle + video below them
+                // instead of overlapping. Mirrors the canvas measurement used
+                // by textBbox / hit-testing.
+                const blockWidth = SLIDE_W - 160;
+                const titleFontSize = 56;
+                const titleLH = 1.1;
+                const subtitleFontSize = 22;
+                const subtitleLH = 1.3;
+                const titleLines = measureTextLines(
+                  heading, blockWidth, titleFontSize, "800", "normal", headingFont,
+                );
+                const titleH = titleFontSize * titleLH * titleLines;
+                const subtitleLines = measureTextLines(
+                  subtitle, blockWidth, subtitleFontSize, "500", "normal", "'Inter', sans-serif",
+                );
+                const subtitleH = subtitleFontSize * subtitleLH * subtitleLines;
+
+                const titleY = 60;
+                const subtitleGap = 16;
+                const subtitleY = titleY + titleH + subtitleGap;
+                const videoGap = 32;
+                const vidTop = Math.round(subtitleY + subtitleH + videoGap);
+
+                const titleText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: titleY, width: blockWidth,
+                  text: heading,
+                  fontSize: titleFontSize, fontWeight: "800",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: headingFont,
+                  color: titleColor,
+                  textAlign: "left",
+                  lineHeight: titleLH,
+                };
+                const subtitleText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: Math.round(subtitleY), width: blockWidth,
+                  text: subtitle,
+                  fontSize: subtitleFontSize, fontWeight: "500",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: "'Inter', sans-serif",
+                  color: subtitleColor,
+                  textAlign: "left",
+                  lineHeight: subtitleLH,
+                };
+                // 16:9 player. Sized to fill what's left below the text block,
+                // centered horizontally with comfortable side margins.
+                const sideMargin = 160;
+                const maxW = SLIDE_W - sideMargin * 2;
+                const maxH = Math.max(120, SLIDE_H - vidTop - 40);
+                let vidW = maxW;
+                let vidH = Math.round(vidW * 9 / 16);
+                if (vidH > maxH) {
+                  vidH = maxH;
+                  vidW = Math.round(vidH * 16 / 9);
+                }
+                const vidX = Math.round((SLIDE_W - vidW) / 2);
+                const newVid: VideoObject = {
+                  id: newId("v"),
+                  source: "youtube",
+                  src: p.video.videoId,
+                  title: p.video.title,
+                  x: vidX,
+                  y: vidTop,
+                  width: vidW,
+                  height: vidH,
+                  cornerRadius: 3,
+                };
+                const realSlide: SlideState = {
+                  id: p.placeholderId ?? newId("s"),
+                  shapes: [], images: [], audios: [],
+                  texts: [titleText, subtitleText],
+                  videos: [newVid],
+                  background: p.slideBg ?? "#1a1a1a",
+                };
+                if (p.placeholderId) {
+                  const idx = prev.findIndex((s) => s.id === p.placeholderId);
+                  if (idx >= 0) {
+                    const next = prev.slice();
+                    next[idx] = realSlide;
+                    slidesRef.current = next;
+                    return next;
+                  }
+                }
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), realSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
+              scheduleSave();
+            } else if (eventName === "audio-placeholder") {
+              const p = payload as {
+                placeholderId: string;
+                targetIndex: number;
+                slideBg?: string;
+                panelBg?: string;
+                panelInk?: string;
+                playBg?: string;
+                playInk?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Pending audio slide: an AudioObject with isPending=true so
+                // AudioElement renders shimmer over the player area. Real data
+                // replaces this slide when the "audio" event fires.
+                const playerW = SLIDE_W - 160;
+                const playerH = 80;
+                const playerY = 210;
+                const pendingAudio: AudioObject = {
+                  id: newId("a"),
+                  x: 80, y: playerY,
+                  width: playerW, height: playerH,
+                  src: "",
+                  title: "",
+                  description: "",
+                  questions: [],
+                  panelBg: p.panelBg,
+                  panelInk: p.panelInk,
+                  playBg: p.playBg,
+                  playInk: p.playInk,
+                  headingFont: p.headingFont,
+                  isPending: true,
+                };
+                const placeholderSlide: SlideState = {
+                  id: p.placeholderId,
+                  shapes: [], images: [],
+                  texts: [],
+                  audios: [pendingAudio],
+                  background: p.slideBg ?? "#0f172a",
+                };
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), placeholderSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
+            } else if (eventName === "video-placeholder") {
+              const p = payload as {
+                placeholderId: string;
+                targetIndex: number;
+                slideBg?: string;
+                titleColor?: string;
+                mutedColor?: string;
+                accent?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Pending video slide: a VideoObject with isPending=true so
+                // VideoElement renders shimmer in the player frame. Replaced by
+                // the real "video" event once /api/find-youtube returns.
+                const sideMargin = 160;
+                const vidW = SLIDE_W - sideMargin * 2;
+                const vidH = Math.round(vidW * 9 / 16);
+                const vidX = Math.round((SLIDE_W - vidW) / 2);
+                const pendingVideo: VideoObject = {
+                  id: newId("v"),
+                  source: "youtube",
+                  src: "",
+                  x: vidX,
+                  y: 210,
+                  width: vidW,
+                  height: vidH,
+                  cornerRadius: 3,
+                  isPending: true,
+                };
+                const placeholderSlide: SlideState = {
+                  id: p.placeholderId,
+                  shapes: [], images: [], audios: [],
+                  texts: [],
+                  videos: [pendingVideo],
+                  background: p.slideBg ?? "#1a1a1a",
+                };
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), placeholderSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
+            } else if (eventName === "audio") {
+              const p = payload as {
+                placeholderId?: string;
+                targetIndex: number;
+                audio: {
+                  src: string; title: string; description: string;
+                  transcript?: string; questions: string[];
+                  panelBg?: string; panelInk?: string;
+                  playBg?: string; playInk?: string;
+                  headingFont?: string;
+                  slideBg?: string;
+                  slideTextColor?: string;
+                };
+              };
+              setSlides((prev) => {
+                // The audio activity gets a dedicated slide. We lay out four
+                // discrete elements so the teacher can edit any of them
+                // independently: a title heading, a description, the audio
+                // player bar, and a numbered questions list.
+                // Slide texts use slideTextColor (palette.text) so they read
+                // against the natural theme bg. Panel internals (player bar)
+                // still use panelInk because they sit on the accent panel.
+                const titleColor = p.audio.slideTextColor ?? p.audio.panelInk ?? "#1a1a2e";
+                const headingFont = p.audio.headingFont ?? "'Bricolage Grotesque', sans-serif";
+
+                const titleText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: 60, width: SLIDE_W - 160,
+                  text: (p.audio.title || "Audio Activity").toUpperCase(),
+                  fontSize: 56, fontWeight: "800",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: headingFont,
+                  color: titleColor,
+                  textAlign: "left",
+                };
+                const descText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: 144, width: SLIDE_W - 160,
+                  text: p.audio.description || "Listen to the audio and answer the questions.",
+                  fontSize: 22, fontWeight: "500",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: "'Inter', sans-serif",
+                  color: titleColor,
+                  textAlign: "left",
+                };
+
+                const playerW = SLIDE_W - 160;
+                const playerH = 80;
+                const playerY = 210;
+                const newAudio: AudioObject = {
+                  id: newId("a"),
+                  x: 80, y: playerY,
+                  width: playerW, height: playerH,
+                  src: p.audio.src,
+                  title: p.audio.title,
+                  description: p.audio.description,
+                  questions: p.audio.questions ?? [],
+                  transcript: p.audio.transcript,
+                  panelBg: p.audio.panelBg,
+                  panelInk: p.audio.panelInk,
+                  playBg: p.audio.playBg,
+                  playInk: p.audio.playInk,
+                  headingFont: p.audio.headingFont,
+                };
+
+                // Numbered comprehension list — one text element with listType
+                // so the teacher gets the toolbar's bullet/number controls.
+                const questionsText: TextObject | null = (p.audio.questions?.length ?? 0) > 0 ? {
+                  id: newId("t"),
+                  x: 80, y: playerY + playerH + 40,
+                  width: SLIDE_W - 160,
+                  text: (p.audio.questions ?? []).join("\n"),
+                  fontSize: 22, fontWeight: "500",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: "'Inter', sans-serif",
+                  color: titleColor,
+                  textAlign: "left",
+                  listType: "number",
+                } : null;
+
+                const realSlide: SlideState = {
+                  // Preserve the placeholder slide id so React's reconciliation
+                  // is stable across the swap — avoids a flash from key change.
+                  id: p.placeholderId ?? newId("s"),
+                  shapes: [], images: [],
+                  texts: questionsText ? [titleText, descText, questionsText] : [titleText, descText],
+                  audios: [newAudio],
+                  background: p.audio.slideBg ?? "#0f172a",
+                };
+                // If a placeholder was inserted earlier, replace it in place;
+                // otherwise fall back to inserting a new slide at targetIndex+1.
+                if (p.placeholderId) {
+                  const idx = prev.findIndex((s) => s.id === p.placeholderId);
+                  if (idx >= 0) {
+                    const next = prev.slice();
+                    next[idx] = realSlide;
+                    slidesRef.current = next;
+                    return next;
+                  }
+                }
+                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
+                const next = [...prev.slice(0, insertAt), realSlide, ...prev.slice(insertAt)];
+                slidesRef.current = next;
+                return next;
+              });
+              scheduleSave();
+            } else if (eventName === "complete") {
+              setGenerating(null);
+              setPreMeta(false);
+            } else if (eventName === "error") {
+              const p = payload as { message?: string };
+              console.error("Stream error:", p.message);
+              setGenerating(null);
+              setPreMeta(false);
+            }
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Generation stream failed", err);
+          setGenerating(null);
+          setPreMeta(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (reveal.timer) clearTimeout(reveal.timer);
+      controller.abort();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generationParams]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const currentSlide = slides[activeIndex];
@@ -1119,7 +2568,19 @@ export default function Editor({ presentation }: Props) {
   const slideEntries: SlideEntry[] = slides.map((s) => ({ id: s.id, slide: s }));
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "#F1EFE3" }}>
+    <div className="relative flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "#F1EFE3" }}>
+      {/* Full-screen overlay shown while waiting for OpenAI to respond (pre-meta phase).
+          Covers the whole editor so the user sees an engaging animation rather than
+          a blank slide + spinner during the 10-20 second AI wait. */}
+      {preMeta && (
+        <div
+          className="absolute inset-0 z-200 flex flex-col items-center justify-center pointer-events-none"
+          style={{ backgroundColor: "#F1EFE3" }}
+        >
+          <SlideshowLoadingAnimation label="Planning your deck…" />
+          <p className="text-xs text-gray-400 mt-3">This usually takes about 15 seconds</p>
+        </div>
+      )}
       <EditorTopBar
         title={title}
         onTitleChange={handleTitleChange}
@@ -1128,6 +2589,9 @@ export default function Editor({ presentation }: Props) {
         onExport={handleExport}
         isExporting={isExporting}
         saveStatus={saveStatus}
+        disableHistory={!!generating}
+        themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
+        onThemeChange={handleThemeChange}
       />
       <div className="flex flex-1 min-h-0 relative">
         <Sidebar
@@ -1135,6 +2599,71 @@ export default function Editor({ presentation }: Props) {
           onAddText={addText}
           onAddImage={addImage}
           onAddFrame={addFrame}
+          onAddVideo={addVideo}
+          galleryRefreshTrigger={galleryRefreshTrigger}
+          onAddAudioActivity={(audio) => {
+            // Same layout the AI wizard uses — separate text elements + thin
+            // player bar — on a brand-new slide inserted right after the
+            // current one. Uses neutral defaults since no theme is in scope.
+            const titleText: TextObject = {
+              id: newId("t"),
+              x: 80, y: 60, width: SLIDE_W - 160,
+              text: (audio.title || "Audio Activity").toUpperCase(),
+              fontSize: 56, fontWeight: "800",
+              fontStyle: "normal", underline: false,
+              fontFamily: "'Bricolage Grotesque', sans-serif",
+              color: "#FFE8C8",
+              textAlign: "left",
+            };
+            const descText: TextObject = {
+              id: newId("t"),
+              x: 80, y: 144, width: SLIDE_W - 160,
+              text: audio.description || "Listen to the audio and answer the questions.",
+              fontSize: 22, fontWeight: "500",
+              fontStyle: "normal", underline: false,
+              fontFamily: "'Inter', sans-serif",
+              color: "#FFE8C8",
+              textAlign: "left",
+            };
+            const playerY = 210;
+            const newAudio: AudioObject = {
+              id: newId("a"),
+              x: 80, y: playerY,
+              width: SLIDE_W - 160, height: 80,
+              src: audio.src,
+              title: audio.title,
+              description: audio.description,
+              questions: audio.questions ?? [],
+              transcript: audio.transcript,
+            };
+            const questionsText: TextObject | null = (audio.questions?.length ?? 0) > 0 ? {
+              id: newId("t"),
+              x: 80, y: playerY + 80 + 40,
+              width: SLIDE_W - 160,
+              text: audio.questions.join("\n"),
+              fontSize: 22, fontWeight: "500",
+              fontStyle: "normal", underline: false,
+              fontFamily: "'Inter', sans-serif",
+              color: "#FFE8C8",
+              textAlign: "left",
+              listType: "number",
+            } : null;
+            const newSlide: SlideState = {
+              id: newId("s"),
+              shapes: [], images: [],
+              texts: questionsText ? [titleText, descText, questionsText] : [titleText, descText],
+              audios: [newAudio],
+              background: "#0f172a",
+            };
+            setSlides((prev) => {
+              const insertAt = Math.max(0, Math.min(activeIndexRef.current + 1, prev.length));
+              const next = [...prev.slice(0, insertAt), newSlide, ...prev.slice(insertAt)];
+              slidesRef.current = next;
+              setActiveIndex(insertAt);
+              return next;
+            });
+            scheduleSave();
+          }}
         />
         {fontPanelOpen && selection?.kind === "text" && (
           <FontPanel
@@ -1154,9 +2683,12 @@ export default function Editor({ presentation }: Props) {
               <div className="shrink-0" style={{ width: SLIDE_W * zoom, height: SLIDE_H * zoom }}>
                 <div
                   ref={slideWrapperRef}
+                  onMouseDownCapture={handleSlideMouseDownCapture}
                   onMouseDown={handleSlideMouseDown}
                   onDoubleClick={handleSlideDoubleClick}
                   onContextMenu={handleSlideContextMenu}
+                  onDragOver={handleSlideDragOver}
+                  onDrop={handleSlideDrop}
                   className="relative shadow-2xl"
                   style={{
                     width: SLIDE_W,
@@ -1180,8 +2712,18 @@ export default function Editor({ presentation }: Props) {
                       ? "2px solid #7c3aed"
                       : "none",
                     outlineOffset: 2,
+                    // Clip content to the slide so elements positioned past the
+                    // edges don't bleed into the surrounding workspace. Stay
+                    // visible while panning the background image (that flow
+                    // intentionally renders the bg extending beyond the slide).
+                    overflow: adjustingBackground ? "visible" : "hidden",
                   }}
                 >
+                  {/* Background-image shimmer while the AI is still fetching
+                      a title-cover / image-full hero photo. Beneath every element. */}
+                  {currentSlide?.backgroundImagePending && !currentSlide.backgroundImage && (
+                    <div className="absolute inset-0 jooma-shimmer pointer-events-none" style={{ zIndex: 0 }} />
+                  )}
                   {currentSlide && currentBg && (() => {
                     const bg = currentBg;
                     const imgLeft = (SLIDE_W - bg.scaledW) / 2 + bg.offsetX;
@@ -1237,6 +2779,9 @@ export default function Editor({ presentation }: Props) {
                           onEnterEditInner={setEditingInnerImageId}
                           onExitEditInner={exitInnerEdit}
                           onRemoveInnerImage={removeInnerImage}
+                          isInMultiSelection={(id) => isInMultiSelection("image", id)}
+                          onGroupDragStart={startGroupDrag}
+                          onCloneAndDrag={(id, e) => startCloneAndDrag("image", id, e)}
                         />
                         <ShapeLayer
                           shapes={currentSlide.shapes}
@@ -1248,6 +2793,9 @@ export default function Editor({ presentation }: Props) {
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
                           onContextMenu={openShapeContextMenu}
+                          isInMultiSelection={(id) => isInMultiSelection("shape", id)}
+                          onGroupDragStart={startGroupDrag}
+                          onCloneAndDrag={(id, e) => startCloneAndDrag("shape", id, e)}
                         />
                         <TextLayer
                           texts={currentSlide.texts}
@@ -1259,6 +2807,74 @@ export default function Editor({ presentation }: Props) {
                           onSnap={snapPosition}
                           onDragEnd={clearDragGuides}
                           onContextMenu={openTextContextMenu}
+                          isInMultiSelection={(id) => isInMultiSelection("text", id)}
+                          onGroupDragStart={startGroupDrag}
+                          onCloneAndDrag={(id, e) => startCloneAndDrag("text", id, e)}
+                        />
+                        <AudioLayer
+                          audios={currentSlide.audios ?? []}
+                          selectedId={selectedAudioId}
+                          zoom={zoom}
+                          onSelect={handleAudioSelect}
+                          onUpdate={updateAudio}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                          onEdit={setEditingAudioId}
+                        />
+                        <VideoLayer
+                          videos={currentSlide.videos ?? []}
+                          selectedId={selectedVideoId}
+                          zoom={zoom}
+                          onSelect={handleVideoSelect}
+                          onUpdate={updateVideo}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <CalloutLayer
+                          callouts={currentSlide.callouts ?? []}
+                          selectedId={selectedCalloutId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleCalloutSelect}
+                          onUpdate={updateCallout}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <BadgeLayer
+                          badges={currentSlide.badges ?? []}
+                          selectedId={selectedBadgeId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleBadgeSelect}
+                          onUpdate={updateBadge}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <BlockquoteLayer
+                          blockquotes={currentSlide.blockquotes ?? []}
+                          selectedId={selectedBlockquoteId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleBlockquoteSelect}
+                          onUpdate={updateBlockquote}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
+                        />
+                        <ActivityLayer
+                          activities={currentSlide.activities ?? []}
+                          selectedId={selectedActivityId}
+                          zoom={zoom}
+                          theme={getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID)}
+                          onSelect={handleActivitySelect}
+                          onUpdate={updateActivity}
+                          onCommit={scheduleSave}
+                          onSnap={snapPosition}
+                          onDragEnd={clearDragGuides}
                         />
 
                         {/* Alignment guides while dragging */}
@@ -1276,6 +2892,122 @@ export default function Editor({ presentation }: Props) {
                               <line key={`h${i}`} x1={0} y1={hy} x2={SLIDE_W} y2={hy} stroke="#ec4899" strokeWidth={1} />
                             ))}
                           </svg>
+                        )}
+
+                        {/* Marquee + multi-selection outlines */}
+                        {(marquee || multiSelection.length > 0) && (
+                          <svg
+                            className="absolute inset-0 pointer-events-none"
+                            width={SLIDE_W}
+                            height={SLIDE_H}
+                            style={{ overflow: "visible", zIndex: 60 }}
+                          >
+                            {multiSelection.map((m) => {
+                              let b: { x: number; y: number; w: number; h: number } | null = null;
+                              if (m.kind === "image") {
+                                const im = currentSlide.images.find((x) => x.id === m.id);
+                                if (im) b = { x: im.x, y: im.y, w: im.width, h: im.height };
+                              } else if (m.kind === "shape") {
+                                const sh = currentSlide.shapes.find((x) => x.id === m.id);
+                                if (sh) b = { x: sh.x, y: sh.y, w: sh.width, h: sh.height };
+                              } else if (m.kind === "text") {
+                                const t = currentSlide.texts.find((x) => x.id === m.id);
+                                if (t) b = textBbox(t);
+                              }
+                              if (!b) return null;
+                              return (
+                                <rect
+                                  key={`${m.kind}-${m.id}`}
+                                  x={b.x - 2}
+                                  y={b.y - 2}
+                                  width={b.w + 4}
+                                  height={b.h + 4}
+                                  fill="none"
+                                  stroke="#7c3aed"
+                                  strokeWidth={2 / zoom}
+                                  rx={2}
+                                />
+                              );
+                            })}
+                            {marquee && (
+                              <rect
+                                x={marquee.x}
+                                y={marquee.y}
+                                width={marquee.w}
+                                height={marquee.h}
+                                fill="rgba(124, 58, 237, 0.08)"
+                                stroke="#7c3aed"
+                                strokeWidth={1 / zoom}
+                                strokeDasharray={`${4 / zoom} ${3 / zoom}`}
+                              />
+                            )}
+                          </svg>
+                        )}
+
+                        {/* Drop-loading spinner at the drop point while we fetch the asset */}
+                        {dropLoading && (
+                          <div
+                            className="absolute pointer-events-none flex items-center justify-center rounded-2xl bg-white/90 border border-violet-300 shadow-lg"
+                            style={{
+                              left: dropLoading.x - 60,
+                              top: dropLoading.y - 60,
+                              width: 120,
+                              height: 120,
+                              zIndex: 51,
+                            }}
+                          >
+                            <div className="w-10 h-10 border-3 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+                          </div>
+                        )}
+
+                        {/* AI generation placeholder overlay — shows on slides that are
+                            still pending or actively being generated. Slides past the
+                            current one are static; the active one shimmers + spins.
+                            Uses opacity transition so the overlay fades out smoothly
+                            when its slide's real content arrives. */}
+                        {generating && (
+                          <div
+                            className="absolute inset-0 pointer-events-none flex items-center justify-center transition-opacity duration-500"
+                            style={{
+                              zIndex: 60,
+                              backgroundColor: "rgba(255, 255, 255, 0.92)",
+                              opacity: activeIndex >= generating.current ? 1 : 0,
+                            }}
+                          >
+                            {activeIndex === generating.current && (
+                              <div className="absolute inset-0 jooma-shimmer" />
+                            )}
+                            <div className="relative flex flex-col items-center gap-4">
+                              <div className="w-14 h-14 rounded-full bg-white shadow-md border flex items-center justify-center" style={{ borderColor: "#DAD8D0" }}>
+                                <div
+                                  className="w-7 h-7 rounded-full border-4 animate-spin"
+                                  style={{ borderColor: "#FFCC33", borderTopColor: "transparent" }}
+                                />
+                              </div>
+                              {(() => {
+                                // Only show text once we know the slide titles (post-meta).
+                                // Before that the spinner stands alone so the user isn't
+                                // told "designing slide 1..." while we're still planning
+                                // the deck. Fades in via key+opacity transition.
+                                const isCurrent = activeIndex === generating.current;
+                                const slideTitle = generating.slideTitles?.[activeIndex]?.trim();
+                                const label = !slideTitle
+                                  ? null
+                                  : isCurrent
+                                  ? `Designing ${slideTitle}…`
+                                  : `${slideTitle} · waiting`;
+                                return (
+                                  <p
+                                    key={label ?? "empty"}
+                                    className={`text-sm font-semibold text-gray-700 text-center px-6 max-w-md transition-opacity duration-500 ${label ? "opacity-100" : "opacity-0"}`}
+                                    style={{ minHeight: "1.25rem" }}
+                                  >
+                                    {label ?? ""}
+                                  </p>
+                                );
+                              })()}
+                            </div>
+                          </div>
                         )}
 
                         {/* Adjust-mode UI on top: drag overlay covering the entire visible image,
@@ -1367,13 +3099,22 @@ export default function Editor({ presentation }: Props) {
                   onUpdateText={(patch) => selectedTextId && updateText(selectedTextId, patch)}
                   onUpdateShape={(patch) => selectedShapeId && updateShape(selectedShapeId, patch)}
                   onUpdateImage={(patch) => selectedImageId && updateImage(selectedImageId, patch)}
+                  onUpdateVideo={(patch) => selectedVideoId && updateVideo(selectedVideoId, patch)}
                   onUpdateSlide={updateSlide}
                   onDelete={() => {
                     if (selectedTextId) deleteSelectedText();
                     else if (selectedShapeId) deleteSelectedShape();
                     else if (selectedImageId) deleteSelectedImage();
+                    else if (selectedVideoId) deleteSelectedVideo();
+                  }}
+                  onToggleLock={() => {
+                    if (selection?.kind === "text" && selectedTextId) updateText(selectedTextId, { locked: !selection.text.locked });
+                    else if (selection?.kind === "shape" && selectedShapeId) updateShape(selectedShapeId, { locked: !selection.shape.locked });
+                    else if (selection?.kind === "image" && selectedImageId) updateImage(selectedImageId, { locked: !selection.image.locked });
+                    else if (selection?.kind === "video" && selectedVideoId) updateVideo(selectedVideoId, { locked: !selection.video.locked });
                   }}
                   onOpenFontPanel={() => setFontPanelOpen(true)}
+                  onOpenEditVideo={selectedVideoId ? () => setEditVideoPanelOpen(true) : undefined}
                 />
               )}
             </div>
@@ -1387,11 +3128,59 @@ export default function Editor({ presentation }: Props) {
                 onSelect={switchSlide}
                 onAdd={addSlide}
                 onDelete={deleteSlide}
+                onReorder={reorderSlides}
+                generatingIndex={generating?.current}
+                themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
               />
             </div>
           </div>
-          <ZoomControls zoom={zoom} onChange={setZoom} onFit={handleFit} />
+          <ZoomControls
+            zoom={zoom}
+            onChange={setZoom}
+            onFit={handleFit}
+            slideIndex={activeIndex}
+            slideCount={slides.length}
+          />
+
+          {/* AI generation banner — visible while the SSE stream is producing slides */}
+          {generating && (
+            <div className="absolute top-2 right-4 z-50 pointer-events-none">
+              <div
+                className="inline-flex items-center gap-3 rounded-2xl border shadow-lg px-4 py-2 text-sm pointer-events-auto"
+                style={{ backgroundColor: "#1a1a1a", color: "#fff", borderColor: "#1a1a1a" }}
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: "#FFCC33" }} />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: "#FFCC33" }} />
+                </span>
+                <span className="font-medium">
+                  {generating.title ? `Generated: ${generating.title}` : "Designing your deck…"}
+                </span>
+                {generating.total > 0 && (
+                  <span className="font-mono text-xs opacity-70">
+                    {generating.current}/{generating.total}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+        {/* Right-side "Edit video" panel — URL paste + AI search. Lives as a
+            flex sibling so the canvas auto-shrinks when the panel is open. */}
+        <VideoRegenerateModal
+          open={editVideoPanelOpen}
+          onClose={() => setEditVideoPanelOpen(false)}
+          context={{
+            deckTitle: titleRef.current?.trim() || "Lesson",
+            slideTitles: slidesRef.current
+              .flatMap((s) => s.texts.map((t) => t.text))
+              .filter((t) => !!t?.trim())
+              .slice(0, 8),
+          }}
+          defaults={{ length: "medium" }}
+          onApplyVideoId={applyVideoId}
+          onApply={applyVideoCandidate}
+        />
       </div>
 
       {contextMenu && (
@@ -1443,6 +3232,7 @@ export default function Editor({ presentation }: Props) {
           onDeleteSlide={contextMenu.kind === "slide" ? () => deleteSlide(activeIndexRef.current) : undefined}
           onChangeBackgroundImage={contextMenu.kind === "slide" ? openBackgroundFilePicker : undefined}
           onRemoveBackgroundImage={contextMenu.kind === "slide" ? removeBackgroundImage : undefined}
+          onRegenerate={contextMenu.kind === "image" && selectedImageId ? () => setRegenerateTargetId(selectedImageId) : undefined}
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -1458,6 +3248,73 @@ export default function Editor({ presentation }: Props) {
           e.target.value = "";
         }}
       />
+
+      {regenerateTargetId && (() => {
+        // Look up the slide frame the new image will replace so the AI gets
+        // generated at the same aspect ratio — no more landscape images
+        // squeezed into a near-square slide frame.
+        const slide = slidesRef.current[activeIndexRef.current];
+        const target = slide?.images.find((im) => im.id === regenerateTargetId);
+        return (
+          <RegenerateImageDialog
+            frameWidth={target?.width}
+            frameHeight={target?.height}
+            onClose={() => setRegenerateTargetId(null)}
+            onGenerated={({ dataUrl, prompt, style }) => {
+              updateImage(regenerateTargetId, { src: dataUrl });
+              saveGeneratedImage({ prompt, style, dataUrl })
+                .then(() => setGalleryRefreshTrigger((n) => n + 1))
+                .catch((err) => console.warn("Gallery save failed:", err));
+            }}
+          />
+        );
+      })()}
+
+      {editingAudioId && (() => {
+        // Find the audio + the slide it lives on so we can update both the
+        // AudioObject's questions and the numbered text element next to it.
+        const slide = slidesRef.current[activeIndexRef.current];
+        const audio = slide?.audios?.find((a) => a.id === editingAudioId);
+        if (!audio) return null;
+        return (
+          <EditAudioPanel
+            onClose={() => setEditingAudioId(null)}
+            onSubmit={async ({ activityType, additionalInstructions }) => {
+              const res = await fetch("/api/generate-audio", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  topic: audio.title || "audio activity",
+                  activityType,
+                  additionalInstructions,
+                  questionsOnly: true,
+                  existingTranscript: audio.transcript ?? "",
+                }),
+              });
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || err.message || "Failed");
+              }
+              const data: { title: string; description: string; questions: string[] } = await res.json();
+
+              // Update the audio object's stored fields.
+              updateAudio(editingAudioId, {
+                title: data.title,
+                description: data.description,
+                questions: data.questions,
+              });
+
+              // Refresh the on-slide question text (the one with listType:"number").
+              mutateActiveSlide((s) => ({
+                ...s,
+                texts: s.texts.map((t) => t.listType === "number"
+                  ? { ...t, text: data.questions.join("\n") }
+                  : t),
+              }));
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

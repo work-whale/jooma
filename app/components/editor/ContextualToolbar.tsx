@@ -1,15 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3, Pencil } from "lucide-react";
+import { SLIDE_W, SLIDE_H } from "./constants";
 import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
-import { isSvgDataUrl, recolorSvgSrc } from "./svg-recolor";
+import { isSvgDataUrl, extractSvgColors, swapSvgColor } from "./svg-recolor";
 import ColorPicker from "./ColorPicker";
-import type { TextObject, ShapeObject, ImageObject, SlideJSON } from "@/app/lib/presentations";
+import type { TextObject, ShapeObject, ImageObject, SlideJSON, VideoObject } from "@/app/lib/presentations";
+
+// ────────────────────────────────────────────────────────────────────────────
+// Shared primitives
+// ────────────────────────────────────────────────────────────────────────────
 
 // Swatch-only button. Clicking opens a popover containing the native color picker,
-// a hex input, and any caller-provided extra controls (e.g. stroke thickness).
+// a hex input, and any caller-provided extra controls.
 function ColorPopover({
   value,
   onChange,
@@ -41,7 +46,6 @@ function ColorPopover({
     return () => window.removeEventListener("mousedown", h);
   }, [open]);
 
-  // Transparent / no-color indicator: render a tiny diagonal slash on the swatch.
   const isTransparent = value === "transparent" || value === "#00000000";
 
   const handleClick = () => {
@@ -49,7 +53,6 @@ function ColorPopover({
     if (!buttonRef.current) return;
     const r = buttonRef.current.getBoundingClientRect();
     const POPOVER_W = 260;
-    // Center popover under the button, clamped so it never spills off either viewport edge.
     const centered = r.left + r.width / 2 - POPOVER_W / 2;
     const clamped = Math.max(8, Math.min(window.innerWidth - POPOVER_W - 8, centered));
     setPopoverPos({ x: clamped, y: r.bottom + 8 });
@@ -130,313 +133,9 @@ function ColorPopover({
   );
 }
 
-export type EditorSelection =
-  | { kind: "text"; text: TextObject }
-  | { kind: "shape"; shape: ShapeObject }
-  | { kind: "image"; image: ImageObject }
-  | { kind: "slide"; slide: SlideJSON }
-  | null;
-
-interface Props {
-  selection: EditorSelection;
-  onUpdateText: (patch: Partial<TextObject>) => void;
-  onUpdateShape: (patch: Partial<ShapeObject>) => void;
-  onUpdateImage: (patch: Partial<ImageObject>) => void;
-  onUpdateSlide: (patch: Partial<SlideJSON>) => void;
-  onDelete: () => void;
-  onOpenFontPanel: () => void;
-}
-
-function ObjectActions({ onDelete }: { onDelete: () => void }) {
-  return (
-    <div className="ml-auto flex items-center gap-1">
-      <button onClick={onDelete} className={toggleBtn(false)} title="Delete">
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
-}
-
-const inputClass =
-  "h-8 px-2 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200";
-
-const toggleBtn = (active: boolean) =>
-  `h-8 w-8 flex items-center justify-center rounded-md border text-xs transition-colors ${
-    active ? "bg-violet-100 border-violet-300 text-violet-700" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-  }`;
-
-const pillClass =
-  "inline-flex items-center gap-2 px-3 py-2 bg-white rounded-2xl shadow-lg border border-gray-200 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden";
-
-export default function ContextualToolbar({
-  selection,
-  onUpdateText,
-  onUpdateShape,
-  onUpdateImage,
-  onUpdateSlide,
-  onDelete,
-  onOpenFontPanel,
-}: Props) {
-  if (!selection) return null;
-
-  if (selection.kind === "slide") {
-    return <SlideToolbar slide={selection.slide} onUpdateSlide={onUpdateSlide} />;
-  }
-
-  if (selection.kind === "text") {
-    const t = selection.text;
-    return (
-      <div className={pillClass} style={{ scrollbarWidth: "none" }}>
-        <button
-          type="button"
-          onClick={onOpenFontPanel}
-          className="h-8 px-2.5 flex items-center gap-1.5 border border-gray-200 rounded-md bg-white text-xs text-gray-800 hover:bg-gray-50 min-w-32"
-          title="Change font"
-        >
-          <span className="truncate" style={{ fontFamily: t.fontFamily }}>
-            {t.fontFamily.split(",")[0].replace(/['"]/g, "")}
-          </span>
-          <ChevronDown className="w-3 h-3 text-gray-500 ml-auto shrink-0" />
-        </button>
-        <input
-          type="number"
-          value={t.fontSize}
-          min={8}
-          max={300}
-          onChange={(e) => onUpdateText({ fontSize: Number(e.target.value) })}
-          className={`${inputClass} w-16`}
-        />
-        <button
-          onClick={() => onUpdateText({ fontWeight: t.fontWeight === "700" || t.fontWeight === "bold" ? "400" : "700" })}
-          className={toggleBtn(t.fontWeight === "700" || t.fontWeight === "bold")}
-          title="Bold"
-        >
-          <Bold className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={() => onUpdateText({ fontStyle: t.fontStyle === "italic" ? "normal" : "italic" })}
-          className={toggleBtn(t.fontStyle === "italic")}
-          title="Italic"
-        >
-          <Italic className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={() => onUpdateText({ underline: !t.underline })}
-          className={toggleBtn(t.underline)}
-          title="Underline"
-        >
-          <Underline className="w-3.5 h-3.5" />
-        </button>
-        <ColorPopover
-          value={t.color}
-          onChange={(c) => onUpdateText({ color: c })}
-          title="Text color"
-        />
-        <div className="w-px h-6 bg-gray-300 mx-1" />
-        <button onClick={() => onUpdateText({ textAlign: "left" })} className={toggleBtn(t.textAlign === "left")}>
-          <AlignLeft className="w-3.5 h-3.5" />
-        </button>
-        <button onClick={() => onUpdateText({ textAlign: "center" })} className={toggleBtn(t.textAlign === "center")}>
-          <AlignCenter className="w-3.5 h-3.5" />
-        </button>
-        <button onClick={() => onUpdateText({ textAlign: "right" })} className={toggleBtn(t.textAlign === "right")}>
-          <AlignRight className="w-3.5 h-3.5" />
-        </button>
-        <ObjectActions onDelete={onDelete} />
-      </div>
-    );
-  }
-
-  if (selection.kind === "shape") {
-    const sh = selection.shape;
-    const isRect = sh.type === "rect";
-    return (
-      <div className={pillClass} style={{ scrollbarWidth: "none" }}>
-        <ColorPopover
-          value={sh.fill}
-          onChange={(c) => onUpdateShape({ fill: c })}
-          title="Fill"
-        />
-        <ColorPopover
-          value={sh.stroke}
-          onChange={(c) => onUpdateShape({ stroke: c })}
-          title="Border"
-          appearance="stroke"
-          extra={
-            <label className="flex items-center justify-between gap-2 text-xs text-gray-600">
-              <span>Thickness</span>
-              <input
-                type="range"
-                min={0}
-                max={40}
-                value={sh.strokeWidth}
-                onChange={(e) => onUpdateShape({ strokeWidth: Number(e.target.value) })}
-                className="accent-violet-600 flex-1"
-              />
-              <input
-                type="number"
-                value={sh.strokeWidth}
-                min={0}
-                max={40}
-                onChange={(e) => onUpdateShape({ strokeWidth: Number(e.target.value) })}
-                className={`${inputClass} w-12`}
-              />
-            </label>
-          }
-        />
-        {isRect && (
-          <label className="flex items-center gap-1.5 text-xs text-gray-600">
-            Radius
-            <input
-              type="number"
-              value={sh.cornerRadius ?? 0}
-              min={0}
-              max={200}
-              onChange={(e) => onUpdateShape({ cornerRadius: Number(e.target.value) })}
-              className={`${inputClass} w-14`}
-            />
-          </label>
-        )}
-        <label className="flex items-center gap-1.5 text-xs text-gray-600">
-          Opacity
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={sh.opacity}
-            onChange={(e) => onUpdateShape({ opacity: Number(e.target.value) })}
-            className="accent-violet-600 w-24"
-          />
-        </label>
-        <ObjectActions onDelete={onDelete} />
-      </div>
-    );
-  }
-
-  // image
-  const im = selection.image;
-  const imFrame = (im.frame ?? "none") as FrameShape;
-  const cornerRadius = im.cornerRadius ?? (imFrame === "rounded" ? 16 : imFrame === "pill" ? 50 : 0);
-  const strokeWidth = im.strokeWidth ?? 0;
-  const strokeColor = im.strokeColor ?? "#1a1a2e";
-  const tint = im.tint ?? "#1a1a2e";
-  const isSvg = isSvgDataUrl(im.src);
-  return (
-    <div className={pillClass} style={{ scrollbarWidth: "none" }}>
-      {isSvg && (
-        <ColorPopover
-          value={tint}
-          onChange={(c) => {
-            const newSrc = recolorSvgSrc(im.src, c);
-            if (newSrc) onUpdateImage({ src: newSrc, tint: c });
-            else onUpdateImage({ tint: c });
-          }}
-          title="Icon color"
-        />
-      )}
-      <FramePopover
-        value={imFrame}
-        onSelect={(f) => onUpdateImage({ frame: f })}
-      />
-      <IconPopover
-        icon={<Spline className="w-3.5 h-3.5" />}
-        label="Roundness"
-        isActive={cornerRadius > 0}
-      >
-        {() => (
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={0}
-              max={50}
-              step={1}
-              value={cornerRadius}
-              onChange={(e) => onUpdateImage({ cornerRadius: Number(e.target.value) })}
-              className="accent-violet-600 flex-1"
-            />
-            <span className="text-xs font-mono text-gray-600 w-8 text-right">{cornerRadius}</span>
-          </div>
-        )}
-      </IconPopover>
-      <IconPopover
-        icon={<Brush className="w-3.5 h-3.5" />}
-        label="Border"
-        isActive={strokeWidth > 0}
-      >
-        {() => {
-          const strokeAlign = im.strokeAlign ?? "inside";
-          return (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <ColorPopover
-                  value={strokeColor}
-                  onChange={(c) => onUpdateImage({ strokeColor: c })}
-                  appearance="stroke"
-                />
-                <div className="flex-1 flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={strokeWidth}
-                    onChange={(e) => onUpdateImage({ strokeWidth: Number(e.target.value) })}
-                    className="accent-violet-600 flex-1"
-                  />
-                  <span className="text-xs font-mono text-gray-600 w-8 text-right">{strokeWidth}</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Position</p>
-                <div className="grid grid-cols-3 gap-1">
-                  {(["inside", "center", "outside"] as const).map((pos) => (
-                    <button
-                      key={pos}
-                      onClick={() => onUpdateImage({ strokeAlign: pos })}
-                      className={`px-2 py-1 text-[11px] rounded-md border capitalize transition-colors ${
-                        strokeAlign === pos
-                          ? "bg-violet-100 border-violet-300 text-violet-700"
-                          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {pos}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        }}
-      </IconPopover>
-      <IconPopover
-        icon={<Droplet className="w-3.5 h-3.5" />}
-        label="Opacity"
-        isActive={im.opacity < 1}
-      >
-        {() => (
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={im.opacity}
-              onChange={(e) => onUpdateImage({ opacity: Number(e.target.value) })}
-              className="accent-violet-600 flex-1"
-            />
-            <span className="text-xs font-mono text-gray-600 w-10 text-right">{Math.round(im.opacity * 100)}%</span>
-          </div>
-        )}
-      </IconPopover>
-      <ObjectActions onDelete={onDelete} />
-    </div>
-  );
-}
-
 // Generic icon-only button that opens a popover with the given children, and shows a
-// dark tooltip beneath on hover. The popover uses fixed positioning to escape the
-// toolbar's overflow-x-auto (which would otherwise clip it).
+// tooltip on hover. The popover uses fixed positioning to escape the toolbar's
+// overflow-x-auto.
 function IconPopover({
   icon,
   label,
@@ -475,7 +174,6 @@ function IconPopover({
     }
     if (!buttonRef.current) return;
     const r = buttonRef.current.getBoundingClientRect();
-    // Center popover under the button, clamped to viewport so it never spills off either edge.
     const centered = r.left + r.width / 2 - widthPx / 2;
     const clamped = Math.max(8, Math.min(window.innerWidth - widthPx - 8, centered));
     setPopoverPos({ x: clamped, y: r.bottom + 8 });
@@ -524,7 +222,9 @@ function IconPopover({
   );
 }
 
-function FramePopover({ value, onSelect }: { value: FrameShape; onSelect: (f: FrameShape) => void }) {
+function FramePopover({ value, onSelect, columns = 4, showLabels = true }: {
+  value: FrameShape; onSelect: (f: FrameShape) => void; columns?: number; showLabels?: boolean;
+}) {
   return (
     <IconPopover
       icon={<FrameIcon className="w-3.5 h-3.5" />}
@@ -533,11 +233,557 @@ function FramePopover({ value, onSelect }: { value: FrameShape; onSelect: (f: Fr
       isActive={value !== "none"}
     >
       {(close) => (
-        <FramePicker value={value} onSelect={(f) => { onSelect(f); close(); }} columns={4} showLabels />
+        <FramePicker value={value} onSelect={(f) => { onSelect(f); close(); }} columns={columns} showLabels={showLabels} />
       )}
     </IconPopover>
   );
 }
+
+// Roundness/Radius popover. All corner radius values across the editor are now
+// in pixels — same semantic for shape rects, images, and videos.
+function RadiusTool({ value, onChange, max = 200 }: {
+  value: number;
+  onChange: (v: number) => void;
+  max?: number;
+}) {
+  return (
+    <IconPopover icon={<Spline className="w-3.5 h-3.5" />} label="Roundness" isActive={value > 0}>
+      {() => (
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0}
+            max={max}
+            step={1}
+            value={Math.min(value, max)}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="accent-violet-600 flex-1 min-w-0"
+          />
+          <input
+            type="number"
+            min={0}
+            value={value}
+            onChange={(e) => {
+              const n = Number(e.target.value);
+              if (Number.isFinite(n)) onChange(Math.max(0, n));
+            }}
+            className="h-7 w-12 px-1.5 text-xs text-center font-mono border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+          />
+        </div>
+      )}
+    </IconPopover>
+  );
+}
+
+function LineHeightTool({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <IconPopover icon={<Rows3 className="w-3.5 h-3.5" />} label="Line height" isActive={value !== 1.2}>
+      {() => (
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0.8}
+            max={3}
+            step={0.05}
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="accent-violet-600 flex-1 min-w-0"
+          />
+          <input
+            type="number"
+            min={0.5}
+            max={5}
+            step={0.05}
+            value={value.toFixed(2)}
+            onChange={(e) => {
+              const n = Number(e.target.value);
+              if (Number.isFinite(n)) onChange(Math.max(0.5, Math.min(5, n)));
+            }}
+            className="h-7 w-14 px-1.5 text-xs text-center font-mono border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+          />
+        </div>
+      )}
+    </IconPopover>
+  );
+}
+
+function OpacityTool({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <IconPopover icon={<Droplet className="w-3.5 h-3.5" />} label="Opacity" isActive={value < 1}>
+      {() => (
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="accent-violet-600 flex-1"
+          />
+          <span className="text-xs font-mono text-gray-600 w-10 text-right">{Math.round(value * 100)}%</span>
+        </div>
+      )}
+    </IconPopover>
+  );
+}
+
+// Border popover. Optional align controls (image-only) are gated by `onAlignChange`.
+function BorderTool({
+  color, width, align, maxWidth,
+  onColorChange, onWidthChange, onAlignChange,
+}: {
+  color: string;
+  width: number;
+  align?: "inside" | "center" | "outside";
+  maxWidth: number;
+  onColorChange: (c: string) => void;
+  onWidthChange: (w: number) => void;
+  onAlignChange?: (a: "inside" | "center" | "outside") => void;
+}) {
+  return (
+    <IconPopover icon={<Brush className="w-3.5 h-3.5" />} label="Border" isActive={width > 0}>
+      {() => (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ColorPopover value={color} onChange={onColorChange} appearance="stroke" />
+            <input
+              type="range"
+              min={0}
+              max={maxWidth}
+              step={1}
+              value={width}
+              onChange={(e) => onWidthChange(Number(e.target.value))}
+              className="accent-violet-600 flex-1 min-w-0"
+            />
+            <input
+              type="number"
+              min={0}
+              max={maxWidth}
+              value={width}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                if (Number.isFinite(n)) onWidthChange(Math.max(0, Math.min(maxWidth, n)));
+              }}
+              className="h-7 w-12 px-1.5 text-xs text-center font-mono border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+            />
+          </div>
+          {onAlignChange && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Position</p>
+              <div className="grid grid-cols-3 gap-1">
+                {(["inside", "center", "outside"] as const).map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={() => onAlignChange(pos)}
+                    className={`px-2 py-1 text-[11px] rounded-md border capitalize transition-colors ${
+                      align === pos
+                        ? "bg-violet-100 border-violet-300 text-violet-700"
+                        : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {pos}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </IconPopover>
+  );
+}
+
+function ObjectActions({ locked, onToggleLock, onDelete }: { locked: boolean; onToggleLock: () => void; onDelete: () => void }) {
+  return (
+    <div className="ml-auto flex items-center gap-1">
+      <ToolbarButton
+        icon={locked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
+        label={locked ? "Unlock" : "Lock"}
+        onClick={onToggleLock}
+        active={locked}
+      />
+      <ToolbarButton
+        icon={<Trash2 className="w-3.5 h-3.5" />}
+        label="Delete"
+        onClick={onDelete}
+      />
+    </div>
+  );
+}
+
+const inputClass =
+  "h-8 px-2 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0";
+
+// Single source of truth for the idle/hover/active styling of every 8×8
+// toolbar button. IconPopover and the standalone action buttons (lock,
+// delete, regenerate, fit, …) both use this so the bar looks uniform.
+const toggleBtn = (active: boolean) =>
+  `h-8 w-8 flex items-center justify-center rounded-md border transition-colors ${
+    active
+      ? "bg-violet-100 border-violet-300 text-violet-700"
+      : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+  }`;
+
+// Plain action button with the SAME hover/active styling AND the SAME custom
+// tooltip as IconPopover. Used for lock, delete, regenerate, fit-to-slide,
+// fit-to-ratio — anything that fires an action immediately instead of opening
+// a popover. Without this, the lock/delete/etc. buttons fell back to the
+// native browser `title` tooltip, which felt slow and differently styled
+// compared to the IconPopover ones.
+function ToolbarButton({
+  icon,
+  label,
+  onClick,
+  active,
+  disabled,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+}) {
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        onMouseEnter={() => {
+          if (!buttonRef.current || disabled) return;
+          const r = buttonRef.current.getBoundingClientRect();
+          setTooltipPos({ x: r.left + r.width / 2, y: r.bottom + 8 });
+        }}
+        onMouseLeave={() => setTooltipPos(null)}
+        className={toggleBtn(!!active) + " disabled:opacity-50"}
+      >
+        {icon}
+      </button>
+      {tooltipPos && (
+        <span
+          className="fixed -translate-x-1/2 px-2.5 py-1 rounded-md border text-[11px] font-medium whitespace-nowrap z-100 pointer-events-none shadow-md"
+          style={{ left: tooltipPos.x, top: tooltipPos.y, backgroundColor: "#F1EFE3", borderColor: "#DAD8D0", color: "#030303" }}
+        >
+          {label}
+        </span>
+      )}
+    </>
+  );
+}
+
+const pillClass =
+  "inline-flex items-center gap-2 px-3 py-2 bg-white rounded-2xl shadow-lg border border-gray-200 max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden";
+
+// Strip any pre-existing list markers so the toolbar's bullet/number rendering
+// doesn't double up. Also splits mid-line bullets onto their own lines.
+function stripListPrefixes(text: string): string {
+  const normalized = text
+    .replace(/([^\n])[ \t]+([•·▪‣◦●○■])[ \t]+/g, "$1\n$2 ")
+    .replace(/([^\n])[ \t]+(\d+[.)])[ \t]+/g, "$1\n$2 ");
+  return normalized
+    .split("\n")
+    .map((line) => line.replace(/^\s*(?:[•·▪‣◦●○■\-*]+|\d+[.)])\s+/, "").trim())
+    .filter((line, i, arr) => line || i < arr.length - 1)
+    .join("\n");
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Selection model + main component
+// ────────────────────────────────────────────────────────────────────────────
+
+export type EditorSelection =
+  | { kind: "text"; text: TextObject }
+  | { kind: "shape"; shape: ShapeObject }
+  | { kind: "image"; image: ImageObject }
+  | { kind: "video"; video: VideoObject }
+  | { kind: "slide"; slide: SlideJSON }
+  | null;
+
+interface Props {
+  selection: EditorSelection;
+  onUpdateText: (patch: Partial<TextObject>) => void;
+  onUpdateShape: (patch: Partial<ShapeObject>) => void;
+  onUpdateImage: (patch: Partial<ImageObject>) => void;
+  onUpdateVideo: (patch: Partial<VideoObject>) => void;
+  onUpdateSlide: (patch: Partial<SlideJSON>) => void;
+  onDelete: () => void;
+  onToggleLock: () => void;
+  onOpenFontPanel: () => void;
+  /** Opens the right-side "Edit video" panel — which contains both the URL
+   *  paste flow and the AI-search flow. Toolbar just triggers it. */
+  onOpenEditVideo?: () => void;
+}
+
+// One toolbar to rule them all. Tools that don't apply to the current selection
+// simply don't render. Each tool component (OpacityTool, RadiusTool, BorderTool,
+// …) is shared across element types so the UI stays consistent — same icon,
+// same popover layout, same active-state indicator.
+export default function ContextualToolbar({
+  selection,
+  onUpdateText,
+  onUpdateShape,
+  onUpdateImage,
+  onUpdateVideo,
+  onUpdateSlide,
+  onDelete,
+  onToggleLock,
+  onOpenFontPanel,
+  onOpenEditVideo,
+}: Props) {
+  if (!selection) return null;
+
+  // Slides have a fundamentally different toolset (background, no lock/delete);
+  // route them to a dedicated render to keep the main branch clean.
+  if (selection.kind === "slide") {
+    return <SlideToolbar slide={selection.slide} onUpdateSlide={onUpdateSlide} />;
+  }
+
+  const t = selection.kind === "text" ? selection.text : null;
+  const sh = selection.kind === "shape" ? selection.shape : null;
+  const im = selection.kind === "image" ? selection.image : null;
+  const v = selection.kind === "video" ? selection.video : null;
+
+  // Frame state (image + video share the frame system).
+  const imFrame = (im?.frame ?? "none") as FrameShape;
+  const vFrame = (v?.frame ?? "none") as FrameShape;
+
+  // Effective corner radius in px — fall back to frame-specific defaults so the
+  // slider starts at the visible value rather than 0. Pill always reads back as
+  // 0 in the slider since its radius is "max"; tweaking it doesn't make sense.
+  const imCorner = im ? (im.cornerRadius ?? (imFrame === "rounded" ? 32 : 0)) : 0;
+  const vCorner = v ? (v.cornerRadius ?? (vFrame === "rounded" ? 32 : 0)) : 0;
+  const vShowRadius = vFrame === "rounded" || vFrame === "none";
+
+  // SVG color channels — only meaningful for vector graphics so we can swap them.
+  const isSvg = im ? isSvgDataUrl(im.src) : false;
+  const svgColors = isSvg && im ? extractSvgColors(im.src).slice(0, 6) : [];
+
+  const locked = !!(t?.locked || sh?.locked || im?.locked || v?.locked);
+
+  return (
+    <div className={pillClass} style={{ scrollbarWidth: "none" }}>
+      {/* ── Text-only controls ──────────────────────────────────────────── */}
+      {t && (
+        <>
+          <button
+            type="button"
+            onClick={onOpenFontPanel}
+            className="h-8 px-2.5 flex items-center gap-1.5 border border-gray-200 rounded-md bg-white text-xs text-gray-800 hover:bg-gray-50 min-w-32"
+            title="Change font"
+          >
+            <span className="truncate" style={{ fontFamily: t.fontFamily }}>
+              {t.fontFamily.split(",")[0].replace(/['"]/g, "")}
+            </span>
+            <ChevronDown className="w-3 h-3 text-gray-500 ml-auto shrink-0" />
+          </button>
+          <input
+            type="number"
+            value={t.fontSize}
+            min={8}
+            max={300}
+            onChange={(e) => onUpdateText({ fontSize: Number(e.target.value) })}
+            className={`${inputClass} w-16`}
+          />
+          <ToolbarButton
+            icon={<Bold className="w-3.5 h-3.5" />}
+            label="Bold"
+            onClick={() => onUpdateText({ fontWeight: t.fontWeight === "700" || t.fontWeight === "bold" ? "400" : "700" })}
+            active={t.fontWeight === "700" || t.fontWeight === "bold"}
+          />
+          <ToolbarButton
+            icon={<Italic className="w-3.5 h-3.5" />}
+            label="Italic"
+            onClick={() => onUpdateText({ fontStyle: t.fontStyle === "italic" ? "normal" : "italic" })}
+            active={t.fontStyle === "italic"}
+          />
+          <ToolbarButton
+            icon={<Underline className="w-3.5 h-3.5" />}
+            label="Underline"
+            onClick={() => onUpdateText({ underline: !t.underline })}
+            active={t.underline}
+          />
+          <ColorPopover value={t.color} onChange={(c) => onUpdateText({ color: c })} title="Text color" />
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <ToolbarButton
+            icon={<AlignLeft className="w-3.5 h-3.5" />}
+            label="Align left"
+            onClick={() => onUpdateText({ textAlign: "left" })}
+            active={t.textAlign === "left"}
+          />
+          <ToolbarButton
+            icon={<AlignCenter className="w-3.5 h-3.5" />}
+            label="Align center"
+            onClick={() => onUpdateText({ textAlign: "center" })}
+            active={t.textAlign === "center"}
+          />
+          <ToolbarButton
+            icon={<AlignRight className="w-3.5 h-3.5" />}
+            label="Align right"
+            onClick={() => onUpdateText({ textAlign: "right" })}
+            active={t.textAlign === "right"}
+          />
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <ToolbarButton
+            icon={<List className="w-3.5 h-3.5" />}
+            label="Bullet list"
+            onClick={() => {
+              const enabling = t.listType !== "bullet";
+              onUpdateText({
+                listType: enabling ? "bullet" : undefined,
+                ...(enabling ? { text: stripListPrefixes(t.text) } : {}),
+              });
+            }}
+            active={t.listType === "bullet"}
+          />
+          <ToolbarButton
+            icon={<ListOrdered className="w-3.5 h-3.5" />}
+            label="Numbered list"
+            onClick={() => {
+              const enabling = t.listType !== "number";
+              onUpdateText({
+                listType: enabling ? "number" : undefined,
+                ...(enabling ? { text: stripListPrefixes(t.text) } : {}),
+              });
+            }}
+            active={t.listType === "number"}
+          />
+          <LineHeightTool
+            value={t.lineHeight ?? 1.2}
+            onChange={(v2) => onUpdateText({ lineHeight: v2 })}
+          />
+        </>
+      )}
+
+      {/* ── Shape fill ──────────────────────────────────────────────────── */}
+      {sh && <ColorPopover value={sh.fill} onChange={(c) => onUpdateShape({ fill: c })} title="Fill" />}
+
+      {/* ── SVG channel colors (image only, only for SVG sources) ───────── */}
+      {im && svgColors.map((c) => (
+        <ColorPopover
+          key={c}
+          value={c}
+          onChange={(newC) => {
+            const newSrc = swapSvgColor(im.src, c, newC);
+            if (newSrc) onUpdateImage({ src: newSrc });
+          }}
+          title="Color"
+        />
+      ))}
+
+      {/* ── Frame (image + video) ───────────────────────────────────────── */}
+      {im && <FramePopover value={imFrame} onSelect={(f) => onUpdateImage({ frame: f })} />}
+      {v && (
+        <FramePopover
+          value={vFrame}
+          onSelect={(f) => onUpdateVideo({ frame: f, cornerRadius: undefined })}
+          columns={3}
+          showLabels={false}
+        />
+      )}
+
+      {/* ── Roundness / Radius (shape rect, image, video) ───────────────── */}
+      {sh && sh.type === "rect" && (
+        <RadiusTool
+          value={sh.cornerRadius ?? 0}
+          onChange={(v2) => onUpdateShape({ cornerRadius: v2 })}
+        />
+      )}
+      {im && (imFrame === "rounded" || imFrame === "none") && (
+        <RadiusTool
+          value={imCorner}
+          onChange={(v2) => onUpdateImage({ cornerRadius: v2 })}
+        />
+      )}
+      {v && vShowRadius && (
+        <RadiusTool
+          value={vCorner}
+          onChange={(v2) => onUpdateVideo({ cornerRadius: v2 })}
+        />
+      )}
+
+      {/* ── Video: open the Edit-video side panel (URL paste + AI search) ── */}
+      {v && onOpenEditVideo && (
+        <ToolbarButton
+          icon={<Pencil className="w-3.5 h-3.5" />}
+          label="Edit video"
+          onClick={onOpenEditVideo}
+        />
+      )}
+
+      {/* ── Border (shape + image) ──────────────────────────────────────── */}
+      {sh && (
+        <BorderTool
+          color={sh.stroke}
+          width={sh.strokeWidth}
+          maxWidth={40}
+          onColorChange={(c) => onUpdateShape({ stroke: c })}
+          onWidthChange={(w) => onUpdateShape({ strokeWidth: w })}
+        />
+      )}
+      {im && (
+        <BorderTool
+          color={im.strokeColor ?? "#1a1a2e"}
+          width={im.strokeWidth ?? 0}
+          align={im.strokeAlign ?? "inside"}
+          maxWidth={100}
+          onColorChange={(c) => onUpdateImage({ strokeColor: c })}
+          onWidthChange={(w) => onUpdateImage({ strokeWidth: w })}
+          onAlignChange={(a) => onUpdateImage({ strokeAlign: a })}
+        />
+      )}
+
+      {/* ── Opacity (shape + image) ─────────────────────────────────────── */}
+      {sh && <OpacityTool value={sh.opacity} onChange={(v2) => onUpdateShape({ opacity: v2 })} />}
+      {im && <OpacityTool value={im.opacity} onChange={(v2) => onUpdateImage({ opacity: v2 })} />}
+
+      {/* ── Image-only fit controls ─────────────────────────────────────── */}
+      {im && (
+        <>
+          <ToolbarButton
+            icon={<Maximize2 className="w-3.5 h-3.5" />}
+            label="Fit to slide"
+            onClick={() => {
+              onUpdateImage({
+                x: 0, y: 0, width: SLIDE_W, height: SLIDE_H,
+                innerOffsetX: 0, innerOffsetY: 0, innerScale: 1,
+                rotation: 0,
+              });
+            }}
+          />
+          <ToolbarButton
+            icon={<SquareIcon className="w-3.5 h-3.5" />}
+            label="Fit to original ratio"
+            onClick={() => {
+              const nw = im.naturalWidth, nh = im.naturalHeight;
+              if (nw && nh) {
+                onUpdateImage({
+                  height: Math.round(im.width * (nh / nw)),
+                  innerOffsetX: 0, innerOffsetY: 0, innerScale: 1,
+                });
+              } else {
+                onUpdateImage({
+                  height: im.width,
+                  innerOffsetX: 0, innerOffsetY: 0, innerScale: 1,
+                });
+              }
+            }}
+          />
+        </>
+      )}
+
+      <ObjectActions locked={locked} onToggleLock={onToggleLock} onDelete={onDelete} />
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Slide toolbar — kept separate because its toolset (background only, no
+// lock/delete) doesn't overlap with element controls.
+// ────────────────────────────────────────────────────────────────────────────
 
 function SlideToolbar({
   slide,
@@ -590,8 +836,9 @@ function SlideToolbar({
           >
             Replace
           </button>
-          <button
-            type="button"
+          <ToolbarButton
+            icon={<X className="w-3.5 h-3.5" />}
+            label="Remove background image"
             onClick={() => onUpdateSlide({
               backgroundImage: undefined,
               backgroundImageWidth: undefined,
@@ -600,11 +847,7 @@ function SlideToolbar({
               backgroundOffsetY: undefined,
               backgroundScale: undefined,
             })}
-            className={toggleBtn(false)}
-            title="Remove background image"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+          />
         </>
       ) : (
         <button

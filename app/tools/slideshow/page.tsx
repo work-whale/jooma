@@ -2,30 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, Plus, Monitor, LayoutGrid, Trash2 } from "lucide-react";
-import { listPresentations, deletePresentation, type Presentation, type SlideJSON } from "@/app/lib/presentations";
+import { useRouter } from "next/navigation";
+import { Search, Plus, Monitor, LayoutGrid, Trash2, Sparkles, Loader2 } from "lucide-react";
+import { listPresentations, deletePresentation, createPresentation, type PresentationListItem, type SlideJSON } from "@/app/lib/presentations";
 import MiniSlide from "@/app/components/editor/MiniSlide";
-
-function SlideThumbnail({ slide }: { slide: SlideJSON }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const observer = new ResizeObserver((entries) => {
-      const w = entries[0].contentRect.width;
-      if (w > 0) setWidth(w);
-    });
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} className="w-full aspect-video overflow-hidden bg-white">
-      {width > 0 && <MiniSlide slide={slide} width={width} />}
-    </div>
-  );
-}
+import GenerateModal from "@/app/components/slideshow/GenerateModal";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -35,20 +16,81 @@ function formatDate(iso: string) {
   });
 }
 
+// Resizes itself to fill the card's available width, then passes that to
+// MiniSlide so the slide renders at the right scale. ResizeObserver keeps it
+// in sync when the viewport changes columns.
+function SlideThumbnail({ slide }: { slide: SlideJSON }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    if (!ref.current) return;
+    const obs = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width;
+      if (w > 0) setWidth(w);
+    });
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  // Width-only outer div. MiniSlide imposes its own 16:9 height based on the
+  // measured width — relying on Tailwind's `aspect-video` here caused the
+  // container to mis-size on first paint and the visible content to look
+  // stretched until the ResizeObserver fired.
+  return (
+    <div ref={ref} className="w-full overflow-hidden bg-white" style={{ aspectRatio: "16 / 9" }}>
+      {width > 0 && <MiniSlide slide={slide} width={width} themeId={slide.themeId} />}
+    </div>
+  );
+}
+
 export default function SlideshowListPage() {
-  const [presentations, setPresentations] = useState<Presentation[]>([]);
+  const router = useRouter();
+  const [presentations, setPresentations] = useState<PresentationListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Presentation | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PresentationListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  // Track the create-and-redirect so the button stays in a busy state and the
+  // user can't double-click. Once the row exists we push directly to
+  // /editor/[id], skipping /editor/new entirely — the next thing the user
+  // sees is the editor's own loading.tsx, not a second transit skeleton.
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      const p = await createPresentation();
+      router.push(`/editor/${p.id}`);
+    } catch (err) {
+      console.error("Failed to create presentation:", err);
+      setError("Could not create a new slideshow. Please try again.");
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     listPresentations()
-      .then((data) => setPresentations(data))
+      .then((data) => {
+        // Diagnostic: confirm first_slide is making it through to the client.
+        console.log("[slideshow list] first row:", data[0]);
+        console.log("[slideshow list] first_slide keys:", data[0]?.first_slide ? Object.keys(data[0].first_slide) : "(null/undefined)");
+        setPresentations(data);
+      })
       .catch((err) => {
-        console.error(err);
-        setError("Could not load presentations. Check Supabase env vars.");
+        console.error("Failed to load presentations:", {
+          message: err?.message,
+          code: err?.code,
+          details: err?.details,
+          hint: err?.hint,
+          name: err?.name,
+        });
+        setError(
+          err?.message
+            ? `Could not load presentations: ${err.message}`
+            : "Could not load presentations. Check Supabase env vars.",
+        );
       })
       .finally(() => setLoading(false));
   }, []);
@@ -57,7 +99,7 @@ export default function SlideshowListPage() {
     p.title.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const requestDelete = (presentation: Presentation, e: React.MouseEvent) => {
+  const requestDelete = (presentation: PresentationListItem, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setPendingDelete(presentation);
@@ -70,15 +112,17 @@ export default function SlideshowListPage() {
       await deletePresentation(pendingDelete.id);
       setPresentations((prev) => prev.filter((p) => p.id !== pendingDelete.id));
       setPendingDelete(null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to delete. Please try again.");
+    } catch (err: unknown) {
+      const e = err as { message?: string; code?: string; details?: string; hint?: string; name?: string };
+      console.error("Failed to delete presentation:", {
+        message: e?.message, code: e?.code, details: e?.details, hint: e?.hint, name: e?.name,
+      });
+      setError(e?.message ? `Failed to delete: ${e.message}` : "Failed to delete. Please try again.");
     } finally {
       setDeleting(false);
     }
   };
 
-  // Close the modal on Escape
   useEffect(() => {
     if (!pendingDelete) return;
     const handler = (e: KeyboardEvent) => {
@@ -92,18 +136,34 @@ export default function SlideshowListPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
-            <Monitor className="w-5 h-5 text-violet-600" />
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "#FFCC33" }}
+          >
+            <Monitor className="w-5 h-5" style={{ color: "#1a1a1a" }} />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Slideshows</h1>
         </div>
-        <Link
-          href="/editor/new"
-          className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Slideshow
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setGenerateOpen(true)}
+            className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
+            style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+          >
+            <Sparkles className="w-4 h-4" />
+            Generate with AI
+          </button>
+          <button
+            type="button"
+            onClick={handleCreate}
+            disabled={creating}
+            className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-70 disabled:cursor-wait"
+            style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+          >
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            {creating ? "Creating…" : "New Slideshow"}
+          </button>
+        </div>
       </div>
 
       <div className="relative">
@@ -113,7 +173,8 @@ export default function SlideshowListPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search slideshows..."
-          className="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition-all"
+          className="w-full rounded-xl pl-11 pr-4 py-3 text-sm bg-white border focus:outline-none transition-all"
+          style={{ borderColor: "#DAD8D0" }}
         />
       </div>
 
@@ -122,21 +183,31 @@ export default function SlideshowListPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-[#FAF9F5] rounded-2xl overflow-hidden animate-pulse">
-              <div className="aspect-video bg-gray-200" />
-              <div className="p-4 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-1/2" />
+        <>
+          {/* Mirror the loaded layout exactly: same "N slideshows" line
+              position (just a shimmer bar) above the same grid, so when the
+              real data arrives only the cards swap — header, search bar,
+              and count slot all stay put with zero layout shift. */}
+          <div className="-mt-4 h-5 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-[#FAF9F5] rounded-2xl overflow-hidden animate-pulse">
+                <div className="aspect-video bg-gray-200" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
-            <LayoutGrid className="w-7 h-7 text-violet-400" />
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+            style={{ backgroundColor: "#F1EFE3" }}
+          >
+            <LayoutGrid className="w-7 h-7" style={{ color: "#1a1a1a" }} />
           </div>
           {search ? (
             <>
@@ -147,13 +218,16 @@ export default function SlideshowListPage() {
             <>
               <p className="text-base font-semibold text-gray-800">No slideshows yet</p>
               <p className="text-sm text-gray-400 mt-1">Create your first one to get started.</p>
-              <Link
-                href="/editor/new"
-                className="mt-5 flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={creating}
+                className="mt-5 flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-70 disabled:cursor-wait"
+                style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
               >
-                <Plus className="w-4 h-4" />
-                New Slideshow
-              </Link>
+                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {creating ? "Creating…" : "New Slideshow"}
+              </button>
             </>
           )}
         </div>
@@ -165,44 +239,49 @@ export default function SlideshowListPage() {
             </p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filtered.map((p) => {
-              const firstSlide = p.slides?.[0];
-              return (
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                className="group bg-[#FAF9F5] rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
+              >
                 <Link
-                  key={p.id}
                   href={`/editor/${p.id}`}
-                  className="group bg-[#FAF9F5] rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative"
-                >
-                  {firstSlide ? (
-                    <SlideThumbnail slide={firstSlide} />
+                  aria-label={p.title || "Open slideshow"}
+                  className="absolute inset-0 z-0 rounded-2xl"
+                />
+                <div className="relative z-10 pointer-events-none">
+                  {p.first_slide ? (
+                    <SlideThumbnail slide={p.first_slide} />
                   ) : (
-                    <div className="aspect-video bg-linear-to-br from-violet-400 to-purple-600 flex items-center justify-center">
-                      <Monitor className="w-8 h-8 text-white/60" />
+                    <div
+                      className="aspect-video flex items-center justify-center"
+                      style={{ backgroundColor: "#F1EFE3" }}
+                    >
+                      <Monitor className="w-8 h-8" style={{ color: "#1a1a1a", opacity: 0.4 }} />
                     </div>
                   )}
                   <div className="p-4">
-                    <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-violet-700 transition-colors">
+                    <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
                       {p.title}
                     </p>
                     <p className="text-xs text-gray-400 mt-1.5">
-                      {p.slides.length} slide{p.slides.length !== 1 ? "s" : ""} · {formatDate(p.updated_at)}
+                      {p.slide_count} slide{p.slide_count !== 1 ? "s" : ""} · {formatDate(p.updated_at)}
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => requestDelete(p, e)}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-opacity"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </Link>
-              );
-            })}
+                </div>
+                <button
+                  onClick={(e) => requestDelete(p, e)}
+                  className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-opacity"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
           </div>
         </>
       )}
 
-      {/* Delete confirmation modal */}
       {pendingDelete && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -250,6 +329,8 @@ export default function SlideshowListPage() {
           </div>
         </div>
       )}
+
+      {generateOpen && <GenerateModal onClose={() => setGenerateOpen(false)} />}
     </div>
   );
 }
