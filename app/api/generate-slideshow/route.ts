@@ -248,9 +248,10 @@ async function fetchImageForSlide(
   style: ImageStyle,
   orientation: AIImageOrientation,
   index: number,
+  slideTitle?: string,
 ): Promise<(FetchedImage & { provider: "ai" | "web" }) | null> {
   const tryAI = async () => {
-    const r = await generateAIImage(query, style, orientation);
+    const r = await generateAIImage(query, style, orientation, slideTitle);
     return r ? { ...r, provider: "ai" as const } : null;
   };
   const tryWeb = async () => {
@@ -259,10 +260,10 @@ async function fetchImageForSlide(
   };
   if (source === "web") return tryWeb();
   if (source === "ai") return tryAI();
-  // auto: alternate to keep balance + speed
-  return index % 2 === 0
-    ? (await tryAI()) ?? tryWeb()
-    : (await tryWeb()) ?? tryAI();
+  // auto: Pixabay first (fast, ~200ms) — AI fallback only when Pixabay misses.
+  // This means most slides get an image quickly; AI fills the gaps.
+  void index;
+  return (await tryWeb()) ?? tryAI();
 }
 
 // Map a slide's layout to the orientation that best fits where the AI image
@@ -284,6 +285,16 @@ function orientationForLayout(layout: SlideLayout): AIImageOrientation {
     default:
       return "square";
   }
+}
+
+/** Fisher-Yates shuffle — returns a new array. */
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 /** Tiny promise-concurrency limiter — caps the number of in-flight
@@ -429,7 +440,14 @@ function buildPrompt(body: RequestBody): string {
     ? `\n\n--- LESSON MATERIAL (provided by the teacher${body.resourceSource ? " from " + body.resourceSource : ""}) ---\n${body.resourceText.trim()}\n--- END MATERIAL ---\n\nBase the deck's facts, examples, and structure on this material. Where the material is silent on something, you may add general context — but the material's content is the source of truth.`
     : "";
   const objectivesLine = body.includeObjectives
-    ? `- Slide 2 should be a content slide that opens with the deck's learning objectives — frame them as a sub-hook ("By the end of this lesson, you'll understand..."), then 3-5 short bold-led bullets covering the key takeaways.`
+    ? `⚠️ MANDATORY — LEARNING OBJECTIVES SLIDE:
+Slide 2 MUST be a "paper-image-right" or "paper-image-left" content slide dedicated entirely to the deck's learning objectives. This is NON-NEGOTIABLE — do not skip it, do not fold it into another slide.
+   · title: a creative title like "What We'll Discover Today" or "Your Learning Journey"
+   · subHook: "By the end of this lesson, you'll be able to…" (or similar forward-looking framing)
+   · body: one short sentence introducing the objectives
+   · bullets: 3–5 short bold-led objective statements, e.g. "**Explain** why gravity holds planets in orbit."
+   · imageQuery: an image that represents learning or discovery for the topic
+   · calloutVariant: "key", calloutBody: a one-sentence motivating summary of the session`
     : "";
   const vocabLine = body.includeVocab
     ? `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition.`
@@ -458,7 +476,7 @@ ${resourceBlock}
 DECK SPINE — emit slides in this exact order. EVERY content layout requires an image.
 ═══════════════════════════════════════════════════
 1.   "title-hero"   — the opener. Creative deck title + one-line subtitle. **imageQuery REQUIRED**: the hero photo of the topic's most iconic object.
-2..N CONTENT SLIDES — pick layouts from this menu and vary them; do NOT repeat the same layout more than twice in a row. EVERY ONE OF THESE LAYOUTS REQUIRES an imageQuery:
+${objectivesLine ? `2.   LEARNING OBJECTIVES SLIDE — see mandatory spec below.\n` : ""}2${objectivesLine ? `+` : ""}..N CONTENT SLIDES — pick layouts from this menu and vary them; do NOT repeat the same layout more than twice in a row. EVERY ONE OF THESE LAYOUTS REQUIRES an imageQuery:
      · "paper-image-right"          — heading + sub-hook + body (+ optional callout) on the LEFT; PHOTO on the RIGHT. imageQuery REQUIRED.
      · "paper-image-left"           — image LEFT, text RIGHT (heading + body + bullets + callout). imageQuery REQUIRED.
      · "paper-two-images"           — heading + intro text on top; TWO image+paragraph cells below. imageQuery AND secondaryImageQuery REQUIRED.
@@ -570,11 +588,13 @@ Per-layout requirements (FAILURE TO COMPLY IS A BUG):
 - activity-ordering-answer      → both image queries empty.
 
 Query format (applies to imageQuery, secondaryImageQuery, activityImageQuery):
-- 2-4 CONCRETE NOUNS. Never generic terms like "planets", "people", "science", or "education".
-- Bad: "planets" → returns gas giants when the slide is about rocky planets.
-- Good: "mercury venus mars rocky planet" or "earth surface from space".
+- 2-4 CONCRETE NOUNS that directly depict the slide's central concept. MUST include the subject-matter word from the slide title.
+- Never generic terms like "planets", "people", "science", "education", "student", "teacher", or "classroom".
+- Bad: "planets" → too vague. "space science" → too abstract.
+- Good: "mercury venus mars rocky planet surface" (for a slide titled "The Rocky Four").
+- Good: "earth cross-section crust mantle core diagram" (for a slide about Earth's interior).
 - For DIAGRAMS (orbits, anatomy, cycles), include "diagram" or "infographic", e.g. "elliptical orbit diagram labeled".
-- For activity-question slides, choose an image that complements the question visually (planet surface for "where would life evolve", a microscope for "how would we detect it", etc).
+- For activity-question slides, choose an image that directly illustrates the question's scenario — not a general topic image.
 
 ═══════════════════════════════════════════════════
 PAPER-TWO-IMAGES SPECIFIC
@@ -598,6 +618,7 @@ TONE & LANGUAGE
 - Tone is science-textbook-meets-storyteller: rigorous facts, warm voice.
 
 ${objectivesLine}
+
 ${vocabLine}
 
 ═══════════════════════════════════════════════════
@@ -749,7 +770,7 @@ export async function POST(req: NextRequest) {
           // that did succeed.
           const safeFetch = async (q: string, ori: AIImageOrientation, jobIdx: number) => {
             try {
-              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx);
+              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx, spec.title);
             } catch (err) {
               console.warn(`[slideJob ${idx}] image fetch failed for "${q}":`, err);
               return null;
@@ -821,8 +842,11 @@ export async function POST(req: NextRequest) {
         // Cap parallel image fetches. AI image gen tier-1 limits are tight
         // (~5-10 images/min) — firing 9-12 in parallel triggered silent 429s
         // that left slides stuck in their shimmer state.
-        const imageLimit = pLimit(3);
+        const imageLimit = pLimit(5);
         let metaSent = false;
+        // Shuffle map for ordering activities: keyed by slide title so the
+        // answer slide gets the same shuffled items as the question slide.
+        const orderingShuffleMap = new Map<string, { shuffled: string[]; correctSeq: string[] }>();
 
         const sendMetaIfReady = () => {
           if (metaSent) return;
@@ -848,6 +872,29 @@ export async function POST(req: NextRequest) {
           const newSlides = parser.feed(delta);
           sendMetaIfReady();
           for (const ai of newSlides) {
+            // Shuffle ordering activity items so the question slide isn't
+            // already in the correct order. The AI consistently generates
+            // activityItems in the intended correct sequence even though the
+            // prompt asks for a random order. We fix this post-parse:
+            //   - question slide: shuffle items, store the permutation.
+            //   - answer slide: apply the same shuffle, derive activityCorrectOrder.
+            if (ai.layout === "activity-ordering" && ai.activityItems.length > 1) {
+              const correctSeq = [...ai.activityItems];
+              const shuffled = shuffleArray(correctSeq);
+              ai.activityItems = shuffled;
+              orderingShuffleMap.set(ai.title, { shuffled, correctSeq });
+            } else if (ai.layout === "activity-ordering-answer" && ai.activityItems.length > 1) {
+              const stored = orderingShuffleMap.get(ai.title);
+              if (stored) {
+                // The AI's activityItems on the answer slide are the intended
+                // correct sequence — use them as the source of truth, then
+                // apply the same shuffle the question slide used.
+                const correctSeq = [...ai.activityItems];
+                ai.activityItems = stored.shuffled;
+                ai.activityCorrectOrder = correctSeq.map((item) => stored.shuffled.indexOf(item));
+              }
+            }
+
             const idx = allAi.length;
             allAi.push(ai);
             const spec = buildSpec(ai);
@@ -928,6 +975,13 @@ export async function POST(req: NextRequest) {
                 topic: body.topic,
                 year: body.year,
                 readingLevel: body.readingLevel,
+                // Pass the content slide titles as context so the audio script
+                // references specific concepts from the deck, not the broad topic.
+                slideContext: allAi
+                  .filter((s) => !s.layout.startsWith("activity-") && s.layout !== "title-hero")
+                  .slice(0, 6)
+                  .map((s) => `- ${s.title}`)
+                  .join("\n"),
               }),
             });
             if (audioRes.ok) {

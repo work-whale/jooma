@@ -186,6 +186,7 @@ const MiniText = memo(function MiniText({ text }: { text: TextObject }) {
         userSelect: "none",
         transform: `rotate(${text.rotation ?? 0}deg)`,
         transformOrigin: "center center",
+        ...(text.clipH !== undefined ? { maxHeight: text.clipH, overflow: "hidden" } : {}),
       }}
     >
       {isList ? (

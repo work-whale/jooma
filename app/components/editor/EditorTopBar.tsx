@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Undo2, Redo2, Download, ArrowLeft, Palette, Check } from "lucide-react";
+import { Undo2, Redo2, Download, ArrowLeft, Palette, Check, Play } from "lucide-react";
 import { SLIDESHOW_THEMES } from "@/app/lib/slideshowThemes";
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   onUndo: () => void;
   onRedo: () => void;
   onExport: () => void;
+  onPresent: () => void;
   isExporting: boolean;
   saveStatus: "idle" | "saving" | "saved" | "error";
   disableHistory?: boolean;
@@ -26,6 +27,7 @@ export default function EditorTopBar({
   onUndo,
   onRedo,
   onExport,
+  onPresent,
   isExporting,
   saveStatus,
   disableHistory,
@@ -147,6 +149,15 @@ export default function EditorTopBar({
           </div>
         )}
         <div className="w-px h-6 bg-gray-300 mx-2" />
+        <button
+          onClick={onPresent}
+          className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+          title="Present"
+        >
+          <Play className="w-4 h-4" />
+          Present
+        </button>
         <button
           onClick={onExport}
           disabled={isExporting}

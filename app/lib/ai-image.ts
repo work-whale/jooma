@@ -51,6 +51,9 @@ export async function generateAIImage(
   query: string,
   style: ImageStyle = "photographic",
   orientation: AIImageOrientation = "landscape",
+  /** Optional slide title — included in the prompt so the model stays
+   *  anchored to the slide's topic, not just the bare noun query. */
+  slideTitle?: string,
 ): Promise<GeneratedImage | null> {
   if (!query.trim()) return null;
   const client = getOpenAI();
@@ -65,7 +68,10 @@ export async function generateAIImage(
   // written across the planets). We want clean photos / illustrations only;
   // any labelling lives in the slide's text layer.
   const noText = "Absolutely no text, no letters, no labels, no captions, no watermarks, no logos, no typography of any kind anywhere in the image. Pure visual only.";
-  const prompt = `${STYLE_PROMPTS[style]}. Subject: ${query}. ${composition}, suitable for a presentation slide. ${noText}`;
+  const subjectLine = slideTitle
+    ? `Subject: ${slideTitle} — ${query}`
+    : `Subject: ${query}`;
+  const prompt = `${STYLE_PROMPTS[style]}. ${subjectLine}. ${composition}, suitable for a presentation slide. ${noText}`;
 
   // Supported sizes per model:
   //   gpt-image-1 → 1024x1024 (sq), 1024x1536 (port), 1536x1024 (land)

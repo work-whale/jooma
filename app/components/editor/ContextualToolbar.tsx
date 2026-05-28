@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3, Pencil } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3, Pencil, RefreshCw, Eraser, Loader2 } from "lucide-react";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
@@ -516,6 +516,10 @@ interface Props {
   /** Opens the right-side "Edit video" panel — which contains both the URL
    *  paste flow and the AI-search flow. Toolbar just triggers it. */
   onOpenEditVideo?: () => void;
+  /** Called when the user confirms background removal via OpenAI. */
+  onRemoveBg?: () => void;
+  /** True while the background-removal API call is in flight. */
+  removingBg?: boolean;
 }
 
 // One toolbar to rule them all. Tools that don't apply to the current selection
@@ -533,6 +537,8 @@ export default function ContextualToolbar({
   onToggleLock,
   onOpenFontPanel,
   onOpenEditVideo,
+  onRemoveBg,
+  removingBg,
 }: Props) {
   if (!selection) return null;
 
@@ -563,6 +569,31 @@ export default function ContextualToolbar({
   const svgColors = isSvg && im ? extractSvgColors(im.src).slice(0, 6) : [];
 
   const locked = !!(t?.locked || sh?.locked || im?.locked || v?.locked);
+
+  // File input ref for the Swap Image button (image toolbar only).
+  const swapInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSwapFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (!dataUrl) return;
+      const img = new window.Image();
+      img.onload = () => {
+        onUpdateImage({
+          src: dataUrl,
+          naturalWidth: img.naturalWidth || undefined,
+          naturalHeight: img.naturalHeight || undefined,
+          // Reset pan/scale so the new image fits correctly.
+          innerOffsetX: 0,
+          innerOffsetY: 0,
+          innerScale: 1,
+        });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className={pillClass} style={{ scrollbarWidth: "none" }}>
@@ -772,6 +803,36 @@ export default function ContextualToolbar({
               }
             }}
           />
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+          {/* Swap image — replaces src via file picker */}
+          <ToolbarButton
+            icon={<RefreshCw className="w-3.5 h-3.5" />}
+            label="Swap image"
+            onClick={() => swapInputRef.current?.click()}
+          />
+          <input
+            ref={swapInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleSwapFile(file);
+              e.target.value = "";
+            }}
+          />
+          {/* Remove background via OpenAI */}
+          {onRemoveBg && !isSvg && (
+            <ToolbarButton
+              icon={removingBg
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <Eraser className="w-3.5 h-3.5" />
+              }
+              label={removingBg ? "Removing background…" : "Remove background"}
+              onClick={onRemoveBg}
+              disabled={removingBg}
+            />
+          )}
         </>
       )}
 

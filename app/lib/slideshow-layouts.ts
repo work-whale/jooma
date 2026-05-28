@@ -162,6 +162,7 @@ function makeText(
   fontSize: number, fontWeight: string, color: string,
   align: "left" | "center" | "right" = "left",
   fontFamily?: string,
+  clipH?: number,
 ): TextObject {
   // Heuristic: titles use the heading font (bold weight); everything else uses body.
   const resolvedFont = fontFamily ?? (
@@ -180,6 +181,7 @@ function makeText(
     fontFamily: resolvedFont,
     color,
     textAlign: align,
+    ...(clipH !== undefined ? { clipH } : {}),
   };
 }
 
@@ -854,17 +856,16 @@ function renderPaperImageRight(spec: SlideSpec, t: Theme): SlideJSON {
   const subHookH = spec.subHook ? textHeight(spec.subHook, colW, 22) : 0;
   const bodyY = (spec.subHook ? subHookY + subHookH + GAP_HOOK_TO_BODY : titleY + titleH + GAP_TITLE_TO_HOOK);
   const bodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
-  // Callout sits directly below the body. No upper clamp: if the body is
-  // long, the callout drops further down — far better than overlapping the
-  // body text. Prompt-level guard keeps body short enough to leave room.
-  const calloutY = bodyY + bodyH + GAP_BODY_TO_REST;
+  // Reserve 120px for callout + 60px bottom margin; body clips to that budget.
+  const bodyClipH = Math.max(40, SLIDE_H - bodyY - GAP_BODY_TO_REST - 120 - 60);
+  const calloutY = bodyY + Math.min(bodyH, bodyClipH) + GAP_BODY_TO_REST;
   const calloutParts = splitCalloutFromSpec(spec, 80, calloutY, colW);
   return {
     shapes: [makePaperBackdrop(activeTheme), ...(calloutParts?.shapes ?? [])],
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, 80, subHookY, colW, 22, "700", t.text, "left")] : []),
-      ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left")] : []),
+      ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
       ...(calloutParts?.texts ?? []),
     ],
     images: paperImage(spec, 680, 80, 540, 560),
@@ -881,12 +882,13 @@ function renderPaperImageLeft(spec: SlideSpec, t: Theme): SlideJSON {
   const subHookY = titleY + titleH + GAP_TITLE_TO_HOOK;
   const subHookH = spec.subHook ? textHeight(spec.subHook, colW, 22) : 0;
   const bodyY = spec.subHook ? subHookY + subHookH + GAP_HOOK_TO_BODY : titleY + titleH + GAP_TITLE_TO_HOOK;
-  const bodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
   const bullets = (spec.bullets ?? []).slice(0, 4);
+  // Body shares vertical space with bullets — cap it so bullets always have room.
+  const bulletsH = bullets.length * 50;
+  const bodyClipH = Math.max(40, SLIDE_H - bodyY - (spec.body ? GAP_BODY_TO_REST : 0) - bulletsH - 80);
+  const bodyH = spec.body ? Math.min(textHeight(spec.body, colW, 22), bodyClipH) : 0;
   const bulletsStartY = bodyY + bodyH + (spec.body ? GAP_BODY_TO_REST : 0);
-  const bulletsEndY = bulletsStartY + bullets.length * 50;
-  // Callout falls directly under bullets — let it slide off the card if the
-  // body+bullets push it too far; better than overlap.
+  const bulletsEndY = bulletsStartY + bulletsH;
   const calloutY = bulletsEndY + 16;
   const calloutParts = splitCalloutFromSpec(spec, colX, calloutY, colW);
   return {
@@ -894,7 +896,7 @@ function renderPaperImageLeft(spec: SlideSpec, t: Theme): SlideJSON {
     texts: [
       makeText(spec.title, colX, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, colX, subHookY, colW, 22, "700", t.text, "left")] : []),
-      ...(spec.body ? [makeText(spec.body, colX, bodyY, colW, 22, "400", t.text, "left")] : []),
+      ...(spec.body ? [makeText(spec.body, colX, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
       ...bullets.map((b, i) =>
         makeText(`•   ${b}`, colX, bulletsStartY + i * 50, colW, 20, "400", t.text, "left"),
       ),
@@ -946,7 +948,9 @@ function renderPaperImageRightBadge(spec: SlideSpec, t: Theme): SlideJSON {
   const badgeY = titleY + titleH + GAP_TITLE_TO_HOOK;
   const badgeH = badgeText ? 36 : 0;
   const bodyY = badgeY + badgeH + (badgeText ? 18 : 0);
-  const bodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
+  const bulletsBlockH = bullets.length * 44 + (spec.bulletsLeadIn && bullets.length > 0 ? textHeight(spec.bulletsLeadIn, colW, 22) + 12 : 0);
+  const bodyClipH = Math.max(40, SLIDE_H - bodyY - GAP_BODY_TO_REST - bulletsBlockH - 60);
+  const bodyH = spec.body ? Math.min(textHeight(spec.body, colW, 22), bodyClipH) : 0;
   const leadInY = bodyY + bodyH + GAP_BODY_TO_REST;
   const leadInH = (spec.bulletsLeadIn && bullets.length > 0) ? textHeight(spec.bulletsLeadIn, colW, 22) : 0;
   const bulletsStartY = leadInY + leadInH + (spec.bulletsLeadIn && bullets.length > 0 ? 12 : 0);
@@ -954,7 +958,7 @@ function renderPaperImageRightBadge(spec: SlideSpec, t: Theme): SlideJSON {
     shapes: [makePaperBackdrop(activeTheme)],
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
-      ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left")] : []),
+      ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
       ...(spec.bulletsLeadIn && bullets.length > 0
         ? [makeText(spec.bulletsLeadIn, 80, leadInY, colW, 22, "400", t.text, "left")]
         : []),
@@ -976,15 +980,17 @@ function renderPaperBannerImageTop(spec: SlideSpec, t: Theme): SlideJSON {
   const titleY = bannerY + bannerH + 30;
   const titleH = textHeight(spec.title, fullW, 40);
   const bodyY = titleY + titleH + GAP_TITLE_TO_HOOK;
-  const bodyH = spec.body ? textHeight(spec.body, fullW, 22) : 0;
   const bullets = (spec.bullets ?? []).slice(0, 4);
+  const bulletsTextH = bullets.length > 0 ? textHeight(bullets.join("\n"), fullW, 22) : 0;
+  const bodyClipH = Math.max(40, SLIDE_H - bodyY - (spec.body ? GAP_BODY_TO_REST : 0) - bulletsTextH - 60);
+  const bodyH = spec.body ? Math.min(textHeight(spec.body, fullW, 22), bodyClipH) : 0;
   const bulletsStartY = bodyY + bodyH + (spec.body ? GAP_BODY_TO_REST : 0);
   const numberedListText = bullets.length > 0 ? bullets.join("\n") : "";
   return {
     shapes: [makePaperBackdrop(activeTheme)],
     texts: [
       makeText(spec.title, 80, titleY, fullW, 40, "800", headingColor, "left"),
-      ...(spec.body ? [makeText(spec.body, 80, bodyY, fullW, 22, "400", t.text, "left")] : []),
+      ...(spec.body ? [makeText(spec.body, 80, bodyY, fullW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
       ...(numberedListText
         ? [{
             ...makeText(numberedListText, 80, bulletsStartY, fullW, 22, "400", t.text, "left"),
@@ -1005,7 +1011,9 @@ function renderPaperQuote(spec: SlideSpec, t: Theme): SlideJSON {
   const subHookY = titleY + titleH + GAP_TITLE_TO_HOOK;
   const subHookH = spec.subHook ? textHeight(spec.subHook, colW, 22) : 0;
   const bodyY = spec.subHook ? subHookY + subHookH + GAP_HOOK_TO_BODY : titleY + titleH + GAP_TITLE_TO_HOOK;
-  const bodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
+  // Quote needs ~80px; leave space between body and quote.
+  const bodyClipH = Math.max(40, 460 - bodyY - GAP_BODY_TO_REST);
+  const bodyH = spec.body ? Math.min(textHeight(spec.body, colW, 22), bodyClipH) : 0;
   const quoteText = spec.blockquoteText?.trim();
   const quoteAttrib = spec.blockquoteAttribution?.trim() ?? "";
   const quoteY = Math.min(600, Math.max(460, bodyY + bodyH + GAP_BODY_TO_REST));
@@ -1017,7 +1025,7 @@ function renderPaperQuote(spec: SlideSpec, t: Theme): SlideJSON {
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, 80, subHookY, colW, 22, "700", t.text, "left")] : []),
-      ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left")] : []),
+      ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
     ],
     images: paperImage(spec, 680, 80, 540, 560),
     background: t.bg,

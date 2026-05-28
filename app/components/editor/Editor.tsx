@@ -22,6 +22,7 @@ import ContextMenu, { type ContextMenuState } from "./ContextMenu";
 import RegenerateImageDialog from "./RegenerateImageDialog";
 import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
 import SlideshowLoadingAnimation from "./SlideshowLoadingAnimation";
+import PresentationViewer from "./PresentationViewer";
 import type { FrameShape } from "./frames";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import {
@@ -167,6 +168,8 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [slideSelected, setSlideSelected] = useState(false);
   const [adjustingBackground, setAdjustingBackground] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [presenting, setPresenting] = useState(false);
+  const [removingBg, setRemovingBg] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [zoom, setZoom] = useState(1);
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
@@ -176,7 +179,7 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [regenerateTargetId, setRegenerateTargetId] = useState<string | null>(null);
   const [editingInnerImageId, setEditingInnerImageId] = useState<string | null>(null);
   const [dropLoading, setDropLoading] = useState<{ x: number; y: number } | null>(null);
-  const [generating, setGenerating] = useState<{ current: number; total: number; title?: string; slideTitles?: string[] } | null>(
+  const [generating, setGenerating] = useState<{ current: number; total: number; title?: string; slideTitles?: string[]; statusMessage?: string } | null>(
     generationParams ? { current: 0, total: generationParams.slideCount ?? 0 } : null,
   );
   // True from the moment generationParams arrives until the first SSE "meta" event,
@@ -1234,6 +1237,32 @@ export default function Editor({ presentation, generationParams }: Props) {
     setSelectedImageId(null);
   }, [selectedImageId, mutateActiveSlide]);
 
+  const handleRemoveBg = useCallback(async () => {
+    if (!selectedImageId || removingBg) return;
+    const slide = slidesRef.current[activeIndexRef.current];
+    const image = slide?.images.find((i) => i.id === selectedImageId);
+    if (!image?.src) return;
+    setRemovingBg(true);
+    try {
+      const res = await fetch("/api/remove-background", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ src: image.src }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error("Remove background failed:", err);
+        return;
+      }
+      const { src: newSrc } = await res.json();
+      if (newSrc) updateImage(selectedImageId, { src: newSrc });
+    } catch (err) {
+      console.error("Remove background error:", err);
+    } finally {
+      setRemovingBg(false);
+    }
+  }, [selectedImageId, removingBg, updateImage]);
+
   const updateAudio = useCallback((id: string, patch: Partial<AudioObject>) => {
     mutateActiveSlide((s) => ({
       ...s,
@@ -2073,6 +2102,7 @@ export default function Editor({ presentation, generationParams }: Props) {
         total: p.total,
         title: p.title,
         slideTitles: prev?.slideTitles,
+        statusMessage: undefined,
       }));
       scheduleSave();
       if (reveal.queue.length > 0) {
@@ -2158,6 +2188,11 @@ export default function Editor({ presentation, generationParams }: Props) {
                   title: prev?.title,
                   slideTitles: p.slideTitles ?? prev?.slideTitles,
                 }));
+              }
+            } else if (eventName === "status") {
+              const p = payload as { message?: string };
+              if (p.message) {
+                setGenerating((prev) => prev ? { ...prev, statusMessage: p.message } : prev);
               }
             } else if (eventName === "slide") {
               // Push into the reveal queue so slides appear one at a time with
@@ -2587,6 +2622,7 @@ export default function Editor({ presentation, generationParams }: Props) {
         onUndo={undo}
         onRedo={redo}
         onExport={handleExport}
+        onPresent={() => setPresenting(true)}
         isExporting={isExporting}
         saveStatus={saveStatus}
         disableHistory={!!generating}
@@ -3115,6 +3151,8 @@ export default function Editor({ presentation, generationParams }: Props) {
                   }}
                   onOpenFontPanel={() => setFontPanelOpen(true)}
                   onOpenEditVideo={selectedVideoId ? () => setEditVideoPanelOpen(true) : undefined}
+                  onRemoveBg={selectedImageId ? handleRemoveBg : undefined}
+                  removingBg={removingBg}
                 />
               )}
             </div>
@@ -3154,7 +3192,11 @@ export default function Editor({ presentation, generationParams }: Props) {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: "#FFCC33" }} />
                 </span>
                 <span className="font-medium">
-                  {generating.title ? `Generated: ${generating.title}` : "Designing your deck…"}
+                  {generating.statusMessage
+                    ? generating.statusMessage
+                    : generating.title
+                    ? `Generated: ${generating.title}`
+                    : "Designing your deck…"}
                 </span>
                 {generating.total > 0 && (
                   <span className="font-mono text-xs opacity-70">
@@ -3315,6 +3357,15 @@ export default function Editor({ presentation, generationParams }: Props) {
           />
         );
       })()}
+
+      {presenting && slides.length > 0 && (
+        <PresentationViewer
+          slides={slides}
+          startIndex={activeIndex}
+          themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
+          onClose={() => setPresenting(false)}
+        />
+      )}
     </div>
   );
 }

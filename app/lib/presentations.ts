@@ -10,6 +10,9 @@ export interface TextObject {
    *  Set (via the top/bottom resize handles) → box uses it as a min-height so
    *  the text frame stays the chosen size even if content is shorter. */
   height?: number;
+  /** Layout-imposed clip height. When set, the text box renders with
+   *  overflow:hidden at this pixel height. Does not affect editing or resizing. */
+  clipH?: number;
   text: string;
   fontSize: number;
   fontWeight: string;

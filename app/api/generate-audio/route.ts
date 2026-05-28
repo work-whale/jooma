@@ -20,6 +20,9 @@ interface RequestBody {
   readingLevel?: string;
   activityType?: ActivityType;
   additionalInstructions?: string;
+  /** Key slide titles / concepts from the deck — used to anchor the audio
+   *  script to specific content covered in the lesson, not just the broad topic. */
+  slideContext?: string;
   // Optional: when the caller already knows what they want, skip the gpt-4o pass.
   scriptOverride?: string;
   titleOverride?: string;
@@ -153,16 +156,20 @@ Do NOT rewrite the script — leave the "script" field equal to the supplied tex
     const readingLine = body.readingLevel && body.readingLevel !== "Same as Year"
       ? `Reading level: ${body.readingLevel}.`
       : "";
+    const contextLine = body.slideContext?.trim()
+      ? `\nThe lesson covers these specific concepts (use them as the source of the script — reference at least one directly):\n${body.slideContext.trim()}`
+      : "";
     const prompt = `Design a short LISTENING activity for a classroom lesson on: "${body.topic}".
 
 ${yearLine}
 ${readingLine}
+${contextLine}
 
 Write:
-- A short title (max 6 words) for the activity.
+- A short title (max 6 words) for the activity — must name a specific concept from the lesson, not just the broad topic.
 - A one-sentence description telling pupils what they will hear.
-- A "script" of 25-50 seconds spoken aloud — a first-person account, a vivid scene, a narrated explanation, or a short dialogue. Concrete and engaging — no filler. Use British English: spellings (colour, organise, realise, learnt), idiom (rubbish bin, lift, pavement, lorry, queue, holiday), and British settings/place names where the topic allows. Avoid American Englishisms (color, organize, sidewalk, vacation, trash can).
-- Activity questions for pupils to complete while/after listening. ${activityInstruction}${extraInstr}
+- A "script" of 25-50 seconds spoken aloud — a first-person account, a vivid scene, a narrated explanation, or a short dialogue. The script MUST be grounded in the specific concepts listed above, not the broad topic in general. Concrete and engaging — no filler. Use British English: spellings (colour, organise, realise, learnt), idiom (rubbish bin, lift, pavement, lorry, queue, holiday), and British settings/place names where the topic allows. Avoid American Englishisms (color, organize, sidewalk, vacation, trash can).
+- Activity questions for pupils to complete while/after listening. Questions must test the specific content of the script, not general topic knowledge. ${activityInstruction}${extraInstr}
 
 The "script" must be plain spoken text only — no stage directions, sound effects, or speaker tags.`;
 
