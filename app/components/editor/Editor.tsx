@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
 import EditorTopBar from "./EditorTopBar";
 import ContextualToolbar, { type EditorSelection } from "./ContextualToolbar";
-import Sidebar from "./Sidebar";
+import Sidebar, { type ActivityKind, type ActivityConfig } from "./Sidebar";
 import SlideTray, { type SlideEntry } from "./SlideTray";
 import TextLayer from "./TextLayer";
 import ShapeLayer from "./ShapeLayer";
@@ -59,9 +59,43 @@ interface GenerationParams {
   additionalInstructions?: string;
   includeObjectives?: boolean;
   includeVocab?: boolean;
+  vocabulary?: string[];
   includeAudio?: boolean;
   imageSource?: "auto" | "ai" | "web";
   imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
+}
+
+/** Firms up a matting result's alpha channel. The background-removal model
+ *  often returns interior foreground pixels at 60-85% alpha (a faded, washed-
+ *  out look). A simple alpha gain (×1.6, clamped) snaps those near-opaque
+ *  pixels to fully opaque while leaving genuinely-soft low-alpha pixels (hair
+ *  wisps, fuzzy edges) feathered. Monotonic + continuous so no edge artefacts.
+ */
+async function hardenAlpha(blob: Blob): Promise<Blob> {
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return blob;
+    ctx.drawImage(bitmap, 0, 0);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = img.data;
+    const GAIN = 1.6;
+    for (let i = 3; i < d.length; i += 4) {
+      if (d[i] === 0 || d[i] === 255) continue; // already fully transparent/opaque
+      d[i] = Math.min(255, Math.round(d[i] * GAIN));
+    }
+    ctx.putImageData(img, 0, 0);
+    return await new Promise<Blob>((resolve) =>
+      canvas.toBlob((b) => resolve(b ?? blob), "image/png"),
+    );
+  } catch {
+    // If anything goes wrong (no canvas, decode failure), fall back to the
+    // un-processed cutout rather than failing the whole operation.
+    return blob;
+  }
 }
 
 interface Props {
@@ -173,6 +207,12 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [zoom, setZoom] = useState(1);
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
+  // Imperative open request for the Sidebar (canvas "Swap image" → Pictures).
+  const [sidebarOpenSignal, setSidebarOpenSignal] = useState<{ tab: "pictures"; subTab?: "stock" | "upload" | "ai"; nonce: number } | undefined>(undefined);
+  // When the user clicks "Swap image" on a selected image, we record its id
+  // here. The next image picked from the Pictures sidebar replaces this image's
+  // src instead of adding a new element. Cleared after one use or on deselect.
+  const swapTargetRef = useRef<string | null>(null);
   const [dragGuides, setDragGuides] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   // Image id currently being regenerated via the AI dialog (null when closed).
@@ -1231,6 +1271,52 @@ export default function Editor({ presentation, generationParams }: Props) {
     }));
   }, [mutateActiveSlide]);
 
+  // Canvas "Swap image" → record the target image and open the Pictures tab.
+  const handleSwapImage = useCallback(() => {
+    if (!selectedImageId) return;
+    swapTargetRef.current = selectedImageId;
+    setSidebarOpenSignal({ tab: "pictures", subTab: "stock", nonce: Date.now() });
+  }, [selectedImageId]);
+
+  // Replace a target image's src in place, loading the new bytes first so we
+  // can reset pan/scale and store natural dims (mirrors the old file-swap).
+  const swapImageSrc = useCallback((targetId: string, src: string) => {
+    const img = new window.Image();
+    img.onload = () => {
+      updateImage(targetId, {
+        src,
+        naturalWidth: img.naturalWidth || undefined,
+        naturalHeight: img.naturalHeight || undefined,
+        innerOffsetX: 0,
+        innerOffsetY: 0,
+        innerScale: 1,
+      });
+      scheduleSave();
+    };
+    img.src = src;
+  }, [updateImage, scheduleSave]);
+
+  // Sidebar image picks route through here. If a swap is pending (and the
+  // target still exists on the active slide), replace it; otherwise add a new
+  // image as before.
+  const handleSidebarAddImage = useCallback((src: string) => {
+    const targetId = swapTargetRef.current;
+    if (targetId) {
+      swapTargetRef.current = null;
+      const exists = slidesRef.current[activeIndex]?.images?.some((im) => im.id === targetId);
+      if (exists) {
+        swapImageSrc(targetId, src);
+        return;
+      }
+    }
+    addImage(src);
+  }, [activeIndex, swapImageSrc, addImage]);
+
+  // Clear a pending swap if the user deselects the image first.
+  useEffect(() => {
+    if (!selectedImageId) swapTargetRef.current = null;
+  }, [selectedImageId]);
+
   const deleteSelectedImage = useCallback(() => {
     if (!selectedImageId) return;
     mutateActiveSlide((s) => ({ ...s, images: s.images.filter((x) => x.id !== selectedImageId) }));
@@ -1244,14 +1330,44 @@ export default function Editor({ presentation, generationParams }: Props) {
     if (!image?.src) return;
     setRemovingBg(true);
     try {
-      const res = await fetch("/api/remove-background", {
+      // Client-side matting via @imgly/background-removal — a U2Net/ISNet
+      // ONNX model running in WASM. Free, no API cost or rate limits, and it
+      // returns a true pixel cutout (not a generative re-paint like the old
+      // gpt-image-1 edit, which could subtly alter the subject). Dynamically
+      // imported so it stays out of the main editor bundle.
+      //
+      // `model: "isnet"` is the FULL-precision model (~80 MB, cached after
+      // first use). The default `isnet_fp16` is quantised and leaves bright
+      // foreground regions (white pages, pale skin) semi-transparent — exactly
+      // the "faded" look the user hit. Full precision is markedly cleaner.
+      const { removeBackground } = await import("@imgly/background-removal");
+      const rawBlob = await removeBackground(image.src, {
+        model: "isnet",
+        output: { format: "image/png" },
+      });
+      // Even the full model can leave interior fill a touch translucent. Apply
+      // an alpha gain that pushes near-opaque pixels to fully opaque while
+      // preserving the genuinely soft edges (hair, fur) at low alpha.
+      const blob = await hardenAlpha(rawBlob);
+      // Persist the transparent PNG to Storage so the slide JSON keeps a small
+      // URL instead of a multi-MB base64 string.
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      const res = await fetch("/api/upload-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ src: image.src }),
+        body: JSON.stringify({ dataUrl, filenameHint: "rembg" }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        console.error("Remove background failed:", err);
+        console.error("Remove background: upload failed:", err);
+        // Fall back to inlining the data URL so the cutout still applies even
+        // if Storage is unavailable.
+        updateImage(selectedImageId, { src: dataUrl });
         return;
       }
       const { src: newSrc } = await res.json();
@@ -1650,6 +1766,11 @@ export default function Editor({ presentation, generationParams }: Props) {
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // While presenting, the PresentationViewer owns the keyboard (arrows,
+      // space, Escape). The editor must stay out of the way — otherwise its
+      // own arrow-key navigation/nudge handlers fire on the same window event
+      // and fight the viewer.
+      if (presenting) return;
       const target = e.target as HTMLElement;
       const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
       if (inField) return;
@@ -1718,7 +1839,7 @@ export default function Editor({ presentation, generationParams }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, multiSelection, deleteMultiSelection, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection, clearSelection, generating, updateText, updateShape, updateImage]);
+  }, [presenting, selectedTextId, selectedShapeId, selectedImageId, adjustingBackground, multiSelection, deleteMultiSelection, deleteSelectedText, deleteSelectedShape, deleteSelectedImage, removeBackgroundImage, undo, redo, duplicateSelection, nudgeSelection, clearSelection, generating, updateText, updateShape, updateImage]);
 
   // ── Slide management ──────────────────────────────────────────────────────
 
@@ -1743,6 +1864,183 @@ export default function Editor({ presentation, generationParams }: Props) {
     clearSelection();
     scheduleSave();
   }, [scheduleSave, clearSelection]);
+
+  // AI-generated activity slide. Calls /api/generate-activity with the kind +
+  // teacher-supplied config (topic, level) and inserts the resulting slide
+  // after the active one. Layout is a speech-bubble "thought card" with an
+  // image on the left and the AI-written body on the right — the same
+  // aesthetic as the question-activity layout the deck generator emits.
+  const addActivitySlide = useCallback(async (kind: ActivityKind, config: ActivityConfig) => {
+    const r = await fetch("/api/generate-activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind,
+        topic: config.topic,
+        level: config.level,
+        deckTitle: title,
+        slideTitles: slidesRef.current
+          .map((s) => s.texts?.[0]?.text)
+          .filter((t): t is string => !!t)
+          .slice(0, 8),
+      }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error || err.message || "Activity generation failed");
+    }
+    const data = await r.json() as {
+      kind: ActivityKind;
+      title: string;
+      body: string;
+      imageQuery: string;
+      items: string[];
+      answers: string[];
+      options: { question: string; choices: string[]; correctIndex: number }[];
+    };
+
+    const theme = getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID);
+    const palette = theme.palette;
+    const stroke = palette.speechBubbleStroke ?? "#1a1a1a";
+
+    // Build the slide. Title + thought-bubble shape + body text inside the
+    // bubble. If the API returned items / options, fold them into the body
+    // (one element so the teacher can edit + reorder as a normal text block).
+    const composedBody = (() => {
+      if (data.options?.length) {
+        return data.options.map((q, i) =>
+          `${i + 1}. ${q.question}\n   A) ${q.choices[0] ?? ""}\n   B) ${q.choices[1] ?? ""}\n   C) ${q.choices[2] ?? ""}\n   D) ${q.choices[3] ?? ""}`,
+        ).join("\n\n");
+      }
+      if (data.items?.length) {
+        // For vocab-match / fill-blanks / which-true / true-false etc., the
+        // items go below the body prompt.
+        const itemsBlock = data.items.map((it, i) => `${i + 1}. ${it}`).join("\n");
+        return data.body ? `${data.body}\n\n${itemsBlock}` : itemsBlock;
+      }
+      return data.body;
+    })();
+
+    const titleY = 80;
+    const bubbleX = 60;
+    const bubbleY = 160;
+    const bubbleW = SLIDE_W - 120;
+    const bubbleH = SLIDE_H - bubbleY - 60;
+    const bubbleBodyH = bubbleH * 0.78;
+    const innerPad = 60;
+    const innerX = bubbleX + innerPad;
+    const innerW = bubbleW - innerPad * 2;
+    const innerY = bubbleY + innerPad;
+    const innerH = bubbleBodyH - innerPad * 2;
+
+    const newSlide: SlideState = {
+      id: newId("s"),
+      shapes: [
+        // Speech-bubble "thought card" — matches the activity-question layout.
+        {
+          id: newId("sh"),
+          type: "speech",
+          x: bubbleX, y: bubbleY, width: bubbleW, height: bubbleH,
+          fill: "#ffffff",
+          stroke,
+          strokeWidth: 3,
+          opacity: 1,
+        },
+      ],
+      texts: [
+        {
+          id: newId("t"),
+          x: 80, y: titleY, width: SLIDE_W - 160,
+          text: data.title || "Activity",
+          fontSize: 40, fontWeight: "800",
+          fontStyle: "normal", underline: false,
+          fontFamily: theme.fonts.heading,
+          color: palette.headingColor ?? palette.accent,
+          textAlign: "left",
+        },
+        // Body text — sits to the RIGHT of the (optional) image, vertically
+        // centred within the bubble's body area.
+        {
+          id: newId("t"),
+          x: data.imageQuery ? innerX + 240 + 36 : innerX,
+          y: innerY,
+          width: data.imageQuery ? innerW - 240 - 36 : innerW,
+          text: composedBody,
+          fontSize: 22, fontWeight: "400",
+          fontStyle: "normal", underline: false,
+          fontFamily: theme.fonts.body,
+          color: palette.text,
+          textAlign: "left",
+          lineHeight: 1.4,
+        },
+      ],
+      images: [],
+      background: palette.background,
+    };
+
+    const insertAt = activeIndexRef.current + 1;
+    setSlides((prev) => {
+      const next = [...prev.slice(0, insertAt), newSlide, ...prev.slice(insertAt)];
+      slidesRef.current = next;
+      return next;
+    });
+    setActiveIndex(insertAt);
+    clearSelection();
+    scheduleSave();
+
+    // Fetch the image in the background (if requested). When it arrives we
+    // splice an ImageObject into the slide we just inserted.
+    if (data.imageQuery) {
+      void (async () => {
+        try {
+          const imgRes = await fetch("/api/generate-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: data.imageQuery,
+              style: "illustration",
+              // The activity bubble image is a 240×240 square inside the
+              // thought card — request square so the AI doesn't generate a
+              // wide landscape that cover-crops most of itself away.
+              orientation: "square",
+            }),
+          });
+          if (!imgRes.ok) return;
+          const { dataUrl } = await imgRes.json();
+          if (!dataUrl) return;
+          // Decode dimensions then attach. Use a square 240×240 inside the
+          // bubble on the left.
+          const img = new window.Image();
+          img.onload = () => {
+            const imageSize = 240;
+            const imageX = innerX;
+            const imageY = innerY + Math.max(0, (innerH - imageSize) / 2);
+            const targetId = newSlide.id;
+            setSlides((prev) => {
+              const idx = prev.findIndex((s) => s.id === targetId);
+              if (idx < 0) return prev;
+              const newImage: ImageObject = {
+                id: newId("im"),
+                x: imageX, y: imageY, width: imageSize, height: imageSize,
+                src: dataUrl, opacity: 1,
+                naturalWidth: img.naturalWidth || undefined,
+                naturalHeight: img.naturalHeight || undefined,
+                frame: "rounded", cornerRadius: 12,
+              };
+              const next = prev.slice();
+              next[idx] = { ...next[idx], images: [...(next[idx].images ?? []), newImage] };
+              slidesRef.current = next;
+              return next;
+            });
+            scheduleSave();
+          };
+          img.src = dataUrl;
+        } catch {
+          // Image fetch failures are non-fatal — the slide still has the body.
+        }
+      })();
+    }
+  }, [title, slides, scheduleSave, clearSelection]);
 
   const deleteSlide = useCallback((index: number) => {
     if (slidesRef.current.length <= 1) return;
@@ -2063,8 +2361,17 @@ export default function Editor({ presentation, generationParams }: Props) {
           .catch((err) => console.warn("Gallery save failed:", err));
       }
       setSlides((prev) => {
+        // Pad-to-index model. Each slide event carries its FINAL array index
+        // (audio/answer/video are reserved at fixed mid-deck positions and
+        // content streams around them). Pad with empty placeholders up to
+        // p.index, then set the slot. The existing placeholder's id (if any
+        // — from meta seed or a previous padding pass) is preserved so the
+        // tray's pop-in animation only fires the first time the slot appears.
         const next = prev.slice();
-        const placeholderId = prev[p.index]?.id ?? newId("s");
+        while (next.length <= p.index) {
+          next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+        }
+        const placeholderId = next[p.index]?.id ?? newId("s");
         const replaced: SlideState = {
           id: placeholderId,
           shapes: p.slide.shapes ?? [],
@@ -2087,12 +2394,7 @@ export default function Editor({ presentation, generationParams }: Props) {
           skeleton: p.slide.skeleton,
           themeId: p.slide.themeId,
         };
-        if (p.index < next.length) next[p.index] = replaced;
-        else next.push(replaced);
-        const streamingCap = p.contentTotal ?? p.total;
-        if (next.length < streamingCap && p.index + 1 >= next.length) {
-          next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-        }
+        next[p.index] = replaced;
         slidesRef.current = next;
         return next;
       });
@@ -2248,8 +2550,7 @@ export default function Editor({ presentation, generationParams }: Props) {
               scheduleSave();
             } else if (eventName === "video") {
               const p = payload as {
-                placeholderId?: string;
-                targetIndex: number;
+                index: number;
                 video: {
                   videoId: string; title: string; channel: string; description: string;
                   slideHeading?: string; slideSubtitle?: string;
@@ -2340,33 +2641,30 @@ export default function Editor({ presentation, generationParams }: Props) {
                   height: vidH,
                   cornerRadius: 3,
                 };
+                // Preserve the slot id (reserved by video-placeholder) so the
+                // tray pop-in animation doesn't re-fire on the swap.
+                const placeholderId = prev[p.index]?.id ?? newId("s");
                 const realSlide: SlideState = {
-                  id: p.placeholderId ?? newId("s"),
+                  id: placeholderId,
                   shapes: [], images: [], audios: [],
                   texts: [titleText, subtitleText],
                   videos: [newVid],
                   background: p.slideBg ?? "#1a1a1a",
                 };
-                if (p.placeholderId) {
-                  const idx = prev.findIndex((s) => s.id === p.placeholderId);
-                  if (idx >= 0) {
-                    const next = prev.slice();
-                    next[idx] = realSlide;
-                    slidesRef.current = next;
-                    return next;
-                  }
+                const next = prev.slice();
+                while (next.length <= p.index) {
+                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
                 }
-                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
-                const next = [...prev.slice(0, insertAt), realSlide, ...prev.slice(insertAt)];
+                next[p.index] = realSlide;
                 slidesRef.current = next;
                 return next;
               });
               scheduleSave();
             } else if (eventName === "audio-placeholder") {
               const p = payload as {
-                placeholderId: string;
-                targetIndex: number;
+                index: number;
                 slideBg?: string;
+                slideTextColor?: string;
                 panelBg?: string;
                 panelInk?: string;
                 playBg?: string;
@@ -2374,9 +2672,8 @@ export default function Editor({ presentation, generationParams }: Props) {
                 headingFont?: string;
               };
               setSlides((prev) => {
-                // Pending audio slide: an AudioObject with isPending=true so
-                // AudioElement renders shimmer over the player area. Real data
-                // replaces this slide when the "audio" event fires.
+                // Pad-to-index: reserve this slot now with a pending audio
+                // shimmer. The real audio data fills it via the "audio" event.
                 const playerW = SLIDE_W - 160;
                 const playerH = 80;
                 const playerY = 210;
@@ -2396,21 +2693,23 @@ export default function Editor({ presentation, generationParams }: Props) {
                   isPending: true,
                 };
                 const placeholderSlide: SlideState = {
-                  id: p.placeholderId,
+                  id: newId("s"),
                   shapes: [], images: [],
                   texts: [],
                   audios: [pendingAudio],
                   background: p.slideBg ?? "#0f172a",
                 };
-                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
-                const next = [...prev.slice(0, insertAt), placeholderSlide, ...prev.slice(insertAt)];
+                const next = prev.slice();
+                while (next.length <= p.index) {
+                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+                }
+                next[p.index] = placeholderSlide;
                 slidesRef.current = next;
                 return next;
               });
             } else if (eventName === "video-placeholder") {
               const p = payload as {
-                placeholderId: string;
-                targetIndex: number;
+                index: number;
                 slideBg?: string;
                 titleColor?: string;
                 mutedColor?: string;
@@ -2418,9 +2717,6 @@ export default function Editor({ presentation, generationParams }: Props) {
                 headingFont?: string;
               };
               setSlides((prev) => {
-                // Pending video slide: a VideoObject with isPending=true so
-                // VideoElement renders shimmer in the player frame. Replaced by
-                // the real "video" event once /api/find-youtube returns.
                 const sideMargin = 160;
                 const vidW = SLIDE_W - sideMargin * 2;
                 const vidH = Math.round(vidW * 9 / 16);
@@ -2437,24 +2733,63 @@ export default function Editor({ presentation, generationParams }: Props) {
                   isPending: true,
                 };
                 const placeholderSlide: SlideState = {
-                  id: p.placeholderId,
+                  id: newId("s"),
                   shapes: [], images: [], audios: [],
                   texts: [],
                   videos: [pendingVideo],
                   background: p.slideBg ?? "#1a1a1a",
                 };
-                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
-                const next = [...prev.slice(0, insertAt), placeholderSlide, ...prev.slice(insertAt)];
+                const next = prev.slice();
+                while (next.length <= p.index) {
+                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+                }
+                next[p.index] = placeholderSlide;
+                slidesRef.current = next;
+                return next;
+              });
+            } else if (eventName === "audio-answer-placeholder") {
+              const p = payload as {
+                index: number;
+                slideBg?: string;
+                slideTextColor?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Reserve the answer slot — a blank shimmer until the audio
+                // API returns the model answers.
+                const placeholderSlide: SlideState = {
+                  id: newId("s"),
+                  shapes: [], images: [], audios: [], videos: [],
+                  texts: [
+                    {
+                      id: newId("t"),
+                      x: 80, y: 80, width: SLIDE_W - 160,
+                      text: "Answers loading…",
+                      fontSize: 36,
+                      fontWeight: "800",
+                      fontStyle: "normal",
+                      underline: false,
+                      fontFamily: p.headingFont ?? "'Bricolage Grotesque', sans-serif",
+                      color: p.slideTextColor ?? "#1a1a1a",
+                      textAlign: "left",
+                    },
+                  ],
+                  background: p.slideBg ?? "#ffffff",
+                };
+                const next = prev.slice();
+                while (next.length <= p.index) {
+                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+                }
+                next[p.index] = placeholderSlide;
                 slidesRef.current = next;
                 return next;
               });
             } else if (eventName === "audio") {
               const p = payload as {
-                placeholderId?: string;
-                targetIndex: number;
+                index: number;
                 audio: {
                   src: string; title: string; description: string;
-                  transcript?: string; questions: string[];
+                  transcript?: string; questions: string[]; answers?: string[];
                   panelBg?: string; panelInk?: string;
                   playBg?: string; playInk?: string;
                   headingFont?: string;
@@ -2528,28 +2863,78 @@ export default function Editor({ presentation, generationParams }: Props) {
                   listType: "number",
                 } : null;
 
+                // Preserve the slot id (reserved by audio-placeholder) so the
+                // tray's pop-in animation only fires once.
+                const placeholderId = prev[p.index]?.id ?? newId("s");
                 const realSlide: SlideState = {
-                  // Preserve the placeholder slide id so React's reconciliation
-                  // is stable across the swap — avoids a flash from key change.
-                  id: p.placeholderId ?? newId("s"),
+                  id: placeholderId,
                   shapes: [], images: [],
                   texts: questionsText ? [titleText, descText, questionsText] : [titleText, descText],
                   audios: [newAudio],
                   background: p.audio.slideBg ?? "#0f172a",
                 };
-                // If a placeholder was inserted earlier, replace it in place;
-                // otherwise fall back to inserting a new slide at targetIndex+1.
-                if (p.placeholderId) {
-                  const idx = prev.findIndex((s) => s.id === p.placeholderId);
-                  if (idx >= 0) {
-                    const next = prev.slice();
-                    next[idx] = realSlide;
-                    slidesRef.current = next;
-                    return next;
-                  }
+                const next = prev.slice();
+                while (next.length <= p.index) {
+                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
                 }
-                const insertAt = Math.max(0, Math.min(p.targetIndex + 1, prev.length));
-                const next = [...prev.slice(0, insertAt), realSlide, ...prev.slice(insertAt)];
+                next[p.index] = realSlide;
+                slidesRef.current = next;
+                return next;
+              });
+              scheduleSave();
+            } else if (eventName === "audio-answers") {
+              const p = payload as {
+                index: number;
+                title: string;
+                questions: string[];
+                answers: string[];
+                slideBg?: string;
+                slideTextColor?: string;
+                accent?: string;
+                headingFont?: string;
+              };
+              setSlides((prev) => {
+                // Build a "Q: ... / A: ..." paired list. We render each as one
+                // long text element so the teacher can edit any line and the
+                // toolbar's lists work naturally.
+                const titleColor = p.slideTextColor ?? "#1a1a1a";
+                const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
+                const titleText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: 60, width: SLIDE_W - 160,
+                  text: p.title || "Audio activity — answers",
+                  fontSize: 44, fontWeight: "800",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: headingFont,
+                  color: titleColor,
+                  textAlign: "left",
+                };
+                const pairs = (p.questions ?? []).map((q, i) => {
+                  const a = (p.answers ?? [])[i] ?? "";
+                  return `${i + 1}. ${q}\n   → ${a}`;
+                }).join("\n\n");
+                const answersText: TextObject = {
+                  id: newId("t"),
+                  x: 80, y: 150, width: SLIDE_W - 160,
+                  text: pairs || "Answers unavailable.",
+                  fontSize: 20, fontWeight: "500",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: "'Inter', sans-serif",
+                  color: titleColor,
+                  textAlign: "left",
+                };
+                const placeholderId = prev[p.index]?.id ?? newId("s");
+                const realSlide: SlideState = {
+                  id: placeholderId,
+                  shapes: [], images: [], audios: [], videos: [],
+                  texts: [titleText, answersText],
+                  background: p.slideBg ?? "#ffffff",
+                };
+                const next = prev.slice();
+                while (next.length <= p.index) {
+                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
+                }
+                next[p.index] = realSlide;
                 slidesRef.current = next;
                 return next;
               });
@@ -2633,10 +3018,12 @@ export default function Editor({ presentation, generationParams }: Props) {
         <Sidebar
           onAddShape={addShape}
           onAddText={addText}
-          onAddImage={addImage}
+          onAddImage={handleSidebarAddImage}
           onAddFrame={addFrame}
           onAddVideo={addVideo}
+          onAddActivity={addActivitySlide}
           galleryRefreshTrigger={galleryRefreshTrigger}
+          openSignal={sidebarOpenSignal}
           onAddAudioActivity={(audio) => {
             // Same layout the AI wizard uses — separate text elements + thin
             // player bar — on a brand-new slide inserted right after the
@@ -3153,6 +3540,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                   onOpenEditVideo={selectedVideoId ? () => setEditVideoPanelOpen(true) : undefined}
                   onRemoveBg={selectedImageId ? handleRemoveBg : undefined}
                   removingBg={removingBg}
+                  onSwapImage={selectedImageId ? handleSwapImage : undefined}
                 />
               )}
             </div>

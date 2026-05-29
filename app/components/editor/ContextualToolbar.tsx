@@ -520,6 +520,10 @@ interface Props {
   onRemoveBg?: () => void;
   /** True while the background-removal API call is in flight. */
   removingBg?: boolean;
+  /** When provided, the "Swap image" button opens the Pictures sidebar (so
+   *  the user picks a stock/AI/uploaded image to replace with) instead of the
+   *  device file picker. Falls back to the file picker when omitted. */
+  onSwapImage?: () => void;
 }
 
 // One toolbar to rule them all. Tools that don't apply to the current selection
@@ -539,6 +543,7 @@ export default function ContextualToolbar({
   onOpenEditVideo,
   onRemoveBg,
   removingBg,
+  onSwapImage,
 }: Props) {
   if (!selection) return null;
 
@@ -804,11 +809,15 @@ export default function ContextualToolbar({
             }}
           />
           <div className="w-px h-6 bg-gray-300 mx-1" />
-          {/* Swap image — replaces src via file picker */}
+          {/* Swap image — opens the Pictures sidebar when wired (preferred),
+              else falls back to the device file picker. */}
           <ToolbarButton
             icon={<RefreshCw className="w-3.5 h-3.5" />}
             label="Swap image"
-            onClick={() => swapInputRef.current?.click()}
+            onClick={() => {
+              if (onSwapImage) onSwapImage();
+              else swapInputRef.current?.click();
+            }}
           />
           <input
             ref={swapInputRef}

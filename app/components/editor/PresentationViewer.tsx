@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { SlideJSON } from "@/app/lib/presentations";
 import MiniSlide from "./MiniSlide";
@@ -46,10 +46,27 @@ export default function PresentationViewer({ slides, startIndex = 0, themeId, on
     return () => window.removeEventListener("keydown", onKey);
   }, [next, prev, onClose]);
 
-  // Request native fullscreen
+  // Request native fullscreen, and close the viewer when the user leaves
+  // fullscreen. In fullscreen the browser swallows the Escape keydown to exit
+  // fullscreen itself (it never reaches our keydown handler), so without this
+  // the overlay would linger on top of the page after Escape. `onClose` is
+  // held in a ref so re-renders don't re-trigger the fullscreen request.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
+    // Track entry via the actual fullscreenchange events rather than the
+    // requestFullscreen() promise — the promise can resolve after the first
+    // change event, which made the close guard miss. Once we've seen
+    // fullscreen become active, the next time it goes inactive we close.
+    let everEntered = false;
     document.documentElement.requestFullscreen?.().catch(() => {});
+    const onFsChange = () => {
+      if (document.fullscreenElement) everEntered = true;
+      else if (everEntered) onCloseRef.current();
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
     return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
       if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
     };
   }, []);
@@ -66,7 +83,7 @@ export default function PresentationViewer({ slides, startIndex = 0, themeId, on
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center select-none"
+      className="fixed inset-0 z-1000 flex items-center justify-center select-none"
       style={{ backgroundColor: "#000" }}
       onClick={handleBackdropClick}
     >

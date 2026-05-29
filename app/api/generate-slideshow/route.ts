@@ -17,6 +17,9 @@ interface RequestBody {
   additionalInstructions?: string;
   includeObjectives?: boolean;
   includeVocab?: boolean;
+  /** Teacher-curated key vocabulary terms. When present, the vocab slide uses
+   *  exactly these instead of letting the AI pick its own. */
+  vocabulary?: string[];
   includeAudio?: boolean;
   includeYouTube?: boolean;
   youtubeLength?: "short" | "medium" | "long" | "any";
@@ -224,19 +227,38 @@ function scoreHit(hit: PixabayHit, queryWords: string[]): number {
   return score;
 }
 
-async function searchPixabay(query: string): Promise<FetchedImage | null> {
+async function searchPixabay(
+  query: string,
+  orientation: AIImageOrientation = "landscape",
+): Promise<FetchedImage | null> {
   const key = process.env.NEXT_PUBLIC_PIXABAY_KEY;
   if (!key || !query.trim()) return null;
   const queryWords = query.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  // Pixabay supports horizontal | vertical | all. "all" for square because
+  // there's no native square filter — we score square-ness in scoreHit below.
+  const pbOrient = orientation === "landscape" ? "horizontal"
+                 : orientation === "portrait"  ? "vertical"
+                 :                                "all";
+  // Target aspect we score hits against. Landscape ~1.5, portrait ~0.67, square 1.
+  const targetAspect = orientation === "landscape" ? 1.5
+                     : orientation === "portrait"  ? 0.67
+                     :                                1.0;
   try {
-    const url = `https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(query)}&per_page=20&image_type=all&safesearch=true&orientation=horizontal&order=popular`;
+    const url = `https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(query)}&per_page=20&image_type=all&safesearch=true&orientation=${pbOrient}&order=popular`;
     const r = await fetch(url);
     const data: { hits?: PixabayHit[] } = await r.json();
     const hits = data.hits ?? [];
     if (hits.length === 0) return null;
-    // Pick the hit with the highest tag-overlap score, not just the most popular.
+    // Rank by tag-overlap AND closeness to the target aspect — so a square
+    // request gets a near-square hit instead of a panoramic one that
+    // cover-fits awkwardly into the frame.
     const ranked = hits
-      .map((h) => ({ hit: h, score: scoreHit(h, queryWords) }))
+      .map((h) => {
+        const aspect = h.imageWidth / Math.max(1, h.imageHeight);
+        // Aspect penalty: 0 when perfect, grows as we drift away.
+        const aspectPenalty = Math.abs(Math.log(aspect / targetAspect)) * 1.5;
+        return { hit: h, score: scoreHit(h, queryWords) - aspectPenalty };
+      })
       .sort((a, b) => b.score - a.score);
     return await fetchHit(ranked[0].hit);
   } catch { return null; }
@@ -255,7 +277,7 @@ async function fetchImageForSlide(
     return r ? { ...r, provider: "ai" as const } : null;
   };
   const tryWeb = async () => {
-    const r = await searchPixabay(query);
+    const r = await searchPixabay(query, orientation);
     return r ? { ...r, provider: "web" as const } : null;
   };
   if (source === "web") return tryWeb();
@@ -449,8 +471,11 @@ Slide 2 MUST be a "paper-image-right" or "paper-image-left" content slide dedica
    · imageQuery: an image that represents learning or discovery for the topic
    · calloutVariant: "key", calloutBody: a one-sentence motivating summary of the session`
     : "";
+  const curatedVocab = (body.vocabulary ?? []).map((t) => t.trim()).filter(Boolean);
   const vocabLine = body.includeVocab
-    ? `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition.`
+    ? curatedVocab.length > 0
+      ? `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition. Use EXACTLY these terms the teacher selected (define each one): ${curatedVocab.join(", ")}.`
+      : `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition.`
     : "";
 
   // Deck spine description varies with activityPairs to avoid telling the AI
@@ -746,11 +771,38 @@ export async function POST(req: NextRequest) {
         const expectedContentTarget = Math.max(1, Math.min(15, body.slideCount ?? 8));
         const expectedActivityPairs = activityPairsForContentCount(expectedContentTarget);
         const expectedTotalAi = expectedContentTarget + expectedActivityPairs * 2;
-        const audioVideoExtras =
-          (body.includeAudio ? 1 : 0) + (body.includeYouTube ? 1 : 0);
-        const expectedFinalTotal = expectedTotalAi + audioVideoExtras;
+
+        // Reserved mid-deck slots for the audio activity (+ its answer slide)
+        // and the YouTube video. We pin them to fixed final positions starting
+        // at the 3rd slide, stream the AI content slides AROUND those positions,
+        // and emit shimmer placeholders for them up front — so they appear in
+        // place from the start and just fill in last, instead of popping in at
+        // the end and shoving content down.
+        const reserved: { kind: "audio" | "audio-answer" | "video"; index: number }[] = [];
+        {
+          let cursor = Math.min(2, expectedTotalAi); // 3rd slide (index 2), or end on tiny decks
+          if (body.includeAudio) {
+            reserved.push({ kind: "audio", index: cursor++ });
+            reserved.push({ kind: "audio-answer", index: cursor++ });
+          }
+          if (body.includeYouTube) {
+            reserved.push({ kind: "video", index: cursor++ });
+          }
+        }
+        const reservedSet = new Set(reserved.map((r) => r.index));
+        const audioIndex = reserved.find((r) => r.kind === "audio")?.index;
+        const answerIndex = reserved.find((r) => r.kind === "audio-answer")?.index;
+        const videoIndex = reserved.find((r) => r.kind === "video")?.index;
+        // Walks final positions for content slides, skipping the reserved slots.
+        let contentCursor = 0;
+        const nextContentIndex = () => {
+          while (reservedSet.has(contentCursor)) contentCursor++;
+          return contentCursor++;
+        };
+
+        const expectedFinalTotal = expectedTotalAi + reserved.length;
         const extraTitles: string[] = [];
-        if (body.includeAudio) extraTitles.push("Audio activity");
+        if (body.includeAudio) extraTitles.push("Audio activity", "Audio activity — answers");
         if (body.includeYouTube) extraTitles.push("YouTube video");
 
         // Image-fetch helper — kicks off the (up to three) image fetches for
@@ -863,6 +915,39 @@ export async function POST(req: NextRequest) {
               ...extraTitles,
             ],
           });
+          // Reserve the audio/answer/video slots up front so they show shimmer
+          // placeholders at their final positions while content streams in.
+          const palette = theme.palette;
+          for (const r of reserved) {
+            if (r.kind === "audio") {
+              send("audio-placeholder", {
+                index: r.index,
+                slideBg: palette.background,
+                slideTextColor: palette.text,
+                panelBg: palette.accent,
+                panelInk: palette.overlayText,
+                playBg: palette.background,
+                playInk: palette.text,
+                headingFont: theme.fonts.heading,
+              });
+            } else if (r.kind === "audio-answer") {
+              send("audio-answer-placeholder", {
+                index: r.index,
+                slideBg: palette.background,
+                slideTextColor: palette.text,
+                headingFont: theme.fonts.heading,
+              });
+            } else if (r.kind === "video") {
+              send("video-placeholder", {
+                index: r.index,
+                slideBg: palette.background,
+                titleColor: palette.accent,
+                mutedColor: palette.muted,
+                accent: palette.accent,
+                headingFont: theme.fonts.heading,
+              });
+            }
+          }
         };
 
         for await (const chunk of stream) {
@@ -895,30 +980,33 @@ export async function POST(req: NextRequest) {
               }
             }
 
-            const idx = allAi.length;
+            const ordinal = allAi.length;
             allAi.push(ai);
             const spec = buildSpec(ai);
             allSpecs.push(spec);
+            // Final array index for this content slide — skips the reserved
+            // audio/answer/video slots so they stay pinned in place.
+            const finalIdx = nextContentIndex();
 
             // Diagnostic logging on the fly
             const expectsMain = !ai.layout.startsWith("activity-");
             if (expectsMain) {
-              console.log(`[generate-slideshow] slide ${idx} (${ai.layout}) imageQuery="${ai.imageQuery}" → "${spec.imageQuery ?? ""}"`);
+              console.log(`[generate-slideshow] slide ${ordinal}→${finalIdx} (${ai.layout}) imageQuery="${ai.imageQuery}" → "${spec.imageQuery ?? ""}"`);
             }
 
             const slide: SlideJSON = renderSlide(spec, theme);
             slide.skeleton = toSkeleton(spec);
-            if (idx === 0) slide.themeId = theme.id;
+            if (finalIdx === 0) slide.themeId = theme.id;
             send("slide", {
-              index: idx,
+              index: finalIdx,
               total: expectedFinalTotal,
-              contentTotal: expectedTotalAi,
+              contentTotal: expectedFinalTotal,
               slide,
               title: ai.title,
             });
             // Start fetching this slide's image(s) immediately, capped at
             // `imageLimit` concurrent jobs so we don't trip rate limits.
-            imageJobs.push(imageLimit(() => slideJob(spec, idx)));
+            imageJobs.push(imageLimit(() => slideJob(spec, finalIdx)));
           }
         }
 
@@ -929,7 +1017,7 @@ export async function POST(req: NextRequest) {
         // re-send `meta` because the client's meta handler wipes all slides
         // to a single placeholder — it's only safe at the very start. The
         // dedicated `count-correction` handler only updates the progress UI.
-        const finalTotal = allAi.length + audioVideoExtras;
+        const finalTotal = allAi.length + reserved.length;
         if (allAi.length !== expectedTotalAi) {
           send("count-correction", {
             total: finalTotal,
@@ -944,28 +1032,12 @@ export async function POST(req: NextRequest) {
         // wait for any still in flight before generating audio/video.
         await Promise.allSettled(imageJobs);
 
-        // Optional audio activity (one per deck). Generated AFTER all slides
-        // stream in so the user can see the deck while TTS runs in the background.
-        if (body.includeAudio && !closed) {
+        // Optional audio activity. Placeholder was reserved up-front in
+        // sendMetaIfReady at `audioIndex` (the audio activity) and
+        // `answerIndex` (the audio-answer slide). We just generate the data
+        // here and fill those slots.
+        if (body.includeAudio && audioIndex !== undefined && !closed) {
           console.log("[generate-slideshow] includeAudio=true — calling /api/generate-audio");
-          // Send a placeholder slide immediately so the user sees a shimmer
-          // while TTS is running, matching how images appear during generation.
-          const audioPlaceholderId = `s_audio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-          const audioTargetIndex = Math.min(1, parsed.slides.length - 1);
-          send("audio-placeholder", {
-            placeholderId: audioPlaceholderId,
-            targetIndex: audioTargetIndex,
-            // Use the theme's natural background so the audio slide matches
-            // the rest of the deck. The accent-coloured player panel still
-            // pops against it; slide-level text uses palette.text for contrast.
-            slideBg: theme.palette.background,
-            slideTextColor: theme.palette.text,
-            panelBg: theme.palette.accent,
-            panelInk: theme.palette.overlayText,
-            playBg: theme.palette.background,
-            playInk: theme.palette.text,
-            headingFont: theme.fonts.heading,
-          });
           try {
             send("status", { message: "Recording the audio activity..." });
             const audioRes = await fetch(`${req.nextUrl.origin}/api/generate-audio`, {
@@ -991,8 +1063,7 @@ export async function POST(req: NextRequest) {
               // the deck's visual style instead of hardcoded maroon.
               const palette = theme.palette;
               send("audio", {
-                placeholderId: audioPlaceholderId,
-                targetIndex: audioTargetIndex,
+                index: audioIndex,
                 audio: {
                   ...audioData,
                   panelBg: palette.accent,
@@ -1006,6 +1077,20 @@ export async function POST(req: NextRequest) {
                   slideTextColor: palette.text,
                 },
               });
+              // Fill the answer slide right after the activity. Server emits
+              // the data; client builds the slide layout.
+              if (answerIndex !== undefined) {
+                send("audio-answers", {
+                  index: answerIndex,
+                  title: `${audioData.title ?? "Audio activity"} — answers`,
+                  questions: audioData.questions ?? [],
+                  answers: audioData.answers ?? [],
+                  slideBg: palette.background,
+                  slideTextColor: palette.text,
+                  accent: palette.accent,
+                  headingFont: theme.fonts.heading,
+                });
+              }
             } else {
               const err = await audioRes.json().catch(() => ({}));
               console.error("[generate-slideshow] /api/generate-audio failed:", audioRes.status, err);
@@ -1019,22 +1104,10 @@ export async function POST(req: NextRequest) {
           console.log("[generate-slideshow] includeAudio is", body.includeAudio, "— skipping audio");
         }
 
-        // Optional YouTube video. Same pattern as audio: kicks off AFTER text
-        // slides have streamed in. Inserts a new dedicated slide with the video.
-        if (body.includeYouTube && !closed) {
-          const videoPlaceholderId = `s_video_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-          const videoTargetIndex = Math.min(2, specs.length - 1);
-          send("video-placeholder", {
-            placeholderId: videoPlaceholderId,
-            targetIndex: videoTargetIndex,
-            // Same as content slides — single theme background. Heading still
-            // pops in the accent colour; subtitle uses the muted palette.
-            slideBg: theme.palette.background,
-            titleColor: theme.palette.accent,
-            mutedColor: theme.palette.muted,
-            accent: theme.palette.accent,
-            headingFont: theme.fonts.heading,
-          });
+        // Optional YouTube video. Placeholder was reserved up-front in
+        // sendMetaIfReady at `videoIndex`. We just fetch the video data here
+        // and fill that slot.
+        if (body.includeYouTube && videoIndex !== undefined && !closed) {
           try {
             send("status", { message: "Finding a YouTube video..." });
             const ytRes = await fetch(`${req.nextUrl.origin}/api/find-youtube`, {
@@ -1060,8 +1133,7 @@ export async function POST(req: NextRequest) {
                 slideHeading?: string; slideSubtitle?: string;
               } = await ytRes.json();
               send("video", {
-                placeholderId: videoPlaceholderId,
-                targetIndex: videoTargetIndex,
+                index: videoIndex,
                 video: {
                   videoId: yt.videoId,
                   title: yt.title,
