@@ -13,6 +13,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "assembly-planner";
 
 const REFINE_CHIPS = [
   "Make the assembly longer",
@@ -35,6 +39,20 @@ export default function AssemblyPlannerForm({ sidebar }: { sidebar: React.ReactN
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { theme, stageOfSchool, lengthMinutes, additionalNotes };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setTheme((i.theme as string) ?? "");
+    setStageOfSchool((i.stageOfSchool as string) ?? "Primary");
+    setLengthMinutes((i.lengthMinutes as number) ?? 20);
+    setAdditionalNotes((i.additionalNotes as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const canGenerate = theme.trim();
   const formSnapshot = JSON.stringify({ theme, stageOfSchool, lengthMinutes, additionalNotes });
@@ -99,7 +117,7 @@ export default function AssemblyPlannerForm({ sidebar }: { sidebar: React.ReactN
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">{sidebar}<ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} /></div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -156,6 +174,8 @@ export default function AssemblyPlannerForm({ sidebar }: { sidebar: React.ReactN
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="assembly-plan"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: theme || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

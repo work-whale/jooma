@@ -96,6 +96,7 @@ const slideshowSchema = {
                 "paper-image-right-badge",
                 "paper-banner-image-top",
                 "paper-quote",
+                "paper-vocab-grid",
                 "activity-ordering",
                 "activity-ordering-answer",
                 "activity-question",
@@ -465,17 +466,46 @@ function buildPrompt(body: RequestBody): string {
     ? `⚠️ MANDATORY — LEARNING OBJECTIVES SLIDE:
 Slide 2 MUST be a "paper-image-right" or "paper-image-left" content slide dedicated entirely to the deck's learning objectives. This is NON-NEGOTIABLE — do not skip it, do not fold it into another slide.
    · title: a creative title like "What We'll Discover Today" or "Your Learning Journey"
-   · subHook: "By the end of this lesson, you'll be able to…" (or similar forward-looking framing)
-   · body: one short sentence introducing the objectives
-   · bullets: 3–5 short bold-led objective statements, e.g. "**Explain** why gravity holds planets in orbit."
+   · subHook: "By the end of this lesson, you'll be able to:" (or similar forward-looking framing)
+   · body: MUST be empty string "" — no prose introduction
+   · bullets: REQUIRED 3-5 short bold-led objective statements. Each MUST start with a strong action verb wrapped in **bold**, then complete the sentence in plain text. Examples (DO NOT copy these verbatim, use your own topic):
+       "**Describe** the stages of the cell cycle."
+       "**Explain** why mitosis is essential for growth and repair."
+       "**Identify** the key features of each phase of mitosis."
+       "**Understand** how genetically identical daughter cells are produced."
    · imageQuery: an image that represents learning or discovery for the topic
-   · calloutVariant: "key", calloutBody: a one-sentence motivating summary of the session`
+   · calloutVariant: "key", calloutBody: a one-sentence motivating summary of the session
+
+DO NOT leave bullets empty. DO NOT put the objectives in body. This slide's WHOLE PURPOSE is the bulleted list of objectives.`
     : "";
   const curatedVocab = (body.vocabulary ?? []).map((t) => t.trim()).filter(Boolean);
+  // When includeVocab is on, the deck MUST emit a "paper-vocab-grid" slide.
+  // The layout overloads existing fields to avoid schema bloat:
+  //   activityItems[0..2] = 3 terms (one per column)
+  //   bullets[0..2]       = 3 definitions (paired by index)
+  //   imageQuery          = column 1 image (the first term)
+  //   secondaryImageQuery = column 2 image (the second term)
+  //   activityImageQuery  = column 3 image (the third term)
   const vocabLine = body.includeVocab
     ? curatedVocab.length > 0
-      ? `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition. Use EXACTLY these terms the teacher selected (define each one): ${curatedVocab.join(", ")}.`
-      : `- Somewhere in the first half of the deck, include a content slide that introduces the deck's key vocabulary. Use bullets where each item is **TERM**: short definition.`
+      ? `⚠️ MANDATORY — KEY VOCABULARY SLIDE:
+The deck MUST include EXACTLY ONE slide with layout "paper-vocab-grid", placed in the first half of the deck (typically slide 3). It is a 3-column visual vocabulary grid. The teacher has selected these terms: ${curatedVocab.join(", ")}. Pick the THREE most essential and use them — if more than 3 were given, pick the top 3 by centrality to the topic.
+   · title: "Key Vocabulary" (or topic-flavoured like "Words to Know" / "Essential Vocabulary")
+   · activityItems: EXACTLY 3 strings — the three terms, in the order they'll appear in the columns.
+   · bullets: EXACTLY 3 strings — the three definitions, paired by index with activityItems. Each definition is ONE short sentence (≤ 14 words). Plain text, no **bold** markers.
+   · imageQuery: 2-4 concrete nouns that depict activityItems[0] (column 1).
+   · secondaryImageQuery: 2-4 concrete nouns that depict activityItems[1] (column 2).
+   · activityImageQuery: 2-4 concrete nouns that depict activityItems[2] (column 3).
+   · body, subHook, bulletsLeadIn, callout*, badge*, blockquote*, activityKind, activityCorrectOrder, secondaryBody, subtitle — all empty/empty-array.
+This is NON-NEGOTIABLE. Do NOT introduce vocabulary inline on other slides — the grid is the deck's vocabulary moment.`
+      : `⚠️ MANDATORY — KEY VOCABULARY SLIDE:
+The deck MUST include EXACTLY ONE slide with layout "paper-vocab-grid", placed in the first half of the deck (typically slide 3). It is a 3-column visual vocabulary grid. Pick the THREE most essential terms students need to understand the topic.
+   · title: "Key Vocabulary" (or topic-flavoured like "Words to Know" / "Essential Vocabulary")
+   · activityItems: EXACTLY 3 strings — the three terms.
+   · bullets: EXACTLY 3 strings — the three definitions, paired by index. Each definition is ONE short sentence (≤ 14 words). Plain text, no **bold** markers.
+   · imageQuery / secondaryImageQuery / activityImageQuery: 2-4 concrete nouns depicting the 3 terms in order (column 1, 2, 3).
+   · body, subHook, bulletsLeadIn, callout*, badge*, blockquote*, activityKind, activityCorrectOrder, secondaryBody, subtitle — all empty/empty-array.
+This is NON-NEGOTIABLE. Do NOT introduce vocabulary inline on other slides — the grid is the deck's vocabulary moment.`
     : "";
 
   // Deck spine description varies with activityPairs to avoid telling the AI
@@ -507,6 +537,7 @@ ${objectivesLine ? `2.   LEARNING OBJECTIVES SLIDE — see mandatory spec below.
      · "paper-two-images"           — heading + intro text on top; TWO image+paragraph cells below. imageQuery AND secondaryImageQuery REQUIRED.
      · "paper-image-right-badge"    — heading + brown BADGE + body + bullets, with image RIGHT. imageQuery AND badgeText REQUIRED.
      · "paper-banner-image-top"     — wide banner PHOTO across the top + heading + numbered list below. imageQuery REQUIRED.
+     · "paper-vocab-grid"           — 3-COLUMN key-vocabulary grid (image + bold term + definition per column). ONLY used when explicitly required by the KEY VOCABULARY SLIDE block below. imageQuery + secondaryImageQuery + activityImageQuery ALL REQUIRED (one per column).
 LAST content slide — "paper-quote" — a perspective shift: zoom out from the topic and end with an italic attributed quote (Carl Sagan for cosmology, Darwin for biology, an inventor for technology). imageQuery REQUIRED for the right-side image. blockquoteText AND blockquoteAttribution REQUIRED.
 
 ${activityDirective}
@@ -607,6 +638,7 @@ Per-layout requirements (FAILURE TO COMPLY IS A BUG):
 - paper-banner-image-top        → imageQuery REQUIRED (wide banner photo).
 - paper-quote                   → imageQuery REQUIRED (the right-side image).
 - paper-two-images              → imageQuery REQUIRED (LEFT cell image) AND secondaryImageQuery REQUIRED (RIGHT cell image).
+- paper-vocab-grid              → imageQuery REQUIRED (col 1) AND secondaryImageQuery REQUIRED (col 2) AND activityImageQuery REQUIRED (col 3). Each query depicts ITS column's term, not the slide title.
 - activity-question             → activityImageQuery REQUIRED (the photo inside the speech bubble). imageQuery may be empty.
 - activity-question-answer      → both image queries empty.
 - activity-ordering             → both image queries empty.
@@ -711,6 +743,7 @@ export async function POST(req: NextRequest) {
           "paper-banner-image-top",
           "paper-quote",
           "paper-two-images",
+          "paper-vocab-grid",
         ]);
         const synthQuery = (slideTitle: string) => {
           const cleaned = (slideTitle || body.topic)
@@ -722,17 +755,28 @@ export async function POST(req: NextRequest) {
         const buildSpec = (s: AISlideSpec): SlideSpec => {
           const isTwoImages = s.layout === "paper-two-images";
           const isActivityQuestion = s.layout === "activity-question";
+          const isVocabGrid = s.layout === "paper-vocab-grid";
           const aiQuery = s.imageQuery?.trim();
+          // Vocab-grid needs all 3 image queries; if any is missing, synth from
+          // the matching term (more specific than the slide title for column 2/3).
+          const vocabTerms = isVocabGrid ? (s.activityItems ?? []) : [];
+          const vocabTermFor = (i: number) => (vocabTerms[i] || "").trim();
           const finalImageQuery = imageRequiredLayouts.has(s.layout) && !aiQuery
-            ? synthQuery(s.title)
+            ? (isVocabGrid && vocabTermFor(0)
+                ? `${body.topic.toLowerCase()} ${vocabTermFor(0)}`.slice(0, 80)
+                : synthQuery(s.title))
             : aiQuery || undefined;
           const aiActivityQuery = s.activityImageQuery?.trim();
-          const finalActivityImageQuery = isActivityQuestion && !aiActivityQuery
-            ? synthQuery(s.title)
+          const finalActivityImageQuery = (isActivityQuestion || isVocabGrid) && !aiActivityQuery
+            ? (isVocabGrid && vocabTermFor(2)
+                ? `${body.topic.toLowerCase()} ${vocabTermFor(2)}`.slice(0, 80)
+                : synthQuery(s.title))
             : aiActivityQuery || undefined;
           const aiSecondaryQuery = s.secondaryImageQuery?.trim();
-          const finalSecondaryImageQuery = isTwoImages && !aiSecondaryQuery
-            ? synthQuery(s.title)
+          const finalSecondaryImageQuery = (isTwoImages || isVocabGrid) && !aiSecondaryQuery
+            ? (isVocabGrid && vocabTermFor(1)
+                ? `${body.topic.toLowerCase()} ${vocabTermFor(1)}`.slice(0, 80)
+                : synthQuery(s.title))
             : aiSecondaryQuery || undefined;
           return {
             layout: s.layout,
@@ -1071,10 +1115,15 @@ export async function POST(req: NextRequest) {
                   playBg: palette.background,
                   playInk: palette.text,
                   headingFont: theme.fonts.heading,
+                  bodyFont: theme.fonts.body,
                   // Match the rest of the deck's background. Slide-level
                   // headings/desc/questions use slideTextColor for contrast.
                   slideBg: palette.background,
                   slideTextColor: palette.text,
+                  // Title colour — the themed heading colour so the audio
+                  // slide title reads like every other paper-* slide instead
+                  // of a giant black uppercase block.
+                  headingColor: palette.headingColor ?? palette.accent,
                 },
               });
               // Fill the answer slide right after the activity. Server emits
@@ -1088,7 +1137,11 @@ export async function POST(req: NextRequest) {
                   slideBg: palette.background,
                   slideTextColor: palette.text,
                   accent: palette.accent,
+                  headingColor: palette.headingColor ?? palette.accent,
+                  checkBadgeBg: palette.checkBadgeBg ?? "#2e9d54",
+                  checkBadgeInk: palette.checkBadgeInk ?? "#ffffff",
                   headingFont: theme.fonts.heading,
+                  bodyFont: theme.fonts.body,
                 });
               }
             } else {
@@ -1134,6 +1187,10 @@ export async function POST(req: NextRequest) {
               } = await ytRes.json();
               send("video", {
                 index: videoIndex,
+                // Title colour for the YouTube slide — matches paper-* slide
+                // headings instead of cream-on-dark.
+                headingColor: theme.palette.headingColor ?? theme.palette.accent,
+                bodyFont: theme.fonts.body,
                 video: {
                   videoId: yt.videoId,
                   title: yt.title,

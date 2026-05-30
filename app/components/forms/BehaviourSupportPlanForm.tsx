@@ -20,6 +20,10 @@ import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "behaviour-support-plan";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -55,12 +59,36 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
   const canGenerate = curriculum.trim() && resolvedYearGroup.trim() && studentName.trim() &&
     behaviourDescription.trim() && behaviouralTriggers.trim();
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, studentName, studentGender, studentClass, supportNeeds, keyStaff, behaviourDescription, behaviouralTriggers, behaviouralPatterns, strengths, dislikes, previousInterventions, planStartDate, reviewDate });
+  const formState = { curriculum, yearGroup, mixed, studentName, studentGender, studentClass, supportNeeds, keyStaff, behaviourDescription, behaviouralTriggers, behaviouralPatterns, strengths, dislikes, previousInterventions, planStartDate, reviewDate };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setStudentName((i.studentName as string) ?? "");
+    setStudentGender((i.studentGender as string) ?? "Male");
+    setStudentClass((i.studentClass as string) ?? "");
+    setSupportNeeds((i.supportNeeds as string) ?? "");
+    setKeyStaff((i.keyStaff as string) ?? "");
+    setBehaviourDescription((i.behaviourDescription as string) ?? "");
+    setBehaviouralTriggers((i.behaviouralTriggers as string) ?? "");
+    setBehaviouralPatterns((i.behaviouralPatterns as string) ?? "");
+    setStrengths((i.strengths as string) ?? "");
+    setDislikes((i.dislikes as string) ?? "");
+    setPreviousInterventions((i.previousInterventions as string) ?? "");
+    setPlanStartDate((i.planStartDate as string) ?? "");
+    setReviewDate((i.reviewDate as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const streamResponse = async (body: object, onChunk: (c: string) => void) => {
     const res = await fetch("/api/behaviour-support-plan", {
@@ -120,7 +148,10 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -252,6 +283,8 @@ export default function BehaviourSupportPlanForm({ sidebar }: { sidebar: React.R
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`bsp-${studentName.toLowerCase().replace(/\s+/g, "-") || "student"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: studentName || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

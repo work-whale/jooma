@@ -10,6 +10,10 @@ import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 import { toTitleCase } from "@/app/lib/formOptions";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import { saveToolRun, type ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "lesson-slideshow";
 
 interface LessonSlideData {
   type: "title" | "content" | "two-column" | "activity" | "key-fact";
@@ -618,6 +622,41 @@ export default function LessonSlideshowForm({ sidebar }: { sidebar: React.ReactN
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState("");
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { curriculum, yearGroup, mixed, subject, topic, slideCount, additionalContext, includeImageSuggestions };
+
+  // Slides are a structured array, not markdown — store as JSON text.
+  const persist = (s: LessonSlideData[]) => {
+    if (!s.length) return;
+    saveToolRun({
+      toolSlug: TOOL_SLUG,
+      title: topic || subject || null,
+      input: formState,
+      output: JSON.stringify(s),
+    })
+      .then(() => setHistoryKey((k) => k + 1))
+      .catch(() => {});
+  };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setTopic((i.topic as string) ?? "");
+    setSlideCount((i.slideCount as number) ?? 8);
+    setAdditionalContext((i.additionalContext as string) ?? "");
+    setIncludeImageSuggestions(i.includeImageSuggestions === undefined ? true : Boolean(i.includeImageSuggestions));
+    try {
+      setSlides(JSON.parse(run.output) as LessonSlideData[]);
+    } catch {
+      setSlides(null);
+    }
+    setLastGenerated(JSON.stringify({ topic: i.topic, subject: i.subject, yearGroup: i.yearGroup, mixed: i.mixed, slideCount: i.slideCount, additionalContext: i.additionalContext, includeImageSuggestions: i.includeImageSuggestions }));
+  };
 
   const userScrolledUp = useRef(false);
   const isGeneratingRef = useRef(false);
@@ -674,6 +713,7 @@ export default function LessonSlideshowForm({ sidebar }: { sidebar: React.ReactN
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      const collected: LessonSlideData[] = [];
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -683,14 +723,23 @@ export default function LessonSlideshowForm({ sidebar }: { sidebar: React.ReactN
         for (const line of lines) {
           const trimmed = line.trim();
           if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-            try { setSlides((prev) => [...(prev ?? []), JSON.parse(trimmed) as LessonSlideData]); } catch { /* skip */ }
+            try {
+              const slide = JSON.parse(trimmed) as LessonSlideData;
+              collected.push(slide);
+              setSlides((prev) => [...(prev ?? []), slide]);
+            } catch { /* skip */ }
           }
         }
       }
       const remaining = buffer.trim();
       if (remaining.startsWith("{") && remaining.endsWith("}")) {
-        try { setSlides((prev) => [...(prev ?? []), JSON.parse(remaining) as LessonSlideData]); } catch { /* skip */ }
+        try {
+          const slide = JSON.parse(remaining) as LessonSlideData;
+          collected.push(slide);
+          setSlides((prev) => [...(prev ?? []), slide]);
+        } catch { /* skip */ }
       }
+      persist(collected);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setSlides(null);
@@ -711,6 +760,7 @@ export default function LessonSlideshowForm({ sidebar }: { sidebar: React.ReactN
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Refinement failed");
       setSlides(data.slides);
+      persist(data.slides);
     } catch { /* silent */ } finally {
       setIsRefining(false);
       setRefineInstruction("");
@@ -729,7 +779,10 @@ export default function LessonSlideshowForm({ sidebar }: { sidebar: React.ReactN
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
         <div className="lg:col-span-2">
           <Card className="space-y-6">
 

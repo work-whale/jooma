@@ -15,6 +15,10 @@ import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "performance-management";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -37,10 +41,23 @@ export default function PerformanceManagementForm({ sidebar }: { sidebar: React.
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && staffMember.trim() && responsibilities.trim();
-  const formSnapshot = JSON.stringify({ curriculum, schoolType, staffMember, payScale, responsibilities });
+  const formState = { curriculum, schoolType, staffMember, payScale, responsibilities };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setSchoolType((i.schoolType as string) ?? "");
+    setStaffMember((i.staffMember as string) ?? "");
+    setPayScale((i.payScale as string) ?? "");
+    setResponsibilities((i.responsibilities as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -101,7 +118,10 @@ export default function PerformanceManagementForm({ sidebar }: { sidebar: React.
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -161,6 +181,8 @@ export default function PerformanceManagementForm({ sidebar }: { sidebar: React.
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="performance-management-targets"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: staffMember || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Eye, EyeOff, Info } from "lucide-react";
+import { createClient } from "@/app/lib/auth/client";
 
 export default function CreatePasswordPage() {
   const router = useRouter();
@@ -11,6 +12,8 @@ export default function CreatePasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const rules = {
     length: password.length >= 8,
@@ -20,7 +23,48 @@ export default function CreatePasswordPage() {
   };
   const meetsRules = Object.values(rules).every(Boolean);
   const matches = password.length > 0 && password === confirm;
-  const canSubmit = meetsRules && matches;
+  const canSubmit = meetsRules && matches && !loading;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setError(null);
+    setLoading(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      // Already signed in (e.g. via Google) — just attach a password.
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        setError("Could not set your password. Please try again.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Email sign-up: create the account now. Requires "Confirm email" to be
+      // OFF in Supabase so the session is active immediately (no email yet).
+      const email = sessionStorage.getItem("jooma:auth-email");
+      if (!email) {
+        setError("Your session expired. Please sign up again.");
+        setLoading(false);
+        return;
+      }
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setError(
+          error.message.includes("already")
+            ? "An account with this email already exists. Try signing in."
+            : "Could not create your account. Please try again.",
+        );
+        setLoading(false);
+        return;
+      }
+    }
+    router.push("/complete-profile");
+  };
 
   return (
     <div className="min-h-screen p-6 flex" style={{ backgroundColor: "#F1EFE3" }}>
@@ -57,13 +101,7 @@ export default function CreatePasswordPage() {
               </p>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!canSubmit) return;
-                router.push("/complete-profile");
-              }}
-            >
+            <form onSubmit={handleSubmit}>
               <div>
                 <label
                   htmlFor="password"
@@ -100,13 +138,17 @@ export default function CreatePasswordPage() {
                 />
               </div>
 
+              {error && (
+                <p className="mt-6 text-center text-sm text-red-600 font-light">{error}</p>
+              )}
+
               <div className="mt-8 flex justify-center">
                 <button
                   type="submit"
                   disabled={!canSubmit}
                   className="px-10 py-3 rounded-xl text-sm font-medium text-white transition-colors disabled:bg-[#F1EFE3] disabled:text-[#A5A5A5] disabled:cursor-default bg-[#030303] hover:bg-black"
                 >
-                  Submit
+                  {loading ? "Saving…" : "Submit"}
                 </button>
               </div>
             </form>

@@ -12,6 +12,10 @@ import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "eyfs-action-plan";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -32,10 +36,20 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && objective.trim();
-  const formSnapshot = JSON.stringify({ curriculum, objective });
+  const formState = { curriculum, objective };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setObjective((i.objective as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -96,7 +110,10 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -145,6 +162,8 @@ export default function EYFSActionPlanForm({ sidebar }: { sidebar: React.ReactNo
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="eyfs-action-plan"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: objective || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

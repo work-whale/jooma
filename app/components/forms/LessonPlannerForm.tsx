@@ -11,6 +11,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import LessonPlannerNav from "@/app/components/LessonPlannerNav";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "lesson-planner";
 
 export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNode }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
@@ -27,12 +31,30 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate =
     curriculum && (mixed || yearGroup) && subject.trim() && topic.trim() && learningObjective.trim();
 
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, topic, learningObjective, abilityLevel, outputDetail, additionalInfo });
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { curriculum, yearGroup, mixed, subject, topic, learningObjective, abilityLevel, outputDetail, additionalInfo };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setTopic((i.topic as string) ?? "");
+    setLearningObjective((i.learningObjective as string) ?? "");
+    setAbilityLevel((i.abilityLevel as string) ?? "EXS");
+    setOutputDetail((i.outputDetail as OutputDetail) ?? "detailed");
+    setAdditionalInfo((i.additionalInfo as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -79,6 +101,7 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
           {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
         </div>
 
         <div className="lg:col-span-2">
@@ -156,6 +179,8 @@ export default function LessonPlannerForm({ sidebar }: { sidebar: React.ReactNod
             onChange={(md) => setResult(md)}
             exportFilename={`lesson-plan-${topic || subject || "export"}`}
             maxWidth={false}
+            historyMeta={{ toolSlug: TOOL_SLUG, title: topic || subject || null, input: formState }}
+            onSaved={() => setHistoryKey((k) => k + 1)}
           />
         </div>
       </div>

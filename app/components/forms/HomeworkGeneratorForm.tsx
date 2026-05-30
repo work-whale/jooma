@@ -11,6 +11,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "homework-generator";
 
 const HOMEWORK_TYPES = [
   "Worksheet-style questions",
@@ -74,6 +78,7 @@ export default function HomeworkGeneratorForm({ sidebar }: { sidebar: React.Reac
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate =
     curriculum &&
@@ -83,12 +88,33 @@ export default function HomeworkGeneratorForm({ sidebar }: { sidebar: React.Reac
     homeworkType &&
     length;
 
-  const formSnapshot = JSON.stringify({
+  const formState = {
     curriculum, yearGroup, mixed, subject, learningObjective, abilityLevel,
     questionTypes, questionCounts, homeworkType, length, includeAnswers,
     additionalInstructions, lessonContent, imageBase64,
-  });
+  };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setLearningObjective((i.learningObjective as string) ?? "");
+    setAbilityLevel((i.abilityLevel as string) ?? "EXS");
+    setQuestionTypes((i.questionTypes as string[]) ?? []);
+    setQuestionCounts((i.questionCounts as Record<string, number>) ?? {});
+    setHomeworkType((i.homeworkType as string) ?? "");
+    setLength((i.length as string) ?? "");
+    setIncludeAnswers((i.includeAnswers as "yes" | "no") ?? "no");
+    setAdditionalInstructions((i.additionalInstructions as string) ?? "");
+    setLessonContent((i.lessonContent as string) ?? "");
+    setImageBase64((i.imageBase64 as string) ?? null);
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleImageFile = (file: File) => {
     setImageFile(file);
@@ -175,7 +201,10 @@ export default function HomeworkGeneratorForm({ sidebar }: { sidebar: React.Reac
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -386,6 +415,8 @@ export default function HomeworkGeneratorForm({ sidebar }: { sidebar: React.Reac
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`homework-${subject || "export"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

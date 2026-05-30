@@ -5,6 +5,7 @@ import { Loader2, Copy, Check, FileText, FileDown } from "lucide-react";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import { exportToDocx, buildPdfHtml } from "@/app/lib/exportUtils";
+import { saveToolRun } from "@/app/lib/toolRuns";
 
 interface ResultPanelProps {
   result: string | null;
@@ -13,6 +14,10 @@ interface ResultPanelProps {
   onChange: (md: string) => void;
   exportFilename?: string;
   maxWidth?: boolean;
+  /** When set, each completed generation/refine is saved to tool history. */
+  historyMeta?: { toolSlug: string; title?: string | null; input: Record<string, unknown> };
+  /** Called after a run is successfully saved (to refresh the history list). */
+  onSaved?: () => void;
 }
 
 export default function ResultPanel({
@@ -22,6 +27,8 @@ export default function ResultPanel({
   onChange,
   exportFilename = "export",
   maxWidth = true,
+  historyMeta,
+  onSaved,
 }: ResultPanelProps) {
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState<"docx" | "pdf" | null>(null);
@@ -62,6 +69,29 @@ export default function ResultPanel({
       window.scrollTo({ top: document.documentElement.scrollHeight });
     }
   }, [result, isBusy]);
+
+  // Save to tool history once a generation/refine completes (busy -> idle with a
+  // non-empty result). Refs keep the latest meta without re-firing the effect,
+  // and lastSavedRef dedupes against re-renders. A restore sets `result`
+  // without toggling busy, so it never triggers a save.
+  const wasBusyRef = useRef(isBusy);
+  const lastSavedRef = useRef<string | null>(null);
+  const historyMetaRef = useRef(historyMeta);
+  const onSavedRef = useRef(onSaved);
+  historyMetaRef.current = historyMeta;
+  onSavedRef.current = onSaved;
+  useEffect(() => {
+    const wasBusy = wasBusyRef.current;
+    wasBusyRef.current = isBusy;
+    if (!wasBusy || isBusy) return; // only on the busy -> idle edge
+    const meta = historyMetaRef.current;
+    if (!meta || !result || result.trim() === "") return;
+    if (lastSavedRef.current === result) return;
+    lastSavedRef.current = result;
+    saveToolRun({ toolSlug: meta.toolSlug, title: meta.title, input: meta.input, output: result })
+      .then(() => onSavedRef.current?.())
+      .catch(() => { lastSavedRef.current = null; });
+  }, [isBusy, result]);
 
   if (result === null) return null;
 

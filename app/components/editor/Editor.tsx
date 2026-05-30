@@ -2559,17 +2559,19 @@ export default function Editor({ presentation, generationParams }: Props) {
                 titleColor?: string;
                 mutedColor?: string;
                 accent?: string;
+                headingColor?: string;
                 headingFont?: string;
+                bodyFont?: string;
               };
               setSlides((prev) => {
-                // Dedicated scene-styled slide for the YouTube video. Mirrors
-                // the audio activity layout: dramatic background, large title
-                // in the theme accent, cream subtitle, and a rounded 16:9
-                // player centered with side margins.
-                const titleColor = p.titleColor ?? "#FFE8C8";
-                const subtitleColor = p.mutedColor ?? "#ffffff";
+                // Title styled like every other paper-* slide: theme heading
+                // colour, normal title-case, 40pt — no more giant uppercase
+                // "WATCH: ..." block that sticks out from the rest of the deck.
+                const titleColor = p.headingColor ?? p.titleColor ?? "#1a1a1a";
+                const subtitleColor = p.mutedColor ?? "#1a1a1a";
                 const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
-                const heading = (p.video.slideHeading ?? `WATCH: ${p.video.title}`).toUpperCase();
+                const bodyFont = p.bodyFont ?? "'Inter', sans-serif";
+                const heading = p.video.slideHeading ?? p.video.title ?? "Watch this together";
                 const subtitle = p.video.slideSubtitle ?? "Let's watch this together to deepen our understanding.";
 
                 // Measure each text block at its width so wrapped headings
@@ -2577,8 +2579,8 @@ export default function Editor({ presentation, generationParams }: Props) {
                 // instead of overlapping. Mirrors the canvas measurement used
                 // by textBbox / hit-testing.
                 const blockWidth = SLIDE_W - 160;
-                const titleFontSize = 56;
-                const titleLH = 1.1;
+                const titleFontSize = 40;
+                const titleLH = 1.15;
                 const subtitleFontSize = 22;
                 const subtitleLH = 1.3;
                 const titleLines = measureTextLines(
@@ -2586,14 +2588,14 @@ export default function Editor({ presentation, generationParams }: Props) {
                 );
                 const titleH = titleFontSize * titleLH * titleLines;
                 const subtitleLines = measureTextLines(
-                  subtitle, blockWidth, subtitleFontSize, "500", "normal", "'Inter', sans-serif",
+                  subtitle, blockWidth, subtitleFontSize, "500", "normal", bodyFont,
                 );
                 const subtitleH = subtitleFontSize * subtitleLH * subtitleLines;
 
-                const titleY = 60;
-                const subtitleGap = 16;
+                const titleY = 80;
+                const subtitleGap = 14;
                 const subtitleY = titleY + titleH + subtitleGap;
-                const videoGap = 32;
+                const videoGap = 28;
                 const vidTop = Math.round(subtitleY + subtitleH + videoGap);
 
                 const titleText: TextObject = {
@@ -2613,7 +2615,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                   text: subtitle,
                   fontSize: subtitleFontSize, fontWeight: "500",
                   fontStyle: "normal", underline: false,
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: bodyFont,
                   color: subtitleColor,
                   textAlign: "left",
                   lineHeight: subtitleLH,
@@ -2793,8 +2795,10 @@ export default function Editor({ presentation, generationParams }: Props) {
                   panelBg?: string; panelInk?: string;
                   playBg?: string; playInk?: string;
                   headingFont?: string;
+                  bodyFont?: string;
                   slideBg?: string;
                   slideTextColor?: string;
+                  headingColor?: string;
                 };
               };
               setSlides((prev) => {
@@ -2805,14 +2809,19 @@ export default function Editor({ presentation, generationParams }: Props) {
                 // Slide texts use slideTextColor (palette.text) so they read
                 // against the natural theme bg. Panel internals (player bar)
                 // still use panelInk because they sit on the accent panel.
-                const titleColor = p.audio.slideTextColor ?? p.audio.panelInk ?? "#1a1a2e";
+                const titleColor = p.audio.headingColor ?? p.audio.slideTextColor ?? "#1a1a2e";
+                const bodyColor = p.audio.slideTextColor ?? "#1a1a2e";
                 const headingFont = p.audio.headingFont ?? "'Bricolage Grotesque', sans-serif";
+                const bodyFont = p.audio.bodyFont ?? "'Inter', sans-serif";
 
+                // Title styled like every other paper-* slide: theme heading
+                // colour, normal title-case, 44pt — no more giant 56pt black
+                // uppercase that sticks out from the rest of the deck.
                 const titleText: TextObject = {
                   id: newId("t"),
-                  x: 80, y: 60, width: SLIDE_W - 160,
-                  text: (p.audio.title || "Audio Activity").toUpperCase(),
-                  fontSize: 56, fontWeight: "800",
+                  x: 80, y: 80, width: SLIDE_W - 160,
+                  text: p.audio.title || "Audio Activity",
+                  fontSize: 44, fontWeight: "800",
                   fontStyle: "normal", underline: false,
                   fontFamily: headingFont,
                   color: titleColor,
@@ -2820,12 +2829,12 @@ export default function Editor({ presentation, generationParams }: Props) {
                 };
                 const descText: TextObject = {
                   id: newId("t"),
-                  x: 80, y: 144, width: SLIDE_W - 160,
+                  x: 80, y: 150, width: SLIDE_W - 160,
                   text: p.audio.description || "Listen to the audio and answer the questions.",
                   fontSize: 22, fontWeight: "500",
                   fontStyle: "normal", underline: false,
-                  fontFamily: "'Inter', sans-serif",
-                  color: titleColor,
+                  fontFamily: bodyFont,
+                  color: bodyColor,
                   textAlign: "left",
                 };
 
@@ -2857,8 +2866,8 @@ export default function Editor({ presentation, generationParams }: Props) {
                   text: (p.audio.questions ?? []).join("\n"),
                   fontSize: 22, fontWeight: "500",
                   fontStyle: "normal", underline: false,
-                  fontFamily: "'Inter', sans-serif",
-                  color: titleColor,
+                  fontFamily: bodyFont,
+                  color: bodyColor,
                   textAlign: "left",
                   listType: "number",
                 } : null;
@@ -2891,17 +2900,23 @@ export default function Editor({ presentation, generationParams }: Props) {
                 slideBg?: string;
                 slideTextColor?: string;
                 accent?: string;
+                headingColor?: string;
+                checkBadgeBg?: string;
+                checkBadgeInk?: string;
                 headingFont?: string;
+                bodyFont?: string;
               };
               setSlides((prev) => {
                 // Build a "Q: ... / A: ..." paired list. We render each as one
                 // long text element so the teacher can edit any line and the
                 // toolbar's lists work naturally.
-                const titleColor = p.slideTextColor ?? "#1a1a1a";
+                const titleColor = p.headingColor ?? p.slideTextColor ?? "#1a1a1a";
+                const bodyColor = p.slideTextColor ?? "#1a1a1a";
                 const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
+                const bodyFont = p.bodyFont ?? "'Inter', sans-serif";
                 const titleText: TextObject = {
                   id: newId("t"),
-                  x: 80, y: 60, width: SLIDE_W - 160,
+                  x: 80, y: 80, width: SLIDE_W - 240,
                   text: p.title || "Audio activity — answers",
                   fontSize: 44, fontWeight: "800",
                   fontStyle: "normal", underline: false,
@@ -2915,19 +2930,47 @@ export default function Editor({ presentation, generationParams }: Props) {
                 }).join("\n\n");
                 const answersText: TextObject = {
                   id: newId("t"),
-                  x: 80, y: 150, width: SLIDE_W - 160,
+                  x: 80, y: 170, width: SLIDE_W - 160,
                   text: pairs || "Answers unavailable.",
                   fontSize: 20, fontWeight: "500",
                   fontStyle: "normal", underline: false,
-                  fontFamily: "'Inter', sans-serif",
-                  color: titleColor,
+                  fontFamily: bodyFont,
+                  color: bodyColor,
                   textAlign: "left",
+                };
+                // Green ✓ badge in the top-right — same visual cue the
+                // activity-ordering-answer slide uses, so the deck reads
+                // consistently as "this is an answers slide".
+                const badgeSize = 56;
+                const badgeX = SLIDE_W - 60 - badgeSize;
+                const badgeY = 60;
+                const checkBadge: ShapeObject = {
+                  id: newId("sh"),
+                  type: "rect",
+                  x: badgeX, y: badgeY, width: badgeSize, height: badgeSize,
+                  fill: p.checkBadgeBg ?? "#2e9d54",
+                  stroke: "transparent",
+                  strokeWidth: 0,
+                  opacity: 1,
+                  cornerRadius: 10,
+                  shadow: true,
+                };
+                const checkGlyph: TextObject = {
+                  id: newId("t"),
+                  x: badgeX, y: badgeY + (badgeSize - 36) / 2,
+                  width: badgeSize,
+                  text: "✓",
+                  fontSize: 36, fontWeight: "900",
+                  fontStyle: "normal", underline: false,
+                  fontFamily: headingFont,
+                  color: p.checkBadgeInk ?? "#ffffff",
+                  textAlign: "center",
                 };
                 const placeholderId = prev[p.index]?.id ?? newId("s");
                 const realSlide: SlideState = {
                   id: placeholderId,
-                  shapes: [], images: [], audios: [], videos: [],
-                  texts: [titleText, answersText],
+                  shapes: [checkBadge], images: [], audios: [], videos: [],
+                  texts: [titleText, answersText, checkGlyph],
                   background: p.slideBg ?? "#ffffff",
                 };
                 const next = prev.slice();

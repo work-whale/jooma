@@ -42,6 +42,10 @@ export type SlideLayout =
   | "paper-image-right-badge"
   | "paper-banner-image-top"
   | "paper-quote"
+  // 3-column key-vocabulary grid (image + bold term + definition per column).
+  // Used when the deck includes vocabulary — replaces the old bullet-list
+  // approach and matches the competitor's "Key Vocabulary" slide.
+  | "paper-vocab-grid"
   | "activity-ordering"
   | "activity-ordering-answer"
   | "activity-question"
@@ -717,6 +721,25 @@ function calloutVariantEmoji(variant: CalloutObject["variant"]): string {
   return "🔑";
 }
 
+/** Estimates the rendered height of the callout the spec would produce —
+ *  needed by the paper renderers to reserve space at the bottom of the card
+ *  BEFORE positioning bullets/body. Returns 0 if there's no callout. The
+ *  math mirrors `splitCalloutFromSpec` exactly so the reservation matches
+ *  what the splitter actually emits. */
+function estimateCalloutHeight(spec: SlideSpec, width: number, bodyFontSize: number = 18): number {
+  const v = spec.calloutVariant;
+  if (!v || (v !== "key" && v !== "remember" && v !== "fun")) return 0;
+  const body = spec.calloutBody?.trim();
+  if (!body) return 0;
+  const padding = 18;
+  const emojiCol = 36;
+  const innerW = width - padding * 2;
+  const bodyTextW = innerW - emojiCol - 8;
+  const labelLH = 20 * 1.2;
+  const bodyTextH = textHeight(body, bodyTextW, bodyFontSize);
+  return padding + labelLH + 4 + bodyTextH + padding;
+}
+
 /** Splits a callout into its constituent design parts (rounded background
  *  Shape + emoji+label TextObject + body TextObject) so the teacher can
  *  drag/recolour/edit each independently. Returns null when the spec
@@ -855,17 +878,50 @@ function renderPaperImageRight(spec: SlideSpec, t: Theme): SlideJSON {
   const subHookY = titleY + titleH + GAP_TITLE_TO_HOOK;
   const subHookH = spec.subHook ? textHeight(spec.subHook, colW, 22) : 0;
   const bodyY = (spec.subHook ? subHookY + subHookH + GAP_HOOK_TO_BODY : titleY + titleH + GAP_TITLE_TO_HOOK);
-  const bodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
-  // Reserve 120px for callout + 60px bottom margin; body clips to that budget.
-  const bodyClipH = Math.max(40, SLIDE_H - bodyY - GAP_BODY_TO_REST - 120 - 60);
-  const calloutY = bodyY + Math.min(bodyH, bodyClipH) + GAP_BODY_TO_REST;
-  const calloutParts = splitCalloutFromSpec(spec, 80, calloutY, colW);
+
+  // Fit-to-card: paper card ends at y=700, keep a 20px bottom margin.
+  // Reserve space for the callout up-front so body+bullets never push it off.
+  const CARD_BOTTOM = 680;
+  const calloutH = estimateCalloutHeight(spec, colW);
+  const calloutGap = calloutH > 0 ? 24 : 0;
+  const contentMaxY = CARD_BOTTOM - calloutH - calloutGap;
+
+  const bullets = (spec.bullets ?? []).slice(0, 5);
+  const bulletsText = bullets.join("\n");
+  const naturalBodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
+  // When both body AND bullets exist, cap body at half the remaining area so
+  // bullets always have room. When only body exists, body gets the lot.
+  const availForContent = Math.max(80, contentMaxY - bodyY);
+  const bodyMax = bullets.length > 0 ? availForContent * 0.5 : availForContent;
+  const bodyH = spec.body ? Math.min(naturalBodyH, bodyMax) : 0;
+  const bodyClipH = spec.body && naturalBodyH > bodyH ? bodyH : undefined;
+
+  const bulletsStartY = bodyY + bodyH + (spec.body ? GAP_BODY_TO_REST : 0);
+  const bulletsAvailH = Math.max(40, contentMaxY - bulletsStartY);
+  const naturalBulletsH = bullets.length > 0 ? textHeight(bulletsText, colW, 22) + bullets.length * 8 : 0;
+  const bulletsH = Math.min(naturalBulletsH, bulletsAvailH);
+  const bulletsClipH = bullets.length > 0 && naturalBulletsH > bulletsH ? bulletsH : undefined;
+
+  // Callout sits just below content; if content was short, it floats up
+  // naturally. If content overflowed, the clips above keep it inside.
+  const contentEndY = bullets.length > 0
+    ? bulletsStartY + bulletsH
+    : (spec.body ? bodyY + bodyH : bodyY);
+  const calloutY = calloutH > 0 ? Math.min(contentEndY + calloutGap, CARD_BOTTOM - calloutH) : 0;
+  const calloutParts = calloutH > 0 ? splitCalloutFromSpec(spec, 80, calloutY, colW) : null;
+
   return {
     shapes: [makePaperBackdrop(activeTheme), ...(calloutParts?.shapes ?? [])],
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, 80, subHookY, colW, 22, "700", t.text, "left")] : []),
       ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
+      ...(bullets.length > 0
+        ? [{
+            ...makeText(bulletsText, 80, bulletsStartY, colW, 22, "400", t.text, "left", undefined, bulletsClipH),
+            listType: "bullet" as const,
+          }]
+        : []),
       ...(calloutParts?.texts ?? []),
     ],
     images: paperImage(spec, 680, 80, 540, 560),
@@ -882,24 +938,44 @@ function renderPaperImageLeft(spec: SlideSpec, t: Theme): SlideJSON {
   const subHookY = titleY + titleH + GAP_TITLE_TO_HOOK;
   const subHookH = spec.subHook ? textHeight(spec.subHook, colW, 22) : 0;
   const bodyY = spec.subHook ? subHookY + subHookH + GAP_HOOK_TO_BODY : titleY + titleH + GAP_TITLE_TO_HOOK;
+  // Fit-to-card: reserve callout space at the bottom, share remaining area
+  // between body and bullets.
+  const CARD_BOTTOM = 680;
+  const calloutH = estimateCalloutHeight(spec, colW);
+  const calloutGap = calloutH > 0 ? 24 : 0;
+  const contentMaxY = CARD_BOTTOM - calloutH - calloutGap;
+
   const bullets = (spec.bullets ?? []).slice(0, 4);
-  // Body shares vertical space with bullets — cap it so bullets always have room.
-  const bulletsH = bullets.length * 50;
-  const bodyClipH = Math.max(40, SLIDE_H - bodyY - (spec.body ? GAP_BODY_TO_REST : 0) - bulletsH - 80);
-  const bodyH = spec.body ? Math.min(textHeight(spec.body, colW, 22), bodyClipH) : 0;
+  const bulletsText = bullets.join("\n");
+  const naturalBodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
+  const availForContent = Math.max(80, contentMaxY - bodyY);
+  const bodyMax = bullets.length > 0 ? availForContent * 0.5 : availForContent;
+  const bodyH = spec.body ? Math.min(naturalBodyH, bodyMax) : 0;
+  const bodyClipH = spec.body && naturalBodyH > bodyH ? bodyH : undefined;
+
   const bulletsStartY = bodyY + bodyH + (spec.body ? GAP_BODY_TO_REST : 0);
-  const bulletsEndY = bulletsStartY + bulletsH;
-  const calloutY = bulletsEndY + 16;
-  const calloutParts = splitCalloutFromSpec(spec, colX, calloutY, colW);
+  const bulletsAvailH = Math.max(40, contentMaxY - bulletsStartY);
+  const naturalBulletsH = bullets.length > 0 ? textHeight(bulletsText, colW, 20) + bullets.length * 8 : 0;
+  const bulletsH = Math.min(naturalBulletsH, bulletsAvailH);
+  const bulletsClipH = bullets.length > 0 && naturalBulletsH > bulletsH ? bulletsH : undefined;
+
+  const contentEndY = bullets.length > 0
+    ? bulletsStartY + bulletsH
+    : (spec.body ? bodyY + bodyH : bodyY);
+  const calloutY = calloutH > 0 ? Math.min(contentEndY + calloutGap, CARD_BOTTOM - calloutH) : 0;
+  const calloutParts = calloutH > 0 ? splitCalloutFromSpec(spec, colX, calloutY, colW) : null;
   return {
     shapes: [makePaperBackdrop(activeTheme), ...(calloutParts?.shapes ?? [])],
     texts: [
       makeText(spec.title, colX, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, colX, subHookY, colW, 22, "700", t.text, "left")] : []),
       ...(spec.body ? [makeText(spec.body, colX, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
-      ...bullets.map((b, i) =>
-        makeText(`•   ${b}`, colX, bulletsStartY + i * 50, colW, 20, "400", t.text, "left"),
-      ),
+      ...(bullets.length > 0
+        ? [{
+            ...makeText(bulletsText, colX, bulletsStartY, colW, 20, "400", t.text, "left", undefined, bulletsClipH),
+            listType: "bullet" as const,
+          }]
+        : []),
       ...(calloutParts?.texts ?? []),
     ],
     images: paperImage(spec, 60, 80, 560, 560),
@@ -948,12 +1024,25 @@ function renderPaperImageRightBadge(spec: SlideSpec, t: Theme): SlideJSON {
   const badgeY = titleY + titleH + GAP_TITLE_TO_HOOK;
   const badgeH = badgeText ? 36 : 0;
   const bodyY = badgeY + badgeH + (badgeText ? 18 : 0);
-  const bulletsBlockH = bullets.length * 44 + (spec.bulletsLeadIn && bullets.length > 0 ? textHeight(spec.bulletsLeadIn, colW, 22) + 12 : 0);
-  const bodyClipH = Math.max(40, SLIDE_H - bodyY - GAP_BODY_TO_REST - bulletsBlockH - 60);
-  const bodyH = spec.body ? Math.min(textHeight(spec.body, colW, 22), bodyClipH) : 0;
-  const leadInY = bodyY + bodyH + GAP_BODY_TO_REST;
+
+  // Fit-to-card. No callout on this layout, so the bottom budget is the
+  // whole CARD_BOTTOM. Body + leadIn + bullets share the available space.
+  const CARD_BOTTOM = 680;
+  const naturalBodyH = spec.body ? textHeight(spec.body, colW, 22) : 0;
+  const availForContent = Math.max(80, CARD_BOTTOM - bodyY);
+  const bodyMax = bullets.length > 0 ? availForContent * 0.45 : availForContent;
+  const bodyH = spec.body ? Math.min(naturalBodyH, bodyMax) : 0;
+  const bodyClipH = spec.body && naturalBodyH > bodyH ? bodyH : undefined;
+
+  const leadInY = bodyY + bodyH + (spec.body ? GAP_BODY_TO_REST : 0);
   const leadInH = (spec.bulletsLeadIn && bullets.length > 0) ? textHeight(spec.bulletsLeadIn, colW, 22) : 0;
   const bulletsStartY = leadInY + leadInH + (spec.bulletsLeadIn && bullets.length > 0 ? 12 : 0);
+  const bulletsText = bullets.join("\n");
+  const bulletsAvailH = Math.max(40, CARD_BOTTOM - bulletsStartY);
+  const naturalBulletsH = bullets.length > 0 ? textHeight(bulletsText, colW, 22) + bullets.length * 8 : 0;
+  const bulletsH = Math.min(naturalBulletsH, bulletsAvailH);
+  const bulletsClipH = bullets.length > 0 && naturalBulletsH > bulletsH ? bulletsH : undefined;
+
   return {
     shapes: [makePaperBackdrop(activeTheme)],
     texts: [
@@ -962,9 +1051,12 @@ function renderPaperImageRightBadge(spec: SlideSpec, t: Theme): SlideJSON {
       ...(spec.bulletsLeadIn && bullets.length > 0
         ? [makeText(spec.bulletsLeadIn, 80, leadInY, colW, 22, "400", t.text, "left")]
         : []),
-      ...bullets.map((b, i) =>
-        makeText(`•   ${b}`, 80, bulletsStartY + i * 44, colW, 22, "400", t.text, "left"),
-      ),
+      ...(bullets.length > 0
+        ? [{
+            ...makeText(bulletsText, 80, bulletsStartY, colW, 22, "400", t.text, "left", undefined, bulletsClipH),
+            listType: "bullet" as const,
+          }]
+        : []),
     ],
     images: paperImage(spec, 680, 80, 540, 560),
     background: t.bg,
@@ -1030,6 +1122,94 @@ function renderPaperQuote(spec: SlideSpec, t: Theme): SlideJSON {
     images: paperImage(spec, 680, 80, 540, 560),
     background: t.bg,
     ...(quotes.length > 0 ? { blockquotes: quotes } : {}),
+  };
+}
+
+/** 3-column key-vocabulary grid. Each column: a square image, a centred
+ *  bold term, then a centred definition paragraph beneath. Mirrors the
+ *  competitor's Key Vocabulary slide design. We reuse the existing slots:
+ *   - imageQuery / secondaryImageQuery / activityImageQuery → 3 column images
+ *   - activityItems → 3 terms (one per column)
+ *   - bullets       → 3 definitions (paired by index with the terms)
+ *  No new schema fields needed; the prompt explains the overload to the AI. */
+function renderPaperVocabGrid(spec: SlideSpec, t: Theme): SlideJSON {
+  const headingColor = activeTheme?.palette.headingColor ?? t.accent;
+  const titleY = 80;
+  const titleH = textHeight(spec.title, SLIDE_W - 160, 40);
+  // Layout grid. Three equal columns, 30px gaps, 80px outer margins.
+  const sideMargin = 80;
+  const gap = 30;
+  const colW = (SLIDE_W - sideMargin * 2 - gap * 2) / 3;
+  const startX = sideMargin;
+  const colX = (i: number) => startX + i * (colW + gap);
+  // Image is a square that fits the column width, capped at 280 so columns
+  // don't dominate the slide on wide decks.
+  const imageSize = Math.min(280, colW);
+  const imageX = (i: number) => colX(i) + (colW - imageSize) / 2;
+  const imageY = titleY + titleH + 36;
+  // Terms + definitions stack below the image, centred.
+  const termY = imageY + imageSize + 20;
+  const termH = 30; // ~24pt × 1.25 line height with a touch of slack
+  const defY = termY + termH + 8;
+
+  // Up to 3 terms; pad with empties so the layout reads cleanly if the AI
+  // emitted fewer (rare — the prompt requires 3).
+  const terms = (spec.activityItems ?? []).slice(0, 3);
+  const definitions = (spec.bullets ?? []).slice(0, 3);
+  while (terms.length < 3) terms.push("");
+  while (definitions.length < 3) definitions.push("");
+
+  // Image URLs are pulled from the three existing slots so the slideJob /
+  // re-theme logic doesn't need to learn a new field.
+  const imageSrcs: (string | undefined)[] = [
+    spec.imageDataUrl,
+    spec.secondaryImageDataUrl,
+    spec.activityImageDataUrl,
+  ];
+  const imageNW: (number | undefined)[] = [
+    spec.imageWidth, spec.secondaryImageWidth, spec.activityImageWidth,
+  ];
+  const imageNH: (number | undefined)[] = [
+    spec.imageHeight, spec.secondaryImageHeight, spec.activityImageHeight,
+  ];
+
+  const images: ImageObject[] = [];
+  for (let i = 0; i < 3; i++) {
+    const src = imageSrcs[i];
+    if (src) {
+      images.push({
+        ...makeImage(src, imageX(i), imageY, imageSize, imageSize, imageNW[i], imageNH[i]),
+        frame: "rounded",
+        cornerRadius: 14,
+      });
+    } else if (spec.imagePending) {
+      // Shimmer placeholder while the per-column image is still fetching.
+      images.push({
+        ...makeImage("", imageX(i), imageY, imageSize, imageSize),
+        frame: "rounded",
+        cornerRadius: 14,
+        isPending: true,
+      });
+    }
+  }
+
+  const texts: TextObject[] = [
+    makeText(spec.title, sideMargin, titleY, SLIDE_W - 160, 40, "800", headingColor, "left"),
+  ];
+  for (let i = 0; i < 3; i++) {
+    if (terms[i]) {
+      texts.push(makeText(terms[i], colX(i), termY, colW, 24, "800", t.text, "center"));
+    }
+    if (definitions[i]) {
+      texts.push(makeText(definitions[i], colX(i), defY, colW, 18, "400", t.text, "center"));
+    }
+  }
+
+  return {
+    shapes: [makePaperBackdrop(activeTheme)],
+    texts,
+    images,
+    background: t.bg,
   };
 }
 
@@ -1344,6 +1524,7 @@ function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
     case "paper-image-right-badge": return renderPaperImageRightBadge(spec, t);
     case "paper-banner-image-top": return renderPaperBannerImageTop(spec, t);
     case "paper-quote": return renderPaperQuote(spec, t);
+    case "paper-vocab-grid": return renderPaperVocabGrid(spec, t);
     case "activity-ordering": return renderActivityOrdering(spec, t, false);
     case "activity-ordering-answer": return renderActivityOrdering(spec, t, true);
     case "activity-question": return renderActivityQuestion(spec, t, false);
@@ -1380,16 +1561,25 @@ export function rerenderSlideWithTheme(
   // Secondary image for paper-two-images lives at slide.images[1] in the new
   // renderers — preserve so a re-theme keeps both photos.
   const existingSecondaryImage = slide.images?.[1];
+  // paper-vocab-grid emits 3 plain ImageObjects (no ActivityObject wrapper) —
+  // pick slide.images[2] for the third column so a theme switch doesn't lose
+  // it. ActivityObject image still wins when present (activity-question slides
+  // never have a 3rd images[] entry, so the two don't collide).
+  const existingThirdImage = slide.images?.[2];
+  const skeletonSpec = slide.skeleton as SlideSpec;
+  const activityImageFromGrid = skeletonSpec.layout === "paper-vocab-grid"
+    ? existingThirdImage
+    : undefined;
   const spec: SlideSpec = {
-    ...(slide.skeleton as SlideSpec),
+    ...skeletonSpec,
     accentColor: theme.palette.accent,
     imageDataUrl: existingImageSrc || undefined,
     imageWidth: existingW,
     imageHeight: existingH,
     imagePending: false,
-    activityImageDataUrl: existingActivityImage?.src || undefined,
-    activityImageWidth: existingActivityImage?.naturalWidth,
-    activityImageHeight: existingActivityImage?.naturalHeight,
+    activityImageDataUrl: existingActivityImage?.src || activityImageFromGrid?.src || undefined,
+    activityImageWidth: existingActivityImage?.naturalWidth ?? activityImageFromGrid?.naturalWidth,
+    activityImageHeight: existingActivityImage?.naturalHeight ?? activityImageFromGrid?.naturalHeight,
     secondaryImageDataUrl: existingSecondaryImage?.src || undefined,
     secondaryImageWidth: existingSecondaryImage?.naturalWidth,
     secondaryImageHeight: existingSecondaryImage?.naturalHeight,

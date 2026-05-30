@@ -8,6 +8,10 @@ import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "model-answer-generator";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -35,11 +39,27 @@ export default function ModelAnswerForm({ sidebar }: { sidebar: React.ReactNode 
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && (mixed || yearGroup) && subject.trim() && question.trim();
 
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, question, contentRequirements, guidelines, totalMarks });
+  const formState = { curriculum, yearGroup, mixed, subject, question, contentRequirements, guidelines, totalMarks };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setQuestion((i.question as string) ?? "");
+    setContentRequirements((i.contentRequirements as string) ?? "");
+    setGuidelines((i.guidelines as string) ?? "");
+    setTotalMarks((i.totalMarks as number) ?? 10);
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleMarksChange = (delta: number) => {
     setTotalMarks((prev) => Math.min(50, Math.max(1, prev + delta)));
@@ -113,7 +133,10 @@ export default function ModelAnswerForm({ sidebar }: { sidebar: React.ReactNode 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -259,6 +282,8 @@ export default function ModelAnswerForm({ sidebar }: { sidebar: React.ReactNode 
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`model-answer-${subject || "export"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || question || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

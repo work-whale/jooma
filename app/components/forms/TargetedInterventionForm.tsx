@@ -16,6 +16,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "targeted-intervention";
 
 const REFINE_CHIPS = [
   "Add more strategies",
@@ -41,14 +45,30 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && (mixed || yearGroup) && subject.trim() && attitudinalData.trim();
 
-  const formSnapshot = JSON.stringify({
+  const formState = {
     curriculum, yearGroup, mixed, subject,
     attitudinalData, aptitudinalData, attainmentData, otherData,
-  });
+  };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setAttitudinalData((i.attitudinalData as string) ?? "");
+    setAptitudinalData((i.aptitudinalData as string) ?? "");
+    setAttainmentData((i.attainmentData as string) ?? "");
+    setOtherData((i.otherData as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -131,7 +151,10 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -188,6 +211,8 @@ export default function TargetedInterventionForm({ sidebar }: { sidebar: React.R
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`intervention-${subject || "export"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

@@ -14,6 +14,10 @@ import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "risk-assessment";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -36,11 +40,26 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
   const canGenerate = curriculum.trim() && resolvedYearGroup.trim() && activity.trim();
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, activity, transport, location, resources });
+  const formState = { curriculum, yearGroup, mixed, activity, transport, location, resources };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setActivity((i.activity as string) ?? "");
+    setTransport((i.transport as string) ?? "");
+    setLocation((i.location as string) ?? "");
+    setResources((i.resources as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const streamResponse = async (body: object, onChunk: (c: string) => void) => {
     const res = await fetch("/api/risk-assessment", {
@@ -98,7 +117,10 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -160,6 +182,8 @@ export default function RiskAssessmentForm({ sidebar }: { sidebar: React.ReactNo
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`risk-assessment-${activity.slice(0, 30).replace(/\s+/g, "-") || "activity"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: activity || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

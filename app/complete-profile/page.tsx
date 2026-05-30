@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { createClient } from "@/app/lib/auth/client";
 
 type Country = { name: string; code: string; dial: string };
 
@@ -45,12 +46,47 @@ export default function CompleteProfilePage() {
   const [dialCountry, setDialCountry] = useState(DEFAULT_CODE);
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const canSubmit =
     firstName.trim() !== "" &&
     surname.trim() !== "" &&
     phone.trim() !== "" &&
-    country !== null;
+    country !== null &&
+    !loading;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setError(null);
+    setLoading(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Your session expired. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      first_name: firstName.trim(),
+      surname: surname.trim(),
+      dial_code: dialCountry,
+      phone: phone.trim(),
+      country,
+    });
+    if (error) {
+      setError("Could not save your profile. Please try again.");
+      setLoading(false);
+      return;
+    }
+    sessionStorage.removeItem("jooma:auth-email");
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <div className="min-h-screen p-6 flex" style={{ backgroundColor: "#F1EFE3" }}>
@@ -89,14 +125,7 @@ export default function CompleteProfilePage() {
               </p>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!canSubmit) return;
-                sessionStorage.removeItem("jooma:auth-email");
-                router.push("/");
-              }}
-            >
+            <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="First name" htmlFor="firstName">
                   <TextInput
@@ -139,13 +168,17 @@ export default function CompleteProfilePage() {
                 </Field>
               </div>
 
+              {error && (
+                <p className="mt-6 text-center text-sm text-red-600 font-light">{error}</p>
+              )}
+
               <div className="mt-8 flex justify-center">
                 <button
                   type="submit"
                   disabled={!canSubmit}
                   className="px-10 py-3 rounded-xl text-sm font-medium text-white transition-colors disabled:bg-[#F1EFE3] disabled:text-[#A5A5A5] disabled:cursor-default bg-[#030303] hover:bg-black"
                 >
-                  Create account
+                  {loading ? "Creating account…" : "Create account"}
                 </button>
               </div>
             </form>

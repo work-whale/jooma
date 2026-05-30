@@ -5,14 +5,35 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaApple, FaLinkedinIn } from "react-icons/fa";
 import { MdLock } from "react-icons/md";
+import { createClient } from "@/app/lib/auth/client";
 
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const canSubmit = email.trim().length > 0 && agreed;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    // Email verification is disabled for now (no email provider). Carry the
+    // email forward; the account is created with a password on /create-password.
+    setError(null);
+    sessionStorage.setItem("jooma:auth-email", email.trim());
+    router.push("/create-password");
+  };
+
+  const handleGoogle = async () => {
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setError("Could not start Google sign-in.");
+  };
 
   return (
     <div className="min-h-screen p-6 flex" style={{ backgroundColor: "#F1EFE3" }}>
@@ -51,22 +72,14 @@ export default function SignupPage() {
               </p>
             </div>
 
-            <div className="flex justify-center gap-3 mb-6">
-              <SsoButton label="Continue with Google">
-                <FcGoogle className="w-7 h-7" />
-              </SsoButton>
-              <SsoButton label="Continue with Apple">
-                <FaApple className="w-7 h-7 text-dark" />
-              </SsoButton>
-              <SsoButton label="Continue with Microsoft">
-                <MicrosoftIcon className="w-7 h-7" />
-              </SsoButton>
-              <SsoButton label="Continue with LinkedIn">
-                <span className="w-7 h-7 rounded-sm bg-[#0A66C2] flex items-center justify-center">
-                  <FaLinkedinIn className="w-5 h-5 text-white" />
-                </span>
-              </SsoButton>
-            </div>
+            <button
+              type="button"
+              onClick={handleGoogle}
+              className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white border border-line text-sm font-medium hover:border-dark transition-colors mb-6"
+            >
+              <FcGoogle className="w-5 h-5" />
+              Continue with Google
+            </button>
 
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px bg-line flex-1" />
@@ -74,14 +87,7 @@ export default function SignupPage() {
               <div className="h-px bg-line flex-1" />
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!canSubmit) return;
-                sessionStorage.setItem("jooma:auth-email", email.trim());
-                router.push("/verify");
-              }}
-            >
+            <form onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm mb-2 leading-tight tracking-tight font-medium">
                   Email
@@ -116,6 +122,10 @@ export default function SignupPage() {
                 </span>
               </label>
 
+              {error && (
+                <p className="mt-3 text-sm text-red-600 font-light">{error}</p>
+              )}
+
               <div className="mt-8 flex justify-center">
                 <button
                   type="submit"
@@ -149,34 +159,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function SsoButton({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="w-14 h-14 rounded-full bg-transparent border border-line flex items-center justify-center hover:border-dark transition-colors"
-    >
-      {children}
-    </button>
-  );
-}
-
-function MicrosoftIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 23 23" className={className} aria-hidden="true">
-      <rect width="10" height="10" x="1" y="1" fill="#F25022" />
-      <rect width="10" height="10" x="12" y="1" fill="#7FBA00" />
-      <rect width="10" height="10" x="1" y="12" fill="#00A4EF" />
-      <rect width="10" height="10" x="12" y="12" fill="#FFB900" />
-    </svg>
   );
 }

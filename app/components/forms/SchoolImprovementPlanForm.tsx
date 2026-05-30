@@ -14,6 +14,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "school-improvement-plan";
 
 const REFINE_CHIPS = [
   "Make the strategies and actions more detailed",
@@ -36,6 +40,21 @@ export default function SchoolImprovementPlanForm({ sidebar }: { sidebar: React.
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setSchoolType((i.schoolType as string) ?? "Primary");
+    setAreasToImprove((i.areasToImprove as string) ?? "");
+    setSchoolContext((i.schoolContext as string) ?? "");
+    setPlanTimeframe((i.planTimeframe as number) ?? 1);
+    setOutputFormat((i.outputFormat as "table" | "narrative") ?? "table");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const canGenerate = areasToImprove.trim();
   const formSnapshot = JSON.stringify({ schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat });
@@ -100,7 +119,7 @@ export default function SchoolImprovementPlanForm({ sidebar }: { sidebar: React.
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">{sidebar}<ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} /></div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -159,6 +178,8 @@ export default function SchoolImprovementPlanForm({ sidebar }: { sidebar: React.
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="school-improvement-plan"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: areasToImprove || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

@@ -11,6 +11,10 @@ import Card from "@/app/components/ui/Card";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import SensoryActivitiesNav from "@/app/components/SensoryActivitiesNav";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "sensory-activities";
 
 const REFINE_CHIPS = [
   "Translate to French",
@@ -32,11 +36,25 @@ export default function SensoryActivitiesForm({ sidebar }: { sidebar: React.Reac
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && (mixed || yearGroup) && subject.trim() && topic.trim();
 
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, topic });
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { curriculum, yearGroup, mixed, subject, topic };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setTopic((i.topic as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -103,7 +121,10 @@ export default function SensoryActivitiesForm({ sidebar }: { sidebar: React.Reac
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -158,6 +179,8 @@ export default function SensoryActivitiesForm({ sidebar }: { sidebar: React.Reac
             onChange={(md) => setResult(md)}
             exportFilename={`sensory-activities-${topic || subject || "export"}`}
             maxWidth={false}
+            historyMeta={{ toolSlug: TOOL_SLUG, title: topic || subject || null, input: formState }}
+            onSaved={() => setHistoryKey((k) => k + 1)}
           />
         </div>
       </div>

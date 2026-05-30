@@ -9,8 +9,10 @@ import Card from "@/app/components/ui/Card";
 import EYFSNav from "@/app/components/EYFSNav";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
 
-
+const TOOL_SLUG = "eyfs-planner";
 
 export default function EYFSPlannerForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [curriculum, setCurriculum] = useState("Early Years Foundation Stage (EYFS)");
@@ -25,12 +27,27 @@ export default function EYFSPlannerForm({ sidebar }: { sidebar: React.ReactNode 
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const weeksNum = parseInt(numberOfWeeks, 10);
   const canGenerate = curriculum && topic.trim() && !isNaN(weeksNum) && weeksNum >= 1 && weeksNum <= 12;
 
-  const formSnapshot = JSON.stringify({ curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview });
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "Early Years Foundation Stage (EYFS)");
+    setTopic((i.topic as string) ?? "");
+    setNumberOfWeeks((i.numberOfWeeks as string) ?? "2");
+    setIncludeBookList(Boolean(i.includeBookList));
+    setIncludeHomeLearning(Boolean(i.includeHomeLearning));
+    setIncludeWeeklyOverview(Boolean(i.includeWeeklyOverview));
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -75,7 +92,10 @@ export default function EYFSPlannerForm({ sidebar }: { sidebar: React.ReactNode 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -211,6 +231,8 @@ export default function EYFSPlannerForm({ sidebar }: { sidebar: React.ReactNode 
             onChange={(md) => setResult(md)}
             exportFilename={`eyfs-plan-${topic || "export"}`}
             maxWidth={false}
+            historyMeta={{ toolSlug: TOOL_SLUG, title: topic || null, input: formState }}
+            onSaved={() => setHistoryKey((k) => k + 1)}
           />
         </div>
       </div>
