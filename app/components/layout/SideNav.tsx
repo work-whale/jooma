@@ -2,17 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pin } from "lucide-react";
 import { BiSolidDashboard } from "react-icons/bi";
 import { FaPenNib } from "react-icons/fa";
 import { RiFolder6Fill } from "react-icons/ri";
 import { MdAssistant } from "react-icons/md";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { TOOLS } from "@/app/lib/tools";
+import ToolIcon from "@/app/components/ToolIcon";
+import { TAG_COLORS } from "@/app/lib/toolRunDisplay";
+
+const PIN_STORAGE_KEY = "jooma:pinned-tools";
 
 const NAV = [
-  { label: "Dashboard", icon: BiSolidDashboard, href: "#" },
+  { label: "Dashboard", icon: BiSolidDashboard, href: "/dashboard" },
   { label: "Tools", icon: FaPenNib, href: "/" },
-  { label: "Folders", icon: RiFolder6Fill, href: "#" },
+  { label: "Folders", icon: RiFolder6Fill, href: "/folders" },
   { label: "AI assistant", icon: MdAssistant, href: "#" },
 ];
 
@@ -29,6 +34,27 @@ export default function SideNav() {
       return !c;
     });
   };
+
+  // Pinned tools — shares the same localStorage key the Tools page writes to.
+  const [pinnedHrefs, setPinnedHrefs] = useState<string[]>([]);
+  useEffect(() => {
+    const read = () => {
+      try {
+        const stored = localStorage.getItem(PIN_STORAGE_KEY);
+        setPinnedHrefs(stored ? JSON.parse(stored) : []);
+      } catch {
+        setPinnedHrefs([]);
+      }
+    };
+    read();
+    // Reflect pin/unpin made in another tab.
+    window.addEventListener("storage", read);
+    return () => window.removeEventListener("storage", read);
+  }, []);
+
+  const pinnedTools = pinnedHrefs
+    .map((href) => TOOLS.find((t) => t.href === href))
+    .filter((t): t is (typeof TOOLS)[number] => Boolean(t));
 
   return (
     <aside
@@ -55,7 +81,9 @@ export default function SideNav() {
 
       <nav className="space-y-1 grow">
         {NAV.map(({ label, icon: Icon, href }) => {
-          const active = href === "/" ? (pathname === "/" || pathname.startsWith("/tools")) : pathname === href;
+          const active = href === "/"
+            ? (pathname === "/" || pathname.startsWith("/tools"))
+            : (pathname === href || pathname.startsWith(`${href}/`));
           const isDisabled = href === "#";
 
           if (isDisabled) {
@@ -84,6 +112,49 @@ export default function SideNav() {
           );
         })}
       </nav>
+
+      {/* Pinned tools — pinned from the Tools page */}
+      {pinnedTools.length > 0 && (
+        collapsed ? (
+          <div className="mt-4 flex flex-col items-center gap-1">
+            {pinnedTools.map((tool) => {
+              const colors = TAG_COLORS[tool.tag] ?? { icon: "text-gray-600" };
+              return (
+                <Link
+                  key={tool.href}
+                  href={tool.href}
+                  title={tool.label}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
+                >
+                  <ToolIcon name={tool.icon} className={`w-4 h-4 ${colors.icon}`} />
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-4 rounded-2xl p-4" style={{ backgroundColor: "#FAF9F5" }}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted">Pinned tools</span>
+              <Pin className="w-3.5 h-3.5 text-muted" />
+            </div>
+            <div className="space-y-0.5">
+              {pinnedTools.map((tool) => {
+                const colors = TAG_COLORS[tool.tag] ?? { icon: "text-gray-600" };
+                return (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <ToolIcon name={tool.icon} className={`w-4 h-4 shrink-0 ${colors.icon}`} />
+                    <span className="text-sm font-medium truncate">{tool.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )
+      )}
     </aside>
   );
 }

@@ -46,6 +46,19 @@ export async function listToolRuns(toolSlug: string): Promise<ToolRun[]> {
   return (data ?? []) as ToolRun[];
 }
 
+// Recent runs across ALL tools — powers the dashboard's "Recently added" table
+// and activity stats.
+export async function listRecentRuns(limit = 100): Promise<ToolRun[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("tool_runs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as ToolRun[];
+}
+
 export async function deleteToolRun(id: string): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase.from("tool_runs").delete().eq("id", id);
