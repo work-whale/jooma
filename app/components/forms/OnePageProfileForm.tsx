@@ -14,6 +14,10 @@ import RefinePanel from "@/app/components/RefinePanel";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "one-page-profile";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -43,11 +47,31 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
   const canGenerate = curriculum.trim() && resolvedYearGroup.trim() && name.trim() && likes.trim() && supportNeeds.trim();
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, name, likes, happy, supportNeeds, supportStyle, hopes, interventionGroups, outsideAgency, includeAdditionalSupport });
+  const formState = { curriculum, yearGroup, mixed, name, likes, happy, supportNeeds, supportStyle, hopes, interventionGroups, outsideAgency, includeAdditionalSupport };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setName((i.name as string) ?? "");
+    setLikes((i.likes as string) ?? "");
+    setHappy((i.happy as string) ?? "");
+    setSupportNeeds((i.supportNeeds as string) ?? "");
+    setSupportStyle((i.supportStyle as string) ?? "");
+    setHopes((i.hopes as string) ?? "");
+    setInterventionGroups((i.interventionGroups as string) ?? "");
+    setOutsideAgency((i.outsideAgency as string) ?? "");
+    setIncludeAdditionalSupport(i.includeAdditionalSupport === undefined ? true : Boolean(i.includeAdditionalSupport));
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const streamResponse = async (body: object, onChunk: (c: string) => void) => {
     const res = await fetch("/api/one-page-profile", {
@@ -105,7 +129,10 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -253,6 +280,8 @@ export default function OnePageProfileForm({ sidebar }: { sidebar: React.ReactNo
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`support-profile-${name.toLowerCase().replace(/\s+/g, "-") || "student"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: name || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

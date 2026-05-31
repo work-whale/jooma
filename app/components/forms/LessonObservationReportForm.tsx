@@ -17,6 +17,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "lesson-observation-report";
 
 const REFINE_CHIPS = [
   "Make the lesson observation report more detailed",
@@ -149,10 +153,29 @@ export default function LessonObservationReportForm({ sidebar }: { sidebar: Reac
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && (mixed || yearGroup) && strengths.trim() && areasForDevelopment.trim();
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, learningObjective, observationFocus, strengths, areasForDevelopment, date, includeActionPlan, includeFollowUpSupport });
+  const formState = { curriculum, yearGroup, mixed, subject, learningObjective, observationFocus, strengths, areasForDevelopment, date, includeActionPlan, includeFollowUpSupport };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setLearningObjective((i.learningObjective as string) ?? "");
+    setObservationFocus((i.observationFocus as string) ?? "");
+    setStrengths((i.strengths as string) ?? "");
+    setAreasForDevelopment((i.areasForDevelopment as string) ?? "");
+    setDate((i.date as string) ?? new Date().toISOString().slice(0, 10));
+    setIncludeActionPlan(Boolean(i.includeActionPlan));
+    setIncludeFollowUpSupport(Boolean(i.includeFollowUpSupport));
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -226,6 +249,7 @@ export default function LessonObservationReportForm({ sidebar }: { sidebar: Reac
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
           {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
           <LessonObservationFocusPanel onSelect={setObservationFocus} />
         </div>
 
@@ -330,6 +354,8 @@ export default function LessonObservationReportForm({ sidebar }: { sidebar: Reac
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`lesson-observation-${subject.slice(0, 20).replace(/\s+/g, "-") || "report"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || observationFocus || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

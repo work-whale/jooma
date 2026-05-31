@@ -4,14 +4,16 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { MdLock } from "react-icons/md";
+import { createClient } from "@/app/lib/auth/client";
 
 const CODE_LENGTH = 6;
-const ACCEPTED_CODE = "000000";
 const FALLBACK_EMAIL = "your email";
 
 export default function VerifyPage() {
   const router = useRouter();
   const [email, setEmail] = useState(FALLBACK_EMAIL);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("jooma:auth-email");
@@ -21,8 +23,43 @@ export default function VerifyPage() {
   const [digits, setDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(""));
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const code = digits.join("");
-  const canSubmit = code.length === CODE_LENGTH && digits.every((d) => d !== "");
-  const isValid = code === ACCEPTED_CODE;
+  const canSubmit =
+    code.length === CODE_LENGTH && digits.every((d) => d !== "") && !loading;
+
+  const handleVerify = async () => {
+    if (!canSubmit) return;
+    const storedEmail = sessionStorage.getItem("jooma:auth-email");
+    if (!storedEmail) {
+      setError("Your session expired. Please sign up again.");
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.verifyOtp({
+      email: storedEmail,
+      token: code,
+      type: "email",
+    });
+    if (error) {
+      setError("That code is incorrect or has expired.");
+      setLoading(false);
+      return;
+    }
+    router.push("/create-password");
+  };
+
+  const handleResend = async () => {
+    const storedEmail = sessionStorage.getItem("jooma:auth-email");
+    if (!storedEmail) return;
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: storedEmail,
+      options: { shouldCreateUser: true },
+    });
+    if (error) setError("Could not resend the code. Please try again.");
+  };
 
   const focusInput = (index: number) => {
     inputsRef.current[index]?.focus();
@@ -105,8 +142,7 @@ export default function VerifyPage() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!canSubmit || !isValid) return;
-                router.push("/create-password");
+                handleVerify();
               }}
             >
               <div className="flex justify-center gap-2 mb-4">
@@ -131,9 +167,14 @@ export default function VerifyPage() {
                 ))}
               </div>
 
+              {error && (
+                <p className="text-center text-sm text-red-600 font-light mb-4">{error}</p>
+              )}
+
               <div className="text-center mb-8">
                 <button
                   type="button"
+                  onClick={handleResend}
                   className="text-sm font-semibold text-dark hover:underline"
                 >
                   Resend code
@@ -146,7 +187,7 @@ export default function VerifyPage() {
                   disabled={!canSubmit}
                   className="px-10 py-3 rounded-xl text-sm font-medium text-white transition-colors disabled:bg-[#F1EFE3] disabled:text-[#A5A5A5] disabled:cursor-default bg-[#030303] hover:bg-black"
                 >
-                  Submit
+                  {loading ? "Verifying…" : "Submit"}
                 </button>
               </div>
             </form>

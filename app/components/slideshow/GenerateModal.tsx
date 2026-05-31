@@ -21,6 +21,9 @@ export interface GenerationParams {
   additionalInstructions?: string;
   includeObjectives?: boolean;
   includeVocab?: boolean;
+  /** Curated key-vocabulary terms (AI-suggested, teacher-edited). Only sent
+   *  when includeVocab is on and at least one term is selected. */
+  vocabulary?: string[];
   includeAudio?: boolean;
   includeYouTube?: boolean;
   youtubeLength?: YoutubeLength;
@@ -92,6 +95,15 @@ export default function GenerateModal({ onClose }: Props) {
 
   const [includeObjectives, setIncludeObjectives] = useState(false);
   const [includeVocab, setIncludeVocab] = useState(false);
+  // Key-vocabulary curation. `vocabTerms` is the unified list the teacher sees
+  // (AI suggestions + their own additions), each with a checked flag. We track
+  // which topic the suggestions were fetched for so re-enabling after a topic
+  // change re-fetches.
+  const [vocabTerms, setVocabTerms] = useState<{ term: string; checked: boolean }[]>([]);
+  const [vocabBusy, setVocabBusy] = useState(false);
+  const [vocabError, setVocabError] = useState<string | null>(null);
+  const [vocabFetchedFor, setVocabFetchedFor] = useState<string | null>(null);
+  const [vocabInput, setVocabInput] = useState("");
   const [includeAudio, setIncludeAudio] = useState(false);
   const [includeYouTube, setIncludeYouTube] = useState(false);
   // Curriculum alignment — toggled off by default. The dropdowns below cascade
@@ -147,6 +159,64 @@ export default function GenerateModal({ onClose }: Props) {
     }
   };
 
+  // Fetch AI vocabulary suggestions for the current topic. Pre-checked so the
+  // teacher starts with a usable list and just unchecks what they don't want.
+  const fetchVocabSuggestions = async () => {
+    const t = topic.trim();
+    if (!t || vocabBusy) return;
+    setVocabBusy(true);
+    setVocabError(null);
+    try {
+      const r = await fetch("/api/suggest-vocabulary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: t, year: year || undefined }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        throw new Error(err.error || err.message || "Failed");
+      }
+      const data: { terms: string[] } = await r.json();
+      setVocabTerms((prev) => {
+        // Preserve any custom terms the teacher already added.
+        const existing = new Set(prev.map((v) => v.term.toLowerCase()));
+        const suggestions = data.terms
+          .filter((term) => !existing.has(term.toLowerCase()))
+          .map((term) => ({ term, checked: true }));
+        return [...prev, ...suggestions];
+      });
+      setVocabFetchedFor(t);
+    } catch (err) {
+      setVocabError(err instanceof Error ? err.message : "Couldn't suggest vocabulary");
+    } finally {
+      setVocabBusy(false);
+    }
+  };
+
+  // When the teacher enables Key vocabulary, fetch suggestions once for the
+  // current topic (if we haven't already for this topic).
+  const handleToggleVocab = (on: boolean) => {
+    setIncludeVocab(on);
+    if (on && topic.trim() && vocabFetchedFor !== topic.trim() && !vocabBusy) {
+      fetchVocabSuggestions();
+    }
+  };
+
+  const toggleVocabTerm = (term: string) => {
+    setVocabTerms((prev) => prev.map((v) => v.term === term ? { ...v, checked: !v.checked } : v));
+  };
+
+  const addCustomVocab = () => {
+    const t = vocabInput.trim();
+    if (!t) return;
+    setVocabTerms((prev) =>
+      prev.some((v) => v.term.toLowerCase() === t.toLowerCase())
+        ? prev
+        : [...prev, { term: t, checked: true }],
+    );
+    setVocabInput("");
+  };
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busy) onClose();
@@ -173,6 +243,9 @@ export default function GenerateModal({ onClose }: Props) {
         additionalInstructions: additionalInstructions.trim() || undefined,
         includeObjectives,
         includeVocab,
+        vocabulary: includeVocab
+          ? vocabTerms.filter((v) => v.checked).map((v) => v.term)
+          : undefined,
         includeAudio,
         includeYouTube,
         youtubeLength: includeYouTube ? youtubeLength : undefined,
@@ -467,15 +540,121 @@ export default function GenerateModal({ onClose }: Props) {
                     onChange={setIncludeObjectives}
                     disabled={busy}
                   />
-                  <ToggleCard
-                    icon={<Key className="w-4 h-4 text-amber-600" />}
-                    iconBg="bg-amber-100"
-                    title="Key vocabulary"
-                    description="Add a slide with key terms and definitions"
-                    checked={includeVocab}
-                    onChange={setIncludeVocab}
-                    disabled={busy}
-                  />
+                  <div
+                    className="rounded-xl border transition-colors overflow-hidden"
+                    style={
+                      includeVocab
+                        ? { backgroundColor: "#fff", borderColor: "#1a1a1a" }
+                        : { backgroundColor: "#fff", borderColor: "#DAD8D0" }
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleToggleVocab(!includeVocab)}
+                      disabled={busy}
+                      className="w-full flex items-center gap-3 p-3 text-left disabled:opacity-60"
+                    >
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-amber-100">
+                        <Key className="w-4 h-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Key vocabulary</p>
+                        <p className="text-xs text-gray-500 truncate">Add a slide with key terms — we&apos;ll suggest them for you</p>
+                      </div>
+                      <div
+                        className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
+                        style={
+                          includeVocab
+                            ? { backgroundColor: "#1a1a1a", borderColor: "#1a1a1a" }
+                            : { borderColor: "#DAD8D0" }
+                        }
+                      >
+                        {includeVocab && (
+                          <svg viewBox="0 0 20 20" className="w-3 h-3 text-white fill-current">
+                            <path d="M7.6 13.6 4 10l1.4-1.4 2.2 2.2 7-7L16 5.2z" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                    {includeVocab && (
+                      <div className="px-3 pb-3 pt-2 space-y-2.5" style={{ borderTop: "1px solid #F0EFE8" }}>
+                        {/* Suggestions */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className="text-xs font-semibold text-gray-700">Suggestions</p>
+                            <button
+                              type="button"
+                              onClick={fetchVocabSuggestions}
+                              disabled={vocabBusy || !topic.trim()}
+                              className="text-[11px] font-medium text-violet-600 hover:text-violet-700 disabled:opacity-40 flex items-center gap-1"
+                            >
+                              {vocabBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                              {vocabTerms.length > 0 ? "Suggest more" : "Suggest"}
+                            </button>
+                          </div>
+                          {vocabBusy && vocabTerms.length === 0 ? (
+                            <div className="flex items-center gap-2 text-xs text-gray-400 py-1">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Finding key terms…
+                            </div>
+                          ) : vocabTerms.length === 0 ? (
+                            <p className="text-[11px] text-gray-400">
+                              {topic.trim() ? "No suggestions yet — tap Suggest." : "Enter a topic first."}
+                            </p>
+                          ) : (
+                            <div className="space-y-1">
+                              {vocabTerms.map((v) => (
+                                <button
+                                  key={v.term}
+                                  type="button"
+                                  onClick={() => toggleVocabTerm(v.term)}
+                                  className="w-full flex items-center gap-2 text-left group"
+                                >
+                                  <span
+                                    className="w-4 h-4 rounded border flex items-center justify-center shrink-0"
+                                    style={
+                                      v.checked
+                                        ? { backgroundColor: "#2e7d52", borderColor: "#2e7d52" }
+                                        : { borderColor: "#CBD5C0", backgroundColor: "#fff" }
+                                    }
+                                  >
+                                    {v.checked && (
+                                      <svg viewBox="0 0 20 20" className="w-2.5 h-2.5 text-white fill-current">
+                                        <path d="M7.6 13.6 4 10l1.4-1.4 2.2 2.2 7-7L16 5.2z" />
+                                      </svg>
+                                    )}
+                                  </span>
+                                  <span className={`text-sm ${v.checked ? "text-gray-800" : "text-gray-400 line-through"}`}>
+                                    {v.term}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {vocabError && <p className="text-[10px] text-red-600 mt-1">{vocabError}</p>}
+                        </div>
+                        {/* Add your own */}
+                        <div>
+                          <p className="text-xs font-semibold text-gray-700 mb-1">Add your own</p>
+                          <input
+                            type="text"
+                            value={vocabInput}
+                            onChange={(e) => setVocabInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") { e.preventDefault(); addCustomVocab(); }
+                            }}
+                            placeholder="Type and press enter to add"
+                            disabled={busy}
+                            autoComplete="off"
+                            data-1p-ignore
+                            data-lpignore="true"
+                            name="vocab-term"
+                            className="w-full px-3 py-2 text-sm bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60"
+                            style={{ borderColor: "#DAD8D0" }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

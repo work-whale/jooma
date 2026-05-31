@@ -62,10 +62,10 @@ export const CURRICULA: Curriculum[] = [
           "Chemical analysis",
           "Chemical and allied industries",
           "Chemical changes",
+          "Earth and atmospheric science",
           "Energy changes in chemistry",
           "Rate and extent of chemical change",
           "Structure, bonding and the properties of matter",
-          "The structure of matter",
         ],
       },
       {
@@ -78,7 +78,11 @@ export const CURRICULA: Curriculum[] = [
       },
       {
         name: "English",
-        strands: ["Reading", "Writing", "Spoken English", "Grammar and vocabulary"],
+        strands: ["Grammar and vocabulary", "Reading", "Spoken English", "Writing"],
+      },
+      {
+        name: "Language and Literacy",
+        strands: ["English with Media Education"],
       },
       {
         name: "Maths",
@@ -106,13 +110,13 @@ export const CURRICULA: Curriculum[] = [
         name: "Physics",
         strands: [
           "Atomic structure",
-          "Earth and atmospheric science",
           "Electricity",
           "Energy",
           "Forces",
           "Forces and motion",
           "Magnetism and electromagnetism",
           "Space physics",
+          "The structure of matter",
           "Wave motion",
         ],
       },

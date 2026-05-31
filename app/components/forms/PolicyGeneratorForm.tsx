@@ -10,6 +10,10 @@ import RefinePanel from "@/app/components/RefinePanel";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "policy-generator";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -152,10 +156,22 @@ export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactN
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum.trim() && policy.trim();
-  const formSnapshot = JSON.stringify({ curriculum, policy, additionalRequirements, outputType });
+  const formState = { curriculum, policy, additionalRequirements, outputType };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setPolicy((i.policy as string) ?? "");
+    setAdditionalRequirements((i.additionalRequirements as string) ?? "");
+    setOutputType((i.outputType as "full" | "structure") ?? "full");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const streamResponse = async (url: string, body: object, onChunk: (chunk: string) => void) => {
     const res = await fetch(url, {
@@ -217,6 +233,7 @@ export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactN
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
           {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
           <PolicyCategoriesPanel onSelect={setPolicy} />
         </div>
 
@@ -294,6 +311,8 @@ export default function PolicyGeneratorForm({ sidebar }: { sidebar: React.ReactN
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`policy-${policy.slice(0, 30).replace(/\s+/g, "-") || "document"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: policy || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

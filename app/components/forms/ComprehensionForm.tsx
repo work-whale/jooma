@@ -9,6 +9,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "comprehension-generator";
 
 const KS1_DOMAINS = [
   { code: "1a", label: "Word meaning", description: "Draw on knowledge of vocabulary to understand texts" },
@@ -62,6 +66,7 @@ export default function ComprehensionForm({ sidebar }: { sidebar: React.ReactNod
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const ks = (!mixed && (yearGroup === "Year 1" || yearGroup === "Year 2")) ? "ks1" : "ks2";
   const currentDomains = ks === "ks1" ? KS1_DOMAINS : KS2_DOMAINS;
@@ -80,8 +85,27 @@ export default function ComprehensionForm({ sidebar }: { sidebar: React.ReactNod
   const toggleQuestionType = (type: string) =>
     setQuestionTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
 
-  const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey });
+  const formState = { curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setTextSource((i.textSource as "generate" | "own" | "") ?? "");
+    setTopic((i.topic as string) ?? "");
+    setOwnText((i.ownText as string) ?? "");
+    setPassageWordCount((i.passageWordCount as string) ?? "300");
+    setComplexity((i.complexity as Complexity) ?? "Standard");
+    setContentDomains((i.contentDomains as string[]) ?? []);
+    setQuestionTypes((i.questionTypes as string[]) ?? []);
+    setNumQuestions((i.numQuestions as number) ?? 5);
+    setIncludeAnswerKey(i.includeAnswerKey === undefined ? true : Boolean(i.includeAnswerKey));
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -139,7 +163,10 @@ export default function ComprehensionForm({ sidebar }: { sidebar: React.ReactNod
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -156,7 +183,12 @@ export default function ComprehensionForm({ sidebar }: { sidebar: React.ReactNod
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => { setTextSource("generate"); setTimeout(() => topicInputRef.current?.focus(), 0); }}
+                  onClick={() => {
+                    // Toggle: clicking the active card again hides its fields.
+                    const next = textSource === "generate" ? "" : "generate";
+                    setTextSource(next);
+                    if (next === "generate") setTimeout(() => topicInputRef.current?.focus(), 0);
+                  }}
                   className={`border rounded-md p-4 flex flex-col items-center gap-2 text-sm font-medium cursor-pointer transition-colors ${
                     textSource === "generate"
                       ? "border-stone-700 bg-stone-50 text-stone-800"
@@ -168,7 +200,7 @@ export default function ComprehensionForm({ sidebar }: { sidebar: React.ReactNod
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTextSource("own")}
+                  onClick={() => setTextSource((prev) => (prev === "own" ? "" : "own"))}
                   className={`border rounded-md p-4 flex flex-col items-center gap-2 text-sm font-medium cursor-pointer transition-colors ${
                     textSource === "own"
                       ? "border-stone-700 bg-stone-50 text-stone-800"
@@ -366,6 +398,8 @@ export default function ComprehensionForm({ sidebar }: { sidebar: React.ReactNod
         isGenerating={isGenerating}
         onChange={(md) => setResult(md)}
         exportFilename="comprehension-activity"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: topic || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
     </div>
   );

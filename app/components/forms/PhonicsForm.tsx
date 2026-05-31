@@ -8,6 +8,10 @@ import ResultPanel from "@/app/components/ResultPanel";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "phonics-support";
 
 const REFINE_CHIPS = [
   "Provide more words",
@@ -35,11 +39,22 @@ export default function PhonicsForm({ sidebar }: { sidebar: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && grapheme.trim();
 
-  const formSnapshot = JSON.stringify({ curriculum, age, grapheme });
+  const formState = { curriculum, age, grapheme };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setAge((i.age as number) ?? 5);
+    setGrapheme((i.grapheme as string) ?? "");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleAgeChange = (delta: number) => {
     setAge((prev) => Math.min(18, Math.max(3, prev + delta)));
@@ -105,7 +120,10 @@ export default function PhonicsForm({ sidebar }: { sidebar: React.ReactNode }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -220,6 +238,8 @@ export default function PhonicsForm({ sidebar }: { sidebar: React.ReactNode }) {
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`phonics-support-${grapheme || "export"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: grapheme || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

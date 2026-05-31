@@ -11,6 +11,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "pupil-premium-planner";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -31,6 +35,18 @@ export default function PupilPremiumPlannerForm({ sidebar }: { sidebar: React.Re
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { challenges, educationPhase };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setChallenges((i.challenges as string) ?? "");
+    setEducationPhase((i.educationPhase as string) ?? "Primary");
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const canGenerate = challenges.trim();
   const formSnapshot = JSON.stringify({ challenges, educationPhase });
@@ -95,7 +111,7 @@ export default function PupilPremiumPlannerForm({ sidebar }: { sidebar: React.Re
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">{sidebar}<ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} /></div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -145,6 +161,8 @@ export default function PupilPremiumPlannerForm({ sidebar }: { sidebar: React.Re
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="pupil-premium-strategy-plan"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: challenges || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

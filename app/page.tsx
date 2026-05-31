@@ -7,16 +7,8 @@ import { Pin } from "lucide-react";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import Card from "@/app/components/ui/Card";
+import ToolIcon from "@/app/components/ToolIcon";
 import { TOOLS, PINNED_HREFS } from "@/app/lib/tools";
-import {
-  MdMenuBook, MdCalendarMonth, MdAssignment, MdCheckBox, MdGridView,
-  MdLightbulb, MdEdit, MdEmojiPeople, MdTextFields, MdFactCheck,
-  MdHelp, MdDesktopMac, MdEmail, MdAccessTime, MdDateRange,
-  MdVisibility, MdTrendingUp, MdSearch, MdAssignmentTurnedIn,
-  MdDescription, MdPlaylistAdd, MdWarning, MdBadge, MdShowChart,
-  MdNewspaper, MdGroups, MdBarChart, MdSecurity, MdTrackChanges,
-  MdSummarize, MdHomeWork, MdPersonSearch, MdCopyAll, MdSchool, MdSlideshow,
-} from "react-icons/md";
 
 const TAG_COLORS: Record<string, { bg: string; icon: string }> = {
   Planning: { bg: "bg-blue-100", icon: "text-blue-600" },
@@ -166,47 +158,3 @@ function ToolCard({
   );
 }
 
-const TOOL_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  "cover-lesson": MdCopyAll,
-  "comprehension": MdMenuBook,
-  "planner": MdCalendarMonth,
-  "worksheet": MdAssignment,
-  "topic": MdCheckBox,
-  "medium-term": MdGridView,
-  "sensory": MdLightbulb,
-  "model-text": MdEdit,
-  "eyfs": MdEmojiPeople,
-  "phonics": MdTextFields,
-  "exam": MdSchool,
-  "model-answer": MdFactCheck,
-  "homework": MdHomeWork,
-  "intervention": MdPersonSearch,
-  "quiz": MdHelp,
-  "lesson-slideshow": MdSlideshow,
-  "cpd-slideshow": MdDesktopMac,
-  "letter-writer": MdEmail,
-  "performance-management": MdAccessTime,
-  "meeting-planner": MdDateRange,
-  "lesson-observation": MdVisibility,
-  "learning-walk": MdTrendingUp,
-  "inspection-prep": MdSearch,
-  "eyfs-action-plan": MdAssignmentTurnedIn,
-  "ect-report": MdDescription,
-  "behaviour-support-plan": MdPlaylistAdd,
-  "risk-assessment": MdWarning,
-  "one-page-profile": MdBadge,
-  "sip": MdShowChart,
-  "newsletter": MdNewspaper,
-  "assembly": MdGroups,
-  "pupil-premium": MdBarChart,
-  "policy": MdSecurity,
-  "smart-targets": MdTrackChanges,
-  "report": MdSummarize,
-  "presentation": MdSlideshow,
-};
-
-function ToolIcon({ name, className }: { name: string; className?: string }) {
-  const Icon = TOOL_ICONS[name];
-  if (!Icon) return null;
-  return <Icon className={className} />;
-}

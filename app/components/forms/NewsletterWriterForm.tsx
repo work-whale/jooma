@@ -13,6 +13,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "newsletter-writer";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -37,6 +41,20 @@ export default function NewsletterWriterForm({ sidebar }: { sidebar: React.React
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { newsletterTitle, schoolName, tone, sections };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setNewsletterTitle((i.newsletterTitle as string) ?? "");
+    setSchoolName((i.schoolName as string) ?? "");
+    setTone((i.tone as string) ?? "");
+    setSections((i.sections as string[]) ?? [""]);
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const canGenerate = sections.some((s) => s.trim()) && tone;
   const formSnapshot = JSON.stringify({ newsletterTitle, schoolName, tone, sections });
@@ -111,7 +129,7 @@ export default function NewsletterWriterForm({ sidebar }: { sidebar: React.React
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">{sidebar}<ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} /></div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">
@@ -208,6 +226,8 @@ export default function NewsletterWriterForm({ sidebar }: { sidebar: React.React
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="newsletter"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: newsletterTitle || schoolName || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

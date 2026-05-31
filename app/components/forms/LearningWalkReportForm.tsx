@@ -17,6 +17,10 @@ import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "learning-walk-report";
 
 const REFINE_CHIPS = [
   "Make the report more detailed",
@@ -146,10 +150,26 @@ export default function LearningWalkReportForm({ sidebar }: { sidebar: React.Rea
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && strengths.trim() && areasForDevelopment.trim();
-  const formSnapshot = JSON.stringify({ curriculum, date, classesVisited, focus, strengths, areasForDevelopment, includeRecommendations, includeNextSteps });
+  const formState = { curriculum, date, classesVisited, focus, strengths, areasForDevelopment, includeRecommendations, includeNextSteps };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setDate((i.date as string) ?? new Date().toISOString().slice(0, 10));
+    setClassesVisited((i.classesVisited as string) ?? "");
+    setFocus((i.focus as string) ?? "");
+    setStrengths((i.strengths as string) ?? "");
+    setAreasForDevelopment((i.areasForDevelopment as string) ?? "");
+    setIncludeRecommendations(i.includeRecommendations === undefined ? true : Boolean(i.includeRecommendations));
+    setIncludeNextSteps(i.includeNextSteps === undefined ? true : Boolean(i.includeNextSteps));
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -212,6 +232,7 @@ export default function LearningWalkReportForm({ sidebar }: { sidebar: React.Rea
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
           {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
           <LearningWalkFocusPanel onSelect={setFocus} />
         </div>
 
@@ -306,6 +327,8 @@ export default function LearningWalkReportForm({ sidebar }: { sidebar: React.Rea
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="learning-walk-report"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: focus || classesVisited || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

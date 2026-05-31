@@ -262,3 +262,61 @@ export const TOOLS: Tool[] = [
 ];
 
 export const PINNED_HREFS: string[] = [];
+
+// Estimated minutes saved per generation versus doing the task by hand — used
+// for the dashboard "hours saved" stat. Keyed by tool slug (the `/api/<slug>`
+// and `/tools/<slug>` segment, which is what `tool_runs.tool_slug` stores).
+//
+// Anchored to published UK/teacher-time figures where they exist, conservative
+// extrapolation elsewhere (these remain ESTIMATES, not measured time):
+//   - Lesson plan ~30-40 min/lesson (a 90-min lesson takes 30-40 min to plan;
+//     DfE 2013 workload diary: primary ~10.6 hrs/wk on planning/prep).
+//   - Pupil report ~20 min/child/comment (full narrative reports up to 1 hr+).
+//   - Resource/worksheet creation: part of ~5 hrs/wk teachers spend making
+//     materials.
+// Sources: DfE Teachers' Workload Diary Survey 2013; NCTQ/EdSurge planning-time
+// data (2024); EducationWorld resource-creation survey.
+export const TOOL_MINUTES_SAVED: Record<string, number> = {
+  "lesson-planner": 40,
+  "medium-term-planner": 90,
+  "school-improvement-plan": 90,
+  "eyfs-planner": 60,
+  "lesson-slideshow": 60,
+  "cpd-slideshow": 60,
+  "policy-generator": 60,
+  "exam-question-generator": 45,
+  "behaviour-support-plan": 45,
+  "ect-report-writer": 45,
+  "eyfs-action-plan": 45,
+  "pupil-premium-planner": 45,
+  "comprehension-generator": 40,
+  "cover-lesson": 40,
+  "risk-assessment": 40,
+  "inspection-prep": 40,
+  "worksheet-generator": 30,
+  "topic-overview": 30,
+  "model-answer-generator": 30,
+  "targeted-intervention": 30,
+  "quiz-generator": 30,
+  "report-writer": 30,
+  "one-page-profile": 30,
+  "learning-walk-report": 30,
+  "lesson-observation-report": 30,
+  "performance-management": 30,
+  "assembly-planner": 30,
+  "newsletter-writer": 30,
+  "slideshow": 30,
+  "model-text-generator": 25,
+  "sensory-activities": 25,
+  "phonics-support": 25,
+  "homework-generator": 25,
+  "meeting-planner": 25,
+  "smart-targets": 20,
+  "letter-writer": 20,
+};
+
+export const DEFAULT_MINUTES_SAVED = 30;
+
+export function minutesSavedFor(slug: string): number {
+  return TOOL_MINUTES_SAVED[slug] ?? DEFAULT_MINUTES_SAVED;
+}

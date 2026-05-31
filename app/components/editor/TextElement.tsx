@@ -512,6 +512,11 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
           // visible/clickable. The selection outline is on this div, so the
           // user sees the box grow as soon as they drag a top/bottom handle.
           minHeight: text.height ?? text.fontSize,
+          // Layout-imposed clip height: visible overflow is hidden. Only applied
+          // outside edit mode so typing doesn't lose content mid-session.
+          ...(!editing && text.clipH !== undefined
+            ? { maxHeight: text.clipH, overflow: "hidden" }
+            : {}),
         }}
       />
       {selected && !editing && !text.locked && (

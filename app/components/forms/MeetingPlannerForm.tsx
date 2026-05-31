@@ -15,6 +15,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import type { ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "meeting-planner";
 
 const REFINE_CHIPS = [
   "Translate to...",
@@ -147,11 +151,25 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const durationNum = parseInt(duration, 10);
   const canGenerate = purpose.trim() && participants.trim() && !isNaN(durationNum) && durationNum >= 5 && durationNum <= 480;
-  const formSnapshot = JSON.stringify({ purpose, duration, participants, topics, includeIcebreaker, includeActionItems });
+  const formState = { purpose, duration, participants, topics, includeIcebreaker, includeActionItems };
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setPurpose((i.purpose as string) ?? "");
+    setDuration((i.duration as string) ?? "60");
+    setParticipants((i.participants as string) ?? "");
+    setTopics((i.topics as string) ?? "");
+    setIncludeIcebreaker(Boolean(i.includeIcebreaker));
+    setIncludeActionItems(Boolean(i.includeActionItems));
+    setResult(run.output);
+    setLastGenerated(JSON.stringify(i));
+  };
 
   const handleGenerate = async () => {
     setError(null);
@@ -214,6 +232,7 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
           {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
           <MeetingTypesPanel onSelect={setPurpose} />
         </div>
 
@@ -281,6 +300,8 @@ export default function MeetingPlannerForm({ sidebar }: { sidebar: React.ReactNo
         isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="meeting-plan"
+        historyMeta={{ toolSlug: TOOL_SLUG, title: purpose || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
       />
 
       {result && !isGenerating && (

@@ -11,6 +11,10 @@ import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import { exportToDocx } from "@/app/lib/exportUtils";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import { saveToolRun, type ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "quiz-generator";
 
 interface QuizQuestion {
   question: string;
@@ -380,10 +384,44 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && (mixed || yearGroup) && subject.trim() && topic.trim();
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { curriculum, yearGroup, mixed, subject, topic, numQuestions, timeLimit, answerType };
   const formSnapshot = JSON.stringify({ curriculum, yearGroup, mixed, subject, topic, numQuestions, answerType });
   const unchangedSinceGeneration = questions.length > 0 && lastGenerated === formSnapshot;
+
+  // Quiz output is a structured array, not markdown — store it as JSON text.
+  const persist = (qs: QuizQuestion[]) => {
+    if (!qs.length) return;
+    saveToolRun({
+      toolSlug: TOOL_SLUG,
+      title: topic || subject || null,
+      input: formState,
+      output: JSON.stringify(qs),
+    })
+      .then(() => setHistoryKey((k) => k + 1))
+      .catch(() => {});
+  };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setCurriculum((i.curriculum as string) ?? "");
+    setYearGroup((i.yearGroup as string) ?? "");
+    setMixed(Boolean(i.mixed));
+    setSubject((i.subject as string) ?? "");
+    setTopic((i.topic as string) ?? "");
+    setNumQuestions((i.numQuestions as number) ?? 5);
+    setTimeLimit((i.timeLimit as number) ?? 30);
+    setAnswerType((i.answerType as string) ?? "single");
+    try {
+      setQuestions(JSON.parse(run.output) as QuizQuestion[]);
+    } catch {
+      setQuestions([]);
+    }
+    setLastGenerated(JSON.stringify({ curriculum: i.curriculum, yearGroup: i.yearGroup, mixed: i.mixed, subject: i.subject, topic: i.topic, numQuestions: i.numQuestions, answerType: i.answerType }));
+  };
 
   const updateQuestion = (i: number, q: QuizQuestion) => {
     setQuestions((prev) => prev.map((old, idx) => (idx === i ? q : old)));
@@ -415,6 +453,7 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Generation failed");
       setQuestions(data.questions);
+      persist(data.questions);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -441,7 +480,11 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to add question");
-      setQuestions((prev) => [...prev, ...data.questions]);
+      setQuestions((prev) => {
+        const next = [...prev, ...data.questions];
+        persist(next);
+        return next;
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -468,6 +511,7 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Refinement failed");
       setQuestions(data.questions);
+      persist(data.questions);
     } catch {
       // questions stay as-is
     } finally {
@@ -478,7 +522,10 @@ export default function QuizGeneratorForm({ sidebar }: { sidebar: React.ReactNod
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">

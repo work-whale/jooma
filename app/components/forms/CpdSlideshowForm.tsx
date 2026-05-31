@@ -7,6 +7,10 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
+import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
+import { saveToolRun, type ToolRun } from "@/app/lib/toolRuns";
+
+const TOOL_SLUG = "cpd-slideshow";
 
 interface SlideData {
   type: "title" | "content" | "quote" | "stat" | "two-column" | "activity";
@@ -895,6 +899,39 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState("");
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Raw form state — saved as history input so a past run can refill the form.
+  const formState = { topic, slideCount, additionalFocus, presentationFocus, contentFormat, includeImageSuggestions };
+
+  // Slides are a structured array, not markdown — store as JSON text.
+  const persist = (s: SlideData[]) => {
+    if (!s.length) return;
+    saveToolRun({
+      toolSlug: TOOL_SLUG,
+      title: topic || null,
+      input: formState,
+      output: JSON.stringify(s),
+    })
+      .then(() => setHistoryKey((k) => k + 1))
+      .catch(() => {});
+  };
+
+  const restore = (run: ToolRun) => {
+    const i = run.input;
+    setTopic((i.topic as string) ?? "");
+    setSlideCount((i.slideCount as number) ?? 4);
+    setAdditionalFocus((i.additionalFocus as string) ?? "");
+    setPresentationFocus((i.presentationFocus as PresentationFocus) ?? "Practical application");
+    setContentFormat((i.contentFormat as ContentFormat) ?? "Text and bullet point summary");
+    setIncludeImageSuggestions(i.includeImageSuggestions === undefined ? true : Boolean(i.includeImageSuggestions));
+    try {
+      setSlides(JSON.parse(run.output) as SlideData[]);
+    } catch {
+      setSlides(null);
+    }
+    setLastGenerated(JSON.stringify({ topic: i.topic, slideCount: i.slideCount, additionalFocus: i.additionalFocus, presentationFocus: i.presentationFocus, contentFormat: i.contentFormat, includeImageSuggestions: i.includeImageSuggestions }));
+  };
 
   const userScrolledUp = useRef(false);
   const isGeneratingRef = useRef(isGenerating || isRefining);
@@ -959,6 +996,7 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      const collected: SlideData[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
@@ -974,6 +1012,7 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
           if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
             try {
               const slide = JSON.parse(trimmed) as SlideData;
+              collected.push(slide);
               setSlides((prev) => [...(prev ?? []), slide]);
             } catch {
               // incomplete or malformed line — skip
@@ -987,11 +1026,13 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
       if (remaining.startsWith("{") && remaining.endsWith("}")) {
         try {
           const slide = JSON.parse(remaining) as SlideData;
+          collected.push(slide);
           setSlides((prev) => [...(prev ?? []), slide]);
         } catch {
           // ignore
         }
       }
+      persist(collected);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setSlides(null);
@@ -1012,6 +1053,7 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Refinement failed");
       setSlides(data.slides);
+      persist(data.slides);
     } catch {
       // silently fail
     } finally {
@@ -1033,7 +1075,10 @@ export default function CpdSlideshowForm({ sidebar }: { sidebar: React.ReactNode
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">{sidebar}</div>
+        <div className="lg:col-span-1">
+          {sidebar}
+          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+        </div>
 
         <div className="lg:col-span-2">
           <Card className="space-y-6">

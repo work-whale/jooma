@@ -2,9 +2,10 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Bell, UserCircle } from "lucide-react";
+import { ChevronDown, Bell, UserCircle, LogOut } from "lucide-react";
 import { CiSearch } from "react-icons/ci";
 import { TOOLS } from "@/app/lib/tools";
+import { createClient } from "@/app/lib/auth/client";
 
 const TAG_COLORS: Record<string, string> = {
   Planning: "bg-blue-100 text-blue-700",
@@ -29,6 +30,34 @@ export default function TopBar({ title, onSearchChange }: TopBarProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   const trimmed = query.trim().toLowerCase();
   const results = trimmed
@@ -157,13 +186,34 @@ export default function TopBar({ title, onSearchChange }: TopBarProps) {
             Coming soon
           </span>
         </div>
-        <div className="relative group/profile">
-          <button disabled className="w-9 h-9 flex items-center justify-center rounded-2xl border border-line bg-white opacity-50 cursor-not-allowed">
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setProfileOpen((v) => !v)}
+            aria-label="Account menu"
+            aria-haspopup="menu"
+            aria-expanded={profileOpen}
+            className="w-9 h-9 flex items-center justify-center rounded-2xl border border-line bg-white hover:border-gray-400 transition-colors cursor-pointer"
+          >
             <UserCircle className="w-5 h-5 text-muted" />
           </button>
-          <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-800 px-2 py-1 text-xs text-white opacity-0 group-hover/profile:opacity-100 transition-opacity">
-            Coming soon
-          </span>
+          {profileOpen && (
+            <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden">
+              {userEmail && (
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-xs text-gray-400">Signed in as</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{userEmail}</p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
