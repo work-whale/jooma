@@ -71,7 +71,8 @@ export default function LoginPage() {
           style={{ backgroundColor: "#FAF9F5" }}
         >
           <div className="mx-auto w-full max-w-100 flex-1 flex flex-col justify-center">
-            <h1 className="text-center text-3xl font-medium text-muted mb-6">Jooma</h1>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo/logo.svg" alt="Jooma" className="mx-auto mb-6" style={{ height: 34, width: "auto" }} />
 
             <div className="text-center mb-8">
               <h2 className="text-4xl font-medium leading-tight tracking-tight">

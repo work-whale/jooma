@@ -128,7 +128,8 @@ export default function VerifyPage() {
           className="rounded-3xl px-10 py-12 flex flex-col"
           style={{ backgroundColor: "#FAF9F5" }}
         >
-          <h1 className="text-center text-3xl font-medium text-muted mb-6">Jooma</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo/logo.svg" alt="Jooma" className="mx-auto mb-6" style={{ height: 34, width: "auto" }} />
 
           <div className="mx-auto w-full max-w-110 flex-1 flex flex-col justify-center">
             <div className="text-center mb-8">

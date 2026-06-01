@@ -1,10 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  BookOpen, Clock, HelpCircle, Bookmark, FileText, MoreVertical,
-} from "lucide-react";
+import { FileText, MoreVertical } from "lucide-react";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import Card from "@/app/components/ui/Card";
@@ -62,19 +61,19 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
-                bg="bg-rose-100" iconBg="bg-rose-500" icon={<BookOpen className="w-4 h-4 text-white" />}
+                bg="bg-[#EF233C]/10" icon={<img src="/icons/lesson-plan.svg" alt="" width={36} height={36} />}
                 value={`${stats.lessonPlans} lesson plans`} sub="Created with Jooma"
               />
               <StatCard
-                bg="bg-emerald-100" iconBg="bg-emerald-500" icon={<Clock className="w-4 h-4 text-white" />}
+                bg="bg-[#16DB65]/10" icon={<img src="/icons/clock.svg" alt="" width={36} height={36} />}
                 value={`${stats.hoursSaved} hours`} sub="Estimated time saved"
               />
               <StatCard
-                bg="bg-amber-100" iconBg="bg-amber-400" icon={<HelpCircle className="w-4 h-4 text-white" />}
+                bg="bg-[#FFDC21]/10" icon={<img src="/icons/flashcards.svg" alt="" width={36} height={36} />}
                 value={`${stats.quizzes} quizzes`} sub="Ready to play"
               />
               <StatCard
-                bg="bg-indigo-100" iconBg="bg-indigo-500" icon={<Bookmark className="w-4 h-4 text-white" />}
+                bg="bg-[#3B6FF5]/10" icon={<img src="/icons/worksheet.svg" alt="" width={36} height={36} />}
                 value={`${stats.worksheets} worksheets`} sub="Ready to use"
               />
             </div>
@@ -163,13 +162,13 @@ export default function DashboardPage() {
 }
 
 function StatCard({
-  bg, iconBg, icon, value, sub,
+  bg, icon, value, sub,
 }: {
-  bg: string; iconBg: string; icon: React.ReactNode; value: string; sub: string;
+  bg: string; icon: React.ReactNode; value: string; sub: string;
 }) {
   return (
     <div className={`relative rounded-2xl p-6 ${bg} min-h-32 flex flex-col justify-end`}>
-      <span className={`absolute top-5 right-5 w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center`}>
+      <span className="absolute top-5 right-5">
         {icon}
       </span>
       <p className="text-xl font-semibold text-dark">{value}</p>
