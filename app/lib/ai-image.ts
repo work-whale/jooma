@@ -17,6 +17,30 @@ export interface GeneratedImage {
   dataUrl: string;
   width: number;
   height: number;
+  /** Which model actually served the image (for cost tracking). */
+  model?: "gpt-image-1" | "dall-e-3";
+  /** The size string requested (e.g. "1024x1024"). */
+  size?: string;
+  /** Estimated USD cost of this single image. */
+  costUsd?: number;
+}
+
+// USD cost per generated image, keyed by "model size quality".
+// gpt-image-1 values are CALIBRATED to a real OpenAI console measurement
+// (June: a 14-image deck of 12× 1024² + 2× 1536×1024 cost ~$0.216 of images,
+// i.e. ~$0.015 per square image). The earlier token-based estimates (~$0.042)
+// overstated cost ~3×. dall-e-3 prices are OpenAI's fixed per-image rates.
+const IMAGE_COST_USD: Record<string, number> = {
+  "gpt-image-1 1024x1024 medium": 0.015,
+  "gpt-image-1 1536x1024 medium": 0.022,
+  "gpt-image-1 1024x1536 medium": 0.022,
+  "dall-e-3 1024x1024 standard": 0.040,
+  "dall-e-3 1792x1024 standard": 0.080,
+  "dall-e-3 1024x1792 standard": 0.080,
+};
+
+function imageCostUsd(model: string, size: string, quality: string): number {
+  return IMAGE_COST_USD[`${model} ${size} ${quality}`] ?? 0.02; // fallback estimate
 }
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
@@ -129,7 +153,14 @@ export async function generateAIImage(
 
       try {
         const publicUrl = await uploadImageBytes(bytes, "image/png", "ai");
-        return { dataUrl: publicUrl, width: att.w, height: att.h };
+        return {
+          dataUrl: publicUrl,
+          width: att.w,
+          height: att.h,
+          model: att.model,
+          size: att.size,
+          costUsd: imageCostUsd(att.model, att.size, att.quality),
+        };
       } catch (uploadErr) {
         console.error("AI image storage upload failed:", uploadErr);
         // Bail rather than fall back to base64 — base64 is exactly what we're

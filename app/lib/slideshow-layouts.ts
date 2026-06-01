@@ -49,7 +49,11 @@ export type SlideLayout =
   | "activity-ordering"
   | "activity-ordering-answer"
   | "activity-question"
-  | "activity-question-answer";
+  | "activity-question-answer"
+  | "activity-multichoice"
+  | "activity-multichoice-answer"
+  | "activity-vocab-match"
+  | "activity-vocab-match-answer";
 
 export type ColorScheme = "light" | "dark" | "accent";
 
@@ -1423,6 +1427,130 @@ function renderActivityQuestion(spec: SlideSpec, t: Theme, answerMode: boolean):
   };
 }
 
+// ── Activity: Multiple Choice ─────────────────────────────────────────────────
+// 4 lettered answer boxes. Answer slide highlights the correct option in green.
+function renderActivityMultichoice(spec: SlideSpec, t: Theme, answerMode: boolean): SlideJSON {
+  const headingColor = activeTheme?.palette.headingColor ?? t.accent;
+  const cardBg       = activeTheme?.palette.activityCardBg ?? "#e7eef7";
+  const cardInk      = activeTheme?.palette.activityCardInk ?? t.text;
+  const checkBg      = activeTheme?.palette.checkBadgeBg ?? "#2e9d54";
+  const checkInk     = activeTheme?.palette.checkBadgeInk ?? "#ffffff";
+
+  const items = spec.activityItems ?? [];
+  // activityCorrectOrder[0] = index of the correct option
+  const correctIndex = answerMode ? (spec.activityCorrectOrder?.[0] ?? -1) : -1;
+
+  const cardsLeft   = 80;
+  const cardsWidth  = SLIDE_W - 160;
+  const bodyY       = spec.body ? 160 : 200;
+  const cardsTop    = spec.body ? 220 : 200;
+  const cardsBottom = SLIDE_H - 60;
+  const gap         = 14;
+  const cardCount   = Math.max(1, items.length || 4);
+  const cardHeight  = Math.max(50, (cardsBottom - cardsTop - gap * (cardCount - 1)) / cardCount);
+
+  const shapes: ShapeObject[] = [makePaperBackdrop(activeTheme)];
+  const texts: TextObject[] = [
+    makeText(spec.title, 80, 80, SLIDE_W - 180, 44, "800", headingColor, "left"),
+    ...(!answerMode ? [makeText("Answers on the next slide…", 880, 92, 320, 20, "600", t.muted, "right")] : []),
+    ...(spec.body ? [makeText(spec.body, cardsLeft, bodyY, cardsWidth, 22, "400", t.text, "left")] : []),
+  ];
+
+  // ✓ badge on answer slide
+  if (answerMode) {
+    shapes.push({ id: nid("chk"), type: "rect", x: SLIDE_W - 80, y: 64, width: 44, height: 44, fill: checkBg, stroke: "none", strokeWidth: 0, opacity: 1, cornerRadius: 10 });
+    texts.push(makeText("✓", SLIDE_W - 80, 68, 44, 36, "800", checkInk, "center"));
+  }
+
+  const letters = ["A", "B", "C", "D"];
+  for (let i = 0; i < items.length; i++) {
+    const y        = cardsTop + i * (cardHeight + gap);
+    const isRight  = answerMode && i === correctIndex;
+    const isWrong  = answerMode && i !== correctIndex;
+    const bg       = isRight ? "#d1fae5" : isWrong ? "#f3f4f6" : cardBg;
+    const border   = isRight ? "#059669"  : "rgba(0,0,0,0.18)";
+    const bw       = isRight ? 2 : 1.5;
+    const ink      = isWrong ? "#9ca3af" : cardInk;
+    const labelH   = 22 * 1.2;
+
+    shapes.push({ id: nid("card"), type: "rect", x: cardsLeft, y, width: cardsWidth, height: cardHeight, fill: bg, stroke: border, strokeWidth: bw, opacity: 1, cornerRadius: 12 });
+    texts.push(
+      makeText(`${letters[i] ?? String(i + 1)}.`, cardsLeft + 16, y + (cardHeight - labelH) / 2, 30, 22, "700", ink, "left"),
+      makeText(items[i] ?? "", cardsLeft + 56, y + (cardHeight - labelH) / 2, cardsWidth - 72, 22, "600", ink, "left"),
+    );
+  }
+
+  return { shapes, texts, images: [], background: t.bg };
+}
+
+// ── Activity: Vocabulary Matching ─────────────────────────────────────────────
+// Terms numbered 1-4 on the left; definitions lettered a-d on the right (shuffled
+// in question mode). Answer slide reveals the correct term→definition pairings.
+function renderActivityVocabMatch(spec: SlideSpec, t: Theme, answerMode: boolean): SlideJSON {
+  const headingColor = activeTheme?.palette.headingColor ?? t.accent;
+  const cardBg       = activeTheme?.palette.activityCardBg ?? "#e7eef7";
+  const cardInk      = activeTheme?.palette.activityCardInk ?? t.text;
+  const checkBg      = activeTheme?.palette.checkBadgeBg ?? "#2e9d54";
+  const checkInk     = activeTheme?.palette.checkBadgeInk ?? "#ffffff";
+
+  const terms      = spec.activityItems ?? [];
+  const defs       = spec.bullets ?? [];
+  // activityCorrectOrder[i] = index into defs[] that is the correct match for terms[i]
+  const correctOrder = spec.activityCorrectOrder ?? terms.map((_, i) => i);
+  const letters    = ["a", "b", "c", "d"];
+
+  const count      = Math.min(terms.length, 4);
+  const termW      = 440;
+  const defX       = 560;
+  const defW       = SLIDE_W - defX - 60;
+  const rowTop     = 185;
+  const rowH       = 90;
+  const rowGap     = 10;
+
+  const shapes: ShapeObject[] = [makePaperBackdrop(activeTheme)];
+  const texts: TextObject[] = [
+    makeText(spec.title, 80, 80, SLIDE_W - 180, 44, "800", headingColor, "left"),
+    ...(!answerMode ? [makeText("Match each term to its definition.", 80, 148, SLIDE_W - 160, 18, "400", t.muted, "left")] : []),
+  ];
+
+  // ✓ badge on answer slide
+  if (answerMode) {
+    shapes.push({ id: nid("chk"), type: "rect", x: SLIDE_W - 80, y: 64, width: 44, height: 44, fill: checkBg, stroke: "none", strokeWidth: 0, opacity: 1, cornerRadius: 10 });
+    texts.push(makeText("✓", SLIDE_W - 80, 68, 44, 36, "800", checkInk, "center"));
+  }
+
+  for (let i = 0; i < count; i++) {
+    const y       = rowTop + i * (rowH + rowGap);
+    const textY   = y + (rowH - 22) / 2;
+
+    // Term card
+    shapes.push({ id: nid("term"), type: "rect", x: 60, y, width: termW, height: rowH, fill: cardBg, stroke: "rgba(0,0,0,0.15)", strokeWidth: 1.5, opacity: 1, cornerRadius: 10 });
+    texts.push(
+      makeText(`${i + 1}.`, 74, textY, 26, 20, "700", cardInk, "left"),
+      makeText(terms[i] ?? "", 106, textY, termW - 56, 20, "600", cardInk, "left"),
+    );
+
+    if (answerMode) {
+      // Show the correct definition for this term
+      const defIdx  = correctOrder[i] ?? i;
+      const letter  = letters[defIdx] ?? String.fromCharCode(97 + defIdx);
+      texts.push(
+        makeText(`${letter})`, defX, textY, 30, 20, "700", "#059669", "left"),
+        makeText(defs[defIdx] ?? "", defX + 34, textY, defW - 34, 20, "400", t.text, "left"),
+      );
+    } else {
+      // Show definitions in their given (shuffled) order
+      const letter  = letters[i] ?? String.fromCharCode(97 + i);
+      texts.push(
+        makeText(`${letter})`, defX, textY, 30, 20, "700", t.muted, "left"),
+        makeText(defs[i] ?? "", defX + 34, textY, defW - 34, 20, "400", t.text, "left"),
+      );
+    }
+  }
+
+  return { shapes, texts, images: [], background: t.bg };
+}
+
 // ── Public renderer ────────────────────────────────────────────────────────
 
 export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJSON {
@@ -1529,6 +1657,10 @@ function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
     case "activity-ordering-answer": return renderActivityOrdering(spec, t, true);
     case "activity-question": return renderActivityQuestion(spec, t, false);
     case "activity-question-answer": return renderActivityQuestion(spec, t, true);
+    case "activity-multichoice": return renderActivityMultichoice(spec, t, false);
+    case "activity-multichoice-answer": return renderActivityMultichoice(spec, t, true);
+    case "activity-vocab-match": return renderActivityVocabMatch(spec, t, false);
+    case "activity-vocab-match-answer": return renderActivityVocabMatch(spec, t, true);
     default: return renderTitleBody(spec, t);
   }
 }

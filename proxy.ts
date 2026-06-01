@@ -11,9 +11,16 @@ const PUBLIC_PATHS = [
   "/auth",
   "/terms",
   "/privacy",
+  "/pricing",
+  // Stripe calls this server-to-server with no session; it verifies its own
+  // signature, so it must bypass the auth redirect.
+  "/api/stripe/webhook",
 ];
 
 function isPublic(pathname: string) {
+  // The marketing landing page at "/" is public (exact match only — we don't
+  // want "/" to prefix-match every other route).
+  if (pathname === "/") return true;
   return PUBLIC_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
@@ -52,17 +59,23 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Unauthenticated visitor hitting a protected route -> send to login.
+  // Unauthenticated request to a protected route.
   if (!user && !isPublic(pathname)) {
+    // API routes must NOT be redirected to the HTML login page — the caller
+    // does res.json() and would choke on "<!DOCTYPE html>". Return a clean
+    // 401 JSON instead so the error is legible.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Already signed in but sitting on login/signup -> send home.
+  // Already signed in but sitting on login/signup -> send into the app.
   if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/tools";
     return NextResponse.redirect(url);
   }
 

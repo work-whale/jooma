@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import { SLIDESHOW_THEMES, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
@@ -114,9 +114,8 @@ export default function GenerateModal({ onClose }: Props) {
   const [curGrade, setCurGrade] = useState("");
   const [curSubject, setCurSubject] = useState("");
   const [curStrand, setCurStrand] = useState("");
-  // "Use existing resources" — toggled off by default. When attached, the
-  // extracted text gets sent to the AI as base material for the deck.
-  const [useResource, setUseResource] = useState(false);
+  // Resource attached in Step 1 — always available (no toggle).
+  // When attached, the extracted text gets sent to the AI as base material.
   const [resourceText, setResourceText] = useState("");
   const [resourceSource, setResourceSource] = useState("");
   const [resourceBusy, setResourceBusy] = useState(false);
@@ -252,8 +251,8 @@ export default function GenerateModal({ onClose }: Props) {
         imageSource,
         imageStyle: imageSource === "web" ? undefined : imageStyle,
         themeId,
-        resourceText: useResource && resourceText ? resourceText : undefined,
-        resourceSource: useResource && resourceSource ? resourceSource : undefined,
+        resourceText: resourceText || undefined,
+        resourceSource: resourceSource || undefined,
         curriculum:
           alignCurriculum && curSubject && curStrand
             ? {
@@ -395,109 +394,126 @@ export default function GenerateModal({ onClose }: Props) {
             </div>
           ) : step === 1 ? (
             <>
-              <label className="block">
-                <span className="text-xs font-semibold text-gray-700">Lesson topic</span>
-                <input
-                  type="text"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="E.g. The Solar System"
-                  required
-                  disabled={busy}
-                  autoFocus
-                  // Chrome's autofill misreads this as an identity-card field
-                  // ("Save identity card?" pop-up). Disable browser autofill
-                  // entirely — same goes for the other inputs in this modal.
-                  autoComplete="off"
-                  data-1p-ignore
-                  data-lpignore="true"
-                  name="lesson-topic"
-                  className="mt-1 w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60"
-                  style={{ borderColor: "#DAD8D0" }}
-                />
-              </label>
+              {/* Topic input */}
+              <input
+                type="text"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="E.g. The French Revolution"
+                required
+                disabled={busy}
+                autoFocus
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
+                name="lesson-topic"
+                className="w-full px-4 py-3 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 placeholder:text-gray-400"
+                style={{ borderColor: "#DAD8D0", fontSize: "15px" }}
+              />
 
-              <div className="grid grid-cols-3 gap-3">
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-700">Year</span>
-                  <select
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    disabled={busy}
-                    className="mt-1 w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
-                    style={{ borderColor: "#DAD8D0" }}
-                  >
-                    <option value="">Choose a year</option>
-                    {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-700">Reading level</span>
-                  <select
-                    value={readingLevel}
-                    onChange={(e) => setReadingLevel(e.target.value)}
-                    disabled={busy}
-                    className="mt-1 w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
-                    style={{ borderColor: "#DAD8D0" }}
-                  >
-                    {READING_LEVELS.map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-xs font-semibold text-gray-700">Slides</span>
-                  <select
-                    value={slideCount}
-                    onChange={(e) => setSlideCount(Number(e.target.value))}
-                    disabled={busy}
-                    className="mt-1 w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
-                    style={{ borderColor: "#DAD8D0" }}
-                  >
-                    {SLIDE_COUNTS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </label>
+              {/* Inline pill selectors */}
+              <div className="flex flex-wrap gap-2">
+                <PillSelect
+                  icon={<GraduationCap className="w-3.5 h-3.5" />}
+                  value={year}
+                  placeholder="Year group"
+                  options={[{ value: "", label: "Any year" }, ...YEARS.map((y) => ({ value: y, label: y }))]}
+                  onChange={setYear}
+                  disabled={busy}
+                />
+                <PillSelect
+                  icon={<BookOpen className="w-3.5 h-3.5" />}
+                  value={readingLevel}
+                  placeholder="Reading level"
+                  options={READING_LEVELS.map((r) => ({ value: r, label: r }))}
+                  onChange={setReadingLevel}
+                  disabled={busy}
+                />
+                <PillSelect
+                  icon={<Layers className="w-3.5 h-3.5" />}
+                  value={String(slideCount)}
+                  placeholder="Slides"
+                  options={SLIDE_COUNTS.map((c) => ({ value: String(c), label: `${c} slides` }))}
+                  onChange={(v) => setSlideCount(Number(v))}
+                  disabled={busy}
+                />
               </div>
 
+              {/* Instructions textarea */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-gray-700">
-                    Additional instructions <span className="text-gray-400 font-normal">(optional)</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleGenerateOutline}
-                    disabled={outlineBusy || busy || !topic.trim()}
-                    title={!topic.trim() ? "Enter a lesson topic first" : "Let AI sketch an outline for you"}
-                    className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-colors disabled:opacity-50"
-                    style={{ borderColor: "#0f5f3a", color: "#0f5f3a", backgroundColor: "#fff" }}
-                  >
-                    {outlineBusy ? (
-                      <>
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        Generating…
-                      </>
-                    ) : (
-                      <>
-                        Generate lesson outline
-                        <Sparkles className="w-3 h-3" />
-                      </>
-                    )}
-                  </button>
-                </div>
                 <textarea
                   value={additionalInstructions}
                   onChange={(e) => setAdditionalInstructions(e.target.value)}
-                  placeholder="You can include specific topics, learning objectives or paste in existing lesson plans..."
+                  placeholder="Any specific instructions or topics?"
                   rows={3}
                   disabled={busy || outlineBusy}
                   autoComplete="off"
                   data-1p-ignore
                   data-lpignore="true"
                   name="lesson-instructions"
-                  className="w-full px-3 py-2 text-sm bg-white border rounded-xl focus:outline-none disabled:opacity-60"
+                  className="w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none resize-none disabled:opacity-60 placeholder:text-gray-400"
                   style={{ borderColor: "#DAD8D0" }}
                 />
-                {outlineError && <p className="text-[11px] text-red-600 mt-1">{outlineError}</p>}
+                <div className="flex items-center justify-between mt-1.5 px-0.5">
+                  {outlineError
+                    ? <p className="text-[11px] text-red-600">{outlineError}</p>
+                    : <span />
+                  }
+                  <button
+                    type="button"
+                    onClick={handleGenerateOutline}
+                    disabled={outlineBusy || busy || !topic.trim()}
+                    title={!topic.trim() ? "Enter a lesson topic first" : "Let AI sketch an outline for you"}
+                    className="flex items-center gap-1 text-[12px] font-semibold transition-colors disabled:opacity-40"
+                    style={{ color: "#0f5f3a" }}
+                  >
+                    {outlineBusy
+                      ? <><Loader2 className="w-3 h-3 animate-spin" />Generating…</>
+                      : <><Sparkles className="w-3 h-3" />Generate outline</>
+                    }
+                  </button>
+                </div>
               </div>
+
+              {/* Always-visible upload zone */}
+              <InlineUploadZone
+                busy={resourceBusy}
+                text={resourceText}
+                source={resourceSource}
+                error={resourceError}
+                onAttach={async (input) => {
+                  setResourceBusy(true);
+                  setResourceError(null);
+                  try {
+                    let res: Response;
+                    if (input.kind === "url") {
+                      res = await fetch("/api/extract-resource", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: input.url }),
+                      });
+                    } else {
+                      const fd = new FormData();
+                      fd.append("file", input.file);
+                      res = await fetch("/api/extract-resource", { method: "POST", body: fd });
+                    }
+                    if (!res.ok) {
+                      const err = await res.json().catch(() => ({}));
+                      throw new Error(err.error || err.message || "Couldn't read that resource");
+                    }
+                    const data: { text: string; source: string } = await res.json();
+                    if (!data.text?.trim()) throw new Error("Resource was empty or unreadable");
+                    setResourceText(data.text);
+                    setResourceSource(data.source);
+                  } catch (err) {
+                    setResourceError(err instanceof Error ? err.message : "Extraction failed");
+                  } finally {
+                    setResourceBusy(false);
+                  }
+                }}
+                onClear={() => { setResourceText(""); setResourceSource(""); setResourceError(null); }}
+                disabled={busy}
+              />
             </>
           ) : (
             <>
@@ -732,66 +748,6 @@ export default function GenerateModal({ onClose }: Props) {
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Lesson material</p>
-                <ResourceAttachmentCard
-                  checked={useResource}
-                  onChange={(v) => {
-                    setUseResource(v);
-                    if (!v) {
-                      setResourceText("");
-                      setResourceSource("");
-                      setResourceError(null);
-                    }
-                  }}
-                  busy={resourceBusy}
-                  text={resourceText}
-                  source={resourceSource}
-                  error={resourceError}
-                  onAttach={async (input) => {
-                    setResourceBusy(true);
-                    setResourceError(null);
-                    try {
-                      let res: Response;
-                      if (input.kind === "url") {
-                        res = await fetch("/api/extract-resource", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ url: input.url }),
-                        });
-                      } else {
-                        const fd = new FormData();
-                        fd.append("file", input.file);
-                        res = await fetch("/api/extract-resource", {
-                          method: "POST",
-                          body: fd,
-                        });
-                      }
-                      if (!res.ok) {
-                        const err = await res.json().catch(() => ({}));
-                        throw new Error(err.error || err.message || "Couldn't read that resource");
-                      }
-                      const data: { text: string; source: string } = await res.json();
-                      if (!data.text?.trim()) {
-                        throw new Error("Resource was empty or unreadable");
-                      }
-                      setResourceText(data.text);
-                      setResourceSource(data.source);
-                    } catch (err) {
-                      setResourceError(err instanceof Error ? err.message : "Extraction failed");
-                    } finally {
-                      setResourceBusy(false);
-                    }
-                  }}
-                  onClear={() => {
-                    setResourceText("");
-                    setResourceSource("");
-                    setResourceError(null);
-                  }}
-                  disabled={busy}
-                />
-              </div>
-
-              <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Images</p>
                 <div className="bg-white border rounded-xl p-4 space-y-4" style={{ borderColor: "#DAD8D0" }}>
                   <div className="flex items-start gap-3">
@@ -1017,16 +973,269 @@ function ToggleCard({
 // Country picker with flag images. Native <select> can't render <img> inside
 // <option>, and emoji flags don't render on Windows — so this is a custom
 // dropdown that fetches SVG flags from flagcdn.com (same pattern as the
-// CountrySelect in /complete-profile). Used inside CurriculumAlignmentCard.
-// "Use existing resources" toggle card. Mirrors the curriculum-alignment
-// pattern: collapsed shows the checkbox row, expanded shows a 3-up button
-// grid for attaching content (file upload / Drive [stubbed] / URL paste).
-// Once a resource is attached, the grid is replaced by a status chip with
-// a Replace button. The actual extraction lives in /api/extract-resource.
+// ── PillSelect ────────────────────────────────────────────────────────────────
+// Inline pill button that opens a small dropdown list. Used in Step 1 for Year,
+// Reading Level, and Slide Count — replacing the old 3-column grid of selects.
+
+function PillSelect({
+  icon,
+  value,
+  placeholder,
+  options,
+  onChange,
+  disabled,
+}: {
+  icon?: React.ReactNode;
+  value: string;
+  placeholder: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <button
+        type="button"
+        onClick={() => !disabled && setOpen((v) => !v)}
+        disabled={disabled}
+        className="flex items-center gap-1.5 pl-3 pr-2.5 py-1.5 rounded-full border text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50"
+        style={{ borderColor: "#DAD8D0", color: "#1a1a1a", backgroundColor: open ? "#f5f4f0" : "#fff" }}
+      >
+        {icon && <span className="text-gray-500">{icon}</span>}
+        <span>{selected?.label ?? placeholder}</span>
+        <ChevronDown className="w-3 h-3 text-gray-400" />
+      </button>
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1.5 z-50 rounded-xl border bg-white shadow-lg min-w-40 py-1.5 overflow-hidden"
+          style={{ borderColor: "#DAD8D0" }}
+        >
+          {options.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors"
+              style={{
+                color: o.value === value ? "#1a1a1a" : "#6b7280",
+                fontWeight: o.value === value ? 600 : 400,
+              }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── InlineUploadZone ──────────────────────────────────────────────────────────
+// Always-visible upload zone for Step 1. Supports drag-and-drop, file picker,
+// and URL paste. When a resource is attached, shows a success chip instead.
+
 type ResourceInput =
   | { kind: "file"; file: File }
   | { kind: "url"; url: string };
 
+function InlineUploadZone({
+  busy,
+  text,
+  source,
+  error,
+  onAttach,
+  onClear,
+  disabled,
+}: {
+  busy: boolean;
+  text: string;
+  source: string;
+  error: string | null;
+  onAttach: (input: ResourceInput) => Promise<void> | void;
+  onClear: () => void;
+  disabled?: boolean;
+}) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [urlOpen, setUrlOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const hasResource = !!text;
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && !disabled && !busy) onAttach({ kind: "file", file });
+  };
+
+  return (
+    <div className="space-y-2">
+      {hasResource ? (
+        <div
+          className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border"
+          style={{ backgroundColor: "#f0faf5", borderColor: "#A7F3D0" }}
+        >
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-gray-900 truncate">{source}</p>
+            <p className="text-[10px] text-gray-500">
+              {text.length.toLocaleString()} chars extracted — will be used as lesson material
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={disabled || busy}
+            className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-emerald-100 transition-colors disabled:opacity-50"
+          >
+            <X className="w-3 h-3 text-gray-500" />
+          </button>
+        </div>
+      ) : (
+        <>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => !disabled && !busy && fileRef.current?.click()}
+            className="relative rounded-xl border-2 border-dashed cursor-pointer transition-colors"
+            style={{
+              borderColor: dragOver ? "#1a1a1a" : "#DAD8D0",
+              backgroundColor: dragOver ? "#f5f4f0" : "#fff",
+            }}
+          >
+            {busy ? (
+              <div className="flex flex-col items-center gap-2 py-6">
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                <p className="text-xs text-gray-500">Reading resource…</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-5 px-4">
+                <div className="flex items-center gap-5">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); if (!disabled && !busy) fileRef.current?.click(); }}
+                    disabled={disabled || busy}
+                    className="flex flex-col items-center gap-1 group disabled:opacity-50"
+                    title="Upload a file"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors group-hover:bg-gray-50"
+                      style={{ borderColor: "#DAD8D0" }}
+                    >
+                      <FileUp className="w-4.5 h-4.5 text-gray-500" />
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="flex flex-col items-center gap-1 opacity-35 cursor-not-allowed"
+                    title="Import from Drive — coming soon"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center border"
+                      style={{ borderColor: "#DAD8D0" }}
+                    >
+                      <FolderSymlink className="w-4.5 h-4.5 text-gray-500" />
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); if (!disabled && !busy) setUrlOpen((v) => !v); }}
+                    disabled={disabled || busy}
+                    className="flex flex-col items-center gap-1 group disabled:opacity-50"
+                    title="Paste a URL"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors group-hover:bg-gray-50"
+                      style={{ borderColor: "#DAD8D0" }}
+                    >
+                      <LinkIcon className="w-4.5 h-4.5 text-gray-500" />
+                    </div>
+                  </button>
+                </div>
+                <div className="text-center pointer-events-none select-none">
+                  <p className="text-sm font-medium text-gray-700">Drop files here or click to upload</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Add existing lesson presentations, plans or resources</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {urlOpen && (
+            <div className="flex items-center gap-2">
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && urlInput.trim()) {
+                    e.preventDefault();
+                    onAttach({ kind: "url", url: urlInput.trim() });
+                    setUrlOpen(false);
+                    setUrlInput("");
+                  }
+                }}
+                placeholder="https://en.wikipedia.org/wiki/..."
+                disabled={disabled || busy}
+                autoFocus
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
+                name="resource-url"
+                className="flex-1 px-3 py-2 text-xs bg-white border rounded-xl focus:outline-none disabled:opacity-60"
+                style={{ borderColor: "#DAD8D0" }}
+              />
+              <button
+                type="button"
+                onClick={() => { if (urlInput.trim()) { onAttach({ kind: "url", url: urlInput.trim() }); setUrlOpen(false); setUrlInput(""); } }}
+                disabled={!urlInput.trim() || disabled || busy}
+                className="px-3 py-2 text-xs font-semibold rounded-xl disabled:opacity-50"
+                style={{ backgroundColor: "#1a1a1a", color: "#fff" }}
+              >
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Fetch"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setUrlOpen(false); setUrlInput(""); }}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      {error && <p className="text-[11px] text-red-600 px-0.5">{error}</p>}
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onAttach({ kind: "file", file: f });
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+// CountrySelect in /complete-profile). Used inside CurriculumAlignmentCard.
+// Legacy ResourceAttachmentCard — currently unused but kept for potential reuse.
 function ResourceAttachmentCard({
   checked,
   onChange,

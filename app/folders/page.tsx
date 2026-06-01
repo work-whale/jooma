@@ -166,7 +166,7 @@ export default function FoldersPage() {
               />
             </div>
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/tools")}
               className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#030303] text-white text-sm font-medium hover:bg-black transition-colors cursor-pointer shrink-0"
             >
               Browse tools

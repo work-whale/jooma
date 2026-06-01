@@ -1,16 +1,16 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  BookOpen, Clock, HelpCircle, Bookmark, FileText, MoreVertical,
-} from "lucide-react";
+import { MoreVertical } from "lucide-react";
+import ToolIcon from "@/app/components/ToolIcon";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import Card from "@/app/components/ui/Card";
 import { minutesSavedFor } from "@/app/lib/tools";
 import { listRecentRuns, type ToolRun } from "@/app/lib/toolRuns";
-import { toolForSlug, typeLabel, formatDate, TAG_COLORS } from "@/app/lib/toolRunDisplay";
+import { toolForSlug, typeLabel, formatDate } from "@/app/lib/toolRunDisplay";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -62,19 +62,19 @@ export default function DashboardPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
-                bg="bg-rose-100" iconBg="bg-rose-500" icon={<BookOpen className="w-4 h-4 text-white" />}
+                bg="bg-[#EF233C]/10" icon={<img src="/icons/lesson-plan.svg" alt="" width={36} height={36} />}
                 value={`${stats.lessonPlans} lesson plans`} sub="Created with Jooma"
               />
               <StatCard
-                bg="bg-emerald-100" iconBg="bg-emerald-500" icon={<Clock className="w-4 h-4 text-white" />}
+                bg="bg-[#16DB65]/10" icon={<img src="/icons/clock.svg" alt="" width={36} height={36} />}
                 value={`${stats.hoursSaved} hours`} sub="Estimated time saved"
               />
               <StatCard
-                bg="bg-amber-100" iconBg="bg-amber-400" icon={<HelpCircle className="w-4 h-4 text-white" />}
+                bg="bg-[#FFDC21]/10" icon={<img src="/icons/flashcards.svg" alt="" width={36} height={36} />}
                 value={`${stats.quizzes} quizzes`} sub="Ready to play"
               />
               <StatCard
-                bg="bg-indigo-100" iconBg="bg-indigo-500" icon={<Bookmark className="w-4 h-4 text-white" />}
+                bg="bg-[#3B6FF5]/10" icon={<img src="/icons/worksheet.svg" alt="" width={36} height={36} />}
                 value={`${stats.worksheets} worksheets`} sub="Ready to use"
               />
             </div>
@@ -116,7 +116,6 @@ export default function DashboardPage() {
                 <tbody>
                   {recent.map((run) => {
                     const tool = toolForSlug(run.tool_slug);
-                    const colors = (tool && TAG_COLORS[tool.tag]) || { bg: "bg-gray-100", icon: "text-gray-600" };
                     const input = run.input as Record<string, unknown>;
                     const subject = (input.subject as string) || "—";
                     const year = (input.yearGroup as string) || "—";
@@ -128,9 +127,7 @@ export default function DashboardPage() {
                       >
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-3">
-                            <span className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
-                              <FileText className={`w-4 h-4 ${colors.icon}`} />
-                            </span>
+                            <ToolIcon name={tool?.icon ?? ""} className="w-8 h-8 shrink-0" />
                             <span className="font-medium text-dark truncate max-w-xs">
                               {run.title?.trim() || "Untitled"}
                             </span>
@@ -163,13 +160,13 @@ export default function DashboardPage() {
 }
 
 function StatCard({
-  bg, iconBg, icon, value, sub,
+  bg, icon, value, sub,
 }: {
-  bg: string; iconBg: string; icon: React.ReactNode; value: string; sub: string;
+  bg: string; icon: React.ReactNode; value: string; sub: string;
 }) {
   return (
     <div className={`relative rounded-2xl p-6 ${bg} min-h-32 flex flex-col justify-end`}>
-      <span className={`absolute top-5 right-5 w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center`}>
+      <span className="absolute top-5 right-5">
         {icon}
       </span>
       <p className="text-xl font-semibold text-dark">{value}</p>

@@ -65,8 +65,9 @@ export default function EditorTopBar({
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <Link href="/tools/slideshow" className="text-xl font-bold text-gray-900 hover:opacity-70">
-          Jooma
+        <Link href="/tools/slideshow" className="hover:opacity-70 transition-opacity">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo/logo.svg" alt="Jooma" style={{ height: 22, width: "auto" }} />
         </Link>
         <span className="text-gray-400">/</span>
         <input

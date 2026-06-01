@@ -45,7 +45,11 @@ export default function CompleteProfilePage() {
   const [surname, setSurname] = useState("");
   const [dialCountry, setDialCountry] = useState(DEFAULT_CODE);
   const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState<string | null>(null);
+  // Seeded from the dial code so the user doesn't have to pick twice.
+  const [country, setCountry] = useState<string | null>(DEFAULT_CODE);
+
+  // Keep country in sync when the dial code changes (user can still override).
+  useEffect(() => { setCountry(dialCountry); }, [dialCountry]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -62,9 +66,22 @@ export default function CompleteProfilePage() {
     setError(null);
     setLoading(true);
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let { data: { user } } = await supabase.auth.getUser();
+
+    // If the cookie race-condition means no session yet, try restoring from
+    // the token stashed by create-password right after signUp.
+    if (!user) {
+      const accessToken  = sessionStorage.getItem("jooma:auth-token");
+      const refreshToken = sessionStorage.getItem("jooma:auth-refresh");
+      if (accessToken) {
+        const { data: restored } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken ?? "",
+        });
+        user = restored.user ?? null;
+      }
+    }
+
     if (!user) {
       setError("Your session expired. Please sign in again.");
       setLoading(false);
@@ -84,7 +101,9 @@ export default function CompleteProfilePage() {
       return;
     }
     sessionStorage.removeItem("jooma:auth-email");
-    router.push("/");
+    sessionStorage.removeItem("jooma:auth-token");
+    sessionStorage.removeItem("jooma:auth-refresh");
+    router.push("/tools");
     router.refresh();
   };
 
@@ -112,7 +131,8 @@ export default function CompleteProfilePage() {
           style={{ backgroundColor: "#FAF9F5" }}
         >
           <div className="mx-auto w-full max-w-110 flex-1 flex flex-col justify-center">
-            <h1 className="text-center text-3xl font-medium text-muted mb-6">Jooma</h1>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo/logo.svg" alt="Jooma" className="mx-auto mb-6" style={{ height: 34, width: "auto" }} />
 
             <div className="text-center mb-8">
               <h2 className="text-4xl font-medium leading-tight tracking-tight">

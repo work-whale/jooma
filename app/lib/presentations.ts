@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { createClient } from "./auth/client";
 import { DEFAULT_THEME_ID } from "./slideshowThemes";
 
 export interface TextObject {
@@ -306,12 +306,8 @@ export function setDeckTheme(slides: SlideJSON[], themeId: string): SlideJSON[] 
 const TABLE = "presentations";
 
 export async function listPresentations(): Promise<PresentationListItem[]> {
-  // Use the RPC, not a plain select. The RPC returns first_slide (stripped of
-  // backgroundImage and images[].src to keep the payload tiny) plus a
-  // jsonb_array_length-derived slide_count. A plain select on the table
-  // would either drop these fields or pull the entire `slides` JSONB blob —
-  // both useless for the list view.
-  const { data, error } = await supabase
+  const sb = createClient();
+  const { data, error } = await sb
     .rpc("list_presentations_lite")
     .order("updated_at", { ascending: false });
   if (error) throw error;
@@ -319,7 +315,8 @@ export async function listPresentations(): Promise<PresentationListItem[]> {
 }
 
 export async function getPresentation(id: string): Promise<Presentation | null> {
-  const { data, error } = await supabase
+  const sb = createClient();
+  const { data, error } = await sb
     .from(TABLE)
     .select("*")
     .eq("id", id)
@@ -329,7 +326,8 @@ export async function getPresentation(id: string): Promise<Presentation | null> 
 }
 
 export async function createPresentation(opts?: { title?: string; slides?: SlideJSON[] }): Promise<Presentation> {
-  const { data, error } = await supabase
+  const sb = createClient();
+  const { data, error } = await sb
     .from(TABLE)
     .insert({
       title: opts?.title ?? "Untitled Slideshow",
@@ -345,7 +343,8 @@ export async function updatePresentation(
   id: string,
   patch: Partial<Pick<Presentation, "title" | "slides">>,
 ): Promise<void> {
-  const { error } = await supabase
+  const sb = createClient();
+  const { error } = await sb
     .from(TABLE)
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -353,6 +352,7 @@ export async function updatePresentation(
 }
 
 export async function deletePresentation(id: string): Promise<void> {
-  const { error } = await supabase.from(TABLE).delete().eq("id", id);
+  const sb = createClient();
+  const { error } = await sb.from(TABLE).delete().eq("id", id);
   if (error) throw error;
 }
