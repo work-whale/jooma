@@ -109,3 +109,67 @@ summary {
 .jooma-thumb-pop {
   animation: jooma-thumb-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* ── Landing-page animated tool previews ─────────────────────────────────────
+   Pure-CSS looping mockups that read like a muted autoplay video. The wrapping
+   container is pointer-events:none / user-select:none so they feel inert. All
+   share a ~5s cycle so the row stays visually in harmony. */
+
+/* A text line / block growing in from the left, holding, then clearing. */
+@keyframes tp-line {
+  0%        { transform: scaleX(0); opacity: 0; }
+  12%       { transform: scaleX(1); opacity: 1; }
+  82%       { transform: scaleX(1); opacity: 1; }
+  94%, 100% { transform: scaleX(0); opacity: 0; }
+}
+.tp-line {
+  transform-origin: left center;
+  animation: tp-line 5s ease-in-out infinite;
+}
+
+/* A block fading + rising into place, holding, then clearing. */
+@keyframes tp-fade-up {
+  0%, 4%    { opacity: 0; transform: translateY(10px); }
+  20%       { opacity: 1; transform: translateY(0); }
+  84%       { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(10px); }
+}
+.tp-fade-up {
+  animation: tp-fade-up 5s ease-in-out infinite;
+}
+
+/* Quiz: the correct option's background flips to green mid-cycle. */
+@keyframes tp-correct {
+  0%, 45%   { background-color: #e7eef7; }
+  58%, 90%  { background-color: #d1fae5; }
+  100%      { background-color: #e7eef7; }
+}
+.tp-correct {
+  animation: tp-correct 5s ease-in-out infinite;
+}
+
+/* Quiz: the green tick badge pops in on the correct option. */
+@keyframes tp-check {
+  0%, 48%   { opacity: 0; transform: scale(0.3); }
+  60%       { opacity: 1; transform: scale(1.2); }
+  70%, 90%  { opacity: 1; transform: scale(1); }
+  100%      { opacity: 0; transform: scale(1); }
+}
+.tp-check {
+  animation: tp-check 5s ease-in-out infinite;
+}
+
+/* Whole preview breathes very gently so static cards still feel alive. */
+@keyframes tp-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+.tp-float {
+  animation: tp-float 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp-line, .tp-fade-up, .tp-correct, .tp-check, .tp-float {
+    animation: none;
+  }
+}

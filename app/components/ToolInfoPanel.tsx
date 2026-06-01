@@ -1,4 +1,9 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import Card from "@/app/components/ui/Card";
+import ToolIcon from "@/app/components/ToolIcon";
+import { TOOLS } from "@/app/lib/tools";
 
 interface Step {
   label: string;
@@ -7,7 +12,7 @@ interface Step {
 }
 
 interface ToolInfoPanelProps {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   heroBg?: string;
   title: string;
   description: string;
@@ -23,13 +28,17 @@ export default function ToolInfoPanel({
   description,
   steps,
 }: ToolInfoPanelProps) {
+  const pathname = usePathname();
+  const tool = TOOLS.find((t) => pathname.startsWith(t.href));
+
   return (
     <Card className="overflow-hidden p-0">
       <div className={`p-6 rounded-2xl ${heroBg}`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0">
-            {icon}
-          </div>
+          {tool
+            ? <ToolIcon name={tool.icon} className="w-11 h-11 shrink-0" />
+            : <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0">{icon}</div>
+          }
           <h1 className="text-2xl font-semibold">{title}</h1>
         </div>
         <p className="text-sm font-light">{description}</p>

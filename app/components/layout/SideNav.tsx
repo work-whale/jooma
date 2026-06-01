@@ -3,16 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight, Pin } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TOOLS } from "@/app/lib/tools";
 import ToolIcon from "@/app/components/ToolIcon";
-import { TAG_COLORS } from "@/app/lib/toolRunDisplay";
-
-const PIN_STORAGE_KEY = "jooma:pinned-tools";
+import { usePinnedTools } from "@/app/lib/usePinnedTools";
 
 const NAV = [
   { label: "Dashboard", icon: "/icons/dashboard.svg", href: "/dashboard" },
-  { label: "Tools", icon: "/icons/tools.svg", href: "/" },
+  { label: "Tools", icon: "/icons/tools.svg", href: "/tools" },
   { label: "Folders", icon: "/icons/folders.svg", href: "/folders" },
   { label: "AI assistant", icon: "/icons/ai-assistant.svg", href: "#" },
 ];
@@ -31,22 +29,8 @@ export default function SideNav() {
     });
   };
 
-  // Pinned tools — shares the same localStorage key the Tools page writes to.
-  const [pinnedHrefs, setPinnedHrefs] = useState<string[]>([]);
-  useEffect(() => {
-    const read = () => {
-      try {
-        const stored = localStorage.getItem(PIN_STORAGE_KEY);
-        setPinnedHrefs(stored ? JSON.parse(stored) : []);
-      } catch {
-        setPinnedHrefs([]);
-      }
-    };
-    read();
-    // Reflect pin/unpin made in another tab.
-    window.addEventListener("storage", read);
-    return () => window.removeEventListener("storage", read);
-  }, []);
+  // Pinned tools — shared store, kept in sync with the Tools page live.
+  const pinnedHrefs = usePinnedTools();
 
   const pinnedTools = pinnedHrefs
     .map((href) => TOOLS.find((t) => t.href === href))
@@ -78,9 +62,7 @@ export default function SideNav() {
 
       <nav className="space-y-1 grow">
         {NAV.map(({ label, icon, href }) => {
-          const active = href === "/"
-            ? (pathname === "/" || pathname.startsWith("/tools"))
-            : (pathname === href || pathname.startsWith(`${href}/`));
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           const isDisabled = href === "#";
 
           // CSS filter normalises any icon colour: dark bg → white, light bg → black
@@ -122,15 +104,14 @@ export default function SideNav() {
         collapsed ? (
           <div className="mt-4 flex flex-col items-center gap-1">
             {pinnedTools.map((tool) => {
-              const colors = TAG_COLORS[tool.tag] ?? { icon: "text-gray-600" };
               return (
                 <Link
                   key={tool.href}
                   href={tool.href}
                   title={tool.label}
-                  className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
+                  className="hover:opacity-80 transition-opacity"
                 >
-                  <ToolIcon name={tool.icon} className={`w-4 h-4 ${colors.icon}`} />
+                  <ToolIcon name={tool.icon} className="w-10 h-10" />
                 </Link>
               );
             })}
@@ -143,14 +124,13 @@ export default function SideNav() {
             </div>
             <div className="space-y-0.5">
               {pinnedTools.map((tool) => {
-                const colors = TAG_COLORS[tool.tag] ?? { icon: "text-gray-600" };
                 return (
                   <Link
                     key={tool.href}
                     href={tool.href}
                     className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <ToolIcon name={tool.icon} className={`w-4 h-4 shrink-0 ${colors.icon}`} />
+                    <ToolIcon name={tool.icon} className="w-8 h-8 shrink-0" />
                     <span className="text-sm font-medium truncate">{tool.label}</span>
                   </Link>
                 );

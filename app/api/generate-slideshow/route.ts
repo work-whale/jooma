@@ -101,6 +101,10 @@ const slideshowSchema = {
                 "activity-ordering-answer",
                 "activity-question",
                 "activity-question-answer",
+                "activity-multichoice",
+                "activity-multichoice-answer",
+                "activity-vocab-match",
+                "activity-vocab-match-answer",
               ],
             },
             title: { type: "string" },
@@ -185,7 +189,15 @@ interface AISlideSpec {
 
 // ── Image fetching ───────────────────────────────────────────────────────
 
-interface FetchedImage { dataUrl: string; width: number; height: number }
+interface FetchedImage {
+  dataUrl: string;
+  width: number;
+  height: number;
+  // Present only on AI-generated images (web/Pixabay images are free).
+  model?: "gpt-image-1" | "dall-e-3";
+  size?: string;
+  costUsd?: number;
+}
 
 interface PixabayHit {
   largeImageURL: string;
@@ -510,14 +522,25 @@ This is NON-NEGOTIABLE. Do NOT introduce vocabulary inline on other slides — t
 
   // Deck spine description varies with activityPairs to avoid telling the AI
   // to emit pairs when there's no room for them.
+  // ── Activity type menu (used in both 1-pair and 2-pair directives) ──
+  const activityTypeMenu = `
+ACTIVITY TYPES — pick the best fit for the topic each time:
+  · "activity-multichoice" + "activity-multichoice-answer"
+      A "Check Your Understanding" quiz. body = the question. activityItems = 4 answer options (one correct, three plausible distractors). activityCorrectOrder = [index of correct option] on the answer slide; [] on the question slide. Title same on both. imageQuery EMPTY on both.
+  · "activity-ordering" + "activity-ordering-answer"
+      Students put 4 items in correct sequence (chronological, size, distance, etc.). activityItems = 4 strings already SHUFFLED (server shuffles them; you provide correct order). activityCorrectOrder = [] on question, [indices] on answer. Title same on both. imageQuery EMPTY on both.
+  · "activity-question" + "activity-question-answer"
+      Open-ended critical-thinking discussion. body = the question. activityItems = 3-5 "you might have said" plausible responses (ANSWER slide only). activityImageQuery = 2-4 nouns for the photo inside the speech bubble (QUESTION slide only). Title same on both (e.g. "Critical Thinking: The Search for Life").
+  · "activity-vocab-match" + "activity-vocab-match-answer"
+      Vocabulary matching: 4 terms numbered 1-4 on the left, 4 short definitions lettered a-d on the right. activityItems = 4 terms. bullets = 4 definitions in SHUFFLED order (NOT matching order — the server uses activityCorrectOrder to reveal answers). activityCorrectOrder = [] on question slide; on answer slide, [defIndex for term0, defIndex for term1, defIndex for term2, defIndex for term3] where defIndex is the index into bullets[] that correctly defines that term. Title same on both (e.g. "Key Vocabulary Match"). imageQuery EMPTY on both.`;
+
   const activityDirective = activityPairs === 2
-    ? `Inject TWO activity pairs into the deck — one at roughly 1/3 of the way through, one at roughly 2/3:
-  (1) An "activity-ordering" slide immediately followed by an "activity-ordering-answer" slide. Same title on both. The student is asked to put 4 items in order (closest-to-furthest, smallest-to-largest, oldest-to-newest, etc). imageQuery is EMPTY on both ordering slides.
-  (2) An "activity-question" slide immediately followed by an "activity-question-answer" slide. Same title on both ("Critical Thinking: ..." works well). An open-ended question students should think about, paired with 3-5 plausible "you might have said" responses on the answer slide. activityImageQuery is REQUIRED on the activity-question slide (the photo inside the speech bubble). activityImageQuery is EMPTY on the answer slide.`
+    ? `Inject TWO activity pairs into the deck — one at roughly 1/3 of the way through, one at roughly 2/3. For each pair, choose the activity type that best suits the content covered so far (vary them — don't use the same type twice):
+${activityTypeMenu}`
     : activityPairs === 1
-    ? `Inject ONE activity pair into the deck — placed roughly halfway through:
-  An "activity-question" slide immediately followed by an "activity-question-answer" slide. Same title on both. An open-ended critical-thinking question paired with 3-5 plausible "you might have said" responses on the answer slide. activityImageQuery REQUIRED on the question slide; empty on the answer slide.`
-    : `Do not include any activity-ordering or activity-question slides — the deck is too short.`;
+    ? `Inject ONE activity pair into the deck — placed roughly halfway through. Choose the activity type that best suits the topic:
+${activityTypeMenu}`
+    : `Do not include any activity slides — the deck is too short.`;
 
   return `You are a senior pedagogical lesson designer for UK classrooms. Produce a single slideshow JSON for the topic: "${body.topic}".
 
@@ -602,22 +625,37 @@ BLOCKQUOTE (blockquoteText + blockquoteAttribution)
 - The quote should be a humbling perspective-shift moment. Carl Sagan's "very small stage in a vast cosmic arena" for cosmology. Choose a real, attributable quote that lands the topic emotionally.
 
 ACTIVITY-ORDERING / ACTIVITY-ORDERING-ANSWER
-- activityKind: "order" on BOTH slides of the pair.
+- activityKind: "order" on BOTH slides.
 - title: same on both (e.g. "Planetary Distance").
 - body: instruction text ("Order these planets by their distance from the Sun, starting with the closest.")
-- activityItems: 4 strings in RANDOM presentation order. SAME 4 strings on both slides — do NOT re-order between question and answer slide.
-- activityCorrectOrder: empty array [] on the question slide; on the answer slide, fill with the indices into activityItems that put them in correct order. Example: activityItems = ["Mars","Saturn","Venus","Neptune"] → activityCorrectOrder = [2, 0, 1, 3] (Venus, Mars, Saturn, Neptune).
-- imageQuery: empty on both — these slides are pure activity.
-- No callout, no badge, no blockquote, no body **bold** required.
+- activityItems: 4 strings in RANDOM presentation order. SAME 4 strings on both slides.
+- activityCorrectOrder: [] on question; on answer, indices into activityItems giving correct order. Example: activityItems = ["Mars","Saturn","Venus","Neptune"] → activityCorrectOrder = [2, 0, 1, 3].
+- imageQuery: empty on both. No callout, badge, or blockquote.
+
+ACTIVITY-MULTICHOICE / ACTIVITY-MULTICHOICE-ANSWER
+- activityKind: "choice" on BOTH slides.
+- title: same on both (e.g. "Check Your Understanding").
+- body: the quiz question (e.g. "Which group made up 98% of the French population?").
+- activityItems: exactly 4 answer options. ONE is correct, three are plausible distractors.
+- activityCorrectOrder: [] on question; [correctIndex] (single integer) on answer slide.
+- imageQuery: empty on both. No callout, badge, or blockquote.
 
 ACTIVITY-QUESTION / ACTIVITY-QUESTION-ANSWER
-- activityKind: "question" on BOTH slides of the pair.
+- activityKind: "question" on BOTH slides.
 - title: same on both (e.g. "Critical Thinking: The Search for Life").
-- body: on the question slide, the open-ended question itself. On the answer slide, empty.
-- activityItems: empty [] on the question slide; on the answer slide, 3-5 "you might have said" responses (one short sentence each).
-- activityImageQuery: 2-4 concrete nouns for the image embedded in the speech bubble (question slide only). Empty on the answer slide.
-- activityCorrectOrder: empty on both.
-- No callout, no badge, no blockquote.
+- body: the open-ended question (question slide only); empty on answer slide.
+- activityItems: [] on question; 3-5 "you might have said" responses on answer slide.
+- activityImageQuery: 2-4 concrete nouns for the speech-bubble image (question slide only); empty on answer.
+- activityCorrectOrder: empty on both. No callout, badge, or blockquote.
+
+ACTIVITY-VOCAB-MATCH / ACTIVITY-VOCAB-MATCH-ANSWER
+- activityKind: "match" on BOTH slides.
+- title: same on both (e.g. "Key Vocabulary Match" or "Revolutionary Vocabulary").
+- body: empty on both.
+- activityItems: exactly 4 key terms.
+- bullets: exactly 4 short definitions in SHUFFLED order (not matching the term order). Each ≤ 14 words.
+- activityCorrectOrder: [] on question; on answer, [defIndex for term0, defIndex for term1, defIndex for term2, defIndex for term3] — where each value is the index into bullets[] that correctly defines that term. Example: terms = [Republic, Monarchy, Constitution, Citizen], bullets = [a definition of Monarchy, a definition of Republic, a definition of Citizen, a definition of Constitution] → activityCorrectOrder = [1, 0, 3, 2].
+- imageQuery: empty on both. No callout, badge, or blockquote.
 
 TITLE-HERO (slide 1 only)
 - title: the deck title (3-6 words).
@@ -849,6 +887,10 @@ export async function POST(req: NextRequest) {
         if (body.includeAudio) extraTitles.push("Audio activity", "Audio activity — answers");
         if (body.includeYouTube) extraTitles.push("YouTube video");
 
+        // Running tally of AI image spend for this deck. Filled by slideJob as
+        // each image settles; logged in the cost summary once images finish.
+        const imageCost = { count: 0, usd: 0, byModel: {} as Record<string, number> };
+
         // Image-fetch helper — kicks off the (up to three) image fetches for
         // a slide and emits a "slide-image" event when each settles. Defined
         // here so it's in scope when the streaming loop below calls it as
@@ -860,6 +902,15 @@ export async function POST(req: NextRequest) {
           if (!spec.imageQuery && !spec.secondaryImageQuery && !spec.activityImageQuery) return;
           const filled: SlideSpec = { ...spec, imagePending: false };
           const galleryImages: { prompt: string; style?: string; dataUrl: string }[] = [];
+
+          // Tally AI image cost (web/Pixabay images are free, so skip those).
+          const tallyCost = (img: FetchedImage & { provider: "ai" | "web" }) => {
+            if (img.provider !== "ai" || img.costUsd === undefined) return;
+            imageCost.count += 1;
+            imageCost.usd += img.costUsd;
+            const key = `${img.model ?? "?"} ${img.size ?? "?"}`;
+            imageCost.byModel[key] = (imageCost.byModel[key] ?? 0) + 1;
+          };
 
           // Wrap each fetch in its own try so one failure doesn't kill the
           // others. The slide can still render with the partial set of images
@@ -885,6 +936,7 @@ export async function POST(req: NextRequest) {
               filled.imageDataUrl = img.dataUrl;
               filled.imageWidth = img.width;
               filled.imageHeight = img.height;
+              tallyCost(img);
               if (img.provider === "ai") galleryImages.push({ prompt: spec.imageQuery, style: imageStyle, dataUrl: img.dataUrl });
             }
           }
@@ -895,6 +947,7 @@ export async function POST(req: NextRequest) {
               filled.secondaryImageDataUrl = img2.dataUrl;
               filled.secondaryImageWidth = img2.width;
               filled.secondaryImageHeight = img2.height;
+              tallyCost(img2);
               if (img2.provider === "ai") galleryImages.push({ prompt: spec.secondaryImageQuery, style: imageStyle, dataUrl: img2.dataUrl });
             }
           }
@@ -905,6 +958,7 @@ export async function POST(req: NextRequest) {
               filled.activityImageDataUrl = img3.dataUrl;
               filled.activityImageWidth = img3.width;
               filled.activityImageHeight = img3.height;
+              tallyCost(img3);
               if (img3.provider === "ai") galleryImages.push({ prompt: spec.activityImageQuery, style: imageStyle, dataUrl: img3.dataUrl });
             }
           }
@@ -929,6 +983,9 @@ export async function POST(req: NextRequest) {
           ],
           response_format: { type: "json_schema", json_schema: slideshowSchema },
           stream: true,
+          // Ask for token usage in the final stream chunk so we can log the
+          // exact cost of each generation (see cost summary after the loop).
+          stream_options: { include_usage: true },
         });
 
         const parser = new SlideStreamParser();
@@ -940,9 +997,15 @@ export async function POST(req: NextRequest) {
         // that left slides stuck in their shimmer state.
         const imageLimit = pLimit(5);
         let metaSent = false;
-        // Shuffle map for ordering activities: keyed by slide title so the
-        // answer slide gets the same shuffled items as the question slide.
-        const orderingShuffleMap = new Map<string, { shuffled: string[]; correctSeq: string[] }>();
+        // Per-activity-pair store, keyed by slide title. The QUESTION slide
+        // fills it; the matching ANSWER slide reads it so the answer renders
+        // correctly even when the AI leaves the answer slide's fields empty
+        // (which it routinely does — the answer slide was coming out blank).
+        const activityStore = new Map<string, {
+          items: string[];        // cards / options / terms (post-shuffle), shown on both slides
+          bullets: string[];      // definitions for vocab-match (post-shuffle)
+          correctOrder: number[]; // indices the answer slide reveals
+        }>();
 
         const sendMetaIfReady = () => {
           if (metaSent) return;
@@ -994,33 +1057,83 @@ export async function POST(req: NextRequest) {
           }
         };
 
+        // Captured from the final stream chunk (include_usage). Holds the
+        // exact prompt/completion token counts for the gpt-4o call.
+        let chatUsage: { prompt_tokens: number; completion_tokens: number; total_tokens: number } | null = null;
+
         for await (const chunk of stream) {
           if (closed) break;
+          // The include_usage final chunk carries usage and no content delta.
+          if (chunk.usage) chatUsage = chunk.usage;
           const delta = chunk.choices[0]?.delta?.content;
           if (!delta) continue;
           const newSlides = parser.feed(delta);
           sendMetaIfReady();
           for (const ai of newSlides) {
-            // Shuffle ordering activity items so the question slide isn't
-            // already in the correct order. The AI consistently generates
-            // activityItems in the intended correct sequence even though the
-            // prompt asks for a random order. We fix this post-parse:
-            //   - question slide: shuffle items, store the permutation.
-            //   - answer slide: apply the same shuffle, derive activityCorrectOrder.
-            if (ai.layout === "activity-ordering" && ai.activityItems.length > 1) {
-              const correctSeq = [...ai.activityItems];
-              const shuffled = shuffleArray(correctSeq);
-              ai.activityItems = shuffled;
-              orderingShuffleMap.set(ai.title, { shuffled, correctSeq });
-            } else if (ai.layout === "activity-ordering-answer" && ai.activityItems.length > 1) {
-              const stored = orderingShuffleMap.get(ai.title);
-              if (stored) {
-                // The AI's activityItems on the answer slide are the intended
-                // correct sequence — use them as the source of truth, then
-                // apply the same shuffle the question slide used.
-                const correctSeq = [...ai.activityItems];
-                ai.activityItems = stored.shuffled;
-                ai.activityCorrectOrder = correctSeq.map((item) => stored.shuffled.indexOf(item));
+            // ── Activity question/answer data flow ──────────────────────────
+            // The AI generates question slides correctly but routinely leaves
+            // the ANSWER slide's fields empty, so answer slides were rendering
+            // blank. Fix: the question slide stores everything its answer slide
+            // needs (keyed by shared title); the answer slide inherits it.
+            const at = ai.title;
+            switch (ai.layout) {
+              case "activity-ordering": {
+                // AI items are in CORRECT order — shuffle for display and
+                // remember the permutation so the answer can reveal it.
+                if (ai.activityItems.length > 1) {
+                  const correctSeq = [...ai.activityItems];
+                  const shuffled = shuffleArray(correctSeq);
+                  ai.activityItems = shuffled;
+                  ai.activityCorrectOrder = [];
+                  activityStore.set(at, {
+                    items: shuffled,
+                    bullets: [],
+                    correctOrder: correctSeq.map((x) => shuffled.indexOf(x)),
+                  });
+                }
+                break;
+              }
+              case "activity-ordering-answer": {
+                const s = activityStore.get(at);
+                if (s) { ai.activityItems = s.items; ai.activityCorrectOrder = s.correctOrder; }
+                break;
+              }
+              case "activity-multichoice": {
+                if (ai.activityItems.length > 1) {
+                  activityStore.set(at, { items: [...ai.activityItems], bullets: [], correctOrder: [] });
+                }
+                ai.activityCorrectOrder = []; // question reveals nothing
+                break;
+              }
+              case "activity-multichoice-answer": {
+                const s = activityStore.get(at);
+                if (s) ai.activityItems = s.items;        // reuse the question's options
+                if (!ai.activityCorrectOrder?.length) ai.activityCorrectOrder = [0]; // fallback: A
+                break;
+              }
+              case "activity-vocab-match": {
+                // terms = activityItems; defs = bullets (shuffle defs for display).
+                if (ai.activityItems.length > 1) {
+                  const correctDefs = [...(ai.bullets ?? [])];
+                  const shuffledDefs = shuffleArray([...correctDefs]);
+                  ai.bullets = shuffledDefs;
+                  ai.activityCorrectOrder = [];
+                  activityStore.set(at, {
+                    items: [...ai.activityItems],
+                    bullets: shuffledDefs,
+                    correctOrder: correctDefs.map((d) => shuffledDefs.indexOf(d)),
+                  });
+                }
+                break;
+              }
+              case "activity-vocab-match-answer": {
+                const s = activityStore.get(at);
+                if (s) {
+                  ai.activityItems = s.items;
+                  ai.bullets = s.bullets;
+                  ai.activityCorrectOrder = s.correctOrder;
+                }
+                break;
               }
             }
 
@@ -1068,6 +1181,15 @@ export async function POST(req: NextRequest) {
             slideTitles: [...allAi.map((s) => s.title), ...extraTitles],
           });
         }
+        // gpt-4o-2024-08-06 pricing (USD per 1M tokens). UPDATE if OpenAI
+        // changes pricing: https://openai.com/api/pricing/
+        const GPT4O_INPUT_PER_1M = 2.5;   // $/1M prompt tokens
+        const GPT4O_OUTPUT_PER_1M = 10.0; // $/1M completion tokens
+        const textCostUsd = chatUsage
+          ? (chatUsage.prompt_tokens / 1_000_000) * GPT4O_INPUT_PER_1M +
+            (chatUsage.completion_tokens / 1_000_000) * GPT4O_OUTPUT_PER_1M
+          : 0;
+
         // Local aliases to keep the audio/video code below readable.
         const parsed = { title: parser.title ?? body.topic, slides: allAi };
         const specs = allSpecs;
@@ -1075,6 +1197,10 @@ export async function POST(req: NextRequest) {
         // All image jobs were kicked off during the streaming loop above —
         // wait for any still in flight before generating audio/video.
         await Promise.allSettled(imageJobs);
+
+        // Audio cost is captured below once /api/generate-audio returns; the
+        // full COST line is logged at the very end (before "complete").
+        let audioCostUsd = 0;
 
         // Optional audio activity. Placeholder was reserved up-front in
         // sendMetaIfReady at `audioIndex` (the audio activity) and
@@ -1086,7 +1212,12 @@ export async function POST(req: NextRequest) {
             send("status", { message: "Recording the audio activity..." });
             const audioRes = await fetch(`${req.nextUrl.origin}/api/generate-audio`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                // Forward the caller's session cookie so the auth proxy doesn't
+                // redirect this internal call to the /login HTML page.
+                cookie: req.headers.get("cookie") ?? "",
+              },
               body: JSON.stringify({
                 topic: body.topic,
                 year: body.year,
@@ -1101,7 +1232,12 @@ export async function POST(req: NextRequest) {
               }),
             });
             if (audioRes.ok) {
-              const audioData = await audioRes.json();
+              // Guard against a 200 that isn't JSON (e.g. an auth redirect's
+              // HTML body) — .json() would otherwise throw the cryptic
+              // "Unexpected token '<'". The outer catch sends a clean error.
+              const audioData = await audioRes.json().catch(() => null);
+              if (!audioData) throw new Error("audio response was not valid JSON");
+              audioCostUsd = typeof audioData.costUsd === "number" ? audioData.costUsd : 0;
               console.log("[generate-slideshow] audio generated:", { src: audioData.src, title: audioData.title });
               // Bake theme colours into the audio object so the panel matches
               // the deck's visual style instead of hardcoded maroon.
@@ -1165,7 +1301,10 @@ export async function POST(req: NextRequest) {
             send("status", { message: "Finding a YouTube video..." });
             const ytRes = await fetch(`${req.nextUrl.origin}/api/find-youtube`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                cookie: req.headers.get("cookie") ?? "",
+              },
               body: JSON.stringify({
                 topic: body.topic,
                 year: body.year,
@@ -1214,6 +1353,26 @@ export async function POST(req: NextRequest) {
           } catch (err) {
             console.warn("[generate-slideshow] youtube fetch threw:", err);
           }
+        }
+
+        // ── Full cost summary ─────────────────────────────────────────────
+        // Logged last so it can include audio (which runs after images). Image
+        // cost is an estimate (see IMAGE_COST_USD in ai-image.ts); audio cost
+        // is exact (gpt-4o tokens + tts-1 chars) and returned by the audio route.
+        {
+          const modelBreakdown = Object.entries(imageCost.byModel)
+            .map(([k, n]) => `${n}×${k}`)
+            .join(", ");
+          const total = textCostUsd + imageCost.usd + audioCostUsd;
+          console.log(
+            `[generate-slideshow] COST topic="${body.topic}" | ` +
+            (chatUsage
+              ? `gpt-4o ${chatUsage.prompt_tokens}+${chatUsage.completion_tokens}=${chatUsage.total_tokens} tok ($${textCostUsd.toFixed(4)}) | `
+              : `gpt-4o usage n/a | `) +
+            `images ${imageCost.count} (~$${imageCost.usd.toFixed(4)} est${modelBreakdown ? `: ${modelBreakdown}` : ""}) | ` +
+            `audio $${audioCostUsd.toFixed(4)} | ` +
+            `TOTAL ~$${total.toFixed(4)}`,
+          );
         }
 
         send("complete", { title: parsed.title });

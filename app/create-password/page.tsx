@@ -52,15 +52,27 @@ export default function CreatePasswordPage() {
         setLoading(false);
         return;
       }
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data: signUpData, error } = await supabase.auth.signUp({ email, password });
       if (error) {
+        console.error("signUp error:", error.message, error.status);
+        const msg = error.message.toLowerCase();
         setError(
-          error.message.includes("already")
+          msg.includes("already") || msg.includes("registered")
             ? "An account with this email already exists. Try signing in."
-            : "Could not create your account. Please try again.",
+            : msg.includes("rate") || msg.includes("limit")
+            ? "Too many attempts — please wait a moment and try again."
+            : msg.includes("email") && msg.includes("confirm")
+            ? "Email confirmation is required. Please disable it in your Supabase Auth settings."
+            : error.message,
         );
         setLoading(false);
         return;
+      }
+      // Stash the session tokens so complete-profile can recover them if the
+      // cookie hasn't propagated by the time the page mounts.
+      if (signUpData.session) {
+        sessionStorage.setItem("jooma:auth-token", signUpData.session.access_token);
+        sessionStorage.setItem("jooma:auth-refresh", signUpData.session.refresh_token ?? "");
       }
     }
     router.push("/complete-profile");

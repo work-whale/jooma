@@ -3,13 +3,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
+import ToolIcon from "@/app/components/ToolIcon";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
 import Card from "@/app/components/ui/Card";
 import { minutesSavedFor } from "@/app/lib/tools";
 import { listRecentRuns, type ToolRun } from "@/app/lib/toolRuns";
-import { toolForSlug, typeLabel, formatDate, TAG_COLORS } from "@/app/lib/toolRunDisplay";
+import { toolForSlug, typeLabel, formatDate } from "@/app/lib/toolRunDisplay";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -115,7 +116,6 @@ export default function DashboardPage() {
                 <tbody>
                   {recent.map((run) => {
                     const tool = toolForSlug(run.tool_slug);
-                    const colors = (tool && TAG_COLORS[tool.tag]) || { bg: "bg-gray-100", icon: "text-gray-600" };
                     const input = run.input as Record<string, unknown>;
                     const subject = (input.subject as string) || "—";
                     const year = (input.yearGroup as string) || "—";
@@ -127,9 +127,7 @@ export default function DashboardPage() {
                       >
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-3">
-                            <span className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center shrink-0`}>
-                              <FileText className={`w-4 h-4 ${colors.icon}`} />
-                            </span>
+                            <ToolIcon name={tool?.icon ?? ""} className="w-8 h-8 shrink-0" />
                             <span className="font-medium text-dark truncate max-w-xs">
                               {run.title?.trim() || "Untitled"}
                             </span>

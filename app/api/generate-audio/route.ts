@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
   let script: string;
   let questions: string[];
   let answers: string[];
+  // gpt-4o usage for the script-writing call, captured for cost reporting.
+  let scriptUsage: { prompt_tokens: number; completion_tokens: number } | null = null;
 
   const activity = body.activityType ?? "comprehension";
   const activityInstruction = ACTIVITY_INSTRUCTIONS[activity];
@@ -193,6 +195,7 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     });
     const content = completion.choices[0]?.message?.content;
     if (!content) return NextResponse.json({ error: "Empty AI response" }, { status: 500 });
+    if (completion.usage) scriptUsage = completion.usage;
     const parsed: { title: string; description: string; script: string; questions: string[]; answers: string[] } = JSON.parse(content);
     title = parsed.title;
     description = parsed.description;
@@ -235,6 +238,15 @@ The "script" must be plain spoken text only — no stage directions, sound effec
   }
   const { data: pub } = supabase.storage.from("audio").getPublicUrl(filename);
 
+  // Cost: gpt-4o script tokens + tts-1 characters. Pricing (USD):
+  // gpt-4o $2.5/1M in, $10/1M out · tts-1 $15/1M chars.
+  const scriptCost = scriptUsage
+    ? (scriptUsage.prompt_tokens / 1_000_000) * 2.5 +
+      (scriptUsage.completion_tokens / 1_000_000) * 10.0
+    : 0;
+  const ttsCost = (script.length / 1_000_000) * 15.0;
+  const costUsd = scriptCost + ttsCost;
+
   return NextResponse.json({
     src: pub.publicUrl,
     title,
@@ -242,5 +254,6 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     transcript: script,
     questions,
     answers,
+    costUsd,
   });
 }

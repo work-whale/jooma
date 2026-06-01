@@ -46,6 +46,13 @@ const ROUTE_LABELS: Record<string, string> = {
 
 export default function ToolsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+
+  // The /tools index (the tools grid) renders its own SideNav + TopBar, so let
+  // it through untouched. Only the individual tool pages get the chrome below.
+  if (pathname === "/tools") {
+    return <>{children}</>;
+  }
+
   const label = ROUTE_LABELS[pathname] ?? "Tools";
 
   return (
@@ -54,7 +61,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
       <main className="grow flex flex-col min-h-screen">
         <TopBar title={label} />
         <div className="px-10 pb-4 shrink-0">
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-muted hover:text-gray-700 transition-colors w-fit">
+          <Link href="/tools" className="flex items-center gap-1.5 text-sm text-muted hover:text-gray-700 transition-colors w-fit">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to tools
           </Link>

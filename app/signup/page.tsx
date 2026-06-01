@@ -18,8 +18,6 @@ export default function SignupPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    // Email verification is disabled for now (no email provider). Carry the
-    // email forward; the account is created with a password on /create-password.
     setError(null);
     sessionStorage.setItem("jooma:auth-email", email.trim());
     router.push("/create-password");
