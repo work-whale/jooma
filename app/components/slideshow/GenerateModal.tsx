@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
@@ -994,20 +995,44 @@ function PillSelect({
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const selected = options.find((o) => o.value === value);
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      // The menu is portaled outside wrapperRef, so check it separately.
+      if (wrapperRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  // Position the portaled menu directly under the button, and keep it pinned
+  // there while the modal scrolls or the window resizes.
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+    const update = () => {
+      const r = buttonRef.current!.getBoundingClientRect();
+      setMenuPos({ top: r.bottom + 6, left: r.left, width: r.width });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
   return (
     <div ref={wrapperRef} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => !disabled && setOpen((v) => !v)}
         disabled={disabled}
@@ -1018,10 +1043,14 @@ function PillSelect({
         <span>{selected?.label ?? placeholder}</span>
         <ChevronDown className="w-3 h-3 text-gray-400" />
       </button>
-      {open && (
+      {/* Portal to body + fixed positioning so the menu escapes the modal's
+          overflow-y-auto (which otherwise grows a scrollbar) and isn't clipped
+          by the modal's overflow-hidden. */}
+      {open && menuPos && createPortal(
         <div
-          className="absolute top-full left-0 mt-1.5 z-50 rounded-xl border bg-white shadow-lg min-w-40 py-1.5 overflow-hidden"
-          style={{ borderColor: "#DAD8D0" }}
+          ref={menuRef}
+          className="fixed z-[60] w-max max-w-[15rem] rounded-xl border bg-white shadow-lg py-1.5 max-h-64 overflow-y-auto"
+          style={{ borderColor: "#DAD8D0", top: menuPos.top, left: menuPos.left, minWidth: menuPos.width }}
         >
           {options.map((o) => (
             <button
@@ -1037,7 +1066,8 @@ function PillSelect({
               {o.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

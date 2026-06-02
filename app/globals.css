@@ -12,14 +12,25 @@
   --font-headline: var(--font-bricolage), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono);
 
+  /* Two-font system — `font-primary` (display/headings) and `font-secondary`
+     (body/UI) utilities are generated from these. */
+  --font-primary: var(--font-bricolage), Arial, Helvetica, sans-serif;
+  --font-secondary: var(--font-inter), system-ui, -apple-system, sans-serif;
+
   --container-8xl: 88rem;
   --container-9xl: 96rem;
 }
 
 body {
-  background: #F8F8F8;
+  background: #F1EFE3;
   color: #030303;
-  font-family: var(--font-bricolage), Arial, Helvetica, sans-serif;
+  font-family: var(--font-secondary);
+}
+
+/* Headings use the primary (display) font; everything else inherits the
+   secondary (body) font from `body`. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-primary);
 }
 
 button:not(:disabled),

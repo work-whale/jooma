@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isGenerationRequest, checkGenerationQuota } from "@/app/lib/generation-guard";
 
 // Routes reachable without a session. Everything else redirects to /login.
 const PUBLIC_PATHS = [
@@ -79,12 +80,34 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Enforce the monthly AI-generation cap for free users. Runs only on the tool
+  // generation POSTs, and only once we know there's a user. Free users over the
+  // limit get a 402 the client turns into an upgrade prompt; paid plans are
+  // unlimited (checkGenerationQuota returns null).
+  if (user && isGenerationRequest(request.method, pathname)) {
+    const quota = await checkGenerationQuota(supabase, user.id);
+    if (quota?.blocked) {
+      return NextResponse.json(
+        {
+          error: `You've used all ${quota.limit} of your free generations this month. Upgrade to Pro for unlimited generations.`,
+          code: "generation_limit_reached",
+          used: quota.used,
+          limit: quota.limit,
+        },
+        { status: 402, headers: { "x-upgrade-required": "1" } },
+      );
+    }
+  }
+
   return response;
 }
 
 export const config = {
   matcher: [
     // Run on everything except Next internals, static assets, and image files.
-    "/((?!_next/static|_next/image|favicon.ico|svgs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // `api/generate-slideshow` is also excluded: the proxy buffers its SSE
+    // stream (slides arrive all at once instead of one-by-one), so it bypasses
+    // the proxy and authenticates itself inside the route handler.
+    "/((?!api/generate-slideshow|_next/static|_next/image|favicon.ico|svgs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

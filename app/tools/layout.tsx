@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import SideNav from "@/app/components/layout/SideNav";
 import TopBar from "@/app/components/layout/TopBar";
+import UpgradeGate from "@/app/components/UpgradeGate";
 
 const ROUTE_LABELS: Record<string, string> = {
   "/tools/lesson-planner": "Lesson Planner",
@@ -57,6 +58,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: "#F1EFE3" }}>
+      <UpgradeGate />
       <SideNav />
       <main className="grow flex flex-col min-h-screen">
         <TopBar title={label} />
