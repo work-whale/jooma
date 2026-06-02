@@ -2437,9 +2437,14 @@ export default function Editor({ presentation, generationParams }: Props) {
         const decoder = new TextDecoder();
         let buffer = "";
         let first = true;
+        // [stream-debug] mark when the response headers arrived; each chunk log
+        // below is relative to this. If chunks all arrive in one burst near the
+        // end, the stream is being buffered before it reaches the browser.
+        const tResp = Date.now();
         while (!cancelled) {
           const { done, value } = await reader.read();
           if (done) break;
+          if (value) console.log(`[stream-debug] +${Date.now() - tResp}ms chunk bytes=${value.length}`);
           buffer += decoder.decode(value, { stream: true });
           let idx: number;
           while ((idx = buffer.indexOf("\n\n")) !== -1) {

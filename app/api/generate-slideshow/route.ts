@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/app/lib/auth/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
 import { getTheme } from "@/app/lib/slideshowThemes";
@@ -727,6 +728,16 @@ Now produce the JSON.`;
 // ── Handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  // This route is excluded from proxy.ts (the proxy buffers SSE streams), so it
+  // authenticates itself here instead of relying on the proxy's auth gate.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: RequestBody;
   try {
     body = await req.json();
@@ -753,8 +764,14 @@ export async function POST(req: NextRequest) {
       //   2. Slow steps (audio gen, image fetches) bail out early instead of
       //      doing expensive work nobody will read.
       let closed = false;
+      const t0 = Date.now();
       const send = (event: string, data: unknown) => {
         if (closed) return;
+        // [stream-debug] when each SSE event is enqueued, relative to stream
+        // start. If these timestamps are spread out but the browser logs show
+        // them all arriving together, the buffering is in transport (proxy/dev
+        // server), not the generator. Remove once the streaming issue is fixed.
+        console.log(`[stream-debug] +${Date.now() - t0}ms enqueue event=${event}`);
         try {
           controller.enqueue(
             encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
@@ -768,6 +785,14 @@ export async function POST(req: NextRequest) {
       req.signal.addEventListener("abort", () => { closed = true; });
 
       try {
+        // [stream-debug] Flush ~4KB of SSE comment padding before anything
+        // else. Some layers (compression, framework, browser) hold a streamed
+        // response until a minimum number of bytes accrue; SSE events are tiny,
+        // so they'd sit in that buffer. A comment line (starts with ":") is
+        // ignored by the client but forces the buffer to flush and the stream
+        // to open immediately. If this makes slides appear one-by-one, the
+        // problem was byte-threshold buffering.
+        controller.enqueue(encoder.encode(`:${" ".repeat(4096)}\n\n`));
         send("status", { message: "Designing your deck..." });
 
         // Pre-compute everything the AI->Spec mapping needs that doesn't

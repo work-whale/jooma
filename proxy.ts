@@ -105,6 +105,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Run on everything except Next internals, static assets, and image files.
-    "/((?!_next/static|_next/image|favicon.ico|svgs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // `api/generate-slideshow` is also excluded: the proxy buffers its SSE
+    // stream (slides arrive all at once instead of one-by-one), so it bypasses
+    // the proxy and authenticates itself inside the route handler.
+    "/((?!api/generate-slideshow|_next/static|_next/image|favicon.ico|svgs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
