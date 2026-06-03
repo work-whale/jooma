@@ -33,6 +33,16 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-primary);
 }
 
+/* Infinite logo marquee — the track holds two copies of the logos, so a -50%
+   shift loops seamlessly. */
+@keyframes lp-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.lp-marquee {
+  animation: lp-marquee 30s linear infinite;
+}
+
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 label:has(> input[type="checkbox"]),

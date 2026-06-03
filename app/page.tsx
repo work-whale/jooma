@@ -3,6 +3,10 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, Clock, FileCheck, Check, ChevronDown } from "lucide-react";
 import { TOOLS } from "@/app/lib/tools";
 import HeroShowcase from "@/app/components/landing/HeroShowcase";
+import SocialProof from "@/app/components/landing/SocialProof";
+import HowItWorks from "@/app/components/landing/HowItWorks";
+import CtaBanner from "@/app/components/landing/CtaBanner";
+import WhyJooma from "@/app/components/landing/WhyJooma";
 
 const FEATURED = [
   { icon: "/icons/tool-lesson-plans.svg", label: "Lesson Planner", desc: "Structured plans from a topic and objective in seconds." },
@@ -92,6 +96,18 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Social proof + personas */}
+      <SocialProof />
+
+      {/* How it works */}
+      <HowItWorks />
+
+      {/* Red CTA band */}
+      <CtaBanner />
+
+      {/* Why Jooma */}
+      <WhyJooma />
+
       {/* Popular tools — animated previews */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center mb-10">
@@ -173,8 +189,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how-it-works" className="max-w-5xl mx-auto px-6 py-16 scroll-mt-20">
+      {/* How it works (legacy — superseded by the HowItWorks section above) */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-12" style={{ color: "#030303" }}>
           How it works
         </h2>
