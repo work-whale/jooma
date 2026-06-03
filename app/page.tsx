@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { ArrowRight, Sparkles, Clock, FileCheck, Check, ChevronDown } from "lucide-react";
+import { ArrowRight, Sparkles, Check, ChevronDown } from "lucide-react";
 import { TOOLS } from "@/app/lib/tools";
 import HeroShowcase from "@/app/components/landing/HeroShowcase";
 import SocialProof from "@/app/components/landing/SocialProof";
 import HowItWorks from "@/app/components/landing/HowItWorks";
 import CtaBanner from "@/app/components/landing/CtaBanner";
 import WhyJooma from "@/app/components/landing/WhyJooma";
+import Faq from "@/app/components/landing/Faq";
 
 const FEATURED = [
   { icon: "/icons/tool-lesson-plans.svg", label: "Lesson Planner", desc: "Structured plans from a topic and objective in seconds." },
@@ -17,11 +18,6 @@ const FEATURED = [
   { icon: "/icons/tool-report-writer.svg", label: "Report Writer", desc: "Personalised pupil reports from a few quick notes." },
 ];
 
-const STEPS = [
-  { icon: Sparkles, title: "Pick a tool", desc: "Choose from 30+ AI tools built for the classroom." },
-  { icon: FileCheck, title: "Add your details", desc: "Topic, year group, and any specifics — that's it." },
-  { icon: Clock, title: "Save hours", desc: "Get editable, ready-to-use resources in seconds." },
-];
 
 export default function LandingPage() {
   return (
@@ -56,7 +52,7 @@ export default function LandingPage() {
 
       {/* Hero + showcase — framed in a lighter rounded panel that spans the
           screen with a small inset from the page background */}
-      <div className="px-3 sm:px-4 pb-16">
+      <div className="px-3 sm:px-4">
         <div
           className="rounded-[28px] border px-6 pt-14 pb-12"
           style={{ backgroundColor: "#FFFFFF", borderColor: "#E9E6DC" }}
@@ -73,7 +69,7 @@ export default function LandingPage() {
             <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-[1.04]" style={{ color: "#030303" }}>
               Create personalised lessons<br />in minutes, not hours.
             </h1>
-            <p className="text-base max-w-2xl mx-auto mb-8 leading-normal" style={{ color: "#030303" }}>
+            <p className="max-w-2xl mx-auto mb-8 leading-normal">
               Jooma helps teachers generate personalised, curriculum-aligned lessons
               in minutes — reducing planning time while improving classroom engagement.
             </p>
@@ -189,50 +185,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works (legacy — superseded by the HowItWorks section above) */}
-      <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center mb-12" style={{ color: "#030303" }}>
-          How it works
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {STEPS.map((s, i) => (
-            <div key={s.title} className="text-center">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: "#FAE3D9" }}
-              >
-                <s.icon className="w-6 h-6" style={{ color: "#c25034" }} />
-              </div>
-              <p className="text-xs font-semibold mb-1" style={{ color: "#9a8f85" }}>Step {i + 1}</p>
-              <h3 className="font-semibold text-lg mb-1.5" style={{ color: "#030303" }}>{s.title}</h3>
-              <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: "#6b6055" }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA band */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
-        <div
-          className="rounded-3xl px-8 py-14 text-center"
-          style={{ backgroundColor: "#030303" }}
-        >
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-white">
-            Get your evenings back
-          </h2>
-          <p className="text-base max-w-lg mx-auto mb-8" style={{ color: "#bdb8af" }}>
-            Join teachers using Jooma to plan smarter and spend less time on prep.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "#FFCC33", color: "#030303" }}
-          >
-            Start for free
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+      {/* FAQ */}
+      <Faq />
 
       {/* Footer */}
       <footer className="px-3 sm:px-4 pb-4">
