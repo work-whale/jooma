@@ -47,9 +47,9 @@ const PERSONAS = [
 
 export default function SocialProof() {
   return (
-    <section className="py-14">
+    <section className="py-16">
       {/* Caption */}
-      <p className="text-center text-sm mb-9 px-4" style={{ color: "#8a8078" }}>
+      <p className="text-center mb-9 px-4 leading-normal">
         Used by educators, schools, and homeschooling
         <br className="hidden sm:block" /> families across the UK
       </p>
@@ -77,7 +77,7 @@ export default function SocialProof() {
       </div>
 
       {/* Persona cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto px-4 sm:px-6">
         {PERSONAS.map((p) => (
           <div
             key={p.badge}

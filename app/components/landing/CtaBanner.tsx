@@ -4,7 +4,7 @@ import Link from "next/link";
 // the right, matching the page's inset-panel rhythm.
 export default function CtaBanner() {
   return (
-    <section className="px-3 sm:px-4 pb-16">
+    <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
       <div
         className="relative overflow-hidden rounded-[28px] px-6 py-20 sm:py-24 text-center"
         style={{ backgroundColor: "#D9453C" }}
