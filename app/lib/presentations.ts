@@ -248,6 +248,13 @@ export interface SlideJSON {
   backgroundScale?: number;           // multiplier on top of cover scale; >= 1 always
   /** Shimmer overlay on the slide background while the AI fetches the bg image. */
   backgroundImagePending?: boolean;
+  /** Themed full-bleed illustration background (URL). Distinct from
+   *  `backgroundImage` (AI content/hero photo) so the two never collide — the
+   *  scene art sits behind content with a legibility scrim on top of it. */
+  backgroundArt?: string;
+  /** CSS colour for the legibility veil drawn over `backgroundArt`
+   *  (e.g. "rgba(246,251,244,0.5)"). */
+  backgroundArtScrim?: string;
   /** AI-generated skeleton (content + layout) used to re-render the slide under
    *  a different theme. Loose type to avoid a circular import with
    *  slideshow-layouts.ts. Image data isn't stored here — re-render plucks the

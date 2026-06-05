@@ -879,15 +879,25 @@ export async function POST(req: NextRequest) {
         const expectedActivityPairs = activityPairsForContentCount(expectedContentTarget);
         const expectedTotalAi = expectedContentTarget + expectedActivityPairs * 2;
 
-        // Reserved mid-deck slots for the audio activity (+ its answer slide)
-        // and the YouTube video. We pin them to fixed final positions starting
-        // at the 3rd slide, stream the AI content slides AROUND those positions,
-        // and emit shimmer placeholders for them up front — so they appear in
-        // place from the start and just fill in last, instead of popping in at
-        // the end and shoving content down.
+        // Reserved slots for the audio activity (+ its answer slide) and the
+        // YouTube video. We pin them to fixed final positions, stream the AI
+        // content slides AROUND those positions, and emit shimmer placeholders
+        // for them up front — so they appear in place from the start and just
+        // fill in last, instead of popping in at the end and shoving content
+        // down.
+        //
+        // Position: ~60% through the deck rather than slide 3. A listening /
+        // discussion activity only makes sense once the core content has been
+        // presented — pinning it to the 3rd slide asked students to engage with
+        // a topic before it was taught. The anchor is clamped so the closing
+        // slide still lands after the reserved block; tiny decks fall back to
+        // an early slot since there's no meaningful "later" to move to.
         const reserved: { kind: "audio" | "audio-answer" | "video"; index: number }[] = [];
         {
-          let cursor = Math.min(2, expectedTotalAi); // 3rd slide (index 2), or end on tiny decks
+          const anchor = expectedTotalAi <= 4
+            ? Math.min(2, expectedTotalAi)
+            : Math.min(expectedTotalAi - 1, Math.max(3, Math.round(expectedTotalAi * 0.6)));
+          let cursor = anchor;
           if (body.includeAudio) {
             reserved.push({ kind: "audio", index: cursor++ });
             reserved.push({ kind: "audio-answer", index: cursor++ });
