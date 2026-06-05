@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, Sparkles, Check, ChevronDown } from "lucide-react";
 import { TOOLS } from "@/app/lib/tools";
 import HeroShowcase from "@/app/components/landing/HeroShowcase";
@@ -21,7 +22,22 @@ const FEATURED = [
 ];
 
 
-export default async function LandingPage() {
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string; next?: string }>;
+}) {
+  // OAuth fallback: if Supabase falls back to the Site URL (e.g. the exact
+  // `/auth/callback` redirect wasn't allowlisted, or a www/apex mismatch), the
+  // `?code=` can land here on the root. Forward it to the real callback so the
+  // PKCE code still gets exchanged for a session instead of being dropped.
+  const { code, next } = await searchParams;
+  if (code) {
+    const params = new URLSearchParams({ code });
+    if (next) params.set("next", next);
+    redirect(`/auth/callback?${params.toString()}`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
