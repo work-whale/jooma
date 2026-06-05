@@ -12,7 +12,8 @@ import type {
   BlockquoteObject,
   ActivityObject,
 } from "./presentations";
-import type { SlideshowTheme } from "./slideshowThemes";
+import type { SlideshowTheme, ArtStyleId } from "./slideshowThemes";
+import { getThemeArt, DEFAULT_ART_STYLE } from "./slideshowThemes";
 
 const SLIDE_W = 1280;
 const SLIDE_H = 720;
@@ -993,21 +994,26 @@ function renderPaperTwoImages(spec: SlideSpec, t: Theme): SlideJSON {
   const leftX = 80;
   const rightX = 680;
   const cellW = 520;
-  // Title + optional intro paragraph at top, two cells (image + label) below.
+  // Title at top, then two image + caption cells. `twoColLeftBody`/
+  // `twoColRightBody` ARE the cell captions (mapped from body/secondaryBody) —
+  // there is no separate intro. We deliberately do NOT render `spec.body` at the
+  // top: it's identical to the left caption, so doing so duplicated the text and
+  // pushed the cells off the bottom of the slide.
   const titleY = 80;
   const titleH = textHeight(spec.title, fullW, 40);
-  const introY = titleY + titleH + GAP_TITLE_TO_HOOK;
-  const introH = spec.body ? textHeight(spec.body, fullW, 22) : 0;
-  const imgY = introY + introH + (spec.body ? GAP_BODY_TO_REST : 0);
-  const imgH = Math.max(220, Math.min(300, SLIDE_H - imgY - 130)); // reserve ~130px for the cell-label paragraph
+  const imgY = titleY + titleH + GAP_BODY_TO_REST;
+  // Reserve room for the captions and clamp the images so the captions always
+  // fit on-slide. Captions are clipped to the remaining height as a safety net.
+  const LABEL_RESERVE = 160;
+  const imgH = Math.max(200, Math.min(300, SLIDE_H - imgY - LABEL_RESERVE));
   const labelY = imgY + imgH + 18;
+  const labelAvailH = Math.max(48, SLIDE_H - labelY - 32);
   return {
     shapes: [makePaperBackdrop(activeTheme)],
     texts: [
       makeText(spec.title, leftX, titleY, fullW, 40, "800", headingColor, "left"),
-      ...(spec.body ? [makeText(spec.body, leftX, introY, fullW, 22, "400", t.text, "left")] : []),
-      ...(spec.twoColLeftBody  ? [makeText(spec.twoColLeftBody,  leftX,  labelY, cellW, 20, "400", t.text, "left")] : []),
-      ...(spec.twoColRightBody ? [makeText(spec.twoColRightBody, rightX, labelY, cellW, 20, "400", t.text, "left")] : []),
+      ...(spec.twoColLeftBody  ? [makeText(spec.twoColLeftBody,  leftX,  labelY, cellW, 20, "400", t.text, "left", undefined, labelAvailH)] : []),
+      ...(spec.twoColRightBody ? [makeText(spec.twoColRightBody, rightX, labelY, cellW, 20, "400", t.text, "left", undefined, labelAvailH)] : []),
     ],
     images: [
       ...paperImage(spec, leftX, imgY, cellW, imgH),
@@ -1553,7 +1559,11 @@ function renderActivityVocabMatch(spec: SlideSpec, t: Theme, answerMode: boolean
 
 // ── Public renderer ────────────────────────────────────────────────────────
 
-export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJSON {
+export function renderSlide(
+  spec: SlideSpec,
+  baseTheme?: SlideshowTheme,
+  artStyle: ArtStyleId = DEFAULT_ART_STYLE,
+): SlideJSON {
   // Use the user-picked theme's accent if available, otherwise the AI-chosen one.
   const accent = baseTheme?.palette.accent || spec.accentColor || "#7c3aed";
   // The theme's natural palette already encodes its look — for Dark theme that
@@ -1564,10 +1574,11 @@ export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJ
   activeTheme = baseTheme;
   try {
     const slide = applyThemeDecorations(renderForLayout(spec, t), spec, baseTheme);
-    // Themed full-bleed illustration background (scenic art themes only).
-    if (baseTheme?.backgroundArt) {
-      slide.backgroundArt = baseTheme.backgroundArt;
-      slide.backgroundArtScrim = baseTheme.backgroundArtScrim;
+    // Themed full-bleed illustration background, resolved for the chosen style.
+    const art = baseTheme ? getThemeArt(baseTheme, artStyle) : undefined;
+    if (art) {
+      slide.backgroundArt = art.src;
+      slide.backgroundArtScrim = art.scrim;
     }
     return slide;
   } finally {
@@ -1762,6 +1773,7 @@ function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
 export function rerenderSlideWithTheme(
   slide: SlideJSON,
   theme: SlideshowTheme,
+  artStyle: ArtStyleId = DEFAULT_ART_STYLE,
 ): SlideJSON {
   if (!slide.skeleton) return slide;
   // The slide's photo can live in one of two places:
@@ -1804,7 +1816,7 @@ export function rerenderSlideWithTheme(
     secondaryImageWidth: existingSecondaryImage?.naturalWidth,
     secondaryImageHeight: existingSecondaryImage?.naturalHeight,
   };
-  const rebuilt = renderSlide(spec, theme);
+  const rebuilt = renderSlide(spec, theme, artStyle);
   // Preserve audios/videos and the deck-level themeId (the caller will update
   // it after the rerender); skeleton is re-attached so future re-themes work.
   rebuilt.audios = slide.audios;

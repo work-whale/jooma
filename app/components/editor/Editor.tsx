@@ -42,7 +42,7 @@ import {
   type ActivityObject,
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
-import { getTheme, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
+import { getTheme, DEFAULT_THEME_ID, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { rerenderSlideWithTheme, backgroundDecorations } from "@/app/lib/slideshow-layouts";
 
 interface SlideState extends SlideJSON {
@@ -186,6 +186,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       // and the next save would persist them as missing.
       skeleton: s.skeleton,
       themeId: s.themeId,
+      artStyleId: s.artStyleId,
     }));
   });
   const [activeIndex, setActiveIndex] = useState(0);
@@ -231,6 +232,12 @@ export default function Editor({ presentation, generationParams }: Props) {
   // Bumped each time we persist a new AI image to the cross-project gallery
   // (Supabase `generated_images`). Triggers a refetch in the Sidebar.
   const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
+  // Deck-level background art style ("watercolor" | "illustration"), stored on
+  // slides[0].artStyleId. Drives which art variant of the theme is stamped on
+  // every slide.
+  const [artStyle, setArtStyle] = useState<ArtStyleId>(
+    () => (presentation.slides?.[0]?.artStyleId as ArtStyleId) ?? DEFAULT_ART_STYLE,
+  );
 
   // Marquee (rubber-band) multi-selection state. While the user is dragging
   // an empty area of the slide, `marquee` holds the rect in slide-local coords;
@@ -855,6 +862,7 @@ export default function Editor({ presentation, generationParams }: Props) {
         // works after the page is reloaded.
         skeleton: s.skeleton,
         themeId: s.themeId,
+        artStyleId: s.artStyleId,
       }));
       // While we still inline base64 image data in slides, a save can be many
       // MB. Log the payload size so it's obvious when Postgres' statement
@@ -2188,7 +2196,7 @@ export default function Editor({ presentation, generationParams }: Props) {
           };
         }
         // AI content slide: re-render from skeleton, preserve id.
-        const rebuilt = rerenderSlideWithTheme(s, theme);
+        const rebuilt = rerenderSlideWithTheme(s, theme, artStyle);
         return {
           ...rebuilt,
           id: s.id,
@@ -2197,14 +2205,33 @@ export default function Editor({ presentation, generationParams }: Props) {
       });
       if (next[0]) next[0] = { ...next[0], themeId: nextThemeId };
       // Apply (or clear) the theme's full-bleed illustration background on every
-      // slide. Set unconditionally so switching AWAY from an art theme removes it.
+      // slide, resolved for the current art style. Set unconditionally so
+      // switching AWAY from an art theme removes it.
+      const art = getThemeArt(theme, artStyle);
       for (let i = 0; i < next.length; i++) {
         next[i] = {
           ...next[i],
-          backgroundArt: theme.backgroundArt,
-          backgroundArtScrim: theme.backgroundArtScrim,
+          backgroundArt: art?.src,
+          backgroundArtScrim: art?.scrim,
         };
       }
+      if (next[0]) next[0] = { ...next[0], artStyleId: artStyle };
+      slidesRef.current = next;
+      return next;
+    });
+    scheduleSave();
+  }, [scheduleSave, artStyle]);
+
+  // ── Background art style switching ──────────────────────────────────────────
+  // Re-stamps every slide's illustration background with the chosen style's
+  // variant (watercolor ↔ illustration) for the deck's current theme.
+  const handleArtStyleChange = useCallback((nextStyle: ArtStyleId) => {
+    setArtStyle(nextStyle);
+    const theme = getTheme(slidesRef.current[0]?.themeId ?? DEFAULT_THEME_ID);
+    const art = getThemeArt(theme, nextStyle);
+    setSlides((prev) => {
+      const next = prev.map((s) => ({ ...s, backgroundArt: art?.src, backgroundArtScrim: art?.scrim }));
+      if (next[0]) next[0] = { ...next[0], artStyleId: nextStyle };
       slidesRef.current = next;
       return next;
     });
@@ -3113,6 +3140,8 @@ export default function Editor({ presentation, generationParams }: Props) {
         disableHistory={!!generating}
         themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
         onThemeChange={handleThemeChange}
+        artStyle={artStyle}
+        onArtStyleChange={handleArtStyleChange}
       />
       <div className="flex flex-1 min-h-0 relative">
         <Sidebar

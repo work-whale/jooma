@@ -43,9 +43,36 @@ export interface SlideshowTheme {
   };
   /** Optional full-bleed illustration background applied to every slide of this
    *  theme (URL/path under /public). Paired with `backgroundArtScrim`, a
-   *  semi-transparent veil drawn over it so text stays legible. */
+   *  semi-transparent veil drawn over it so text stays legible. This is the
+   *  default "watercolor" art style. */
   backgroundArt?: string;
   backgroundArtScrim?: string;
+  /** Flat-vector "Illustration" art-style variant of the background. Reuses the
+   *  same `backgroundArtScrim`. Selected via the art-style switch. */
+  artIllustration?: string;
+}
+
+/** Background art styles the user can switch between. The id maps to a field on
+ *  the theme via `getThemeArt`. */
+export const ART_STYLES = [
+  { id: "watercolor", name: "Watercolor" },
+  { id: "illustration", name: "Illustration" },
+] as const;
+export type ArtStyleId = (typeof ART_STYLES)[number]["id"];
+export const DEFAULT_ART_STYLE: ArtStyleId = "watercolor";
+
+/** Resolve a theme's background art for the chosen style. Falls back to the
+ *  watercolor default when a variant is missing. Returns undefined for themes
+ *  with no art at all. */
+export function getThemeArt(
+  theme: SlideshowTheme,
+  style: ArtStyleId,
+): { src: string; scrim: string } | undefined {
+  const src = style === "illustration"
+    ? (theme.artIllustration ?? theme.backgroundArt)
+    : theme.backgroundArt;
+  if (!src) return undefined;
+  return { src, scrim: theme.backgroundArtScrim ?? "rgba(255,255,255,0.45)" };
 }
 
 export const SLIDESHOW_THEMES: SlideshowTheme[] = [
@@ -53,6 +80,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "paper",
     name: "Paper",
     description: "Cream paper, sienna headings — textbook feel",
+    backgroundArt: "/scenes/paper.png",
+    artIllustration: "/scenes/paper-illus.png",
+    backgroundArtScrim: "rgba(251, 245, 227, 0.55)",
     palette: {
       // Outer slide canvas — neutral so the cream paper card pops on top.
       background: "#efe9d8",
@@ -87,6 +117,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "light",
     name: "Light",
     description: "Clean and crisp",
+    backgroundArt: "/scenes/light.png",
+    artIllustration: "/scenes/light-illus.png",
+    backgroundArtScrim: "rgba(255, 255, 255, 0.5)",
     palette: {
       background: "#ffffff",
       text: "#1a1a2e",
@@ -120,6 +153,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "dark",
     name: "Dark",
     description: "For the night owls",
+    backgroundArt: "/scenes/dark.png",
+    artIllustration: "/scenes/dark-illus.png",
+    backgroundArtScrim: "rgba(10, 10, 26, 0.55)",
     palette: {
       background: "#0a0a1a",
       text: "#f0f0f5",
@@ -153,6 +189,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "warm",
     name: "Warm",
     description: "Editorial and cosy",
+    backgroundArt: "/scenes/warm.png",
+    artIllustration: "/scenes/warm-illus.png",
+    backgroundArtScrim: "rgba(253, 246, 227, 0.55)",
     palette: {
       background: "#fdf6e3",
       text: "#3e2723",
@@ -186,6 +225,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "bold",
     name: "Bold",
     description: "Make a statement",
+    backgroundArt: "/scenes/bold.png",
+    artIllustration: "/scenes/bold-illus.png",
+    backgroundArtScrim: "rgba(254, 243, 199, 0.55)",
     palette: {
       background: "#fef3c7",
       text: "#0c0a09",
@@ -228,6 +270,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     name: "Ocean",
     description: "Calm coastal blues with a wave horizon",
     backgroundArt: "/scenes/ocean.png",
+    artIllustration: "/scenes/ocean-illus.png",
     backgroundArtScrim: "rgba(246, 251, 253, 0.5)",
     palette: {
       background: "#e3f1f6",
@@ -263,6 +306,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     name: "Desert",
     description: "Warm sands, dunes and a low sun",
     backgroundArt: "/scenes/desert.png",
+    artIllustration: "/scenes/desert-illus.png",
     backgroundArtScrim: "rgba(253, 248, 236, 0.5)",
     palette: {
       background: "#f6ecd6",
@@ -298,6 +342,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     name: "Cloudy",
     description: "Soft overcast sky with drifting clouds",
     backgroundArt: "/scenes/cloudy.png",
+    artIllustration: "/scenes/cloudy-illus.png",
     backgroundArtScrim: "rgba(255, 255, 255, 0.42)",
     palette: {
       background: "#e6edf3",
@@ -361,6 +406,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
       body: "'Lora', serif",
     },
     backgroundArt: "/scenes/forest-3-watercolor.png",
+    artIllustration: "/scenes/forest-illus.png",
     backgroundArtScrim: "rgba(246, 251, 244, 0.5)",
   },
   {
@@ -368,6 +414,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     name: "Dusk",
     description: "Warm sunset glow over the horizon",
     backgroundArt: "/scenes/dusk.png",
+    artIllustration: "/scenes/dusk-illus.png",
     backgroundArtScrim: "rgba(254, 246, 240, 0.55)",
     palette: {
       background: "#f7e6da",

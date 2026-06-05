@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
-import { getTheme } from "@/app/lib/slideshowThemes";
+import { getTheme, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
 import type { SlideJSON } from "@/app/lib/presentations";
 
@@ -27,6 +27,8 @@ interface RequestBody {
   imageSource?: ImageSource;
   imageStyle?: ImageStyle;
   themeId?: string;
+  /** Background art style: "watercolor" (default) | "illustration". */
+  artStyle?: string;
   /** Text extracted from a teacher-supplied resource (URL or uploaded file)
    *  via /api/extract-resource. Anchors the AI to the actual lesson content. */
   resourceText?: string;
@@ -751,6 +753,7 @@ export async function POST(req: NextRequest) {
   const imageSource: ImageSource = body.imageSource ?? "auto";
   const imageStyle: ImageStyle = body.imageStyle ?? "photographic";
   const theme = getTheme(body.themeId);
+  const artStyle: ArtStyleId = body.artStyle === "illustration" ? "illustration" : DEFAULT_ART_STYLE;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -1001,7 +1004,7 @@ export async function POST(req: NextRequest) {
           // ALWAYS send the final "slide-image" so the client clears the
           // shimmer, even if every fetch failed (the slide just falls back to
           // a blank frame instead of staying in the pending state forever).
-          const updated = renderSlide(filled, theme);
+          const updated = renderSlide(filled, theme, artStyle);
           const primary = galleryImages[0];
           send("slide-image", { index: idx, slide: updated, galleryImage: primary });
           for (let g = 1; g < galleryImages.length; g++) {
@@ -1186,9 +1189,9 @@ export async function POST(req: NextRequest) {
               console.log(`[generate-slideshow] slide ${ordinal}→${finalIdx} (${ai.layout}) imageQuery="${ai.imageQuery}" → "${spec.imageQuery ?? ""}"`);
             }
 
-            const slide: SlideJSON = renderSlide(spec, theme);
+            const slide: SlideJSON = renderSlide(spec, theme, artStyle);
             slide.skeleton = toSkeleton(spec);
-            if (finalIdx === 0) slide.themeId = theme.id;
+            if (finalIdx === 0) { slide.themeId = theme.id; slide.artStyleId = artStyle; }
             send("slide", {
               index: finalIdx,
               total: expectedFinalTotal,
@@ -1228,6 +1231,62 @@ export async function POST(req: NextRequest) {
         // Local aliases to keep the audio/video code below readable.
         const parsed = { title: parser.title ?? body.topic, slides: allAi };
         const specs = allSpecs;
+
+        // YouTube lookup runs concurrently with the still-running image jobs and
+        // sends its slide as soon as it resolves (~3s) — NOT after every image
+        // settles. It used to run dead last, so a stream cut during the long
+        // image wait left the video stuck on its pending placeholder. Starting
+        // it here makes it persist early. Awaited again before "complete".
+        const videoTask: Promise<void> = (async () => {
+          if (!(body.includeYouTube && videoIndex !== undefined)) return;
+          try {
+            send("status", { message: "Finding a YouTube video..." });
+            const ytRes = await fetch(`${req.nextUrl.origin}/api/find-youtube`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                cookie: req.headers.get("cookie") ?? "",
+              },
+              body: JSON.stringify({
+                topic: body.topic,
+                year: body.year,
+                readingLevel: body.readingLevel,
+                length: body.youtubeLength ?? "medium",
+                deckTitle: parsed.title,
+                slideTitles: parsed.slides.map((s) => s.title).slice(0, 8),
+              }),
+            });
+            if (ytRes.ok) {
+              const yt: {
+                videoId: string; title: string; channel: string; description: string;
+                slideHeading?: string; slideSubtitle?: string;
+              } = await ytRes.json();
+              send("video", {
+                index: videoIndex,
+                headingColor: theme.palette.headingColor ?? theme.palette.accent,
+                bodyFont: theme.fonts.body,
+                video: {
+                  videoId: yt.videoId,
+                  title: yt.title,
+                  channel: yt.channel,
+                  description: yt.description,
+                  slideHeading: yt.slideHeading ?? `WATCH: ${body.topic.toUpperCase()}`,
+                  slideSubtitle: yt.slideSubtitle ?? "Let's watch this together to deepen our understanding.",
+                },
+                slideBg: theme.palette.background,
+                titleColor: theme.palette.accent,
+                mutedColor: theme.palette.muted,
+                accent: theme.palette.accent,
+                headingFont: theme.fonts.heading,
+              });
+            } else {
+              const err = await ytRes.json().catch(() => ({}));
+              console.warn("[generate-slideshow] /api/find-youtube failed:", ytRes.status, err);
+            }
+          } catch (err) {
+            console.warn("[generate-slideshow] youtube fetch threw:", err);
+          }
+        })();
 
         // All image jobs were kicked off during the streaming loop above —
         // wait for any still in flight before generating audio/video.
@@ -1331,64 +1390,9 @@ export async function POST(req: NextRequest) {
         // Optional YouTube video. Placeholder was reserved up-front in
         // sendMetaIfReady at `videoIndex`. We just fetch the video data here
         // and fill that slot.
-        if (body.includeYouTube && videoIndex !== undefined && !closed) {
-          try {
-            send("status", { message: "Finding a YouTube video..." });
-            const ytRes = await fetch(`${req.nextUrl.origin}/api/find-youtube`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                cookie: req.headers.get("cookie") ?? "",
-              },
-              body: JSON.stringify({
-                topic: body.topic,
-                year: body.year,
-                readingLevel: body.readingLevel,
-                // Default to medium-length (4-20 min) rather than "any" so the
-                // YouTube API itself filters out Shorts and lecture-length
-                // videos. Users can still override via the modal.
-                length: body.youtubeLength ?? "medium",
-                // Pass the deck's title + slide titles so the search query
-                // matches what the presentation actually covers.
-                deckTitle: parsed.title,
-                slideTitles: parsed.slides.map((s) => s.title).slice(0, 8),
-              }),
-            });
-            if (ytRes.ok) {
-              const yt: {
-                videoId: string; title: string; channel: string; description: string;
-                slideHeading?: string; slideSubtitle?: string;
-              } = await ytRes.json();
-              send("video", {
-                index: videoIndex,
-                // Title colour for the YouTube slide — matches paper-* slide
-                // headings instead of cream-on-dark.
-                headingColor: theme.palette.headingColor ?? theme.palette.accent,
-                bodyFont: theme.fonts.body,
-                video: {
-                  videoId: yt.videoId,
-                  title: yt.title,
-                  channel: yt.channel,
-                  description: yt.description,
-                  slideHeading: yt.slideHeading ?? `WATCH: ${body.topic.toUpperCase()}`,
-                  slideSubtitle: yt.slideSubtitle ?? "Let's watch this together to deepen our understanding.",
-                },
-                // Match the rest of the deck: single theme bg, heading in
-                // accent, subtitle in muted.
-                slideBg: theme.palette.background,
-                titleColor: theme.palette.accent,
-                mutedColor: theme.palette.muted,
-                accent: theme.palette.accent,
-                headingFont: theme.fonts.heading,
-              });
-            } else {
-              const err = await ytRes.json().catch(() => ({}));
-              console.warn("[generate-slideshow] /api/find-youtube failed:", ytRes.status, err);
-            }
-          } catch (err) {
-            console.warn("[generate-slideshow] youtube fetch threw:", err);
-          }
-        }
+        // The YouTube task was started early (above) and streams its slide as
+        // soon as it resolves; just make sure it has settled before we finish.
+        await videoTask;
 
         // ── Full cost summary ─────────────────────────────────────────────
         // Logged last so it can include audio (which runs after images). Image

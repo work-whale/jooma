@@ -265,6 +265,10 @@ export interface SlideJSON {
    *  acts as the carrier for deck-wide metadata so we don't need a new DB
    *  column. Read via getDeckTheme / write via setDeckTheme. */
   themeId?: string;
+  /** Deck-level background art style ("watercolor" | "illustration"). Only
+   *  meaningful on slides[0], like themeId. Determines which art variant of the
+   *  theme is stamped onto every slide's backgroundArt. */
+  artStyleId?: string;
 }
 
 export const BLANK_SLIDE: SlideJSON = {
