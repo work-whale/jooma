@@ -41,6 +41,38 @@ export interface SlideshowTheme {
     heading: string;          // CSS font-family for titles
     body: string;             // CSS font-family for body
   };
+  /** Optional full-bleed illustration background applied to every slide of this
+   *  theme (URL/path under /public). Paired with `backgroundArtScrim`, a
+   *  semi-transparent veil drawn over it so text stays legible. This is the
+   *  default "watercolor" art style. */
+  backgroundArt?: string;
+  backgroundArtScrim?: string;
+  /** Flat-vector "Illustration" art-style variant of the background. Reuses the
+   *  same `backgroundArtScrim`. Selected via the art-style switch. */
+  artIllustration?: string;
+}
+
+/** Background art styles the user can switch between. The id maps to a field on
+ *  the theme via `getThemeArt`. */
+export const ART_STYLES = [
+  { id: "watercolor", name: "Watercolor" },
+  { id: "illustration", name: "Illustration" },
+] as const;
+export type ArtStyleId = (typeof ART_STYLES)[number]["id"];
+export const DEFAULT_ART_STYLE: ArtStyleId = "watercolor";
+
+/** Resolve a theme's background art for the chosen style. Falls back to the
+ *  watercolor default when a variant is missing. Returns undefined for themes
+ *  with no art at all. */
+export function getThemeArt(
+  theme: SlideshowTheme,
+  style: ArtStyleId,
+): { src: string; scrim: string } | undefined {
+  const src = style === "illustration"
+    ? (theme.artIllustration ?? theme.backgroundArt)
+    : theme.backgroundArt;
+  if (!src) return undefined;
+  return { src, scrim: theme.backgroundArtScrim ?? "rgba(255,255,255,0.45)" };
 }
 
 export const SLIDESHOW_THEMES: SlideshowTheme[] = [
@@ -48,6 +80,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "paper",
     name: "Paper",
     description: "Cream paper, sienna headings — textbook feel",
+    backgroundArt: "/scenes/paper.png",
+    artIllustration: "/scenes/paper-illus.png",
+    backgroundArtScrim: "rgba(251, 245, 227, 0.55)",
     palette: {
       // Outer slide canvas — neutral so the cream paper card pops on top.
       background: "#efe9d8",
@@ -82,6 +117,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "light",
     name: "Light",
     description: "Clean and crisp",
+    backgroundArt: "/scenes/light.png",
+    artIllustration: "/scenes/light-illus.png",
+    backgroundArtScrim: "rgba(255, 255, 255, 0.5)",
     palette: {
       background: "#ffffff",
       text: "#1a1a2e",
@@ -115,6 +153,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "dark",
     name: "Dark",
     description: "For the night owls",
+    backgroundArt: "/scenes/dark.png",
+    artIllustration: "/scenes/dark-illus.png",
+    backgroundArtScrim: "rgba(10, 10, 26, 0.55)",
     palette: {
       background: "#0a0a1a",
       text: "#f0f0f5",
@@ -148,6 +189,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "warm",
     name: "Warm",
     description: "Editorial and cosy",
+    backgroundArt: "/scenes/warm.png",
+    artIllustration: "/scenes/warm-illus.png",
+    backgroundArtScrim: "rgba(253, 246, 227, 0.55)",
     palette: {
       background: "#fdf6e3",
       text: "#3e2723",
@@ -181,6 +225,9 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "bold",
     name: "Bold",
     description: "Make a statement",
+    backgroundArt: "/scenes/bold.png",
+    artIllustration: "/scenes/bold-illus.png",
+    backgroundArtScrim: "rgba(254, 243, 199, 0.55)",
     palette: {
       background: "#fef3c7",
       text: "#0c0a09",
@@ -208,6 +255,194 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: {
       heading: "'Archivo Black', sans-serif",
       body: "'Inter', sans-serif",
+    },
+  },
+
+  // ── Scenic themes ────────────────────────────────────────────────────────
+  // These pair a light, legible canvas + paper surface with a flat-illustration
+  // backdrop (sky/water/sand bands, sun, clouds, dunes) drawn as low-opacity
+  // decoration SHAPES — see `sceneDecorations` in slideshow-layouts.ts. Shapes
+  // render on every surface (editor, thumbnails, present mode, PPTX export), so
+  // the scene survives export without any special handling. Keep backgrounds
+  // light so dark body text stays readable on card-less layouts.
+  {
+    id: "ocean",
+    name: "Ocean",
+    description: "Calm coastal blues with a wave horizon",
+    backgroundArt: "/scenes/ocean.png",
+    artIllustration: "/scenes/ocean-illus.png",
+    backgroundArtScrim: "rgba(246, 251, 253, 0.5)",
+    palette: {
+      background: "#e3f1f6",
+      paperBg: "#f6fbfd",
+      paperShadow: "rgba(13, 74, 99, 0.12)",
+      text: "#0f3a4d",
+      muted: "#4a7382",
+      accent: "#0e7490",
+      overlayText: "#f6fbfd",
+      headingColor: "#0c5870",
+      calloutBgKey: "#cfeaf2",
+      calloutInkKey: "#0f3a4d",
+      calloutBgRemember: "#d8ecf6",
+      calloutInkRemember: "#123a52",
+      calloutBgFun: "#dbeede",
+      calloutInkFun: "#194a36",
+      badgeBg: "#0e7490",
+      badgeInk: "#f6fbfd",
+      blockquoteRule: "#0e7490",
+      activityCardBg: "#d7ecf3",
+      activityCardInk: "#0f3a4d",
+      speechBubbleStroke: "#0f3a4d",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Inter', sans-serif",
+      body: "'Inter', sans-serif",
+    },
+  },
+  {
+    id: "desert",
+    name: "Desert",
+    description: "Warm sands, dunes and a low sun",
+    backgroundArt: "/scenes/desert.png",
+    artIllustration: "/scenes/desert-illus.png",
+    backgroundArtScrim: "rgba(253, 248, 236, 0.5)",
+    palette: {
+      background: "#f6ecd6",
+      paperBg: "#fdf8ec",
+      paperShadow: "rgba(91, 68, 35, 0.12)",
+      text: "#5b4423",
+      muted: "#8a7150",
+      accent: "#c2682f",
+      overlayText: "#fdf8ec",
+      headingColor: "#a8521f",
+      calloutBgKey: "#f6e3bf",
+      calloutInkKey: "#5b4423",
+      calloutBgRemember: "#e6ebd6",
+      calloutInkRemember: "#3f4a2a",
+      calloutBgFun: "#f1ddd0",
+      calloutInkFun: "#5b3322",
+      badgeBg: "#c2682f",
+      badgeInk: "#fdf8ec",
+      blockquoteRule: "#c2682f",
+      activityCardBg: "#f1e3c8",
+      activityCardInk: "#5b4423",
+      speechBubbleStroke: "#5b4423",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Playfair Display', serif",
+      body: "'Lora', serif",
+    },
+  },
+  {
+    id: "cloudy",
+    name: "Cloudy",
+    description: "Soft overcast sky with drifting clouds",
+    backgroundArt: "/scenes/cloudy.png",
+    artIllustration: "/scenes/cloudy-illus.png",
+    backgroundArtScrim: "rgba(255, 255, 255, 0.42)",
+    palette: {
+      background: "#e6edf3",
+      paperBg: "#ffffff",
+      paperShadow: "rgba(51, 65, 85, 0.10)",
+      text: "#334155",
+      muted: "#64748b",
+      accent: "#3b82c4",
+      overlayText: "#ffffff",
+      headingColor: "#2c6aa0",
+      calloutBgKey: "#dbe7f2",
+      calloutInkKey: "#334155",
+      calloutBgRemember: "#e2eaf2",
+      calloutInkRemember: "#2a3a4f",
+      calloutBgFun: "#e8e6f3",
+      calloutInkFun: "#3a3460",
+      badgeBg: "#3b82c4",
+      badgeInk: "#ffffff",
+      blockquoteRule: "#3b82c4",
+      activityCardBg: "#e3ebf3",
+      activityCardInk: "#334155",
+      speechBubbleStroke: "#334155",
+      checkBadgeBg: "#16a34a",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Inter', sans-serif",
+      body: "'Inter', sans-serif",
+    },
+  },
+  {
+    id: "forest",
+    name: "Forest",
+    description: "Fresh sage hills and treetops",
+    palette: {
+      background: "#e6efe4",
+      paperBg: "#f6fbf4",
+      paperShadow: "rgba(33, 74, 46, 0.12)",
+      text: "#214a2e",
+      muted: "#5a7a60",
+      accent: "#2f7d4f",
+      overlayText: "#f6fbf4",
+      headingColor: "#256040",
+      calloutBgKey: "#d8eccf",
+      calloutInkKey: "#214a2e",
+      calloutBgRemember: "#d6ecdd",
+      calloutInkRemember: "#1f4632",
+      calloutBgFun: "#e7eccd",
+      calloutInkFun: "#3a4521",
+      badgeBg: "#2f7d4f",
+      badgeInk: "#f6fbf4",
+      blockquoteRule: "#2f7d4f",
+      activityCardBg: "#dcecd6",
+      activityCardInk: "#214a2e",
+      speechBubbleStroke: "#214a2e",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Lora', serif",
+      body: "'Lora', serif",
+    },
+    backgroundArt: "/scenes/forest-3-watercolor.png",
+    artIllustration: "/scenes/forest-illus.png",
+    backgroundArtScrim: "rgba(246, 251, 244, 0.5)",
+  },
+  {
+    id: "dusk",
+    name: "Dusk",
+    description: "Warm sunset glow over the horizon",
+    backgroundArt: "/scenes/dusk.png",
+    artIllustration: "/scenes/dusk-illus.png",
+    backgroundArtScrim: "rgba(254, 246, 240, 0.55)",
+    palette: {
+      background: "#f7e6da",
+      paperBg: "#fef6f0",
+      paperShadow: "rgba(74, 44, 64, 0.12)",
+      text: "#4a2c40",
+      muted: "#8a6071",
+      accent: "#d4663f",
+      overlayText: "#fef6f0",
+      headingColor: "#b8452f",
+      calloutBgKey: "#f7dcc6",
+      calloutInkKey: "#4a2c40",
+      calloutBgRemember: "#f0dce0",
+      calloutInkRemember: "#4a2c40",
+      calloutBgFun: "#ecd9e6",
+      calloutInkFun: "#43284a",
+      badgeBg: "#d4663f",
+      badgeInk: "#fef6f0",
+      blockquoteRule: "#d4663f",
+      activityCardBg: "#f4e0d2",
+      activityCardInk: "#4a2c40",
+      speechBubbleStroke: "#4a2c40",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Playfair Display', serif",
+      body: "'Lora', serif",
     },
   },
 ];

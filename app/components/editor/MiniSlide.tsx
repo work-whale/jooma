@@ -677,6 +677,11 @@ function MiniSlideBase({ slide, width, thumbnailMode, themeId }: Props) {
     }
   }
 
+  // Themed illustration background — only when there's no content/hero photo
+  // taking the full-bleed slot. Scrim veil composited over the art via CSS.
+  const useArt = !bgImgSrc && !!slide.backgroundArt;
+  const artScrim = slide.backgroundArtScrim ?? "rgba(255,255,255,0.45)";
+
   return (
     <div
       style={{
@@ -685,10 +690,12 @@ function MiniSlideBase({ slide, width, thumbnailMode, themeId }: Props) {
         overflow: "hidden",
         position: "relative",
         backgroundColor: slide.background ?? "#ffffff",
-        backgroundImage: bgImgSrc ? `url(${bgImgSrc})` : undefined,
-        backgroundSize: useCssCover ? "cover" : backgroundSize,
+        backgroundImage: useArt
+          ? `linear-gradient(${artScrim}, ${artScrim}), url(${slide.backgroundArt})`
+          : bgImgSrc ? `url(${bgImgSrc})` : undefined,
+        backgroundSize: useArt ? "cover" : useCssCover ? "cover" : backgroundSize,
         backgroundRepeat: "no-repeat",
-        backgroundPosition: slide.backgroundImage && !useCssCover
+        backgroundPosition: !useArt && slide.backgroundImage && !useCssCover
           ? `calc(50% + ${offX * scale}px) calc(50% + ${offY * scale}px)`
           : "center",
       }}

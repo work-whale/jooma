@@ -3,9 +3,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers } from "lucide-react";
+import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
-import { SLIDESHOW_THEMES, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
+import { SLIDESHOW_THEMES, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
 
 // sessionStorage key used to hand the generation params from this modal to the
@@ -31,6 +31,7 @@ export interface GenerationParams {
   imageSource?: "auto" | "ai" | "web";
   imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
   themeId?: string;
+  artStyle?: string;
   /** Extracted text from a teacher-supplied resource (URL or uploaded file).
    *  Fed to the AI as base material so the deck reflects the actual lesson
    *  content. Truncated by the extract route to ~30k chars. */
@@ -93,6 +94,7 @@ export default function GenerateModal({ onClose }: Props) {
   const [slideCount, setSlideCount] = useState(8);
   const [additionalInstructions, setAdditionalInstructions] = useState("");
   const [themeId, setThemeId] = useState<string>(DEFAULT_THEME_ID);
+  const [artStyle, setArtStyle] = useState<ArtStyleId>(DEFAULT_ART_STYLE);
 
   const [includeObjectives, setIncludeObjectives] = useState(false);
   const [includeVocab, setIncludeVocab] = useState(false);
@@ -131,6 +133,41 @@ export default function GenerateModal({ onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [outlineBusy, setOutlineBusy] = useState(false);
   const [outlineError, setOutlineError] = useState<string | null>(null);
+  const [subjectSuggesting, setSubjectSuggesting] = useState(false);
+
+  // Auto-fill the curriculum subject/strand from the topic (via AI) when the
+  // "Align to curriculum" section is opened. Keyed by curriculum + topic so it
+  // runs once per combination and never overrides a subject the user picked.
+  const subjectSuggestKeyRef = useRef("");
+  useEffect(() => {
+    if (!alignCurriculum || !topic.trim() || curSubject) return;
+    const subjects = getSubjectsForCurriculum(curCurriculumId);
+    if (subjects.length === 0) return;
+    const key = `${curCurriculumId}::${topic.trim().toLowerCase()}`;
+    if (subjectSuggestKeyRef.current === key) return;
+    subjectSuggestKeyRef.current = key;
+    let cancelled = false;
+    setSubjectSuggesting(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/suggest-subject", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic: topic.trim(), subjects }),
+        });
+        if (!res.ok || cancelled) return;
+        const { subject, strand } = (await res.json()) as { subject: string; strand: string };
+        if (cancelled || !subject) return;
+        setCurSubject(subject);
+        if (strand) setCurStrand(strand);
+      } catch {
+        /* best-effort — leave the dropdown for the user to fill */
+      } finally {
+        if (!cancelled) setSubjectSuggesting(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [alignCurriculum, topic, curCurriculumId, curSubject]);
 
   const handleGenerateOutline = async () => {
     if (!topic.trim() || outlineBusy) return;
@@ -252,6 +289,7 @@ export default function GenerateModal({ onClose }: Props) {
         imageSource,
         imageStyle: imageSource === "web" ? undefined : imageStyle,
         themeId,
+        artStyle,
         resourceText: resourceText || undefined,
         resourceSource: resourceSource || undefined,
         curriculum:
@@ -329,15 +367,36 @@ export default function GenerateModal({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {step === 2 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="col-span-2 sm:col-span-3 flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-500">Art style</span>
+                <div className="flex gap-1 p-0.5 rounded-lg bg-gray-100">
+                  {ART_STYLES.map((s) => {
+                    const active = artStyle === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setArtStyle(s.id)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        {s.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               {SLIDESHOW_THEMES.map((t) => {
                 const selected = themeId === t.id;
+                const art = getThemeArt(t, artStyle);
                 return (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => setThemeId(t.id)}
                     disabled={busy}
-                    className="rounded-xl border-2 overflow-hidden text-left transition-transform hover:scale-[1.02] focus:outline-none disabled:opacity-60"
+                    className="rounded-xl border-2 overflow-hidden text-left transition-shadow hover:shadow-md focus:outline-none disabled:opacity-60"
                     style={{
                       borderColor: selected ? "#1a1a1a" : "#DAD8D0",
                       backgroundColor: "#fff",
@@ -345,19 +404,29 @@ export default function GenerateModal({ onClose }: Props) {
                     aria-pressed={selected}
                   >
                     <div
-                      className="aspect-4/3 p-3 flex flex-col justify-between"
+                      className="aspect-4/3 p-3 flex flex-col justify-between relative overflow-hidden"
                       style={{
                         backgroundColor: t.palette.background,
+                        backgroundImage: art ? `url(${art.src})` : undefined,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
                         color: t.palette.text,
                         fontFamily: t.fonts.heading,
                       }}
                     >
+                      {/* Legibility veil over the illustration background */}
+                      {art && (
+                        <div className="absolute inset-0" style={{ backgroundColor: art.scrim }} />
+                      )}
                       <div
-                        className="h-1 w-8 rounded-full"
+                        className="relative h-1 w-8 rounded-full"
                         style={{ backgroundColor: t.palette.accent }}
                       />
-                      <div>
-                        <p className="text-sm font-bold leading-tight" style={{ fontFamily: t.fonts.heading }}>
+                      <div className="relative">
+                        <p
+                          className="text-sm font-bold leading-tight"
+                          style={{ fontFamily: t.fonts.heading, color: t.palette.headingColor ?? t.palette.text }}
+                        >
                           {t.name}
                         </p>
                         <p
@@ -430,14 +499,27 @@ export default function GenerateModal({ onClose }: Props) {
                   onChange={setReadingLevel}
                   disabled={busy}
                 />
-                <PillSelect
-                  icon={<Layers className="w-3.5 h-3.5" />}
-                  value={String(slideCount)}
-                  placeholder="Slides"
-                  options={SLIDE_COUNTS.map((c) => ({ value: String(c), label: `${c} slides` }))}
-                  onChange={(v) => setSlideCount(Number(v))}
-                  disabled={busy}
-                />
+                <div className="flex items-center gap-1.5">
+                  <PillSelect
+                    icon={<Layers className="w-3.5 h-3.5" />}
+                    value={String(slideCount)}
+                    placeholder="Slides"
+                    options={SLIDE_COUNTS.map((c) => ({ value: String(c), label: `${c} slides` }))}
+                    onChange={(v) => setSlideCount(Number(v))}
+                    disabled={busy}
+                  />
+                  <span className="relative group inline-flex">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" aria-label="About slide count" tabIndex={0} />
+                    <span
+                      role="tooltip"
+                      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-60 px-3 py-2 rounded-lg bg-gray-900 text-white text-[11px] font-normal leading-snug text-left opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity z-20 shadow-lg"
+                    >
+                      This is the base number of content slides. Extra slides for
+                      activities, audio and a video are added on top, so your deck
+                      may end up a little longer.
+                    </span>
+                  </span>
+                </div>
               </div>
 
               {/* Instructions textarea */}
@@ -547,6 +629,7 @@ export default function GenerateModal({ onClose }: Props) {
                     strand={curStrand}
                     onStrandChange={setCurStrand}
                     disabled={busy}
+                    suggesting={subjectSuggesting}
                   />
                   <ToggleCard
                     icon={<Target className="w-4 h-4 text-rose-600" />}
@@ -1547,6 +1630,7 @@ function CurriculumAlignmentCard({
   subject, onSubjectChange,
   strand, onStrandChange,
   disabled,
+  suggesting,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
@@ -1561,6 +1645,7 @@ function CurriculumAlignmentCard({
   strand: string;
   onStrandChange: (s: string) => void;
   disabled?: boolean;
+  suggesting?: boolean;
 }) {
   const [hintOpen, setHintOpen] = useState(false);
   const curricula = getCurriculaForCountry(countryId);
@@ -1642,17 +1727,22 @@ function CurriculumAlignmentCard({
             </select>
           </div>
 
-          {/* Row 2: subject (full width) */}
-          <select
-            value={subject}
-            onChange={(e) => onSubjectChange(e.target.value)}
-            disabled={disabled || subjects.length === 0}
-            className={selectCls}
-            style={{ borderColor: "#DAD8D0" }}
-          >
-            <option value="">Select subject</option>
-            {subjects.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
-          </select>
+          {/* Row 2: subject (full width) — auto-suggested from the topic */}
+          <div className="relative">
+            <select
+              value={subject}
+              onChange={(e) => onSubjectChange(e.target.value)}
+              disabled={disabled || subjects.length === 0}
+              className={selectCls}
+              style={{ borderColor: "#DAD8D0" }}
+            >
+              <option value="">{suggesting ? "Finding best subject…" : "Select subject"}</option>
+              {subjects.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+            </select>
+            {suggesting && (
+              <Loader2 className="w-4 h-4 text-gray-400 animate-spin absolute right-7 top-1/2 -translate-y-1/2 pointer-events-none" />
+            )}
+          </div>
 
           {/* Row 3: strand (full width, cascades off subject) */}
           <select

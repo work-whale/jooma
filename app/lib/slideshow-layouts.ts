@@ -12,7 +12,8 @@ import type {
   BlockquoteObject,
   ActivityObject,
 } from "./presentations";
-import type { SlideshowTheme } from "./slideshowThemes";
+import type { SlideshowTheme, ArtStyleId } from "./slideshowThemes";
+import { getThemeArt, DEFAULT_ART_STYLE } from "./slideshowThemes";
 
 const SLIDE_W = 1280;
 const SLIDE_H = 720;
@@ -993,21 +994,26 @@ function renderPaperTwoImages(spec: SlideSpec, t: Theme): SlideJSON {
   const leftX = 80;
   const rightX = 680;
   const cellW = 520;
-  // Title + optional intro paragraph at top, two cells (image + label) below.
+  // Title at top, then two image + caption cells. `twoColLeftBody`/
+  // `twoColRightBody` ARE the cell captions (mapped from body/secondaryBody) —
+  // there is no separate intro. We deliberately do NOT render `spec.body` at the
+  // top: it's identical to the left caption, so doing so duplicated the text and
+  // pushed the cells off the bottom of the slide.
   const titleY = 80;
   const titleH = textHeight(spec.title, fullW, 40);
-  const introY = titleY + titleH + GAP_TITLE_TO_HOOK;
-  const introH = spec.body ? textHeight(spec.body, fullW, 22) : 0;
-  const imgY = introY + introH + (spec.body ? GAP_BODY_TO_REST : 0);
-  const imgH = Math.max(220, Math.min(300, SLIDE_H - imgY - 130)); // reserve ~130px for the cell-label paragraph
+  const imgY = titleY + titleH + GAP_BODY_TO_REST;
+  // Reserve room for the captions and clamp the images so the captions always
+  // fit on-slide. Captions are clipped to the remaining height as a safety net.
+  const LABEL_RESERVE = 160;
+  const imgH = Math.max(200, Math.min(300, SLIDE_H - imgY - LABEL_RESERVE));
   const labelY = imgY + imgH + 18;
+  const labelAvailH = Math.max(48, SLIDE_H - labelY - 32);
   return {
     shapes: [makePaperBackdrop(activeTheme)],
     texts: [
       makeText(spec.title, leftX, titleY, fullW, 40, "800", headingColor, "left"),
-      ...(spec.body ? [makeText(spec.body, leftX, introY, fullW, 22, "400", t.text, "left")] : []),
-      ...(spec.twoColLeftBody  ? [makeText(spec.twoColLeftBody,  leftX,  labelY, cellW, 20, "400", t.text, "left")] : []),
-      ...(spec.twoColRightBody ? [makeText(spec.twoColRightBody, rightX, labelY, cellW, 20, "400", t.text, "left")] : []),
+      ...(spec.twoColLeftBody  ? [makeText(spec.twoColLeftBody,  leftX,  labelY, cellW, 20, "400", t.text, "left", undefined, labelAvailH)] : []),
+      ...(spec.twoColRightBody ? [makeText(spec.twoColRightBody, rightX, labelY, cellW, 20, "400", t.text, "left", undefined, labelAvailH)] : []),
     ],
     images: [
       ...paperImage(spec, leftX, imgY, cellW, imgH),
@@ -1553,7 +1559,11 @@ function renderActivityVocabMatch(spec: SlideSpec, t: Theme, answerMode: boolean
 
 // ── Public renderer ────────────────────────────────────────────────────────
 
-export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJSON {
+export function renderSlide(
+  spec: SlideSpec,
+  baseTheme?: SlideshowTheme,
+  artStyle: ArtStyleId = DEFAULT_ART_STYLE,
+): SlideJSON {
   // Use the user-picked theme's accent if available, otherwise the AI-chosen one.
   const accent = baseTheme?.palette.accent || spec.accentColor || "#7c3aed";
   // The theme's natural palette already encodes its look — for Dark theme that
@@ -1563,8 +1573,14 @@ export function renderSlide(spec: SlideSpec, baseTheme?: SlideshowTheme): SlideJ
   const t = themeFor(spec.colorScheme, accent, baseTheme);
   activeTheme = baseTheme;
   try {
-    const slide = renderForLayout(spec, t);
-    return applyThemeDecorations(slide, spec, baseTheme);
+    const slide = applyThemeDecorations(renderForLayout(spec, t), spec, baseTheme);
+    // Themed full-bleed illustration background, resolved for the chosen style.
+    const art = baseTheme ? getThemeArt(baseTheme, artStyle) : undefined;
+    if (art) {
+      slide.backgroundArt = art.src;
+      slide.backgroundArtScrim = art.scrim;
+    }
+    return slide;
   } finally {
     activeTheme = undefined;
   }
@@ -1616,6 +1632,89 @@ function getThemeDecorations(
           stroke: "transparent", strokeWidth: 0,
           opacity: 0.07,
         },
+      ];
+    case "ocean":
+    case "desert":
+    case "cloudy":
+    case "forest":
+    case "dusk":
+      return sceneDecorations(theme.id);
+    default:
+      return [];
+  }
+}
+
+// Flat-illustration backdrop for the scenic themes. Built from low-opacity
+// ellipse / triangle SHAPES so it renders identically on the editor canvas,
+// thumbnails, present mode, AND PPTX export — no per-surface background work
+// needed. Elements are anchored to the slide edges/corners so they peek
+// around the centred paper card rather than hiding behind it.
+function deco(
+  type: ShapeObject["type"], x: number, y: number, width: number, height: number,
+  fill: string, opacity: number,
+): ShapeObject {
+  return { id: nid("dec"), type, x, y, width, height, fill, stroke: "transparent", strokeWidth: 0, opacity };
+}
+
+// Public: the backdrop decoration shapes for a slide that has NO re-renderable
+// skeleton (audio, audio-answer, video, manual). Mirrors what a normal content
+// render adds, so a theme switch gives these slides the same scene motif as
+// every other slide instead of just a flat background colour. Returns [] for
+// full-bleed photo slides (the motif would be hidden behind / clash with it).
+export function backgroundDecorations(
+  theme: SlideshowTheme,
+  hasBackgroundImage: boolean,
+): ShapeObject[] {
+  if (hasBackgroundImage) return [];
+  // A generic non-cover layout so the title-cover special-casing is skipped.
+  const spec = { layout: "title-body" } as SlideSpec;
+  const slide = { backgroundImage: undefined } as unknown as SlideJSON;
+  return getThemeDecorations(theme, spec, slide);
+}
+
+function sceneDecorations(themeId: string): ShapeObject[] {
+  switch (themeId) {
+    case "ocean":
+      return [
+        deco("ellipse", SLIDE_W - 210, 50, 150, 150, "#bfe6f0", 0.6),          // soft sun, top-right
+        deco("ellipse", -160, SLIDE_H - 70, 760, 240, "#7cc4dd", 0.40),        // near swell, left
+        deco("ellipse", SLIDE_W - 680, SLIDE_H - 50, 900, 230, "#3f9fc4", 0.32), // far swell, right
+        deco("ellipse", 260, SLIDE_H - 30, 220, 90, "#ffffff", 0.40),          // foam crest
+        deco("ellipse", SLIDE_W - 460, SLIDE_H - 26, 240, 90, "#ffffff", 0.32), // foam crest
+      ];
+    case "desert":
+      return [
+        deco("ellipse", SLIDE_W - 230, 46, 165, 165, "#f3c45a", 0.55),         // sun
+        deco("ellipse", -180, SLIDE_H - 80, 820, 250, "#e2ba73", 0.55),        // dune, front
+        deco("ellipse", SLIDE_W - 760, SLIDE_H - 46, 980, 240, "#d2a157", 0.60), // dune, back
+      ];
+    case "cloudy":
+      return [
+        // top-left cloud cluster
+        deco("ellipse", 30, 40, 180, 90, "#ffffff", 0.70),
+        deco("ellipse", 110, 20, 160, 100, "#ffffff", 0.70),
+        deco("ellipse", 190, 50, 150, 80, "#ffffff", 0.65),
+        // top-right cloud cluster
+        deco("ellipse", SLIDE_W - 300, 70, 170, 90, "#ffffff", 0.60),
+        deco("ellipse", SLIDE_W - 200, 50, 180, 100, "#ffffff", 0.60),
+        // bottom wisps
+        deco("ellipse", SLIDE_W - 240, SLIDE_H - 120, 200, 90, "#ffffff", 0.50),
+        deco("ellipse", SLIDE_W - 130, SLIDE_H - 100, 160, 80, "#ffffff", 0.50),
+        deco("ellipse", -50, SLIDE_H - 110, 200, 90, "#ffffff", 0.45),
+      ];
+    case "forest":
+      return [
+        deco("ellipse", SLIDE_W - 210, 50, 150, 150, "#d6ebc2", 0.50),         // soft sun
+        deco("ellipse", -170, SLIDE_H - 90, 780, 260, "#9ccb96", 0.45),        // hill, front
+        deco("ellipse", SLIDE_W - 720, SLIDE_H - 60, 920, 240, "#6fae74", 0.50), // hill, back
+        deco("triangle", 70, SLIDE_H - 250, 90, 180, "#4f9468", 0.40),         // treetop
+        deco("triangle", 130, SLIDE_H - 220, 80, 150, "#5aa36c", 0.40),        // treetop
+      ];
+    case "dusk":
+      return [
+        deco("ellipse", SLIDE_W / 2 - 95, SLIDE_H - 170, 190, 190, "#f0a25e", 0.50), // setting sun
+        deco("ellipse", -160, SLIDE_H - 70, 800, 220, "#e6896b", 0.42),        // warm band
+        deco("ellipse", SLIDE_W - 700, SLIDE_H - 46, 900, 210, "#d4663f", 0.34), // warm band
       ];
     default:
       return [];
@@ -1674,6 +1773,7 @@ function renderForLayout(spec: SlideSpec, t: Theme): SlideJSON {
 export function rerenderSlideWithTheme(
   slide: SlideJSON,
   theme: SlideshowTheme,
+  artStyle: ArtStyleId = DEFAULT_ART_STYLE,
 ): SlideJSON {
   if (!slide.skeleton) return slide;
   // The slide's photo can live in one of two places:
@@ -1716,7 +1816,7 @@ export function rerenderSlideWithTheme(
     secondaryImageWidth: existingSecondaryImage?.naturalWidth,
     secondaryImageHeight: existingSecondaryImage?.naturalHeight,
   };
-  const rebuilt = renderSlide(spec, theme);
+  const rebuilt = renderSlide(spec, theme, artStyle);
   // Preserve audios/videos and the deck-level themeId (the caller will update
   // it after the rerender); skeleton is re-attached so future re-themes work.
   rebuilt.audios = slide.audios;

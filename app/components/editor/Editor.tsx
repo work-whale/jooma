@@ -42,8 +42,8 @@ import {
   type ActivityObject,
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
-import { getTheme, DEFAULT_THEME_ID } from "@/app/lib/slideshowThemes";
-import { rerenderSlideWithTheme } from "@/app/lib/slideshow-layouts";
+import { getTheme, DEFAULT_THEME_ID, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { rerenderSlideWithTheme, backgroundDecorations } from "@/app/lib/slideshow-layouts";
 
 interface SlideState extends SlideJSON {
   id: string;
@@ -178,12 +178,15 @@ export default function Editor({ presentation, generationParams }: Props) {
       backgroundOffsetY: s.backgroundOffsetY,
       backgroundScale: s.backgroundScale,
       backgroundImagePending: s.backgroundImagePending && !s.backgroundImage ? false : s.backgroundImagePending,
+      backgroundArt: s.backgroundArt,
+      backgroundArtScrim: s.backgroundArtScrim,
       // Carry the AI skeleton + deck-level themeId through page reloads.
       // Without these, theme-switching becomes a no-op for AI-generated
       // slides (rerenderSlideWithTheme requires a skeleton to rebuild from)
       // and the next save would persist them as missing.
       skeleton: s.skeleton,
       themeId: s.themeId,
+      artStyleId: s.artStyleId,
     }));
   });
   const [activeIndex, setActiveIndex] = useState(0);
@@ -229,6 +232,12 @@ export default function Editor({ presentation, generationParams }: Props) {
   // Bumped each time we persist a new AI image to the cross-project gallery
   // (Supabase `generated_images`). Triggers a refetch in the Sidebar.
   const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
+  // Deck-level background art style ("watercolor" | "illustration"), stored on
+  // slides[0].artStyleId. Drives which art variant of the theme is stamped on
+  // every slide.
+  const [artStyle, setArtStyle] = useState<ArtStyleId>(
+    () => (presentation.slides?.[0]?.artStyleId as ArtStyleId) ?? DEFAULT_ART_STYLE,
+  );
 
   // Marquee (rubber-band) multi-selection state. While the user is dragging
   // an empty area of the slide, `marquee` holds the rect in slide-local coords;
@@ -847,10 +856,13 @@ export default function Editor({ presentation, generationParams }: Props) {
         backgroundOffsetX: s.backgroundOffsetX,
         backgroundOffsetY: s.backgroundOffsetY,
         backgroundScale: s.backgroundScale,
+        backgroundArt: s.backgroundArt,
+        backgroundArtScrim: s.backgroundArtScrim,
         // Persist the AI skeleton + deck-level themeId so theme switching
         // works after the page is reloaded.
         skeleton: s.skeleton,
         themeId: s.themeId,
+        artStyleId: s.artStyleId,
       }));
       // While we still inline base64 image data in slides, a save can be many
       // MB. Log the payload size so it's obvious when Postgres' statement
@@ -2120,6 +2132,10 @@ export default function Editor({ presentation, generationParams }: Props) {
           return {
             ...s,
             background: theme.palette.background,
+            shapes: [
+              ...backgroundDecorations(theme, !!s.backgroundImage),
+              ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
+            ],
             texts: s.texts.map((t) => ({ ...t, color: slideTextColor })),
             audios: (s.audios ?? []).map((a) => ({
               ...a,
@@ -2139,6 +2155,10 @@ export default function Editor({ presentation, generationParams }: Props) {
           return {
             ...s,
             background: theme.palette.background,
+            shapes: [
+              ...backgroundDecorations(theme, !!s.backgroundImage),
+              ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
+            ],
             texts: s.texts.map((t, ti) => ({
               ...t,
               color: ti === 0 ? theme.palette.accent : theme.palette.muted,
@@ -2148,27 +2168,35 @@ export default function Editor({ presentation, generationParams }: Props) {
           };
         }
         if (!s.skeleton) {
-          // No skeleton (manual slide, audio/video, or pre-skeleton-fix deck):
-          // we can't fully rebuild from scratch, but we can still sweep every
-          // text element and swap its font family to the new theme's
-          // heading/body font based on weight. Colours stay because users
-          // might have customised them — but font swap is the visible part
-          // of a theme change so we always do it.
+          // No skeleton (audio-answer slide, manual slide, or pre-skeleton-fix
+          // deck): we can't rebuild from the layout spec, but a theme switch is
+          // a skin change, so recolour the background + text and swap fonts —
+          // otherwise these slides get stranded on the previous theme (e.g. the
+          // audio-answer slide kept its cream "Paper" look while every other
+          // slide moved to the new theme). Heading texts (weight ≥ 600) take the
+          // heading colour; everything else takes the body text colour.
+          const headingColor = theme.palette.headingColor ?? theme.palette.accent;
           const newTexts = s.texts.map((t) => {
             const isHeading = parseInt(t.fontWeight, 10) >= 600;
             return {
               ...t,
               fontFamily: isHeading ? theme.fonts.heading : theme.fonts.body,
+              color: isHeading ? headingColor : theme.palette.text,
             };
           });
           return {
             ...s,
+            background: theme.palette.background,
+            shapes: [
+              ...backgroundDecorations(theme, !!s.backgroundImage),
+              ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
+            ],
             texts: newTexts,
             themeId: i === 0 ? nextThemeId : s.themeId,
           };
         }
         // AI content slide: re-render from skeleton, preserve id.
-        const rebuilt = rerenderSlideWithTheme(s, theme);
+        const rebuilt = rerenderSlideWithTheme(s, theme, artStyle);
         return {
           ...rebuilt,
           id: s.id,
@@ -2176,6 +2204,34 @@ export default function Editor({ presentation, generationParams }: Props) {
         } as SlideState;
       });
       if (next[0]) next[0] = { ...next[0], themeId: nextThemeId };
+      // Apply (or clear) the theme's full-bleed illustration background on every
+      // slide, resolved for the current art style. Set unconditionally so
+      // switching AWAY from an art theme removes it.
+      const art = getThemeArt(theme, artStyle);
+      for (let i = 0; i < next.length; i++) {
+        next[i] = {
+          ...next[i],
+          backgroundArt: art?.src,
+          backgroundArtScrim: art?.scrim,
+        };
+      }
+      if (next[0]) next[0] = { ...next[0], artStyleId: artStyle };
+      slidesRef.current = next;
+      return next;
+    });
+    scheduleSave();
+  }, [scheduleSave, artStyle]);
+
+  // ── Background art style switching ──────────────────────────────────────────
+  // Re-stamps every slide's illustration background with the chosen style's
+  // variant (watercolor ↔ illustration) for the deck's current theme.
+  const handleArtStyleChange = useCallback((nextStyle: ArtStyleId) => {
+    setArtStyle(nextStyle);
+    const theme = getTheme(slidesRef.current[0]?.themeId ?? DEFAULT_THEME_ID);
+    const art = getThemeArt(theme, nextStyle);
+    setSlides((prev) => {
+      const next = prev.map((s) => ({ ...s, backgroundArt: art?.src, backgroundArtScrim: art?.scrim }));
+      if (next[0]) next[0] = { ...next[0], artStyleId: nextStyle };
       slidesRef.current = next;
       return next;
     });
@@ -2352,6 +2408,14 @@ export default function Editor({ presentation, generationParams }: Props) {
       timer: null as ReturnType<typeof setTimeout> | null,
     };
 
+    // Images can finish (slide-image event) BEFORE the slide's text leaves the
+    // staggered reveal queue. If the queued "slide" event then reveals, it would
+    // overwrite the freshly-merged image with the original pending placeholder
+    // (src:"" / isPending:true) — which is exactly how decks ended up persisted
+    // with empty images. We record every arrived image slide by index here so
+    // the reveal step can re-merge it instead of clobbering.
+    const arrivedImages = new Map<number, SlideJSON>();
+
     function processRevealItem() {
       const p = reveal.queue.shift();
       if (!p || cancelled) { reveal.timer = null; return; }
@@ -2372,25 +2436,29 @@ export default function Editor({ presentation, generationParams }: Props) {
           next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
         }
         const placeholderId = next[p.index]?.id ?? newId("s");
+        // If this slide's image already arrived (out-of-order), prefer the
+        // image-bearing render so revealing the text doesn't wipe the image.
+        const img = arrivedImages.get(p.index);
+        const src = img ?? p.slide;
         const replaced: SlideState = {
           id: placeholderId,
-          shapes: p.slide.shapes ?? [],
-          texts: p.slide.texts ?? [],
-          images: p.slide.images ?? [],
+          shapes: src.shapes ?? p.slide.shapes ?? [],
+          texts: src.texts ?? p.slide.texts ?? [],
+          images: src.images ?? p.slide.images ?? [],
           audios: p.slide.audios ?? [],
           videos: p.slide.videos ?? [],
-          callouts: p.slide.callouts ?? [],
-          badges: p.slide.badges ?? [],
-          blockquotes: p.slide.blockquotes ?? [],
-          activities: p.slide.activities ?? [],
-          background: p.slide.background ?? "#ffffff",
-          backgroundImage: p.slide.backgroundImage,
-          backgroundImageWidth: p.slide.backgroundImageWidth,
-          backgroundImageHeight: p.slide.backgroundImageHeight,
-          backgroundOffsetX: p.slide.backgroundOffsetX,
-          backgroundOffsetY: p.slide.backgroundOffsetY,
-          backgroundScale: p.slide.backgroundScale,
-          backgroundImagePending: p.slide.backgroundImagePending,
+          callouts: src.callouts ?? p.slide.callouts ?? [],
+          badges: src.badges ?? p.slide.badges ?? [],
+          blockquotes: src.blockquotes ?? p.slide.blockquotes ?? [],
+          activities: src.activities ?? p.slide.activities ?? [],
+          background: src.background ?? p.slide.background ?? "#ffffff",
+          backgroundImage: src.backgroundImage ?? p.slide.backgroundImage,
+          backgroundImageWidth: src.backgroundImageWidth ?? p.slide.backgroundImageWidth,
+          backgroundImageHeight: src.backgroundImageHeight ?? p.slide.backgroundImageHeight,
+          backgroundOffsetX: src.backgroundOffsetX ?? p.slide.backgroundOffsetX,
+          backgroundOffsetY: src.backgroundOffsetY ?? p.slide.backgroundOffsetY,
+          backgroundScale: src.backgroundScale ?? p.slide.backgroundScale,
+          backgroundImagePending: img ? src.backgroundImagePending : p.slide.backgroundImagePending,
           skeleton: p.slide.skeleton,
           themeId: p.slide.themeId,
         };
@@ -2516,6 +2584,10 @@ export default function Editor({ presentation, generationParams }: Props) {
                   .then(() => setGalleryRefreshTrigger((n) => n + 1))
                   .catch((err) => console.warn("Gallery save failed:", err));
               }
+              // Remember this image render so a still-queued "slide" reveal for
+              // the same index re-merges it instead of clobbering it back to a
+              // pending placeholder.
+              arrivedImages.set(p.index, p.slide);
               setSlides((prev) => {
                 const next = prev.slice();
                 const target = next[p.index];
@@ -3021,12 +3093,19 @@ export default function Editor({ presentation, generationParams }: Props) {
 
   // Memoize the bg-image CSS url(...) string — re-creating a megabyte-sized data URL
   // template literal on every render is one of the costs of rapid color picker drags.
-  const slideBgCssUrl = useMemo(
-    () => currentSlide?.backgroundImage && !adjustingBackground
-      ? `url(${currentSlide.backgroundImage})`
-      : undefined,
-    [currentSlide?.backgroundImage, adjustingBackground],
-  );
+  const slideBgCssUrl = useMemo(() => {
+    // Content/hero photo wins (full-bleed). While adjusting, the bg renders as a
+    // positioned <img> instead, so skip the CSS fast path.
+    if (currentSlide?.backgroundImage && !adjustingBackground) {
+      return `url(${currentSlide.backgroundImage})`;
+    }
+    // Themed illustration background: scrim veil over the art, both via CSS.
+    if (currentSlide?.backgroundArt && !currentSlide?.backgroundImage) {
+      const scrim = currentSlide.backgroundArtScrim ?? "rgba(255,255,255,0.45)";
+      return `linear-gradient(${scrim}, ${scrim}), url(${currentSlide.backgroundArt})`;
+    }
+    return undefined;
+  }, [currentSlide?.backgroundImage, currentSlide?.backgroundArt, currentSlide?.backgroundArtScrim, adjustingBackground]);
 
   // Memoize the bgMetrics result so we don't recompute it twice in the slide-wrapper style.
   const currentBg = useMemo(
@@ -3061,6 +3140,8 @@ export default function Editor({ presentation, generationParams }: Props) {
         disableHistory={!!generating}
         themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
         onThemeChange={handleThemeChange}
+        artStyle={artStyle}
+        onArtStyleChange={handleArtStyleChange}
       />
       <div className="flex flex-1 min-h-0 relative">
         <Sidebar
