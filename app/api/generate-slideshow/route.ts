@@ -25,6 +25,8 @@ interface RequestBody {
   includeYouTube?: boolean;
   youtubeLength?: "short" | "medium" | "long" | "any";
   imageSource?: ImageSource;
+  /** Auto mode: web parts out of 10 (rest AI). Default 8 → 8 web : 2 AI. */
+  imageMixWeb?: number;
   imageStyle?: ImageStyle;
   themeId?: string;
   /** Background art style: "watercolor" (default) | "illustration". */
@@ -287,6 +289,7 @@ async function fetchImageForSlide(
   orientation: AIImageOrientation,
   index: number,
   slideTitle?: string,
+  preferWeb = true,
 ): Promise<(FetchedImage & { provider: "ai" | "web" }) | null> {
   const tryAI = async () => {
     const r = await generateAIImage(query, style, orientation, slideTitle);
@@ -298,10 +301,11 @@ async function fetchImageForSlide(
   };
   if (source === "web") return tryWeb();
   if (source === "ai") return tryAI();
-  // auto: Pixabay first (fast, ~200ms) — AI fallback only when Pixabay misses.
-  // This means most slides get an image quickly; AI fills the gaps.
+  // auto: follow the requested web/AI mix per image (`preferWeb`, derived from
+  // the deck's ratio), falling back to the other provider if the preferred one
+  // misses.
   void index;
-  return (await tryWeb()) ?? tryAI();
+  return preferWeb ? ((await tryWeb()) ?? tryAI()) : ((await tryAI()) ?? tryWeb());
 }
 
 // Map a slide's layout to the orientation that best fits where the AI image
@@ -752,6 +756,11 @@ export async function POST(req: NextRequest) {
 
   const imageSource: ImageSource = body.imageSource ?? "auto";
   const imageStyle: ImageStyle = body.imageStyle ?? "photographic";
+  // Auto-mode web/AI split: `webParts` of every 10 images come from web search.
+  // A running counter assigns each image deterministically so the deck-wide
+  // ratio lands close to the requested mix (default 8 web : 2 AI).
+  const webParts = Math.max(0, Math.min(10, Math.round(body.imageMixWeb ?? 8)));
+  let imgCount = 0;
   const theme = getTheme(body.themeId);
   const artStyle: ArtStyleId = body.artStyle === "illustration" ? "illustration" : DEFAULT_ART_STYLE;
 
@@ -954,8 +963,10 @@ export async function POST(req: NextRequest) {
           // others. The slide can still render with the partial set of images
           // that did succeed.
           const safeFetch = async (q: string, ori: AIImageOrientation, jobIdx: number) => {
+            // Assign this image to web or AI per the deck's ratio (auto mode).
+            const preferWeb = (imgCount++ % 10) < webParts;
             try {
-              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx, spec.title);
+              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx, spec.title, preferWeb);
             } catch (err) {
               console.warn(`[slideJob ${idx}] image fetch failed for "${q}":`, err);
               return null;
@@ -1288,12 +1299,11 @@ export async function POST(req: NextRequest) {
           }
         })();
 
-        // All image jobs were kicked off during the streaming loop above —
-        // wait for any still in flight before generating audio/video.
-        await Promise.allSettled(imageJobs);
-
-        // Audio cost is captured below once /api/generate-audio returns; the
-        // full COST line is logged at the very end (before "complete").
+        // Audio runs CONCURRENTLY with the image jobs (and the video task) — it
+        // only needs the deck's topic + slide titles, not the images. Awaiting
+        // its fetch below lets the in-flight image/video work keep progressing
+        // in the background, so everything loads in parallel and the audio slide
+        // fills in early instead of after the whole image phase.
         let audioCostUsd = 0;
 
         // Optional audio activity. Placeholder was reserved up-front in
@@ -1376,22 +1386,24 @@ export async function POST(req: NextRequest) {
               }
             } else {
               const err = await audioRes.json().catch(() => ({}));
-              console.error("[generate-slideshow] /api/generate-audio failed:", audioRes.status, err);
-              send("error", { message: `Audio generation failed: ${err.error ?? err.message ?? audioRes.statusText}` });
+              // Non-fatal: log + skip the audio activity, keep generating the
+              // rest of the deck. We deliberately do NOT send a stream "error"
+              // here — that stops the client's generating UI mid-stream while
+              // images/video are still arriving. The reserved audio slot just
+              // stays empty (cleared on the next load).
+              console.warn("[generate-slideshow] /api/generate-audio failed — skipping audio:", audioRes.status, err);
             }
           } catch (err) {
-            console.error("[generate-slideshow] audio fetch threw:", err);
-            send("error", { message: `Audio generation error: ${err instanceof Error ? err.message : "unknown"}` });
+            console.warn("[generate-slideshow] audio fetch threw — skipping audio:", err);
           }
         } else {
           console.log("[generate-slideshow] includeAudio is", body.includeAudio, "— skipping audio");
         }
 
-        // Optional YouTube video. Placeholder was reserved up-front in
-        // sendMetaIfReady at `videoIndex`. We just fetch the video data here
-        // and fill that slot.
-        // The YouTube task was started early (above) and streams its slide as
-        // soon as it resolves; just make sure it has settled before we finish.
+        // Everything (text, images, audio, video) was generated concurrently.
+        // Wait for the remaining in-flight work to settle before the cost
+        // summary + "complete": the image jobs and the early-started video task.
+        await Promise.allSettled(imageJobs);
         await videoTask;
 
         // ── Full cost summary ─────────────────────────────────────────────

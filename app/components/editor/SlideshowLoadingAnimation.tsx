@@ -1,6 +1,9 @@
 const CARDS = [0, 1, 2, 3];
 
-export default function SlideshowLoadingAnimation({ label = "Loading slideshow" }: { label?: string }) {
+export default function SlideshowLoadingAnimation({
+  label = "Loading slideshow",
+  subtitle,
+}: { label?: string; subtitle?: string }) {
   return (
     <div className="flex flex-col items-center gap-16">
       <style>{`
@@ -39,7 +42,12 @@ export default function SlideshowLoadingAnimation({ label = "Loading slideshow" 
           </div>
         ))}
       </div>
-      <p className="text-xs uppercase tracking-widest text-gray-500 font-medium">{label}</p>
+      {/* Fixed-height text area so the optional subtitle (or a label change)
+          never reflows the card stack above it — keeps the icon from jumping. */}
+      <div className="h-10 flex flex-col items-center gap-1.5">
+        <p className="text-xs uppercase tracking-widest text-gray-500 font-medium">{label}</p>
+        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+      </div>
     </div>
   );
 }

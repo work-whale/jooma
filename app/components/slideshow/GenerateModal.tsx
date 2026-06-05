@@ -7,6 +7,8 @@ import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, Che
 import { createPresentation } from "@/app/lib/presentations";
 import { SLIDESHOW_THEMES, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
+import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
+import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
 
 // sessionStorage key used to hand the generation params from this modal to the
 // editor page, which kicks off the SSE stream after navigation.
@@ -29,6 +31,9 @@ export interface GenerationParams {
   includeYouTube?: boolean;
   youtubeLength?: YoutubeLength;
   imageSource?: "auto" | "ai" | "web";
+  /** Auto mode only: how many of every 10 images come from web search (the rest
+   *  are AI-generated). Default 8 → 8 web : 2 AI. */
+  imageMixWeb?: number;
   imageStyle?: "storybook" | "illustration" | "photographic" | "painted" | "line-drawing" | "comic-book";
   themeId?: string;
   artStyle?: string;
@@ -88,11 +93,35 @@ export default function GenerateModal({ onClose }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
+  // Lock background scroll while the modal is open; restore on close.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   const [topic, setTopic] = useState("");
+  // Cycling typewriter placeholder, matching the other tool forms.
+  const topicPlaceholder = useTypingPlaceholder([
+    "E.g. The French Revolution",
+    "E.g. The Water Cycle",
+    "E.g. Photosynthesis",
+    "E.g. World War One — Causes",
+    "E.g. Fractions and Decimals",
+  ]);
   const [year, setYear] = useState("");
   const [readingLevel, setReadingLevel] = useState(READING_LEVELS[0]);
   const [slideCount, setSlideCount] = useState(8);
   const [additionalInstructions, setAdditionalInstructions] = useState("");
+  // Auto-grow the instructions textarea with its content (up to a max, then it
+  // scrolls). Re-runs when the text changes, incl. when "Generate outline" fills it.
+  const instructionsRef = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = instructionsRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 260)}px`;
+  }, [additionalInstructions]);
   const [themeId, setThemeId] = useState<string>(DEFAULT_THEME_ID);
   const [artStyle, setArtStyle] = useState<ArtStyleId>(DEFAULT_ART_STYLE);
 
@@ -125,6 +154,8 @@ export default function GenerateModal({ onClose }: Props) {
   const [resourceError, setResourceError] = useState<string | null>(null);
   const [youtubeLength, setYoutubeLength] = useState<"short" | "medium" | "long" | "any">("short");
   const [imageSource, setImageSource] = useState<ImageSource>("auto");
+  // Auto mode web:AI split (web parts out of 10). Default 8 → 8 web : 2 AI.
+  const [imageMixWeb, setImageMixWeb] = useState(8);
   // Default to "illustration" — works better for classroom decks than realistic
   // photography (and DALL·E/gpt-image's safety filter rejects fewer prompts).
   const [imageStyle, setImageStyle] = useState<ImageStyle>("illustration");
@@ -287,6 +318,7 @@ export default function GenerateModal({ onClose }: Props) {
         includeYouTube,
         youtubeLength: includeYouTube ? youtubeLength : undefined,
         imageSource,
+        imageMixWeb: imageSource === "auto" ? imageMixWeb : undefined,
         imageStyle: imageSource === "web" ? undefined : imageStyle,
         themeId,
         artStyle,
@@ -334,14 +366,14 @@ export default function GenerateModal({ onClose }: Props) {
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-semibold" style={{ color: "#1a1a1a" }}>
-              {step === 1 ? "Pick your topic" : step === 2 ? "Pick a theme" : "Refine your slideshow"}
+              {step === 1 ? "Pick your topic" : step === 2 ? "Refine your slideshow" : "Pick a theme"}
             </h2>
             <p className="text-sm text-gray-500 mt-0.5">
               {step === 1
                 ? "Let's start with the basics."
                 : step === 2
-                ? "Choose a visual style for your slides."
-                : "Pick your preferences or we'll surprise you."}
+                ? "Pick your preferences or we'll surprise you."
+                : "Choose a visual style for your slides."}
             </p>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -365,7 +397,7 @@ export default function GenerateModal({ onClose }: Props) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {step === 2 ? (
+          {step === 3 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="col-span-2 sm:col-span-3 flex items-center gap-2">
                 <span className="text-xs font-medium text-gray-500">Art style</span>
@@ -465,21 +497,24 @@ export default function GenerateModal({ onClose }: Props) {
           ) : step === 1 ? (
             <>
               {/* Topic input */}
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="E.g. The French Revolution"
-                required
-                disabled={busy}
-                autoFocus
-                autoComplete="off"
-                data-1p-ignore
-                data-lpignore="true"
-                name="lesson-topic"
-                className="w-full px-4 py-3 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 placeholder:text-gray-400"
-                style={{ borderColor: "#DAD8D0", fontSize: "15px" }}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder=""
+                  required
+                  disabled={busy}
+                  autoFocus
+                  autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  name="lesson-topic"
+                  className="w-full px-4 py-3 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 placeholder:text-gray-400"
+                  style={{ borderColor: "#DAD8D0", fontSize: "15px" }}
+                />
+                {!topic && <PlaceholderOverlay text={topicPlaceholder} />}
+              </div>
 
               {/* Inline pill selectors */}
               <div className="flex flex-wrap gap-2">
@@ -525,6 +560,7 @@ export default function GenerateModal({ onClose }: Props) {
               {/* Instructions textarea */}
               <div>
                 <textarea
+                  ref={instructionsRef}
                   value={additionalInstructions}
                   onChange={(e) => setAdditionalInstructions(e.target.value)}
                   placeholder="Any specific instructions or topics?"
@@ -534,8 +570,8 @@ export default function GenerateModal({ onClose }: Props) {
                   data-1p-ignore
                   data-lpignore="true"
                   name="lesson-instructions"
-                  className="w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none resize-none disabled:opacity-60 placeholder:text-gray-400"
-                  style={{ borderColor: "#DAD8D0" }}
+                  className="w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none resize-none overflow-y-auto disabled:opacity-60 placeholder:text-gray-400"
+                  style={{ borderColor: "#DAD8D0", minHeight: "76px", maxHeight: "260px" }}
                 />
                 <div className="flex items-center justify-between mt-1.5 px-0.5">
                   {outlineError
@@ -869,6 +905,33 @@ export default function GenerateModal({ onClose }: Props) {
                       );
                     })}
                   </div>
+
+                  {imageSource === "auto" && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-xs font-semibold text-gray-700">Web / AI mix</p>
+                        <p className="text-[11px] text-gray-500">
+                          <span className="font-semibold text-gray-700">{imageMixWeb}</span> web
+                          {" · "}
+                          <span className="font-semibold text-gray-700">{10 - imageMixWeb}</span> AI
+                        </p>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={10}
+                        step={1}
+                        value={imageMixWeb}
+                        onChange={(e) => setImageMixWeb(Number(e.target.value))}
+                        disabled={busy}
+                        className="w-full accent-gray-900 disabled:opacity-60"
+                      />
+                      <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                        <span>All AI</span>
+                        <span>All web</span>
+                      </div>
+                    </div>
+                  )}
 
                   {imageSource !== "web" && (
                     <div>
