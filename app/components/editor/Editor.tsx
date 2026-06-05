@@ -44,6 +44,7 @@ import {
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
 import { getTheme, DEFAULT_THEME_ID, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { rerenderSlideWithTheme, backgroundDecorations } from "@/app/lib/slideshow-layouts";
+import { parseInlineBold } from "@/app/lib/utils";
 
 interface SlideState extends SlideJSON {
   id: string;
@@ -2288,6 +2289,39 @@ export default function Editor({ presentation, generationParams }: Props) {
       const PPTX_H = 7.5;
       const toIn = (px: number, dim: "w" | "h") => (px / (dim === "w" ? SLIDE_W : SLIDE_H)) * (dim === "w" ? PPTX_W : PPTX_H);
       const noHash = (c: string) => c.replace("#", "");
+      const absUrl = (u: string) =>
+        u.startsWith("data:") || /^https?:\/\//i.test(u) ? u : new URL(u, window.location.origin).href;
+      // Parse an rgba()/rgb() string into a pptxgenjs { color, transparency }.
+      const parseRgba = (c?: string): { color: string; transparency: number } | null => {
+        if (!c) return null;
+        const m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/i.exec(c);
+        if (!m) return null;
+        const hex = [m[1], m[2], m[3]]
+          .map((v) => Number(v).toString(16).padStart(2, "0"))
+          .join("")
+          .toUpperCase();
+        const a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+        return { color: hex, transparency: Math.round((1 - a) * 100) };
+      };
+      // Split text into pptx runs, honouring `**bold**` markers (and the text
+      // element's own bold weight) plus `\n` line breaks.
+      const buildTextRuns = (text: string, baseBold: boolean) => {
+        const lines = text.split("\n");
+        const runs: { text: string; options: { bold: boolean; breakLine?: boolean } }[] = [];
+        lines.forEach((line, li) => {
+          const parts = parseInlineBold(line);
+          parts.forEach((p, pi) => {
+            runs.push({
+              text: p.text,
+              options: {
+                bold: baseBold || p.bold,
+                breakLine: pi === parts.length - 1 && li < lines.length - 1,
+              },
+            });
+          });
+        });
+        return runs;
+      };
 
       for (const s of slidesRef.current) {
         const slide = pptx.addSlide();
@@ -2295,6 +2329,18 @@ export default function Editor({ presentation, generationParams }: Props) {
           slide.background = s.backgroundImage.startsWith("data:")
             ? { data: s.backgroundImage }
             : { path: s.backgroundImage };
+        } else if (s.backgroundArt) {
+          // Themed illustration background + its legibility scrim (a full-slide
+          // semi-transparent rect over the art, beneath all content).
+          slide.background = { path: absUrl(s.backgroundArt) };
+          const scrim = parseRgba(s.backgroundArtScrim);
+          if (scrim) {
+            slide.addShape("rect", {
+              x: 0, y: 0, w: PPTX_W, h: PPTX_H,
+              fill: { color: scrim.color, transparency: scrim.transparency },
+              line: { type: "none" },
+            });
+          }
         } else if (s.background && s.background !== "#ffffff") {
           slide.background = { color: noHash(s.background) };
         }
@@ -2360,7 +2406,11 @@ export default function Editor({ presentation, generationParams }: Props) {
         // Texts on top
         for (const t of s.texts) {
           const rot = ((t.rotation ?? 0) % 360 + 360) % 360;
-          slide.addText(t.text, {
+          const baseBold = parseInt(t.fontWeight) >= 600 || t.fontWeight === "bold";
+          // Pass rich runs so `**bold**` markers render as real bold instead of
+          // literal asterisks. Per-run bold; everything else inherits the
+          // shared options below.
+          slide.addText(buildTextRuns(t.text, baseBold), {
             x: toIn(t.x, "w"),
             y: toIn(t.y, "h"),
             w: toIn(t.width, "w"),
@@ -2368,7 +2418,6 @@ export default function Editor({ presentation, generationParams }: Props) {
             fontSize: Math.round((t.fontSize / 1.333) * 10) / 10,
             fontFace: t.fontFamily.split(",")[0].trim().replace(/['"]/g, ""),
             color: noHash(t.color),
-            bold: parseInt(t.fontWeight) >= 600 || t.fontWeight === "bold",
             italic: t.fontStyle === "italic",
             underline: t.underline ? { style: "sng" } : undefined,
             align: t.textAlign,
