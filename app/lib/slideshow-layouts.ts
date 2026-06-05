@@ -677,28 +677,12 @@ function makeActivity(
   };
 }
 
-/** Cream paper card filling the slide minus a 40px margin. Themes provide
- *  `paperBg` and `paperShadow`; default themes (no paperBg) fall back to a
- *  faint accent overlay which still gives a visible card edge.
- *
- *  `z: -1` is critical — the editor's stacking helper (Editor.tsx
- *  `effective()`) assigns shapes a base z-index of 1000+idx when their `z`
- *  is undefined, which puts the paper card ABOVE images (base 0+idx) and
- *  hides every image on a paper-* layout. Negative explicit z forces it
- *  below the image layer so the photos show through. */
-function makePaperBackdrop(theme: SlideshowTheme | undefined): ShapeObject {
-  const bg = theme?.palette.paperBg ?? "#ffffff";
-  return {
-    id: nid("paper"),
-    type: "rect",
-    x: 20, y: 20, width: SLIDE_W - 40, height: SLIDE_H - 40,
-    fill: bg,
-    stroke: "transparent",
-    strokeWidth: 0,
-    opacity: 1,
-    cornerRadius: 24,
-    z: -1,
-  };
+/** Frameless slides: the themed background (illustration + scrim, or the solid
+ *  theme colour) is the content surface now, so paper layouts render with NO
+ *  inset card. Returns an empty shape list — spread it into each layout's
+ *  `shapes`. To bring the framed look back, return the cream rect again. */
+function makePaperBackdrop(): ShapeObject[] {
+  return [];
 }
 
 /** Picks a default callout label per variant if the AI didn't supply one. */
@@ -865,7 +849,7 @@ function renderTitleHero(spec: SlideSpec, t: Theme): SlideJSON {
   const titleY = Math.max(80, Math.round((SLIDE_H - blockH) / 2));
   const subtitleY = titleY + titleH + GAP_TITLE_TO_HOOK;
   return {
-    shapes: [makePaperBackdrop(activeTheme)],
+    shapes: [...makePaperBackdrop()],
     texts: [
       makeText(spec.title, 680, titleY, titleW, titleSize, "800", headingColor, "left"),
       ...(spec.subtitle ? [makeText(spec.subtitle, 680, subtitleY, titleW, 24, "400", t.muted, "left")] : []),
@@ -916,7 +900,7 @@ function renderPaperImageRight(spec: SlideSpec, t: Theme): SlideJSON {
   const calloutParts = calloutH > 0 ? splitCalloutFromSpec(spec, 80, calloutY, colW) : null;
 
   return {
-    shapes: [makePaperBackdrop(activeTheme), ...(calloutParts?.shapes ?? [])],
+    shapes: [...makePaperBackdrop(), ...(calloutParts?.shapes ?? [])],
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, 80, subHookY, colW, 22, "700", t.text, "left")] : []),
@@ -970,7 +954,7 @@ function renderPaperImageLeft(spec: SlideSpec, t: Theme): SlideJSON {
   const calloutY = calloutH > 0 ? Math.min(contentEndY + calloutGap, CARD_BOTTOM - calloutH) : 0;
   const calloutParts = calloutH > 0 ? splitCalloutFromSpec(spec, colX, calloutY, colW) : null;
   return {
-    shapes: [makePaperBackdrop(activeTheme), ...(calloutParts?.shapes ?? [])],
+    shapes: [...makePaperBackdrop(), ...(calloutParts?.shapes ?? [])],
     texts: [
       makeText(spec.title, colX, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, colX, subHookY, colW, 22, "700", t.text, "left")] : []),
@@ -1009,7 +993,7 @@ function renderPaperTwoImages(spec: SlideSpec, t: Theme): SlideJSON {
   const labelY = imgY + imgH + 18;
   const labelAvailH = Math.max(48, SLIDE_H - labelY - 32);
   return {
-    shapes: [makePaperBackdrop(activeTheme)],
+    shapes: [...makePaperBackdrop()],
     texts: [
       makeText(spec.title, leftX, titleY, fullW, 40, "800", headingColor, "left"),
       ...(spec.twoColLeftBody  ? [makeText(spec.twoColLeftBody,  leftX,  labelY, cellW, 20, "400", t.text, "left", undefined, labelAvailH)] : []),
@@ -1054,7 +1038,7 @@ function renderPaperImageRightBadge(spec: SlideSpec, t: Theme): SlideJSON {
   const bulletsClipH = bullets.length > 0 && naturalBulletsH > bulletsH ? bulletsH : undefined;
 
   return {
-    shapes: [makePaperBackdrop(activeTheme)],
+    shapes: [...makePaperBackdrop()],
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.body ? [makeText(spec.body, 80, bodyY, colW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
@@ -1089,7 +1073,7 @@ function renderPaperBannerImageTop(spec: SlideSpec, t: Theme): SlideJSON {
   const bulletsStartY = bodyY + bodyH + (spec.body ? GAP_BODY_TO_REST : 0);
   const numberedListText = bullets.length > 0 ? bullets.join("\n") : "";
   return {
-    shapes: [makePaperBackdrop(activeTheme)],
+    shapes: [...makePaperBackdrop()],
     texts: [
       makeText(spec.title, 80, titleY, fullW, 40, "800", headingColor, "left"),
       ...(spec.body ? [makeText(spec.body, 80, bodyY, fullW, 22, "400", t.text, "left", undefined, bodyClipH)] : []),
@@ -1123,7 +1107,7 @@ function renderPaperQuote(spec: SlideSpec, t: Theme): SlideJSON {
     ? [makeBlockquote(quoteText, quoteAttrib, 80, quoteY, colW)]
     : [];
   return {
-    shapes: [makePaperBackdrop(activeTheme)],
+    shapes: [...makePaperBackdrop()],
     texts: [
       makeText(spec.title, 80, titleY, colW, 44, "800", headingColor, "left"),
       ...(spec.subHook ? [makeText(spec.subHook, 80, subHookY, colW, 22, "700", t.text, "left")] : []),
@@ -1216,7 +1200,7 @@ function renderPaperVocabGrid(spec: SlideSpec, t: Theme): SlideJSON {
   }
 
   return {
-    shapes: [makePaperBackdrop(activeTheme)],
+    shapes: [...makePaperBackdrop()],
     texts,
     images,
     background: t.bg,
@@ -1254,7 +1238,7 @@ function renderActivityOrdering(spec: SlideSpec, t: Theme, answerMode: boolean):
   const cardCount = Math.max(1, items.length || 4);
   const cardHeight = Math.max(50, (cardsBottom - cardsTop - gap * (cardCount - 1)) / cardCount);
 
-  const shapes: ShapeObject[] = [makePaperBackdrop(activeTheme)];
+  const shapes: ShapeObject[] = [...makePaperBackdrop()];
   const texts: TextObject[] = [
     makeText(spec.title, 80, 80, 800, 44, "800", headingColor, "left"),
     ...(!answerMode
@@ -1386,7 +1370,7 @@ function renderActivityQuestion(spec: SlideSpec, t: Theme, answerMode: boolean):
     opacity: 1,
   };
 
-  const shapes: ShapeObject[] = [makePaperBackdrop(activeTheme), bubbleShape];
+  const shapes: ShapeObject[] = [...makePaperBackdrop(), bubbleShape];
   const texts: TextObject[] = [
     makeText(spec.title, 80, titleY, SLIDE_W - 160, 40, "800", headingColor, "left"),
   ];
@@ -1455,7 +1439,7 @@ function renderActivityMultichoice(spec: SlideSpec, t: Theme, answerMode: boolea
   const cardCount   = Math.max(1, items.length || 4);
   const cardHeight  = Math.max(50, (cardsBottom - cardsTop - gap * (cardCount - 1)) / cardCount);
 
-  const shapes: ShapeObject[] = [makePaperBackdrop(activeTheme)];
+  const shapes: ShapeObject[] = [...makePaperBackdrop()];
   const texts: TextObject[] = [
     makeText(spec.title, 80, 80, SLIDE_W - 180, 44, "800", headingColor, "left"),
     ...(!answerMode ? [makeText("Answers on the next slide…", 880, 92, 320, 20, "600", t.muted, "right")] : []),
@@ -1513,7 +1497,7 @@ function renderActivityVocabMatch(spec: SlideSpec, t: Theme, answerMode: boolean
   const rowH       = 90;
   const rowGap     = 10;
 
-  const shapes: ShapeObject[] = [makePaperBackdrop(activeTheme)];
+  const shapes: ShapeObject[] = [...makePaperBackdrop()];
   const texts: TextObject[] = [
     makeText(spec.title, 80, 80, SLIDE_W - 180, 44, "800", headingColor, "left"),
     ...(!answerMode ? [makeText("Match each term to its definition.", 80, 148, SLIDE_W - 160, 18, "400", t.muted, "left")] : []),
