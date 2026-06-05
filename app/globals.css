@@ -213,8 +213,60 @@ summary {
   animation: hiw-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
+/* Hero AI-assistant "typing" indicator — three dots bouncing in sequence. */
+@keyframes hs-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%           { transform: translateY(-3px); opacity: 1; }
+}
+.hs-typing-dot {
+  display: inline-block;
+  animation: hs-typing 1.1s ease-in-out infinite;
+}
+
+/* Hero auto-typed search/composer caret — a thin blinking bar. */
+@keyframes hs-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+.hs-caret {
+  display: inline-block;
+  width: 1px;
+  height: 0.95em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background-color: #1a1a1a;
+  animation: hs-blink 1s step-end infinite;
+}
+
+/* Hero tools grid — each matching card pops in when the search changes. */
+@keyframes hs-pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hs-pop {
+  animation: hs-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Hero assistant — the cross-fade when the chat "navigates" into a tool. */
+@keyframes hs-view-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hs-view-in {
+  animation: hs-view-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Side panel that slides out beside the slideshow wizard. */
+@keyframes panel-slide-in {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.panel-slide-in {
+  animation: panel-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .tp-line, .tp-fade-up, .tp-correct, .tp-check, .tp-float, .hiw-grow, .hiw-rise {
+  .tp-line, .tp-fade-up, .tp-correct, .tp-check, .tp-float, .hiw-grow, .hiw-rise, .hs-typing-dot, .hs-caret, .hs-pop, .hs-view-in, .panel-slide-in {
     animation: none;
   }
 }

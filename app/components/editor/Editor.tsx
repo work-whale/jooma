@@ -2129,7 +2129,11 @@ export default function Editor({ presentation, generationParams }: Props) {
         // Audio activity slide: re-colour bg, panel, and any slide-level
         // texts so it follows the new theme.
         if ((s.audios?.length ?? 0) > 0) {
-          const slideTextColor = theme.palette.text;
+          // Match the rest of the deck: heading texts (weight ≥ 600) take the
+          // theme heading colour + heading font; body texts take the body
+          // colour + font. Previously everything was recoloured to palette.text,
+          // so the title lost its themed (e.g. sienna) heading colour.
+          const headingColor = theme.palette.headingColor ?? theme.palette.accent;
           return {
             ...s,
             background: theme.palette.background,
@@ -2137,7 +2141,14 @@ export default function Editor({ presentation, generationParams }: Props) {
               ...backgroundDecorations(theme, !!s.backgroundImage),
               ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
             ],
-            texts: s.texts.map((t) => ({ ...t, color: slideTextColor })),
+            texts: s.texts.map((t) => {
+              const isHeading = parseInt(t.fontWeight, 10) >= 600;
+              return {
+                ...t,
+                color: isHeading ? headingColor : theme.palette.text,
+                fontFamily: isHeading ? theme.fonts.heading : theme.fonts.body,
+              };
+            }),
             audios: (s.audios ?? []).map((a) => ({
               ...a,
               panelBg: theme.palette.accent,
@@ -2508,6 +2519,8 @@ export default function Editor({ presentation, generationParams }: Props) {
           backgroundOffsetY: src.backgroundOffsetY ?? p.slide.backgroundOffsetY,
           backgroundScale: src.backgroundScale ?? p.slide.backgroundScale,
           backgroundImagePending: img ? src.backgroundImagePending : p.slide.backgroundImagePending,
+          backgroundArt: src.backgroundArt ?? p.slide.backgroundArt,
+          backgroundArtScrim: src.backgroundArtScrim ?? p.slide.backgroundArtScrim,
           skeleton: p.slide.skeleton,
           themeId: p.slide.themeId,
         };
@@ -2665,6 +2678,8 @@ export default function Editor({ presentation, generationParams }: Props) {
                   backgroundOffsetY: p.slide.backgroundOffsetY,
                   backgroundScale: p.slide.backgroundScale,
                   backgroundImagePending: p.slide.backgroundImagePending,
+                  backgroundArt: p.slide.backgroundArt ?? target.backgroundArt,
+                  backgroundArtScrim: p.slide.backgroundArtScrim ?? target.backgroundArtScrim,
                   // Keep skeleton + themeId carried by the previous slide so
                   // image arrival doesn't strip the re-theming metadata.
                   skeleton: target.skeleton,
@@ -3111,6 +3126,32 @@ export default function Editor({ presentation, generationParams }: Props) {
             } else if (eventName === "complete") {
               setGenerating(null);
               setPreMeta(false);
+              // Make sure every slide carries the deck's themed background art.
+              // Content slides already get it baked in server-side, but the
+              // audio/video slides are built client-side and would otherwise
+              // miss it until a manual re-theme. Use the generated art style
+              // recorded on slide 0, and sync the editor's toggle to it.
+              const genArtStyle = (slidesRef.current[0]?.artStyleId as ArtStyleId) ?? DEFAULT_ART_STYLE;
+              const genTheme = getTheme(slidesRef.current[0]?.themeId ?? DEFAULT_THEME_ID);
+              const genArt = getThemeArt(genTheme, genArtStyle);
+              setArtStyle(genArtStyle);
+              // Clear any media slots still pending at the end of the run (e.g.
+              // an audio activity whose generation failed) so they don't shimmer
+              // forever — drop them back to an empty frame.
+              setSlides((prev) => {
+                const next = prev.map((s) => ({
+                  ...s,
+                  images: (s.images ?? []).map((i) => (i.isPending && !i.src ? { ...i, isPending: false } : i)),
+                  audios: (s.audios ?? []).map((a) => (a.isPending && !a.src ? { ...a, isPending: false } : a)),
+                  videos: (s.videos ?? []).map((v) => (v.isPending && !v.src ? { ...v, isPending: false } : v)),
+                  backgroundImagePending: s.backgroundImagePending && !s.backgroundImage ? false : s.backgroundImagePending,
+                  backgroundArt: s.backgroundArt ?? genArt?.src,
+                  backgroundArtScrim: s.backgroundArtScrim ?? genArt?.scrim,
+                }));
+                slidesRef.current = next;
+                return next;
+              });
+              scheduleSave();
             } else if (eventName === "error") {
               const p = payload as { message?: string };
               console.error("Stream error:", p.message);
@@ -3173,8 +3214,7 @@ export default function Editor({ presentation, generationParams }: Props) {
           className="absolute inset-0 z-200 flex flex-col items-center justify-center pointer-events-none"
           style={{ backgroundColor: "#F1EFE3" }}
         >
-          <SlideshowLoadingAnimation label="Planning your deck…" />
-          <p className="text-xs text-gray-400 mt-3">This usually takes about 15 seconds</p>
+          <SlideshowLoadingAnimation label="Planning your deck…" subtitle="This usually takes about 15 seconds" />
         </div>
       )}
       <EditorTopBar

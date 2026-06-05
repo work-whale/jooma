@@ -59,9 +59,14 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   }
 
   if (!presentation) {
+    // Match the Editor's pre-generation overlay when we arrived here to generate,
+    // so the loader transitions seamlessly (no label/layout change) into it.
     return (
       <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "#F1EFE3" }}>
-        <SlideshowLoadingAnimation />
+        <SlideshowLoadingAnimation
+          label={genParams ? "Planning your deck…" : "Loading slideshow"}
+          subtitle={genParams ? "This usually takes about 15 seconds" : undefined}
+        />
       </div>
     );
   }
