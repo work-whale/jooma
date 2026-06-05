@@ -8,6 +8,8 @@ import HowItWorks from "@/app/components/landing/HowItWorks";
 import CtaBanner from "@/app/components/landing/CtaBanner";
 import WhyJooma from "@/app/components/landing/WhyJooma";
 import Faq from "@/app/components/landing/Faq";
+import NavAuth from "@/app/components/landing/NavAuth";
+import { createClient } from "@/app/lib/auth/server";
 
 const FEATURED = [
   { icon: "/icons/tool-lesson-plans.svg", label: "Lesson Planner", desc: "Structured plans from a topic and objective in seconds." },
@@ -19,7 +21,22 @@ const FEATURED = [
 ];
 
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let firstName: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    firstName = profile?.first_name ?? null;
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F1EFE3" }}>
 
@@ -35,19 +52,7 @@ export default function LandingPage() {
           <Link href="/pricing" className="transition-colors hover:text-black">Schools</Link>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link href="/login" className="px-4 py-2 text-sm font-semibold rounded-xl transition-colors hover:bg-black/5" style={{ color: "#030303" }}>
-            Log In
-          </Link>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "#030303" }}
-          >
-            Let&apos;s Try Free
-            <ArrowRight className="w-3.5 h-3.5 -rotate-45" />
-          </Link>
-        </div>
+        <NavAuth name={firstName} email={user?.email ?? null} />
       </nav>
 
       {/* Hero + showcase — framed in a lighter rounded panel that spans the

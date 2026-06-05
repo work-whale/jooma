@@ -62,7 +62,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${geistMono.variable} ${lora.variable} ${playfair.variable} ${inter.variable} ${archivoBlack.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${geistMono.variable} ${lora.variable} ${playfair.variable} ${inter.variable} ${archivoBlack.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col" style={{ backgroundColor: "#F1EFE3" }} suppressHydrationWarning>
         <NextTopLoader color="#1a1a1a" showSpinner={false} />

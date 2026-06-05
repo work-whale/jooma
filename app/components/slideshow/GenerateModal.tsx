@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
+import ResourceLibraryModal from "./ResourceLibraryModal";
 import { SLIDESHOW_THEMES, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
@@ -150,6 +151,7 @@ export default function GenerateModal({ onClose }: Props) {
   // When attached, the extracted text gets sent to the AI as base material.
   const [resourceText, setResourceText] = useState("");
   const [resourceSource, setResourceSource] = useState("");
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [resourceBusy, setResourceBusy] = useState(false);
   const [resourceError, setResourceError] = useState<string | null>(null);
   const [youtubeLength, setYoutubeLength] = useState<"short" | "medium" | "long" | "any">("short");
@@ -352,8 +354,10 @@ export default function GenerateModal({ onClose }: Props) {
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={() => { if (!busy) onClose(); }}
       />
+      {/* Wrapper: card + optional side panel share a height via items-stretch. */}
+      <div className="relative z-10 flex items-stretch justify-center gap-3 w-full max-h-[90vh]">
       <div
-        className="relative rounded-2xl shadow-2xl w-full max-w-2xl border max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative rounded-2xl shadow-2xl w-full max-w-2xl border overflow-hidden flex flex-col"
         style={{ borderColor: "#DAD8D0", backgroundColor: "#FAF9F5" }}
       >
         {/* Header */}
@@ -631,6 +635,7 @@ export default function GenerateModal({ onClose }: Props) {
                   }
                 }}
                 onClear={() => { setResourceText(""); setResourceSource(""); setResourceError(null); }}
+                onOpenLibrary={() => setLibraryOpen(true)}
                 disabled={busy}
               />
             </>
@@ -1051,6 +1056,13 @@ export default function GenerateModal({ onClose }: Props) {
           )}
         </div>
       </div>
+      {libraryOpen && (
+        <ResourceLibraryModal
+          onSelect={(text, source) => { setResourceText(text); setResourceSource(source); }}
+          onClose={() => setLibraryOpen(false)}
+        />
+      )}
+      </div>
     </div>
   );
 }
@@ -1234,6 +1246,7 @@ function InlineUploadZone({
   error,
   onAttach,
   onClear,
+  onOpenLibrary,
   disabled,
 }: {
   busy: boolean;
@@ -1242,6 +1255,7 @@ function InlineUploadZone({
   error: string | null;
   onAttach: (input: ResourceInput) => Promise<void> | void;
   onClear: () => void;
+  onOpenLibrary: () => void;
   disabled?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -1317,12 +1331,13 @@ function InlineUploadZone({
                   </button>
                   <button
                     type="button"
-                    disabled
-                    className="flex flex-col items-center gap-1 opacity-35 cursor-not-allowed"
-                    title="Import from Drive — coming soon"
+                    onClick={(e) => { e.stopPropagation(); if (!disabled && !busy) onOpenLibrary(); }}
+                    disabled={disabled || busy}
+                    className="flex flex-col items-center gap-1 group disabled:opacity-50"
+                    title="Use a previous tool output"
                   >
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center border"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors group-hover:bg-gray-50"
                       style={{ borderColor: "#DAD8D0" }}
                     >
                       <FolderSymlink className="w-4.5 h-4.5 text-gray-500" />
