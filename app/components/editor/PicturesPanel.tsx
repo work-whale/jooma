@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, Loader2, MoreHorizontal, ExternalLink } from "lucide-react";
+import { Search, Loader2, MoreHorizontal, ExternalLink, Sparkles } from "lucide-react";
+import { listGeneratedImages, thumbUrl, type GeneratedImage } from "@/app/lib/generatedImages";
 
 interface Props {
   onAdd: (dataUrl: string) => void;
@@ -232,6 +233,7 @@ export default function PicturesPanel({ onAdd }: Props) {
   );
 
   const [query, setQuery] = useState("");
+  const [aiImages, setAiImages] = useState<GeneratedImage[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -255,6 +257,18 @@ export default function PicturesPanel({ onAdd }: Props) {
   }, [infoOpenId]);
 
   useEffect(() => { setInfoOpenId(null); }, [query]);
+
+  // Surface the user's own AI-generated images (searched by the same query), so
+  // they're reusable straight from Photos without switching to the AI tab.
+  useEffect(() => {
+    let cancelled = false;
+    const id = setTimeout(() => {
+      listGeneratedImages({ search: query.trim(), limit: 12 })
+        .then((rows) => { if (!cancelled) setAiImages(rows); })
+        .catch(() => { if (!cancelled) setAiImages([]); });
+    }, 250);
+    return () => { cancelled = true; clearTimeout(id); };
+  }, [query]);
 
   // Reset + load first page whenever the query changes
   useEffect(() => {
@@ -381,6 +395,40 @@ export default function PicturesPanel({ onAdd }: Props) {
       </div>
 
       {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
+
+      {/* Your AI-generated images (reusable straight from Photos). */}
+      {aiImages.length > 0 && (
+        <div className="mt-3">
+          <p className="text-[11px] font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-violet-500" /> Your AI images
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {aiImages.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => onAdd(g.data_url)}
+                title={g.description ?? g.title ?? g.prompt}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", g.data_url)}
+                className="aspect-square w-full overflow-hidden rounded-lg border border-gray-200 hover:border-violet-400 block"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={thumbUrl(g.data_url, 240)}
+                  onError={(e) => { const t = e.currentTarget; if (t.src !== g.data_url) t.src = g.data_url; }}
+                  alt={g.title ?? g.prompt}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  draggable={false}
+                />
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 mb-1 border-t" style={{ borderColor: "#EDEAE0" }} />
+          <p className="text-[10px] font-medium text-gray-400 mb-1">Stock photos</p>
+        </div>
+      )}
 
       <div className="mt-3 grid grid-cols-2 gap-1.5">
         {photos.map((p) => (

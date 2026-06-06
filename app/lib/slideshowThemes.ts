@@ -6,10 +6,15 @@
 // Adding a theme: append an entry below. No other code changes required —
 // the modal and renderer read from this list dynamically.
 
+/** Groups themes in the picker. `classic` = clean timeless skins, `scenic` =
+ *  illustrated landscapes, `subject` = tailored to a school subject. */
+export type ThemeCategory = "classic" | "scenic" | "subject";
+
 export interface SlideshowTheme {
   id: string;
   name: string;
   description: string;
+  category: ThemeCategory;
   palette: {
     background: string;       // default slide bg color
     text: string;             // primary text color
@@ -80,6 +85,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "paper",
     name: "Paper",
     description: "Cream paper, sienna headings — textbook feel",
+    category: "classic",
     backgroundArt: "/scenes/paper.png",
     artIllustration: "/scenes/paper-illus.png",
     backgroundArtScrim: "rgba(251, 245, 227, 0.55)",
@@ -117,6 +123,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "light",
     name: "Light",
     description: "Clean and crisp",
+    category: "classic",
     backgroundArt: "/scenes/light.png",
     artIllustration: "/scenes/light-illus.png",
     backgroundArtScrim: "rgba(255, 255, 255, 0.5)",
@@ -153,6 +160,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "dark",
     name: "Dark",
     description: "For the night owls",
+    category: "classic",
     backgroundArt: "/scenes/dark.png",
     artIllustration: "/scenes/dark-illus.png",
     backgroundArtScrim: "rgba(10, 10, 26, 0.55)",
@@ -189,6 +197,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "warm",
     name: "Warm",
     description: "Editorial and cosy",
+    category: "classic",
     backgroundArt: "/scenes/warm.png",
     artIllustration: "/scenes/warm-illus.png",
     backgroundArtScrim: "rgba(253, 246, 227, 0.55)",
@@ -225,6 +234,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "bold",
     name: "Bold",
     description: "Make a statement",
+    category: "classic",
     backgroundArt: "/scenes/bold.png",
     artIllustration: "/scenes/bold-illus.png",
     backgroundArtScrim: "rgba(254, 243, 199, 0.55)",
@@ -269,6 +279,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "ocean",
     name: "Ocean",
     description: "Calm coastal blues with a wave horizon",
+    category: "scenic",
     backgroundArt: "/scenes/ocean.png",
     artIllustration: "/scenes/ocean-illus.png",
     backgroundArtScrim: "rgba(246, 251, 253, 0.5)",
@@ -305,6 +316,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "desert",
     name: "Desert",
     description: "Warm sands, dunes and a low sun",
+    category: "scenic",
     backgroundArt: "/scenes/desert.png",
     artIllustration: "/scenes/desert-illus.png",
     backgroundArtScrim: "rgba(253, 248, 236, 0.5)",
@@ -341,6 +353,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "cloudy",
     name: "Cloudy",
     description: "Soft overcast sky with drifting clouds",
+    category: "scenic",
     backgroundArt: "/scenes/cloudy.png",
     artIllustration: "/scenes/cloudy-illus.png",
     backgroundArtScrim: "rgba(255, 255, 255, 0.42)",
@@ -377,6 +390,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "forest",
     name: "Forest",
     description: "Fresh sage hills and treetops",
+    category: "scenic",
     palette: {
       background: "#e6efe4",
       paperBg: "#f6fbf4",
@@ -413,6 +427,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "dusk",
     name: "Dusk",
     description: "Warm sunset glow over the horizon",
+    category: "scenic",
     backgroundArt: "/scenes/dusk.png",
     artIllustration: "/scenes/dusk-illus.png",
     backgroundArtScrim: "rgba(254, 246, 240, 0.55)",
@@ -445,6 +460,160 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
       body: "'Lora', serif",
     },
   },
+
+  // ── Subject themes ───────────────────────────────────────────────────────
+  // Tailored to a school subject rather than a scene. They carry NO background
+  // PNG — their identity comes from a code-drawn motif (grid + geometry, atoms,
+  // columns, book + quill) in `subjectDecorations` (slideshow-layouts.ts), which
+  // renders on every surface and survives PPTX export for free.
+  {
+    id: "math",
+    name: "Math",
+    description: "Indigo geometry — rulers, compass, shapes",
+    category: "subject",
+    backgroundArt: "/scenes/math.png",
+    artIllustration: "/scenes/math.png",
+    backgroundArtScrim: "rgba(244, 246, 253, 0.42)",
+    palette: {
+      background: "#eef1fb",
+      paperBg: "#ffffff",
+      paperShadow: "rgba(30, 42, 82, 0.10)",
+      text: "#1e2a52",
+      muted: "#5a648a",
+      accent: "#4f46e5",
+      overlayText: "#ffffff",
+      headingColor: "#3730a3",
+      calloutBgKey: "#e0e3fb",
+      calloutInkKey: "#1e2a52",
+      calloutBgRemember: "#dbeafe",
+      calloutInkRemember: "#1e3a5f",
+      calloutBgFun: "#e9e3fb",
+      calloutInkFun: "#3a2a60",
+      badgeBg: "#4f46e5",
+      badgeInk: "#ffffff",
+      blockquoteRule: "#4f46e5",
+      activityCardBg: "#e6e9fb",
+      activityCardInk: "#1e2a52",
+      speechBubbleStroke: "#1e2a52",
+      checkBadgeBg: "#16a34a",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Inter', sans-serif",
+      body: "'Inter', sans-serif",
+    },
+  },
+  {
+    id: "science",
+    name: "Science",
+    description: "Teal lab — atoms, molecules, beakers",
+    category: "subject",
+    backgroundArt: "/scenes/science.png",
+    artIllustration: "/scenes/science.png",
+    backgroundArtScrim: "rgba(244, 251, 250, 0.42)",
+    palette: {
+      background: "#e4f3f0",
+      paperBg: "#f5fbfa",
+      paperShadow: "rgba(17, 64, 58, 0.12)",
+      text: "#11403a",
+      muted: "#4a766e",
+      accent: "#0d9488",
+      overlayText: "#f5fbfa",
+      headingColor: "#0b6e63",
+      calloutBgKey: "#cfeae5",
+      calloutInkKey: "#11403a",
+      calloutBgRemember: "#d6ecf2",
+      calloutInkRemember: "#123a52",
+      calloutBgFun: "#dcecd9",
+      calloutInkFun: "#234a1f",
+      badgeBg: "#0d9488",
+      badgeInk: "#f5fbfa",
+      blockquoteRule: "#0d9488",
+      activityCardBg: "#d7ece8",
+      activityCardInk: "#11403a",
+      speechBubbleStroke: "#11403a",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Inter', sans-serif",
+      body: "'Inter', sans-serif",
+    },
+  },
+  {
+    id: "history",
+    name: "History",
+    description: "Parchment — columns, scrolls, amphora",
+    category: "subject",
+    backgroundArt: "/scenes/history.png",
+    artIllustration: "/scenes/history.png",
+    backgroundArtScrim: "rgba(250, 243, 226, 0.40)",
+    palette: {
+      background: "#f0e6d0",
+      paperBg: "#faf3e2",
+      paperShadow: "rgba(58, 44, 26, 0.12)",
+      text: "#3a2c1a",
+      muted: "#7a6448",
+      accent: "#9a6b3f",
+      overlayText: "#faf3e2",
+      headingColor: "#7c4a25",
+      calloutBgKey: "#efdcb8",
+      calloutInkKey: "#3a2c1a",
+      calloutBgRemember: "#e3e7d4",
+      calloutInkRemember: "#3a3f24",
+      calloutBgFun: "#ecdcc8",
+      calloutInkFun: "#4a3320",
+      badgeBg: "#9a6b3f",
+      badgeInk: "#faf3e2",
+      blockquoteRule: "#9a6b3f",
+      activityCardBg: "#eee0c6",
+      activityCardInk: "#3a2c1a",
+      speechBubbleStroke: "#3a2c1a",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Playfair Display', serif",
+      body: "'Lora', serif",
+    },
+  },
+  {
+    id: "english",
+    name: "English",
+    description: "Literary cream — books, quill, ink",
+    category: "subject",
+    backgroundArt: "/scenes/english.png",
+    artIllustration: "/scenes/english.png",
+    backgroundArtScrim: "rgba(253, 250, 243, 0.40)",
+    palette: {
+      background: "#f3ede2",
+      paperBg: "#fdfaf3",
+      paperShadow: "rgba(46, 42, 34, 0.10)",
+      text: "#2e2a22",
+      muted: "#6f6657",
+      accent: "#9a4a55",
+      overlayText: "#fdfaf3",
+      headingColor: "#7a3a44",
+      calloutBgKey: "#f0e4d6",
+      calloutInkKey: "#2e2a22",
+      calloutBgRemember: "#e6e2d0",
+      calloutInkRemember: "#3a3528",
+      calloutBgFun: "#efddd9",
+      calloutInkFun: "#5a2e34",
+      badgeBg: "#9a4a55",
+      badgeInk: "#fdfaf3",
+      blockquoteRule: "#9a4a55",
+      activityCardBg: "#efe7d8",
+      activityCardInk: "#2e2a22",
+      speechBubbleStroke: "#2e2a22",
+      checkBadgeBg: "#2e9d54",
+      checkBadgeInk: "#ffffff",
+    },
+    fonts: {
+      heading: "'Playfair Display', serif",
+      body: "'Lora', serif",
+    },
+  },
 ];
 
 /** Default theme for newly-created decks. Paper matches the textbook feel of
@@ -453,4 +622,16 @@ export const DEFAULT_THEME_ID = "paper";
 
 export function getTheme(id: string | undefined): SlideshowTheme {
   return SLIDESHOW_THEMES.find((t) => t.id === id) ?? SLIDESHOW_THEMES.find((t) => t.id === DEFAULT_THEME_ID) ?? SLIDESHOW_THEMES[0];
+}
+
+/** Display order + labels for the theme-picker section headings. */
+export const THEME_CATEGORIES: { id: ThemeCategory; label: string; description: string }[] = [
+  { id: "classic", label: "Classic", description: "Clean, timeless looks" },
+  { id: "scenic", label: "Scenic", description: "Illustrated landscapes" },
+  { id: "subject", label: "Subjects", description: "Tailored to a subject" },
+];
+
+/** Themes belonging to a category, in their declared order. */
+export function getThemesByCategory(category: ThemeCategory): SlideshowTheme[] {
+  return SLIDESHOW_THEMES.filter((t) => t.category === category);
 }

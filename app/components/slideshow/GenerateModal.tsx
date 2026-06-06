@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import ResourceLibraryModal from "./ResourceLibraryModal";
-import { SLIDESHOW_THEMES, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { THEME_CATEGORIES, getThemesByCategory, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
@@ -423,10 +423,19 @@ export default function GenerateModal({ onClose }: Props) {
                   })}
                 </div>
               </div>
-              {SLIDESHOW_THEMES.map((t) => {
-                const selected = themeId === t.id;
-                const art = getThemeArt(t, artStyle);
+              {THEME_CATEGORIES.map((cat) => {
+                const themes = getThemesByCategory(cat.id);
+                if (themes.length === 0) return null;
                 return (
+                  <Fragment key={cat.id}>
+                    <div className="col-span-2 sm:col-span-3 flex items-baseline gap-2 mt-2 first:mt-0">
+                      <span className="text-xs font-semibold text-gray-700">{cat.label}</span>
+                      <span className="text-[10px] text-gray-400">{cat.description}</span>
+                    </div>
+                    {themes.map((t) => {
+                      const selected = themeId === t.id;
+                      const art = getThemeArt(t, artStyle);
+                      return (
                   <button
                     key={t.id}
                     type="button"
@@ -495,6 +504,9 @@ export default function GenerateModal({ onClose }: Props) {
                       )}
                     </div>
                   </button>
+                      );
+                    })}
+                  </Fragment>
                 );
               })}
             </div>

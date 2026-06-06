@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Undo2, Redo2, Download, ArrowLeft, Palette, Check, Play } from "lucide-react";
-import { SLIDESHOW_THEMES, ART_STYLES, getThemeArt, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { SLIDESHOW_THEMES, THEME_CATEGORIES, getThemesByCategory, ART_STYLES, getThemeArt, type ArtStyleId } from "@/app/lib/slideshowThemes";
 
 interface Props {
   title: string;
@@ -158,7 +158,15 @@ export default function EditorTopBar({
                     </div>
                   </div>
                 )}
-                {SLIDESHOW_THEMES.map((t) => (
+                {THEME_CATEGORIES.map((cat) => {
+                  const themes = getThemesByCategory(cat.id);
+                  if (themes.length === 0) return null;
+                  return (
+                    <Fragment key={cat.id}>
+                      <div className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                        {cat.label}
+                      </div>
+                      {themes.map((t) => (
                   <button
                     key={t.id}
                     type="button"
@@ -186,7 +194,10 @@ export default function EditorTopBar({
                     </span>
                     {t.id === activeTheme.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
                   </button>
-                ))}
+                      ))}
+                    </Fragment>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1624,6 +1624,9 @@ function getThemeDecorations(
     case "dusk":
       return sceneDecorations(theme.id);
     default:
+      // Subject themes (math/science/history/english) carry a full-bleed
+      // illustration background instead of decoration shapes — see their
+      // `backgroundArt` in slideshowThemes.ts.
       return [];
   }
 }
@@ -1635,9 +1638,13 @@ function getThemeDecorations(
 // around the centred paper card rather than hiding behind it.
 function deco(
   type: ShapeObject["type"], x: number, y: number, width: number, height: number,
-  fill: string, opacity: number,
+  fill: string, opacity: number, rotation?: number,
 ): ShapeObject {
-  return { id: nid("dec"), type, x, y, width, height, fill, stroke: "transparent", strokeWidth: 0, opacity };
+  return {
+    id: nid("dec"), type, x, y, width, height, fill,
+    stroke: "transparent", strokeWidth: 0, opacity,
+    ...(rotation ? { rotation } : {}),
+  };
 }
 
 // Public: the backdrop decoration shapes for a slide that has NO re-renderable

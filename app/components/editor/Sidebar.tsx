@@ -8,7 +8,7 @@ import PicturesPanel from "./PicturesPanel";
 import FramePicker from "./FramePicker";
 import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
-import { listGeneratedImages, saveGeneratedImage, type GeneratedImage } from "@/app/lib/generatedImages";
+import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage } from "@/app/lib/generatedImages";
 
 type TabId = "elements" | "text" | "activities" | "pictures" | "audio" | "video";
 
@@ -276,7 +276,7 @@ export default function Sidebar({
         throw new Error(err.error || "Generation failed");
       }
       const data: { dataUrl: string } = await r.json();
-      const saved = await saveGeneratedImage({ prompt: aiPrompt.trim(), style: aiStyle, dataUrl: data.dataUrl });
+      const saved = await saveGeneratedImage({ prompt: aiPrompt.trim(), style: aiStyle, dataUrl: data.dataUrl, source: "editor-ai" });
       setGallery((prev) => [saved, ...prev]);
       setAiPrompt("");
     } catch (err) {
@@ -813,17 +813,25 @@ export default function Sidebar({
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       {gallery.map((g) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={g.id}
-                          src={g.data_url}
-                          alt={g.prompt}
-                          title={g.prompt}
-                          draggable
-                          onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", g.data_url)}
-                          onClick={() => onAddImage(g.data_url)}
-                          className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
-                        />
+                        <div key={g.id} className="min-w-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={thumbUrl(g.data_url, 240)}
+                            onError={(e) => { const t = e.currentTarget; if (t.src !== g.data_url) t.src = g.data_url; }}
+                            alt={g.title ?? g.prompt}
+                            title={g.description ?? g.title ?? g.prompt}
+                            draggable
+                            onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", g.data_url)}
+                            onClick={() => onAddImage(g.data_url)}
+                            className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
+                          />
+                          <p
+                            className="mt-1 text-[10px] leading-tight text-gray-500 truncate"
+                            title={g.description ?? g.title ?? g.prompt}
+                          >
+                            {g.title ?? g.prompt}
+                          </p>
+                        </div>
                       ))}
                     </div>
                   )}

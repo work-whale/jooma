@@ -2480,7 +2480,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       const p = reveal.queue.shift();
       if (!p || cancelled) { reveal.timer = null; return; }
       if (p.galleryImage) {
-        saveGeneratedImage(p.galleryImage)
+        saveGeneratedImage({ ...p.galleryImage, source: "slideshow" })
           .then(() => setGalleryRefreshTrigger((n) => n + 1))
           .catch((err) => console.warn("Gallery save failed:", err));
       }
@@ -2642,7 +2642,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                 galleryImage?: { prompt: string; style?: string; dataUrl: string };
               };
               if (p.galleryImage) {
-                saveGeneratedImage(p.galleryImage)
+                saveGeneratedImage({ ...p.galleryImage, source: "slideshow" })
                   .then(() => setGalleryRefreshTrigger((n) => n + 1))
                   .catch((err) => console.warn("Gallery save failed:", err));
               }
@@ -3910,7 +3910,7 @@ export default function Editor({ presentation, generationParams }: Props) {
             onClose={() => setRegenerateTargetId(null)}
             onGenerated={({ dataUrl, prompt, style }) => {
               updateImage(regenerateTargetId, { src: dataUrl });
-              saveGeneratedImage({ prompt, style, dataUrl })
+              saveGeneratedImage({ prompt, style, dataUrl, source: "regenerate" })
                 .then(() => setGalleryRefreshTrigger((n) => n + 1))
                 .catch((err) => console.warn("Gallery save failed:", err));
             }}
