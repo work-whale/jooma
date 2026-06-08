@@ -7,8 +7,8 @@
 // the modal and renderer read from this list dynamically.
 
 /** Groups themes in the picker. `classic` = clean timeless skins, `scenic` =
- *  illustrated landscapes, `subject` = tailored to a school subject. */
-export type ThemeCategory = "classic" | "scenic" | "subject";
+ *  illustrated landscapes, and one group per school subject. */
+export type ThemeCategory = "classic" | "scenic" | "math" | "science" | "history" | "english";
 
 export interface SlideshowTheme {
   id: string;
@@ -470,7 +470,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "math",
     name: "Math",
     description: "Indigo geometry — rulers, compass, shapes",
-    category: "subject",
+    category: "math",
     backgroundArt: "/scenes/math.png",
     artIllustration: "/scenes/math.png",
     backgroundArtScrim: "rgba(244, 246, 253, 0.42)",
@@ -507,7 +507,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "science",
     name: "Science",
     description: "Teal lab — atoms, molecules, beakers",
-    category: "subject",
+    category: "science",
     backgroundArt: "/scenes/science.png",
     artIllustration: "/scenes/science.png",
     backgroundArtScrim: "rgba(244, 251, 250, 0.42)",
@@ -544,7 +544,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "history",
     name: "History",
     description: "Parchment — columns, scrolls, amphora",
-    category: "subject",
+    category: "history",
     backgroundArt: "/scenes/history.png",
     artIllustration: "/scenes/history.png",
     backgroundArtScrim: "rgba(250, 243, 226, 0.40)",
@@ -581,7 +581,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "english",
     name: "English",
     description: "Literary cream — books, quill, ink",
-    category: "subject",
+    category: "english",
     backgroundArt: "/scenes/english.png",
     artIllustration: "/scenes/english.png",
     backgroundArtScrim: "rgba(253, 250, 243, 0.40)",
@@ -614,6 +614,156 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
       body: "'Lora', serif",
     },
   },
+
+  // ── Subject variations ───────────────────────────────────────────────────
+  // Vibrant, playful alternates for each subject. Each carries its subject's
+  // category (math/science/history/english) so it sits under that subject's
+  // heading in the picker, alongside the original. Light, clear centres keep
+  // dark text legible; backgrounds in /public/scenes/<id>.png.
+  {
+    id: "math-pop", name: "Math · Pop", description: "Coral & yellow geometry confetti", category: "math",
+    backgroundArt: "/scenes/math-pop.png", artIllustration: "/scenes/math-pop.png", backgroundArtScrim: "rgba(255, 244, 239, 0.40)",
+    palette: {
+      background: "#fff4ef", paperBg: "#fffaf7", paperShadow: "rgba(42, 26, 46, 0.10)",
+      text: "#2a1a2e", muted: "#7a5e74", accent: "#ff5a5f", overlayText: "#ffffff", headingColor: "#e23b50",
+      calloutBgKey: "#ffe0dd", calloutInkKey: "#2a1a2e", calloutBgRemember: "#dbeafe", calloutInkRemember: "#1e3a5f",
+      calloutBgFun: "#fde9c7", calloutInkFun: "#5a3a14", badgeBg: "#ff5a5f", badgeInk: "#ffffff", blockquoteRule: "#ff5a5f",
+      activityCardBg: "#ffe7e3", activityCardInk: "#2a1a2e", speechBubbleStroke: "#2a1a2e", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "math-neon", name: "Math · Neon", description: "Electric violet & cyan geometry", category: "math",
+    backgroundArt: "/scenes/math-neon.png", artIllustration: "/scenes/math-neon.png", backgroundArtScrim: "rgba(241, 243, 255, 0.40)",
+    palette: {
+      background: "#f1f3ff", paperBg: "#fafbff", paperShadow: "rgba(26, 21, 53, 0.10)",
+      text: "#1a1535", muted: "#5a5680", accent: "#6c4cf0", overlayText: "#ffffff", headingColor: "#5b3ce0",
+      calloutBgKey: "#e2def9", calloutInkKey: "#1a1535", calloutBgRemember: "#d6f3ff", calloutInkRemember: "#13384a",
+      calloutBgFun: "#fbdcf3", calloutInkFun: "#4a1f3d", badgeBg: "#6c4cf0", badgeInk: "#ffffff", blockquoteRule: "#6c4cf0",
+      activityCardBg: "#e6e3fb", activityCardInk: "#1a1535", speechBubbleStroke: "#1a1535", checkBadgeBg: "#16a34a", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "math-citrus", name: "Math · Citrus", description: "Zesty orange & lime geometry", category: "math",
+    backgroundArt: "/scenes/math-citrus.png", artIllustration: "/scenes/math-citrus.png", backgroundArtScrim: "rgba(246, 251, 233, 0.40)",
+    palette: {
+      background: "#f6fbe9", paperBg: "#fbfdf2", paperShadow: "rgba(46, 42, 20, 0.10)",
+      text: "#2e2a14", muted: "#6f6a3f", accent: "#ff7a18", overlayText: "#ffffff", headingColor: "#e8650a",
+      calloutBgKey: "#ffe6cf", calloutInkKey: "#2e2a14", calloutBgRemember: "#dcefd0", calloutInkRemember: "#2f4a1f",
+      calloutBgFun: "#e7eccd", calloutInkFun: "#3a4521", badgeBg: "#ff7a18", badgeInk: "#ffffff", blockquoteRule: "#ff7a18",
+      activityCardBg: "#eef3d8", activityCardInk: "#2e2a14", speechBubbleStroke: "#2e2a14", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "science-pop", name: "Science · Lab Pop", description: "Bright beakers, bubbles & atoms", category: "science",
+    backgroundArt: "/scenes/science-pop.png", artIllustration: "/scenes/science-pop.png", backgroundArtScrim: "rgba(238, 254, 248, 0.40)",
+    palette: {
+      background: "#eefef8", paperBg: "#f6fffb", paperShadow: "rgba(17, 64, 58, 0.12)",
+      text: "#11403a", muted: "#4a766e", accent: "#18c29c", overlayText: "#ffffff", headingColor: "#0e9e80",
+      calloutBgKey: "#cdeee6", calloutInkKey: "#11403a", calloutBgRemember: "#d6ecf2", calloutInkRemember: "#123a52",
+      calloutBgFun: "#fbdcef", calloutInkFun: "#4a1f3a", badgeBg: "#18c29c", badgeInk: "#ffffff", blockquoteRule: "#18c29c",
+      activityCardBg: "#d7ece8", activityCardInk: "#11403a", speechBubbleStroke: "#11403a", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "science-cosmic", name: "Science · Cosmic", description: "Purple atoms, planets & stars", category: "science",
+    backgroundArt: "/scenes/science-cosmic.png", artIllustration: "/scenes/science-cosmic.png", backgroundArtScrim: "rgba(244, 240, 255, 0.40)",
+    palette: {
+      background: "#f4f0ff", paperBg: "#fbf9ff", paperShadow: "rgba(34, 26, 64, 0.12)",
+      text: "#221a40", muted: "#5e5685", accent: "#8b5cf6", overlayText: "#ffffff", headingColor: "#7a45e8",
+      calloutBgKey: "#e6dcfb", calloutInkKey: "#221a40", calloutBgRemember: "#d6e6ff", calloutInkRemember: "#1f3358",
+      calloutBgFun: "#fbdcf3", calloutInkFun: "#4a1f3d", badgeBg: "#8b5cf6", badgeInk: "#ffffff", blockquoteRule: "#8b5cf6",
+      activityCardBg: "#e9e3fb", activityCardInk: "#221a40", speechBubbleStroke: "#221a40", checkBadgeBg: "#16a34a", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "science-botanic", name: "Science · Botanic", description: "Leaves, DNA & blooms", category: "science",
+    backgroundArt: "/scenes/science-botanic.png", artIllustration: "/scenes/science-botanic.png", backgroundArtScrim: "rgba(241, 251, 239, 0.40)",
+    palette: {
+      background: "#f1fbef", paperBg: "#f8fdf7", paperShadow: "rgba(31, 64, 35, 0.12)",
+      text: "#1f4023", muted: "#5a7a60", accent: "#2fb344", overlayText: "#ffffff", headingColor: "#259a38",
+      calloutBgKey: "#d6efce", calloutInkKey: "#1f4023", calloutBgRemember: "#d6ecf2", calloutInkRemember: "#123a52",
+      calloutBgFun: "#ffe0d6", calloutInkFun: "#5a2e1f", badgeBg: "#2fb344", badgeInk: "#ffffff", blockquoteRule: "#2fb344",
+      activityCardBg: "#dcecd6", activityCardInk: "#1f4023", speechBubbleStroke: "#1f4023", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "history-pop", name: "History · Pop", description: "Bright columns, amphora & scrolls", category: "history",
+    backgroundArt: "/scenes/history-pop.png", artIllustration: "/scenes/history-pop.png", backgroundArtScrim: "rgba(253, 243, 230, 0.40)",
+    palette: {
+      background: "#fdf3e6", paperBg: "#fff9f0", paperShadow: "rgba(58, 36, 24, 0.12)",
+      text: "#3a2418", muted: "#7a5e48", accent: "#e2683c", overlayText: "#ffffff", headingColor: "#c8502a",
+      calloutBgKey: "#f7ddca", calloutInkKey: "#3a2418", calloutBgRemember: "#d2ece6", calloutInkRemember: "#163f3a",
+      calloutBgFun: "#f6e3bf", calloutInkFun: "#5a4423", badgeBg: "#e2683c", badgeInk: "#ffffff", blockquoteRule: "#e2683c",
+      activityCardBg: "#f1e3d2", activityCardInk: "#3a2418", speechBubbleStroke: "#3a2418", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "history-explorer", name: "History · Explorer", description: "Maps, compass & ships", category: "history",
+    backgroundArt: "/scenes/history-explorer.png", artIllustration: "/scenes/history-explorer.png", backgroundArtScrim: "rgba(253, 246, 233, 0.40)",
+    palette: {
+      background: "#fdf6e9", paperBg: "#fffaf0", paperShadow: "rgba(58, 42, 26, 0.12)",
+      text: "#3a2a1a", muted: "#7a6248", accent: "#1f9e8f", overlayText: "#ffffff", headingColor: "#18897b",
+      calloutBgKey: "#cfeae5", calloutInkKey: "#3a2a1a", calloutBgRemember: "#d6e6f2", calloutInkRemember: "#1f3a52",
+      calloutBgFun: "#ffe0d2", calloutInkFun: "#5a2e1a", badgeBg: "#1f9e8f", badgeInk: "#ffffff", blockquoteRule: "#1f9e8f",
+      activityCardBg: "#dcebe4", activityCardInk: "#3a2a1a", speechBubbleStroke: "#3a2a1a", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
+  },
+  {
+    id: "history-royal", name: "History · Royal", description: "Crowns, castles & shields", category: "history",
+    backgroundArt: "/scenes/history-royal.png", artIllustration: "/scenes/history-royal.png", backgroundArtScrim: "rgba(250, 242, 232, 0.40)",
+    palette: {
+      background: "#faf2e8", paperBg: "#fdf8f0", paperShadow: "rgba(46, 26, 51, 0.12)",
+      text: "#2e1a33", muted: "#6a5470", accent: "#7b3fa0", overlayText: "#ffffff", headingColor: "#6a2f90",
+      calloutBgKey: "#e7d8f0", calloutInkKey: "#2e1a33", calloutBgRemember: "#f6e3bf", calloutInkRemember: "#5a4423",
+      calloutBgFun: "#f1d8e6", calloutInkFun: "#4a2040", badgeBg: "#7b3fa0", badgeInk: "#ffffff", blockquoteRule: "#7b3fa0",
+      activityCardBg: "#ece0f3", activityCardInk: "#2e1a33", speechBubbleStroke: "#2e1a33", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
+  },
+  {
+    id: "english-storybook", name: "English · Storybook", description: "Books, quill & speech bubbles", category: "english",
+    backgroundArt: "/scenes/english-storybook.png", artIllustration: "/scenes/english-storybook.png", backgroundArtScrim: "rgba(255, 247, 238, 0.40)",
+    palette: {
+      background: "#fff7ee", paperBg: "#fffbf5", paperShadow: "rgba(58, 34, 48, 0.10)",
+      text: "#3a2230", muted: "#7a6070", accent: "#ff8a5c", overlayText: "#ffffff", headingColor: "#f06a3a",
+      calloutBgKey: "#ffe6da", calloutInkKey: "#3a2230", calloutBgRemember: "#d6eef5", calloutInkRemember: "#163f4a",
+      calloutBgFun: "#fdebc4", calloutInkFun: "#5a4414", badgeBg: "#ff8a5c", badgeInk: "#ffffff", blockquoteRule: "#ff8a5c",
+      activityCardBg: "#ffe7dd", activityCardInk: "#3a2230", speechBubbleStroke: "#3a2230", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "english-comic", name: "English · Comic", description: "Bold speech bubbles & bursts", category: "english",
+    backgroundArt: "/scenes/english-comic.png", artIllustration: "/scenes/english-comic.png", backgroundArtScrim: "rgba(255, 249, 240, 0.40)",
+    palette: {
+      background: "#fff9f0", paperBg: "#fffcf6", paperShadow: "rgba(26, 19, 32, 0.10)",
+      text: "#1a1320", muted: "#5a5260", accent: "#ff3b3b", overlayText: "#ffffff", headingColor: "#e62020",
+      calloutBgKey: "#ffd9d9", calloutInkKey: "#1a1320", calloutBgRemember: "#d6e2ff", calloutInkRemember: "#1a2f5a",
+      calloutBgFun: "#fff0c4", calloutInkFun: "#5a4a14", badgeBg: "#ff3b3b", badgeInk: "#ffffff", blockquoteRule: "#ff3b3b",
+      activityCardBg: "#ffe2e2", activityCardInk: "#1a1320", speechBubbleStroke: "#1a1320", checkBadgeBg: "#16a34a", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "english-poetry", name: "English · Poetry", description: "Quills, feathers & ink swirls", category: "english",
+    backgroundArt: "/scenes/english-poetry.png", artIllustration: "/scenes/english-poetry.png", backgroundArtScrim: "rgba(250, 245, 255, 0.40)",
+    palette: {
+      background: "#faf5ff", paperBg: "#fdfbff", paperShadow: "rgba(46, 36, 64, 0.10)",
+      text: "#2e2440", muted: "#645a80", accent: "#a06bd6", overlayText: "#ffffff", headingColor: "#8a4fc8",
+      calloutBgKey: "#ebdff7", calloutInkKey: "#2e2440", calloutBgRemember: "#d6f0e8", calloutInkRemember: "#16453a",
+      calloutBgFun: "#f7dcee", calloutInkFun: "#4a1f3d", badgeBg: "#a06bd6", badgeInk: "#ffffff", blockquoteRule: "#a06bd6",
+      activityCardBg: "#ece0f3", activityCardInk: "#2e2440", speechBubbleStroke: "#2e2440", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
+    },
+    fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
+  },
 ];
 
 /** Default theme for newly-created decks. Paper matches the textbook feel of
@@ -628,7 +778,10 @@ export function getTheme(id: string | undefined): SlideshowTheme {
 export const THEME_CATEGORIES: { id: ThemeCategory; label: string; description: string }[] = [
   { id: "classic", label: "Classic", description: "Clean, timeless looks" },
   { id: "scenic", label: "Scenic", description: "Illustrated landscapes" },
-  { id: "subject", label: "Subjects", description: "Tailored to a subject" },
+  { id: "math", label: "Math", description: "Geometry & numbers" },
+  { id: "science", label: "Science", description: "Atoms & nature" },
+  { id: "history", label: "History", description: "Eras & artefacts" },
+  { id: "english", label: "English", description: "Books & language" },
 ];
 
 /** Themes belonging to a category, in their declared order. */

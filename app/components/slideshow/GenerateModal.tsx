@@ -410,34 +410,36 @@ export default function GenerateModal({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {step === 3 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="col-span-2 sm:col-span-3 flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-500">Art style</span>
-                <div className="flex gap-1 p-0.5 rounded-lg bg-gray-100">
-                  {ART_STYLES.map((s) => {
-                    const active = artStyle === s.id;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setArtStyle(s.id)}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                          active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        {s.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
               {THEME_CATEGORIES.map((cat) => {
                 const themes = getThemesByCategory(cat.id);
                 if (themes.length === 0) return null;
                 return (
                   <Fragment key={cat.id}>
-                    <div className="col-span-2 sm:col-span-3 flex items-baseline gap-2 mt-2 first:mt-0">
-                      <span className="text-xs font-semibold text-gray-700">{cat.label}</span>
-                      <span className="text-[10px] text-gray-400">{cat.description}</span>
+                    <div className="col-span-2 sm:col-span-3 flex items-center justify-between gap-2 mt-2 first:mt-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-semibold text-gray-700">{cat.label}</span>
+                        <span className="text-[10px] text-gray-400">{cat.description}</span>
+                      </div>
+                      {/* Art-style toggle only on the categories with both variants. */}
+                      {(cat.id === "classic" || cat.id === "scenic") && (
+                        <div className="flex gap-0.5 p-0.5 rounded-lg bg-gray-100 shrink-0">
+                          {ART_STYLES.map((s) => {
+                            const active = artStyle === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => setArtStyle(s.id)}
+                                className={`px-2 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
+                                  active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+                                }`}
+                              >
+                                {s.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                     {themes.map((t) => {
                       const selected = themeId === t.id;

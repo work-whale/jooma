@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3, Pencil, RefreshCw, Eraser, Loader2 } from "lucide-react";
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, ChevronDown, ImagePlus, X, Frame as FrameIcon, Spline, Droplet, Brush, List, ListOrdered, Lock, LockOpen, Maximize2, Square as SquareIcon, Rows3, Pencil, RefreshCw, Eraser, Loader2, Sparkles, ArrowUp } from "lucide-react";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
@@ -492,6 +492,144 @@ function stripListPrefixes(text: string): string {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Edit with AI — text element only
+// ────────────────────────────────────────────────────────────────────────────
+
+const AI_QUICK_ACTIONS = [
+  { label: "Simplify", emoji: "🔍", instruction: "Simplify this so it's easier to read — shorter words and sentences, same meaning." },
+  { label: "Make it more fun", emoji: "🎉", instruction: "Make this more fun and engaging for students, while staying accurate and concise." },
+  { label: "Add detail", emoji: "📝", instruction: "Add a little more relevant detail or explanation, keeping it concise and slide-appropriate." },
+  { label: "Add structure", emoji: "📋", instruction: "Reformat this into a clear, structured set of concise bullet points." },
+] as const;
+
+// "Edit" button + popover that rewrites the selected text via /api/edit-text.
+// Renders the popover with fixed positioning (no portal) so it escapes the
+// toolbar's overflow-x-auto — same approach as IconPopover.
+function AiTextEdit({ text, onApply }: { text: string; onApply: (next: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [instruction, setInstruction] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const WIDTH = 300;
+
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => {
+      const tgt = e.target as Node;
+      if (popoverRef.current?.contains(tgt) || buttonRef.current?.contains(tgt)) return;
+      setOpen(false);
+    };
+    window.addEventListener("mousedown", h);
+    return () => window.removeEventListener("mousedown", h);
+  }, [open]);
+
+  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+
+  const toggle = () => {
+    if (open) { setOpen(false); return; }
+    if (!buttonRef.current) return;
+    const r = buttonRef.current.getBoundingClientRect();
+    const centered = r.left + r.width / 2 - WIDTH / 2;
+    const clamped = Math.max(8, Math.min(window.innerWidth - WIDTH - 8, centered));
+    setPos({ x: clamped, y: r.bottom + 8 });
+    setError(null);
+    setOpen(true);
+  };
+
+  const run = async (instr: string) => {
+    const trimmed = instr.trim();
+    if (!trimmed || busy || !text.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/edit-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, instruction: trimmed }),
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.error || e.message || "Edit failed");
+      }
+      const data: { text?: string } = await res.json();
+      if (data.text) {
+        onApply(data.text);
+        setInstruction("");
+        setOpen(false);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Edit failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={toggle}
+        className={`h-8 px-2.5 flex items-center gap-1.5 rounded-md border text-xs font-semibold transition-colors shrink-0 ${
+          open ? "bg-violet-100 border-violet-300 text-violet-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+        }`}
+      >
+        <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+        Edit
+      </button>
+      {open && pos && (
+        <div
+          ref={popoverRef}
+          className="fixed bg-white rounded-xl shadow-xl border p-2 z-100"
+          style={{ left: pos.x, top: pos.y, width: WIDTH, borderColor: "#E9E6DC" }}
+        >
+          <div className="relative flex items-center">
+            <Sparkles className="absolute left-2.5 w-3.5 h-3.5 text-violet-500 pointer-events-none" />
+            <input
+              ref={inputRef}
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); run(instruction); } }}
+              placeholder="Edit this text…"
+              disabled={busy}
+              className="w-full pl-8 pr-9 py-1.5 text-sm bg-transparent placeholder:text-gray-400 focus:outline-none disabled:opacity-60"
+            />
+            <button
+              type="button"
+              onClick={() => run(instruction)}
+              disabled={busy || !instruction.trim()}
+              title="Apply"
+              className="absolute right-1 h-7 w-7 flex items-center justify-center rounded-lg text-white transition-colors disabled:opacity-30"
+              style={{ backgroundColor: "#1a1a1a" }}
+            >
+              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowUp className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+          {error && <p className="text-[11px] text-red-600 mt-1 px-1">{error}</p>}
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {AI_QUICK_ACTIONS.map((a) => (
+              <button
+                key={a.label}
+                type="button"
+                onClick={() => run(a.instruction)}
+                disabled={busy}
+                className="px-2 py-1 text-[11px] font-medium rounded-full text-gray-600 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Selection model + main component
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -691,6 +829,8 @@ export default function ContextualToolbar({
             value={t.lineHeight ?? 1.2}
             onChange={(v2) => onUpdateText({ lineHeight: v2 })}
           />
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+          <AiTextEdit text={t.text} onApply={(next) => onUpdateText({ text: next })} />
         </>
       )}
 

@@ -13,9 +13,10 @@ import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage 
 type TabId = "elements" | "text" | "activities" | "pictures" | "gif" | "audio" | "video";
 
 // Sub-tabs inside the consolidated "Pictures" tab.
-type PictureSubTab = "stock" | "upload" | "ai";
+type PictureSubTab = "stock" | "web" | "upload" | "ai";
 const PICTURE_SUB_TAB_LABELS: Record<PictureSubTab, string> = {
   stock: "Images",
+  web: "Web",
   upload: "Upload",
   ai: "AI generate",
 };
@@ -26,6 +27,11 @@ const VIDEO_SUB_TAB_LABELS: Record<VideoSubTab, string> = {
   youtube: "YouTube",
   upload: "Upload",
 };
+
+// Web image search (Google CSE) is built but hidden until the Google Cloud
+// project has Custom Search billing set up. Flip to true — or gate on
+// `!!process.env.NEXT_PUBLIC_GOOGLE_CSE_CX` — to re-enable the "Web" tab.
+const WEB_SEARCH_ENABLED = false;
 
 // Activity catalogue — the 12 kinds the picker offers. Each runs its own AI
 // generation when added: the teacher picks a kind, optionally types a topic
@@ -651,7 +657,9 @@ export default function Sidebar({
                   className="flex gap-1 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
                   style={{ scrollbarWidth: "none" }}
                 >
-                  {(["stock", "upload", "ai"] as PictureSubTab[]).map((id) => (
+                  {((WEB_SEARCH_ENABLED
+                    ? ["stock", "web", "upload", "ai"]
+                    : ["stock", "upload", "ai"]) as PictureSubTab[]).map((id) => (
                     <button
                       key={id}
                       onClick={() => setPictureSubTab(id)}
@@ -670,6 +678,14 @@ export default function Sidebar({
                 <div style={{ display: pictureSubTab === "stock" ? "block" : "none" }}>
                   <PicturesPanel onAdd={onAddImage} />
                 </div>
+
+                {/* Web image search (Google CSE) — hidden behind WEB_SEARCH_ENABLED
+                    until billing is configured. Kept mounted to preserve state. */}
+                {WEB_SEARCH_ENABLED && (
+                  <div style={{ display: pictureSubTab === "web" ? "block" : "none" }}>
+                    <PicturesPanel onAdd={onAddImage} onlyProvider="web" />
+                  </div>
+                )}
 
                 {/* Upload from device or URL */}
                 {pictureSubTab === "upload" && (
