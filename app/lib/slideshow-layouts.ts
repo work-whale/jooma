@@ -1338,9 +1338,6 @@ function renderActivityQuestion(spec: SlideSpec, t: Theme, answerMode: boolean):
   // locked them together.
   const headingColor = activeTheme?.palette.headingColor ?? t.accent;
   const stroke = activeTheme?.palette.speechBubbleStroke ?? "#1a1a1a";
-  const imageSrc = spec.activityImageDataUrl ?? spec.imageDataUrl;
-  const imageNW  = spec.activityImageWidth   ?? spec.imageWidth;
-  const imageNH  = spec.activityImageHeight  ?? spec.imageHeight;
 
   // Layout zones
   const titleY = 80;
@@ -1388,25 +1385,15 @@ function renderActivityQuestion(spec: SlideSpec, t: Theme, answerMode: boolean):
       ),
     );
   } else {
-    // Image on the LEFT inside the bubble + question text on the RIGHT.
-    const imageSize = Math.min(260, innerH);
-    const imageY = innerY + (innerH - imageSize) / 2;
-    const textX = innerX + imageSize + 36;
-    const textW = innerW - (imageSize + 36);
+    // Discussion / critical-thinking prompt: the question sits centred in the
+    // bubble body. No image here — an opaque speech bubble is a SHAPE, and on
+    // every surface (editor canvas, thumbnail, PPTX export) shapes paint over
+    // images, so any picture placed "inside" the bubble would be permanently
+    // hidden behind it. Keeping these text-only avoids that dead layer.
     const questionText = spec.body || spec.subHook || "Add a question…";
-    const qH = textHeight(questionText, textW, 22);
+    const qH = textHeight(questionText, innerW, 24);
     const questionY = innerY + Math.max(0, (innerH - qH) / 2);
-
-    if (imageSrc) {
-      images.push({
-        id: nid("im"),
-        x: innerX, y: imageY, width: imageSize, height: imageSize,
-        src: imageSrc, opacity: 1,
-        naturalWidth: imageNW, naturalHeight: imageNH,
-        frame: "rounded", cornerRadius: 12,
-      });
-    }
-    texts.push(makeText(questionText, textX, questionY, textW, 22, "400", t.text, "left"));
+    texts.push(makeText(questionText, innerX, questionY, innerW, 24, "400", t.text, "center"));
   }
 
   return {

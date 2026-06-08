@@ -203,7 +203,7 @@ export default function GenerateModal({ onClose }: Props) {
   }, [alignCurriculum, topic, curCurriculumId, curSubject]);
 
   const handleGenerateOutline = async () => {
-    if (!topic.trim() || outlineBusy) return;
+    if (!topic.trim() || !year || outlineBusy) return;
     setOutlineBusy(true);
     setOutlineError(null);
     try {
@@ -214,6 +214,13 @@ export default function GenerateModal({ onClose }: Props) {
           topic: topic.trim(),
           year: year || undefined,
           readingLevel,
+          // Feed the subject/curriculum the wizard already knows so the outline
+          // is subject-aware and curriculum-aligned, not just topic + year.
+          subject: curSubject || undefined,
+          curriculum: alignCurriculum && curCurriculumId
+            ? (CURRICULA.find((c) => c.id === curCurriculumId)?.name ?? undefined)
+            : undefined,
+          strand: alignCurriculum ? (curStrand || undefined) : undefined,
         }),
       });
       if (!r.ok) {
@@ -597,8 +604,8 @@ export default function GenerateModal({ onClose }: Props) {
                   <button
                     type="button"
                     onClick={handleGenerateOutline}
-                    disabled={outlineBusy || busy || !topic.trim()}
-                    title={!topic.trim() ? "Enter a lesson topic first" : "Let AI sketch an outline for you"}
+                    disabled={outlineBusy || busy || !topic.trim() || !year}
+                    title={!topic.trim() ? "Enter a lesson topic first" : !year ? "Select a year group first" : "Let AI sketch an outline for you"}
                     className="flex items-center gap-1 text-[12px] font-semibold transition-colors disabled:opacity-40"
                     style={{ color: "#0f5f3a" }}
                   >

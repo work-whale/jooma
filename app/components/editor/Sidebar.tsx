@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film, ListChecks, Volume2, MessagesSquare, HelpCircle, CheckSquare, FormInput, Tags, Images, Brain, ToggleLeft, ToggleRight, ArrowUpDown, Palette } from "lucide-react";
+import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film, ListChecks, Volume2, MessagesSquare, HelpCircle, CheckSquare, FormInput, Tags, Images, Brain, ToggleLeft, ToggleRight, ArrowUpDown, Palette, ImagePlay } from "lucide-react";
 import { parseYouTubeId } from "./youtube";
 import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
@@ -10,14 +10,21 @@ import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
 import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage } from "@/app/lib/generatedImages";
 
-type TabId = "elements" | "text" | "activities" | "pictures" | "audio" | "video";
+type TabId = "elements" | "text" | "activities" | "pictures" | "gif" | "audio" | "video";
 
 // Sub-tabs inside the consolidated "Pictures" tab.
 type PictureSubTab = "stock" | "upload" | "ai";
 const PICTURE_SUB_TAB_LABELS: Record<PictureSubTab, string> = {
-  stock: "Stock",
+  stock: "Images",
   upload: "Upload",
   ai: "AI generate",
+};
+
+type VideoSubTab = "ai" | "youtube" | "upload";
+const VIDEO_SUB_TAB_LABELS: Record<VideoSubTab, string> = {
+  ai: "Suggest with AI",
+  youtube: "YouTube",
+  upload: "Upload",
 };
 
 // Activity catalogue — the 12 kinds the picker offers. Each runs its own AI
@@ -105,6 +112,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "text", label: "Text", icon: <Type className="w-5 h-5" /> },
   { id: "activities", label: "Activities", icon: <ListChecks className="w-5 h-5" /> },
   { id: "pictures", label: "Pictures", icon: <ImageIcon className="w-5 h-5" /> },
+  { id: "gif", label: "GIFs", icon: <ImagePlay className="w-5 h-5" /> },
   { id: "audio", label: "Audio", icon: <Headphones className="w-5 h-5" /> },
   { id: "video", label: "Video", icon: <Film className="w-5 h-5" /> },
 ];
@@ -290,6 +298,7 @@ export default function Sidebar({
   const [active, setActive] = useState<TabId | null>(null);
   // Which sub-tab of the consolidated Pictures tab is showing.
   const [pictureSubTab, setPictureSubTab] = useState<PictureSubTab>("stock");
+  const [videoSubTab, setVideoSubTab] = useState<VideoSubTab>("ai");
 
   // Activities tab — drill-in state. null = catalogue grid; otherwise the
   // selected kind's config form is shown (topic + level + Add button).
@@ -841,6 +850,12 @@ export default function Sidebar({
               </div>
             )}
 
+            {active === "gif" && (
+              <div className="space-y-3">
+                <PicturesPanel onAdd={onAddImage} onlyProvider="giphy" />
+              </div>
+            )}
+
             {active === "activities" && activityPickedKind === null && (
               // Catalogue view: 12 activity cards. Click one to open its
               // config form below.
@@ -1061,9 +1076,28 @@ export default function Sidebar({
             )}
 
             {active === "video" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Suggest with AI</p>
+              <div className="space-y-3">
+                {/* Sub-tabs: Suggest with AI / YouTube / Upload */}
+                <div
+                  className="flex gap-1 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none" }}
+                >
+                  {(["ai", "youtube", "upload"] as VideoSubTab[]).map((id) => (
+                    <button
+                      key={id}
+                      onClick={() => setVideoSubTab(id)}
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        videoSubTab === id
+                          ? "bg-violet-100 text-violet-700"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {VIDEO_SUB_TAB_LABELS[id]}
+                    </button>
+                  ))}
+                </div>
+
+                {videoSubTab === "ai" && (
                   <div className="space-y-1.5">
                     <input
                       type="text"
@@ -1096,10 +1130,9 @@ export default function Sidebar({
                     </button>
                     {videoSuggestError && <p className="text-[10px] text-red-600">{videoSuggestError}</p>}
                   </div>
-                </div>
+                )}
 
-                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">YouTube</p>
+                {videoSubTab === "youtube" && (
                   <div className="space-y-1.5">
                     <input
                       type="url"
@@ -1121,42 +1154,43 @@ export default function Sidebar({
                     </button>
                     {videoUrlError && <p className="text-[10px] text-red-600">{videoUrlError}</p>}
                   </div>
-                </div>
+                )}
 
-                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Upload video</p>
-                  <button
-                    onClick={() => videoFileRef.current?.click()}
-                    disabled={videoUploading}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
-                    style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
-                  >
-                    {videoUploading ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Uploading…
-                      </>
-                    ) : (
-                      <>
-                        <Film className="w-3.5 h-3.5" />
-                        Choose a video file
-                      </>
-                    )}
-                  </button>
-                  <input
-                    ref={videoFileRef}
-                    type="file"
-                    accept="video/*"
-                    hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleVideoFile(file);
-                      e.target.value = "";
-                    }}
-                  />
-                  {videoUploadError && <p className="text-[10px] text-red-600 mt-1">{videoUploadError}</p>}
-                  <p className="text-[10px] text-gray-400 mt-2">MP4 / WebM up to ~50 MB. Stored in your Supabase project.</p>
-                </div>
+                {videoSubTab === "upload" && (
+                  <div>
+                    <button
+                      onClick={() => videoFileRef.current?.click()}
+                      disabled={videoUploading}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                    >
+                      {videoUploading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Uploading…
+                        </>
+                      ) : (
+                        <>
+                          <Film className="w-3.5 h-3.5" />
+                          Choose a video file
+                        </>
+                      )}
+                    </button>
+                    <input
+                      ref={videoFileRef}
+                      type="file"
+                      accept="video/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleVideoFile(file);
+                        e.target.value = "";
+                      }}
+                    />
+                    {videoUploadError && <p className="text-[10px] text-red-600 mt-1">{videoUploadError}</p>}
+                    <p className="text-[10px] text-gray-400 mt-2">MP4 / WebM up to ~50 MB. Stored in your Supabase project.</p>
+                  </div>
+                )}
               </div>
             )}
 

@@ -65,6 +65,67 @@ const MiniShape = memo(function MiniShape({ shape }: { shape: ShapeObject }) {
     }
     hexPts = pts.join(" ");
   }
+  // Path/polygon shapes (speech, heart, cloud, plus, bolt) — mirror the
+  // geometry in ShapeElement so thumbnails match the editor canvas. Without
+  // these, those shapes render as nothing in the tray/list thumbnails.
+  const sw = strokeWidth / 2;
+  const W = w - strokeWidth, H = h - strokeWidth;
+  let pathD = "";
+  let extraPolyPts = "";
+  if (type === "speech") {
+    const bodyH = H * 0.78;
+    const r = Math.min(20, Math.min(W, bodyH) * 0.15);
+    pathD =
+      `M ${sw + r} ${sw} ` +
+      `L ${sw + W - r} ${sw} ` +
+      `Q ${sw + W} ${sw}, ${sw + W} ${sw + r} ` +
+      `L ${sw + W} ${sw + bodyH - r} ` +
+      `Q ${sw + W} ${sw + bodyH}, ${sw + W - r} ${sw + bodyH} ` +
+      `L ${sw + W * 0.35} ${sw + bodyH} ` +
+      `L ${sw + W * 0.18} ${sw + H} ` +
+      `L ${sw + W * 0.25} ${sw + bodyH} ` +
+      `L ${sw + r} ${sw + bodyH} ` +
+      `Q ${sw} ${sw + bodyH}, ${sw} ${sw + bodyH - r} ` +
+      `L ${sw} ${sw + r} ` +
+      `Q ${sw} ${sw}, ${sw + r} ${sw} Z`;
+  } else if (type === "heart") {
+    const x0 = sw, y0 = sw + H * 0.25;
+    pathD =
+      `M ${x0 + W / 2} ${sw + H} ` +
+      `C ${x0 + W / 2} ${sw + H * 0.75}, ${x0} ${sw + H * 0.55}, ${x0} ${y0 + H * 0.05} ` +
+      `C ${x0} ${sw}, ${x0 + W * 0.5} ${sw}, ${x0 + W / 2} ${sw + H * 0.25} ` +
+      `C ${x0 + W * 0.5} ${sw}, ${x0 + W} ${sw}, ${x0 + W} ${y0 + H * 0.05} ` +
+      `C ${x0 + W} ${sw + H * 0.55}, ${x0 + W / 2} ${sw + H * 0.75}, ${x0 + W / 2} ${sw + H} Z`;
+  } else if (type === "cloud") {
+    pathD =
+      `M ${sw + W * 0.20} ${sw + H * 0.75} ` +
+      `C ${sw + W * 0.05} ${sw + H * 0.75}, ${sw + W * 0.05} ${sw + H * 0.45}, ${sw + W * 0.22} ${sw + H * 0.45} ` +
+      `C ${sw + W * 0.22} ${sw + H * 0.18}, ${sw + W * 0.55} ${sw + H * 0.15}, ${sw + W * 0.58} ${sw + H * 0.4} ` +
+      `C ${sw + W * 0.78} ${sw + H * 0.25}, ${sw + W * 0.98} ${sw + H * 0.45}, ${sw + W * 0.86} ${sw + H * 0.55} ` +
+      `C ${sw + W * 0.99} ${sw + H * 0.60}, ${sw + W * 0.95} ${sw + H * 0.80}, ${sw + W * 0.80} ${sw + H * 0.75} Z`;
+  } else if (type === "plus") {
+    const arm = Math.min(W, H) * 0.32;
+    const cx = sw + W / 2, cy = sw + H / 2;
+    extraPolyPts = [
+      `${cx - arm},${sw}`, `${cx + arm},${sw}`,
+      `${cx + arm},${cy - arm}`, `${sw + W},${cy - arm}`,
+      `${sw + W},${cy + arm}`, `${cx + arm},${cy + arm}`,
+      `${cx + arm},${sw + H}`, `${cx - arm},${sw + H}`,
+      `${cx - arm},${cy + arm}`, `${sw},${cy + arm}`,
+      `${sw},${cy - arm}`, `${cx - arm},${cy - arm}`,
+    ].join(" ");
+  } else if (type === "bolt") {
+    extraPolyPts = [
+      `${sw + W * 0.55},${sw}`,
+      `${sw + W * 0.15},${sw + H * 0.55}`,
+      `${sw + W * 0.45},${sw + H * 0.55}`,
+      `${sw + W * 0.30},${sw + H}`,
+      `${sw + W * 0.85},${sw + H * 0.42}`,
+      `${sw + W * 0.55},${sw + H * 0.42}`,
+      `${sw + W * 0.72},${sw}`,
+    ].join(" ");
+  }
+
   const arrowHeadId = `mini-arrowhead-${shape.id}`;
   const flipScale = `scale(${shape.flipX ? -1 : 1}, ${shape.flipY ? -1 : 1})`;
 
@@ -158,6 +219,12 @@ const MiniShape = memo(function MiniShape({ shape }: { shape: ShapeObject }) {
         )}
         {type === "hexagon" && (
           <polygon points={hexPts} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />
+        )}
+        {pathD && (
+          <path d={pathD} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />
+        )}
+        {extraPolyPts && (
+          <polygon points={extraPolyPts} fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinejoin="round" />
         )}
       </svg>
     </div>
