@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 export interface ECTReportWriterRequest {
   curriculum: string;
@@ -13,7 +13,6 @@ export interface ECTReportWriterRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: ECTReportWriterRequest = await req.json();
 
   const { curriculum, ectName, subject, strengths, areasForDevelopment, includeProfessionalDevelopmentPlan } = body;
@@ -105,39 +104,13 @@ Throughout the report:
 - Do not use vague descriptors — every claim must be supported by evidence or framed as an observed behaviour`;
 
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "ect-report-writer",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK school leader, induction tutor, and ECT mentor with comprehensive knowledge of the Early Career Framework (ECF), the Teachers' Standards (DfE, 2011), and the statutory requirements for ECT induction. You have written many formal ECT assessment reports that have been reviewed by appropriate bodies and used in professional review meetings. Your reports are evidence-based, precisely referenced to the Teachers' Standards by number and full title, and written in formal third-person language that meets the standard of an official professional document. You write in professional UK English.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

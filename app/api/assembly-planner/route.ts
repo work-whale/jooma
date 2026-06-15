@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { theme, stageOfSchool, lengthMinutes, additionalNotes } = body;
 
@@ -95,36 +94,13 @@ A bullet list of physical or digital resources needed to run this assembly. Incl
 
 Be specific to the stage of school: ${stageOfSchool || "Primary"}. Use UK English throughout. Do not use emojis.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "assembly-planner",
     model: "gpt-4o",
     max_tokens: 4000,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK school leader, PSHE specialist, and assembly writer with extensive experience planning and scripting whole-school assemblies for all phases. You write engaging, age-appropriate assembly scripts that are practical to deliver, curriculum-linked where relevant, and aligned with British values and safeguarding principles.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

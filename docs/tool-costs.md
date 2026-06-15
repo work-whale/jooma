@@ -65,9 +65,12 @@ All non-slideshow figures are estimates (gpt-4o pricing × typical output size).
 - So the real cost driver is one toggle: **image source = AI**. Everything else
   is cents.
 
-To measure exact figures for the text tools, add `stream_options:
-{ include_usage: true }` + usage logging to their shared generation path (the
-slideshow route already logs a real `COST` line to the dev console).
+Exact figures for the text tools are now captured automatically: every text
+route goes through `streamChat()` / `recordUsage()` in `app/lib/usage.ts`, which
+reads `completion.usage` (the count OpenAI bills on — not an estimate) and writes
+one row per generation to the `token_usage` table. The per-tool, per-month report
+is at `/account/usage` (RPC `my_tool_usage_report()`); for a global owner report,
+aggregate `token_usage` by `tool_slug` with the service role.
 
 ---
 

@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
+import { recordUsage } from "@/app/lib/usage";
 
 export const maxDuration = 15;
 
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+    void recordUsage("suggest-subject", "gpt-4o-mini", completion.usage);
 
     const content = completion.choices[0]?.message?.content;
     if (!content) return NextResponse.json(empty);

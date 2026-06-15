@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { supabase } from "@/app/lib/supabase";
+import { recordUsage, recordAssetCost, type Usage } from "@/app/lib/usage";
 
 export const maxDuration = 120;
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
   let questions: string[];
   let answers: string[];
   // gpt-4o usage for the script-writing call, captured for cost reporting.
-  let scriptUsage: { prompt_tokens: number; completion_tokens: number } | null = null;
+  let scriptUsage: Usage | null = null;
 
   const activity = body.activityType ?? "comprehension";
   const activityInstruction = ACTIVITY_INSTRUCTIONS[activity];
@@ -246,6 +247,19 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     : 0;
   const ttsCost = (script.length / 1_000_000) * 15.0;
   const costUsd = scriptCost + ttsCost;
+
+  // Report telemetry: the script-writing call is token-billed (token_usage); the
+  // tts-1 narration is per-character (asset_cost). When invoked by the slideshow
+  // (parentTool set), attribute the cost to its breakdown as sub-steps; otherwise
+  // it's a standalone editor action recorded under its own slug.
+  // Fire-and-forget (parallel) so telemetry never delays the audio response —
+  // the mp3 is already uploaded by this point.
+  const parentTool = (body as { parentTool?: string }).parentTool;
+  const audioSlug = parentTool ?? "generate-audio";
+  void Promise.allSettled([
+    recordUsage(audioSlug, "gpt-4o-2024-08-06", scriptUsage, parentTool ? "Audio script" : null),
+    recordAssetCost(audioSlug, "audio", script.length, ttsCost, parentTool ? "Audio speech" : null),
+  ]);
 
   return NextResponse.json({
     src: pub.publicUrl,

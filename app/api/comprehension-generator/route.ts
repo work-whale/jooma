@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 export interface GenerateRequest {
   curriculum: string;
@@ -18,7 +18,6 @@ export interface GenerateRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: GenerateRequest = await req.json();
 
   const {
@@ -110,39 +109,13 @@ ${answerKeyInstruction}
 PASSAGE:
 ${ownText}`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "comprehension-generator",
     model: "gpt-4o",
     max_tokens: 4096,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and KS1–KS4 reading assessment frameworks. You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills — from retrieval and inference through to evaluation and critical response. Your passages are well-crafted, purposeful, and rich enough to sustain genuine comprehension work. Your questions are precise, unambiguous, and matched to the content domain they are assessing. Write in professional UK English.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface TargetedInterventionRequest {
@@ -14,7 +14,6 @@ export interface TargetedInterventionRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: TargetedInterventionRequest = await req.json();
 
   const { curriculum, yearGroup, subject, attitudinalData, aptitudinalData, attainmentData, otherData } = body;
@@ -71,8 +70,8 @@ For each strategy, use this exact structure:
 
 Do not include a preamble, introduction, or closing summary. Do not include any research citations or references. Start immediately with "# Intervention Strategies" and the first numbered strategy.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "targeted-intervention",
     model: "gpt-4o",
     max_tokens: 4096,
     messages: [
@@ -84,31 +83,5 @@ Do not include a preamble, introduction, or closing summary. Do not include any 
       },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

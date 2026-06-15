@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { curriculum, schoolType, staffMember, payScale, responsibilities } = body;
 
@@ -44,36 +43,13 @@ Rules for each cell:
 
 Each cell must be a single paragraph — no line breaks, no bullet points, no sub-lists inside cells.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "performance-management",
     model: "gpt-4o",
     max_tokens: 4000,
     messages: [
       { role: "system", content: buildSystem("You are an expert school leader and performance management specialist with extensive experience in UK schools. You draft rigorous, fair, and motivating performance management targets that align with the Teachers' Standards, school improvement priorities, and individual staff development needs. You are familiar with pay scale expectations at all levels from ECT through to UPS and leadership.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

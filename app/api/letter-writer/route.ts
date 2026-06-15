@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { recipient, content, date, tone } = body;
 
@@ -53,36 +52,13 @@ Dear ${recipient.charAt(0).toUpperCase() + recipient.slice(1)},
 
 Write in UK English. Use £ for currency. Use British date conventions. Do not use emojis.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "letter-writer",
     model: "gpt-4o",
     max_tokens: 2000,
     messages: [
       { role: "system", content: buildSystem("You are an expert school communications specialist with extensive experience writing clear, professional letters for UK schools to parents, governors, staff, and external stakeholders. You write letters that are well-structured, appropriately toned, and cover all required information concisely.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { newsletterTitle, schoolName, tone, sections } = body;
 
@@ -47,36 +46,13 @@ Apply the "${tone || "Professional and formal"}" tone consistently across all se
 
 Use the school name "${schoolName?.trim() || "our school"}" naturally in the text where appropriate. Use UK English throughout.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "newsletter-writer",
     model: "gpt-4o",
     max_tokens: 4000,
     messages: [
       { role: "system", content: buildSystem("You are an expert school communications specialist and newsletter writer with extensive experience producing high-quality, engaging school newsletters for UK primary and secondary schools. You write clearly, warmly, and professionally, adapting tone to the audience — whether parents, staff, or the wider community. Your newsletters are free of clichés, genuinely informative, and reflect the values and culture of the school.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

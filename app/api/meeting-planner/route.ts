@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { purpose, duration, participants, topics, includeIcebreaker, includeActionItems } = body;
 
@@ -116,36 +115,13 @@ Write a numbered list of agenda items with timings, matching the discussion stru
 
 Make every section specific to the meeting purpose and participants provided — avoid generic filler. The plan should be practical enough to pick up and use directly.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "meeting-planner",
     model: "gpt-4o",
     max_tokens: 3000,
     messages: [
       { role: "system", content: buildSystem("You are an expert facilitator and school leader with extensive experience designing and running productive professional meetings in UK schools. You create structured, time-efficient meeting plans that respect participants' time, drive clear outcomes, and follow best practice for collaborative professional dialogue.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

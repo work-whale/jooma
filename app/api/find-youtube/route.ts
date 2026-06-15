@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
+import { recordUsage } from "@/app/lib/usage";
 
 export const maxDuration = 30;
 
@@ -154,6 +155,10 @@ Return three things:
       ],
       response_format: { type: "json_schema", json_schema: querySchema },
     });
+    // Record the query-refinement cost. When the slideshow calls this
+    // (parentTool set), attribute it to the slideshow's breakdown.
+    const parentTool = (body as { parentTool?: string }).parentTool;
+    void recordUsage(parentTool ?? "find-youtube", "gpt-4o-2024-08-06", completion.usage, parentTool ? "YouTube" : null);
     const content = completion.choices[0]?.message?.content;
     if (content) {
       const parsed: { query: string; slideHeading: string; slideSubtitle: string } = JSON.parse(content);

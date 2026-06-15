@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 interface GenerateOutlineRequest {
@@ -29,10 +29,8 @@ Write 5–7 bullet points covering the key content areas, concepts, or learning 
 
 Output only the bullet points, each on its own line starting with "- ". No introduction, no header, no trailing text.`;
 
-  const client = getOpenAI();
-  const encoder = new TextEncoder();
-
-  const stream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "generate-outline",
     model: "gpt-4o",
     max_tokens: 512,
     messages: [
@@ -44,31 +42,5 @@ Output only the bullet points, each on its own line starting with "- ". No intro
       },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of stream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      stream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

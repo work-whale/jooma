@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface SensoryActivitiesRequest {
@@ -11,7 +11,6 @@ export interface SensoryActivitiesRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: SensoryActivitiesRequest = await req.json();
 
   const { curriculum, yearGroup, subject, topic } = body;
@@ -83,39 +82,13 @@ Then for each of the 5 activities use this exact structure:
 
 Do not use any emojis. Do not add any text before the title or after the last activity.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "sensory-activities",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK SENCO, inclusion specialist, and classroom teacher with extensive experience designing multisensory learning activities for pupils across the SEND spectrum, including autism, dyslexia, sensory processing differences, and DCD. You understand the SEND Code of Practice and how multisensory approaches increase engagement, retention, and access for all learners. Your activities are always curriculum-aligned, practically achievable in a UK school, and genuinely informed by knowledge of sensory learning theory. You write in professional UK English.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Check } from "lucide-react";
 import EditorTopBar from "./EditorTopBar";
 import ContextualToolbar, { type EditorSelection } from "./ContextualToolbar";
 import Sidebar, { type ActivityKind, type ActivityConfig } from "./Sidebar";
@@ -226,6 +226,14 @@ export default function Editor({ presentation, generationParams }: Props) {
   const [generating, setGenerating] = useState<{ current: number; total: number; title?: string; slideTitles?: string[]; statusMessage?: string } | null>(
     generationParams ? { current: 0, total: generationParams.slideCount ?? 0 } : null,
   );
+  // Brief "deck ready — click a slide to edit" banner shown the moment a
+  // generation finishes, so the user knows the slides are now interactive.
+  const [justFinished, setJustFinished] = useState(false);
+  useEffect(() => {
+    if (!justFinished) return;
+    const t = setTimeout(() => setJustFinished(false), 6000);
+    return () => clearTimeout(t);
+  }, [justFinished]);
   // True from the moment generationParams arrives until the first SSE "meta" event,
   // meaning OpenAI has responded. During this window a full-screen overlay is shown
   // so the user never sees a blank slide + spinner during the AI wait.
@@ -1894,6 +1902,181 @@ export default function Editor({ presentation, generationParams }: Props) {
   // image on the left and the AI-written body on the right — the same
   // aesthetic as the question-activity layout the deck generator emits.
   const addActivitySlide = useCallback(async (kind: ActivityKind, config: ActivityConfig) => {
+    // "Listen and answer" needs a real audio clip, not just text. generate-activity
+    // only writes the comprehension questions; the audio (script -> TTS -> mp3 +
+    // questions) comes from /api/generate-audio. Build a themed audio slide from
+    // its response — same layout as the deck generator's audio slide.
+    if (kind === "listen-answer") {
+      const theme = getTheme(slides[0]?.themeId ?? DEFAULT_THEME_ID);
+      const palette = theme.palette;
+      const titleColor = palette.headingColor ?? palette.accent;
+      const bodyColor = palette.text;
+      const playerY = 210;
+      const playerH = 80;
+      const badgeSize = 56;
+      const badgeX = SLIDE_W - 60 - badgeSize;
+      const badgeY = 60;
+      // Stable ids so the optimistic placeholders can be replaced (or removed)
+      // in place once the audio API responds.
+      const audioSlideId = newId("s");
+      const answerSlideId = newId("s");
+      const audioElId = newId("a");
+
+      type AudioData = {
+        src: string; title: string; description: string;
+        transcript?: string; questions?: string[]; answers?: string[];
+      };
+
+      // Build the audio slide. data === null → skeleton: a shimmering, pending
+      // audio bar (AudioElement renders isPending) + "generating" copy.
+      const buildAudioSlide = (data: AudioData | null): SlideState => {
+        const texts: TextObject[] = [
+          {
+            id: newId("t"), x: 80, y: 80, width: SLIDE_W - 160,
+            text: data?.title || "Audio Activity",
+            fontSize: 44, fontWeight: "800", fontStyle: "normal", underline: false,
+            fontFamily: theme.fonts.heading, color: titleColor, textAlign: "left",
+          },
+          {
+            id: newId("t"), x: 80, y: 150, width: SLIDE_W - 160,
+            text: data
+              ? data.description || "Listen to the audio and answer the questions below."
+              : "Generating a listening activity…",
+            fontSize: 22, fontWeight: "500", fontStyle: "normal", underline: false,
+            fontFamily: theme.fonts.body, color: bodyColor, textAlign: "left",
+          },
+        ];
+        if ((data?.questions?.length ?? 0) > 0) {
+          texts.push({
+            id: newId("t"), x: 80, y: playerY + playerH + 40, width: SLIDE_W - 160,
+            text: (data!.questions ?? []).join("\n"),
+            fontSize: 22, fontWeight: "500", fontStyle: "normal", underline: false,
+            fontFamily: theme.fonts.body, color: bodyColor, textAlign: "left",
+            listType: "number",
+          });
+        }
+        return {
+          id: audioSlideId,
+          shapes: [],
+          images: [],
+          texts,
+          audios: [{
+            id: audioElId,
+            x: 80, y: playerY, width: SLIDE_W - 160, height: playerH,
+            src: data?.src ?? "",
+            isPending: !data,
+            title: data?.title || "Audio clip",
+            description: data?.description ?? "",
+            questions: data?.questions ?? [],
+            transcript: data?.transcript,
+            panelBg: palette.accent,
+            panelInk: palette.overlayText,
+            playBg: palette.background,
+            playInk: palette.text,
+            headingFont: theme.fonts.heading,
+          }],
+          background: palette.background,
+        };
+      };
+
+      // Build the answer slide. data === null → skeleton with "generating" copy.
+      const buildAnswerSlide = (data: AudioData | null): SlideState => ({
+        id: answerSlideId,
+        shapes: [{
+          id: newId("sh"), type: "rect",
+          x: badgeX, y: badgeY, width: badgeSize, height: badgeSize,
+          fill: palette.checkBadgeBg ?? "#2e9d54",
+          stroke: "transparent", strokeWidth: 0, opacity: 1,
+          cornerRadius: 10, shadow: true,
+        }],
+        images: [],
+        audios: [],
+        texts: [
+          {
+            id: newId("t"), x: 80, y: 80, width: SLIDE_W - 240,
+            text: `${data?.title || "Audio activity"} — answers`,
+            fontSize: 44, fontWeight: "800", fontStyle: "normal", underline: false,
+            fontFamily: theme.fonts.heading, color: titleColor, textAlign: "left",
+          },
+          {
+            id: newId("t"), x: 80, y: 170, width: SLIDE_W - 160,
+            text: data
+              ? ((data.questions ?? []).length > 0
+                  ? (data.questions ?? [])
+                      .map((q, i) => `${i + 1}. ${q}\n   → ${(data.answers ?? [])[i] ?? ""}`)
+                      .join("\n\n")
+                  : "Answers unavailable.")
+              : "Generating answers…",
+            fontSize: 20, fontWeight: "500", fontStyle: "normal", underline: false,
+            fontFamily: theme.fonts.body, color: bodyColor, textAlign: "left",
+          },
+          {
+            id: newId("t"), x: badgeX, y: badgeY + (badgeSize - 36) / 2, width: badgeSize,
+            text: "✓",
+            fontSize: 36, fontWeight: "900", fontStyle: "normal", underline: false,
+            fontFamily: theme.fonts.heading, color: palette.checkBadgeInk ?? "#ffffff",
+            textAlign: "center",
+          },
+        ],
+        background: palette.background,
+      });
+
+      // 1) Optimistically insert both skeleton slides right away.
+      const at = activeIndexRef.current + 1;
+      setSlides((prev) => {
+        const next = [...prev.slice(0, at), buildAudioSlide(null), buildAnswerSlide(null), ...prev.slice(at)];
+        slidesRef.current = next;
+        return next;
+      });
+      setActiveIndex(at);
+      clearSelection();
+      scheduleSave();
+
+      // 2) Generate, then fill the placeholders in place (or remove on failure).
+      const audioCtx = slidesRef.current
+        .map((s) => s.texts?.[0]?.text)
+        .filter((t): t is string => !!t)
+        .slice(0, 6)
+        .map((t) => `- ${t}`)
+        .join("\n");
+      try {
+        const ar = await fetch("/api/generate-audio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            topic: config.topic?.trim() || title || "this lesson",
+            activityType: "comprehension",
+            slideContext: audioCtx || undefined,
+          }),
+        });
+        if (!ar.ok) {
+          const err = await ar.json().catch(() => ({}));
+          throw new Error(err.error || err.message || "Audio generation failed");
+        }
+        const audio = (await ar.json()) as AudioData;
+        setSlides((prev) => {
+          const next = prev.map((s) =>
+            s.id === audioSlideId ? buildAudioSlide(audio)
+            : s.id === answerSlideId ? buildAnswerSlide(audio)
+            : s,
+          );
+          slidesRef.current = next;
+          return next;
+        });
+        scheduleSave();
+      } catch (err) {
+        // Roll back the optimistic slides so a failure doesn't leave dead skeletons.
+        setSlides((prev) => {
+          const next = prev.filter((s) => s.id !== audioSlideId && s.id !== answerSlideId);
+          slidesRef.current = next;
+          return next;
+        });
+        scheduleSave();
+        throw err;
+      }
+      return;
+    }
+
     const r = await fetch("/api/generate-activity", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -3138,6 +3321,7 @@ export default function Editor({ presentation, generationParams }: Props) {
             } else if (eventName === "complete") {
               setGenerating(null);
               setPreMeta(false);
+              setJustFinished(true);
               // Make sure every slide carries the deck's themed background art.
               // Content slides already get it baked in server-side, but the
               // audio/video slides are built client-side and would otherwise
@@ -3803,29 +3987,65 @@ export default function Editor({ presentation, generationParams }: Props) {
           />
 
           {/* AI generation banner — visible while the SSE stream is producing slides */}
-          {generating && (
-            <div className="absolute top-2 right-4 z-50 pointer-events-none">
-              <div
-                className="inline-flex items-center gap-3 rounded-2xl border shadow-lg px-4 py-2 text-sm pointer-events-auto"
-                style={{ backgroundColor: "#1a1a1a", color: "#fff", borderColor: "#1a1a1a" }}
-              >
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: "#FFCC33" }} />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: "#FFCC33" }} />
-                </span>
-                <span className="font-medium">
-                  {generating.statusMessage
-                    ? generating.statusMessage
-                    : generating.title
-                    ? `Generated: ${generating.title}`
-                    : "Designing your deck…"}
-                </span>
-                {generating.total > 0 && (
-                  <span className="font-mono text-xs opacity-70">
-                    {generating.current}/{generating.total}
+          {generating && (() => {
+            const g = generating;
+            // Pictures are the slowest, last thing to finish. Once any audio/video
+            // are done and only images remain pending, that's all the user is
+            // waiting on — surface it (count-independent, because media slides
+            // inflate `total` without advancing `current`).
+            const imagesPending = slides.some(
+              (s) => (s.images ?? []).some((i) => i.isPending) || (s.backgroundImagePending && !s.backgroundImage),
+            );
+            const mediaPending = slides.some(
+              (s) => (s.audios ?? []).some((a) => a.isPending) || (s.videos ?? []).some((v) => v.isPending),
+            );
+            const imagesLoading = imagesPending && !mediaPending;
+            const message = imagesLoading
+              ? "Pictures loading…"
+              : g.statusMessage
+              ? g.statusMessage
+              : g.title
+              ? `Generated: ${g.title}`
+              : "Designing your deck…";
+            return (
+              <div className="absolute top-2 right-4 z-50 pointer-events-none">
+                <div
+                  className="flex flex-col gap-0.5 rounded-2xl border shadow-lg px-4 py-2 text-sm pointer-events-auto"
+                  style={{ backgroundColor: "#1a1a1a", color: "#fff", borderColor: "#1a1a1a" }}
+                >
+                  <div className="inline-flex items-center gap-3">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: "#FFCC33" }} />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: "#FFCC33" }} />
+                    </span>
+                    <span className="font-medium">{message}</span>
+                    {!imagesLoading && g.total > 0 && (
+                      <span className="font-mono text-xs opacity-70">
+                        {g.current}/{g.total}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] pl-5" style={{ opacity: 0.6 }}>
+                    Editing unlocks once it&apos;s ready
                   </span>
-                )}
+                </div>
               </div>
+            );
+          })()}
+
+          {/* Ready banner — shown briefly once generation finishes so the user
+              knows the deck is done and the slides are now clickable/editable. */}
+          {justFinished && !generating && (
+            <div className="absolute top-2 right-4 z-50 pointer-events-none">
+              <button
+                type="button"
+                onClick={() => setJustFinished(false)}
+                className="inline-flex items-center gap-2 rounded-2xl border shadow-lg px-4 py-2 text-sm pointer-events-auto transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "#1f6b3b", color: "#fff", borderColor: "#1f6b3b" }}
+              >
+                <Check className="w-4 h-4" />
+                <span className="font-medium">Deck ready — click any slide to edit</span>
+              </button>
             </div>
           )}
         </div>
