@@ -583,6 +583,7 @@ export default function Editor({ presentation, generationParams }: Props) {
   };
 
   const handleSlideMouseDown = (e: React.MouseEvent) => {
+    if (generating) return; // editing locked while the deck streams in
     // Plain mousedown on the slide background: start the marquee. Clicks on
     // child elements (images, shapes, text) bubble up here only after the
     // child's own handler has fired, so plain clicks on elements still select
@@ -593,6 +594,15 @@ export default function Editor({ presentation, generationParams }: Props) {
   };
 
   const handleSlideMouseDownCapture = (e: React.MouseEvent) => {
+    // While the deck streams in, swallow every mousedown on slide content so
+    // nothing can be selected, dragged, or edited. Scrolling and slide
+    // navigation (wheel, tray, zoom) don't pass through here, so they keep
+    // working — the deck isn't frozen, just read-only.
+    if (generating) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
     // Shift held → force marquee mode regardless of what was clicked.
     // We capture before child handlers run and stop propagation so the
     // image/shape/text underneath isn't selected.
@@ -2123,6 +2133,7 @@ export default function Editor({ presentation, generationParams }: Props) {
   // placeholder slides are left alone since they don't have a re-renderable
   // skeleton.
   const handleThemeChange = useCallback((nextThemeId: string) => {
+    if (generating) return; // editing locked while the deck streams in
     const theme = getTheme(nextThemeId);
     setSlides((prev) => {
       const next = prev.map((s, i) => {
@@ -2232,12 +2243,13 @@ export default function Editor({ presentation, generationParams }: Props) {
       return next;
     });
     scheduleSave();
-  }, [scheduleSave, artStyle]);
+  }, [scheduleSave, artStyle, generating]);
 
   // ── Background art style switching ──────────────────────────────────────────
   // Re-stamps every slide's illustration background with the chosen style's
   // variant (watercolor ↔ illustration) for the deck's current theme.
   const handleArtStyleChange = useCallback((nextStyle: ArtStyleId) => {
+    if (generating) return; // editing locked while the deck streams in
     setArtStyle(nextStyle);
     const theme = getTheme(slidesRef.current[0]?.themeId ?? DEFAULT_THEME_ID);
     const art = getThemeArt(theme, nextStyle);
@@ -2248,7 +2260,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       return next;
     });
     scheduleSave();
-  }, [scheduleSave]);
+  }, [scheduleSave, generating]);
 
   // ── Zoom ───────────────────────────────────────────────────────────────────
 
@@ -2480,7 +2492,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       const p = reveal.queue.shift();
       if (!p || cancelled) { reveal.timer = null; return; }
       if (p.galleryImage) {
-        saveGeneratedImage(p.galleryImage)
+        saveGeneratedImage({ ...p.galleryImage, source: "slideshow" })
           .then(() => setGalleryRefreshTrigger((n) => n + 1))
           .catch((err) => console.warn("Gallery save failed:", err));
       }
@@ -2642,7 +2654,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                 galleryImage?: { prompt: string; style?: string; dataUrl: string };
               };
               if (p.galleryImage) {
-                saveGeneratedImage(p.galleryImage)
+                saveGeneratedImage({ ...p.galleryImage, source: "slideshow" })
                   .then(() => setGalleryRefreshTrigger((n) => n + 1))
                   .catch((err) => console.warn("Gallery save failed:", err));
               }
@@ -3233,6 +3245,9 @@ export default function Editor({ presentation, generationParams }: Props) {
         onArtStyleChange={handleArtStyleChange}
       />
       <div className="flex flex-1 min-h-0 relative">
+        {/* Sidebar is made non-interactive (no editing) while the deck streams
+            in — no dim, the user can still scroll/navigate the slides. */}
+        <div className={`flex shrink-0${generating ? " pointer-events-none" : ""}`}>
         <Sidebar
           onAddShape={addShape}
           onAddText={addText}
@@ -3306,6 +3321,7 @@ export default function Editor({ presentation, generationParams }: Props) {
             scheduleSave();
           }}
         />
+        </div>
         {fontPanelOpen && selection?.kind === "text" && (
           <FontPanel
             current={selection.text.fontFamily}
@@ -3910,7 +3926,7 @@ export default function Editor({ presentation, generationParams }: Props) {
             onClose={() => setRegenerateTargetId(null)}
             onGenerated={({ dataUrl, prompt, style }) => {
               updateImage(regenerateTargetId, { src: dataUrl });
-              saveGeneratedImage({ prompt, style, dataUrl })
+              saveGeneratedImage({ prompt, style, dataUrl, source: "regenerate" })
                 .then(() => setGalleryRefreshTrigger((n) => n + 1))
                 .catch((err) => console.warn("Gallery save failed:", err));
             }}

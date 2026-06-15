@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import NextImage from "next/image";
 import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import ResourceLibraryModal from "./ResourceLibraryModal";
-import { SLIDESHOW_THEMES, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { THEME_CATEGORIES, getThemesByCategory, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
@@ -204,7 +204,7 @@ export default function GenerateModal({ onClose }: Props) {
   }, [alignCurriculum, topic, curCurriculumId, curSubject]);
 
   const handleGenerateOutline = async () => {
-    if (!topic.trim() || outlineBusy) return;
+    if (!topic.trim() || !year || outlineBusy) return;
     setOutlineBusy(true);
     setOutlineError(null);
     try {
@@ -215,6 +215,13 @@ export default function GenerateModal({ onClose }: Props) {
           topic: topic.trim(),
           year: year || undefined,
           readingLevel,
+          // Feed the subject/curriculum the wizard already knows so the outline
+          // is subject-aware and curriculum-aligned, not just topic + year.
+          subject: curSubject || undefined,
+          curriculum: alignCurriculum && curCurriculumId
+            ? (CURRICULA.find((c) => c.id === curCurriculumId)?.name ?? undefined)
+            : undefined,
+          strand: alignCurriculum ? (curStrand || undefined) : undefined,
         }),
       });
       if (!r.ok) {
@@ -404,30 +411,41 @@ export default function GenerateModal({ onClose }: Props) {
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {step === 3 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="col-span-2 sm:col-span-3 flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-500">Art style</span>
-                <div className="flex gap-1 p-0.5 rounded-lg bg-gray-100">
-                  {ART_STYLES.map((s) => {
-                    const active = artStyle === s.id;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setArtStyle(s.id)}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                          active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        {s.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              {SLIDESHOW_THEMES.map((t) => {
-                const selected = themeId === t.id;
-                const art = getThemeArt(t, artStyle);
+              {THEME_CATEGORIES.map((cat) => {
+                const themes = getThemesByCategory(cat.id);
+                if (themes.length === 0) return null;
                 return (
+                  <Fragment key={cat.id}>
+                    <div className="col-span-2 sm:col-span-3 flex items-center justify-between gap-2 mt-2 first:mt-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs font-semibold text-gray-700">{cat.label}</span>
+                        <span className="text-[10px] text-gray-400">{cat.description}</span>
+                      </div>
+                      {/* Art-style toggle only on the categories with both variants. */}
+                      {(cat.id === "classic" || cat.id === "scenic") && (
+                        <div className="flex gap-0.5 p-0.5 rounded-lg bg-gray-100 shrink-0">
+                          {ART_STYLES.map((s) => {
+                            const active = artStyle === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => setArtStyle(s.id)}
+                                className={`px-2 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
+                                  active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+                                }`}
+                              >
+                                {s.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    {themes.map((t) => {
+                      const selected = themeId === t.id;
+                      const art = getThemeArt(t, artStyle);
+                      return (
                   <button
                     key={t.id}
                     type="button"
@@ -505,6 +523,9 @@ export default function GenerateModal({ onClose }: Props) {
                       )}
                     </div>
                   </button>
+                      );
+                    })}
+                  </Fragment>
                 );
               })}
             </div>
@@ -595,8 +616,8 @@ export default function GenerateModal({ onClose }: Props) {
                   <button
                     type="button"
                     onClick={handleGenerateOutline}
-                    disabled={outlineBusy || busy || !topic.trim()}
-                    title={!topic.trim() ? "Enter a lesson topic first" : "Let AI sketch an outline for you"}
+                    disabled={outlineBusy || busy || !topic.trim() || !year}
+                    title={!topic.trim() ? "Enter a lesson topic first" : !year ? "Select a year group first" : "Let AI sketch an outline for you"}
                     className="flex items-center gap-1 text-[12px] font-semibold transition-colors disabled:opacity-40"
                     style={{ color: "#0f5f3a" }}
                   >

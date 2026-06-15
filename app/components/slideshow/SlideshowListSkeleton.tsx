@@ -62,15 +62,15 @@ export default function SlideshowListSkeleton({ status }: Props) {
 
       {/* Count line shimmer matches the position of "N slideshows" in the
           loaded view. -mt-4 mirrors the loaded layout's vertical rhythm. */}
-      <div className="-mt-4 h-5 w-32 bg-gray-200 rounded animate-pulse" />
+      <div className="-mt-4 h-5 w-32 rounded-full animate-pulse" style={{ backgroundColor: "#E7E2D5" }} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="bg-[#FAF9F5] rounded-2xl overflow-hidden animate-pulse">
-            <div className="aspect-video bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-3 bg-gray-100 rounded w-1/2" />
+          <div key={i} className="bg-[#FAF9F5] rounded-2xl overflow-hidden border animate-pulse" style={{ borderColor: "#EDEAE0" }}>
+            <div className="aspect-video" style={{ backgroundColor: "#ECE8DE" }} />
+            <div className="p-4 space-y-2.5">
+              <div className="h-4 rounded-full w-3/4" style={{ backgroundColor: "#E7E2D5" }} />
+              <div className="h-3 rounded-full w-1/2" style={{ backgroundColor: "#EDE8DC" }} />
             </div>
           </div>
         ))}

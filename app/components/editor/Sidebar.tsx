@@ -1,24 +1,37 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film, ListChecks, Volume2, MessagesSquare, HelpCircle, CheckSquare, FormInput, Tags, Images, Brain, ToggleLeft, ToggleRight, ArrowUpDown, Palette } from "lucide-react";
+import { Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Sparkles, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film, ListChecks, Volume2, MessagesSquare, HelpCircle, CheckSquare, FormInput, Tags, Images, Brain, ToggleLeft, ToggleRight, ArrowUpDown, Palette, ImagePlay } from "lucide-react";
 import { parseYouTubeId } from "./youtube";
 import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
 import FramePicker from "./FramePicker";
 import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
-import { listGeneratedImages, saveGeneratedImage, type GeneratedImage } from "@/app/lib/generatedImages";
+import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage } from "@/app/lib/generatedImages";
 
-type TabId = "elements" | "text" | "activities" | "pictures" | "audio" | "video";
+type TabId = "elements" | "text" | "activities" | "pictures" | "gif" | "audio" | "video";
 
 // Sub-tabs inside the consolidated "Pictures" tab.
-type PictureSubTab = "stock" | "upload" | "ai";
+type PictureSubTab = "stock" | "web" | "upload" | "ai";
 const PICTURE_SUB_TAB_LABELS: Record<PictureSubTab, string> = {
-  stock: "Stock",
+  stock: "Images",
+  web: "Web",
   upload: "Upload",
   ai: "AI generate",
 };
+
+type VideoSubTab = "ai" | "youtube" | "upload";
+const VIDEO_SUB_TAB_LABELS: Record<VideoSubTab, string> = {
+  ai: "Suggest with AI",
+  youtube: "YouTube",
+  upload: "Upload",
+};
+
+// Web image search (Google CSE) is built but hidden until the Google Cloud
+// project has Custom Search billing set up. Flip to true — or gate on
+// `!!process.env.NEXT_PUBLIC_GOOGLE_CSE_CX` — to re-enable the "Web" tab.
+const WEB_SEARCH_ENABLED = false;
 
 // Activity catalogue — the 12 kinds the picker offers. Each runs its own AI
 // generation when added: the teacher picks a kind, optionally types a topic
@@ -105,6 +118,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "text", label: "Text", icon: <Type className="w-5 h-5" /> },
   { id: "activities", label: "Activities", icon: <ListChecks className="w-5 h-5" /> },
   { id: "pictures", label: "Pictures", icon: <ImageIcon className="w-5 h-5" /> },
+  { id: "gif", label: "GIFs", icon: <ImagePlay className="w-5 h-5" /> },
   { id: "audio", label: "Audio", icon: <Headphones className="w-5 h-5" /> },
   { id: "video", label: "Video", icon: <Film className="w-5 h-5" /> },
 ];
@@ -276,7 +290,7 @@ export default function Sidebar({
         throw new Error(err.error || "Generation failed");
       }
       const data: { dataUrl: string } = await r.json();
-      const saved = await saveGeneratedImage({ prompt: aiPrompt.trim(), style: aiStyle, dataUrl: data.dataUrl });
+      const saved = await saveGeneratedImage({ prompt: aiPrompt.trim(), style: aiStyle, dataUrl: data.dataUrl, source: "editor-ai" });
       setGallery((prev) => [saved, ...prev]);
       setAiPrompt("");
     } catch (err) {
@@ -290,6 +304,7 @@ export default function Sidebar({
   const [active, setActive] = useState<TabId | null>(null);
   // Which sub-tab of the consolidated Pictures tab is showing.
   const [pictureSubTab, setPictureSubTab] = useState<PictureSubTab>("stock");
+  const [videoSubTab, setVideoSubTab] = useState<VideoSubTab>("ai");
 
   // Activities tab — drill-in state. null = catalogue grid; otherwise the
   // selected kind's config form is shown (topic + level + Add button).
@@ -642,7 +657,9 @@ export default function Sidebar({
                   className="flex gap-1 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
                   style={{ scrollbarWidth: "none" }}
                 >
-                  {(["stock", "upload", "ai"] as PictureSubTab[]).map((id) => (
+                  {((WEB_SEARCH_ENABLED
+                    ? ["stock", "web", "upload", "ai"]
+                    : ["stock", "upload", "ai"]) as PictureSubTab[]).map((id) => (
                     <button
                       key={id}
                       onClick={() => setPictureSubTab(id)}
@@ -661,6 +678,14 @@ export default function Sidebar({
                 <div style={{ display: pictureSubTab === "stock" ? "block" : "none" }}>
                   <PicturesPanel onAdd={onAddImage} />
                 </div>
+
+                {/* Web image search (Google CSE) — hidden behind WEB_SEARCH_ENABLED
+                    until billing is configured. Kept mounted to preserve state. */}
+                {WEB_SEARCH_ENABLED && (
+                  <div style={{ display: pictureSubTab === "web" ? "block" : "none" }}>
+                    <PicturesPanel onAdd={onAddImage} onlyProvider="web" />
+                  </div>
+                )}
 
                 {/* Upload from device or URL */}
                 {pictureSubTab === "upload" && (
@@ -813,23 +838,37 @@ export default function Sidebar({
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       {gallery.map((g) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={g.id}
-                          src={g.data_url}
-                          alt={g.prompt}
-                          title={g.prompt}
-                          draggable
-                          onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", g.data_url)}
-                          onClick={() => onAddImage(g.data_url)}
-                          className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
-                        />
+                        <div key={g.id} className="min-w-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={thumbUrl(g.data_url, 240)}
+                            onError={(e) => { const t = e.currentTarget; if (t.src !== g.data_url) t.src = g.data_url; }}
+                            alt={g.title ?? g.prompt}
+                            title={g.description ?? g.title ?? g.prompt}
+                            draggable
+                            onDragStart={(e) => e.dataTransfer.setData("application/x-jooma-image", g.data_url)}
+                            onClick={() => onAddImage(g.data_url)}
+                            className="w-full aspect-square object-cover rounded-lg cursor-pointer hover:opacity-80 border border-gray-200"
+                          />
+                          <p
+                            className="mt-1 text-[10px] leading-tight text-gray-500 truncate"
+                            title={g.description ?? g.title ?? g.prompt}
+                          >
+                            {g.title ?? g.prompt}
+                          </p>
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
                 )}
+              </div>
+            )}
+
+            {active === "gif" && (
+              <div className="space-y-3">
+                <PicturesPanel onAdd={onAddImage} onlyProvider="giphy" />
               </div>
             )}
 
@@ -1053,9 +1092,28 @@ export default function Sidebar({
             )}
 
             {active === "video" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Suggest with AI</p>
+              <div className="space-y-3">
+                {/* Sub-tabs: Suggest with AI / YouTube / Upload */}
+                <div
+                  className="flex gap-1 overflow-x-auto -mx-1 px-1 [&::-webkit-scrollbar]:hidden"
+                  style={{ scrollbarWidth: "none" }}
+                >
+                  {(["ai", "youtube", "upload"] as VideoSubTab[]).map((id) => (
+                    <button
+                      key={id}
+                      onClick={() => setVideoSubTab(id)}
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        videoSubTab === id
+                          ? "bg-violet-100 text-violet-700"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {VIDEO_SUB_TAB_LABELS[id]}
+                    </button>
+                  ))}
+                </div>
+
+                {videoSubTab === "ai" && (
                   <div className="space-y-1.5">
                     <input
                       type="text"
@@ -1088,10 +1146,9 @@ export default function Sidebar({
                     </button>
                     {videoSuggestError && <p className="text-[10px] text-red-600">{videoSuggestError}</p>}
                   </div>
-                </div>
+                )}
 
-                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">YouTube</p>
+                {videoSubTab === "youtube" && (
                   <div className="space-y-1.5">
                     <input
                       type="url"
@@ -1113,42 +1170,43 @@ export default function Sidebar({
                     </button>
                     {videoUrlError && <p className="text-[10px] text-red-600">{videoUrlError}</p>}
                   </div>
-                </div>
+                )}
 
-                <div className="pt-2 border-t" style={{ borderColor: "#DAD8D0" }}>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Upload video</p>
-                  <button
-                    onClick={() => videoFileRef.current?.click()}
-                    disabled={videoUploading}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
-                    style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
-                  >
-                    {videoUploading ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Uploading…
-                      </>
-                    ) : (
-                      <>
-                        <Film className="w-3.5 h-3.5" />
-                        Choose a video file
-                      </>
-                    )}
-                  </button>
-                  <input
-                    ref={videoFileRef}
-                    type="file"
-                    accept="video/*"
-                    hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleVideoFile(file);
-                      e.target.value = "";
-                    }}
-                  />
-                  {videoUploadError && <p className="text-[10px] text-red-600 mt-1">{videoUploadError}</p>}
-                  <p className="text-[10px] text-gray-400 mt-2">MP4 / WebM up to ~50 MB. Stored in your Supabase project.</p>
-                </div>
+                {videoSubTab === "upload" && (
+                  <div>
+                    <button
+                      onClick={() => videoFileRef.current?.click()}
+                      disabled={videoUploading}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50"
+                      style={{ backgroundColor: "#FFCC33", color: "#1a1a1a" }}
+                    >
+                      {videoUploading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Uploading…
+                        </>
+                      ) : (
+                        <>
+                          <Film className="w-3.5 h-3.5" />
+                          Choose a video file
+                        </>
+                      )}
+                    </button>
+                    <input
+                      ref={videoFileRef}
+                      type="file"
+                      accept="video/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleVideoFile(file);
+                        e.target.value = "";
+                      }}
+                    />
+                    {videoUploadError && <p className="text-[10px] text-red-600 mt-1">{videoUploadError}</p>}
+                    <p className="text-[10px] text-gray-400 mt-2">MP4 / WebM up to ~50 MB. Stored in your Supabase project.</p>
+                  </div>
+                )}
               </div>
             )}
 

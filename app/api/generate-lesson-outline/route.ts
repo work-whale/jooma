@@ -12,6 +12,9 @@ interface RequestBody {
   topic: string;
   year?: string;
   readingLevel?: string;
+  subject?: string;
+  curriculum?: string;
+  strand?: string;
 }
 
 const outlineSchema = {
@@ -39,11 +42,19 @@ export async function POST(req: NextRequest) {
   const readingLine = body.readingLevel && body.readingLevel !== "Same as Year"
     ? `Reading level: ${body.readingLevel}.`
     : "";
+  const subjectLine = body.subject?.trim() ? `Subject: ${body.subject.trim()}.` : "";
+  const curriculumLine = body.curriculum?.trim() ? `Curriculum: ${body.curriculum.trim()}.` : "";
+  const strandLine = body.strand?.trim() ? `Curriculum strand/unit: ${body.strand.trim()}.` : "";
 
   const prompt = `Sketch a brief lesson outline for: "${body.topic}".
 
+${subjectLine}
 ${yearLine}
 ${readingLine}
+${curriculumLine}
+${strandLine}
+
+Frame the objectives, concepts and activities for the stated subject, year group and curriculum where given — pitch the depth to the year/reading level and use subject-appropriate terminology.
 
 Write a compact teacher-facing outline (10-14 short lines, plain prose — no markdown headings, no slide numbers). Cover, in order:
 - 1-2 learning objectives (what pupils will know or be able to do)

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Undo2, Redo2, Download, ArrowLeft, Palette, Check, Play } from "lucide-react";
-import { SLIDESHOW_THEMES, ART_STYLES, getThemeArt, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { SLIDESHOW_THEMES, THEME_CATEGORIES, getThemesByCategory, ART_STYLES, getThemeArt, type ArtStyleId } from "@/app/lib/slideshowThemes";
 
 interface Props {
   title: string;
@@ -132,33 +132,40 @@ export default function EditorTopBar({
             {themeOpen && (
               <div
                 ref={themeMenuRef}
-                className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg p-1 z-50"
+                className="absolute right-0 top-full mt-1 w-80 max-h-[80vh] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-1 z-50"
               >
-                {onArtStyleChange && (
-                  <div className="px-1 pt-1 pb-2 mb-1 border-b border-gray-100">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 px-0.5">
-                      Background art
-                    </p>
-                    <div className="flex gap-1 p-0.5 rounded-md bg-gray-100">
-                      {ART_STYLES.map((s) => {
-                        const active = (artStyle ?? "watercolor") === s.id;
-                        return (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => onArtStyleChange(s.id)}
-                            className={`flex-1 text-[11px] font-medium py-1 rounded transition-colors ${
-                              active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                            }`}
-                          >
-                            {s.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {SLIDESHOW_THEMES.map((t) => (
+                {THEME_CATEGORIES.map((cat) => {
+                  const themes = getThemesByCategory(cat.id);
+                  if (themes.length === 0) return null;
+                  return (
+                    <Fragment key={cat.id}>
+                      <div className="px-2 pt-2 pb-1 flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                          {cat.label}
+                        </span>
+                        {/* Watercolor/Illustration toggle only on the categories
+                            that actually have both variants (Classic & Scenic). */}
+                        {onArtStyleChange && (cat.id === "classic" || cat.id === "scenic") && (
+                          <div className="flex gap-0.5 p-0.5 rounded-md bg-gray-100 shrink-0">
+                            {ART_STYLES.map((s) => {
+                              const active = (artStyle ?? "watercolor") === s.id;
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); onArtStyleChange(s.id); }}
+                                  className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-colors ${
+                                    active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+                                  }`}
+                                >
+                                  {s.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      {themes.map((t) => (
                   <button
                     key={t.id}
                     type="button"
@@ -186,7 +193,10 @@ export default function EditorTopBar({
                     </span>
                     {t.id === activeTheme.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
                   </button>
-                ))}
+                      ))}
+                    </Fragment>
+                  );
+                })}
               </div>
             )}
           </div>

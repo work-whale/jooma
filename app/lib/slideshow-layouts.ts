@@ -1338,9 +1338,6 @@ function renderActivityQuestion(spec: SlideSpec, t: Theme, answerMode: boolean):
   // locked them together.
   const headingColor = activeTheme?.palette.headingColor ?? t.accent;
   const stroke = activeTheme?.palette.speechBubbleStroke ?? "#1a1a1a";
-  const imageSrc = spec.activityImageDataUrl ?? spec.imageDataUrl;
-  const imageNW  = spec.activityImageWidth   ?? spec.imageWidth;
-  const imageNH  = spec.activityImageHeight  ?? spec.imageHeight;
 
   // Layout zones
   const titleY = 80;
@@ -1388,25 +1385,15 @@ function renderActivityQuestion(spec: SlideSpec, t: Theme, answerMode: boolean):
       ),
     );
   } else {
-    // Image on the LEFT inside the bubble + question text on the RIGHT.
-    const imageSize = Math.min(260, innerH);
-    const imageY = innerY + (innerH - imageSize) / 2;
-    const textX = innerX + imageSize + 36;
-    const textW = innerW - (imageSize + 36);
+    // Discussion / critical-thinking prompt: the question sits centred in the
+    // bubble body. No image here — an opaque speech bubble is a SHAPE, and on
+    // every surface (editor canvas, thumbnail, PPTX export) shapes paint over
+    // images, so any picture placed "inside" the bubble would be permanently
+    // hidden behind it. Keeping these text-only avoids that dead layer.
     const questionText = spec.body || spec.subHook || "Add a question…";
-    const qH = textHeight(questionText, textW, 22);
+    const qH = textHeight(questionText, innerW, 24);
     const questionY = innerY + Math.max(0, (innerH - qH) / 2);
-
-    if (imageSrc) {
-      images.push({
-        id: nid("im"),
-        x: innerX, y: imageY, width: imageSize, height: imageSize,
-        src: imageSrc, opacity: 1,
-        naturalWidth: imageNW, naturalHeight: imageNH,
-        frame: "rounded", cornerRadius: 12,
-      });
-    }
-    texts.push(makeText(questionText, textX, questionY, textW, 22, "400", t.text, "left"));
+    texts.push(makeText(questionText, innerX, questionY, innerW, 24, "400", t.text, "center"));
   }
 
   return {
@@ -1624,6 +1611,9 @@ function getThemeDecorations(
     case "dusk":
       return sceneDecorations(theme.id);
     default:
+      // Subject themes (math/science/history/english) carry a full-bleed
+      // illustration background instead of decoration shapes — see their
+      // `backgroundArt` in slideshowThemes.ts.
       return [];
   }
 }
@@ -1635,9 +1625,13 @@ function getThemeDecorations(
 // around the centred paper card rather than hiding behind it.
 function deco(
   type: ShapeObject["type"], x: number, y: number, width: number, height: number,
-  fill: string, opacity: number,
+  fill: string, opacity: number, rotation?: number,
 ): ShapeObject {
-  return { id: nid("dec"), type, x, y, width, height, fill, stroke: "transparent", strokeWidth: 0, opacity };
+  return {
+    id: nid("dec"), type, x, y, width, height, fill,
+    stroke: "transparent", strokeWidth: 0, opacity,
+    ...(rotation ? { rotation } : {}),
+  };
 }
 
 // Public: the backdrop decoration shapes for a slide that has NO re-renderable

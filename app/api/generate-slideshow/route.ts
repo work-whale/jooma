@@ -569,14 +569,14 @@ ${objectivesLine ? `2.   LEARNING OBJECTIVES SLIDE — see mandatory spec below.
      · "paper-image-right-badge"    — heading + brown BADGE + body + bullets, with image RIGHT. imageQuery AND badgeText REQUIRED.
      · "paper-banner-image-top"     — wide banner PHOTO across the top + heading + numbered list below. imageQuery REQUIRED.
      · "paper-vocab-grid"           — 3-COLUMN key-vocabulary grid (image + bold term + definition per column). ONLY used when explicitly required by the KEY VOCABULARY SLIDE block below. imageQuery + secondaryImageQuery + activityImageQuery ALL REQUIRED (one per column).
-LAST content slide — "paper-quote" — a perspective shift: zoom out from the topic and end with an italic attributed quote (Carl Sagan for cosmology, Darwin for biology, an inventor for technology). imageQuery REQUIRED for the right-side image. blockquoteText AND blockquoteAttribution REQUIRED.
+LAST content slide — a SUMMARY RECAP using layout "paper-image-right": a creative recap heading (do NOT use the word "Summary"), a one-line subHook, then a body that recaps the lesson in 1-2 short sentences and leads into the bullets (e.g. "Today we explored the chemical engine of life. Remember:"). Add bullets listing the 2-4 KEY TAKEAWAYS from across the WHOLE deck, each leading with a **bold** term. Add a callout with calloutVariant "key", calloutLabel "Question for next time", and calloutBody = ONE forward-looking question that sets up the next lesson. imageQuery REQUIRED (the right-side image). Leave blockquoteText AND blockquoteAttribution EMPTY.
 
 ${activityDirective}
 
 ═══════════════════════════════════════════════════
 SLIDE BUDGET
 ═══════════════════════════════════════════════════
-- ${contentTarget} content slides (slide 1 title-hero + N-1 paper-* layouts including the closing paper-quote)
+- ${contentTarget} content slides (slide 1 title-hero + N-1 paper-* layouts, ending with the closing SUMMARY RECAP slide)
 - ${activityPairs * 2} activity slides (${activityPairs} pair${activityPairs === 1 ? "" : "s"})
 - TOTAL: emit exactly ${totalAiSlides} slides.
 
@@ -629,8 +629,7 @@ LISTS (bullets + bulletsLeadIn)
 - bulletsLeadIn (optional) is a single line above the bullets, e.g. "Two forces are in constant battle:" or "Factors affecting orbit:".
 
 BLOCKQUOTE (blockquoteText + blockquoteAttribution)
-- ONLY on the closing "paper-quote" slide. ALL OTHER slides leave both empty.
-- The quote should be a humbling perspective-shift moment. Carl Sagan's "very small stage in a vast cosmic arena" for cosmology. Choose a real, attributable quote that lands the topic emotionally.
+- Leave EMPTY on every slide. The deck now closes with a SUMMARY RECAP slide (see the DECK SPINE), not an attributed quote.
 
 ACTIVITY-ORDERING / ACTIVITY-ORDERING-ANSWER
 - activityKind: "order" on BOTH slides.

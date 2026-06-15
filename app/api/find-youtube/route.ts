@@ -43,6 +43,44 @@ interface SearchItem {
   };
 }
 
+interface VideoStatusItem {
+  id: string;
+  status?: { uploadStatus?: string; privacyStatus?: string; embeddable?: boolean };
+  contentDetails?: { regionRestriction?: { blocked?: string[]; allowed?: string[] } };
+}
+
+// Verify which of the given video ids will actually play in a third-party
+// embed. `search.list` can't tell us this, so we confirm via
+// `videos.list?part=status,contentDetails` and keep only ids that are
+// embeddable, public, finished processing, and not region-blocked for the
+// viewer (when their region is known). Returns the playable subset; on any API
+// failure returns an empty set so the caller can fall back gracefully.
+async function fetchPlayableIds(ids: string[], key: string, viewerRegion: string): Promise<Set<string>> {
+  const out = new Set<string>();
+  if (ids.length === 0) return out;
+  try {
+    const params = new URLSearchParams({ part: "status,contentDetails", id: ids.join(","), key });
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params.toString()}`);
+    if (!r.ok) return out;
+    const data: { items?: VideoStatusItem[] } = await r.json();
+    for (const it of data.items ?? []) {
+      const s = it.status;
+      if (!s?.embeddable) continue;
+      if (s.privacyStatus !== "public") continue;
+      if (s.uploadStatus && s.uploadStatus !== "processed") continue;
+      const region = it.contentDetails?.regionRestriction;
+      if (region && viewerRegion) {
+        if (region.blocked?.includes(viewerRegion)) continue;
+        if (region.allowed && !region.allowed.includes(viewerRegion)) continue;
+      }
+      out.add(it.id);
+    }
+  } catch (err) {
+    console.warn("[find-youtube] videos.list playability check failed:", err);
+  }
+  return out;
+}
+
 const querySchema = {
   name: "yt_query",
   strict: true,
@@ -138,9 +176,14 @@ Return three things:
     part: "snippet",
     q: finalQuery,
     type: "video",
-    maxResults: "5",
+    // Over-fetch: many results aren't embeddable (owner disabled it) or are
+    // region-blocked. We filter those out below, so ask for extra headroom.
+    maxResults: "12",
     safeSearch: "strict",
     relevanceLanguage: "en",
+    // Only surface videos that are embeddable on a third-party site. This is the
+    // single biggest cause of the player's "An error occurred (Playback ID …)".
+    videoEmbeddable: "true",
     key,
   });
   const len = body.length ?? "medium";
@@ -152,13 +195,30 @@ Return three things:
     return NextResponse.json({ error: "YouTube API error", status: r.status, message: err }, { status: 502 });
   }
   const data: { items?: SearchItem[] } = await r.json();
-  const items = (data.items ?? []).filter((it) => !!it?.id?.videoId);
+  let items = (data.items ?? []).filter((it) => !!it?.id?.videoId);
   if (items.length === 0) {
     return NextResponse.json({ error: "No video found", query: searchQuery }, { status: 404 });
   }
 
+  // `search.list?videoEmbeddable=true` is a coarse filter — it can still return
+  // videos that are region-blocked, unlisted/private, or not finished
+  // processing, all of which fail in the embed. Confirm playability with a
+  // `videos.list?part=status,contentDetails` follow-up and keep only the ones
+  // that will actually play in the iframe (for the viewer's region when known).
+  const viewerRegion = (req.headers.get("x-vercel-ip-country") || "").toUpperCase();
+  const playableIds = await fetchPlayableIds(items.map((it) => it.id.videoId), key, viewerRegion);
+  if (playableIds.size > 0) {
+    // Preserve YouTube's relevance order; just drop the unplayable ones.
+    items = items.filter((it) => playableIds.has(it.id.videoId));
+  } else {
+    // None verified playable (videos.list failed or every hit is restricted).
+    // Fall back to the embeddable-flagged results rather than 404 — the user
+    // can still swap via the regenerate picker.
+    console.warn("[find-youtube] no videos verified playable; using unverified results", { query: searchQuery, viewerRegion });
+  }
+
   // Up to 5 candidates so the client can present them as a selectable list.
-  const candidates = items.map((it) => ({
+  const candidates = items.slice(0, 5).map((it) => ({
     videoId: it.id.videoId,
     title: it.snippet.title,
     channel: it.snippet.channelTitle,

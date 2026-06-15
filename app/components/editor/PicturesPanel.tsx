@@ -5,6 +5,9 @@ import { Search, Loader2, MoreHorizontal, ExternalLink } from "lucide-react";
 
 interface Props {
   onAdd: (dataUrl: string) => void;
+  /** Restrict the panel to a single provider (e.g. "giphy" for a dedicated GIF
+   *  tab). Hides the AI-images section and scopes the empty-state hint. */
+  onlyProvider?: Provider;
 }
 
 interface Photo {
@@ -19,18 +22,22 @@ interface Photo {
   downloadLocation?: string;
 }
 
-type Provider = "pexels" | "unsplash" | "pixabay" | "giphy";
+type Provider = "pexels" | "unsplash" | "pixabay" | "giphy" | "web";
 
 const PEXELS_KEY = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
 const UNSPLASH_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
 const PIXABAY_KEY = process.env.NEXT_PUBLIC_PIXABAY_KEY;
 const GIPHY_KEY = process.env.NEXT_PUBLIC_GIPHY_KEY;
+// Web search runs through /api/search-web-images (key is server-side). The CX
+// (search-engine id) is non-secret and gates the tab's availability here.
+const GOOGLE_CSE_CX = process.env.NEXT_PUBLIC_GOOGLE_CSE_CX;
 
 const PROVIDER_LABELS: Record<Provider, string> = {
   pexels: "Pexels",
   unsplash: "Unsplash",
   pixabay: "Pixabay",
   giphy: "GIPHY",
+  web: "Web",
 };
 
 const PROVIDER_KEYS: Record<Provider, string | undefined> = {
@@ -38,6 +45,7 @@ const PROVIDER_KEYS: Record<Provider, string | undefined> = {
   unsplash: UNSPLASH_KEY,
   pixabay: PIXABAY_KEY,
   giphy: GIPHY_KEY,
+  web: GOOGLE_CSE_CX,
 };
 
 const PROVIDER_DOCS: Record<Provider, { envVar: string; site: string }> = {
@@ -45,6 +53,7 @@ const PROVIDER_DOCS: Record<Provider, { envVar: string; site: string }> = {
   unsplash: { envVar: "NEXT_PUBLIC_UNSPLASH_ACCESS_KEY", site: "unsplash.com/developers" },
   pixabay: { envVar: "NEXT_PUBLIC_PIXABAY_KEY", site: "pixabay.com/api/docs/" },
   giphy: { envVar: "NEXT_PUBLIC_GIPHY_KEY", site: "developers.giphy.com" },
+  web: { envVar: "GOOGLE_CSE_KEY + NEXT_PUBLIC_GOOGLE_CSE_CX", site: "programmablesearchengine.google.com" },
 };
 
 const UTM = "utm_source=jooma&utm_medium=referral";
@@ -160,6 +169,17 @@ async function search(provider: Provider, query: string, page: number, signal: A
       sourceUrl: p.pageURL,
     }));
   }
+  if (provider === "web") {
+    // CSE requires a query; no query => nothing to show.
+    if (!query.trim()) return [];
+    const r = await fetch(
+      `/api/search-web-images?q=${encodeURIComponent(query)}&page=${page}&num=${PER_PROVIDER}`,
+      { signal },
+    );
+    if (!r.ok) return [];
+    const data: { photos?: Omit<Photo, "provider">[] } = await r.json();
+    return (data.photos ?? []).map((p) => ({ ...p, provider: "web" as Provider }));
+  }
   if (provider === "giphy") {
     // GIPHY uses an offset, not a page. Convert: offset = (page-1) * per_page.
     const offset = (page - 1) * PER_PROVIDER;
@@ -225,11 +245,15 @@ async function trackUnsplashDownload(downloadLocation: string) {
   }
 }
 
-export default function PicturesPanel({ onAdd }: Props) {
+export default function PicturesPanel({ onAdd, onlyProvider }: Props) {
   const availableProviders = useMemo<Provider[]>(
-    () => (["pexels", "unsplash", "pixabay", "giphy"] as Provider[]).filter((p) => !!PROVIDER_KEYS[p]),
-    [],
+    // GIFs (giphy) are intentionally excluded from the default mix — they live in
+    // the dedicated GIF tab (onlyProvider="giphy"), not mixed into stock photos.
+    () => (onlyProvider ? [onlyProvider] : (["pexels", "unsplash", "pixabay"] as Provider[])).filter((p) => !!PROVIDER_KEYS[p]),
+    [onlyProvider],
   );
+  const isGif = onlyProvider === "giphy";
+  const isWeb = onlyProvider === "web";
 
   const [query, setQuery] = useState("");
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -265,6 +289,9 @@ export default function PicturesPanel({ onAdd }: Props) {
     setPage(1);
     setHasMore(true);
     const controller = new AbortController();
+    // Web search hits Google's metered API (100 free/day), so debounce it harder
+    // than the stock providers to avoid burning quota on every keystroke.
+    const debounceMs = isWeb ? 650 : 250;
     const id = setTimeout(async () => {
       try {
         const results = await Promise.all(
@@ -280,12 +307,12 @@ export default function PicturesPanel({ onAdd }: Props) {
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, debounceMs);
     return () => {
       clearTimeout(id);
       controller.abort();
     };
-  }, [query, availableProviders]);
+  }, [query, availableProviders, isWeb]);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMore || availableProviders.length === 0) return;
@@ -332,12 +359,13 @@ export default function PicturesPanel({ onAdd }: Props) {
   }, [loadMore]);
 
   if (availableProviders.length === 0) {
+    const missing = onlyProvider ? [onlyProvider] : (Object.keys(PROVIDER_DOCS) as Provider[]);
     return (
       <div className="text-xs text-gray-700 bg-amber-50 border border-amber-200 rounded-lg p-3 leading-relaxed">
-        <p className="font-semibold text-amber-800 mb-2">Set up a stock photo provider</p>
-        <p className="mb-2">Add any of these keys to your <code className="font-mono text-[10px] bg-white px-1 py-0.5 rounded">.env.local</code>:</p>
+        <p className="font-semibold text-amber-800 mb-2">{isGif ? "Set up GIPHY for GIFs" : isWeb ? "Set up Google image search" : "Set up a stock photo provider"}</p>
+        <p className="mb-2">Add {onlyProvider ? "this key" : "any of these keys"} to your <code className="font-mono text-[10px] bg-white px-1 py-0.5 rounded">.env.local</code>:</p>
         <ul className="space-y-1.5">
-          {(Object.keys(PROVIDER_DOCS) as Provider[]).map((p) => (
+          {missing.map((p) => (
             <li key={p}>
               <span className="font-semibold">{PROVIDER_LABELS[p]}:</span>{" "}
               <code className="font-mono text-[10px] bg-white px-1 py-0.5 rounded">{PROVIDER_DOCS[p].envVar}</code>
@@ -366,21 +394,25 @@ export default function PicturesPanel({ onAdd }: Props) {
 
   return (
     <div>
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search photos..."
-          className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400"
-        />
-        {loading && (
-          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 animate-spin" />
-        )}
+      {/* Search bar stays pinned while only the results grid scrolls. The
+          negative side margins + matching bg let it cover the panel's p-4
+          padding so grid items scroll cleanly behind it. */}
+      <div className="sticky top-0 z-10 -mx-4 px-4 pt-2 pb-2" style={{ backgroundColor: "#F1EFE3" }}>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={isGif ? "Search GIFs..." : isWeb ? "Search the web..." : "Search photos..."}
+            className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400"
+          />
+          {loading && (
+            <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 animate-spin" />
+          )}
+        </div>
+        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
       </div>
-
-      {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
 
       <div className="mt-3 grid grid-cols-2 gap-1.5">
         {photos.map((p) => (
