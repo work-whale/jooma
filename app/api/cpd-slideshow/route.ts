@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat, recordUsage } from "@/app/lib/usage";
 
 export interface SlideData {
   type: "title" | "content" | "quote" | "stat" | "two-column" | "activity";
@@ -154,40 +155,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const encoder = new TextEncoder();
-    const openaiStream = await client.chat.completions.create({
+    return streamChat({
+      toolSlug: "cpd-slideshow",
       model: "gpt-4o",
       max_tokens: 8192,
       messages: [
         { role: "system", content: buildSystem("You are an expert UK CPD facilitator, school leader, and teacher educator with extensive experience designing and delivering professional development for teachers across all phases. You understand what makes CPD effective — it must be specific, evidence-informed, relevant to classroom practice, and actionable. Your slideshows are substantive and authoritative, referencing current educational research, the Teachers' Standards, and DfE or Ofsted guidance where appropriate. Output each slide as a single JSON object on its own line with no other text. No markdown, no code fences, no arrays, no separators. One valid JSON object per line only.") },
         { role: "user", content: buildGeneratePrompt(body) },
       ],
-      stream: true,
-    });
-
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of openaiStream) {
-            const text = chunk.choices[0]?.delta?.content ?? "";
-            if (text) controller.enqueue(encoder.encode(text));
-          }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          controller.close();
-        }
-      },
-      cancel() {
-        openaiStream.controller.abort();
-      },
-    });
-
-    return new Response(readable, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "X-Content-Type-Options": "nosniff",
-      },
     });
   }
 
@@ -207,6 +182,7 @@ export async function POST(req: NextRequest) {
         ],
         stream: false,
       });
+      await recordUsage("cpd-slideshow", "gpt-4o", message.usage);
 
       const text = message.choices[0]?.message?.content ?? "";
       if (!text) {

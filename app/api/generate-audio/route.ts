@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { supabase } from "@/app/lib/supabase";
+import { recordUsage, recordAssetCost, type Usage } from "@/app/lib/usage";
 
 export const maxDuration = 120;
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
   let questions: string[];
   let answers: string[];
   // gpt-4o usage for the script-writing call, captured for cost reporting.
-  let scriptUsage: { prompt_tokens: number; completion_tokens: number } | null = null;
+  let scriptUsage: Usage | null = null;
 
   const activity = body.activityType ?? "comprehension";
   const activityInstruction = ACTIVITY_INSTRUCTIONS[activity];
@@ -246,6 +247,12 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     : 0;
   const ttsCost = (script.length / 1_000_000) * 15.0;
   const costUsd = scriptCost + ttsCost;
+
+  // Report telemetry: the script-writing call is token-billed (token_usage); the
+  // tts-1 narration is per-character (asset_cost). Single source of truth for
+  // audio cost — the slideshow route forwards cookies and does not re-record it.
+  await recordUsage("generate-audio", "gpt-4o-2024-08-06", scriptUsage);
+  await recordAssetCost("generate-audio", "audio", script.length, ttsCost);
 
   return NextResponse.json({
     src: pub.publicUrl,

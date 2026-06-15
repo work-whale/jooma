@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { curriculum, objective } = body;
 
@@ -124,36 +123,13 @@ A brief, practical summary of likely costs and how they might be funded (e.g. Pu
 
 Write in a professional, action-oriented tone appropriate for a formal school improvement document. Every action must be specific, named, and practical — avoid vague generalities. Write in UK English.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "eyfs-action-plan",
     model: "gpt-4o",
     max_tokens: 2000,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK EYFS Lead and school improvement specialist with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, Ofsted's inspection of early years provision, and best practice in early childhood education. You write formal, specific, and practically grounded EYFS action plans that would withstand scrutiny from governors, headteachers, and Ofsted inspectors. Your plans are never vague — every action is named, assigned, and measurable. You write in professional UK English.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

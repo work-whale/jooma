@@ -3,16 +3,18 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ChevronDown, LayoutGrid, LogOut } from "lucide-react";
+import { ArrowRight, ChevronDown, LayoutGrid, LogOut, BarChart3, Shield } from "lucide-react";
 import { createClient } from "@/app/lib/auth/client";
 
 interface NavAuthProps {
   /** Display name (first name) when available, falls back to email. */
   name: string | null;
   email: string | null;
+  /** Show the Admin link in the dropdown. */
+  isAdmin?: boolean;
 }
 
-export default function NavAuth({ name, email }: NavAuthProps) {
+export default function NavAuth({ name, email, isAdmin = false }: NavAuthProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -72,7 +74,7 @@ export default function NavAuth({ name, email }: NavAuthProps) {
         >
           {initial}
         </span>
-        <span className="text-sm font-semibold max-w-[140px] truncate" style={{ color: "#030303" }}>
+        <span className="text-sm font-semibold max-w-35 truncate" style={{ color: "#030303" }}>
           {label}
         </span>
         <ChevronDown className="w-4 h-4" style={{ color: "#4a423a" }} />
@@ -90,6 +92,22 @@ export default function NavAuth({ name, email }: NavAuthProps) {
           >
             <LayoutGrid className="w-4 h-4" />
             Go to dashboard
+          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Shield className="w-4 h-4" />
+              Admin
+            </Link>
+          )}
+          <Link
+            href="/account/usage"
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Usage
           </Link>
           <button
             type="button"

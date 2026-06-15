@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 
 function buildPrompt(body: {
@@ -189,40 +189,19 @@ CRITICAL: Each table cell must contain only a single line of text — no line br
 Return the full updated plan in the same markdown table format. Apply only the changes described. No preamble.`;
 }
 
-async function streamText(system: string, userContent: string) {
-  const encoder = new TextEncoder();
-  const openaiStream = await getOpenAI().chat.completions.create({
+function streamText(system: string, userContent: string) {
+  return streamChat({
+    toolSlug: "behaviour-support-plan",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: system },
       { role: "user", content: userContent },
     ],
-    stream: true,
   });
-
-  return new Response(
-    new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of openaiStream) {
-            const text = chunk.choices[0]?.delta?.content ?? "";
-            if (text) controller.enqueue(encoder.encode(text));
-          }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          controller.close();
-        }
-      },
-      cancel() { openaiStream.controller.abort(); },
-    }),
-    { headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff" } },
-  );
 }
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
 
   if (body.action === "refine") {

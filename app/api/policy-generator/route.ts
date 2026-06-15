@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 
 
@@ -66,7 +66,6 @@ Return the full updated policy in the same markdown format. Apply only the chang
 }
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { action } = body;
 
@@ -76,35 +75,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const encoder = new TextEncoder();
-    const openaiStream = await client.chat.completions.create({
+    return streamChat({
+      toolSlug: "policy-generator",
       model: "gpt-4o",
       max_tokens: 8192,
       messages: [
         { role: "system", content: buildSystem("You are an expert UK school policy writer and school governor with comprehensive knowledge of UK education legislation, statutory guidance, and Ofsted requirements. Return only the updated policy in markdown format with no preamble or explanation.") },
         { role: "user", content: buildRefinePrompt(result, instruction) },
       ],
-      stream: true,
-    });
-
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of openaiStream) {
-            const text = chunk.choices[0]?.delta?.content ?? "";
-            if (text) controller.enqueue(encoder.encode(text));
-          }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          controller.close();
-        }
-      },
-      cancel() { openaiStream.controller.abort(); },
-    });
-
-    return new Response(readable, {
-      headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff" },
     });
   }
 
@@ -114,34 +92,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "policy-generator",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK school policy writer and governance specialist with comprehensive knowledge of UK education legislation, statutory DfE guidance, Ofsted's inspection framework, and best practice in school governance. You produce professional, legally accurate, and Ofsted-ready policy documents that would be credible in any UK school. Output only the policy document in markdown format. No preamble, no explanation, no code fences.") },
       { role: "user", content: buildPrompt(curriculum, policy, additionalRequirements, outputType) },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() { openaiStream.controller.abort(); },
-  });
-
-  return new Response(readable, {
-    headers: { "Content-Type": "text/plain; charset=utf-8", "X-Content-Type-Options": "nosniff" },
   });
 }

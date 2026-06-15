@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 export interface EYFSPlannerRequest {
   curriculum: string;
@@ -13,7 +13,6 @@ export interface EYFSPlannerRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: EYFSPlannerRequest = await req.json();
 
   const { curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview } = body;
@@ -99,39 +98,13 @@ All activities must be clearly, specifically linked to the topic "${topic}" — 
 
 Do not use any emojis. Write in a professional, practitioner-friendly tone appropriate for EYFS settings.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "eyfs-planner",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: buildSystem("You are an expert Early Years Foundation Stage (EYFS) practitioner and curriculum leader with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, and best practice in child development. You design rich, purposeful provision that balances child-initiated play with adult-led learning across all seven areas of the EYFS. Your ELG references are always accurate and drawn directly from the 2021 framework. You understand the importance of the enabling environment, sustained shared thinking, and the key person approach. You write in professional UK English using EYFS-specific terminology.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

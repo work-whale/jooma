@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat } = body;
 
@@ -199,36 +198,13 @@ INPUTS:
 
 ${isTable ? tablePrompt : narrativePrompt}`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "school-improvement-plan",
     model: "gpt-4o",
     max_tokens: 8000,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK school improvement specialist, former Ofsted inspector, and school leadership consultant with deep knowledge of the Education Inspection Framework (EIF), DfE school improvement guidance, and evidence-based approaches to raising standards. You help headteachers and senior leaders draft rigorous, inspection-ready School Improvement Plans that are specific, measurable, and grounded in the latest research and policy. You write with authority, precision, and professional clarity.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

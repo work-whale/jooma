@@ -4,6 +4,7 @@ import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
 import { getTheme, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
+import { recordUsage, recordAssetCost } from "@/app/lib/usage";
 import type { SlideJSON } from "@/app/lib/presentations";
 
 export const maxDuration = 120; // AI image gen can push past the default
@@ -1238,6 +1239,10 @@ export async function POST(req: NextRequest) {
           ? (chatUsage.prompt_tokens / 1_000_000) * GPT4O_INPUT_PER_1M +
             (chatUsage.completion_tokens / 1_000_000) * GPT4O_OUTPUT_PER_1M
           : 0;
+        // Persist the exact text-call usage to the report table (images/audio are
+        // priced per-unit, not per-token, so they're excluded here). Fire-and-
+        // forget — recordUsage never throws and lots of work still follows.
+        void recordUsage("generate-slideshow", "gpt-4o-2024-08-06", chatUsage);
 
         // Local aliases to keep the audio/video code below readable.
         const parsed = { title: parser.title ?? body.topic, slides: allAi };
@@ -1405,6 +1410,10 @@ export async function POST(req: NextRequest) {
         // summary + "complete": the image jobs and the early-started video task.
         await Promise.allSettled(imageJobs);
         await videoTask;
+
+        // Persist AI-image cost to the report (audio is recorded by the
+        // generate-audio route itself, so it's not double-counted here).
+        void recordAssetCost("generate-slideshow", "image", imageCost.count, imageCost.usd);
 
         // ── Full cost summary ─────────────────────────────────────────────
         // Logged last so it can include audio (which runs after images). Image

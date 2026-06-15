@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 export interface PhonicsSupportRequest {
   curriculum: string;
@@ -10,7 +10,6 @@ export interface PhonicsSupportRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: PhonicsSupportRequest = await req.json();
   const { curriculum, age, grapheme } = body;
 
@@ -242,39 +241,13 @@ Rules:
 - Do not use any emojis.
 - Do not add any text before the main title or after the last assessment idea.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "phonics-support",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK phonics specialist, Reading Lead, and early years literacy teacher with in-depth knowledge of systematic synthetic phonics, the DfE's phonics guidance, the National Curriculum for English at KS1, and validated SSP programmes including Letters and Sounds and widely used systematic programmes. Your grapheme-phoneme knowledge is phonetically precise and accurate. Your word lists contain only correctly spelled, real English words (except designated pseudo-word sections). Your decodable texts are coherent, engaging, and genuinely aligned with the GPC being taught. Your teaching activities are practical, evidence-informed, and immediately usable in a UK primary classroom. You write in professional UK English.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

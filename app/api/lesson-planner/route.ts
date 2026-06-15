@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface LessonPlanRequest {
@@ -15,7 +15,6 @@ export interface LessonPlanRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: LessonPlanRequest = await req.json();
 
   const {
@@ -148,39 +147,13 @@ A structured bullet list of all materials, tools, and technology required. Separ
 
 Do not use any emojis. Write in a professional, teacher-friendly tone appropriate for use in a UK school context.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "lesson-planner",
     model: "gpt-4o",
     max_tokens: 8192,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK secondary and primary school teacher and curriculum designer with deep knowledge of the National Curriculum, Ofsted's Education Inspection Framework, and the Teachers' Standards. You specialise in creating detailed, pedagogically rigorous lesson plans that reflect best practice in curriculum sequencing, formative assessment, and adaptive teaching. You write in precise, professional UK English and produce plans detailed enough to be taught by any competent colleague without modification.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

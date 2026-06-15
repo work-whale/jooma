@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 export interface TopicOverviewRequest {
@@ -14,7 +14,6 @@ export interface TopicOverviewRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: TopicOverviewRequest = await req.json();
   const { curriculum, yearGroup, subject, topic, numLessons, abilityLevel = "EXS", additionalInfo } = body;
 
@@ -77,39 +76,13 @@ Describe 3 concrete assessment opportunities across the topic as a bullet list. 
 
 Write in a clear, professional tone suitable for ${yearGroup} in a UK school context. Do not use any emojis. When labelling items use plain text letters: (a), (b), (c) — never use the © symbol.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "topic-overview",
     model: "gpt-4o",
     max_tokens: 4096,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK teacher and curriculum designer with deep knowledge of the National Curriculum and subject-specific pedagogy across primary and secondary phases. You specialise in creating coherent, well-sequenced topic overviews that reflect curriculum intent — where each lesson builds deliberately on the last. Your output must include a properly formatted markdown table with columns: Lesson, Learning Objective, Starter, Input, Activity, Plenary, Resources, Questions, Key Vocabulary. Write clearly and at an appropriate level for the year group specified, using professional UK English. Never use the © symbol — always write labels as plain text: (a), (b), (c), (d).") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { curriculum, date, classesVisited, focus, strengths, areasForDevelopment, includeRecommendations, includeNextSteps } = body;
 
@@ -81,36 +80,13 @@ Write 3–4 bullet points, each using this format:
 **[Specific Area for Development]**: 3–4 sentences describing the gap or inconsistency observed, providing specific evidence, explaining the impact on pupil learning or progress, and framing the development need constructively (e.g. "While questioning was strong in Year 9, in two Year 7 classes pupils were not consistently required to...").${recommendationsSection}${nextStepsSection}`;
 
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "learning-walk-report",
     model: "gpt-4o",
     max_tokens: 4000,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK school leader, assistant headteacher, and quality assurance specialist with extensive experience conducting learning walks, lesson observations, and professional monitoring activities in primary and secondary schools. You write professional, evidence-based learning walk reports that are specific, fair, and immediately useful to leadership teams and classroom teachers. Your reports reflect genuine knowledge of what high-quality teaching and learning looks like and how it connects to pupil outcomes. You write in professional UK English.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }

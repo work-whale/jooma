@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 export interface CoverLessonRequest {
   curriculum: string;
@@ -14,7 +14,6 @@ export interface CoverLessonRequest {
 
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: CoverLessonRequest = await req.json();
 
   const { curriculum, yearGroup, subject, topic, lessonLength, resources, additionalContext } = body;
@@ -105,39 +104,13 @@ Provide 4–5 bullet points for the cover teacher to action before leaving the r
 
 Ensure the total timing adds up to ${lessonLength}. Write in a warm, professional tone that makes the cover teacher feel confident.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "cover-lesson",
     model: "gpt-4o",
     max_tokens: 4096,
     messages: [
       { role: "system", content: buildSystem(`You are an expert UK teacher with extensive experience writing cover lessons that any non-specialist can deliver confidently. You write in clear, friendly, step-by-step language. Your cover lessons are fully self-contained — no preparation required, no subject knowledge assumed. You are precise about timings, explicit about instructions, and always include word-for-word scripts where helpful. You write in professional UK English.`) },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

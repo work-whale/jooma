@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { recordUsage } from "@/app/lib/usage";
 
 export interface QuizQuestion {
   question: string;
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
       ],
       stream: false,
     });
+    await recordUsage("quiz-generator", "gpt-4o", message.usage);
 
     const text = message.choices[0]?.message?.content ?? "";
     if (!text) {

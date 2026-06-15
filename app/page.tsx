@@ -28,13 +28,15 @@ export default async function LandingPage() {
   } = await supabase.auth.getUser();
 
   let firstName: string | null = null;
+  let isAdmin = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("first_name")
+      .select("first_name, is_admin")
       .eq("id", user.id)
       .maybeSingle();
     firstName = profile?.first_name ?? null;
+    isAdmin = profile?.is_admin ?? false;
   }
 
   return (
@@ -52,7 +54,7 @@ export default async function LandingPage() {
           <Link href="/pricing" className="transition-colors hover:text-black">Schools</Link>
         </div>
 
-        <NavAuth name={firstName} email={user?.email ?? null} />
+        <NavAuth name={firstName} email={user?.email ?? null} isAdmin={isAdmin} />
       </nav>
 
       {/* Hero + showcase — framed in a lighter rounded panel that spans the

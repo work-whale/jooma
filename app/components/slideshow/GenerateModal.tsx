@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import NextImage from "next/image";
 import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import ResourceLibraryModal from "./ResourceLibraryModal";
@@ -443,13 +444,22 @@ export default function GenerateModal({ onClose }: Props) {
                       className="aspect-4/3 p-3 flex flex-col justify-between relative overflow-hidden"
                       style={{
                         backgroundColor: t.palette.background,
-                        backgroundImage: art ? `url(${art.src})` : undefined,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
                         color: t.palette.text,
                         fontFamily: t.fonts.heading,
                       }}
                     >
+                      {/* Thumbnail-resolution preview of the theme art. next/image
+                          serves a small, optimised (WebP) version sized to the card
+                          and lazy-loads it, rather than the full-res slide PNG. */}
+                      {art && (
+                        <NextImage
+                          src={art.src}
+                          alt=""
+                          fill
+                          sizes="240px"
+                          style={{ objectFit: "cover", objectPosition: "center" }}
+                        />
+                      )}
                       {/* Legibility veil over the illustration background */}
                       {art && (
                         <div className="absolute inset-0" style={{ backgroundColor: art.scrim }} />

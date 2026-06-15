@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { streamChat } from "@/app/lib/usage";
 
 export interface SubjectFocus {
   subject: string;
@@ -26,7 +26,6 @@ function getPronouns(gender: ReportWriterRequest["gender"]) {
 }
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body: ReportWriterRequest = await req.json();
 
   const { name, gender, wordCount, includeTargets, tone, subjects } = body;
@@ -91,39 +90,13 @@ Writing guidelines:
 9. Use "## [Subject name]" as the heading for each subject section.`;
 
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "report-writer",
     model: "gpt-4o",
     max_tokens: 4096,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK teacher and form tutor with many years of experience writing high-quality end-of-year and termly school reports for parents and carers. You understand that school reports serve a dual purpose: they celebrate genuine achievement and communicate honest, constructive feedback in a way that motivates pupils and informs parents. Your reports are specific, never generic — every compliment is evidenced and every area for development is framed as an achievable next step. You write in polished UK English and produce reports that reflect well on the school and the teacher.") },
       { role: "user", content: userPrompt },
     ],
-    stream: true,
-  });
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "X-Content-Type-Options": "nosniff",
-    },
   });
 }

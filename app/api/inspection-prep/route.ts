@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
+import { streamChat } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
 
 const isOfsted = (body: string) => /ofsted/i.test(body);
 
 export async function POST(req: NextRequest) {
-  const client = getOpenAI();
   const body = await req.json();
   const { inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges } = body;
 
@@ -99,36 +98,13 @@ ${evidenceNote}${successNote}${policyNote}
 
 Write in a professional, authoritative tone appropriate for a senior leadership team. Questions must be genuinely thought-provoking — not surface-level checklist items. Actions must be specific and immediately actionable. Use UK English and accurate inspection terminology throughout.`;
 
-  const encoder = new TextEncoder();
-  const openaiStream = await client.chat.completions.create({
+  return streamChat({
+    toolSlug: "inspection-prep",
     model: "gpt-4o",
     max_tokens: 4000,
     messages: [
       { role: "system", content: buildSystem("You are an expert UK school leader, former Ofsted inspector, and inspection readiness consultant with precise, up-to-date knowledge of Ofsted's Education Inspection Framework (EIF) — including the changes introduced following the Ofsted Big Listen consultation (2024) and the move to a report card model. You also have extensive knowledge of ISI, SIAMS, CIS, BSO, KHDA, and other UK and international educational inspection and accreditation processes. You know what inspectors look for, how they triangulate evidence, what language appears in judgement descriptors, and where schools most commonly have weaknesses. You write authoritative, specific, and immediately practical guidance for senior leadership teams preparing for inspections. You write in professional UK English and use accurate, framework-aligned inspection terminology.") },
       { role: "user", content: prompt },
     ],
-    stream: true,
-  });
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of openaiStream) {
-          const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-    cancel() {
-      openaiStream.controller.abort();
-    },
-  });
-
-  return new NextResponse(readableStream, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }
