@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
+import { recordUsage } from "@/app/lib/usage";
 
 export const maxDuration = 30;
 
@@ -50,6 +51,7 @@ Return 5-8 essential terms — the specific subject words pupils need to learn f
       ],
       response_format: { type: "json_schema", json_schema: vocabSchema },
     });
+    void recordUsage("suggest-vocabulary", "gpt-4o-2024-08-06", completion.usage);
     const content = completion.choices[0]?.message?.content;
     if (!content) return NextResponse.json({ error: "Empty AI response" }, { status: 500 });
     const parsed: { terms: string[] } = JSON.parse(content);

@@ -29,7 +29,8 @@ returns table (
   total_tokens bigint,
   text_cost_usd numeric,
   asset_cost_usd numeric,
-  cost_usd numeric
+  cost_usd numeric,
+  last_used timestamptz
 )
 language plpgsql
 stable
@@ -42,13 +43,14 @@ begin
     with t as (
       select tu.tool_slug, count(*) as generations,
         sum(tu.prompt_tokens + tu.completion_tokens) as total_tokens,
-        sum(tu.cost_usd) as text_cost
+        sum(tu.cost_usd) as text_cost,
+        max(tu.created_at) as last_text
       from token_usage tu
       where tu.created_at >= date_trunc('month', now())
       group by tu.tool_slug
     ),
     a as (
-      select ac.tool_slug, sum(ac.cost_usd) as asset_cost
+      select ac.tool_slug, sum(ac.cost_usd) as asset_cost, max(ac.created_at) as last_asset
       from asset_cost ac
       where ac.created_at >= date_trunc('month', now())
       group by ac.tool_slug
@@ -59,7 +61,8 @@ begin
       coalesce(t.total_tokens, 0),
       coalesce(t.text_cost, 0),
       coalesce(a.asset_cost, 0),
-      coalesce(t.text_cost, 0) + coalesce(a.asset_cost, 0)
+      coalesce(t.text_cost, 0) + coalesce(a.asset_cost, 0),
+      greatest(t.last_text, a.last_asset)
     from t full outer join a on t.tool_slug = a.tool_slug
     order by 6 desc;
 end;
@@ -219,6 +222,22 @@ end;
 $$;
 grant execute on function admin_presentations(integer) to authenticated;
 
--- 9. Seed the first admin.
+-- 9. Reset (delete) all recorded usage for the given tools, across all users.
+--    Powers the Select -> Reset action on the admin Usage page.
+create or replace function admin_reset_tool_usage(slugs text[])
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not is_admin() then raise exception 'not authorized'; end if;
+  delete from token_usage where tool_slug = any(slugs);
+  delete from asset_cost where tool_slug = any(slugs);
+end;
+$$;
+grant execute on function admin_reset_tool_usage(text[]) to authenticated;
+
+-- 10. Seed the first admin.
 update profiles set is_admin = true
 where id = (select id from auth.users where email = 'info@workwhale.ph');

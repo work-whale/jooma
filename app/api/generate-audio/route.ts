@@ -249,10 +249,17 @@ The "script" must be plain spoken text only — no stage directions, sound effec
   const costUsd = scriptCost + ttsCost;
 
   // Report telemetry: the script-writing call is token-billed (token_usage); the
-  // tts-1 narration is per-character (asset_cost). Single source of truth for
-  // audio cost — the slideshow route forwards cookies and does not re-record it.
-  await recordUsage("generate-audio", "gpt-4o-2024-08-06", scriptUsage);
-  await recordAssetCost("generate-audio", "audio", script.length, ttsCost);
+  // tts-1 narration is per-character (asset_cost). When invoked by the slideshow
+  // (parentTool set), attribute the cost to its breakdown as sub-steps; otherwise
+  // it's a standalone editor action recorded under its own slug.
+  // Fire-and-forget (parallel) so telemetry never delays the audio response —
+  // the mp3 is already uploaded by this point.
+  const parentTool = (body as { parentTool?: string }).parentTool;
+  const audioSlug = parentTool ?? "generate-audio";
+  void Promise.allSettled([
+    recordUsage(audioSlug, "gpt-4o-2024-08-06", scriptUsage, parentTool ? "Audio script" : null),
+    recordAssetCost(audioSlug, "audio", script.length, ttsCost, parentTool ? "Audio speech" : null),
+  ]);
 
   return NextResponse.json({
     src: pub.publicUrl,

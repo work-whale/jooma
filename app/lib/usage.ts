@@ -46,6 +46,7 @@ export async function recordUsage(
   toolSlug: string,
   model: string,
   usage: Usage | null | undefined,
+  step?: string | null,
 ): Promise<void> {
   if (!usage) return;
   try {
@@ -63,6 +64,7 @@ export async function recordUsage(
       cached_tokens: cached,
       completion_tokens: usage.completion_tokens,
       cost_usd: Number(costUsd(model, usage).toFixed(6)),
+      step: step ?? null,
     });
   } catch {
     // Swallow — a telemetry failure must never surface to the user.
@@ -77,6 +79,8 @@ export async function recordAssetCost(
   kind: "image" | "audio",
   units: number,
   costUsd: number,
+  step?: string | null,
+  slideLabel?: string | null,
 ): Promise<void> {
   if (!(costUsd > 0)) return;
   try {
@@ -91,7 +95,36 @@ export async function recordAssetCost(
       kind,
       units: Math.round(units),
       cost_usd: Number(costUsd.toFixed(6)),
+      step: step ?? null,
+      slide_label: slideLabel ?? null,
     });
+  } catch {
+    // Swallow — telemetry must never surface to the user.
+  }
+}
+
+/** Persist per-slide all-in cost for a slideshow (one row per slide). Powers the
+ *  per-slide breakdown on the admin Usage page; independent of tool-total
+ *  accounting. Never throws. */
+export async function recordSlideCosts(
+  rows: { slideLabel: string; costUsd: number }[],
+): Promise<void> {
+  const valid = rows.filter((r) => r.costUsd > 0 && r.slideLabel);
+  if (valid.length === 0) return;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("slide_cost").insert(
+      valid.map((r) => ({
+        user_id: user.id,
+        tool_slug: "generate-slideshow",
+        slide_label: r.slideLabel,
+        cost_usd: Number(r.costUsd.toFixed(6)),
+      })),
+    );
   } catch {
     // Swallow — telemetry must never surface to the user.
   }

@@ -162,6 +162,9 @@ export default function GenerateModal({ onClose }: Props) {
   // Default to "illustration" — works better for classroom decks than realistic
   // photography (and DALL·E/gpt-image's safety filter rejects fewer prompts).
   const [imageStyle, setImageStyle] = useState<ImageStyle>("illustration");
+  // Image settings are collapsed by default — sensible defaults mean most users
+  // never need to open this. Expand to fine-tune source / mix / style.
+  const [imagesExpanded, setImagesExpanded] = useState(false);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -905,17 +908,39 @@ export default function GenerateModal({ onClose }: Props) {
 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Images</p>
-                <div className="bg-white border rounded-xl p-4 space-y-4" style={{ borderColor: "#DAD8D0" }}>
-                  <div className="flex items-start gap-3">
+                <div className="bg-white border rounded-xl p-4" style={{ borderColor: "#DAD8D0" }}>
+                  <button
+                    type="button"
+                    onClick={() => setImagesExpanded((v) => !v)}
+                    className="w-full flex items-start gap-3 text-left"
+                  >
                     <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center shrink-0">
                       <ImageIcon className="w-4 h-4 text-sky-600" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Image source</p>
-                      <p className="text-xs text-gray-500">Choose between AI-generated, web search, or a mix</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Image source</p>
+                        {imageSource === "auto" && imageMixWeb === 8 && imageStyle === "illustration" && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#EEECE4", color: "#8a8078" }}>
+                            Default
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">
+                        {imagesExpanded
+                          ? "Choose between AI-generated, web search, or a mix"
+                          : imageSource === "web"
+                          ? "Web search images"
+                          : imageSource === "ai"
+                          ? `AI-generated · ${IMAGE_STYLES.find((s) => s.id === imageStyle)?.label ?? ""}`
+                          : `Auto · ${imageMixWeb} web / ${10 - imageMixWeb} AI · ${IMAGE_STYLES.find((s) => s.id === imageStyle)?.label ?? ""}`}
+                      </p>
                     </div>
-                  </div>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform${imagesExpanded ? " rotate-180" : ""}`} />
+                  </button>
 
+                  {imagesExpanded && (
+                  <div className="space-y-4 mt-4">
                   <div className="flex gap-1.5 flex-wrap">
                     {([
                       { id: "auto", label: "Auto (mix)" },
@@ -997,6 +1022,8 @@ export default function GenerateModal({ onClose }: Props) {
                         <p className="text-[10px] text-gray-400 mt-2">AI generation adds a few seconds per slide.</p>
                       )}
                     </div>
+                  )}
+                  </div>
                   )}
                 </div>
               </div>

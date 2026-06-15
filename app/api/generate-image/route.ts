@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAIImage, orientationForFrame, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
+import { recordAssetCost } from "@/app/lib/usage";
 
 export const maxDuration = 120;
 
@@ -38,5 +39,6 @@ export async function POST(req: NextRequest) {
   if (!img) {
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });
   }
+  void recordAssetCost("generate-image", "image", 1, img.costUsd ?? 0);
   return NextResponse.json(img);
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI } from "@/app/lib/openai";
+import { recordUsage } from "@/app/lib/usage";
 
 export interface GenerateRequest {
   curriculum: string;
@@ -60,6 +61,7 @@ ${ownText}`;
     ],
     stream: false,
   });
+  void recordUsage("generate", "gpt-4o", response.usage);
   const output = response.choices[0].message.content ?? "";
 
   return NextResponse.json({ output });

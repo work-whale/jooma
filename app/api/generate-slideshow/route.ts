@@ -4,7 +4,7 @@ import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
 import { getTheme, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
-import { recordUsage, recordAssetCost } from "@/app/lib/usage";
+import { recordUsage, recordAssetCost, recordSlideCosts } from "@/app/lib/usage";
 import type { SlideJSON } from "@/app/lib/presentations";
 
 export const maxDuration = 120; // AI image gen can push past the default
@@ -937,6 +937,9 @@ export async function POST(req: NextRequest) {
         // Running tally of AI image spend for this deck. Filled by slideJob as
         // each image settles; logged in the cost summary once images finish.
         const imageCost = { count: 0, usd: 0, byModel: {} as Record<string, number> };
+        // Per-slide AI image spend (keyed by slide title) so the usage report can
+        // attribute images to individual slides.
+        const imageCostBySlide: Record<string, { usd: number; count: number }> = {};
 
         // Image-fetch helper — kicks off the (up to three) image fetches for
         // a slide and emits a "slide-image" event when each settles. Defined
@@ -957,6 +960,10 @@ export async function POST(req: NextRequest) {
             imageCost.usd += img.costUsd;
             const key = `${img.model ?? "?"} ${img.size ?? "?"}`;
             imageCost.byModel[key] = (imageCost.byModel[key] ?? 0) + 1;
+            const slideKey = spec.title?.trim() || `Slide ${idx + 1}`;
+            const entry = (imageCostBySlide[slideKey] ??= { usd: 0, count: 0 });
+            entry.usd += img.costUsd;
+            entry.count += 1;
           };
 
           // Wrap each fetch in its own try so one failure doesn't kill the
@@ -1241,7 +1248,7 @@ export async function POST(req: NextRequest) {
         // Persist the exact text-call usage to the report table (images/audio are
         // priced per-unit, not per-token, so they're excluded here). Fire-and-
         // forget — recordUsage never throws and lots of work still follows.
-        void recordUsage("generate-slideshow", "gpt-4o-2024-08-06", chatUsage);
+        void recordUsage("generate-slideshow", "gpt-4o-2024-08-06", chatUsage, "Deck text");
 
         // Local aliases to keep the audio/video code below readable.
         const parsed = { title: parser.title ?? body.topic, slides: allAi };
@@ -1269,6 +1276,8 @@ export async function POST(req: NextRequest) {
                 length: body.youtubeLength ?? "medium",
                 deckTitle: parsed.title,
                 slideTitles: parsed.slides.map((s) => s.title).slice(0, 8),
+                // Attribute this call's cost to the slideshow's breakdown.
+                parentTool: "generate-slideshow",
               }),
             });
             if (ytRes.ok) {
@@ -1337,6 +1346,8 @@ export async function POST(req: NextRequest) {
                   .slice(0, 6)
                   .map((s) => `- ${s.title}`)
                   .join("\n"),
+                // Attribute this call's cost to the slideshow's breakdown.
+                parentTool: "generate-slideshow",
               }),
             });
             if (audioRes.ok) {
@@ -1410,9 +1421,20 @@ export async function POST(req: NextRequest) {
         await Promise.allSettled(imageJobs);
         await videoTask;
 
-        // Persist AI-image cost to the report (audio is recorded by the
-        // generate-audio route itself, so it's not double-counted here).
-        void recordAssetCost("generate-slideshow", "image", imageCost.count, imageCost.usd);
+        // Persist AI-image cost to the report, one row per slide so the report
+        // can break the deck down per slide. (Audio is recorded by the
+        // generate-audio route itself, so it's not double-counted here.)
+        for (const [slideTitle, v] of Object.entries(imageCostBySlide)) {
+          void recordAssetCost("generate-slideshow", "image", v.count, v.usd, "Images", slideTitle);
+        }
+
+        // Per-slideshow cost lens: one row per generated deck (its title + all-in
+        // cost) so the report can list each slideshow and what it cost.
+        {
+          const deckTitle = parsed.title?.trim() || body.topic?.trim() || "Untitled slideshow";
+          const deckTotal = textCostUsd + imageCost.usd + audioCostUsd;
+          void recordSlideCosts([{ slideLabel: deckTitle, costUsd: deckTotal }]);
+        }
 
         // ── Full cost summary ─────────────────────────────────────────────
         // Logged last so it can include audio (which runs after images). Image

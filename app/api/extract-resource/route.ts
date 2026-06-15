@@ -15,6 +15,7 @@
 // ~30k chars so the AI prompt stays sane.
 
 import { NextRequest, NextResponse } from "next/server";
+import { recordUsage } from "@/app/lib/usage";
 
 export const runtime = "nodejs"; // pdf-parse + mammoth aren't edge-compatible
 export const maxDuration = 30;
@@ -212,6 +213,7 @@ async function ocrPdfWithOpenAI(buf: Buffer): Promise<string> {
         },
       ],
     });
+    void recordUsage("extract-resource", "gpt-4o-2024-08-06", completion.usage);
     return completion.choices[0]?.message?.content ?? "";
   } catch (err) {
     console.warn("[extract-resource] OpenAI OCR failed:", err);
