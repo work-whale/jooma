@@ -1,6 +1,5 @@
 "use client";
 
-import StickyMask from "@/app/components/ui/StickyMask";
 import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import {
@@ -16,12 +15,11 @@ import {
 import { QUESTION_TYPES } from "@/app/components/fields/QuestionTypesField";
 import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { toTitleCase } from "@/app/lib/formOptions";
-import ResultPanel from "@/app/components/ResultPanel";
+import ToolResults from "@/app/components/ToolResults";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-import OutputOutline from "@/app/components/OutputOutline";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
@@ -210,30 +208,14 @@ export default function WorksheetGeneratorForm({
         <div className="bg-red-50 border border-red-200 rounded-md p-4 text-sm text-red-700">{error}</div>
       )}
 
-      {result !== null && (
-        <StickyMask />
-      )}
-
-      <div className={result !== null ? "flex flex-col lg:flex-row gap-4 lg:gap-8" : ""}>
-        {result !== null && (
-          <div className="hidden lg:block lg:w-md shrink-0">
-            <div className="lg:sticky lg:top-8">
-              <OutputOutline markdown={result} />
-            </div>
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <ResultPanel
-            result={result}
-            isGenerating={isGenerating}
-            onChange={(md) => setResult(md)}
-            exportFilename={`worksheet-${subject || "export"}`}
-            maxWidth={false}
-            historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
-            onSaved={() => setHistoryKey((k) => k + 1)}
-          />
-        </div>
-      </div>
+      <ToolResults
+        result={result}
+        isGenerating={isGenerating}
+        onChange={(md) => setResult(md)}
+        exportFilename={`worksheet-${subject || "export"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
+      />
     </div>
   );
 }

@@ -10,7 +10,10 @@
  * column is already stacked and the card is hidden, which the button covers.
  */
 
-.card {
+/* The hover tab on desktop, the floating button below 900px. The sidebar card
+   this pair replaces is gone: OutlineHover carries both presentations, so the
+   one breakpoint governs the whole responsive story. */
+.shellWrap {
   display: block;
 }
 
@@ -19,12 +22,218 @@
 }
 
 @media (max-width: 900px) {
-  .card {
+  .shellWrap {
     display: none;
   }
 
   .floating {
     display: block;
+  }
+}
+
+/* ── The hover tab ─────────────────────────────────────────────────────────
+ *
+ * The desktop outline, collapsed to a strip that expands over the document
+ * rather than beside it. The card above spent 448px permanently on navigation
+ * that is wanted intermittently; this spends 44px.
+ *
+ * WHY THIS SHAPE. Two traps kill the obvious version, and the nesting is what
+ * defeats both:
+ *
+ *   - A `position: fixed` panel would anchor to the consumer's sticky wrapper
+ *     rather than the viewport, which is the same trap the floating button
+ *     works around by portalling to document.body. Nothing here is fixed, so
+ *     no portal is needed.
+ *   - An `overflow` on any ancestor clips an absolutely positioned descendant.
+ *     The old card put `overflow-y: auto` on its own nav, which would scissor
+ *     this panel. The scrolling therefore sits INSIDE the panel, on .panelList,
+ *     which is a descendant of the positioned element rather than an ancestor.
+ *
+ * The panel is also a CHILD of .shell, so moving the pointer from tab to panel
+ * never fires mouseleave on the shell and needs no bridge element.
+ */
+/* CENTRED on the viewport, not parked at the top. The outline belongs beside
+   the reading position, which is the middle of the screen, and the tick marks
+   below are a progress indicator: centring makes their travel readable. */
+/* CENTRED on the viewport, not parked at the top. The outline belongs beside
+   the reading position, which is the middle of the screen, and the tick marks
+   below are a progress indicator: centring makes their travel readable. */
+.shell {
+  position: relative;
+  width: 44px;
+  height: 70vh;
+  display: flex;
+  align-items: center;
+}
+
+/* THE STACKING RULE, and the thing most likely to be broken by a later edit.
+   ResultPanel's header is `sticky z-30` and StickyMask is `sticky z-20`, and
+   sticky plus a z-index creates a stacking context, so anything at or below 30
+   here renders BEHIND the document and the section names collide with the
+   body text. This must outrank both. It stays far below the floating button's
+   9990 and the focus modal's 9995. */
+.shell,
+.panel {
+  z-index: 40;
+}
+
+/* The tab is now a column of ticks, one per section: a progress indicator you
+   can read without opening anything, and the hover target. */
+.tab {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 7px;
+  width: 44px;
+  max-height: 70vh;
+  padding: 12px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+  border-radius: var(--j-r);
+}
+
+/* One line per section. Short and faint by default; the active one is longer,
+   darker and thicker, so the teacher's position reads at a glance. */
+/* Every mark occupies the SAME BOX at all times: 28px wide, 8px tall, with the
+   visible line drawn by a pseudo element inside it.
+ *
+ * That separation is load bearing, not decoration. The marks used to animate
+ * their own width on hover, which moved geometry underneath the pointer: a
+ * mark growing between mousedown and mouseup means the browser synthesises no
+ * click at all, so the tab could not be clicked, and Playwright reported the
+ * panel's own buttons as "not stable" for the same reason. Animating a child
+ * inside a fixed box keeps the hit target still while the mark still moves.
+ */
+.tick {
+  position: relative;
+  height: 8px;
+  width: 28px;
+  flex: none;
+}
+
+.tick::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 2px;
+  width: 14px;
+  border-radius: 999px;
+  background: var(--j-lilac);
+  opacity: 0.55;
+  transition: width 0.18s var(--j-ease), background 0.18s ease, opacity 0.18s ease;
+}
+
+.tickActive::after {
+  width: 24px;
+  height: 3px;
+  background: var(--j-purple);
+  opacity: 1;
+}
+
+/* Hovering the tab wakes every mark, so the control reads as one thing rather
+   than a row of unrelated marks. */
+.tab:hover .tick::after,
+.tab[aria-expanded="true"] .tick::after {
+  opacity: 0.9;
+  width: 20px;
+}
+
+.tab:hover .tickActive::after,
+.tab[aria-expanded="true"] .tickActive::after {
+  width: 28px;
+}
+
+.panel {
+  position: absolute;
+  /* Centred on the tab rather than aligned to its top, matching the shell. */
+  top: 50%;
+  /*
+   * BESIDE the marks, never over them. 44px is the shell's full width.
+   *
+   * At left: 0 the panel covered its own trigger the instant it opened, and
+   * that broke clicking outright: the pointer went down on a mark, the panel
+   * appeared under the cursor, and the pointer came up on whichever heading
+   * link had slid beneath it. The browser then synthesised the click on the
+   * nearest common ancestor rather than on the tab, so the tab's onClick never
+   * ran and the panel could not be pinned. A teacher pressing the marks would
+   * have landed on an arbitrary section the same way.
+   *
+   * The panel is still a CHILD of .shell, so moving the pointer into it does
+   * not fire mouseleave and the hover grace period is untouched.
+   */
+  left: 44px;
+  transform: translateY(-50%);
+  width: 300px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  background: var(--j-card);
+  box-shadow: 0 12px 32px rgba(29, 23, 48, 0.16);
+  animation: slide 0.14s var(--j-ease);
+}
+
+.panelTitle {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--j-muted);
+}
+
+/* The scrolling lives HERE, inside the positioned element, never on an
+   ancestor. See the note at the top of this block. */
+.panelList {
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.panelList > button + button {
+  margin-top: 0.125rem;
+}
+
+/* translateY(-50%) is carried through both frames: the panel is centred by
+   transform, so animating transform alone would drop the centring mid-flight. */
+@keyframes slide {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* Hover does not exist here, so the open delay is meaningless and the tab
+   needs a bigger target. Tapping it pins the panel open. */
+@media (hover: none) {
+  .tab {
+    padding: 18px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+
+  .tick::after {
+    transition: none;
   }
 }
 

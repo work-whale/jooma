@@ -1,14 +1,12 @@
 "use client";
 
-import StickyMask from "@/app/components/ui/StickyMask";
 import { useState } from "react";
 import {
   InspectionBodyField,
   InspectionFocusField,
   InspectionOptionsField,
 } from "@/app/components/fields";
-import ResultPanel from "@/app/components/ResultPanel";
-import OutputOutline from "@/app/components/OutputOutline";
+import ToolResults from "@/app/components/ToolResults";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
@@ -195,31 +193,15 @@ export default function InspectionPrepForm({
         <div className="bg-red-50 border border-red-200 rounded-md p-4 text-sm text-red-700">{error}</div>
       )}
 
-      {result !== null && (
-        <StickyMask />
-      )}
-
-      <div className={result !== null ? "flex flex-col lg:flex-row gap-4 lg:gap-8" : ""}>
-        {result !== null && (
-          <div className="hidden lg:block lg:w-md shrink-0">
-            <div className="lg:sticky lg:top-8">
-              <OutputOutline markdown={result} />
-            </div>
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <ResultPanel
-            result={result}
-            isGenerating={isGenerating}
-            isRefining={isRefining}
-            onChange={(md) => setResult(md)}
-            maxWidth={false}
-            exportFilename={`inspection-prep-${inspectionBody.slice(0, 20).replace(/\s+/g, "-") || "guide"}`}
-            historyMeta={{ toolSlug: TOOL_SLUG, title: inspectionBody || inspectionFocus || null, input: formState }}
-            onSaved={() => setHistoryKey((k) => k + 1)}
-          />
-        </div>
-      </div>
+      <ToolResults
+        result={result}
+        isGenerating={isGenerating}
+        isRefining={isRefining}
+        onChange={(md) => setResult(md)}
+        exportFilename={`inspection-prep-${inspectionBody.slice(0, 20).replace(/\s+/g, "-") || "guide"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: inspectionBody || inspectionFocus || null, input: formState }}
+        onSaved={() => setHistoryKey((k) => k + 1)}
+      />
 
       {result && !isGenerating && (
         <RefinePanel

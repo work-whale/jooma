@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Copy, Check, FileText, FileDown, Download, ChevronDown, Printer } from "lucide-react";
+import { Loader2, Copy, Check, FileText, FileDown, Download, ChevronDown, Printer, Maximize2 } from "lucide-react";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import MarkdownResult from "@/app/components/MarkdownResult";
-import DropdownMenu, { type DropdownItem } from "@/app/components/ui/DropdownMenu";
-import { exportToDocx, exportToPdf, buildPdfHtml } from "@/app/lib/exportUtils";
+import FocusDocumentModal from "@/app/components/FocusDocumentModal";
+import DropdownMenu from "@/app/components/ui/DropdownMenu";
+import { useDocumentActions } from "@/app/lib/useDocumentActions";
 import { saveToolRun } from "@/app/lib/toolRuns";
 
 /**
@@ -51,9 +52,30 @@ export default function ResultPanel({
   historyMeta,
   onSaved,
 }: ResultPanelProps) {
-  const [copied, setCopied] = useState(false);
-  const [isExporting, setIsExporting] = useState<"docx" | "pdf" | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
+  /*
+   * Copy and export, shared with the focused reading view.
+   *
+   * Called HERE, above the `result === null` early return below, because hooks
+   * cannot be called conditionally. `result ?? ""` covers the render where
+   * there is nothing yet; the panel returns null on that pass anyway, so the
+   * actions are never reachable with an empty document.
+   */
+  const { copied, isExporting, exportError, handleCopy, exportItems } = useDocumentActions(
+    result ?? "",
+    exportFilename,
+    {
+      pdf: <FileDown className="w-3.5 h-3.5" />,
+      docx: <FileText className="w-3.5 h-3.5" />,
+      googleDocs: <Download className="w-3.5 h-3.5" />,
+      print: <Printer className="w-3.5 h-3.5" />,
+    },
+  );
+
+  /** The focused reading view. Unmounting on close is the reset: no stale
+   *  scroll position survives, and the outline rebuilds against the current
+   *  document rather than the one it was opened with. */
+  const [focusOpen, setFocusOpen] = useState(false);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -193,83 +215,6 @@ export default function ResultPanel({
 
   if (result === null) return null;
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(result);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleExportDocx = async () => {
-    setIsExporting("docx");
-    setExportError(null);
-    try {
-      await exportToDocx(result, exportFilename);
-    } catch {
-      setExportError("Couldn't build that Word document. Please try again.");
-    } finally {
-      setIsExporting(null);
-    }
-  };
-
-  /** A real .pdf file. Distinct from Print below, which opens the print dialog. */
-  const handleExportPdf = async () => {
-    setIsExporting("pdf");
-    setExportError(null);
-    try {
-      await exportToPdf(result, exportFilename);
-    } catch {
-      // Rendering a long document to canvas can fail on very large outputs, and
-      // a silent no-op would look like a broken button.
-      setExportError("Couldn't build that PDF. Try Print instead, and save as PDF.");
-    } finally {
-      setIsExporting(null);
-    }
-  };
-
-  const handlePrint = () => {
-    const html = buildPdfHtml(result ?? "", exportFilename);
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;visibility:hidden;top:0;left:0;width:0;height:0;border:none;";
-    iframe.srcdoc = html;
-    document.body.appendChild(iframe);
-    iframe.onload = () => {
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
-  };
-
-  const exportItems: DropdownItem[] = [
-    {
-      label: "Download PDF",
-      icon: <FileDown className="w-3.5 h-3.5" />,
-      onSelect: handleExportPdf,
-    },
-    {
-      label: "Download Word (DOCX)",
-      icon: <FileText className="w-3.5 h-3.5" />,
-      onSelect: handleExportDocx,
-    },
-    {
-      // A real Google Docs export needs OAuth, a Drive client and consent-screen
-      // verification. Until then this is visibly unavailable rather than absent,
-      // so nobody hunts for a feature that was never there.
-      //
-      // Worth knowing: "Download DOCX, then open it in Google Docs" already
-      // works today and imports cleanly, which may make the integration
-      // unnecessary.
-      label: "Save to Google Docs",
-      icon: <Download className="w-3.5 h-3.5" />,
-      disabled: true,
-      note: "coming soon",
-    },
-    {
-      label: "Print",
-      icon: <Printer className="w-3.5 h-3.5" />,
-      onSelect: handlePrint,
-      separated: true,
-    },
-  ];
-
   return (
     <>
       <div ref={panelRef} className={`bg-white border border-gray-200 rounded-3xl shadow-sm${maxWidth ? " max-w-7xl mx-auto" : ""}`} style={{ overflow: "clip" }}>
@@ -296,6 +241,21 @@ export default function ResultPanel({
             )}
           </div>
           <div className="flex items-center gap-2">
+
+            {/* Reading first, then the two output actions. Disabled while busy
+                for the same reason Copy is: a half streamed document is not
+                worth opening in a reading view, and it sidesteps the question
+                of whether the modal should follow a stream. */}
+            <button
+              type="button"
+              onClick={() => setFocusOpen(true)}
+              disabled={isBusy}
+              aria-label="Open in focused view"
+              className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Focus</span>
+            </button>
 
             {!isBusy && (
               <DropdownMenu
@@ -350,6 +310,17 @@ export default function ResultPanel({
         )}
       </div>
 
+      {/* Mounted only while open, so `result` is read at open time and the
+          teacher's edits are already in it (Tiptap round-trips through
+          onChange on every keystroke). */}
+      {focusOpen && (
+        <FocusDocumentModal
+          markdown={result}
+          filename={exportFilename}
+          title={historyMeta?.title?.trim() || "Your document"}
+          onClose={() => setFocusOpen(false)}
+        />
+      )}
     </>
   );
 }

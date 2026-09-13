@@ -1,0 +1,204 @@
+/* Reading a generation without the form in the way.
+   Tokens throughout: they live on :root (app/globals.css), so a portal
+   inherits them. Do not type the hexes here. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 23, 48, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  /* ABOVE the outline's floating button and its sheet (9990 to 9992), which
+     portal to document.body and would otherwise render on top of this scrim
+     below the 900px breakpoint. Still under Modal.tsx at 9999. */
+  z-index: 9995;
+  animation: fade 0.15s ease;
+}
+
+/* THE SCROLL CONTRACT, and the thing most likely to be broken by a later edit.
+   The modal is a column with a bounded height; .body takes the slack and hides
+   its own overflow; .content is the only element that scrolls.
+
+   `min-height: 0` on .body is load-bearing. A flex child's default minimum is
+   its content size, so without it .body refuses to shrink, .content never
+   overflows, and the modal grows past the bottom of the screen with no
+   scrollbar anywhere.
+
+   dvh because 100vh on mobile is the LARGE viewport: with the URL bar showing,
+   the footer would sit below the fold. */
+.modal {
+  background: var(--j-card);
+  border-radius: var(--j-r-xl);
+  width: 100%;
+  /* Wider than SharedResourceModal's 900px: this is a reading surface for the
+     teacher's own long document, not a preview card for judging an offer. */
+  max-width: min(1100px, 94vw);
+  height: min(92dvh, 1000px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  animation: rise 0.18s var(--j-ease);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+.headText {
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  color: var(--j-ink);
+  margin: 0;
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  font-size: 0.82rem;
+  color: var(--j-muted);
+  margin: 2px 0 0;
+}
+
+.close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--j-muted);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.close:hover {
+  background: var(--j-tint);
+  color: var(--j-deep);
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+
+.body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 0; /* see the scroll contract above */
+  overflow: hidden;
+  padding: 16px 8px 16px 20px;
+}
+
+/* One column when the rail renders nothing, which OutlineRail does for a
+   document with fewer than two headings. A short document should not leave a
+   240px gutter of empty space beside it. */
+.body:has(> .content:only-child) {
+  grid-template-columns: 1fr;
+  padding-left: 8px;
+}
+
+.content {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 14px 22px;
+  border-top: 1px solid var(--j-line);
+}
+
+.error {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--j-orange-ink);
+  margin: 0;
+}
+
+/* Pushes the actions right when there is no error text to do it. */
+.spacer {
+  flex: 1;
+}
+
+/* ── Narrow ──────────────────────────────────────────────────────────────
+ *
+ * The rail cannot be a sidebar here, and it deliberately does NOT become the
+ * floating button: that portals to document.body, which would put it on top of
+ * this modal's own scrim.
+ */
+@media (max-width: 820px) {
+  .body {
+    grid-template-columns: 1fr;
+    /* minmax(0, auto) rather than auto: an auto row sizes to its content even
+       past the container, which for a twenty heading outline would leave the
+       document itself entirely below the fold. */
+    grid-template-rows: minmax(0, auto) 1fr;
+    padding: 12px 8px;
+  }
+
+  .modal {
+    height: min(94dvh, 1000px);
+  }
+
+  .body > nav {
+    max-height: 33%;
+    padding-left: 8px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The modal still appears, it just does not travel. */
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .scrim {
+    animation: none;
+  }
+}

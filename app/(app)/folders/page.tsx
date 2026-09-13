@@ -21,7 +21,6 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import ShareModal from "@/app/components/v2/ShareModal";
-import SharedResourceModal from "@/app/components/v2/SharedResourceModal";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import {
   listRecentRuns,
@@ -137,7 +136,6 @@ function Library() {
   /** Which runs came from a colleague, keyed by run id. The whole share rather
    *  than a set of ids, so a row can name its sender and open the snapshot. */
   const [sharedBy, setSharedBy] = useState<Map<string, Share>>(new Map());
-  const [viewing, setViewing] = useState<Share | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -359,31 +357,37 @@ function Library() {
   );
 
   /*
-   * One rule: in "Shared with me" a click READS it, everywhere else a click
-   * EDITS it. The row menu still carries Open for the editing route, so nothing
-   * is taken away.
+   * One rule for every row: a click OPENS the resource in the tool that made
+   * it, editable, with history, export and refine.
    *
-   * This also sidesteps a real gap for exactly these rows. `open` below is
-   * `if (tool) router.push(...)`, and v2ToolForSlug builds its index from
-   * href.replace("/tools/", ""), so a slug that does not match its route
-   * resolves to undefined and clicking does nothing at all, silently. The modal
-   * renders from the snapshot and always works.
+   * "Shared with me" used to be the exception, reading its rows through
+   * SharedResourceModal instead. That modal exists so a teacher can judge an
+   * offer BEFORE accepting it, which is a decision that only exists in the
+   * Colleagues feed. By the time a share reaches this page it has been added,
+   * so it is the teacher's own copy and there is nothing left to decide; giving
+   * it a read-only view made it the one resource in the library they could not
+   * edit.
+   *
+   * The error branch below is what that modal was quietly covering. Because
+   * v2ToolForSlug indexes on href.replace("/tools/", ""), a slug with no
+   * matching route resolves to undefined, and the old `if (tool)` meant
+   * clicking such a row did nothing at all, with no feedback. Those rows are
+   * reachable: a share carries the SENDER's slug, and a run outlives a tool
+   * that is later renamed or removed.
    */
   const open = useCallback(
     (run: ToolRun) => {
       const tool = v2ToolForSlug(run.tool_slug);
-      if (tool) router.push(`${tool.href}?run=${run.id}`);
+      if (!tool) {
+        setError(
+          "That resource was made by a tool that is no longer available, so it cannot be opened. You can still download or delete it from its menu.",
+        );
+        return;
+      }
+      setError(null);
+      router.push(`${tool.href}?run=${run.id}`);
     },
     [router],
-  );
-
-  const openFrom = useCallback(
-    (run: ToolRun) => {
-      const share = selected === SHARED ? sharedBy.get(run.id) : undefined;
-      if (share) setViewing(share);
-      else open(run);
-    },
-    [selected, sharedBy, open],
   );
 
   const total = runs.length;
@@ -601,7 +605,7 @@ function Library() {
                       setDraggingId(null);
                       setDropTarget(undefined);
                     }}
-                    onOpen={() => openFrom(run)}
+                    onOpen={() => open(run)}
                     onMove={() => setMoving(run)}
                     onShare={() => setSharing(run)}
                     onDelete={() => setPendingDelete(run)}
@@ -641,10 +645,6 @@ function Library() {
           onConfirm={remove}
         />
       )}
-
-      {/* No onAdded: these are already in the library, which is how the modal
-          knows to show the confirmation rather than the Add button. */}
-      <SharedResourceModal share={viewing} onClose={() => setViewing(null)} />
 
       <ShareModal
         open={sharing !== null}
