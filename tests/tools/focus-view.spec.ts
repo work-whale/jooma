@@ -66,8 +66,17 @@ test("the focus view opens with the document and its outline", async ({ page }) 
    * The floating outline button must NOT have leaked in. It portals to
    * document.body, so if OutlineRail ever reused that presentation it would
    * render OVER the scrim it is supposed to live inside.
+   *
+   * Scoped to the FAB rather than to the accessible name: the page's own
+   * outline tab behind the scrim answers to "jump to section" too, and it is
+   * meant to be there. Only the portalled floating button would be a leak, and
+   * nothing inside the dialog may carry the rail's own heading as a control.
    */
-  await expect(page.getByRole("button", { name: /jump to section/i })).toHaveCount(0);
+  // Not visible, rather than not present: the floating button portals to
+  // document.body and its wrapper is display:none above 900px, so it is in the
+  // DOM at every width. What matters is that it never PAINTS over this scrim.
+  await expect(page.locator('[class*="floating"] button')).toBeHidden();
+  await expect(dialog.getByRole("button", { name: /jump to section/i })).toHaveCount(0);
 });
 
 test("an outline link scrolls the dialog's own scrollport", async ({ page }) => {

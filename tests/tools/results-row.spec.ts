@@ -45,8 +45,20 @@ test("a saved run opens with its document, outline and export actions", async ({
 
   // The outline column. This is the half most likely to have been dropped in a
   // 32 file edit, because nothing else fails if it silently stops rendering.
-  await expect(page.getByText("Jump to section")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Deposition" })).toBeVisible();
+  //
+  // Located by the panel it controls rather than by visible text: the outline
+  // is a collapsed tab now, so "Jump to section" is its accessible name rather
+  // than a heading on screen, and the headings live inside the panel until it
+  // is opened.
+  const tab = page.locator('button[aria-controls="outline-hover-panel"]');
+  await expect(tab).toBeVisible();
+  // Clicking rather than hovering: a click pins the panel open, which does not
+  // depend on the pointer staying put or on the deliberate 120ms hover delay.
+  // The hover path has its own coverage in outline-hover.spec.ts.
+  await tab.click();
+  await expect(
+    page.locator("#outline-hover-panel").getByRole("button", { name: "Deposition" }),
+  ).toBeVisible();
 
   // The actions the panel owns. Their labels collapse below sm:, and the
   // desktop project runs at 1280 wide, so both read in full here.
@@ -61,7 +73,24 @@ test("an outline link scrolls the page to its heading", async ({ page }) => {
   await page.goto(`/tools/lesson-planner?run=${runId}`);
 
   await expect(page.getByRole("heading", { name: "My results" })).toBeVisible();
-  await page.getByRole("button", { name: "Deposition" }).click();
+
+  /*
+   * The headings live inside the collapsed panel now, so it has to be opened
+   * before one can be picked. Clicking the tab pins it, which does not depend
+   * on the pointer staying put.
+   *
+   * Waiting for the TICKS first, not just for the tab to be visible: the tab
+   * renders as soon as the outline has two headings, but the run arrives
+   * asynchronously through ?run= and the marks appear with it. Clicking into a
+   * tab that is still settling toggles a panel that then re-renders empty.
+   */
+  const tab = page.locator('button[aria-controls="outline-hover-panel"]');
+  await expect(tab.locator("span:not(.sr-only)")).toHaveCount(3);
+  await tab.click();
+  await page
+    .locator("#outline-hover-panel")
+    .getByRole("button", { name: "Deposition" })
+    .click();
 
   /*
    * Assert the HEADING ARRIVED, not merely that the page moved.
@@ -117,6 +146,6 @@ for (const slug of [
     await page.goto(`/tools/${slug}?run=${runId}`);
 
     await expect(page.getByRole("heading", { name: "My results" })).toBeVisible();
-    await expect(page.getByText("Jump to section")).toBeVisible();
+    await expect(page.locator('button[aria-controls="outline-hover-panel"]')).toBeVisible();
   });
 }

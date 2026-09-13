@@ -1,11 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { ArrowUp, X } from "lucide-react";
 import { ChatTeardropDots } from "@phosphor-icons/react/dist/ssr";
-import Card from "@/app/components/ui/Card";
 import { extractHeadings, type Heading } from "@/app/lib/headings";
+import { CLOSED, hoverReducer, tabLabel } from "@/app/lib/outlineHover";
 import styles from "./OutputOutline.module.css";
 
 // Chapter navigation for a generated document, derived from the output itself.
@@ -98,6 +106,39 @@ export function useOutline({
   const contained = scrollRoot != null;
   const offset = contained ? MODAL_SCROLL_OFFSET : SCROLL_OFFSET;
 
+  /*
+   * Which renderer is on screen, as state rather than a one-off read.
+   *
+   * ResultPanel shows MarkdownResult (which emits heading ids) while a
+   * generation streams, then swaps in the Tiptap editor (which emits none).
+   * That swap changes NOTHING this hook already depends on: the markdown is
+   * the same, so `headings` is the same array, and the observer effect below
+   * would run exactly once, against whichever DOM happened to exist at mount,
+   * and never again.
+   *
+   * That is what left the outline stuck on an early section while the teacher
+   * read a later one. The effect ran before `.prose-editor` existed, found
+   * nothing to observe, and had no reason to re-run once it appeared.
+   *
+   * A MutationObserver on the subtree rather than a timer: the swap is a DOM
+   * change, so watching for it is exact, and it also covers the reverse
+   * direction when a refine puts MarkdownResult back.
+   */
+  const [editorEpoch, setEditorEpoch] = useState(0);
+  useEffect(() => {
+    if (contained) return; // a modal always renders MarkdownResult, and never swaps
+    let last = document.querySelector(".prose-editor") !== null;
+    const observer = new MutationObserver(() => {
+      const now = document.querySelector(".prose-editor") !== null;
+      if (now !== last) {
+        last = now;
+        setEditorEpoch((n) => n + 1);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [contained]);
+
   /** The rendered heading, looked up inside the scroll container first.
    *
    *  Ids are document-global, so a modal showing the same markdown as the page
@@ -119,6 +160,40 @@ export function useOutline({
   useEffect(() => {
     if (headings.length === 0) return;
 
+    /*
+     * The element to watch for each heading, and the id to report when it is
+     * the one being read.
+     *
+     * Two strategies, the SAME pair `go` uses for the other direction:
+     *
+     *   1. The element carrying the id, while MarkdownResult is rendering.
+     *   2. The nth heading in document order, once ResultPanel has swapped in
+     *      the Tiptap editor, whose ProseMirror DOM carries no ids at all.
+     *
+     * Strategy 2 is what this effect was missing. Observing only elements that
+     * `find` resolved meant that after generation finished there was nothing
+     * to observe, so activeId froze at whatever it last saw: the outline kept
+     * pointing at an early section while the teacher read a later one. Clicking
+     * still worked, because `go` already had the positional fallback, which is
+     * why only the tracking looked broken.
+     *
+     * Strategy 2 is WINDOW ONLY, for the same reason it is in `go`:
+     * `.prose-editor` matches the editor on the page behind a modal's scrim, so
+     * a contained outline must never use it. A contained outline always renders
+     * through MarkdownResult, which always emits ids, so it never needs to.
+     */
+    const editorHeadings = contained
+      ? []
+      : [
+          ...document.querySelectorAll<HTMLElement>(
+            ".prose-editor h1, .prose-editor h2, .prose-editor h3",
+          ),
+        ];
+
+    // Element to heading id, so the callback can report an id for a node that
+    // does not carry one.
+    const idFor = new Map<Element, string>();
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (scrollingTo.current) return;
@@ -126,7 +201,11 @@ export function useOutline({
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]?.target.id) setActiveId(visible[0].target.id);
+        const top = visible[0]?.target;
+        if (!top) return;
+        // The map first: an editor heading has no id of its own.
+        const id = idFor.get(top) ?? top.id;
+        if (id) setActiveId(id);
       },
       {
         // null is the viewport, which is the behaviour every existing consumer
@@ -139,17 +218,18 @@ export function useOutline({
       },
     );
 
-    // Only headings that actually rendered ids — the Tiptap editor replaces
-    // MarkdownResult once generation finishes and emits none, in which case
-    // there is nothing to observe and the positional fallback in `scrollTo`
-    // takes over.
-    const observed = headings
-      .map((h) => find(h.id))
-      .filter((el): el is HTMLElement => el !== null);
-    observed.forEach((el) => observer.observe(el));
+    for (const h of headings) {
+      const el = find(h.id) ?? editorHeadings[h.index];
+      if (!el) continue;
+      idFor.set(el, h.id);
+      observer.observe(el);
+    }
 
     return () => observer.disconnect();
-  }, [headings, scrollRoot, offset, find]);
+    // editorEpoch is what re-attaches the observer when ResultPanel swaps
+    // MarkdownResult for the Tiptap editor. Without it this runs once against
+    // whichever DOM existed at mount. See the note beside its declaration.
+  }, [headings, scrollRoot, offset, find, contained, editorEpoch]);
 
   /**
    * Scroll to a heading.
@@ -216,19 +296,99 @@ export function useOutline({
   return { headings, minLevel, activeId, go };
 }
 
-export default function OutputOutline({ markdown, title = "Jump to section" }: Props) {
+/**
+ * The outline as a thin tab that expands on hover, plus the floating button
+ * below 900px.
+ *
+ * A fourth presentation of the same brain, and the one the 32 tool pages now
+ * use. The card spent 448px of a roughly 1284px row on navigation that is
+ * wanted intermittently; this spends 44px and overlays the rest, which is
+ * where the document's extra width comes from.
+ *
+ * The collapsed tab is not merely a handle: it carries the current section and
+ * the position in the document, so it answers "where am I?" while shut. That
+ * comes from the IntersectionObserver useOutline already runs whether the
+ * panel is open or not, so it costs nothing extra.
+ *
+ * The positioning contract that makes the panel work lives in the CSS module,
+ * under "The hover tab". Read it before changing either element's overflow or
+ * position.
+ */
+export function OutlineHover({ markdown, title = "Jump to section" }: Props) {
   const { headings, minLevel, activeId, go } = useOutline({ markdown });
 
   const mounted = useMounted();
-  const [open, setOpen] = useState(false);
-  const fabRef = useRef<HTMLButtonElement | null>(null);
+  const [hover, dispatch] = useReducer(hoverReducer, CLOSED);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const tabRef = useRef<HTMLButtonElement | null>(null);
 
-  // Escape closes the sheet, and the body stops scrolling behind it. Both are
-  // scoped to `open`, so nothing is installed while the sheet is shut.
+  /*
+   * Hover intent. The delays are the whole reason this is not a bare
+   * onMouseEnter: without the open delay the panel flashes as the pointer
+   * crosses the tab on its way elsewhere, and without the close grace a
+   * diagonal path from tab to panel loses it.
+   *
+   * Timers live here; the RULES are in outlineHover.ts, where they are tested
+   * without a browser.
+   */
+  const enterTimer = useRef<number | null>(null);
+  const leaveTimer = useRef<number | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (enterTimer.current !== null) window.clearTimeout(enterTimer.current);
+    if (leaveTimer.current !== null) window.clearTimeout(leaveTimer.current);
+    enterTimer.current = null;
+    leaveTimer.current = null;
+  }, []);
+
+  // A timer that fires after unmount would setState on a dead component.
+  useEffect(() => clearTimers, [clearTimers]);
+
+  const onEnter = () => {
+    clearTimers();
+    enterTimer.current = window.setTimeout(() => dispatch({ type: "enter" }), 120);
+  };
+
+  /*
+   * `relatedTarget` is where the pointer WENT. When that is still inside the
+   * shell the pointer has not left at all, it has only crossed between the
+   * tab's own children, and closing on that is wrong.
+   *
+   * This is not hypothetical. mouseleave fires on the shell as the pointer
+   * moves from the button onto one of the tick spans inside it, so every such
+   * crossing scheduled a close. With the panel pinned open the reducer ignored
+   * the resulting `leave`, but the timer was still churning, and an unpinned
+   * panel would flicker shut as the pointer travelled across its own marks.
+   *
+   * Same `contains` guard onBlur uses below, for the same reason: both events
+   * fire on internal transitions that are not departures.
+   */
+  const onLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    clearTimers();
+    leaveTimer.current = window.setTimeout(() => dispatch({ type: "leave" }), 220);
+  };
+
+  // Escape closes a pinned panel and hands focus back, so a keyboard user is
+  // never stranded inside it.
   useEffect(() => {
-    if (!open) return;
+    if (!hover.open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      dispatch({ type: "dismiss" });
+      tabRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [hover.open]);
+
+  // The sheet's own Escape and scroll lock, below 900px. Unchanged from the
+  // card's behaviour, and scoped to `sheetOpen` so nothing is installed while
+  // it is shut.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSheetOpen(false);
     };
     document.addEventListener("keydown", onKey);
     const previous = document.body.style.overflow;
@@ -237,46 +397,92 @@ export default function OutputOutline({ markdown, title = "Jump to section" }: P
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previous;
     };
-  }, [open]);
+  }, [sheetOpen]);
 
   // One heading is a title, not an outline — nothing to navigate between.
   if (headings.length < 2) return null;
 
-  const list = (
-    <OutlineList
-      headings={headings}
-      minLevel={minLevel}
-      activeId={activeId}
-      onPick={(h) => {
-        // Close BEFORE scrolling, so the scrim is not animating away over the
-        // movement. Harmless on desktop, where the sheet is never open.
-        setOpen(false);
-        go(h);
-      }}
-    />
-  );
+  const tab = tabLabel(headings, activeId);
 
   return (
     <>
-      <Card className={`p-5 ${styles.card}`}>
-        <p className="text-xs font-semibold text-(--color-muted) uppercase tracking-wide mb-3">
-          {title}
-        </p>
-        <nav className="space-y-0.5 max-h-[60vh] overflow-y-auto">{list}</nav>
-      </Card>
+      {/*
+        onFocus and onBlur on the SHELL rather than the tab: focus events
+        bubble, so tabbing into a heading link inside the panel keeps it open,
+        and the relatedTarget guard means it closes only when focus leaves the
+        whole component rather than on every hop between links.
+      */}
+      <div
+        className={`${styles.shell} ${styles.shellWrap}`}
+        onMouseEnter={onEnter}
+        onMouseLeave={onLeave}
+        onFocus={() => {
+          clearTimers();
+          dispatch({ type: "enter" });
+        }}
+        onBlur={(e) => {
+          if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+          dispatch({ type: "leave" });
+        }}
+      >
+        <button
+          ref={tabRef}
+          type="button"
+          className={styles.tab}
+          aria-expanded={hover.open}
+          aria-controls="outline-hover-panel"
+          aria-label={title}
+          onClick={() => {
+            clearTimers();
+            dispatch({ type: "toggle" });
+          }}
+        >
+          {/* One line per section, the active one longer and darker. The
+              accessible name carries the section and position, so a screen
+              reader gets what the ticks show visually. */}
+          {headings.map((h, i) => (
+            <span
+              key={h.id}
+              className={`${styles.tick} ${i === tab.position - 1 ? styles.tickActive : ""}`}
+            />
+          ))}
+          <span className="sr-only">
+            {title}: {tab.label}, {tab.position} of {tab.total}
+          </span>
+        </button>
+
+        {hover.open && (
+          <div id="outline-hover-panel" className={styles.panel}>
+            <p className={styles.panelTitle}>{title}</p>
+            <div className={styles.panelList}>
+              <OutlineList
+                headings={headings}
+                minLevel={minLevel}
+                activeId={activeId}
+                onPick={(h) => {
+                  // Close before scrolling, so the panel is not animating away
+                  // over the movement.
+                  dispatch({ type: "dismiss" });
+                  go(h);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/*
-        Portalled to <body>. The 32 consumer forms mount this inside
-        `lg:sticky lg:top-8`, and a position: fixed child of a sticky or
-        transformed ancestor anchors to that ancestor rather than the viewport,
-        which would strand the button mid-page.
+        The same floating button the card had, folded in so one component owns
+        the whole responsive story. Portalled to <body> because a fixed child
+        of the consumer's sticky wrapper would anchor to that wrapper rather
+        than the viewport.
       */}
       {mounted &&
         createPortal(
           <div className={styles.floating}>
-            {open && (
+            {sheetOpen && (
               <>
-                <div className={styles.scrim} onClick={() => setOpen(false)} />
+                <div className={styles.scrim} onClick={() => setSheetOpen(false)} />
                 <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={title}>
                   <div className={styles.sheetHead}>
                     <span className={styles.face} aria-hidden="true">
@@ -288,24 +494,33 @@ export default function OutputOutline({ markdown, title = "Jump to section" }: P
                     </span>
                     <button
                       type="button"
-                      onClick={() => setOpen(false)}
+                      onClick={() => setSheetOpen(false)}
                       aria-label="Close"
                       className={styles.close}
                     >
                       <X width={16} height={16} />
                     </button>
                   </div>
-                  <nav className={styles.sheetList}>{list}</nav>
+                  <nav className={styles.sheetList}>
+                    <OutlineList
+                      headings={headings}
+                      minLevel={minLevel}
+                      activeId={activeId}
+                      onPick={(h) => {
+                        setSheetOpen(false);
+                        go(h);
+                      }}
+                    />
+                  </nav>
                 </div>
               </>
             )}
 
             <button
-              ref={fabRef}
               type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-label={open ? "Close sections" : title}
-              aria-expanded={open}
+              onClick={() => setSheetOpen((v) => !v)}
+              aria-label={sheetOpen ? "Close sections" : title}
+              aria-expanded={sheetOpen}
               className={styles.fab}
             >
               <ArrowUp width={22} height={22} />

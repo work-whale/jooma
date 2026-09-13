@@ -1,7 +1,7 @@
 "use client";
 
 import StickyMask from "@/app/components/ui/StickyMask";
-import OutputOutline from "@/app/components/OutputOutline";
+import { OutlineHover } from "@/app/components/OutputOutline";
 import ResultPanel from "@/app/components/ResultPanel";
 
 /*
@@ -54,14 +54,35 @@ export default function ToolResults({
 
       <div className={result !== null ? "flex flex-col lg:flex-row gap-4 lg:gap-8" : ""}>
         {result !== null && (
-          <div className="hidden lg:block lg:w-md shrink-0">
+          /*
+           * The outline column: 44px now, where the sidebar card was 448px.
+           *
+           * The expanded panel is absolutely positioned INSIDE this wrapper and
+           * overlays the document rather than widening the column, which is
+           * where the document's extra width comes from.
+           *
+           * THREE LOAD-BEARING CLASSES, each one word from being broken:
+           *
+           *   relative  the absolute panel anchors here; without it the panel
+           *             escapes to some other positioned ancestor.
+           *   z-40      the results panel is a LATER SIBLING in this flex row,
+           *             and its header is `sticky z-30` over a `sticky z-10`
+           *             editor toolbar. At equal rank the later sibling paints
+           *             on top, which is what put the panel behind the document
+           *             and its toolbar. Raising only the shell inside could not
+           *             fix it, because this column was still competing at auto.
+           *   no overflow  any overflow here clips the panel, exactly as the old
+           *             card's own overflow-y did. The scrolling belongs inside
+           *             the panel, which is why it is not on this element.
+           */
+          <div className="hidden lg:block shrink-0 relative w-11 z-40">
             <div className="lg:sticky lg:top-8">
               {/* Optional sections need no declaring here: the outline is
                   derived from the output, so a section appears in it exactly
                   when it appears in the document. (Carried over from
                   EYFSPlannerForm, where it was recorded against that tool's
                   three include* toggles but is true of every tool.) */}
-              <OutputOutline markdown={result} />
+              <OutlineHover markdown={result} />
             </div>
           </div>
         )}
