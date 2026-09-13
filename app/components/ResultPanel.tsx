@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Copy, Check, FileText, FileDown, Download, ChevronDown, Printer } from "lucide-react";
+import { Loader2, Copy, Check, FileText, FileDown, Download, ChevronDown, Printer, Maximize2 } from "lucide-react";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import MarkdownResult from "@/app/components/MarkdownResult";
+import FocusDocumentModal from "@/app/components/FocusDocumentModal";
 import DropdownMenu from "@/app/components/ui/DropdownMenu";
 import { useDocumentActions } from "@/app/lib/useDocumentActions";
 import { saveToolRun } from "@/app/lib/toolRuns";
@@ -69,6 +70,11 @@ export default function ResultPanel({
       print: <Printer className="w-3.5 h-3.5" />,
     },
   );
+
+  /** The focused reading view. Unmounting on close is the reset: no stale
+   *  scroll position survives, and the outline rebuilds against the current
+   *  document rather than the one it was opened with. */
+  const [focusOpen, setFocusOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -236,6 +242,21 @@ export default function ResultPanel({
           </div>
           <div className="flex items-center gap-2">
 
+            {/* Reading first, then the two output actions. Disabled while busy
+                for the same reason Copy is: a half streamed document is not
+                worth opening in a reading view, and it sidesteps the question
+                of whether the modal should follow a stream. */}
+            <button
+              type="button"
+              onClick={() => setFocusOpen(true)}
+              disabled={isBusy}
+              aria-label="Open in focused view"
+              className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Focus</span>
+            </button>
+
             {!isBusy && (
               <DropdownMenu
                 ariaLabel="Export options"
@@ -289,6 +310,17 @@ export default function ResultPanel({
         )}
       </div>
 
+      {/* Mounted only while open, so `result` is read at open time and the
+          teacher's edits are already in it (Tiptap round-trips through
+          onChange on every keystroke). */}
+      {focusOpen && (
+        <FocusDocumentModal
+          markdown={result}
+          filename={exportFilename}
+          title={historyMeta?.title?.trim() || "Your document"}
+          onClose={() => setFocusOpen(false)}
+        />
+      )}
     </>
   );
 }
