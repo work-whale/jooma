@@ -22,7 +22,8 @@
     "test:planning": "playwright test tests/planning",
     "test:profile": "playwright test tests/profile",
     "test:shell": "playwright test tests/shell",
-    "test:social": "playwright test tests/social"
+    "test:social": "playwright test tests/social",
+    "test:tools": "playwright test tests/tools"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
