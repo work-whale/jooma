@@ -8,6 +8,7 @@ import { recordUsage, recordAssetCost, recordSlideCosts, costUsd } from "@/app/l
 import { modelFor } from "@/app/lib/tool-model";
 import { forSdk } from "@/app/lib/models";
 import { isToolEnabled } from "@/app/lib/tool-availability";
+import { hasProfile, profileGateBody } from "@/app/lib/profile-gate";
 import {
   checkAllGates,
   quotaBlockBody,
@@ -846,6 +847,15 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // And again: the proxy gates teachers who never finished onboarding, but it
+  // cannot see this route. A profile-less account is invisible to the admin
+  // console and coalesced to 'free' by my_generation_gate(), so leaving the
+  // product's most expensive endpoint open to one is exactly the hole the gate
+  // was written to close.
+  if (!(await hasProfile(supabase, user.id))) {
+    return NextResponse.json(profileGateBody(), { status: 403 });
   }
 
   // Same reason again: the proxy enforces tool_settings.enabled for every other
