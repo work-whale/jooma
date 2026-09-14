@@ -81,6 +81,54 @@ test.describe("validateClarify", () => {
     }
   });
 
+  test("the curriculum is defaulted rather than left blank", () => {
+    // Nobody says "using the 2014 National Curriculum" when they ask for a
+    // Year 6 lesson, so the model omits it — correctly. But the curriculum
+    // tools gate Generate on the field, so leaving it empty hands the teacher
+    // a filled-in form they cannot submit. Three attempts to fix this in the
+    // prompt all failed; the default belongs here.
+    const prefill = validatePrefill({
+      slug: "lesson-planner",
+      fields: { subject: "Science", topic: "The Earth's atmosphere" },
+    });
+
+    expect(prefill).not.toBeNull();
+    expect(prefill!.fields.curriculum).toBe("2014 National Curriculum");
+  });
+
+  test("a curriculum the teacher named is never overwritten", () => {
+    const prefill = validatePrefill({
+      slug: "lesson-planner",
+      fields: {
+        subject: "Science",
+        topic: "Volcanoes",
+        curriculum: "Welsh Curriculum",
+      },
+    });
+
+    // A Welsh school must not silently get the English curriculum.
+    expect(prefill!.fields.curriculum).toBe("Welsh Curriculum");
+  });
+
+  test("a tool without a curriculum field does not gain one", () => {
+    const prefill = validatePrefill({
+      slug: "letter-writer",
+      fields: { recipient: "parents", content: "The trip to the museum" },
+    });
+
+    expect(prefill).not.toBeNull();
+    expect(prefill!.fields.curriculum).toBeUndefined();
+  });
+
+  test("the default cannot rescue an otherwise empty prefill", () => {
+    // Applied after validation, so a prefill with nothing usable in it still
+    // returns null rather than opening a form containing only a curriculum.
+    expect(validatePrefill({ slug: "lesson-planner", fields: {} })).toBeNull();
+    expect(
+      validatePrefill({ slug: "lesson-planner", fields: { notAField: "x" } }),
+    ).toBeNull();
+  });
+
   test("an answered question resolves to a valid prefill", () => {
     const clarify = validateClarify(base())!;
     const answer = clarify.options[0];

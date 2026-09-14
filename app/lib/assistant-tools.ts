@@ -1177,6 +1177,18 @@ function sharedEnumGuide(): string {
     "Always set yearGroup when the teacher names a year, in the exact form above:",
     '"a year 6 addition quiz" means yearGroup "Year 6". Omit it only when no year',
     "is stated or implied.",
+    "",
+    // This instruction lives HERE, not in the curriculum field's `description`,
+    // because per-tool property schemas never travel to the model: `fields` is
+    // declared as an open object in prefillFunctionDef (see the note there).
+    // The description said "Default to '2014 National Curriculum'" for months
+    // and the model never read a word of it, so every prefill came back with no
+    // curriculum — which BLOCKS Generate on the curriculum-based tools, since
+    // their canGenerate requires it. Anything a model must know belongs in this
+    // string or in the tool summaries; nowhere else reaches it.
+    "Always set curriculum. Default to \"2014 National Curriculum\" unless the",
+    "teacher names a Scottish, Welsh, Northern Irish or Early Years context, in",
+    "which case use the matching value above.",
   ].join("\n");
 }
 
@@ -1215,6 +1227,80 @@ export function prefillFunctionDef() {
               "Form fields to prefill, matching the chosen tool's schema. Fill " +
               "everything the teacher stated or clearly implied; leave the rest " +
               "out rather than guessing.",
+            // The shared fields are DECLARED, not just described.
+            //
+            // This object used to be open with no properties at all, and the
+            // guidance for yearGroup and curriculum lived in prose: first in the
+            // per-tool schema descriptions (which never travel), then in this
+            // function's description, then in the tool-select system prompt.
+            // None of it worked. A teacher asking for "a year 6 lesson plan" got
+            // a prefill of { subject, topic } with no year group, every time,
+            // and the server log confirmed the model had simply never sent one.
+            //
+            // The reason is that arguments are completed against the PARAMETERS
+            // SCHEMA. With no yearGroup slot anywhere in it, the model had to
+            // invent the key from a sentence buried in a 7,000 character
+            // description. Declaring the three shared fields here puts them
+            // where the model actually looks, with their legal values inline.
+            //
+            // additionalProperties stays true: these three are common to most
+            // tools, but each tool has its own fields (topic, learningObjective,
+            // recipient, ...) which must still pass through. Declaring a field
+            // here cannot smuggle it into a tool that lacks it — cleanFields
+            // still allow-lists every key against the chosen tool's own schema,
+            // so a yearGroup sent to a tool without one is dropped exactly as
+            // before.
+            properties: {
+              yearGroup: {
+                type: "string",
+                enum: YEAR_GROUPS,
+                description:
+                  "The year group, whenever the teacher names or implies one. " +
+                  "\"a year 6 lesson plan\" is \"Year 6\". Omit only when no year " +
+                  "is stated or implied.",
+              },
+              curriculum: {
+                type: "string",
+                enum: CURRICULUM_VALUES,
+                description:
+                  "The curriculum. Default to \"2014 National Curriculum\" unless " +
+                  "the teacher names a Scottish, Welsh, Northern Irish or Early " +
+                  "Years context.",
+              },
+              subject: {
+                type: "string",
+                description: "Curriculum subject, e.g. \"Science\", \"Maths\".",
+              },
+              // Declared for a different reason than the three above.
+              //
+              // Those are EXTRACTED: the teacher says "year 6" and the value is
+              // sitting in the sentence. This one has to be WRITTEN. A teacher
+              // asking for "a Year 6 lesson on the Earth's atmosphere" has given
+              // a topic, not an objective, and the model was quietly declining
+              // to compose one — so the field arrived blank and Generate stayed
+              // disabled, since LessonPlannerForm.tsx:47 requires it.
+              //
+              // It cannot be defaulted in code the way curriculum is. An
+              // objective states what a teacher's pupils should achieve, and
+              // inventing one would be putting words in their mouth. So the
+              // instruction has to reach the model, which means living here
+              // rather than in the per-tool description, which never travels.
+              //
+              // Louder failure on two tools: worksheet-generator and
+              // homework-generator list learningObjective in `required`, so a
+              // missing one makes validatePrefill return null and Jo answers in
+              // chat instead of opening the tool at all.
+              learningObjective: {
+                type: "string",
+                description:
+                  "What pupils should be able to do by the end. ALWAYS provide " +
+                  "this when the tool has the field: write one yourself when the " +
+                  "teacher did not state it, phrased as a teacher would " +
+                  "(\"Identify the stages of the water cycle\"). On " +
+                  "worksheet-generator and homework-generator this carries the " +
+                  "subject matter, because those tools have no topic field.",
+              },
+            },
             additionalProperties: true,
           },
         },

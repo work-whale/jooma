@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
+import { JoActivityProvider } from "@/app/lib/JoActivityContext";
+import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 
 const ROUTE_LABELS: Record<string, string> = {
   "/tools/lesson-planner": "Lesson Planner",
@@ -78,15 +80,28 @@ function ToolPageChrome({
     contentClassName: "grow flex flex-col px-4 sm:px-6 lg:px-10 pb-16",
   });
 
+  // The panel is a sibling of the content well, not part of it: it has to
+  // outlive the fill and sit beside the form rather than inside its grid. The
+  // provider wraps both, so useToolLaunch (inside the form) can publish to a
+  // panel that is not its descendant. This layout is never remounted between
+  // tool pages, so the panel survives the form remounting beneath it.
   return (
-    <>
+    <JoActivityProvider>
       <div className="pb-4 shrink-0">
         <Link href="/tools" className="flex items-center gap-1.5 text-sm text-muted hover:text-gray-700 transition-colors w-fit">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to tools
         </Link>
       </div>
-      <div className="grow">{children}</div>
-    </>
+      {/* data-jo-form marks the region the fill's interrupt listener watches.
+          None of the 35 forms is a real <form> element, so without this the
+          listener has nothing to scope itself to and would have to watch the
+          whole document — which is exactly the bug that let one click anywhere
+          in the app cancel a fill. */}
+      <div className="grow" data-jo-form="">
+        {children}
+      </div>
+      <JoActivityPanel />
+    </JoActivityProvider>
   );
 }
