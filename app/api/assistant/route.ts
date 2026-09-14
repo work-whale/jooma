@@ -207,6 +207,20 @@ async function selectTool(
       toolSlug: "assistant",
       step: "tool-select",
       userId,
+      // gpt-4o-mini, deliberately.
+      //
+      // luna was tried here and made things WORSE, not better: it stopped
+      // calling the tool at all, so a teacher asking for a lesson plan got the
+      // whole plan written into the chat instead of the Lesson Planner opening.
+      // Answering in chat is this function's null path, and it is silent by
+      // design (see the catch below), which is exactly what made the regression
+      // hard to spot. mini's failure mode was milder — it opened the right tool
+      // but sometimes omitted yearGroup — so it stays until a replacement is
+      // proven to call the tool at least as reliably.
+      //
+      // If you try another model here, verify the tool call FIRST, not the
+      // field quality: a model that fills fields perfectly and never calls the
+      // function is a worse assistant than one that calls it and misses a field.
       model: "gpt-4o-mini",
       max_completion_tokens: 400,
       temperature: 0,
@@ -224,6 +238,11 @@ Call ask_clarifying_question INSTEAD of prefill_tool when you know which tool th
 
 Ask rarely. If the teacher named the year group and the topic, that is enough to build from: infer the rest and call prefill_tool. Never ask about a field the tool does not need, never ask twice in one conversation, and never ask when they have already answered the question earlier in the thread.
 
+When you call prefill_tool, ALWAYS include these in fields when the tool has them:
+- yearGroup, whenever the teacher names or implies a year. "a year 5 lesson plan" means yearGroup "Year 5". Use the exact forms listed in the prefill_tool description; "Y5", "year five" and "5" are all rejected and the teacher's year group is then lost.
+- curriculum. Default it to "2014 National Curriculum" unless they name a Scottish, Welsh, Northern Irish or Early Years context.
+These two gate the Generate button on most tools, so omitting them leaves the teacher with a form they cannot submit.
+
 ${toolSchemaDigest()}`,
         },
         // Only the recent turns: the decision is about what is being asked now,
@@ -233,7 +252,18 @@ ${toolSchemaDigest()}`,
     });
 
     const call = completion.choices[0]?.message?.tool_calls?.[0];
-    if (!call || call.type !== "function") return null;
+    if (!call || call.type !== "function") {
+      // Why no tool: the difference between "this was conversation" and "the
+      // model was cut off mid-call" is invisible from the outside, and both
+      // land the teacher in a chat reply. finish_reason tells them apart —
+      // "length" means the token budget ran out and the cap needs raising.
+      console.warn("[assistant] no tool call", {
+        finish_reason: completion.choices[0]?.finish_reason,
+        model: completion.model,
+        completion_tokens: completion.usage?.completion_tokens,
+      });
+      return null;
+    }
 
     // Validation is the security boundary as well as the quality one: this
     // rejects unknown tools, drops unknown fields, enforces enums and caps

@@ -10,6 +10,7 @@ import { createChat, listMessages, saveMessage } from "@/app/lib/assistantChats"
 import {
   validatePrefill,
   validateClarify,
+  prefillHref,
   type ToolPrefill,
   type ToolClarify,
 } from "@/app/lib/toolPrefill";
@@ -81,6 +82,52 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
    * Shared by the composer and by the pending-reply loader, so a chat started
    * from the dashboard is answered by exactly the same code as one typed here.
    */
+  // Set when the teacher types in the composer while a reply is streaming. A
+  // ref rather than state: it must be readable at the instant the stream ends,
+  // and nothing should re-render because they started typing.
+  const composerTouched = useRef(false);
+
+  // Watched here rather than through a prop on AssistantComposer, which keeps
+  // its draft in local state and exposes no onChange. A capture-phase listener
+  // costs the composer nothing and keeps its interface unchanged.
+  useEffect(() => {
+    if (!streaming) return;
+    const onType = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("textarea, input")) composerTouched.current = true;
+    };
+    document.addEventListener("input", onType, true);
+    return () => document.removeEventListener("input", onType, true);
+  }, [streaming]);
+
+  /**
+   * Open the tool Jo chose, without waiting for a click on the card.
+   *
+   * Only when every guard holds. A teacher who has looked away, started typing
+   * again, or hit an error is not expecting the page to change under them, and
+   * the ToolLinkCard is still sitting under the reply as the manual route. So
+   * the cost of declining to navigate is one click, and the cost of navigating
+   * when they did not want it is losing their place.
+   */
+  const maybeOpenTool = useCallback(
+    (toolCall: ToolPrefill | null, ok: boolean) => {
+      if (!toolCall || !ok) return;
+      if (composerTouched.current) return;
+      if (typeof document === "undefined") return;
+      if (document.visibilityState !== "visible" || !document.hasFocus()) return;
+
+      // A beat before the page changes, so the reply can be read first: Jo's
+      // answer usually explains why it picked this tool.
+      window.setTimeout(() => {
+        if (composerTouched.current) return;
+        if (document.visibilityState !== "visible" || !document.hasFocus()) return;
+        // push, not replace: Back must return to the conversation.
+        router.push(prefillHref(toolCall));
+      }, 600);
+    },
+    [router],
+  );
+
   const streamReply = useCallback(
     async (
       chatIdForSave: string,
@@ -113,7 +160,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           // the upgrade modal itself. Drop the placeholder and say nothing more.
           if (res.status === 402) {
             setTurns(history);
-            return;
+            return null;
           }
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error ?? "The assistant is unavailable right now.");
@@ -159,7 +206,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong.");
         setTurns(history);
-        return;
+        return null;
       } finally {
         setStreaming(false);
       }
@@ -169,6 +216,11 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           () => {},
         );
       }
+
+      // Handed back so the caller can open the tool. A refusal or a clarify is
+      // not a clean run: a refusal has no tool, and a clarify is a question the
+      // teacher must answer first, which ClarifyChips navigates on its own.
+      return { toolCall, ok: !refused && !clarify };
     },
     [],
   );
@@ -179,6 +231,9 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
       opts: { level: string | null; tone: string | null; attachment: Attachment | null },
     ) => {
       setError(null);
+      // A fresh send is a fresh intent to be taken somewhere. Cleared here so
+      // typing during one reply does not suppress the navigation for the next.
+      composerTouched.current = false;
 
       // Create the chat on the first message rather than up front, so opening
       // /assistant and leaving never litters the sidebar with empty chats.
@@ -207,13 +262,17 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
            write must not interrupt the reply the teacher is waiting for. */
       });
 
-      await streamReply(id, history, opts);
+      const outcome = await streamReply(id, history, opts);
 
       // Deferred to here so the URL changes once the exchange is complete,
       // rather than remounting mid-stream.
       if (isNew) router.replace(`/assistant/${id}`);
+
+      // Same reason, and it must come after: navigating to the tool while the
+      // stream was still running would tear down the panel mid-answer.
+      maybeOpenTool(outcome?.toolCall ?? null, outcome?.ok ?? false);
     },
-    [activeId, addChat, router, streamReply],
+    [activeId, addChat, router, streamReply, maybeOpenTool],
   );
 
   // Answer a chat that arrived with its opening message already stored — the
@@ -222,8 +281,12 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
   useEffect(() => {
     if (!pendingReply || !activeId || streaming) return;
     setPendingReply(null);
-    void streamReply(activeId, turnsRef.current, { level: null, tone: null, attachment: null });
-  }, [pendingReply, activeId, streaming, streamReply]);
+    void streamReply(activeId, turnsRef.current, {
+      level: null,
+      tone: null,
+      attachment: null,
+    }).then((outcome) => maybeOpenTool(outcome?.toolCall ?? null, outcome?.ok ?? false));
+  }, [pendingReply, activeId, streaming, streamReply, maybeOpenTool]);
 
   const locked = allowed === false;
 

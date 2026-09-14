@@ -1177,6 +1177,18 @@ function sharedEnumGuide(): string {
     "Always set yearGroup when the teacher names a year, in the exact form above:",
     '"a year 6 addition quiz" means yearGroup "Year 6". Omit it only when no year',
     "is stated or implied.",
+    "",
+    // This instruction lives HERE, not in the curriculum field's `description`,
+    // because per-tool property schemas never travel to the model: `fields` is
+    // declared as an open object in prefillFunctionDef (see the note there).
+    // The description said "Default to '2014 National Curriculum'" for months
+    // and the model never read a word of it, so every prefill came back with no
+    // curriculum — which BLOCKS Generate on the curriculum-based tools, since
+    // their canGenerate requires it. Anything a model must know belongs in this
+    // string or in the tool summaries; nowhere else reaches it.
+    "Always set curriculum. Default to \"2014 National Curriculum\" unless the",
+    "teacher names a Scottish, Welsh, Northern Irish or Early Years context, in",
+    "which case use the matching value above.",
   ].join("\n");
 }
 

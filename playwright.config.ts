@@ -71,7 +71,11 @@ export default defineConfig({
     // nobody minds the disk. See .gitignore.
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    video: "retain-on-failure",
+    // Every run, not just failures: these tests are about what the teacher SEES
+    // (Jo typing into a form), so the recording is the artefact you check the
+    // feature against, not only the evidence of a break. Videos land in
+    // test-results/<test>/video.webm and are gitignored.
+    video: "on",
   },
 
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
