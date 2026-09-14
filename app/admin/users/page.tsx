@@ -3,14 +3,18 @@ import { nf } from "../format";
 import AdminTeachersTable, { type TeacherRow } from "./AdminTeachersTable";
 import AdminTeachersHeaderActions from "./AdminTeachersHeaderActions";
 import PendingInvites, { type PendingInvite } from "./PendingInvites";
+import IncompleteSignups, { type IncompleteSignup } from "./IncompleteSignups";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
   const { supabase } = await requireAdmin();
-  const [{ data }, { data: invites }] = await Promise.all([
+  const [{ data }, { data: invites }, { data: incomplete }] = await Promise.all([
     supabase.rpc("admin_users"),
     supabase.rpc("admin_pending_invites"),
+    // Accounts that are in neither of the two lists above — signed up, never
+    // finished onboarding. Normally empty. See IncompleteSignups.tsx.
+    supabase.rpc("admin_incomplete_signups"),
   ]);
   const rows = (data ?? []) as TeacherRow[];
 
@@ -30,6 +34,7 @@ export default async function AdminUsersPage() {
       </div>
 
       <PendingInvites invites={(invites ?? []) as PendingInvite[]} />
+      <IncompleteSignups rows={(incomplete ?? []) as IncompleteSignup[]} />
       <AdminTeachersTable rows={rows} />
     </>
   );

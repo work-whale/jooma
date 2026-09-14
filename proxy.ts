@@ -12,6 +12,7 @@ import {
   toolSlugFor,
 } from "@/app/lib/generation-guard";
 import { isToolEnabled } from "@/app/lib/tool-availability";
+import { profileGateBody } from "@/app/lib/profile-gate";
 import { publicSettings } from "@/app/lib/settings";
 
 // Reachable while maintenance mode is on. /maintenance itself, obviously, plus
@@ -104,6 +105,39 @@ function isPublic(pathname: string) {
   );
 }
 
+// Reachable by a signed-in teacher who has not finished onboarding (see the
+// profile gate below). Three kinds of thing are here, and each would break in a
+// different way without it:
+//
+//   * /complete-profile and what it calls. The destination of the gate cannot
+//     be behind the gate, or it redirects to itself forever; /api/invites/accept
+//     is posted to BY that form, before the profile exists.
+//   * /auth and /api/auth. The OAuth callback is what creates the session in the
+//     first place, and it already routes a profile-less user to
+//     /complete-profile itself. Gating it would break sign-in for every new
+//     Google teacher.
+//   * Server-to-server and crawler paths that have no session to judge, plus
+//     /terms and /privacy — someone stuck at the form must still be able to read
+//     what they are agreeing to.
+const GATE_EXEMPT = [
+  "/complete-profile",
+  "/api/invites/accept",
+  "/auth",
+  "/api/auth",
+  "/terms",
+  "/privacy",
+  "/maintenance",
+  "/api/stripe/webhook",
+  "/api/cron",
+  "/sitemap.xml",
+  "/robots.txt",
+  "/googleeff60eae5378a4ab.html",
+];
+
+function isGateExempt(pathname: string) {
+  return GATE_EXEMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export async function proxy(request: NextRequest) {
   // Start with a passthrough response we can attach refreshed cookies to.
   let response = NextResponse.next({ request });
@@ -157,6 +191,24 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // One profiles read, shared by the maintenance block and the profile gate
+  // below. Both want the same row, and this is the hot path of every request, so
+  // fetching it twice would double the cost of the cheapest thing here.
+  //
+  // Deliberately NOT cached. The module caches in tool-availability.ts and
+  // settings.ts hold GLOBAL values; this one is per user, and a stale entry
+  // would bounce a teacher back to /complete-profile for up to a minute
+  // immediately after they submitted it — a loop, right at the moment the gate
+  // is supposed to release them.
+  //
+  // `error` is kept, not discarded: the gate has to tell "no row" apart from
+  // "could not read". See app/lib/profile-gate.ts.
+  const gateExempt = isGateExempt(pathname);
+  const { data: profile, error: profileError } =
+    user && !gateExempt
+      ? await supabase.from("profiles").select("id, is_admin").eq("id", user.id).maybeSingle()
+      : { data: null, error: null };
+
   // Maintenance mode. Checked here rather than in a layout because a layout
   // would miss the API routes entirely. Most teacher screens now DO share one
   // layout (app/(app)), but /editor, /admin and every /api route sit outside
@@ -170,10 +222,6 @@ export async function proxy(request: NextRequest) {
       // Admins work through it — that is the whole point of being able to turn
       // it on. Read directly rather than via is_admin() because this is the one
       // place that runs before any admin gate.
-      const { data: profile } = user
-        ? await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
-        : { data: null };
-
       if (!profile?.is_admin) {
         if (pathname.startsWith("/api/")) {
           return NextResponse.json(
@@ -186,6 +234,46 @@ export async function proxy(request: NextRequest) {
         return NextResponse.rewrite(url);
       }
     }
+  }
+
+  // Finish signing up before using the product.
+  //
+  // A profiles row is written only by the upsert at the end of
+  // /complete-profile, and nothing forces anyone to get there: /auth/callback
+  // REDIRECTS a new Google teacher to it, but closing the tab leaves a live
+  // session with no profile. That account then generates freely, is coalesced to
+  // 'free' by my_generation_gate(), and shows up on no admin screen — which is
+  // how info@jooma.ai ran a homework generation two weeks after signing up while
+  // being invisible in the console.
+  //
+  // Here rather than in a layout for the same reason maintenance is: app/(app)
+  // is a client layout, and /editor, /admin and every /api route sit outside it.
+  // This is the only place that covers all of them, and the only one that runs
+  // before RLS gets a say.
+  //
+  // Fails CLOSED on a clean null and OPEN on a read error — the asymmetry is
+  // explained at length in app/lib/profile-gate.ts, and is the opposite of the
+  // gates either side of it here, so read that note before changing this.
+  if (
+    user &&
+    !gateExempt &&
+    !profileError &&
+    !profile &&
+    process.env.PROFILE_GATE_DISABLED !== "1"
+  ) {
+    // 403, and deliberately WITHOUT x-upgrade-required: UpgradeGate keys off
+    // 402 + that header, and no amount of money fixes an unfinished signup.
+    // Same reasoning as the tool_disabled case below.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(profileGateBody(), { status: 403 });
+    }
+    // Redirect, not rewrite (maintenance rewrites). The teacher has to actually
+    // BE at /complete-profile: the form's router.push("/welcome") on success
+    // depends on it, and a rewrite would leave the address bar on /dashboard
+    // while showing a signup form.
+    const url = request.nextUrl.clone();
+    url.pathname = "/complete-profile";
+    return NextResponse.redirect(url);
   }
 
   // Tool availability. An admin turning a tool off in /admin/tools has to

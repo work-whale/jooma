@@ -97,6 +97,40 @@ export async function createTeacher(firstName: string): Promise<TestTeacher> {
   return teacher;
 }
 
+/**
+ * A teacher who signed up but never finished the profile form.
+ *
+ * This is the abandoned-Google-signup state: a real, confirmed auth user with a
+ * working session and NO profiles row. Before the profile gate they could use
+ * the whole product from here while appearing on no admin screen — see
+ * app/lib/profile-gate.ts.
+ *
+ * Identical to createTeacher except that it skips the profiles upsert, which is
+ * the whole point: do not add one here, or the fixture stops reproducing the
+ * bug. Torn down by deleteTeacher() like any other.
+ */
+export async function createProfilelessTeacher(firstName: string): Promise<TestTeacher> {
+  const tag = `${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
+  const teacher: TestTeacher = {
+    id: "",
+    email: `e2e-${firstName.toLowerCase()}-${tag}@jooma.test`,
+    password: `Pw-${tag}-Aa1!`,
+    firstName,
+    surname: "Testcase",
+    username: `e2e${firstName.toLowerCase()}${tag}`.slice(0, 20),
+  };
+
+  const { data, error } = await admin.auth.admin.createUser({
+    email: teacher.email,
+    password: teacher.password,
+    email_confirm: true,
+  });
+  if (error) throw new Error(`Could not create ${firstName}: ${error.message}`);
+  teacher.id = data.user.id;
+
+  return teacher;
+}
+
 /** Deleting the auth user cascades to profiles, edges, requests and shares. */
 export async function deleteTeacher(teacher: TestTeacher | null): Promise<void> {
   if (!teacher?.id) return;

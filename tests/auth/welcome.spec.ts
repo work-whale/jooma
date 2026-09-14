@@ -53,8 +53,13 @@ test.describe("Welcome", () => {
   });
 
   test("survives a teacher with no first name on their profile", async ({ page }) => {
-    // A Google signup that never completed the profile still has a session, and
-    // an empty greeting reading "Welcome to Jooma, " would be worse than none.
+    // A profile row that EXISTS but carries a blank name — an admin edit, or a
+    // partial write. An empty greeting reading "Welcome to Jooma, " would be
+    // worse than none.
+    //
+    // Note this is no longer the abandoned-signup case: a teacher with no
+    // profiles row at all never reaches this page, because the proxy sends them
+    // to /complete-profile first. That path is covered in profile-gate.spec.ts.
     await admin.from("profiles").update({ first_name: "" }).eq("id", teacher.id);
 
     await signIn(page, teacher);
