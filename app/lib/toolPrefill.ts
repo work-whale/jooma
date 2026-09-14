@@ -110,7 +110,51 @@ export function validatePrefill(raw: unknown): ToolPrefill | null {
     (tool.fields as { required?: string[] }).required ?? [];
   if (required.some((f) => clean[f] === undefined)) return null;
 
+  applyDefaults(tool, clean);
+
   return { slug, fields: clean };
+}
+
+/**
+ * The curriculum almost every English school means.
+ *
+ * Must stay character-for-character one of CURRICULA in formOptions.ts, or the
+ * <select> renders blank. cleanFields enforces that, so a typo here shows up as
+ * the field simply not being defaulted rather than as a broken control.
+ */
+const DEFAULT_CURRICULUM = "2014 National Curriculum";
+
+/**
+ * Fill in what the teacher did not say and would not think to say.
+ *
+ * Applied AFTER validation, so a default can never rescue an otherwise empty or
+ * invalid prefill: `clean` is already known to be non-empty and to carry every
+ * required field. It only tops up what is missing.
+ *
+ * Currently just the curriculum, and only for tools that actually have the
+ * field. Nobody types "using the 2014 National Curriculum" when they ask for a
+ * Year 6 lesson, so the model correctly omits it, but the curriculum tools gate
+ * Generate on it (LessonPlannerForm.tsx:46) and the teacher is left with a
+ * complete-looking form they cannot submit.
+ *
+ * A DEFAULT BELONGS IN CODE, NOT IN A PROMPT. This was tried three times as
+ * prose — in the per-tool schema description, in the function description, and
+ * in the tool-select system prompt — and the model omitted it every time. A
+ * prompt is a request; this is a guarantee. The prompt guidance stays for the
+ * cases where a teacher DOES name a Scottish, Welsh or Northern Irish context,
+ * which is a real choice the model should still make.
+ */
+function applyDefaults(
+  tool: { fields: Record<string, unknown> },
+  clean: Record<string, string | number | boolean | string[]>,
+): void {
+  const properties = (tool.fields as { properties?: Record<string, unknown> })
+    .properties;
+  // Only tools that have the field: a letter to parents has no curriculum, and
+  // inventing one would be dropped by the setter loop anyway.
+  if (!properties?.curriculum) return;
+  if (clean.curriculum !== undefined) return;
+  clean.curriculum = DEFAULT_CURRICULUM;
 }
 
 /**

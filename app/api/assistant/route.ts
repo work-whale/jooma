@@ -269,7 +269,32 @@ ${toolSchemaDigest()}`,
     // rejects unknown tools, drops unknown fields, enforces enums and caps
     // string lengths before any of it reaches a form. See toolPrefill.ts.
     if (call.function.name === "prefill_tool") {
-      const prefill = validatePrefill(JSON.parse(call.function.arguments));
+      const raw = JSON.parse(call.function.arguments);
+      const prefill = validatePrefill(raw);
+
+      // TEMPORARY DIAGNOSTIC — remove once the missing yearGroup is resolved.
+      //
+      // Prints what the model SENT beside what survived validation, because
+      // those two cases look identical from the outside and need opposite
+      // fixes. A prefill can arrive without a year group because the model
+      // never wrote one, or because it wrote "Y5" and cleanFields dropped it:
+      // enum matching is exact after normalising case and spacing, so a near
+      // miss is discarded with no error anywhere.
+      //
+      //   sent has yearGroup, kept does not  -> validation is too strict
+      //   neither has it                     -> the prompt is not landing
+      const sent = Object.keys((raw as { fields?: object })?.fields ?? {});
+      const kept = prefill ? Object.keys(prefill.fields) : [];
+      console.log("[assistant] prefill fields", {
+        slug: (raw as { slug?: string })?.slug,
+        sent,
+        kept,
+        dropped: sent.filter((f) => !kept.includes(f)),
+        yearGroupSent: (raw as { fields?: Record<string, unknown> })?.fields?.yearGroup,
+        curriculumSent: (raw as { fields?: Record<string, unknown> })?.fields?.curriculum,
+        rejectedEntirely: prefill === null,
+      });
+
       return prefill ? { kind: "prefill", prefill } : null;
     }
 

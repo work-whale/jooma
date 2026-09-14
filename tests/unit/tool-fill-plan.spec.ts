@@ -120,14 +120,21 @@ test.describe("buildFillPlan", () => {
       fields: { subject: "Science", topic: "The water cycle" },
     })!;
 
-    // The form can set yearGroup, but Jo had nothing to put there. Clearing it
-    // is useToolLaunch's job and happens instantly, so it gets no step.
     const plan = buildFillPlan(
       prefill,
       allFields("curriculum", "yearGroup", "subject", "topic"),
     )!;
+    const filled = plan.steps.map((s) => s.field);
 
-    expect(plan.steps.map((s) => s.field)).toEqual(["subject", "topic"]);
+    // The form can set yearGroup, but Jo had nothing to put there and nothing
+    // defaults it. Clearing it is useToolLaunch's job and happens instantly,
+    // so it gets no step.
+    expect(filled).not.toContain("yearGroup");
+
+    // curriculum IS present, and not because the model sent it: validatePrefill
+    // defaults it, since the curriculum tools gate Generate on the field and a
+    // teacher never thinks to name it. See applyDefaults in toolPrefill.ts.
+    expect(filled).toEqual(["curriculum", "subject", "topic"]);
   });
 
   test("stays within the total cap by speeding up", () => {

@@ -59,6 +59,43 @@ test.describe("what the model is told", () => {
     }
   });
 
+  test("declares the shared fields in the schema, not only in prose", () => {
+    // THE REGRESSION THIS GUARDS. Arguments are completed against the
+    // parameters schema. While `fields` was an open object with no properties,
+    // the model had no yearGroup slot to fill and never sent one, however many
+    // times the instruction was restated in the description or system prompt.
+    const fields = prefillFunctionDef().function.parameters.properties.fields as {
+      properties?: Record<string, { enum?: readonly unknown[] }>;
+      additionalProperties?: boolean;
+    };
+
+    expect(fields.properties?.yearGroup).toBeDefined();
+    expect(fields.properties?.curriculum).toBeDefined();
+
+    // With their legal values inline, so a near miss like "Y5" is never the
+    // model's best guess: cleanFields discards anything outside the enum.
+    expect(fields.properties?.yearGroup?.enum).toContain("Year 6");
+    expect(fields.properties?.curriculum?.enum).toContain("2014 National Curriculum");
+
+    // Still open: every tool has its own fields beyond these, and they must
+    // keep flowing through.
+    expect(fields.additionalProperties).toBe(true);
+  });
+
+  test("tells the model to WRITE a learning objective, not just extract one", () => {
+    // The other declared fields are extracted from the sentence. This one has
+    // to be composed: a teacher gives a topic, not an objective, and the model
+    // was leaving it blank — which disables Generate on lesson-planner and
+    // voids the prefill entirely on the two tools that require it.
+    const fields = prefillFunctionDef().function.parameters.properties.fields as {
+      properties?: Record<string, { description?: string }>;
+    };
+
+    const objective = fields.properties?.learningObjective;
+    expect(objective).toBeDefined();
+    expect(objective?.description).toMatch(/write one yourself|ALWAYS provide/i);
+  });
+
   test("warns that near-miss year groups are rejected outright", () => {
     // The failure this guards: "Y5" and "5" are dropped by validatePrefill with
     // no error anywhere, so the teacher's stated year group silently vanishes
