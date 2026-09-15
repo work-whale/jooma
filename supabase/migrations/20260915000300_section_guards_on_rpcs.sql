@@ -283,7 +283,7 @@ begin
       i.id, i.reference,
       coalesce(sc.name,
         nullif(trim(coalesce(p.first_name,'') || ' ' || coalesce(p.surname,'')), ''),
-        u.email::text, '-'),
+        u.email::text, '—'),
       i.type, i.amount_gbp,
       case when i.status = 'sent' and i.due_at is not null and i.due_at < current_date
            then 'overdue' else i.status end,
