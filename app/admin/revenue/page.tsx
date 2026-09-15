@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { stripe } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import InvoicesView, {
@@ -72,7 +72,7 @@ async function loadDunning(): Promise<{ rows: DunningRow[]; error: string | null
 }
 
 export default async function AdminRevenuePage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_money");
 
   const [{ data: invoices }, { data: summary }, { data: schools }, dunning] = await Promise.all([
     supabase.rpc("admin_invoices"),

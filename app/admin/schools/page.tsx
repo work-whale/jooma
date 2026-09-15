@@ -1,11 +1,11 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import NotBuiltBanner from "../NotBuiltBanner";
 import SchoolsTable, { type SchoolRow, type TrustRow } from "./SchoolsTable";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSchoolsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_people");
 
   const [{ data: schools }, { data: trusts }] = await Promise.all([
     supabase.rpc("admin_schools"),

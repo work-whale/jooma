@@ -1,11 +1,11 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { loadFxRate } from "@/app/lib/fx";
 import PlansView, { type PlanRow, type PricingRule } from "./PlansView";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPlansPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_money");
 
   const [{ data: plans }, { data: rules }, fx] = await Promise.all([
     supabase.rpc("admin_plans"),

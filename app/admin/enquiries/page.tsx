@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import EnquiriesView, { type EnquiryRow } from "./EnquiriesView";
 
 // Same shape as every other admin section: a server component does the fetch, a
@@ -14,7 +14,7 @@ export default async function AdminEnquiriesPage({
   searchParams: Promise<{ id?: string; kind?: string }>;
 }) {
   const { id, kind } = await searchParams;
-  const { supabase, user } = await requireAdmin();
+  const { supabase, user } = await requireSection("see_support");
 
   const [{ data: rows }, { data: summary }] = await Promise.all([
     supabase.rpc("admin_enquiries", {

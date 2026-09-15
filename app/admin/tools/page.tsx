@@ -1,11 +1,11 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { TOOLS } from "@/app/lib/tools";
 import ToolsView, { type ModelRow, type ToolRow } from "./ToolsView";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminToolsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_product");
 
   const [{ data: tools }, { data: models }] = await Promise.all([
     supabase.rpc("admin_tools"),

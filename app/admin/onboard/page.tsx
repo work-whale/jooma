@@ -1,11 +1,11 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import NotBuiltBanner from "../NotBuiltBanner";
 import OnboardWizard, { type TrustOption } from "./OnboardWizard";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOnboardPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_people");
   const { data: trusts } = await supabase.rpc("admin_trusts");
 
   return (

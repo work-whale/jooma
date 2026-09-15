@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { stripe } from "@/app/lib/stripe";
 import PromosView, { type PromoRow } from "./PromosView";
 
@@ -35,7 +35,7 @@ function describeOffer(coupon: {
 }
 
 export default async function AdminPromosPage() {
-  await requireAdmin();
+  await requireSection("see_money");
 
   // Stripe is the source of truth for promotions — it is the system that
   // actually validates a code at checkout. Rather than keep a local copy that

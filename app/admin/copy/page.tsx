@@ -1,10 +1,10 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import CopyView, { type CopyBlock } from "./CopyView";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCopyPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_content");
 
   const [{ data: blocks }, { data: can }] = await Promise.all([
     supabase.rpc("admin_copy_blocks"),

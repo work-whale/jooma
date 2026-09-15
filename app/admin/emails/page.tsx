@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { mailerConfigured } from "@/app/lib/email";
 import { TEMPLATES } from "@/app/lib/email-templates";
 import EmailsView, { type EmailTemplate } from "./EmailsView";
@@ -6,7 +6,7 @@ import EmailsView, { type EmailTemplate } from "./EmailsView";
 export const dynamic = "force-dynamic";
 
 export default async function AdminEmailsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_content");
   const { data } = await supabase.rpc("admin_email_templates");
 
   // Two separate facts, and this page used to assert the wrong value for the

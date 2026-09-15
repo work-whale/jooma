@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { nf, fmtDateTime } from "../format";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ interface DeckRow {
 }
 
 export default async function AdminPresentationsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_product");
   const { data } = await supabase.rpc("admin_presentations", { lim: 100 });
   const rows = (data ?? []) as DeckRow[];
 

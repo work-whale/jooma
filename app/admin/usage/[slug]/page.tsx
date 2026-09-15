@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../../access";
 import { typeLabel } from "@/app/lib/toolRunDisplay";
 import { nf, usd } from "../../format";
 import SlideshowBreakdown, { type SlideRow } from "./SlideshowBreakdown";
@@ -45,7 +45,7 @@ export default async function AdminToolDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_product");
   const isSlideshow = slug === "generate-slideshow";
 
   const [{ data: reportData }, { data: stepData }, slideRes] = await Promise.all([
