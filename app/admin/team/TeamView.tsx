@@ -3,6 +3,12 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/auth/client";
+import {
+  ADMIN_ROLES as ROLES,
+  PERMISSION_LABEL,
+  PERMISSION_ORDER,
+  ROLE_LABEL,
+} from "@/app/lib/adminRoles";
 import { fmtRelative } from "../format";
 import AddAdminModal from "./AddAdminModal";
 import {
@@ -43,50 +49,6 @@ export interface MatrixRow {
    *  switched off — currently only super_admin/manage_admins. */
   protected: boolean;
 }
-
-const ROLES = ["super_admin", "support", "finance", "content", "developer"] as const;
-
-const ROLE_LABEL: Record<string, string> = {
-  super_admin: "Super admin",
-  support: "Support",
-  finance: "Finance",
-  content: "Content",
-  developer: "Developer",
-};
-
-const PERMISSION_LABEL: Record<string, string> = {
-  see_teachers: "See teacher accounts",
-  reset_passwords: "Reset passwords",
-  view_as_teacher: "View as a teacher",
-  invite_teachers: "Invite teachers",
-  grant_allowance: "Grant resources or AI images",
-  suspend_accounts: "Suspend accounts",
-  change_plan: "Change a plan or price",
-  issue_refunds: "Issue refunds",
-  edit_copy: "Edit website copy",
-  onboard_school: "Onboard a school",
-  toggle_tools: "Turn tools on and off",
-  manage_admins: "Manage admins",
-  export_personal_data: "Export personal data",
-};
-
-// Display order matters here — it reads as a story from least to most
-// sensitive, which is how someone auditing it will scan.
-const PERMISSION_ORDER = [
-  "see_teachers",
-  "reset_passwords",
-  "view_as_teacher",
-  "invite_teachers",
-  "grant_allowance",
-  "suspend_accounts",
-  "change_plan",
-  "issue_refunds",
-  "edit_copy",
-  "onboard_school",
-  "toggle_tools",
-  "manage_admins",
-  "export_personal_data",
-];
 
 export default function TeamView({
   members,

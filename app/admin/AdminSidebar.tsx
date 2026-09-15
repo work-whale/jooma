@@ -27,6 +27,7 @@ import {
   Sliders,
   Presentation,
   Activity,
+  TrendingUp,
   ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +44,11 @@ interface NavItem {
 
 interface NavGroup {
   label: string;
+  /** Section permission that reveals this group. A role without it never sees
+   *  the group at all, rather than seeing it greyed: a disabled Money group
+   *  would tell a marketing contractor exactly what exists. Distinct from the
+   *  `disabled` flag below, which means "built but not shippable yet". */
+  perm: string;
   items: NavItem[];
 }
 
@@ -52,10 +58,21 @@ interface NavGroup {
 const NAV: NavGroup[] = [
   {
     label: "Overview",
+    perm: "see_overview",
     items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
   },
   {
+    // Its own group rather than a second item under Overview, because
+    // marketing holds see_stats WITHOUT see_overview. Nested under a group
+    // they cannot see, Stats would be unreachable for the one role built
+    // around it.
+    label: "Insight",
+    perm: "see_stats",
+    items: [{ href: "/admin/stats", label: "Stats", icon: TrendingUp }],
+  },
+  {
     label: "People",
+    perm: "see_people",
     items: [
       { href: "/admin/users", label: "Teachers", icon: Users },
       // The School plan isn't part of the product yet — there is no pricing for
@@ -67,6 +84,7 @@ const NAV: NavGroup[] = [
   },
   {
     label: "Money",
+    perm: "see_money",
     items: [
       { href: "/admin/plans", label: "Plans & pricing", icon: PoundSterling },
       { href: "/admin/revenue", label: "Payments & invoices", icon: CreditCard },
@@ -79,6 +97,7 @@ const NAV: NavGroup[] = [
   },
   {
     label: "Product",
+    perm: "see_product",
     items: [
       { href: "/admin/usage", label: "Usage & margins", icon: BarChart3 },
       { href: "/admin/tools", label: "Tools", icon: Sliders },
@@ -89,6 +108,7 @@ const NAV: NavGroup[] = [
   },
   {
     label: "Support",
+    perm: "see_support",
     items: [
       { href: "/admin/inbox", label: "Inbox", icon: Inbox },
       // Contact and school enquiries. Separate from the inbox because a ticket
@@ -101,6 +121,7 @@ const NAV: NavGroup[] = [
   },
   {
     label: "Content",
+    perm: "see_content",
     items: [
       { href: "/admin/copy", label: "Website & app copy", icon: PenSquare },
       { href: "/admin/emails", label: "Email templates", icon: Mail },
@@ -109,6 +130,7 @@ const NAV: NavGroup[] = [
   },
   {
     label: "Admin",
+    perm: "see_admin",
     items: [
       { href: "/admin/team", label: "Team & roles", icon: UsersRound },
       { href: "/admin/audit", label: "Audit log", icon: ScrollText },
@@ -126,11 +148,18 @@ function isActive(pathname: string, href: string) {
 
 export default function AdminSidebar({
   badges,
+  permissions,
 }: {
   /** Live counts keyed by href, e.g. { "/admin/inbox": 3 }. */
   badges?: Record<string, number>;
+  /** Section permissions the viewer holds. Required rather than optional so a
+   *  failed lookup renders an empty sidebar instead of the whole console:
+   *  showing too little during an outage is recoverable, too much is not. */
+  permissions: string[];
 }) {
   const pathname = usePathname();
+  const allowed = new Set(permissions);
+  const groups = NAV.filter((g) => allowed.has(g.perm));
 
   return (
     <aside
@@ -144,7 +173,7 @@ export default function AdminSidebar({
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4 space-y-5">
-        {NAV.map((group) => (
+        {groups.map((group) => (
           <div key={group.label}>
             <p
               className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider"

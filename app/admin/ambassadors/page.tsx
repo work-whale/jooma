@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { stripe } from "@/app/lib/stripe";
 import AmbassadorsView, { type AmbassadorRow, type CodeLive } from "./AmbassadorsView";
 
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  */
 
 export default async function AdminAmbassadorsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_money");
 
   const { data: rows, error } = await supabase.rpc("admin_ambassadors");
 

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { nf } from "../format";
 import AdminTeachersTable, { type TeacherRow } from "./AdminTeachersTable";
 import AdminTeachersHeaderActions from "./AdminTeachersHeaderActions";
@@ -8,7 +8,7 @@ import IncompleteSignups, { type IncompleteSignup } from "./IncompleteSignups";
 export const dynamic = "force-dynamic";
 
 export default async function AdminUsersPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_people");
   const [{ data }, { data: invites }, { data: incomplete }] = await Promise.all([
     supabase.rpc("admin_users"),
     supabase.rpc("admin_pending_invites"),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/lib/auth/client";
+import { ADMIN_ROLES, ROLE_HINT, ROLE_LABEL } from "@/app/lib/adminRoles";
 import { Btn, C, Field, Modal, inputClass, inputStyle } from "../ui";
 
 // Promotes someone who already has a Jooma account. There is deliberately no
@@ -16,13 +17,17 @@ interface Candidate {
   name: string | null;
 }
 
-const ROLES: { value: string; label: string; hint: string }[] = [
-  { value: "support", label: "Support", hint: "Teacher accounts, grants, password resets." },
-  { value: "finance", label: "Finance", hint: "Plans, prices, refunds, invoices." },
-  { value: "content", label: "Content", hint: "Website and app copy only." },
-  { value: "developer", label: "Developer", hint: "Tools on and off. Read-only elsewhere." },
-  { value: "super_admin", label: "Super admin", hint: "Everything, including managing admins." },
-];
+// Super admin last: the list reads as increasing access, and the most dangerous
+// choice should not be the one sitting next to the default.
+const ROLE_ORDER = ["support", "finance", "marketing", "super_admin"];
+
+const ROLES: { value: string; label: string; hint: string }[] = ROLE_ORDER.filter((r) =>
+  (ADMIN_ROLES as readonly string[]).includes(r),
+).map((value) => ({
+  value,
+  label: ROLE_LABEL[value] ?? value,
+  hint: ROLE_HINT[value] ?? "",
+}));
 
 export default function AddAdminModal({
   onClose,

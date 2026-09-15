@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import TopupsView, {
   type RecentTopup,
   type TopupPack,
@@ -19,7 +19,7 @@ const TOPUP_RULE_KEYS = [
 ];
 
 export default async function AdminTopupsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_money");
 
   const [{ data: packs }, { data: summary }, { data: rules }, { data: recent }] =
     await Promise.all([

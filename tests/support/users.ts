@@ -153,6 +153,33 @@ export async function createAdmin(firstName: string): Promise<TestTeacher> {
 }
 
 /**
+ * An admin with a specific console role.
+ *
+ * Two writes, because "is an admin" is two things: profiles.is_admin is the
+ * boundary every admin_* RPC checks, and the admin_team row carries the role
+ * that decides which SECTIONS they see. Writing only the first would silently
+ * create a super admin, since admin_role() resolves a missing team row to
+ * super_admin.
+ *
+ * Service role by necessity: 20260813000500 dropped the "admins write team"
+ * policy, so admin_team has no client-side write path at all. That is the
+ * design working, and it is why this cannot go through the browser.
+ *
+ * Torn down by deleteTeacher(); admin_team.user_id cascades from auth.users.
+ */
+export async function createAdminWithRole(
+  firstName: string,
+  role: "super_admin" | "support" | "finance" | "marketing",
+): Promise<TestTeacher> {
+  const person = await createAdmin(firstName);
+  const { error } = await admin
+    .from("admin_team")
+    .upsert({ user_id: person.id, role }, { onConflict: "user_id" });
+  if (error) throw new Error(`Could not give ${firstName} the ${role} role: ${error.message}`);
+  return person;
+}
+
+/**
  * Put a teacher on a paid plan in one of the three states MRR has to tell
  * apart. The distinction that matters is `stripe_subscription_id`: a comp never
  * has one, and that absence is the only honest way to spot it, because the comp

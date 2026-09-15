@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import InboxView, { type CannedReply, type SupportSummary, type ThreadRow } from "./InboxView";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export default async function AdminInboxPage({
   searchParams: Promise<{ thread?: string }>;
 }) {
   const { thread } = await searchParams;
-  const { supabase, user } = await requireAdmin();
+  const { supabase, user } = await requireSection("see_support");
 
   const [{ data: threads }, { data: canned }, { data: summary }] = await Promise.all([
     supabase.rpc("admin_threads", { p_status: null, p_filter: null, q: null }),

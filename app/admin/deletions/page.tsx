@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { landingPath, requireSection } from "../access";
 import DeletionsView, { type DeletionRow } from "./DeletionsView";
 
 // Why teachers are leaving, and what is in the queue.
@@ -15,12 +15,11 @@ import DeletionsView, { type DeletionRow } from "./DeletionsView";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDeletionsPage() {
-  const { supabase } = await requireAdmin();
-
-  const { data: allowed } = await supabase.rpc("admin_can", {
-    p_permission: "see_deletions",
-  });
-  if (!allowed) redirect("/admin");
+  // Two gates, deliberately. see_support puts the page in the sidebar; the
+  // finer see_deletions decides whether a support admin may read the reasons
+  // someone gave for leaving. Finance holds neither.
+  const { supabase, access } = await requireSection("see_support");
+  if (!access.can("see_deletions")) redirect(landingPath(access.permissions));
 
   // Read directly rather than through an admin_* RPC: the "admins read deletion
   // requests" policy already scopes this to is_admin(), so a function would add

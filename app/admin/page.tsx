@@ -1,4 +1,5 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { redirect } from "next/navigation";
+import { adminAccess, landingPath } from "./access";
 import { loadTrueMrr } from "./trueMrr";
 import DashboardView, {
   type CostRow,
@@ -10,7 +11,14 @@ import DashboardView, {
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase, access } = await adminAccess();
+
+  // /admin is the dashboard, and not every role can see it. Marketing lands on
+  // Stats instead. This is the ONLY redirect in the console that moves someone
+  // between sections, and it always points away from here, never back: the
+  // pages it targets check their own permission and render inline if it fails,
+  // so there is no pair of pages that can bounce a request between them.
+  if (!access.can("see_overview")) redirect(landingPath(access.permissions));
 
   const [{ data: stats }, { data: attention }, { data: signups }, { data: costs }, { data: mrrRows }] =
     await Promise.all([

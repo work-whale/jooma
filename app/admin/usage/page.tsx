@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/app/lib/auth/admin";
+import { requireSection } from "../access";
 import { TOOLS } from "@/app/lib/tools";
 import { typeLabel } from "@/app/lib/toolRunDisplay";
 import AdminUsageTable, { type AdminUsageRow } from "./AdminUsageTable";
@@ -53,7 +53,7 @@ interface StepRow {
 }
 
 export default async function AdminUsagePage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireSection("see_product");
 
   const [
     { data },
