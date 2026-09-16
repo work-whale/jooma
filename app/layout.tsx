@@ -10,6 +10,7 @@ import {
 } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/next";
+import MetaPixel from "@/app/components/MetaPixel";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -121,6 +122,9 @@ export default function RootLayout({
         <NextTopLoader color="#5B2ED6" showSpinner={false} />
         {children}
         <Analytics />
+        {/* Renders nothing unless NEXT_PUBLIC_META_PIXEL_ID is set, so local
+            and staging cannot report into the live pixel. */}
+        <MetaPixel />
       </body>
     </html>
   );

@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/app/lib/auth/client";
+import { shouldSendStartTrial, type ActivationOutcome } from "@/app/lib/meta-events";
 import DialCodeSelect, {
   DEFAULT_DIAL_CODE as DEFAULT_CODE,
 } from "@/app/components/DialCodeSelect";
@@ -22,6 +23,14 @@ import styles from "./complete-profile.module.css";
  * trade.
  */
 
+/** One Meta cookie, or null when the pixel never ran (an ad blocker, or the
+ *  pixel id not configured in this environment). Both are expected to be
+ *  missing often, and nothing downstream may treat that as an error. */
+function metaCookie(name: "_fbp" | "_fbc"): string | null {
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 export default function CompleteProfilePage() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
@@ -38,6 +47,53 @@ export default function CompleteProfilePage() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // A second submit must not report a second activation.
+  //
+  // The profiles upsert is idempotent (id is the primary key), so a teacher who
+  // retries after a failed invite step, or after a dropped connection, runs this
+  // handler twice against ONE account. Meta would count two conversions for one
+  // activation. The server send guards the same case by using the user id as its
+  // event_id, which Meta dedupes on; this ref is what stops the browser event
+  // firing twice in the first place.
+  const reported = useRef(false);
+
+  /**
+   * Report a Free plan activation, to the browser pixel and to our own route.
+   *
+   * Called at every point the teacher ends up on Free, which is not the same as
+   * "whenever this form succeeds": an admin-invited teacher can land directly on
+   * a paid plan, and never started a trial. shouldSendStartTrial holds that rule
+   * and is shared with the server so the two cannot disagree.
+   *
+   * Fire and forget. The caller navigates immediately afterwards, and a signup
+   * that worked must never be made to look broken by a marketing pixel, so
+   * nothing here is awaited and every failure is swallowed.
+   */
+  const reportActivation = (userId: string, outcome: ActivationOutcome) => {
+    if (reported.current) return;
+    reported.current = true;
+
+    if (!shouldSendStartTrial(outcome)) return;
+
+    const fbp = metaCookie("_fbp");
+    const fbc = metaCookie("_fbc");
+
+    // eventID, not a random value: it dedupes this against the server copy of
+    // the same event, so one activation is not counted twice. Do not remove it
+    // without reading sendStartTrialEvent in app/lib/meta-capi.ts.
+    window.fbq?.("track", "StartTrial", {}, { eventID: userId });
+
+    // keepalive, because this fires immediately before a navigation: without it
+    // the browser is free to cancel the request as the page unloads, which is
+    // the common case here rather than a rare one.
+    void fetch("/api/meta/activation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fbp, fbc, outcome }),
+      keepalive: true,
+    }).catch(() => {});
+  };
 
   const canSubmit =
     firstName.trim() !== "" &&
@@ -106,19 +162,32 @@ export default function CompleteProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: inviteToken }),
       });
+      const json = await res.json().catch(() => ({}));
+      const invitePlan = (json as { plan?: unknown }).plan;
       if (!res.ok) {
         // The profile is saved either way — this only decides the plan — so
         // report it and let them continue on Free rather than stranding them
         // on a form they cannot get past. The admin can re-invite.
-        const json = await res.json().catch(() => ({}));
         setError(
           `${json.error ?? "Your invitation couldn't be applied."} Your account is set up, continuing on the Free plan.`,
         );
         sessionStorage.removeItem("jooma:invite-token");
+        // On Free, despite the invite: the row is saved and the copy above says
+        // so. A real activation, and the one case that never reaches /welcome,
+        // which is why this event cannot hang off that page.
+        reportActivation(user.id, { kind: "invite-failed" });
         setLoading(false);
         return;
       }
       sessionStorage.removeItem("jooma:invite-token");
+      // An invite can carry any plan. A paid one is not a trial, so the shared
+      // predicate decides rather than this call site.
+      reportActivation(user.id, {
+        kind: "invite-applied",
+        plan: typeof invitePlan === "string" ? invitePlan : "free",
+      });
+    } else {
+      reportActivation(user.id, { kind: "self-signup" });
     }
 
     sessionStorage.removeItem("jooma:auth-email");

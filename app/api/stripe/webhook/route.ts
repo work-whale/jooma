@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { stripe, planForPriceId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { DEFAULT_PLAN, TOPUP_PENCE } from "@/app/lib/plans";
+import { isReportablePurchase, sendPurchase } from "@/app/lib/meta-capi";
 
 // Stripe → app sync. This is the ONLY place a user's plan is upgraded/downgraded
 // from payment state. It runs with the service-role key (no user session) and
@@ -311,6 +312,72 @@ async function markReferralPaid(inv: Stripe.Invoice) {
     .is("first_paid_at", null);
 
   if (error) console.error("[stripe/webhook] referral payout mark failed", error);
+}
+
+// ── Meta advertising ─────────────────────────────────────────────────────────
+
+/**
+ * Report a confirmed subscription payment to Meta.
+ *
+ * WHY THIS IS HERE RATHER THAN IN THE BROWSER
+ *
+ * This is the moment the specification means by "after the payment has been
+ * successfully confirmed", and there is no browser at it: the teacher may have
+ * closed the tab at the Stripe redirect minutes ago. The success page could not
+ * report an honest value either, since it cannot know what was actually charged
+ * once promotion codes and proration are applied. The invoice can.
+ *
+ * SAFE AGAINST RETRIES. The handler below returns 500 on any throw to invite
+ * Stripe to retry, and those retries re-run this. sendPurchase uses inv.id as
+ * the Meta event_id, and Meta dedupes on it within 48 hours, so a retried
+ * invoice collapses into one conversion rather than inflating revenue.
+ *
+ * NEVER THROWS, for the same reason: a marketing pixel must not be able to
+ * trigger a retry storm against subscription syncing. sendPurchase swallows its
+ * own failures, and this wrapper swallows everything around it.
+ */
+async function reportPurchaseToMeta(inv: Stripe.Invoice) {
+  try {
+    // Subscription invoices only. A one-off credit top-up is not a purchase of
+    // a plan, and the same check guards markReferralPaid above.
+    if (!isReportablePurchase(inv)) return;
+
+    const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
+    const userId = await userIdForCustomer(customerId);
+    if (!userId) return;
+
+    // The advertising cookies captured at signup, possibly weeks ago. This is
+    // what links this payment back to the ad click that started the free trial,
+    // and the whole reason those columns exist. Null for an organic signup, or
+    // where an ad blocker stopped the pixel: sendPurchase omits what is missing
+    // and still matches on the hashed email.
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("meta_fbp, meta_fbc")
+      .eq("id", userId)
+      .maybeSingle();
+
+    // Read from the Stripe customer rather than the profile: it is the address
+    // that actually paid, which is what Meta is most likely to match against.
+    const customer = inv.customer_email ?? null;
+
+    await sendPurchase({
+      eventId: inv.id ?? `invoice-${userId}-${inv.created}`,
+      email: customer,
+      fbp: profile?.meta_fbp ?? null,
+      fbc: profile?.meta_fbc ?? null,
+      // What was actually received, not what was billed: a discounted first
+      // month is worth what it charged, and toMajor turns pence into pounds.
+      valueMinor: inv.amount_paid ?? 0,
+      currency: inv.currency ?? "gbp",
+      // Stripe reports this in seconds already, which is what Meta wants.
+      eventTimeUnix: inv.created,
+      // Deliberately absent. Stripe's IP and user agent are Stripe's, not the
+      // teacher's, and sending them would corrupt the match rather than help it.
+    });
+  } catch (err) {
+    console.error("[stripe/webhook] Meta purchase report failed", err);
+  }
 }
 
 /**
@@ -685,6 +752,10 @@ export async function POST(req: NextRequest) {
         // Money has actually arrived, which is the moment an ambassador becomes
         // owed for this teacher. Idempotent: only ever writes the FIRST payment.
         await markReferralPaid(inv);
+        // LAST, and deliberately so: everything above writes to our own
+        // database, and a third party being unreachable must not stop any of
+        // it. This one never throws, so it cannot.
+        await reportPurchaseToMeta(inv);
         break;
       }
       case "invoice.payment_failed": {
