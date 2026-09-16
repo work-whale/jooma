@@ -97,13 +97,99 @@ test.describe("marketing", () => {
     await page.goto("/admin/stats");
 
     await expect(page.getByText("Signups by month")).toBeVisible();
-    await expect(page.getByText("How teachers reached us")).toBeVisible();
+    await expect(page.getByText("Acquisition channel")).toBeVisible();
 
-    // The acquisition panel must keep saying it is not built. If someone later
-    // fills it with the three attribution buckets and calls it channel data,
-    // this fails, which is the point.
-    await expect(page.getByText("NOT BUILT YET")).toBeVisible();
-    await expect(page.getByText(/Acquisition channel/)).toBeVisible();
+    // The acquisition panel used to be a NOT BUILT YET banner, and this test
+    // guarded against someone filling it with the ambassador and invite buckets
+    // and calling that channel data. Now that campaign tags are genuinely
+    // recorded, the same job falls to the caveats: the panel has to keep saying
+    // which accounts carry no source at all, and that paid social is a floor
+    // rather than a total because of the in-app-browser gap. A panel that
+    // quietly dropped those would be overclaiming again.
+    //
+    // Matched on the substance rather than an exact sentence: the copy is
+    // marketing-facing and will be reworded, and a test pinned to a phrase
+    // fails on an honest edit while passing if someone deletes the caveat and
+    // writes a different one. "Not recorded" and "floor" are the two claims
+    // that have to survive.
+    await expect(page.getByText(/Not recorded/).first()).toBeVisible();
+    await expect(page.getByText(/floor/)).toBeVisible();
+
+    // And the tagging note, which is what makes a missing utm_source self
+    // diagnosing for the agency reading this page.
+    await expect(page.getByText(/utm_source=facebook/)).toBeVisible();
+  });
+
+  /*
+   * The visual rebuild: KPI deltas, the visitors tile, the charts, and the
+   * ranges named in months.
+   *
+   * These assert structure rather than numbers. The staging database's figures
+   * change under the tests, so anything pinned to a value fails on a quiet
+   * Tuesday; what has to hold is that each panel renders at all, which is what
+   * breaks when a chart throws or a tile is wired to a field that does not
+   * exist.
+   */
+  test("shows the range tabs named in months, not days", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+
+    // The rename. "30 days" promised a precision the monthly RPCs never had.
+    await expect(page.getByRole("link", { name: "1 month" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "3 months" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "12 months" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "All time" })).toBeVisible();
+
+    await expect(page.getByRole("link", { name: /30 days/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /90 days/ })).toHaveCount(0);
+  });
+
+  test("renders every KPI tile, including visitors", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+
+    // Scoped to the tile labels themselves. Unscoped, "Visitors" also matches
+    // the Monthly detail column header and trips strict mode.
+    const labels = page.locator("p.uppercase");
+
+    for (const tile of [
+      "Total signups",
+      "This month",
+      "Paying teachers",
+      "Free to paid",
+      "Visitors",
+    ]) {
+      await expect(labels.filter({ hasText: new RegExp(`^${tile}$`) })).toBeVisible();
+    }
+  });
+
+  test("draws the charts rather than leaving empty panels", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+
+    await expect(page.getByText("Plan mix")).toBeVisible();
+    await expect(page.getByText("Free to paid conversion")).toBeVisible();
+
+    // Recharts renders to SVG, and renders nothing at all if the data shape is
+    // wrong. Waiting on the surface is the cheapest proof the chart mounted:
+    // a thrown chart leaves the card body empty and this times out.
+    await expect(page.locator(".recharts-surface").first()).toBeVisible();
+
+    // One per chart: signups, conversion, plan mix. Fewer means a panel fell
+    // back to its empty state on data that exists.
+    await expect(page.locator(".recharts-surface")).toHaveCount(3);
+  });
+
+  test("keeps the visitor count honest about being daily", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+
+    // The wording is the point. Vercel floors every window to a whole day, so
+    // the mockup's "on site right now" would be a claim this data cannot make,
+    // and the caveat underneath is what stops someone reinstating it.
+    await expect(page.getByText(/so far today/i)).toBeVisible();
+    await expect(page.getByText(/Counted per day, not live/)).toBeVisible();
+    await expect(page.getByText(/on site right now/i)).toHaveCount(0);
   });
 });
 

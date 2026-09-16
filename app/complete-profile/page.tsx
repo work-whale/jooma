@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/app/lib/auth/client";
 import { shouldSendStartTrial, type ActivationOutcome } from "@/app/lib/meta-events";
+import { ATTRIBUTION_COOKIE } from "@/app/lib/attribution";
 import DialCodeSelect, {
   DEFAULT_DIAL_CODE as DEFAULT_CODE,
 } from "@/app/components/DialCodeSelect";
@@ -28,6 +29,16 @@ import styles from "./complete-profile.module.css";
  *  missing often, and nothing downstream may treat that as an error. */
 function metaCookie(name: "_fbp" | "_fbc"): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** The first touch proxy.ts recorded, if there was one. Sent as a fallback only:
+ *  the activation route reads this same cookie from the request and prefers it,
+ *  since a body value would be forgeable. */
+function attributionCookie(): string | null {
+  const match = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${ATTRIBUTION_COOKIE}=([^;]*)`),
+  );
   return match ? decodeURIComponent(match[1]) : null;
 }
 
@@ -74,23 +85,42 @@ export default function CompleteProfilePage() {
     if (reported.current) return;
     reported.current = true;
 
-    if (!shouldSendStartTrial(outcome)) return;
-
     const fbp = metaCookie("_fbp");
     const fbc = metaCookie("_fbc");
 
-    // eventID, not a random value: it dedupes this against the server copy of
-    // the same event, so one activation is not counted twice. Do not remove it
-    // without reading sendStartTrialEvent in app/lib/meta-capi.ts.
-    window.fbq?.("track", "StartTrial", {}, { eventID: userId });
+    // ONLY THE BROWSER PIXEL IS CONDITIONAL, and this used to be a bare return
+    // above it, which was a bug with two victims.
+    //
+    // An admin-invited teacher landing on a paid plan reports no StartTrial, so
+    // the old early return meant the route below was never called for them at
+    // all. That route's own comment says it stores the advertising cookies
+    // "regardless of whether this particular signup reports a trial", naming
+    // exactly that teacher: it believed it handled the case and the client
+    // never let it. Their _fbp and _fbc were dropped, costing attribution on a
+    // renewal months later, and their signup source would be lost too.
+    //
+    // The route re-checks this same predicate before sending anything to Meta,
+    // so the event itself stays correctly suppressed.
+    if (shouldSendStartTrial(outcome)) {
+      // eventID, not a random value: it dedupes this against the server copy of
+      // the same event, so one activation is not counted twice. Do not remove it
+      // without reading sendStartTrialEvent in app/lib/meta-capi.ts.
+      window.fbq?.("track", "StartTrial", {}, { eventID: userId });
+    }
 
     // keepalive, because this fires immediately before a navigation: without it
     // the browser is free to cancel the request as the page unloads, which is
     // the common case here rather than a rare one.
+    //
+    // `attr` is defence in depth only. The route reads the same cookie from the
+    // request itself and prefers that, because a body value would let a teacher
+    // credit any campaign they liked. This covers nothing more than a browser
+    // dropping the cookie on a same-origin keepalive fetch, which does not
+    // happen, at the cost of one line.
     void fetch("/api/meta/activation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fbp, fbc, outcome }),
+      body: JSON.stringify({ fbp, fbc, outcome, attr: attributionCookie() }),
       keepalive: true,
     }).catch(() => {});
   };

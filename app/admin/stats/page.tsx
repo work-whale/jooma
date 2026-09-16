@@ -96,6 +96,7 @@ export default async function AdminStatsPage(props: {
       }))}
       sources={((bySource ?? []) as SourceRow[]).map((s) => ({
         ...s,
+        channel: String(s.channel ?? "unknown"),
         signups: Number(s.signups),
         paid: Number(s.paid),
       }))}

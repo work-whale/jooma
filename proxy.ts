@@ -14,6 +14,7 @@ import {
 import { isToolEnabled } from "@/app/lib/tool-availability";
 import { profileGateBody } from "@/app/lib/profile-gate";
 import { publicSettings } from "@/app/lib/settings";
+import { applyAttributionCookie } from "@/app/lib/attribution-cookie";
 
 // Reachable while maintenance mode is on. /maintenance itself, obviously, plus
 // the auth routes — an admin has to be able to sign in to turn it back off,
@@ -357,6 +358,17 @@ export async function proxy(request: NextRequest) {
       });
     }
   }
+
+  // Where this visitor came from, recorded once and never overwritten.
+  //
+  // Last, and on `response` rather than any earlier object, because the Supabase
+  // setAll handler above replaces `response` wholesale whenever it refreshes a
+  // session: a cookie set before that point is silently dropped.
+  //
+  // One call site is enough. Every path that can ORIGINATE an ad click is a
+  // signed-out page load that returns here; the redirects above are by
+  // definition second visits, and first touch wins would skip them anyway.
+  applyAttributionCookie(request, response);
 
   return response;
 }

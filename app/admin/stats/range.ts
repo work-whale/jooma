@@ -8,11 +8,24 @@ export const RANGES = ["30d", "90d", "12mo", "all"] as const;
 
 export type Range = (typeof RANGES)[number];
 
+// Labelled in months rather than days, because months are the unit this page
+// actually counts in: every RPC buckets by month, so "30 days" promised a
+// precision the data never had.
 export const RANGE_LABEL: Record<Range, string> = {
-  "30d": "30 days",
-  "90d": "90 days",
+  "30d": "1 month",
+  "90d": "3 months",
   "12mo": "12 months",
   all: "All time",
+};
+
+/** How the KPI tiles name the window under a figure covering the whole range,
+ *  e.g. "in the last 3 months". "All time" has no such phrasing, so it keeps
+ *  its own wording. */
+export const RANGE_PHRASE: Record<Range, string> = {
+  "30d": "in the last month",
+  "90d": "in the last 3 months",
+  "12mo": "in the last 12 months",
+  all: "all time",
 };
 
 /** Months of history each range asks the RPCs for. "all" is capped at the

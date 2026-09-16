@@ -41,6 +41,40 @@ export function conversionOf(row: { signups: number; paid: number }): string {
   return `${((row.paid / row.signups) * 100).toFixed(1)}%`;
 }
 
+export interface Delta {
+  label: string;
+  dir: "up" | "down" | "new" | "flat";
+}
+
+/**
+ * Month-on-month movement, for the chip under a KPI figure.
+ *
+ * Three cases the obvious `(cur - prev) / prev` does not survive:
+ *
+ *   - No previous month at all (`undefined`), or a previous month of zero.
+ *     There is no percentage to state, so it reads "new" rather than the
+ *     Infinity that division would give.
+ *   - A previous month that is null, meaning never recorded. Visitors do this
+ *     for any month before analytics began, and treating it as zero would
+ *     invent a gain out of a gap in the data.
+ *   - No change, which is shown flat rather than as a green "0%".
+ */
+export function deltaOf(current: number | null, previous: number | null | undefined): Delta | null {
+  if (current === null || previous === null || previous === undefined) return null;
+  if (previous === 0) return current > 0 ? { label: "new", dir: "new" } : null;
+
+  const change = ((current - previous) / previous) * 100;
+  // Rounded before the comparison, so a change that displays as 0% is not
+  // labelled as a rise by a difference no one can see.
+  const rounded = Math.round(change);
+  if (rounded === 0) return { label: "no change", dir: "flat" };
+
+  return {
+    label: `${Math.abs(rounded)}%`,
+    dir: rounded > 0 ? "up" : "down",
+  };
+}
+
 /**
  * The monthly table as CSV, with a totals row.
  *
