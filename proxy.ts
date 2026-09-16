@@ -122,6 +122,11 @@ function isPublic(pathname: string) {
 const GATE_EXEMPT = [
   "/complete-profile",
   "/api/invites/accept",
+  // Posted to BY that form, at the moment the profiles row is created, for the
+  // same reason /api/invites/accept is above: the gate would otherwise refuse
+  // it with a 403 precisely when it is meant to run. It reports the signup to
+  // Meta and stores the advertising cookies, and grants nothing.
+  "/api/meta/activation",
   "/auth",
   "/api/auth",
   "/terms",

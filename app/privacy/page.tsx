@@ -70,6 +70,7 @@ export default function PrivacyPage() {
               ["Twilio SendGrid", "Delivery of account and service emails — operated by Twilio Inc. See twilio.com/en-us/legal/privacy"],
               ["Sentry", "Error monitoring and diagnostics, which may record your IP address and account identifier when something goes wrong — operated by Functional Software, Inc. See sentry.io/privacy"],
               ["Vercel", "Hosting and edge delivery — see vercel.com/legal/privacy-policy"],
+              ["Meta", "Advertising measurement. We send a one-way encrypted (hashed) form of your email address, advertising cookie identifiers, and the amount and currency of a subscription payment, so we can tell which adverts led to signups — operated by Meta Platforms Ireland Ltd. See facebook.com/privacy/policy"],
             ]} />
             <p>We do not sell your personal data. We do not share it with third parties for their own marketing purposes.</p>
           </Section>
@@ -100,7 +101,8 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="9. Cookies">
-            <p>We use strictly necessary cookies to maintain your login session. We do not use third-party advertising or tracking cookies. You can control cookies through your browser settings, though disabling session cookies will prevent you from logging in.</p>
+            <p>We use strictly necessary cookies to maintain your login session. You can control cookies through your browser settings, though disabling session cookies will prevent you from logging in.</p>
+            <p>We also use the Meta pixel, which sets advertising cookies to measure which adverts lead to signups and subscriptions. These are set by Meta rather than by us, and you can block them through your browser settings or your ad blocker without affecting your use of Jooma. Doing so does not stop you signing up, subscribing, or using any feature.</p>
           </Section>
 
           <Section title="10. Security">
@@ -108,7 +110,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="11. International Transfers">
-            <p>Some of the service providers named in section 5 (including OpenAI, Anthropic, Twilio SendGrid and Sentry) are based in the United States and may process data outside the UK/EEA. Where this occurs, we rely on appropriate safeguards such as the UK International Data Transfer Agreement (IDTA) or Standard Contractual Clauses.</p>
+            <p>Some of the service providers named in section 5 (including OpenAI, Anthropic, Twilio SendGrid, Sentry and Meta) are based in or transfer data to the United States and may process data outside the UK/EEA. Where this occurs, we rely on appropriate safeguards such as the UK International Data Transfer Agreement (IDTA) or Standard Contractual Clauses.</p>
           </Section>
 
           <Section title="12. Changes to This Policy">
