@@ -186,7 +186,7 @@ export default async function LandingPage({
           title="The deck is the lesson."
           lede="Most tools hand you a plan and leave you to build the slides. Jooma builds the thing you actually stand up and teach from, then lets you edit every word of it."
           points={[
-            "Twelve to twenty four slides from one line",
+            "Six to eighteen slides from one line",
             "Activities embedded in the deck, not bolted on",
             "Pictures, video and listening clips where they help",
             "Themes from clean and plain to full illustration",
@@ -200,13 +200,13 @@ export default async function LandingPage({
         <Showcase
           reverse
           eyebrow="Comprehension"
-          title="One text. Every reading age in the room."
-          lede="Write the text once and Jooma rewrites it for the children who need it simpler and the ones who need stretching, questions included. No hunting for a second worksheet at ten to nine."
+          title="One topic. Pitched for the room in front of you."
+          lede="Give it a topic and a year group, and Jooma writes the passage and the questions together. Pitch the same topic simpler for the children who need it, or harder for the ones who need stretching, without hunting for a second worksheet at ten to nine."
           points={[
             "Original texts, not scraped from anywhere",
-            "Any reading age from five to sixteen",
-            "Retrieval, inference and vocabulary questions",
-            "Answers and common misconceptions included",
+            "Simple, standard or challenging, for any year group",
+            "Questions tagged to the reading content domains",
+            "Marks on every question, and an answer key with it",
             "Print ready, or send to Google Docs",
           ]}
           cta={{ href: "/signup", label: "Make a comprehension free" }}
@@ -223,7 +223,7 @@ export default async function LandingPage({
           points={[
             "No prompt writing and nothing to learn",
             "It asks a question back when something is unclear",
-            "Knows what you taught last week, so it pitches the starter right",
+            "It opens the right tool with the details already filled in",
             "Every answer can be saved to your library or shared",
           ]}
           cta={{ href: "/signup", label: "Try Jo free" }}

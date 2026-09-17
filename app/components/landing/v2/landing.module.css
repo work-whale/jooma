@@ -20,10 +20,20 @@
   overflow-x: hidden;
 }
 
-.page h1,
-.page h2,
-.page h3,
-.page h4 {
+/* The heading reset, and the same `:where()` story as the paragraph rule below.
+   As `.page h1..h4` this was two selectors, which TIED with the one class plus
+   one element of `.close h2` in the closing CTA and won on source order. That
+   single tie produced both of the bugs seen there: `color: var(--j-ink)`
+   painted the white-on-purple headline black, and `margin: 0` killed the
+   `margin: 0 auto` that centres its `17ch` block, so the headline sat hard
+   against the left of the card while the subtext and buttons below it stayed
+   centred. Zero specificity here, so a component rule beats it with one class.
+
+   The font-size rules below stay as `.page h*`: nothing competes for those. */
+:where(.page) h1,
+:where(.page) h2,
+:where(.page) h3,
+:where(.page) h4 {
   color: var(--j-ink);
   font-weight: 800;
   letter-spacing: -0.032em;

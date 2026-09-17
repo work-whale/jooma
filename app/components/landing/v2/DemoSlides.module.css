@@ -47,6 +47,14 @@
   max-width: 44ch;
 }
 
+/* The sub-hook. Body weight, not heading weight, which is how the real
+   renderer sets it apart from the title above. */
+.hook {
+  font-weight: 700;
+  color: #6b4a2e;
+  margin-bottom: 8px;
+}
+
 .slide ul {
   margin: 12px 0 0;
   padding-left: 18px;
@@ -58,35 +66,58 @@
   padding: 2px 0;
 }
 
-.activity {
+.slide li b,
+.slide p b {
+  color: #8a3c12;
+}
+
+/* A callout. The real slide renderer draws a rounded tinted card with the
+   variant's emoji in a left column, a bold label and the body beneath it. */
+.callout {
   margin-top: 16px;
   background: #fbeedc;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 13px 15px;
   max-width: 42ch;
   position: relative;
   z-index: 1;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
 }
 
-.activity b {
+.calloutEmoji {
+  font-size: 1.2rem;
+  line-height: 1.1;
+  flex: none;
+}
+
+.calloutText {
+  min-width: 0;
+}
+
+.calloutText b {
   display: block;
   font-size: 0.85rem;
   color: #8a3c12;
   margin-bottom: 3px;
 }
 
-.activity span {
+.calloutText span {
   font-size: 0.87rem;
   color: #6b4a2e;
 }
 
+/* The image well. A soft tinted block in the paper palette rather than a
+   drawing of any one topic, since the topic changes with the chips. */
 .art {
   position: absolute;
-  right: -18px;
-  bottom: -18px;
-  width: 180px;
-  height: 180px;
-  opacity: 0.9;
+  right: 18px;
+  bottom: 18px;
+  width: 150px;
+  height: 118px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f3e6d2, #e7dcc6);
 }
 
 .actions {
@@ -113,6 +144,10 @@
   color: #fff;
 }
 
+/* A real deck runs to ten slides or more, which is well past the height of the
+   slide beside it. Rather than clip the tenth thumbnail mid-border, the column
+   fades out at the bottom: the deck visibly continues, which is the honest
+   impression and the flattering one at the same time. */
 .thumbs {
   display: flex;
   flex-direction: column;
@@ -120,6 +155,7 @@
   max-height: 300px;
   overflow: hidden;
   min-width: 0;
+  mask-image: linear-gradient(180deg, #000 76%, transparent 100%);
 }
 
 .thumb {
@@ -168,12 +204,14 @@
   }
 
   /* Below the slide the strip reads better horizontally, and scrolls inside
-     its own box rather than widening the page. */
+     its own box rather than widening the page. The fade turns with it: a
+     vertical mask on a row would fade the wrong edge. */
   .thumbs {
     flex-direction: row;
     max-height: none;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(90deg, #000 88%, transparent 100%);
   }
 
   .thumb {
@@ -191,11 +229,9 @@
     font-size: 1.25rem;
   }
 
+  /* No room for the image well beside the text at this width. */
   .art {
-    width: 120px;
-    height: 120px;
-    right: -14px;
-    bottom: -14px;
+    display: none;
   }
 
   .thumb {
