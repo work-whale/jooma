@@ -36,7 +36,7 @@ export default function Faq() {
     },
     {
       q: "Can I edit what it makes?",
-      a: "All of it. Change the wording, the reading age, the difficulty or a single question. Everything saves to your library so you can pick it up next year.",
+      a: "All of it. Every resource opens in an editor when it is done, so you can change the wording, the difficulty or a single question. Everything saves to your library so you can pick it up next year.",
     },
     {
       q: "Is pupil data safe?",

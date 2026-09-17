@@ -1,53 +1,85 @@
+/* The sheet and the teacher's sidebar. Same two-column rhythm as the
+   comprehension pane beside it, so switching tabs does not reshuffle the page. */
 .ws {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 18px;
 }
 
-.column {
+.sheet {
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r);
-  padding: 18px;
+  padding: 24px 26px;
   min-width: 0;
 }
 
-.band {
-  font-size: 0.68rem;
+.sheet h4 {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.meta {
+  font-size: 0.78rem;
+  color: var(--j-faint);
+  font-weight: 600;
+}
+
+.objective {
+  font-size: 0.9rem;
+  color: var(--j-body);
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* The name/date/class rule the tool prints at the top of every worksheet. */
+.namebar {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+.namebar span {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--j-faint);
+  border-bottom: 1px solid var(--j-line-2);
+  padding-bottom: 3px;
+}
+
+.section {
+  margin-top: 16px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.sectionHead b {
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: var(--j-pill);
-  display: inline-block;
-  margin-bottom: 12px;
+  color: var(--j-purple);
 }
 
-/* Three bands, three tints. Not a traffic light: none of these is a worse
-   outcome than another, they are three groups in one room. */
-.a {
-  background: #e1f5ee;
-  color: #0f6e56;
-}
-
-.b {
-  background: #e6f1fb;
-  color: #0c447c;
-}
-
-.c {
-  background: #f1ecfc;
-  color: #4a22b5;
-}
-
-.column h4 {
-  font-size: 0.92rem;
-  margin-bottom: 10px;
+.marks {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--j-faint);
+  white-space: nowrap;
 }
 
 .question {
-  font-size: 0.87rem;
-  padding: 7px 0;
+  font-size: 0.88rem;
+  padding: 6px 0;
   border-bottom: 1px dashed var(--j-line);
   color: var(--j-body);
 }
@@ -56,8 +88,53 @@
   border-bottom: 0;
 }
 
-@media (max-width: 860px) {
+.aside {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r);
+  padding: 20px;
+  min-width: 0;
+  align-self: start;
+}
+
+.aside h4 {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.asideNote {
+  font-size: 0.78rem;
+  color: var(--j-faint);
+  margin-bottom: 12px;
+}
+
+.aside ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.aside li {
+  font-size: 0.85rem;
+  color: var(--j-body);
+  padding: 4px 0;
+}
+
+.hint {
+  font-size: 0.79rem;
+  color: var(--j-faint);
+  border-top: 1px solid var(--j-line);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+@media (max-width: 1000px) {
   .ws {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .sheet {
+    padding: 18px;
   }
 }

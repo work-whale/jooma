@@ -83,6 +83,14 @@
   color: var(--j-ink);
 }
 
+/* The clarifying question. Bold and in heading ink, as the real chips render
+   it above the options. */
+.ask {
+  font-weight: 700;
+  color: var(--j-ink);
+  margin-top: 10px;
+}
+
 .options {
   display: flex;
   gap: 8px;
@@ -91,12 +99,25 @@
 }
 
 .options span {
-  background: var(--j-tint);
-  color: var(--j-deep);
+  border: 1px solid var(--j-line-2);
+  color: var(--j-purple);
   border-radius: var(--j-pill);
   padding: 8px 14px;
   font-size: 0.83rem;
   font-weight: 600;
+}
+
+/* The escape hatch, quieter than the options because picking one is the better
+   outcome. Never hidden: it is always offered, on every question Jo asks. */
+.escape {
+  border-color: transparent;
+  color: var(--j-muted);
+}
+
+.opens {
+  font-size: 0.72rem;
+  color: var(--j-faint);
+  margin-top: 8px;
 }
 
 @media (max-width: 620px) {

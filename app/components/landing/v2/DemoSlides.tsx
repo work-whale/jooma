@@ -1,51 +1,50 @@
-import { DEMO_SLIDE } from "@/app/lib/landing/demo-content";
+import { SLIDE_ACTIONS, type DemoSlide } from "@/app/lib/landing/demo-content";
+import { boldRuns } from "./bold-runs";
 import styles from "./DemoSlides.module.css";
 
 /**
  * The Slides output: one slide at full size with the rest of the deck as a
  * thumbnail strip beside it.
  *
- * The strip is what sells the tool. A single slide could be anything; five of
+ * The strip is what sells the tool. A single slide could be anything; ten of
  * them says the whole deck arrived, which is the actual claim.
  */
-export default function DemoSlides() {
+export default function DemoSlides({ slide }: { slide: DemoSlide }) {
   return (
     <div className={styles.deck}>
       <div className={styles.main}>
         <div className={styles.slide}>
           <span className={styles.rule} />
-          <h4>{DEMO_SLIDE.title}</h4>
-          <p>{DEMO_SLIDE.body}</p>
+          <h4>{slide.title}</h4>
+          {/* Every real content slide carries a sub-hook: a question or punchy
+              declarative under the title, in body weight rather than heading. */}
+          <p className={styles.hook}>{slide.subHook}</p>
+          <p>{boldRuns(slide.body)}</p>
           <ul>
-            {DEMO_SLIDE.bullets.map((b) => (
-              <li key={b}>{b}</li>
+            {slide.bullets.map((b) => (
+              <li key={b}>{boldRuns(b)}</li>
             ))}
           </ul>
-          <div className={styles.activity}>
-            <b>{DEMO_SLIDE.activity.label}</b>
-            <span>{DEMO_SLIDE.activity.text}</span>
+          <div className={styles.callout}>
+            <span className={styles.calloutEmoji} aria-hidden="true">
+              {slide.callout.emoji}
+            </span>
+            <span className={styles.calloutText}>
+              <b>{slide.callout.label}</b>
+              <span>{slide.callout.body}</span>
+            </span>
           </div>
 
-          {/* Decorative. The water cycle drawn plainly, in the same warm
-              palette as the slide theme. */}
-          <svg className={styles.art} viewBox="0 0 200 200" aria-hidden="true">
-            <circle cx="150" cy="52" r="26" fill="#F2B23E" />
-            <path d="M20 150 Q60 120 100 150 T180 150 L180 200 L20 200 Z" fill="#7FB6C9" />
-            <path
-              d="M45 118 q10-18 26-12 6-16 24-10 14-10 24 6 16 2 12 18z"
-              fill="#DCE6EA"
-            />
-            <path
-              d="M70 128 l-4 16M92 132 l-4 16M114 128 l-4 16"
-              stroke="#5B92A8"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-          </svg>
+          {/* Where the slide's photograph sits. Every real content layout
+              requires an image (the generator treats an empty imageQuery as a
+              bug), so the space is held rather than filled with a drawing: the
+              topic changes with the suggestion chips, and a water cycle
+              illustration behind a fractions slide was worse than nothing. */}
+          <span className={styles.art} aria-hidden="true" />
         </div>
 
         <div className={styles.actions}>
-          {DEMO_SLIDE.actions.map((action, i) => (
+          {SLIDE_ACTIONS.map((action, i) => (
             <span key={action} className={`${styles.action} ${i === 0 ? styles.actionPrimary : ""}`}>
               {action}
             </span>
@@ -54,8 +53,8 @@ export default function DemoSlides() {
       </div>
 
       <div className={styles.thumbs}>
-        {Array.from({ length: DEMO_SLIDE.thumbCount }, (_, i) => i + 1).map((n) => (
-          <div key={n} className={`${styles.thumb} ${n === DEMO_SLIDE.activeThumb ? styles.thumbOn : ""}`}>
+        {Array.from({ length: slide.thumbCount }, (_, i) => i + 1).map((n) => (
+          <div key={n} className={`${styles.thumb} ${n === slide.activeThumb ? styles.thumbOn : ""}`}>
             <i />
             <i />
             <span>{n}</span>
