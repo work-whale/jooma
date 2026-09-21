@@ -95,6 +95,19 @@ async function postEvent(
       return false;
     }
 
+    // Logged on SUCCESS too, deliberately. Without this, "Meta accepted it" and
+    // "this code never ran" are indistinguishable in the logs, which is the
+    // exact question anyone reading them is trying to answer. Meta's own
+    // reporting lags by minutes to hours, so the server log is the only
+    // immediate confirmation there is.
+    //
+    // Says which pixel and whether it went to Test Events, because sending live
+    // events while expecting test ones (or the reverse) is otherwise invisible.
+    console.info(
+      `[meta-capi] Meta accepted ${label}`,
+      reference,
+      process.env.META_TEST_EVENT_CODE ? "(test event)" : "(live)",
+    );
     return true;
   } catch (err) {
     console.error(`[meta-capi] could not reach Meta for ${label}`, reference, err);
