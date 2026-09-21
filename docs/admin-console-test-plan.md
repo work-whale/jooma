@@ -638,15 +638,24 @@ per-model cost. `gpt-4o-mini` is tagged green as the cheap one.
 
 #### 4B.1 The list
 
-**Expect:** 36 tools, ~26 with real usage. Sorted by cost.
+**Expect:** 35 tools, ~26 with real usage. Sorted by cost.
 
-#### 4B.2 The unlisted tool
+#### 4B.2 Every tool is listed to teachers
 
-**Do:** Filter → "Not listed to teachers".
+**Do:** Look at the top of the page, then filter → "Not listed to teachers".
 
-**Expect:** `lesson-slideshow` appears, tagged **not listed**, with a callout
-explaining the route exists and can record cost but doesn't appear in the
-teacher grid. This is a real, known drift — [#20](https://github.com/work-whale/jooma/issues/20).
+**Expect:** No amber "*N* tools not in the teacher-facing list" banner, and the
+filter returns nothing. Every teacher-facing tool now has a matching entry in
+the `TOOLS` catalogue, so none can be reachable by URL while absent from the
+grid. Internal routes are excluded from that count by design — they are *meant*
+to be absent.
+
+This step used to expect `lesson-slideshow`, the one tool that had a live route
+and could record cost without appearing in the grid ([#20](https://github.com/work-whale/jooma/issues/20)).
+It was removed on 2026-09-21 — never used, confirmed with the product owner and
+the developer who built it — so the drift it tracked is gone rather than merely
+hidden. A row appearing here again is a real regression, and `generation-guard.ts`
+warns about the same drift in dev.
 
 #### 4B.3 Toggle a tool off
 
@@ -1227,7 +1236,6 @@ Don't raise these; they're tracked:
 | Settings | Recorded but not enforced | [#26](https://github.com/work-whale/jooma/issues/26) |
 | Dashboard | No acquisition/UTM data | [#28](https://github.com/work-whale/jooma/issues/28) |
 | Retention | Nothing purged; **account deletion fails** | [#27](https://github.com/work-whale/jooma/issues/27) |
-| Tools | `lesson-slideshow` unlisted | [#20](https://github.com/work-whale/jooma/issues/20) |
 | Ambassadors | **Payouts are recorded, not made.** Marking a referral Paid is bookkeeping; Jooma never moves money to an ambassador. Pay them out of band and record it here | — |
 | Ambassadors | A referral whose code was refused at checkout still counts, and the teacher pays full price. Deliberate: they were genuinely referred, and only the discount lapsed | — |
 | Images | Shared read scope | [#22](https://github.com/work-whale/jooma/issues/22) |
