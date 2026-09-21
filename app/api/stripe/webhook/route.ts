@@ -343,8 +343,40 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
     if (!isReportablePurchase(inv)) return;
 
     const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
-    const userId = await userIdForCustomer(customerId);
-    if (!userId) return;
+
+    // THE FIRST SUBSCRIPTION RACE.
+    //
+    // profiles.stripe_customer_id is written by syncSubscription, which runs on
+    // checkout.session.completed. Stripe promises no ordering between that event
+    // and invoice.paid, and in practice all three arrive in the same second: on
+    // a first subscription the invoice frequently lands FIRST, so the lookup
+    // finds nothing and the conversion is dropped silently.
+    //
+    // That is the most valuable conversion there is, and it was reproduced on a
+    // real test subscription: "no profile for invoice customer cus_VIem7..."
+    // logged while the row existed moments later.
+    //
+    // markReferralPaid dodges the same hazard by reading the plan off the
+    // invoice instead of the profile, but that is not available here: the
+    // advertising cookies exist only on the profile row.
+    //
+    // So wait briefly for the write rather than giving up on the first miss.
+    // Three attempts over ~1.5s, which is far longer than the gap observed and
+    // still nowhere near Stripe's webhook timeout. A renewal months later hits
+    // on the first attempt and never sleeps.
+    let userId = await userIdForCustomer(customerId);
+    for (let attempt = 0; !userId && attempt < 2; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 750));
+      userId = await userIdForCustomer(customerId);
+    }
+
+    if (!userId) {
+      // Genuinely unknown, rather than merely early: a customer created outside
+      // the app, or test noise. Logged because a real subscriber reaching this
+      // means a Purchase was lost and the cause is worth knowing.
+      console.warn("[meta-capi] no profile for customer, Purchase not sent", customerId);
+      return;
+    }
 
     // The advertising cookies captured at signup, possibly weeks ago. This is
     // what links this payment back to the ad click that started the free trial,
@@ -357,13 +389,33 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       .eq("id", userId)
       .maybeSingle();
 
-    // Read from the Stripe customer rather than the profile: it is the address
-    // that actually paid, which is what Meta is most likely to match against.
-    const customer = inv.customer_email ?? null;
+    // WHICH EMAIL, and why there are two sources.
+    //
+    // The invoice's own address is preferred: it is what actually paid, so it is
+    // the address Meta is most likely to hold for this person.
+    //
+    // But it is not guaranteed. A Checkout session started from an existing
+    // customer record carries whatever address that record holds, which can be
+    // empty for a customer created outside the normal flow, and Stripe does not
+    // promise the field at all. A null there would drop our single strongest
+    // identifier and leave the event matching on cookies alone, which for an
+    // organic signup means matching on nothing.
+    //
+    // So fall back to the account's own address. Note it lives on auth.users
+    // rather than profiles, which has no email column at all -- the same reason
+    // /api/invites/accept reads it off the session.
+    let email = inv.customer_email ?? null;
+    if (!email) {
+      const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (error) {
+        console.warn("[meta-capi] could not read account email for fallback", userId, error.message);
+      }
+      email = authUser?.user?.email ?? null;
+    }
 
     await sendPurchase({
       eventId: inv.id ?? `invoice-${userId}-${inv.created}`,
-      email: customer,
+      email,
       fbp: profile?.meta_fbp ?? null,
       fbc: profile?.meta_fbc ?? null,
       // What was actually received, not what was billed: a discounted first
