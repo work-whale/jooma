@@ -15,10 +15,10 @@ import ResultPanel from "@/app/components/ResultPanel";
  * collapses to a hover tab), so without this component each of them would be a
  * 32 file change of its own.
  *
- * The three structured tools are deliberately NOT consumers. lesson-slideshow,
- * cpd-slideshow and quiz-generator put JSON in their output rather than
- * markdown, which is why they are also the exact three forms that never had
- * this block. See isStructuredOutput in app/lib/toolRunDisplay.ts.
+ * The structured tools are deliberately NOT consumers. cpd-slideshow and
+ * quiz-generator put JSON in their output rather than markdown, which is why
+ * they are also the exact forms that never had this block. See
+ * isStructuredOutput in app/lib/toolRunDisplay.ts.
  */
 
 interface ToolResultsProps {

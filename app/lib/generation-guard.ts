@@ -42,7 +42,6 @@ const GENERATION_PATHS: ReadonlySet<string> = new Set([
   "/api/learning-walk-report",
   "/api/lesson-observation-report",
   "/api/lesson-planner",
-  "/api/lesson-slideshow",
   "/api/letter-writer",
   "/api/medium-term-planner",
   "/api/meeting-planner",
@@ -71,7 +70,10 @@ const GENERATION_PATHS: ReadonlySet<string> = new Set([
 // GENERATION_PATHS and the TOOLS catalogue drift silently and expensively: a
 // tool added to the grid but missing here is UNCAPPED, so a free account can
 // run it without limit. A tool here but missing from the grid is unreachable
-// but still burns quota (which is exactly what lesson-slideshow is).
+// but still burns quota — which `lesson-slideshow` was for months, hidden from
+// the grid while Jo still routed every slides request to it. It has since been
+// removed outright, so the `unlisted` warning below should now stay silent: if
+// it ever fires again, something has been half-deleted.
 //
 // Dev-only and non-fatal: this warns while you are working, and never risks
 // taking production down over a naming mismatch.

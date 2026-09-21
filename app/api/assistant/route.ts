@@ -35,6 +35,7 @@ import {
   prefillFunctionDef,
   clarifyFunctionDef,
   toolSchemaDigest,
+  assistantToolFor,
 } from "@/app/lib/assistant-tools";
 import {
   validatePrefill,
@@ -69,10 +70,26 @@ interface AssistantMessage {
 
 interface AssistantBody {
   messages?: AssistantMessage[];
-  level?: string | null;
-  tone?: string | null;
+  /** A tool the teacher picked in the composer. Overrides auto-selection. */
+  tool?: string | null;
   attachment?: { source: string; text: string } | null;
+  /** Clarifying questions already asked for this build request. See MAX_ASKS. */
+  askCount?: number;
 }
+
+/**
+ * How many clarifying questions one build request may ask.
+ *
+ * Bounded in code rather than in the prompt, for the reason recorded in
+ * toolPrefill.ts: a prompt is a request, and "ask rarely" has to be a
+ * guarantee. Past the cap the clarify function is simply not offered, so the
+ * model has nothing to ask WITH and must open the tool instead.
+ *
+ * Two is the judgement: enough to turn "make me slides" into a year group and a
+ * slide count, few enough that a teacher who was already clear is never
+ * interrogated.
+ */
+const MAX_ASKS = 2;
 
 // How much conversation to carry. Chat has no natural end, so without a cap the
 // prompt grows every turn until it is both slow and expensive — and the oldest
@@ -84,7 +101,14 @@ const MAX_MESSAGE_CHARS = 8_000;
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as AssistantBody;
-  const { level, tone, attachment } = body;
+  const { tool, attachment } = body;
+
+  // Clamped rather than trusted: this arrives from the client, and a negative
+  // or absurd value would either disable the cap or disable asking entirely.
+  const askCount = Math.max(
+    0,
+    Math.min(MAX_ASKS, Number.isFinite(body.askCount) ? Number(body.askCount) : 0),
+  );
 
   const messages = Array.isArray(body.messages) ? body.messages : [];
   const history = messages
@@ -133,14 +157,18 @@ export async function POST(req: NextRequest) {
 
   // ── 2. Tool selection ──
   //
-  // Either a tool to open, or a single question to ask first when a field it
-  // needs is genuinely ambiguous.
-  const decision = await selectTool(history, userId);
+  // Either a tool to open, or a question to ask first when a field it needs is
+  // genuinely ambiguous. A tool the teacher picked in the composer skips the
+  // choosing and goes straight to extracting that tool's fields.
+  const decision = await selectTool(history, userId, {
+    forcedSlug: typeof tool === "string" ? tool : null,
+    canAsk: askCount < MAX_ASKS,
+  });
   const prefill = decision?.kind === "prefill" ? decision.prefill : null;
   const clarify = decision?.kind === "clarify" ? decision.clarify : null;
 
   // ── 3. The reply ──
-  const system = assistantSystem({ level, tone, attachment });
+  const system = assistantSystem({ attachment });
 
   // When a tool was chosen, the reply's job changes: it should introduce the
   // card rather than answer at length, because the tool is about to do the work.
@@ -188,6 +216,29 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * The extra instruction sent when the teacher picked a tool themselves.
+ *
+ * The model is still asked to extract fields, because that is what fills the
+ * form, but it is no longer choosing WHICH tool — `tool_choice` forces the call
+ * and the slug is overwritten afterwards regardless. This exists so the model
+ * extracts for the RIGHT tool: told to open the Quiz Generator, it should be
+ * looking for a quiz's fields, not a lesson plan's.
+ */
+function forcedInstruction(tool: ReturnType<typeof assistantToolFor>): string {
+  if (!tool) return "";
+  const required = (tool.fields as { required?: string[] }).required ?? [];
+  return `
+
+THE TEACHER HAS ALREADY CHOSEN THE TOOL: "${tool.slug}" (${tool.label}).
+
+Do not pick a different one and do not decide whether a tool is warranted — that decision is made. Call prefill_tool with slug "${tool.slug}" and extract that tool's fields from the conversation.${
+    required.length
+      ? ` It requires: ${required.join(", ")}. Where the teacher has not stated one, infer the most reasonable value from what they did say rather than omitting it — an omitted required field throws the whole prefill away and the teacher gets nothing.`
+      : ""
+  }`;
+}
+
+/**
  * Decide whether this turn should open a tool, and with what.
  *
  * Non-streaming and cheap: gpt-4o-mini is enough to match a request to one of
@@ -201,7 +252,19 @@ export async function POST(req: NextRequest) {
 async function selectTool(
   history: { role: "user" | "assistant"; content: string }[],
   userId: string | null,
+  opts: {
+    /** A tool the teacher picked, which wins over the model's own choice. */
+    forcedSlug?: string | null;
+    /** False once the question allowance is spent — see MAX_ASKS. */
+    canAsk?: boolean;
+  } = {},
 ): Promise<ToolDecision | null> {
+  // Resolved rather than trusted: the slug arrives from a client, and an
+  // unknown one must fall back to ordinary auto-selection rather than force a
+  // tool that does not exist.
+  const forced = opts.forcedSlug ? assistantToolFor(opts.forcedSlug) : undefined;
+  const canAsk = opts.canAsk !== false;
+
   try {
     const completion = await createCompletion({
       toolSlug: "assistant",
@@ -224,7 +287,20 @@ async function selectTool(
       model: "gpt-4o-mini",
       max_completion_tokens: 400,
       temperature: 0,
-      tools: [prefillFunctionDef(), clarifyFunctionDef()],
+      // The clarify function is withheld in two cases, and withholding it is
+      // the enforcement: a model cannot ask a question it has not been given.
+      //
+      //   - a forced tool, because the teacher has already said what they want
+      //   - the question allowance spent, so the gather cannot chain forever
+      tools: forced || !canAsk
+        ? [prefillFunctionDef()]
+        : [prefillFunctionDef(), clarifyFunctionDef()],
+      // A picked tool must actually open. Left to its own judgement the model
+      // treats a thin request as conversation and calls nothing, which would
+      // make the pill feel ignored — the exact complaint it exists to fix.
+      ...(forced
+        ? { tool_choice: { type: "function" as const, function: { name: "prefill_tool" } } }
+        : {}),
       messages: [
         {
           role: "system",
@@ -236,18 +312,23 @@ Do not call it when the teacher is asking a question ABOUT teaching rather than 
 
 Call ask_clarifying_question INSTEAD of prefill_tool when you know which tool they want but a field it NEEDS is genuinely ambiguous, and guessing it wrong would waste a generation. Ask about ONE field, offer two or three concrete answers, and pass everything you already understood in the fields argument.
 
-Ask rarely. If the teacher named the year group and the topic, that is enough to build from: infer the rest and call prefill_tool. Never ask about a field the tool does not need, never ask twice in one conversation, and never ask when they have already answered the question earlier in the thread.
+Ask only about a field the chosen tool actually needs and the teacher has not supplied. One field per question. Never ask about something they already answered earlier in the thread — read the whole conversation before asking, because a question they have answered reads as not listening. If the teacher named the year group and the topic, that is enough to build from: infer the rest and call prefill_tool.
 
 When you call prefill_tool, ALWAYS include these in fields when the tool has them:
 - yearGroup, whenever the teacher names or implies a year. "a year 5 lesson plan" means yearGroup "Year 5". Use the exact forms listed in the prefill_tool description; "Y5", "year five" and "5" are all rejected and the teacher's year group is then lost.
 - curriculum. Default it to "2014 National Curriculum" unless they name a Scottish, Welsh, Northern Irish or Early Years context.
 These two gate the Generate button on most tools, so omitting them leaves the teacher with a form they cannot submit.
 
-${toolSchemaDigest()}`,
+${toolSchemaDigest()}${forcedInstruction(forced)}`,
         },
         // Only the recent turns: the decision is about what is being asked now,
         // and older context mostly adds noise and cost.
-        ...history.slice(-4),
+        //
+        // A gather needs more than a glance backwards, though: by the third
+        // turn the topic is four messages back, and dropping it would ask for
+        // something the teacher opened with. Eight covers a question, an answer,
+        // a second question and its answer, with the original request intact.
+        ...history.slice(-8),
       ],
     });
 
@@ -270,6 +351,18 @@ ${toolSchemaDigest()}`,
     // string lengths before any of it reaches a form. See toolPrefill.ts.
     if (call.function.name === "prefill_tool") {
       const raw = JSON.parse(call.function.arguments);
+
+      // The teacher's choice wins over whatever the model echoed back.
+      //
+      // tool_choice forces the CALL, not its arguments: the slug enum still
+      // offers all 35 tools, and a model told to open the Quiz Generator can
+      // still return "worksheet-generator" in the payload. Overwriting here is
+      // what makes the pill a guarantee rather than another suggestion — which
+      // is the whole point, since asking for a tool in prose already fails.
+      // cleanFields then allow-lists the fields against THIS tool's schema, so
+      // anything extracted for the wrong one is dropped rather than smuggled in.
+      if (forced) (raw as { slug?: string }).slug = forced.slug;
+
       const prefill = validatePrefill(raw);
 
       // TEMPORARY DIAGNOSTIC — remove once the missing yearGroup is resolved.

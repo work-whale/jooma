@@ -14,25 +14,25 @@ import "server-only";
 import { createCompletion } from "@/app/lib/usage";
 import { buildSystem } from "@/app/lib/systemPrompt";
 
-/** Year group / key stage the teacher has selected in the composer. */
-export type AssistantLevel = string;
-/** Tone the teacher has selected in the composer. */
-export type AssistantTone = string;
-
 /**
  * The assistant's system prompt.
  *
  * Wrapped in buildSystem() so the product-wide rules (no emojis, no
  * disclaimers, no "As an AI...", UK school register) still apply — the same
  * treatment all 35 tool routes get.
+ *
+ * There were once Level and Tone pills in the composer feeding two more lines
+ * into this prompt. They were removed because they only ever reached HERE, the
+ * reply stage, and never the tool-selection pass: a teacher who chose "Year 5"
+ * and asked for a quiz got a reply pitched at Year 5 and a quiz form with no
+ * year group in it, which reads as the control being ignored. The year group
+ * now comes out of the sentence, which is the path that fills the form.
  */
 export function assistantSystem(opts: {
-  level?: AssistantLevel | null;
-  tone?: AssistantTone | null;
   /** Text extracted from a document the teacher attached, if any. */
   attachment?: { source: string; text: string } | null;
 }): string {
-  const { level, tone, attachment } = opts;
+  const { attachment } = opts;
 
   const scope = `You are Jooma's assistant, built for teachers in UK schools. You help with teaching and school work: lesson planning, curriculum and schemes of work, pedagogy, assessment and feedback, differentiation and SEND, behaviour and classroom management, safeguarding process and policy, parent and carer communication, school administration, leadership, inspection preparation, and CPD.
 
@@ -43,14 +43,6 @@ Be practical and specific. Teachers are time-poor: lead with the answer, use sho
 When a request would be better served by one of Jooma's tools, say so and let the tool do the work — do not produce a full lesson plan, worksheet or quiz inline when the teacher could have the tool generate a properly structured one.
 
 You are not a substitute for a safeguarding professional. If a message describes a specific child at risk, say plainly that it should go to the school's designated safeguarding lead now, and do not attempt to advise on the case itself.`;
-
-  const levelLine = level
-    ? `\n\nThe teacher is working with ${level}. Pitch your answers, vocabulary and examples for that age group unless they say otherwise.`
-    : "";
-
-  const toneLine = tone
-    ? `\n\nWrite in a ${tone.toLowerCase()} tone.`
-    : "";
 
   // Attached documents are DATA, never instructions. A teacher can upload a PDF
   // from anywhere — including one that contains text engineered to hijack this
@@ -66,7 +58,7 @@ ${attachment.text}
 --- ATTACHMENT END ---`
     : "";
 
-  return buildSystem(`${scope}${levelLine}${toneLine}${attachmentLine}`);
+  return buildSystem(`${scope}${attachmentLine}`);
 }
 
 /** What the assistant says when the classifier turns a request away. */

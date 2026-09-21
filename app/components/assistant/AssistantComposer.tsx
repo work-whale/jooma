@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Paperclip, Plus, X } from "lucide-react";
-import { YEAR_GROUPS } from "@/app/lib/formOptions";
-
-const TONES = ["Formal", "Semi-formal", "Informal", "Friendly"];
+import { ASSISTANT_TOOLS } from "@/app/lib/assistant-tools";
+import { V2_CATEGORIES, v2ToolForSlug } from "@/app/lib/tools";
 
 export interface Attachment {
   source: string;
@@ -12,7 +11,7 @@ export interface Attachment {
 }
 
 interface Props {
-  onSend: (message: string, opts: { level: string | null; tone: string | null; attachment: Attachment | null }) => void;
+  onSend: (message: string, opts: { tool: string | null; attachment: Attachment | null }) => void;
   busy?: boolean;
   disabled?: boolean;
   placeholder?: string;
@@ -54,8 +53,7 @@ export default function AssistantComposer({
   autoFocus = false,
 }: Props) {
   const [value, setValue] = useState("");
-  const [level, setLevel] = useState<string | null>(null);
-  const [tone, setTone] = useState<string | null>(null);
+  const [tool, setTool] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -92,7 +90,7 @@ export default function AssistantComposer({
   const submit = () => {
     const message = value.trim();
     if (!message || blocked) return;
-    onSend(message, { level, tone, attachment });
+    onSend(message, { tool, attachment });
     setValue("");
     // The attachment is consumed by the turn it was sent with. Keeping it would
     // silently re-send the same document with every later message.
@@ -161,7 +159,10 @@ export default function AssistantComposer({
   };
 
   return (
-    <div className="w-full">
+    // Marked so "Add more detail" on a clarifying question can put the cursor
+    // back here. The textarea is private to this component, so the alternative
+    // is threading a ref through every surface that renders a composer.
+    <div className="w-full" data-jo-composer>
       {attachment && (
         <div className="mb-2 flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-sm">
           <Paperclip className="w-3.5 h-3.5 shrink-0 text-muted" />
@@ -218,20 +219,7 @@ export default function AssistantComposer({
           </button>
 
           <div className="ml-auto flex items-center gap-2">
-            <Select
-              value={level}
-              onChange={setLevel}
-              placeholder="Level"
-              options={YEAR_GROUPS}
-              disabled={blocked}
-            />
-            <Select
-              value={tone}
-              onChange={setTone}
-              placeholder="Tone"
-              options={TONES}
-              disabled={blocked}
-            />
+            <ToolSelect value={tool} onChange={setTool} disabled={blocked} />
 
             {canDictate && (
               <button
@@ -265,38 +253,81 @@ export default function AssistantComposer({
 }
 
 /**
- * A native <select> styled as a pill.
+ * The tool picker, as a native <select> styled as a pill.
+ *
+ * Replaced the Level and Tone pills, which looked like controls and were not:
+ * `level` reached only the reply prompt and never the tool-selection pass, so
+ * choosing "Year 5" could not prefill a year group on the tool Jo opened. The
+ * year group is extracted from the sentence instead, which is the path that
+ * actually fills the form.
+ *
+ * Naming a tool in prose does not bind the router: production has a teacher
+ * writing "Create me a slideshow from the slideshow tool" and still being sent
+ * to a deprecated one. A pill binds it, because the slug is forced server-side
+ * rather than suggested to a model.
+ *
+ * Empty means auto-select, which is the existing behaviour untouched.
  *
  * Deliberately native rather than the hand-rolled menu pattern used elsewhere:
  * it is keyboard accessible for free, closes on outside click for free, and on
- * a phone it opens the platform picker. The empty option lets a teacher clear a
- * choice, since neither Level nor Tone is required.
+ * a phone it opens the platform picker.
  */
-function Select({
+function ToolSelect({
   value,
   onChange,
-  placeholder,
-  options,
   disabled,
 }: {
   value: string | null;
   onChange: (v: string | null) => void;
-  placeholder: string;
-  options: readonly string[];
   disabled?: boolean;
 }) {
+  // Grouped by category, in the same order the Make grid uses, because 35 flat
+  // options is a wall. Labelled with the short V2 name ("Quizzes") so the pill
+  // reads the way the rest of the product names its tools, falling back to the
+  // registry's own label for a tool with no V2 entry.
+  const groups = useMemo(() => {
+    const byCategory = new Map<string, { slug: string; name: string }[]>();
+    for (const tool of ASSISTANT_TOOLS) {
+      const v2 = v2ToolForSlug(tool.slug);
+      const category = v2?.category ?? "other";
+      const entry = { slug: tool.slug, name: v2?.name ?? tool.label };
+      const existing = byCategory.get(category);
+      if (existing) existing.push(entry);
+      else byCategory.set(category, [entry]);
+    }
+    const ordered: { id: string; name: string; tools: { slug: string; name: string }[] }[] =
+      V2_CATEGORIES.filter((c) => byCategory.has(c.id)).map((c) => ({
+        id: c.id,
+        name: c.name,
+        tools: byCategory.get(c.id)!.sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+    // Anything without a V2 category still has to be reachable, or a registered
+    // tool would be silently unpickable.
+    const loose = byCategory.get("other");
+    if (loose) {
+      ordered.push({ id: "other", name: "Other", tools: loose.sort((a, b) => a.name.localeCompare(b.name)) });
+    }
+    return ordered;
+  }, []);
+
   return (
     <select
       value={value ?? ""}
       disabled={disabled}
-      aria-label={placeholder}
+      aria-label="Tool"
+      title="Pick a tool, or leave it to Jo"
       onChange={(e) => onChange(e.target.value || null)}
-      className="h-9 rounded-xl border bg-white px-3 text-[13px] font-semibold text-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+      className="h-9 max-w-40 rounded-xl border bg-white px-3 text-[13px] font-semibold text-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
       style={{ borderColor: "var(--j-tint)" }}
     >
-      <option value="">{placeholder}</option>
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
+      {/* Not "None": the empty choice is an instruction to Jo, not an absence. */}
+      <option value="">Auto</option>
+      {groups.map((group) => (
+        <optgroup key={group.id} label={group.name}>
+          {group.tools.map((tool) => (
+            <option key={tool.slug} value={tool.slug}>{tool.name}</option>
+          ))}
+        </optgroup>
       ))}
     </select>
   );

@@ -6,25 +6,41 @@ import { v2ToolForSlug } from "@/app/lib/tools";
 import { prefillHref, validatePrefill, type ToolClarify } from "@/app/lib/toolPrefill";
 
 /**
- * The one question Jo asks before opening a tool.
+ * A question Jo asks when it does not yet have enough to build well.
  *
  * The handover calls this out as one of the two behaviours that make Jo feel
  * like an assistant rather than a slot machine: when a field a tool needs is
- * genuinely ambiguous, guessing burns a generation and teaches teachers not to
- * trust it.
+ * ambiguous, guessing burns a generation and teaches teachers not to trust it.
  *
- * Three rules hold this to being helpful rather than an interrogation:
+ * Four rules hold this to being helpful rather than an interrogation:
  *
- *   1. It never asks twice. Answering navigates to the tool, so the question
- *      cannot chain into a second one.
- *   2. "Just build it" is always here, added by the client rather than the
- *      model, so the escape is always present and always worded the same. It
- *      opens the tool with what was already understood, letting the teacher
- *      finish the field themselves.
- *   3. Both routes land in the SAME validated prefill the tool card uses, so
- *      there is no second path into a form to keep correct.
+ *   1. Answering CONTINUES the conversation rather than ending it. A chip posts
+ *      its value back as an ordinary user turn, so the next tool-selection pass
+ *      sees the fuller history and either asks once more or opens the tool. A
+ *      teacher asked for a year group can answer and then be asked how many
+ *      slides, which is what makes this a gather instead of a single question.
+ *   2. Typing is always equivalent to picking. Both are just a user turn, so a
+ *      teacher who wants to say something the chips do not cover simply says it.
+ *   3. The teacher chooses when to stop being asked. "Open it as is" goes now
+ *      with whatever was understood; "Add more detail" stays here to type. Both
+ *      are added by the client, never the model, so they are always present and
+ *      always worded the same.
+ *   4. The ask is bounded. AssistantView counts the questions and the server
+ *      withdraws the ability to ask another past the cap, so this cannot chain
+ *      forever.
+ *
+ * Both exit routes land in the SAME validated prefill the tool card uses, so
+ * there is no second path into a form to keep correct.
  */
-export default function ClarifyChips({ clarify }: { clarify: ToolClarify }) {
+export default function ClarifyChips({
+  clarify,
+  onAnswer,
+  onAddDetail,
+}: {
+  clarify: ToolClarify;
+  onAnswer?: (answer: string) => void;
+  onAddDetail?: () => void;
+}) {
   const router = useRouter();
 
   const tool = assistantToolFor(clarify.slug);
@@ -35,22 +51,16 @@ export default function ClarifyChips({ clarify }: { clarify: ToolClarify }) {
   const v2 = v2ToolForSlug(clarify.slug);
   const toolName = v2?.name ?? tool.label;
 
-  /**
-   * Open the tool with the answer filled in.
-   *
-   * `answer` is null for "Just build it", which opens with only what was
-   * already understood. Either way the payload goes through validatePrefill, so
-   * a chip cannot put anything in a form that a model reply could not.
-   */
-  const open = (answer: string | null) => {
-    const fields = answer === null
-      ? clarify.fields
-      : { ...clarify.fields, [clarify.field]: answer };
+  // What "Open it as is" would produce, computed up front because it decides
+  // whether that button can be offered at all. validatePrefill returns null
+  // when a required field is still missing, and a button that silently does
+  // nothing is worse than one that explains why it cannot.
+  const asIs = validatePrefill({ slug: clarify.slug, fields: clarify.fields });
 
-    const prefill = validatePrefill({ slug: clarify.slug, fields });
-    if (!prefill) return;
-    router.push(prefillHref(prefill));
-  };
+  // Named so the disabled state can say what is actually missing, rather than a
+  // generic "not enough detail" that leaves the teacher guessing.
+  const required = (tool.fields as { required?: string[] }).required ?? [];
+  const missing = required.filter((f) => clarify.fields[f] === undefined);
 
   return (
     <div className="mt-2.5">
@@ -63,29 +73,50 @@ export default function ClarifyChips({ clarify }: { clarify: ToolClarify }) {
           <button
             key={option.value}
             type="button"
-            onClick={() => open(option.value)}
-            className="rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-(--j-tint)"
+            onClick={() => onAnswer?.(option.label)}
+            className="rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-(--j-tint) cursor-pointer"
             style={{ borderColor: "var(--j-line-2)", color: "var(--j-purple)" }}
           >
             {option.label}
           </button>
         ))}
+      </div>
 
-        {/* The escape. Quieter than the options because picking one is the
-            better outcome, but never hidden: a teacher who was already clear
-            must be able to get past the question in one click. */}
+      {/* The two ways past the question. Quieter than the chips because
+          answering is the better outcome, but never hidden: a teacher who was
+          already clear has to get through in one click. */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => open(null)}
-          className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-(--j-tint)"
+          disabled={!asIs}
+          title={
+            asIs
+              ? `Open ${toolName} with what Jo has so far`
+              : `Jo still needs ${missing.join(" and ")} before it can open ${toolName}`
+          }
+          onClick={() => {
+            if (asIs) router.push(prefillHref(asIs));
+          }}
+          className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-(--j-tint) disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           style={{ color: "var(--j-muted)" }}
         >
-          Just build it
+          Open it as is
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onAddDetail?.()}
+          className="rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-(--j-tint) cursor-pointer"
+          style={{ color: "var(--j-muted)" }}
+        >
+          Add more detail
         </button>
       </div>
 
       <p className="mt-1.5 text-[10px]" style={{ color: "var(--j-faint)" }}>
-        Opens {toolName}, filled in for you
+        {asIs
+          ? `Answer, or open ${toolName} now and finish it yourself`
+          : `Jo still needs ${missing.join(" and ")} to open ${toolName}`}
       </p>
     </div>
   );

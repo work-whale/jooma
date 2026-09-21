@@ -12,6 +12,7 @@ import { THEME_CATEGORIES, getThemesByCategory, DEFAULT_THEME_ID, ART_STYLES, ge
 import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
+import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
 
 // sessionStorage key used to hand the generation params from this modal to the
 // editor page, which kicks off the SSE stream after navigation.
@@ -73,15 +74,41 @@ export interface GenerationParams {
   };
 }
 
-interface Props {
-  onClose: () => void;
+/**
+ * Step-one values handed over by Jo.
+ *
+ * Mirrors the `slideshow` entry in ASSISTANT_TOOLS, and is validated against
+ * that schema before it gets here — unknown fields are dropped, `year` must be
+ * one of SLIDESHOW_YEARS, and slideCount is range-checked. Every field is
+ * optional because the wizard has a working default for all but the topic.
+ */
+export interface SlideshowPrefill {
+  topic?: string;
+  year?: string;
+  slideCount?: number;
+  additionalInstructions?: string;
 }
 
-const YEARS = [
-  "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6",
-  "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12", "Year 13",
-  "Adult learners",
-];
+interface Props {
+  onClose: () => void;
+  /** Values from Jo, seeded into step one. */
+  prefill?: SlideshowPrefill | null;
+}
+
+/**
+ * The wizard's year list, shared with Jo's tool registry.
+ *
+ * Imported rather than declared here so the enum cannot drift: Jo prefills this
+ * control, and cleanFields drops any value outside the registry's copy — a
+ * dropped value reads as the year group being ignored. The list lives in
+ * assistant-tools.ts because that module is dependency-light and imported by
+ * both the server route and several client components, whereas this file is a
+ * heavy client component nothing else should have to pull in.
+ *
+ * Deliberately NOT YEAR_GROUPS from formOptions: this list offers "Adult
+ * learners" and has no mixed-age handling, so the two are not interchangeable.
+ */
+const YEARS = SLIDESHOW_YEARS;
 
 const READING_LEVELS = [
   "Same as Year",
@@ -110,7 +137,7 @@ const IMAGE_STYLES: { id: ImageStyle; label: string }[] = [
   { id: "comic-book", label: "Comic book" },
 ];
 
-export default function GenerateModal({ onClose }: Props) {
+export default function GenerateModal({ onClose, prefill }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -121,7 +148,10 @@ export default function GenerateModal({ onClose }: Props) {
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  const [topic, setTopic] = useState("");
+  // Seeded from Jo through useState INITIALISERS, not an effect. The values are
+  // a starting point the teacher edits, so re-applying them after a render
+  // would fight whatever they had just typed. Mount once, then it is theirs.
+  const [topic, setTopic] = useState(prefill?.topic ?? "");
   // Cycling typewriter placeholder, matching the other tool forms.
   const topicPlaceholder = useTypingPlaceholder([
     "E.g. The French Revolution",
@@ -130,10 +160,22 @@ export default function GenerateModal({ onClose }: Props) {
     "E.g. World War One — Causes",
     "E.g. Fractions and Decimals",
   ]);
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState(prefill?.year ?? "");
   const [readingLevel, setReadingLevel] = useState(READING_LEVELS[0]);
-  const [slideCount, setSlideCount] = useState(8);
-  const [additionalInstructions, setAdditionalInstructions] = useState("");
+  // Snapped to an option the control actually offers. The registry accepts any
+  // count from 3 to 20, but this is a <select> over SLIDE_COUNTS, and a value
+  // outside that list renders as an empty pill — the same silent drop an
+  // off-enum year group would cause. Nearest match keeps the teacher's intent.
+  const [slideCount, setSlideCount] = useState(() =>
+    prefill?.slideCount
+      ? SLIDE_COUNTS.reduce((best, n) =>
+          Math.abs(n - prefill.slideCount!) < Math.abs(best - prefill.slideCount!) ? n : best,
+        )
+      : 8,
+  );
+  const [additionalInstructions, setAdditionalInstructions] = useState(
+    prefill?.additionalInstructions ?? "",
+  );
   // Auto-grow the instructions textarea with its content (up to a max, then it
   // scrolls). Re-runs when the text changes, incl. when "Generate outline" fills it.
   const instructionsRef = useRef<HTMLTextAreaElement>(null);

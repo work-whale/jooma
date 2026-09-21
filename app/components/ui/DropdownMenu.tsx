@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 // One dropdown, replacing three ad-hoc implementations (QuizGeneratorForm,
-// LessonSlideshowForm, CpdSlideshowForm). Only the quiz one closed on an
-// outside click; the two slideshow menus stayed open until you clicked an item
-// or the trigger again, which is the bug this consolidation fixes.
+// CpdSlideshowForm, and the since-removed LessonSlideshowForm). Only the quiz
+// one closed on an outside click; the slideshow menus stayed open until you
+// clicked an item or the trigger again, which is the bug this consolidation
+// fixes.
 //
 // Deliberately not a headless-UI dependency: the app has no Radix or shadcn,
 // and one menu with a backdrop and an Escape handler is less code than adding
