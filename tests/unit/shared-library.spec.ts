@@ -73,13 +73,20 @@ test.describe("Indexing shares by the resource they became", () => {
 });
 
 test.describe("Telling JSON output from markdown", () => {
-  test("the three structured tools are known by slug alone", () => {
-    // Matches TOOL_SLUG in LessonSlideshowForm, CpdSlideshowForm and
-    // QuizGeneratorForm. Slug alone, because the viewer decides what to render
-    // before it has looked at the body.
-    expect(isStructuredOutput("lesson-slideshow")).toBe(true);
+  test("the structured tools are known by slug alone", () => {
+    // Matches TOOL_SLUG in CpdSlideshowForm and QuizGeneratorForm, plus the
+    // slideshow generator, which saves a deck. Slug alone, because the viewer
+    // decides what to render before it has looked at the body.
+    expect(isStructuredOutput("slideshow")).toBe(true);
     expect(isStructuredOutput("cpd-slideshow")).toBe(true);
     expect(isStructuredOutput("quiz-generator")).toBe(true);
+  });
+
+  test("a removed tool's saved runs still render as decks", () => {
+    // `lesson-slideshow` was deleted, but its rows outlive the route and are
+    // still JSON. Dropping the slug here would hand a deck to MarkdownResult
+    // and produce a screenful of literal braces.
+    expect(isStructuredOutput("lesson-slideshow")).toBe(true);
   });
 
   test("a markdown tool is not structured", () => {

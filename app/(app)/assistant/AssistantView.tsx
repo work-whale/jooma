@@ -46,6 +46,27 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
   const turnsRef = useRef<ChatTurn[]>([]);
   turnsRef.current = turns ?? [];
 
+  /**
+   * Clarifying questions asked so far in the current build request.
+   *
+   * A ref, not state: nothing renders from it, and it has to be readable at the
+   * moment a chip is pressed. Reset whenever the teacher starts a fresh request
+   * from the composer, so a new ask gets its full allowance of questions.
+   */
+  const askCountRef = useRef(0);
+
+  /**
+   * Put the cursor in the composer.
+   *
+   * "Add more detail" is an invitation to type, so it has to leave the teacher
+   * somewhere they can type. Reached through the DOM rather than a ref threaded
+   * into AssistantComposer, which owns its own textarea and exposes none.
+   */
+  const focusComposer = useCallback(() => {
+    const el = document.querySelector<HTMLTextAreaElement>("[data-jo-composer] textarea");
+    el?.focus();
+  }, []);
+
   // Load the conversation whenever the route changes.
   //
   // A chat arriving from the dashboard card has one stored user message and no
@@ -132,7 +153,12 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
     async (
       chatIdForSave: string,
       history: ChatTurn[],
-      opts: { level: string | null; tone: string | null; attachment: Attachment | null },
+      opts: {
+        tool: string | null;
+        attachment: Attachment | null;
+        /** How many clarifying questions this build request has already asked. */
+        askCount?: number;
+      },
     ) => {
       const replyId = `local-reply-${Date.now()}`;
       setTurns([...history, { id: replyId, role: "assistant", content: "" }]);
@@ -149,9 +175,9 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages: history.map((t) => ({ role: t.role, content: t.content })),
-            level: opts.level,
-            tone: opts.tone,
+            tool: opts.tool,
             attachment: opts.attachment,
+            askCount: opts.askCount ?? 0,
           }),
         });
 
@@ -219,8 +245,12 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
       // Handed back so the caller can open the tool. A refusal or a clarify is
       // not a clean run: a refusal has no tool, and a clarify is a question the
-      // teacher must answer first, which ClarifyChips navigates on its own.
-      return { toolCall, ok: !refused && !clarify };
+      // teacher must answer first, which ClarifyChips resolves on its own.
+      //
+      // `clarify` rides along so the caller can count the questions asked. The
+      // server cannot keep that tally: a clarify is never persisted and never
+      // sent back up, so only the client knows one was shown.
+      return { toolCall, clarify, ok: !refused && !clarify };
     },
     [],
   );
@@ -228,12 +258,22 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
   const send = useCallback(
     async (
       message: string,
-      opts: { level: string | null; tone: string | null; attachment: Attachment | null },
+      opts: {
+        tool: string | null;
+        attachment: Attachment | null;
+        /** Set only when answering a clarifying question — see onAnswer. */
+        askCount?: number;
+      },
     ) => {
       setError(null);
       // A fresh send is a fresh intent to be taken somewhere. Cleared here so
       // typing during one reply does not suppress the navigation for the next.
       composerTouched.current = false;
+
+      // A message straight from the composer starts a new build request, so the
+      // question allowance resets. Answering a clarify passes its own count and
+      // leaves the running tally alone.
+      if (opts.askCount === undefined) askCountRef.current = 0;
 
       // Create the chat on the first message rather than up front, so opening
       // /assistant and leaving never litters the sidebar with empty chats.
@@ -262,7 +302,15 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
            write must not interrupt the reply the teacher is waiting for. */
       });
 
-      const outcome = await streamReply(id, history, opts);
+      const outcome = await streamReply(id, history, {
+        ...opts,
+        askCount: opts.askCount ?? askCountRef.current,
+      });
+
+      // A question was asked, so the next answer counts against the allowance.
+      // Tracked here rather than in the clarify component, which is unmounted
+      // and rebuilt on every turn and so cannot hold a running total.
+      if (outcome?.clarify) askCountRef.current = (opts.askCount ?? askCountRef.current) + 1;
 
       // Deferred to here so the URL changes once the exchange is complete,
       // rather than remounting mid-stream.
@@ -275,6 +323,31 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
     [activeId, addChat, router, streamReply, maybeOpenTool],
   );
 
+  /**
+   * Answering a clarifying question, by chip or by typing.
+   *
+   * Posted back as an ordinary user turn rather than navigating, so the next
+   * tool-selection pass sees the fuller history and can either ask once more or
+   * open the tool. That is what makes the gather a conversation instead of a
+   * single question: a teacher who was asked for a year group can answer "Year
+   * 5" and then be asked how many slides.
+   *
+   * `askCount` rides along because the server cannot recover it. A clarify is
+   * never persisted and never sent back up — history is role and content only —
+   * so by the third turn nothing on the server remembers that two questions
+   * were already asked. The client knows, because it rendered the chips.
+   */
+  const answerClarify = useCallback(
+    (answer: string) => {
+      void send(answer, {
+        tool: null,
+        attachment: null,
+        askCount: askCountRef.current,
+      });
+    },
+    [send],
+  );
+
   // Answer a chat that arrived with its opening message already stored — the
   // dashboard card's hand-off, or a refresh that landed between the user turn
   // being saved and its reply arriving.
@@ -282,8 +355,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
     if (!pendingReply || !activeId || streaming) return;
     setPendingReply(null);
     void streamReply(activeId, turnsRef.current, {
-      level: null,
-      tone: null,
+      tool: null,
       attachment: null,
     }).then((outcome) => maybeOpenTool(outcome?.toolCall ?? null, outcome?.ok ?? false));
   }, [pendingReply, activeId, streaming, streamReply, maybeOpenTool]);
@@ -307,7 +379,12 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           ) : turns.length === 0 ? (
             <EmptyState />
           ) : (
-            <ChatMessages turns={turns} streaming={streaming} />
+            <ChatMessages
+              turns={turns}
+              streaming={streaming}
+              onAnswer={answerClarify}
+              onAddDetail={focusComposer}
+            />
           )}
 
           <div className="px-4 sm:px-6 lg:px-10 pb-8 pt-2">

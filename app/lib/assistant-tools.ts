@@ -16,11 +16,14 @@
 // and Year facets from. Target the request body instead and resources file
 // correctly but show "—" and vanish from those filters.
 //
-// Every tool with a form is registered (34 of the 35 in the grid; `slideshow` is
-// a deck LIST rather than a form, and its decks already have real URLs under
-// /editor/[id]). Each schema is hand-checked against its own form, because the
-// shapes really do vary: worksheet has no `topic` at all, quiz needs a
-// discriminating `action`, model-text carries its subject matter in `write`.
+// Every tool in the grid is registered. Each schema is hand-checked against its
+// own form, because the shapes really do vary: worksheet has no `topic` at all,
+// quiz needs a discriminating `action`, model-text carries its subject matter in
+// `write`.
+//
+// `slideshow` is the exception to "a schema describes a form": it is a deck LIST
+// page whose generation happens in a modal wizard, so its schema describes that
+// wizard's opening step and the prefill opens it pre-filled. See its entry.
 //
 // ── Five rules learned the hard way, all load-bearing ───────────────────────
 //
@@ -88,6 +91,24 @@ const NEWSLETTER_TONES = [
 ] as const;
 /** fields/GenderField.tsx */
 const GENDERS = ["Male", "Female", "Non-Binary"] as const;
+
+/**
+ * The slideshow wizard's year list — components/slideshow/GenerateModal.tsx.
+ *
+ * Exported and imported BY the modal, rather than copied from it, so the two
+ * cannot drift. Rule 3 above with a twist: the usual fix is to import the
+ * option list from the control, but that control is a heavy client component
+ * and this module is imported by the server route, so the ownership is
+ * inverted and the modal imports this instead.
+ *
+ * Not YEAR_GROUPS: this list offers "Adult learners" and omits the mixed-age
+ * handling, so a value from the other list would be discarded here.
+ */
+export const SLIDESHOW_YEARS = [
+  "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6",
+  "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12", "Year 13",
+  "Adult learners",
+] as const;
 
 export interface AssistantTool {
   /** Tool slug — also the route segment and the tool_runs / folder key. */
@@ -708,32 +729,66 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
   },
 
   // ── Slideshows ────────────────────────────────────────────────────────────
+  //
+  // THE ONE ENTRY HERE THAT IS NOT A FORM.
+  //
+  // `slideshow` was deliberately left out of this registry for a long time,
+  // because /tools/slideshow is a deck LIST and its generation happens in a
+  // three-step modal. In its place sat `lesson-slideshow`: an older, unlisted
+  // tool that was hidden in tool_settings, absent from the tools grid, and
+  // still live by URL. Jo sent every slides request to it, so teachers got a
+  // deprecated tool behind a grey fallback tile while the real Slides tool sat
+  // unreachable. One teacher asked for "a slideshow from the slideshow tool"
+  // and was still sent to the wrong one, which is what finally settled it.
+  //
+  // So the fields below describe GenerateModal's step one, not a form's state.
+  // The prefill opens the wizard with those values already in it.
   {
-    slug: "lesson-slideshow",
-    label: "Lesson Slideshow",
+    slug: "slideshow",
+    label: "Slideshow",
     icon: "presentation",
     description:
       "A classroom presentation for delivering a lesson. Use for 'slides', " +
-      "'slideshow', 'presentation', or 'PowerPoint' for teaching pupils.",
+      "'slideshow', 'presentation', 'deck' or 'PowerPoint' for teaching pupils.",
     fields: {
       type: "object",
       properties: {
-        ...curriculumFields,
-        topic: { type: "string", description: "What the lesson covers." },
+        // Deliberately NOT curriculumFields. The slideshow wizard has no
+        // curriculum or subject control on its opening step, and a field the
+        // target cannot render is dropped by cleanFields anyway.
+        topic: {
+          type: "string",
+          description: "What the lesson covers, e.g. 'The water cycle'.",
+        },
+        // `year`, not `yearGroup`: this drives the modal's own control, whose
+        // list differs from YEAR_GROUPS (it offers "Adult learners"). Sharing
+        // the name would invite the shared-enum guidance to fill it with a
+        // value this list does not contain, and it would then be discarded.
+        year: {
+          type: "string",
+          enum: SLIDESHOW_YEARS,
+          description:
+            "The year group. Omit if the teacher did not say — the wizard " +
+            "treats that as 'Any year'.",
+        },
         slideCount: {
           type: "integer",
           minimum: 3,
           maximum: 20,
-          description: "How many slides. Defaults to 8.",
+          description: "How many content slides. Defaults to 8.",
         },
-        includeImageSuggestions: {
-          type: "boolean",
-          description: "Suggest an image for each slide.",
+        additionalInstructions: {
+          type: "string",
+          description:
+            "Anything specific the teacher asked for: what to cover, what to " +
+            "leave out, an activity to include.",
         },
-        differentiate: differentiateField,
-        differentiationLevels: differentiationLevelsField,
       },
-      required: ["yearGroup", "topic"],
+      // Topic alone. Everything else has a working default in the wizard, and
+      // requiring more would throw away prefills the teacher would have been
+      // glad of — validatePrefill discards the lot when a required field is
+      // missing.
+      required: ["topic"],
     },
   },
   {

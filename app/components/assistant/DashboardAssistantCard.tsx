@@ -33,7 +33,7 @@ export default function DashboardAssistantCard() {
 
   const start = async (
     message: string,
-    opts: { level: string | null; tone: string | null; attachment: Attachment | null },
+    opts: { tool: string | null; attachment: Attachment | null },
   ) => {
     setSending(true);
     setError(null);
@@ -41,8 +41,11 @@ export default function DashboardAssistantCard() {
       const chat = await createChat(message);
       await saveMessage({ chatId: chat.id, role: "user", content: message });
       // The assistant page picks the message up from history and answers it.
-      // Level/tone are not carried across: they are per-turn composer settings,
-      // and the teacher can set them again there if they matter.
+      //
+      // A tool picked here is not carried across: the hand-off goes through
+      // stored history, which holds messages only, so there is nowhere to put
+      // it. The teacher can pick it again on the assistant page, where the
+      // choice actually reaches the request.
       void opts;
       router.push(`/assistant/${chat.id}`);
     } catch {

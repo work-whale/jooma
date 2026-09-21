@@ -74,7 +74,8 @@ test.describe("Landing page", () => {
     await expect(pane.getByText("What makes puddles disappear?")).toBeVisible();
 
     // A real callout label. "Quick check" is NOT one: it only ever existed in
-    // the hidden legacy lesson-slideshow prompt, and the placeholder used it.
+    // the legacy lesson-slideshow prompt (since deleted), and the placeholder
+    // used it.
     await expect(pane.getByText(/^(Key point|Remember|Fun fact)$/)).toBeVisible();
     await expect(pane.getByText("Quick check")).toHaveCount(0);
 

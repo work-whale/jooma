@@ -8,6 +8,9 @@ const TYPE_LABEL: Record<string, string> = {
   "worksheet-generator": "Worksheet",
   "quiz-generator": "Quiz",
   "comprehension-generator": "Comprehension",
+  "slideshow": "Slideshow",
+  // The tool is gone, but its saved runs are not: a handful of rows still carry
+  // this slug and would otherwise render as the raw string. Kept for them.
   "lesson-slideshow": "Slideshow",
   "cpd-slideshow": "CPD Slideshow",
   "homework-generator": "Homework",
@@ -31,16 +34,21 @@ export function typeLabel(slug: string) {
 }
 
 /*
- * Three tools put JSON in tool_runs.output rather than markdown, because what
+ * Some tools put JSON in tool_runs.output rather than markdown, because what
  * they make is a structure and not a document: a deck of slides, a list of
- * questions. See TOOL_SLUG in LessonSlideshowForm, CpdSlideshowForm and
- * QuizGeneratorForm, each of which JSON.stringify's its result before saving.
+ * questions. See TOOL_SLUG in CpdSlideshowForm and QuizGeneratorForm, each of
+ * which JSON.stringify's its result before saving, and the slideshow generator,
+ * which saves a deck.
  *
  * Anything that renders an output it did not generate itself has to ask first.
  * Handing one of these to MarkdownResult produces a screenful of literal braces,
  * which reads as a broken resource rather than as the wrong renderer.
+ *
+ * `lesson-slideshow` is a removed tool kept here for its saved runs: the rows
+ * outlive the route, and they are still decks.
  */
 const STRUCTURED_OUTPUT_SLUGS = new Set([
+  "slideshow",
   "lesson-slideshow",
   "cpd-slideshow",
   "quiz-generator",

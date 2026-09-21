@@ -23,9 +23,18 @@ interface Props {
   turns: ChatTurn[];
   /** True while the assistant's reply is still streaming in. */
   streaming?: boolean;
+  /** Answer a clarifying question, by chip or by the escape. */
+  onAnswer?: (answer: string) => void;
+  /** Leave the question unanswered and let the teacher type instead. */
+  onAddDetail?: () => void;
 }
 
-export default function ChatMessages({ turns, streaming = false }: Props) {
+export default function ChatMessages({
+  turns,
+  streaming = false,
+  onAnswer,
+  onAddDetail,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
@@ -62,6 +71,12 @@ export default function ChatMessages({ turns, streaming = false }: Props) {
               content={turn.content}
               toolCall={turn.toolCall}
               clarify={turn.clarify}
+              // Only the final turn's question is still open. An earlier one has
+              // already been answered by the turns below it, so its chips must
+              // not stay live and offer a choice that has been made.
+              answerable={i === turns.length - 1}
+              onAnswer={onAnswer}
+              onAddDetail={onAddDetail}
               // Only the final turn can still be arriving.
               streaming={streaming && i === turns.length - 1}
             />
@@ -87,11 +102,17 @@ function AssistantTurn({
   content,
   toolCall,
   clarify,
+  answerable,
+  onAnswer,
+  onAddDetail,
   streaming,
 }: {
   content: string;
   toolCall?: ToolPrefill | null;
   clarify?: ToolClarify | null;
+  answerable?: boolean;
+  onAnswer?: (answer: string) => void;
+  onAddDetail?: () => void;
   streaming: boolean;
 }) {
   const [copied, setCopied] = useState(false);
@@ -135,7 +156,9 @@ function AssistantTurn({
 
         {toolCall && <ToolLinkCard prefill={toolCall} />}
 
-        {clarify && <ClarifyChips clarify={clarify} />}
+        {clarify && answerable && (
+          <ClarifyChips clarify={clarify} onAnswer={onAnswer} onAddDetail={onAddDetail} />
+        )}
 
         {/* Actions appear once the reply is complete — offering "copy"
             mid-stream would copy a fragment. */}

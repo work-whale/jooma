@@ -1,0 +1,56 @@
+-- ── Remove lesson-slideshow ──────────────────────────────────────────────────
+--
+-- This is the decision that 20260812130038_hide_lesson_slideshow.sql was
+-- holding a place for. That migration said, in as many words:
+--
+--     "Whether the tool should be removed outright is still being decided."
+--
+-- Decided: the tool was never used. Confirmed with the product owner and the
+-- previous developer, who built it. It existed only because nobody was certain
+-- whether it was live, and hiding it was the safe holding position while that
+-- was established.
+--
+-- The route (app/(app)/tools/lesson-slideshow), the API handler
+-- (app/api/lesson-slideshow) and the form (LessonSlideshowForm.tsx) are deleted
+-- in the same change as this migration, and the slug is gone from
+-- GENERATION_PATHS and from Jo's tool registry. /tools/lesson-slideshow now
+-- returns 404.
+--
+-- WHY IT WAS REMOVED RATHER THAN LEFT HIDDEN
+-- Hiding it never stopped it costing money, as that migration admitted under
+-- "HONEST LIMITATION". Worse, it was not merely reachable by URL: Jo ROUTED
+-- teachers to it. `lesson-slideshow` was the only slideshow entry in the
+-- assistant's registry, so every "make me slides" request opened a tool that
+-- was hidden from the grid, missing from the TOOLS catalogue, and rendered
+-- behind a grey fallback tile. Production holds a teacher asking for "a
+-- slideshow from the slideshow tool" and being sent to this one anyway.
+--
+-- The real Slides tool (/tools/slideshow, which builds a deck in /editor/[id])
+-- is registered with the assistant in its place.
+--
+-- WHY THE ROW IS DELETED
+-- 20260812130038 kept it, on the grounds that admin_tools() joins tool_settings
+-- to the usage tables and deleting the row would orphan historical spend. That
+-- reasoning was right for a tool whose usage was unknown. It is moot for one
+-- with no usage: every row attributed to this slug in production comes from a
+-- single internal test on 2026-09-19, seconds after the misrouting above, and
+-- staging has none at all. There is no teacher history to preserve.
+--
+--   The usage rows are deliberately NOT deleted. They are an accurate record of
+--   spend that really happened, they roll up into monthly totals that should
+--   not silently change, and a tool_runs row outliving its tool is ordinary —
+--   app/lib/toolRunDisplay.ts keeps this slug's "Slideshow" label and its
+--   STRUCTURED_OUTPUT_SLUGS entry precisely so any such row still renders as a
+--   deck rather than as literal JSON braces. Only the settings row goes.
+--
+-- admin_tools() is deliberately NOT restated. It reads tool_settings, so the
+-- row simply stops appearing; nothing about the function needs to change. It
+-- has also been redefined twice since August (20260816000000 for per-tool model
+-- selection, 20260915000400 for the see_product section guard), so restating an
+-- older body here would silently revert both.
+--
+-- NOT REVERSIBLE by re-inserting a row: the code this pointed at is gone. If a
+-- lesson slideshow tool is ever wanted again it should be built against the
+-- real slideshow pipeline, not resurrected from here.
+
+delete from tool_settings where slug = 'lesson-slideshow';

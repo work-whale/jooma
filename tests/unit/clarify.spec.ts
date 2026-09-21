@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { validateClarify, validatePrefill } from "@/app/lib/toolPrefill";
+import { assistantToolFor } from "@/app/lib/assistant-tools";
 
 /*
  * The clarifying question's validator.
@@ -142,5 +143,86 @@ test.describe("validateClarify", () => {
     expect(prefill).not.toBeNull();
     expect(prefill!.slug).toBe("lesson-planner");
     expect(prefill!.fields[clarify.field]).toBe(answer.value);
+  });
+});
+
+/*
+ * "Open it as is" — the escape beside the chips.
+ *
+ * A teacher who was already clear has to be able to get past the question in
+ * one click, taking whatever Jo understood and finishing the form themselves.
+ * ClarifyChips decides whether to OFFER that by running the partial fields
+ * through validatePrefill up front, which is what these pin.
+ */
+test.describe("opening a tool without answering", () => {
+  /** What ClarifyChips computes to decide whether to offer the escape. */
+  function asIsFor(clarify: { slug: string; fields: Record<string, unknown> }) {
+    return validatePrefill({ slug: clarify.slug, fields: clarify.fields });
+  }
+
+  test("is offered when what was understood is already enough", () => {
+    // lesson-planner requires only subject and topic, and both are in `fields`.
+    // The question is about the year group, which is optional — so a teacher
+    // who does not care can leave now with a form that works.
+    const clarify = validateClarify(base())!;
+    const asIs = asIsFor(clarify);
+
+    expect(asIs).not.toBeNull();
+    expect(asIs!.fields.topic).toBe("The water cycle");
+    // Unanswered, so the field is absent rather than guessed. The teacher
+    // finishes it in the form.
+    expect(asIs!.fields.yearGroup).toBeUndefined();
+  });
+
+  test("is withheld while a required field is still missing", () => {
+    // worksheet-generator requires learningObjective, which carries its subject
+    // matter. A question asked before that exists has nothing to open, and
+    // validatePrefill discards the whole payload — so the button must be
+    // disabled rather than looking live and silently doing nothing.
+    const clarify = validateClarify({
+      slug: "worksheet-generator",
+      question: "Which year group is this for?",
+      field: "yearGroup",
+      options: [
+        { label: "Year 4", value: "Year 4" },
+        { label: "Year 5", value: "Year 5" },
+      ],
+      fields: { subject: "Maths" },
+    })!;
+
+    expect(asIsFor(clarify)).toBeNull();
+  });
+
+  test("names what is still missing, so the disabled state can explain itself", () => {
+    // A button that looks live and does nothing is worse than one that says
+    // why. ClarifyChips derives this list the same way.
+    const clarify = validateClarify({
+      slug: "worksheet-generator",
+      question: "What should it practise?",
+      field: "learningObjective",
+      options: [
+        { label: "Column addition", value: "Practise column addition" },
+        { label: "Times tables", value: "Practise the 7 times table" },
+      ],
+      fields: { subject: "Maths" },
+    })!;
+
+    const tool = assistantToolFor(clarify.slug)!;
+    const required = (tool.fields as { required?: string[] }).required ?? [];
+    const missing = required.filter((f) => clarify.fields[f] === undefined);
+
+    expect(missing).toContain("learningObjective");
+  });
+
+  test("answering the missing field makes it available", () => {
+    // The other half: once the gather has what it needs, the escape leads
+    // somewhere and the teacher can stop being asked.
+    const answered = validatePrefill({
+      slug: "worksheet-generator",
+      fields: { subject: "Maths", learningObjective: "Practise column addition" },
+    });
+
+    expect(answered).not.toBeNull();
+    expect(answered!.fields.learningObjective).toBe("Practise column addition");
   });
 });
