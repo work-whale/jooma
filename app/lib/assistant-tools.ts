@@ -47,6 +47,15 @@
 //  5. Fields that only make sense together must be described that way, since
 //     nothing enforces it: `differentiate: "yes"` without differentiationLevels
 //     opens the control with no band chosen, which blocks Generate.
+//
+//  6. Every form-backed tool declares `gating`, audited against its own
+//     canGenerate expression. `required` decides whether a prefill is worth
+//     opening; `gating` decides whether the form can actually be submitted, and
+//     a missing gating field makes Jo ASK rather than navigate. The two lists
+//     drifting is how "Plan a Year 3 science lesson" ended up opening a lesson
+//     planner with a dead Generate button and no question asked. `slideshow` is
+//     the only tool without one: it is a wizard, and its own single required
+//     field is the whole gate.
 import { CURRICULA, YEAR_GROUPS } from "@/app/lib/formOptions";
 import { DIFFERENTIATION_VALUES } from "@/app/lib/differentiation";
 
@@ -123,6 +132,34 @@ export interface AssistantTool {
   description: string;
   /** JSON Schema for the form-state fields the assistant may fill. */
   fields: Record<string, unknown>;
+  /**
+   * The fields this tool's Generate button is actually gated on.
+   *
+   * NOT the same list as the schema's `required`, and the difference is the
+   * whole point:
+   *
+   *   required  what a prefill needs before opening the tool is worth doing.
+   *             Missing one and validatePrefill discards everything, so Jo
+   *             answers in chat and the teacher gets no tool at all.
+   *   gating    what the FORM needs before it will generate. Missing one and
+   *             the tool opens with a dead Generate button.
+   *
+   * Keeping `required` narrow is deliberate (see rule 1 in the header). The
+   * cost of that was invisible until it was measured: "Plan a Year 3 science
+   * lesson on the water cycle" satisfied lesson-planner's required [subject,
+   * topic], so Jo prefilled, validation passed, and it navigated straight to a
+   * form whose Generate was disabled for want of a learning objective. Nothing
+   * asked, because from the model's side nothing was missing.
+   *
+   * This list closes that gap: anything named here and still absent after
+   * extraction turns the prefill into a clarifying question instead of a
+   * navigation. Mirror the form's own canGenerate expression, and only fields
+   * the model can reasonably supply — a "paste your observation notes" field
+   * belongs to the teacher and must not be asked for.
+   *
+   * Omit it entirely when `required` already covers the gate.
+   */
+  gating?: string[];
 }
 
 // Fields common to the curriculum-based tools. `mixed` is deliberately absent:
@@ -203,6 +240,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic"],
     },
+    // LessonPlannerForm.tsx:46. learningObjective has to be WRITTEN rather than
+    // extracted, and the model was quietly declining to, so the form opened
+    // complete-looking and unsubmittable.
+    gating: ["curriculum", "yearGroup", "subject", "topic", "learningObjective"],
   },
   {
     slug: "worksheet-generator",
@@ -236,6 +277,9 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "learningObjective"],
     },
+    // WorksheetGeneratorForm.tsx:56. questionTypes is deliberately absent: the
+    // form defaults it to every type, so it is never the missing piece.
+    gating: ["curriculum", "yearGroup", "subject", "learningObjective"],
   },
   {
     slug: "quiz-generator",
@@ -261,6 +305,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic"],
     },
+    // QuizGeneratorForm.tsx:56
+    gating: ["curriculum", "yearGroup", "subject", "topic"],
   },
   {
     slug: "comprehension-generator",
@@ -292,6 +338,9 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["topic"],
     },
+    // ComprehensionForm.tsx:192. textSource and contentDomains have form
+    // defaults, and ownText only applies when the teacher pastes their own.
+    gating: ["curriculum", "yearGroup", "topic"],
   },
   {
     slug: "letter-writer",
@@ -321,6 +370,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["recipient", "content"],
     },
+    // LetterWriterForm.tsx:51
+    gating: ["recipient", "content"],
   },
   {
     slug: "homework-generator",
@@ -344,6 +395,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "learningObjective"],
     },
+    // HomeworkGeneratorForm.tsx:93. homeworkType and length default in the form.
+    gating: ["curriculum", "yearGroup", "subject", "learningObjective"],
   },
 
   // ── Planning ──────────────────────────────────────────────────────────────
@@ -368,6 +421,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic"],
     },
+    // TopicOverviewForm.tsx:56
+    gating: ["curriculum", "yearGroup", "subject", "topic"],
   },
   {
     slug: "medium-term-planner",
@@ -397,6 +452,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic"],
     },
+    // MediumTermPlannerForm.tsx:45
+    gating: ["curriculum", "yearGroup", "subject", "topic"],
   },
   {
     slug: "cover-lesson",
@@ -431,6 +488,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic", "lessonLength", "resources"],
     },
+    // CoverLessonForm.tsx:100
+    gating: ["curriculum", "yearGroup", "subject", "topic", "lessonLength", "resources"],
   },
   {
     slug: "assembly-planner",
@@ -460,6 +519,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["theme"],
     },
+    // AssemblyPlannerForm.tsx:77
+    gating: ["theme"],
   },
   {
     slug: "sensory-activities",
@@ -476,6 +537,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic"],
     },
+    // SensoryActivitiesForm.tsx
+    gating: ["curriculum", "yearGroup", "subject", "topic"],
   },
   {
     slug: "eyfs-planner",
@@ -504,6 +567,11 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["topic"],
     },
+    // EYFSPlannerForm.tsx:45. `curriculum` is NOT listed even though
+    // canGenerate checks it: this form hardcodes it to EYFS, so it can never be
+    // the missing piece, and asking would be a question the teacher cannot
+    // usefully answer. numberOfWeeks defaults in the form.
+    gating: ["topic"],
   },
   {
     slug: "eyfs-action-plan",
@@ -527,6 +595,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "objective"],
     },
+    // EYFSActionPlanForm.tsx:54
+    gating: ["curriculum", "objective"],
   },
   {
     slug: "policy-generator",
@@ -553,6 +623,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "policy"],
     },
+    // PolicyGeneratorForm.tsx
+    gating: ["curriculum", "policy"],
   },
   {
     slug: "risk-assessment",
@@ -576,6 +648,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup", "activity"],
     },
+    // RiskAssessmentForm.tsx
+    gating: ["curriculum", "yearGroup", "activity"],
   },
 
   // ── Literacy ──────────────────────────────────────────────────────────────
@@ -620,6 +694,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup", "write"],
     },
+    // ModelTextGeneratorForm.tsx:55
+    gating: ["curriculum", "yearGroup", "write"],
   },
   {
     slug: "phonics-support",
@@ -647,6 +723,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "grapheme"],
     },
+    // PhonicsSupportForm.tsx
+    gating: ["curriculum", "grapheme"],
   },
 
   // ── Assessment ────────────────────────────────────────────────────────────
@@ -679,6 +757,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "topic"],
     },
+    // ExamQuestionGeneratorForm.tsx:59
+    gating: ["curriculum", "yearGroup", "subject", "topic"],
   },
   {
     slug: "model-answer-generator",
@@ -705,6 +785,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "question"],
     },
+    // ModelAnswerForm.tsx:53
+    gating: ["curriculum", "yearGroup", "subject", "question"],
   },
   {
     slug: "smart-targets",
@@ -726,6 +808,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup", "targets"],
     },
+    // SmartTargetsForm.tsx
+    gating: ["curriculum", "yearGroup", "targets"],
   },
 
   // ── Slideshows ────────────────────────────────────────────────────────────
@@ -825,6 +909,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["topic"],
     },
+    // CpdSlideshowForm.tsx:995
+    gating: ["topic"],
   },
 
   // ── Leadership ────────────────────────────────────────────────────────────
@@ -862,6 +948,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["purpose", "participants"],
     },
+    // MeetingPlannerForm.tsx:166. duration defaults in the form.
+    gating: ["purpose", "participants"],
   },
   {
     slug: "inspection-prep",
@@ -887,6 +975,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["inspectionBody"],
     },
+    // InspectionPrepForm.tsx:52
+    gating: ["inspectionBody"],
   },
   {
     slug: "school-improvement-plan",
@@ -921,6 +1011,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["areasToImprove"],
     },
+    // SchoolImprovementPlanForm.tsx
+    gating: ["areasToImprove"],
   },
   {
     slug: "pupil-premium-planner",
@@ -947,6 +1039,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["challenges"],
     },
+    // PupilPremiumPlannerForm.tsx
+    gating: ["challenges"],
   },
   {
     slug: "performance-management",
@@ -975,6 +1069,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "staffMember", "responsibilities"],
     },
+    // PerformanceManagementForm.tsx
+    gating: ["curriculum", "staffMember", "responsibilities"],
   },
   {
     slug: "newsletter-writer",
@@ -1007,6 +1103,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["tone", "firstSection"],
     },
+    // NewsletterWriterForm.tsx:84. sections are the school's own content.
+    gating: ["tone", "firstSection"],
   },
 
   // ── SEND and pupil-specific ───────────────────────────────────────────────
@@ -1041,6 +1139,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup", "studentName"],
     },
+    // BehaviourSupportPlanForm.tsx:74. studentName is listed only because it is
+    // already `required`, so it is guaranteed present and can never be the gap
+    // Jo asks about. The behaviour notes are the teacher's own and stay out.
+    gating: ["curriculum", "yearGroup", "studentName"],
   },
   {
     slug: "one-page-profile",
@@ -1058,6 +1160,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup", "name"],
     },
+    // OnePageProfileForm.tsx. `name` is already `required`, so it is guaranteed
+    // present rather than something Jo would ask for. The pupil's likes and
+    // support needs are the teacher's to supply and stay out.
+    gating: ["curriculum", "yearGroup", "name"],
   },
   {
     slug: "targeted-intervention",
@@ -1075,6 +1181,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup", "subject"],
     },
+    // TargetedInterventionForm.tsx. attitudinalData is the teacher's own assessment data, never invented.
+    gating: ["curriculum", "yearGroup", "subject"],
   },
   {
     slug: "report-writer",
@@ -1117,6 +1225,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["name", "gender", "firstSubject"],
     },
+    // ReportWriterForm.tsx. All three are already `required`, so they are
+    // guaranteed present; `gender` is the only one with fixed options anyway.
+    // wordCount defaults in the form.
+    gating: ["name", "gender", "firstSubject"],
   },
 
   // ── Observation and review write-ups ──────────────────────────────────────
@@ -1144,6 +1256,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum"],
     },
+    // LearningWalkReportForm.tsx:164. strengths and areasForDevelopment are the observer's notes.
+    gating: ["curriculum"],
   },
   {
     slug: "lesson-observation-report",
@@ -1169,6 +1283,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["curriculum", "yearGroup"],
     },
+    // LessonObservationReportForm.tsx:167. strengths/areasForDevelopment are the observer's own notes.
+    gating: ["curriculum", "yearGroup"],
   },
   {
     slug: "ect-report-writer",
@@ -1190,12 +1306,80 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["ectName"],
     },
+    // ECTReportWriterForm.tsx:55. `curriculum` is deliberately absent: this
+    // tool's schema has no such field, so listing it would make Jo ask forever
+    // about something it could never fill. strengths and areasForDevelopment
+    // are the mentor's own words and stay out.
+    gating: ["ectName"],
   },
 ];
 
 /** Look up a tool by slug. Returns undefined for anything not wired up. */
 export function assistantToolFor(slug: string): AssistantTool | undefined {
   return ASSISTANT_TOOLS.find((t) => t.slug === slug);
+}
+
+/**
+ * Gating fields this prefill has not filled in.
+ *
+ * The check that turns "opened a form the teacher cannot submit" into "asked
+ * one short question first". See the `gating` docs on AssistantTool for why it
+ * is a separate list from the schema's `required`.
+ *
+ * Returns [] when the tool declares no gating list, so a tool that has not been
+ * audited against its form behaves exactly as it did before.
+ */
+export function missingGatingFields(
+  slug: string,
+  fields: Record<string, unknown>,
+): string[] {
+  const tool = assistantToolFor(slug);
+  if (!tool?.gating) return [];
+  return tool.gating.filter((f) => {
+    const v = fields[f];
+    if (v === undefined || v === null) return true;
+    if (typeof v === "string") return v.trim() === "";
+    if (Array.isArray(v)) return v.length === 0;
+    return false;
+  });
+}
+
+/**
+ * How to ask for a gating field, when the model did not supply one itself.
+ *
+ * The model is asked for the question first, because it can phrase one in
+ * context ("Which year group is this Year 3 science lesson for?" beats a
+ * generic prompt). This is the fallback for when it declines, and for the two
+ * fields where the options are a fixed list anyway.
+ *
+ * `null` options means "no sensible fixed answers" — the caller then has to get
+ * them from the model or skip asking about that field.
+ */
+export function gatingQuestion(field: string): {
+  question: string;
+  options: { label: string; value: string }[] | null;
+} | null {
+  switch (field) {
+    case "yearGroup":
+      return {
+        question: "Which year group is this for?",
+        // Trimmed to three, which is the cap validateClarify enforces anyway.
+        // Primary middle years cover the most common requests; anything else
+        // the teacher types instead.
+        options: [
+          { label: "Year 3", value: "Year 3" },
+          { label: "Year 4", value: "Year 4" },
+          { label: "Year 5", value: "Year 5" },
+        ],
+      };
+    case "curriculum":
+      return {
+        question: "Which curriculum should this follow?",
+        options: CURRICULUM_VALUES.slice(0, 3).map((c) => ({ label: c, value: c })),
+      };
+    default:
+      return null;
+  }
 }
 
 /**
@@ -1322,9 +1506,24 @@ export function prefillFunctionDef() {
                   "the teacher names a Scottish, Welsh, Northern Irish or Early " +
                   "Years context.",
               },
+              // The most-required field in the whole registry: 11 tools list it
+              // in `required`, so omitting it discards the ENTIRE prefill and
+              // the teacher gets a chat reply instead of their tool. That is
+              // exactly what happened to a Welsh phonics worksheet whose year
+              // group, curriculum and objective were all extracted perfectly.
+              //
+              // It is almost always inferable even when unstated: "a phonics
+              // worksheet" is English, "CVC words" is English, "column addition"
+              // is Maths. Infer it rather than leaving it out.
               subject: {
                 type: "string",
-                description: "Curriculum subject, e.g. \"Science\", \"Maths\".",
+                description:
+                  "Curriculum subject, e.g. \"Science\", \"Maths\", \"English\". " +
+                  "ALWAYS set this when the tool has the field. Infer it from " +
+                  "the topic when the teacher did not name it: phonics, reading, " +
+                  "writing, spelling and comprehension are \"English\"; " +
+                  "arithmetic, fractions and times tables are \"Maths\". " +
+                  "Omitting it throws the whole prefill away.",
               },
               // Declared for a different reason than the three above.
               //
@@ -1354,6 +1553,27 @@ export function prefillFunctionDef() {
                   "(\"Identify the stages of the water cycle\"). On " +
                   "worksheet-generator and homework-generator this carries the " +
                   "subject matter, because those tools have no topic field.",
+              },
+              // Declared here for the same reason as the others: per-tool
+              // property schemas never travel, so letter-writer's own careful
+              // wording ("the teacher's brief, restated as a clear instruction
+              // of what to include") was never read. The model saw a field
+              // called `content` on a letter tool and wrote the letter into it.
+              //
+              // That output then becomes the BRIEF for the letter generator,
+              // so it was being asked to write a letter from a finished letter.
+              // The form labels this box "Summary of key information", and the
+              // prefill has to match what a teacher would type there.
+              content: {
+                type: "string",
+                description:
+                  "On letter-writer and similar tools: the NOTES a letter or " +
+                  "message should be built from, never the finished text. " +
+                  "Write terse bullet-style facts, not prose, and never open " +
+                  "with a salutation or close with a sign-off. Good: \"Year 4 " +
+                  "museum trip, 14 March. Needs: cost, packed lunch, consent " +
+                  "form by 1 March.\" Bad: \"Dear Parents, I am writing to " +
+                  "inform you...\" The tool writes the letter; this is its brief.",
               },
             },
             additionalProperties: true,

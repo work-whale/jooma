@@ -72,7 +72,24 @@ function toBase64Url(input: string): string {
 
 function fromBase64Url(input: string): string {
   const padded = input.replace(/-/g, "+").replace(/_/g, "/");
-  const binary = atob(padded + "=".repeat((4 - (padded.length % 4)) % 4));
+  return decodeBase64Utf8(padded + "=".repeat((4 - (padded.length % 4)) % 4));
+}
+
+/**
+ * Decode plain base64 that holds UTF-8 text.
+ *
+ * `atob` ALONE IS NOT ENOUGH, and the difference is invisible until a teacher
+ * writes a pound sign. atob returns a binary string — one character per byte —
+ * so the two bytes of "£" come back as the two characters "Â£". Accented names,
+ * curly quotes, em dashes and Welsh text all corrupt the same way.
+ *
+ * The assistant route encodes its headers with Buffer.from(json, "utf8"), so
+ * they need this on the way back in. Exported because the header path in
+ * AssistantView used bare atob and produced exactly that mojibake in a letter
+ * brief: "Cost: Â£10 per student".
+ */
+export function decodeBase64Utf8(b64: string): string {
+  const binary = atob(b64);
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
