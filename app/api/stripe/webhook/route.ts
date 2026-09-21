@@ -389,13 +389,33 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       .eq("id", userId)
       .maybeSingle();
 
-    // Read from the Stripe customer rather than the profile: it is the address
-    // that actually paid, which is what Meta is most likely to match against.
-    const customer = inv.customer_email ?? null;
+    // WHICH EMAIL, and why there are two sources.
+    //
+    // The invoice's own address is preferred: it is what actually paid, so it is
+    // the address Meta is most likely to hold for this person.
+    //
+    // But it is not guaranteed. A Checkout session started from an existing
+    // customer record carries whatever address that record holds, which can be
+    // empty for a customer created outside the normal flow, and Stripe does not
+    // promise the field at all. A null there would drop our single strongest
+    // identifier and leave the event matching on cookies alone, which for an
+    // organic signup means matching on nothing.
+    //
+    // So fall back to the account's own address. Note it lives on auth.users
+    // rather than profiles, which has no email column at all -- the same reason
+    // /api/invites/accept reads it off the session.
+    let email = inv.customer_email ?? null;
+    if (!email) {
+      const { data: authUser, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (error) {
+        console.warn("[meta-capi] could not read account email for fallback", userId, error.message);
+      }
+      email = authUser?.user?.email ?? null;
+    }
 
     await sendPurchase({
       eventId: inv.id ?? `invoice-${userId}-${inv.created}`,
-      email: customer,
+      email,
       fbp: profile?.meta_fbp ?? null,
       fbc: profile?.meta_fbc ?? null,
       // What was actually received, not what was billed: a discounted first
