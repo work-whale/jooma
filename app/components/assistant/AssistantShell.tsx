@@ -21,12 +21,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import ChatSidebar from "@/app/components/assistant/ChatSidebar";
+import type { ChatTurn } from "@/app/components/assistant/ChatMessages";
 import {
   deleteChat,
   listChats,
@@ -43,6 +45,22 @@ interface AssistantChatsValue {
   refreshChats: () => void;
   /** null while the plan is still being resolved — see below. */
   allowed: boolean | null;
+  /**
+   * Turns handed up by the page just before its own route is replaced.
+   *
+   * /assistant and /assistant/[id] are separate segments, so the first message
+   * of a chat UNMOUNTS the view and mounts a new one. Component state and refs
+   * do not survive that, and the fresh instance would reload the conversation
+   * from the database — where a stored row carries `tool_call` but never
+   * `clarify`, so Jo's question and its chips silently disappeared a beat after
+   * they appeared.
+   *
+   * Parked here, in the layout, which is the only thing that outlives the
+   * navigation. The remounted view claims them and skips the fetch.
+   */
+  handover: { chatId: string; turns: ChatTurn[] } | null;
+  /** Park the current turns before replacing the url. */
+  setHandover: (value: { chatId: string; turns: ChatTurn[] } | null) => void;
 }
 
 const AssistantChatsContext = createContext<AssistantChatsValue | null>(null);
@@ -150,9 +168,30 @@ export default function AssistantShell({ children }: { children: React.ReactNode
 
   const locked = allowed === false;
 
+  // Held in a ref, not state: parking turns must not re-render the shell (and
+  // with it the whole conversation) at the exact moment the route is changing.
+  // The consumer reads it once on mount and clears it.
+  const handoverRef = useRef<{ chatId: string; turns: ChatTurn[] } | null>(null);
+  const setHandover = useCallback(
+    (v: { chatId: string; turns: ChatTurn[] } | null) => {
+      handoverRef.current = v;
+    },
+    [],
+  );
+
   const value = useMemo(
-    () => ({ addChat, refreshChats, allowed }),
-    [addChat, refreshChats, allowed],
+    () => ({
+      addChat,
+      refreshChats,
+      allowed,
+      // A getter would be cleaner, but the consumer only reads this during its
+      // first render, and a plain property keeps the context shape obvious.
+      get handover() {
+        return handoverRef.current;
+      },
+      setHandover,
+    }),
+    [addChat, refreshChats, allowed, setHandover],
   );
 
   return (

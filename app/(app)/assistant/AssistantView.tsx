@@ -11,6 +11,7 @@ import {
   validatePrefill,
   validateClarify,
   prefillHref,
+  decodeBase64Utf8,
   type ToolPrefill,
   type ToolClarify,
 } from "@/app/lib/toolPrefill";
@@ -29,13 +30,20 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
   // The chat list and the plan gate live in the layout, so they survive
   // navigation between /assistant and /assistant/[id]. See AssistantShell.
-  const { addChat, allowed } = useAssistantChats();
+  const { addChat, allowed, handover, setHandover } = useAssistantChats();
 
   const [activeId, setActiveId] = useState<string | null>(chatId ?? null);
   // null = the conversation has not loaded yet, [] = it is genuinely empty.
   // Without the distinction the "How can I help you?" splash flashes over an
   // existing conversation while its messages are in flight.
-  const [turns, setTurns] = useState<ChatTurn[] | null>(chatId ? null : []);
+  // Claimed during the FIRST render, not in an effect, so the conversation is
+  // never briefly absent. /assistant and /assistant/[id] are separate route
+  // segments, so the url change after a chat's first message unmounts this
+  // component and mounts a fresh one — see the handover note in AssistantShell.
+  const claimed = chatId && handover?.chatId === chatId ? handover.turns : null;
+  const [turns, setTurns] = useState<ChatTurn[] | null>(
+    claimed ?? (chatId ? null : []),
+  );
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** A stored user message still awaiting its reply — see the loader below. */
@@ -54,6 +62,42 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
    * from the composer, so a new ask gets its full allowance of questions.
    */
   const askCountRef = useRef(0);
+
+  /**
+   * The chat whose turns are currently on screen.
+   *
+   * Distinct from `activeId`, which is state the render reads. This is only
+   * ever consulted inside the loader effect to answer "have I already got
+   * this conversation?", and it must not be a dependency of that effect — see
+   * the note there.
+   */
+  // Seeded with the claimed chat, so the loader effect below sees this
+  // conversation as already on screen and does not re-fetch it.
+  const loadedIdRef = useRef<string | null>(claimed ? chatId! : chatId ?? null);
+
+  // Consumed once. Leaving it parked would make a later genuine navigation
+  // back to this chat reuse turns that may since have moved on.
+  useEffect(() => {
+    if (claimed) setHandover(null);
+    // Deliberately mount-only: `claimed` is a first-render decision.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Chats this component has already streamed a reply for.
+   *
+   * Guards the pending-reply loader, which exists for conversations answered
+   * ELSEWHERE (the dashboard card creates the chat and hands off). It detects
+   * that case by "the last stored row is a user turn" — a condition a chat
+   * answered right here also meets for a moment, because saveMessage is
+   * fire-and-forget and the reply row lands after the user row.
+   */
+  const answeredHereRef = useRef<Set<string>>(
+    // A claimed conversation was answered by the instance that handed it over,
+    // so this one must not stream a second reply for it. Without this the
+    // remount looks exactly like the dashboard hand-off case.
+    new Set(claimed && chatId ? [chatId] : []),
+  );
 
   /**
    * Put the cursor in the composer.
@@ -79,6 +123,27 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
       setTurns([]);
       return;
     }
+
+    // Already showing this conversation? Then this is our OWN url change, not a
+    // navigation, and re-fetching would throw away live state for rows that say
+    // less than what is already on screen.
+    //
+    // THE BUG THIS FIXES. The first message of a chat runs
+    // router.replace("/assistant/<id>") once the exchange completes, which
+    // changes `chatId` and re-ran this effect. It reloaded every turn from the
+    // database, and a stored row carries `tool_call` but NOT `clarify` —
+    // deliberately, since a stale question must never come back after a reload.
+    // So Jo asked its question, the chips rendered, and a beat later the reload
+    // replaced that turn with a clarify-less copy and the chips vanished. The
+    // teacher was left with "I'm about to make a phonics worksheet" and nothing
+    // to answer.
+    //
+    // Read through a ref, not the state value: this must NOT be an effect
+    // dependency. Depending on activeId would re-run the effect the moment it
+    // is set below, which is the re-fetch being prevented.
+    if (loadedIdRef.current === chatId && turnsRef.current.length > 0) return;
+    loadedIdRef.current = chatId;
+
     setActiveId(chatId);
     setTurns(null);
     listMessages(chatId)
@@ -161,6 +226,9 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
       },
     ) => {
       const replyId = `local-reply-${Date.now()}`;
+      // Claimed before the request goes out, not after it returns: the loader
+      // effect can fire while this is still streaming.
+      answeredHereRef.current.add(chatIdForSave);
       setTurns([...history, { id: replyId, role: "assistant", content: "" }]);
       setStreaming(true);
 
@@ -201,7 +269,11 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           try {
             // Re-validated client-side: a header is not a trusted channel, and
             // this is what decides which tool page we link to.
-            toolCall = validatePrefill(JSON.parse(atob(header)));
+            //
+            // decodeBase64Utf8, never bare atob: the route encodes with
+            // Buffer.from(json, "utf8"), and atob hands back one character per
+            // BYTE, so "£10" arrived as "Â£10" in a letter brief.
+            toolCall = validatePrefill(JSON.parse(decodeBase64Utf8(header)));
           } catch {
             toolCall = null;
           }
@@ -212,7 +284,9 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           try {
             // Re-validated client-side for the same reason as the prefill: a
             // header is not a trusted channel, and these chips write into a form.
-            clarify = validateClarify(JSON.parse(atob(clarifyHeader)));
+            // Same UTF-8 decode as above — a chip label can carry a pound sign
+            // or an accented word just as easily.
+            clarify = validateClarify(JSON.parse(decodeBase64Utf8(clarifyHeader)));
           } catch {
             clarify = null;
           }
@@ -285,6 +359,12 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           id = chat.id;
           isNew = true;
           setActiveId(chat.id);
+          // Claimed BEFORE the router.replace below changes `chatId`, so the
+          // loader effect recognises this conversation as already on screen and
+          // declines to re-fetch it. Without this the reload strips the live
+          // clarify off the turn and the chips disappear a beat after they
+          // appear — see the note in that effect.
+          loadedIdRef.current = chat.id;
           // Into the layout's list, so it appears in the sidebar at once.
           addChat(chat);
         } catch {
@@ -314,13 +394,21 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
       // Deferred to here so the URL changes once the exchange is complete,
       // rather than remounting mid-stream.
-      if (isNew) router.replace(`/assistant/${id}`);
+      //
+      // The turns are parked in the layout FIRST. This replace crosses a route
+      // segment boundary, so it tears this component down and builds a new one;
+      // without the handover that new instance reloads from the database and
+      // loses the live clarify, taking Jo's question and its chips with it.
+      if (isNew) {
+        setHandover({ chatId: id, turns: turnsRef.current });
+        router.replace(`/assistant/${id}`);
+      }
 
       // Same reason, and it must come after: navigating to the tool while the
       // stream was still running would tear down the panel mid-answer.
       maybeOpenTool(outcome?.toolCall ?? null, outcome?.ok ?? false);
     },
-    [activeId, addChat, router, streamReply, maybeOpenTool],
+    [activeId, addChat, router, streamReply, maybeOpenTool, setHandover],
   );
 
   /**
@@ -351,8 +439,21 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
   // Answer a chat that arrived with its opening message already stored — the
   // dashboard card's hand-off, or a refresh that landed between the user turn
   // being saved and its reply arriving.
+  //
+  // Only ever for a conversation this component did NOT just answer itself.
+  // saveMessage is fire-and-forget, so a chat answered here can briefly read
+  // back from the database as "one user row, no reply" — which looks exactly
+  // like the hand-off case. Acting on that streamed a SECOND reply over the
+  // first, rebuilding turns from history and discarding the live clarify: the
+  // chips vanished and Jo's next line thanked the teacher for a year group
+  // they had never chosen. answeredHereRef marks the conversations this
+  // component has already streamed for.
   useEffect(() => {
     if (!pendingReply || !activeId || streaming) return;
+    if (answeredHereRef.current.has(activeId)) {
+      setPendingReply(null);
+      return;
+    }
     setPendingReply(null);
     void streamReply(activeId, turnsRef.current, {
       tool: null,

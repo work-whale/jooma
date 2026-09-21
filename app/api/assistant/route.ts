@@ -36,6 +36,8 @@ import {
   clarifyFunctionDef,
   toolSchemaDigest,
   assistantToolFor,
+  missingGatingFields,
+  gatingQuestion,
 } from "@/app/lib/assistant-tools";
 import {
   validatePrefill,
@@ -180,7 +182,27 @@ export async function POST(req: NextRequest) {
       // The chips carry the question, so repeating it in prose would ask
       // twice. One short line of context, then let the teacher pick.
       ? `\n\nYou need one detail before building this. The question and its answers are shown as buttons directly beneath your message, so do NOT ask it again and do NOT list the options. Say in ONE short sentence what you are about to make, and nothing else.`
-      : "";
+      // ── No tool was selected, and this branch is the dangerous one ──
+      //
+      // selectTool returning null is SILENT: it happens when the request was
+      // conversation, but equally when the model declined to call the function
+      // on a request that plainly wanted a resource. In the second case this
+      // used to leave replyGuidance empty, so nothing stopped the reply model
+      // writing the whole worksheet into the chat — which is precisely what a
+      // teacher asking for a Welsh CVC phonics worksheet got, after answering
+      // three questions, having never been offered the tool.
+      //
+      // The base prompt already says not to (assistant-prompt.ts:43), but that
+      // is one line among many and the model talked itself past it once the
+      // conversation had accumulated enough detail to just answer. Restated
+      // here, last and specific, because this is the turn where it matters.
+      //
+      // Deliberately NOT a refusal: plenty of null decisions are genuine
+      // conversation, and those must still get a proper answer. What it forbids
+      // is producing the artefact itself.
+      : isResourceRequest(latestUser.content)
+        ? `\n\nThis teacher is asking for a resource one of Jooma's tools produces, and the tool could not be opened automatically this time. Do NOT write the resource, the worksheet, the plan, the questions or the slides yourself, however clearly you could — it would give them something they cannot save, edit, export or differentiate. Instead ask ONE short question that would let you open the right tool next turn, such as the year group or the subject. Do not tell them to go and find the tool themselves.`
+        : "";
 
   const response = await streamChat({
     toolSlug: "assistant",
@@ -213,6 +235,134 @@ export async function POST(req: NextRequest) {
     );
   }
   return new Response(response.body, { status: response.status, headers });
+}
+
+/**
+ * Does this message plainly ask for a resource one of the tools makes?
+ *
+ * A backstop for the case selectTool cannot signal: it returns null both for
+ * "this was conversation" and for "I declined to call the function", and those
+ * need opposite replies. When the second happens on a request like "I need a
+ * phonics worksheet", the reply model will happily write the worksheet inline
+ * unless something tells it not to.
+ *
+ * Deliberately crude and deliberately narrow. It only has to catch requests
+ * whose wording is unambiguous, because the cost of a false positive is real:
+ * a teacher asking "how do I teach phonics?" must still get a proper answer,
+ * not a redirect to a tool. So this matches an explicit ASK ("make me a", "I
+ * need a", "can you create") next to a noun the tools actually produce, rather
+ * than the noun alone.
+ */
+function isResourceRequest(message: string): boolean {
+  const text = message.toLowerCase();
+
+  // Anything the tools produce. Nouns only — a verb like "plan" is far too
+  // common in ordinary teaching talk ("how do I plan for mixed ability?").
+  const artefact =
+    /\b(worksheet|lesson plan|quiz|slideshow|slides|presentation|powerpoint|comprehension|report|letter|newsletter|homework|policy|risk assessment|exam questions?|model (?:text|answer)|assembly|profile|intervention|targets?)\b/;
+
+  // An explicit request for one to be MADE. A question about the thing is not
+  // a request for the thing.
+  const asking =
+    /\b(make|create|generate|write|build|produce|draft|prepare|design|need|want|give me|can you|could you|i'd like|please)\b/;
+
+  // A clear question about practice, which must never be intercepted even when
+  // it names an artefact ("how do I mark a comprehension?").
+  const advice = /\b(how (?:do|should|can|would)|what (?:is|are|makes)|why (?:do|is|are)|any (?:tips|advice|ideas)|best way)\b/;
+
+  if (advice.test(text)) return false;
+  return artefact.test(text) && asking.test(text);
+}
+
+/**
+ * Recover a prefill that validatePrefill rejected for one missing field.
+ *
+ * The rejection is all-or-nothing by design: a half-filled form that claims to
+ * be complete is worse than none. But "one required field absent" and "this
+ * payload is nonsense" are very different situations, and only the second
+ * deserves to be thrown away.
+ *
+ * Returns a clarifying question when the gap is a field with real options, so
+ * the teacher answers in one tap and the next pass builds the full prefill.
+ * Returns null when there is nothing sensible to ask — a free-text field, a
+ * payload with no usable fields at all, or the allowance already spent — and
+ * the caller then falls back to a chat reply as before.
+ */
+function rescueNearMiss(raw: unknown, canAsk: boolean): ToolDecision | null {
+  if (!canAsk) return null;
+  if (!raw || typeof raw !== "object") return null;
+
+  const { slug, fields } = raw as { slug?: unknown; fields?: unknown };
+  if (typeof slug !== "string") return null;
+  const tool = assistantToolFor(slug);
+  if (!tool) return null;
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) return null;
+
+  const sent = fields as Record<string, unknown>;
+  const required = (tool.fields as { required?: string[] }).required ?? [];
+  const missing = required.filter((f) => {
+    const v = sent[f];
+    return v === undefined || v === null || (typeof v === "string" && !v.trim());
+  });
+
+  // Nothing missing means it failed for some other reason (no field survived
+  // the allow-list), and asking would not help.
+  if (missing.length === 0) return null;
+
+  // More than one hole is not a near miss. Asking twice in a row for a request
+  // the model barely understood is the interrogation this design avoids.
+  if (missing.length > 2) return null;
+
+  for (const field of missing) {
+    const spec = gatingQuestion(field);
+    if (!spec?.options) continue;
+    const clarify = validateClarify({
+      slug,
+      question: spec.question,
+      field,
+      options: spec.options,
+      fields: sent,
+    });
+    if (clarify) return { kind: "clarify", clarify };
+  }
+  return null;
+}
+
+/**
+ * Turn an under-filled prefill into one short question.
+ *
+ * Built in code rather than asked of the model a second time: the prefill has
+ * already been paid for, a second round trip would double the cost of every
+ * thin request, and the question is entirely determined by which field is
+ * missing. The teacher's answer re-enters through the ordinary chat path, so
+ * the next pass sees it as context and fills the field itself.
+ *
+ * Asks about ONE field — the first gap in the tool's own gating order, which
+ * is written to match the form's reading order, so the question is about the
+ * first thing they would have noticed was empty.
+ *
+ * Returns null when the gap is free text with no fixed answers. Chips have to
+ * be real values for the field (validateClarify enforces it), and inventing a
+ * learning objective or a letter's contents on a teacher's behalf is exactly
+ * what the registry forbids. Opening the tool beats stalling them.
+ */
+function gatingClarify(prefill: ToolPrefill, gaps: string[]): ToolClarify | null {
+  for (const field of gaps) {
+    const spec = gatingQuestion(field);
+    if (!spec?.options) continue;
+
+    const clarify = validateClarify({
+      slug: prefill.slug,
+      question: spec.question,
+      field,
+      options: spec.options,
+      // Everything understood so far travels with the question, so answering
+      // completes the form rather than restarting it.
+      fields: prefill.fields,
+    });
+    if (clarify) return clarify;
+  }
+  return null;
 }
 
 /**
@@ -308,16 +458,21 @@ async function selectTool(
 
 Call prefill_tool ONLY when the teacher is asking for something to be PRODUCED — a document, resource, plan, report or presentation. The tools available to you, and what each is for, are listed in the prefill_tool description; choose from those.
 
-Do not call it when the teacher is asking a question ABOUT teaching rather than asking for an artefact. "How do I get parents more involved?" is a conversation. "Write a letter to parents about the trip" is the Letter Writer. When in doubt, answer conversationally — a wrong tool is more annoying than no tool.
+Do not call it when the teacher is asking a question ABOUT teaching rather than asking for an artefact. "How do I get parents more involved?" is a conversation. "Write a letter to parents about the trip" is the Letter Writer.
+
+An imperative naming something a tool makes is ALWAYS a prefill_tool call, never conversation: "make me a quiz on the Romans for Year 5", "write a letter to parents", "I need a phonics worksheet". Do not answer those in prose, do not describe which tool they should open, and do not decline because a field is missing — call the function with what you have. Declining is only for genuine questions about practice.
 
 Call ask_clarifying_question INSTEAD of prefill_tool when you know which tool they want but a field it NEEDS is genuinely ambiguous, and guessing it wrong would waste a generation. Ask about ONE field, offer two or three concrete answers, and pass everything you already understood in the fields argument.
 
 Ask only about a field the chosen tool actually needs and the teacher has not supplied. One field per question. Never ask about something they already answered earlier in the thread — read the whole conversation before asking, because a question they have answered reads as not listening. If the teacher named the year group and the topic, that is enough to build from: infer the rest and call prefill_tool.
 
 When you call prefill_tool, ALWAYS include these in fields when the tool has them:
+- subject, INFERRED when not stated. Phonics, reading, writing, spelling and comprehension are "English"; fractions, arithmetic and times tables are "Maths". Eleven tools REQUIRE this: leaving it out discards the whole prefill and the teacher gets nothing.
 - yearGroup, whenever the teacher names or implies a year. "a year 5 lesson plan" means yearGroup "Year 5". Use the exact forms listed in the prefill_tool description; "Y5", "year five" and "5" are all rejected and the teacher's year group is then lost.
 - curriculum. Default it to "2014 National Curriculum" unless they name a Scottish, Welsh, Northern Irish or Early Years context.
-These two gate the Generate button on most tools, so omitting them leaves the teacher with a form they cannot submit.
+- learningObjective, which you WRITE rather than extract. A teacher gives you a topic, not an objective, so compose one from the topic the way they would phrase it: a verb and an outcome, no preamble. "a Year 3 lesson on the water cycle" becomes "Identify and describe the stages of the water cycle". Never leave it blank because they did not say it.
+
+Fill every one of those you can. But a field you are unsure of is never a reason NOT to call prefill_tool: calling it with most fields right is far better than not calling it at all, which leaves the teacher with prose instead of their tool.
 
 ${toolSchemaDigest()}${forcedInstruction(forced)}`,
         },
@@ -342,6 +497,18 @@ ${toolSchemaDigest()}${forcedInstruction(forced)}`,
         finish_reason: completion.choices[0]?.finish_reason,
         model: completion.model,
         completion_tokens: completion.usage?.completion_tokens,
+        // What the model said INSTEAD of calling. When the request plainly
+        // wanted a resource, this is the regression: "Make me a quiz on the
+        // Romans for Year 5" once came back as prose recommending the Quiz
+        // Maker, because the prompt had been tuned so hard towards filling
+        // fields correctly that declining looked safer than calling.
+        saidInstead: completion.choices[0]?.message?.content?.slice(0, 160) ?? null,
+        // Printed so the two cases are distinguishable at a glance rather than
+        // by reading the message: a true means the model declined something it
+        // should have acted on.
+        looksLikeAResourceRequest: isResourceRequest(
+          [...history].reverse().find((m) => m.role === "user")?.content ?? "",
+        ),
       });
       return null;
     }
@@ -365,30 +532,85 @@ ${toolSchemaDigest()}${forcedInstruction(forced)}`,
 
       const prefill = validatePrefill(raw);
 
-      // TEMPORARY DIAGNOSTIC — remove once the missing yearGroup is resolved.
+      // Diagnostic: what the model SENT beside what survived validation.
       //
-      // Prints what the model SENT beside what survived validation, because
-      // those two cases look identical from the outside and need opposite
-      // fixes. A prefill can arrive without a year group because the model
-      // never wrote one, or because it wrote "Y5" and cleanFields dropped it:
-      // enum matching is exact after normalising case and spacing, so a near
-      // miss is discarded with no error anywhere.
-      //
-      //   sent has yearGroup, kept does not  -> validation is too strict
-      //   neither has it                     -> the prompt is not landing
-      const sent = Object.keys((raw as { fields?: object })?.fields ?? {});
-      const kept = prefill ? Object.keys(prefill.fields) : [];
-      console.log("[assistant] prefill fields", {
-        slug: (raw as { slug?: string })?.slug,
-        sent,
-        kept,
-        dropped: sent.filter((f) => !kept.includes(f)),
-        yearGroupSent: (raw as { fields?: Record<string, unknown> })?.fields?.yearGroup,
-        curriculumSent: (raw as { fields?: Record<string, unknown> })?.fields?.curriculum,
-        rejectedEntirely: prefill === null,
+      // `kept` and `dropped` are only meaningful when a prefill came back. On a
+      // rejection they USED to report every field as dropped, which reads as
+      // "validation ate everything" when the truth is usually the opposite: the
+      // fields were all fine and one REQUIRED field was simply absent, so
+      // validatePrefill discarded the lot. That misreading cost real debugging
+      // time on a Welsh phonics worksheet whose year group, curriculum and
+      // objective were all correct and whose `subject` was missing.
+      const sentFields = (raw as { fields?: Record<string, unknown> })?.fields ?? {};
+      const sent = Object.keys(sentFields);
+      const slug = (raw as { slug?: string })?.slug;
+      const requiredFor =
+        (assistantToolFor(slug ?? "")?.fields as { required?: string[] })?.required ?? [];
+      const missingRequired = requiredFor.filter((f) => {
+        const v = sentFields[f];
+        return v === undefined || v === null || (typeof v === "string" && !v.trim());
       });
 
-      return prefill ? { kind: "prefill", prefill } : null;
+      console.log("[assistant] prefill fields", {
+        slug,
+        sent,
+        ...(prefill
+          ? {
+              kept: Object.keys(prefill.fields),
+              dropped: sent.filter((f) => !(f in prefill.fields)),
+            }
+          : {
+              rejectedEntirely: true,
+              // The actual reason, rather than leaving it to be inferred.
+              reason: missingRequired.length
+                ? `missing required: ${missingRequired.join(", ")}`
+                : "no field survived cleanFields",
+            }),
+      });
+
+      // ── A near miss is rescued, not discarded ──
+      //
+      // validatePrefill is all-or-nothing: one absent REQUIRED field throws the
+      // whole payload away and Jo answers in chat. That is far too brutal when
+      // everything else landed. A teacher asking for a Welsh phonics worksheet
+      // got exactly this — yearGroup "Year 5", curriculum "Welsh Curriculum"
+      // and a learning objective all extracted correctly, `subject` missing,
+      // and the entire prefill binned. No tool card, no question, and the reply
+      // model wrote the worksheet into the chat instead.
+      //
+      // So ask for the one missing piece rather than pretending the turn was
+      // conversation. cleanFields is reused through validateClarify, so the
+      // partial fields go through exactly the same allow-list as any other
+      // payload — nothing unvalidated reaches a form.
+      if (!prefill) {
+        const rescued = rescueNearMiss(raw, canAsk && !forced);
+        if (rescued) return rescued;
+        return null;
+      }
+
+      // ── Would this form actually generate? ──
+      //
+      // validatePrefill only enforces the schema's `required`, which is
+      // deliberately narrow so a thin request still opens something. The form's
+      // own canGenerate is stricter, and the gap between them is a tool that
+      // opens looking complete with a dead Generate button — exactly what
+      // "Plan a Year 3 science lesson on the water cycle" produced: subject and
+      // topic satisfied `required`, so nothing asked, and the teacher landed on
+      // a lesson planner needing a learning objective it never wrote.
+      //
+      // Asking is skipped when the allowance is spent or a tool was forced,
+      // matching the rule that the model gets no clarify function in either
+      // case: the teacher has said what they want, so open it and let them
+      // finish the field themselves.
+      const gaps = missingGatingFields(prefill.slug, prefill.fields);
+      if (gaps.length > 0 && canAsk && !forced) {
+        const asked = gatingClarify(prefill, gaps);
+        if (asked) return { kind: "clarify", clarify: asked };
+        // No sensible question for this field (free text with no fixed
+        // answers). Opening beats stalling: the teacher can see the empty box.
+      }
+
+      return { kind: "prefill", prefill };
     }
 
     if (call.function.name === "ask_clarifying_question") {

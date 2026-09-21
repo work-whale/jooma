@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { validateClarify, validatePrefill } from "@/app/lib/toolPrefill";
+import { validateClarify, validatePrefill, decodeBase64Utf8 } from "@/app/lib/toolPrefill";
 import { assistantToolFor } from "@/app/lib/assistant-tools";
 
 /*
@@ -154,6 +154,61 @@ test.describe("validateClarify", () => {
  * ClarifyChips decides whether to OFFER that by running the partial fields
  * through validatePrefill up front, which is what these pin.
  */
+/*
+ * Non-ASCII text surviving the round trip.
+ *
+ * The assistant route hands its decision back in a base64 HTTP header, encoded
+ * server-side with Buffer.from(json, "utf8"). The client decoded it with bare
+ * atob, which returns ONE CHARACTER PER BYTE — so the two bytes of "£" came
+ * back as "Â£" and a letter brief read "Cost: Â£10 per student".
+ *
+ * Teachers write pound signs constantly (trip costs, fundraising), and the same
+ * corruption hits accented names, curly quotes, em dashes and Welsh text.
+ */
+test.describe("UTF-8 through the header channel", () => {
+  /** Exactly what app/api/assistant/route.ts does. */
+  function encodeHeader(value: unknown): string {
+    return Buffer.from(JSON.stringify(value), "utf8").toString("base64");
+  }
+
+  test("a pound sign survives", () => {
+    const brief = "Year 4 museum trip. Cost: £10 per student.";
+    const decoded = JSON.parse(decodeBase64Utf8(encodeHeader({ content: brief })));
+
+    expect(decoded.content).toBe(brief);
+    // The exact corruption this guards against.
+    expect(decoded.content).not.toContain("Â");
+  });
+
+  test("accents, curly quotes and dashes survive", () => {
+    const messy = "Café trip — the children's “favourite” outing. Naïve café.";
+    const decoded = JSON.parse(decodeBase64Utf8(encodeHeader({ content: messy })));
+    expect(decoded.content).toBe(messy);
+  });
+
+  test("Welsh survives, since a Welsh school is a first-class case", () => {
+    const welsh = "Rhannu gair yn seiniau. Cyfuno seiniau i ddarllen gair.";
+    const decoded = JSON.parse(decodeBase64Utf8(encodeHeader({ content: welsh })));
+    expect(decoded.content).toBe(welsh);
+  });
+
+  test("a whole prefill round-trips intact", () => {
+    // The real shape, through the real validator, as the client does it.
+    const prefill = {
+      slug: "letter-writer",
+      fields: {
+        recipient: "parents",
+        content: "Year 4 museum trip, 14 March. Cost: £10. Consent by 1 March.",
+      },
+    };
+
+    const out = validatePrefill(JSON.parse(decodeBase64Utf8(encodeHeader(prefill))));
+    expect(out).not.toBeNull();
+    expect(out!.fields.content).toContain("£10");
+    expect(out!.fields.content).not.toContain("Â£");
+  });
+});
+
 test.describe("opening a tool without answering", () => {
   /** What ClarifyChips computes to decide whether to offer the escape. */
   function asIsFor(clarify: { slug: string; fields: Record<string, unknown> }) {
