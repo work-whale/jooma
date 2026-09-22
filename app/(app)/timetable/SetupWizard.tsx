@@ -234,7 +234,7 @@ export default function SetupWizard({
               <span className={styles.periodNum}>Period {i + 1}</span>
               <input
                 value={p}
-                maxLength={12}
+                maxLength={20}
                 onChange={(e) => setPeriodAt(i, e.target.value)}
                 aria-label={`Period ${i + 1} label`}
                 placeholder={periodLabel(periods, i)}

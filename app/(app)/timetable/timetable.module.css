@@ -59,12 +59,31 @@
   color: var(--j-purple);
 }
 
+/* The period label, in the gutter beside the week.
+ *
+ * Labels run to 20 characters (PeriodEditor, SetupWizard), which does not fit
+ * one line of a 70px gutter. A long one takes a SECOND LINE rather than an
+ * ellipsis, so the whole label stays readable: truncating would hide something
+ * the teacher typed themselves, and recovering it would need a title tooltip
+ * that says nothing to touch or to a keyboard.
+ *
+ * This costs no height. Every cell in a row is a grid item in that row and
+ * .ttcell carries min-height: 78px, so a row is already at least that tall
+ * whether or not it holds a lesson; two lines at this size is about 34px and
+ * sits inside that floor. The day columns keep every pixel they have.
+ *
+ * overflow-wrap stays `normal` on purpose: breaking at spaces stacks two words
+ * tidily, while breaking inside a word would chop one long label mid-word,
+ * which is harder to read than the rare label running slightly wide.
+ */
 .ttslot {
   font-size: 0.73rem;
   font-weight: 800;
   color: var(--j-faint);
   padding: 14px 6px 0;
   text-align: right;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 /* ── Cells ───────────────────────────────────────────────────────────────── */
@@ -154,18 +173,44 @@
   margin-top: 1px;
 }
 
+/* What is attached, and the way to read it. A button rather than the span this
+   used to be: a teacher could see the title and had no way to check it was the
+   right thing without leaving the page. The reset keeps it looking exactly as
+   it did. */
 .attach {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   background: var(--j-card);
   border: 1px solid var(--j-line);
-  border-radius: 6px;
-  padding: 4px 7px;
+  border-radius: 9px;
+  /* Matches .needs, which fills the same slot when nothing is attached. The
+     chip used to be a small inline tag, so it kept a tag's padding; sitting in
+     the block's place it has to stand as tall, or a week of cells alternates
+     between two heights depending on what is on each lesson. */
+  padding: 8px 9px;
   font-size: 0.69rem;
   font-weight: 800;
   color: var(--j-body);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* Full width, like .needs beside it. These two are the same slot in the cell,
+     one for what is attached and one for the gap where something should be, so
+     a chip that shrink-wrapped to its title would leave the row looking ragged
+     next to a cell that has nothing on it yet. */
+  width: 100%;
   min-width: 0;
+  /* .needs carries two lines of text and this carries one, so matching padding
+     alone still leaves the attached cell visibly shorter than the one beside
+     it. The floor is what makes a row of cells sit level whichever state each
+     lesson happens to be in. */
+  min-height: 61px;
+}
+
+.attach:hover {
+  border-color: var(--j-lilac-2);
+  color: var(--j-deep);
 }
 
 .attachName {
@@ -237,9 +282,24 @@
   opacity: 0.45;
 }
 
+/* The row's text column, and what you press to read the resource. The row
+   itself stays a plain div carrying the drag: it also holds a select, and a
+   button wrapping a select is invalid markup that swallows its clicks. */
 .stripMain {
   flex: 1;
   min-width: 0;
+  display: block;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.stripRow:hover .stripTitle {
+  color: var(--j-purple);
 }
 
 .stripTitle {
@@ -247,6 +307,11 @@
   font-weight: 800;
   color: var(--j-ink);
   letter-spacing: -0.015em;
+  /* display: block is load-bearing, not tidiness. Ellipsis does not apply to
+     an inline box, and this span stopped being a flex child when .stripMain
+     became a block button. Without it a long title runs on rather than
+     truncating, which a short title would never reveal. */
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
