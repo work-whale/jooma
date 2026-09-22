@@ -336,11 +336,87 @@ async function markReferralPaid(inv: Stripe.Invoice) {
  * trigger a retry storm against subscription syncing. sendPurchase swallows its
  * own failures, and this wrapper swallows everything around it.
  */
+/**
+ * Undo the claim taken at the top of reportPurchaseToMeta.
+ *
+ * Called on every path that claims the invoice and then does NOT report it, so
+ * the column never says "reported" about a conversion Meta never received. A
+ * released invoice is eligible again: the other Stripe event, or a webhook
+ * retry, picks it up.
+ *
+ * Never throws, like everything else on this path.
+ */
+async function releaseMetaClaim(invoiceId: string | null | undefined) {
+  if (!invoiceId) return;
+
+  const { error } = await supabaseAdmin
+    .from("invoices")
+    .update({ meta_reported_at: null })
+    .eq("stripe_invoice_id", invoiceId);
+
+  if (error) {
+    // The row now claims a report that did not happen, and nothing will retry
+    // it. Rare, since it needs the send AND this write to fail together, but
+    // worth shouting about: this line is the only trace it leaves.
+    console.error(
+      "[meta-capi] could not release the claim, this invoice will not retry",
+      invoiceId,
+      error.message,
+    );
+  }
+}
+
 async function reportPurchaseToMeta(inv: Stripe.Invoice) {
   try {
     // Subscription invoices only. A one-off credit top-up is not a purchase of
     // a plan, and the same check guards markReferralPaid above.
     if (!isReportablePurchase(inv)) return;
+
+    // CLAIM THE RIGHT TO REPORT, ATOMICALLY.
+    //
+    // A read followed by a write is NOT enough here, and that was measured
+    // rather than guessed: Stripe delivers invoice.paid and
+    // invoice.payment_succeeded within the same second, and the work between
+    // them takes seconds (the profile retry below, then the round trip to Meta).
+    // So both events read a null column, both decided they were first, and both
+    // sent. A live test produced exactly that -- one stamped row, two events at
+    // Meta.
+    //
+    // This is a conditional UPDATE instead: set the timestamp only WHERE it is
+    // still null, and ask which rows changed. Postgres serialises the two
+    // updates, so exactly one of them matches a row and the other matches none.
+    // The winner reports; the loser returns here.
+    //
+    // Same discipline as the two calls beside this one in the handler --
+    // markReferralPaid conditions on `first_paid_at is null`, and
+    // grantTopUpCredit leans on a unique constraint. This brings the Meta call
+    // in line with its neighbours rather than inventing anything.
+    //
+    // STAMPED BEFORE THE SEND, not after, which is the deliberate trade: if Meta
+    // then refuses the event, the column is set and no retry happens, so that
+    // conversion is lost. The alternative loses the race protection entirely.
+    // Under-reporting is recoverable and visible (the send logs a rejection, and
+    // the column is queryable); double-reporting quietly inflates a client's
+    // revenue. The failure is rolled back below if the send does not succeed.
+    if (inv.id) {
+      const { data: claimed, error } = await supabaseAdmin
+        .from("invoices")
+        .update({ meta_reported_at: new Date().toISOString() })
+        .eq("stripe_invoice_id", inv.id)
+        .is("meta_reported_at", null)
+        .select("id");
+
+      if (error) {
+        // Could not claim, so we do not know whether anyone else is reporting.
+        // Send anyway: Meta dedupes on event_id, so a duplicate under a database
+        // blip costs nothing, while skipping could lose the conversion for good.
+        console.warn("[meta-capi] could not claim the report, sending anyway", inv.id, error.message);
+      } else if (!claimed || claimed.length === 0) {
+        // No row changed. Either the other event claimed it moments ago, or a
+        // Stripe retry is replaying something already reported. Nothing to do.
+        return;
+      }
+    }
 
     const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
 
@@ -374,7 +450,14 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       // Genuinely unknown, rather than merely early: a customer created outside
       // the app, or test noise. Logged because a real subscriber reaching this
       // means a Purchase was lost and the cause is worth knowing.
+      //
+      // Release the claim on the way out. We stamped the column above to win the
+      // race, and leaving it set here would mark the invoice reported when
+      // nothing was sent, so the other event would skip it too. Clearing it lets
+      // the second event try, which for the first-subscription race is exactly
+      // the retry that succeeds.
       console.warn("[meta-capi] no profile for customer, Purchase not sent", customerId);
+      await releaseMetaClaim(inv.id);
       return;
     }
 
@@ -413,7 +496,7 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       email = authUser?.user?.email ?? null;
     }
 
-    await sendPurchase({
+    const accepted = await sendPurchase({
       eventId: inv.id ?? `invoice-${userId}-${inv.created}`,
       email,
       fbp: profile?.meta_fbp ?? null,
@@ -427,8 +510,27 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       // Deliberately absent. Stripe's IP and user agent are Stripe's, not the
       // teacher's, and sending them would corrupt the match rather than help it.
     });
+
+    // RELEASE THE CLAIM IF THE SEND FAILED.
+    //
+    // The timestamp was written before the send, to win the race against the
+    // other event type. If Meta then refused the event or was unreachable, that
+    // timestamp is a lie: it says reported when nothing was. Clearing it makes
+    // the invoice eligible again, so the second Stripe event or a webhook retry
+    // can have another go.
+    //
+    // sendPurchase returns false for every failure it swallows: a missing token,
+    // a payload Meta rejected, the network. It never throws.
+    if (!accepted) {
+      await releaseMetaClaim(inv.id);
+    }
   } catch (err) {
     console.error("[stripe/webhook] Meta purchase report failed", err);
+    // An unexpected throw between the claim and the send would otherwise strand
+    // the claim, marking the invoice reported when it was not. Releasing here
+    // costs nothing when no claim was taken: the update simply matches a row
+    // that is already null.
+    await releaseMetaClaim(inv.id);
   }
 }
 
@@ -804,6 +906,36 @@ export async function POST(req: NextRequest) {
         // Money has actually arrived, which is the moment an ambassador becomes
         // owed for this teacher. Idempotent: only ever writes the FIRST payment.
         await markReferralPaid(inv);
+
+        // EXACTLY ONCE, VIA THE DATABASE RATHER THAN VIA THE EVENT TYPE.
+        //
+        // Stripe fires BOTH invoice.paid and invoice.payment_succeeded for a
+        // single subscription payment, and they share this case block, so
+        // everything here runs twice. The two calls above are immune by
+        // construction: syncInvoice upserts on stripe_invoice_id, and
+        // markReferralPaid is conditioned on first_paid_at being null.
+        //
+        // Reporting to Meta had no such guard, and it showed: one test
+        // subscription produced TWO Purchase rows in Events Manager, both
+        // carrying the same event_id. Meta is documented to collapse those
+        // within 48 hours and probably does, but if it ever did not, every
+        // purchase would count twice, reported revenue would double, and Meta's
+        // delivery algorithm would bid against a figure that is not real. That
+        // is the exact failure the specification's deduplication section exists
+        // to prevent, and nobody would notice until they reconciled Meta against
+        // Stripe.
+        //
+        // Gating on `event.type === "invoice.paid"` alone would fix the
+        // duplicate and open a quieter hole: Stripe does not promise both events
+        // arrive, so an invoice delivered only as invoice.payment_succeeded
+        // would never be reported at all.
+        //
+        // So the guard is invoices.meta_reported_at, checked and stamped inside
+        // reportPurchaseToMeta. BOTH event types call it, and whichever arrives
+        // first does the work while the other finds the column already set and
+        // returns. Exactly one report per invoice, and no dependence on which
+        // event Stripe sends or in what order.
+        //
         // LAST, and deliberately so: everything above writes to our own
         // database, and a third party being unreachable must not stop any of
         // it. This one never throws, so it cannot.
