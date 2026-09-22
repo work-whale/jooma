@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CaretLeft,
   CaretRight,
@@ -17,6 +18,7 @@ import { listRecentRuns, type ToolRun } from "@/app/lib/toolRuns";
 import { listFolders, folderSwatch, type Folder } from "@/app/lib/folders";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { typeLabel, formatDate } from "@/app/lib/toolRunDisplay";
+import { useDragAutoScroll } from "@/app/lib/useDragAutoScroll";
 import {
   TIMETABLE_DAYS,
   DEFAULT_PERIODS,
@@ -45,6 +47,7 @@ import {
 import SetupWizard from "./SetupWizard";
 import SlotEditor, { type SlotTarget, type SlotDraft } from "./SlotEditor";
 import PeriodEditor, { type PeriodPlan } from "./PeriodEditor";
+import SharedResourceModal, { type ResourceView } from "@/app/components/v2/SharedResourceModal";
 import app from "@/app/components/v2/app.module.css";
 import styles from "./timetable.module.css";
 
@@ -65,6 +68,13 @@ import styles from "./timetable.module.css";
  * only route that works from a keyboard, and this screen would otherwise put
  * attaching out of reach entirely. Same rule the Library set with Move to
  * folder.
+ *
+ * Resources can be READ from this page, both before attaching one and after.
+ * Without that a teacher picks by title alone and cannot tell two similarly
+ * named plans apart, which is the same blind decision the Colleagues feed had
+ * before SharedResourceModal existed. That modal does the reading here too, in
+ * its run form. Opening one properly still means the tool that made it, so the
+ * preview carries Open in library rather than trying to be an editor.
  */
 
 /** Everything, filed or not. The same sentinel the Library uses. */
@@ -86,6 +96,17 @@ export default function TimetablePage() {
   const [editingRows, setEditingRows] = useState(false);
   const [dropOn, setDropOn] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
+
+  /* The resource being read, from a cell's chip or from a strip row. One piece
+     of state for both, which is what the run arm of ResourceView is for. */
+  const [previewing, setPreviewing] = useState<ResourceView | null>(null);
+
+  /* Scrolls the window while a resource is held near the top or bottom of the
+     screen. The strip sits below the week, so the lesson being aimed at is
+     routinely off the top by the time the resource has been found. */
+  const autoScroll = useDragAutoScroll();
+
+  const router = useRouter();
 
   /*
    * Which resources the strip is showing.
@@ -364,6 +385,55 @@ export default function TimetablePage() {
     [lessons, runs],
   );
 
+  /* Read what is attached to a lesson. The cell carries only (id, title,
+     tool_slug), which is exactly what the run arm of the view needs: the body
+     is the modal's own errand. */
+  const previewAttached = useCallback((resource: NonNullable<LessonWithResource["resource"]>) => {
+    setPreviewing({
+      kind: "run",
+      runId: resource.id,
+      title: resource.title,
+      toolSlug: resource.tool_slug,
+    });
+  }, []);
+
+  /* Read a resource in the strip, before deciding where it goes. */
+  const previewRun = useCallback((run: ToolRun) => {
+    setPreviewing({ kind: "run", runId: run.id, title: run.title, toolSlug: run.tool_slug });
+  }, []);
+
+  /*
+   * Open a resource in the tool that made it, which is what the Library means by
+   * opening one. Lifted from folders/page.tsx, error branch and all: v2ToolForSlug
+   * indexes on the href, so a run whose tool was renamed or removed resolves to
+   * undefined, and a silent no-op would leave the teacher pressing a button that
+   * does nothing with no explanation.
+   *
+   * The slug comes off the view rather than from a lookup in `runs`. The strip
+   * holds the 1,000 most recent runs, a ceiling, and a resource attached to a
+   * lesson can be older than that: present on the cell, absent from the strip. A
+   * lookup there would report it as unavailable when it is perfectly fine.
+   */
+  const openInLibrary = useCallback(
+    (view: Extract<ResourceView, { kind: "run" }>) => {
+      const tool = v2ToolForSlug(view.toolSlug);
+      if (!tool) {
+        // Closed first, so the message is not left behind the scrim.
+        setPreviewing(null);
+        setStatus({
+          text: "That resource was made by a tool that is no longer available, so it cannot be opened.",
+          error: true,
+        });
+        return;
+      }
+      /* Deliberately NOT closing first on the way out. The push unmounts this
+         page, which runs the modal's own scroll-lock cleanup; closing first
+         would restore focus and repaint the week for one frame before leaving. */
+      router.push(`${tool.href}?run=${view.runId}`);
+    },
+    [router],
+  );
+
   const byCell = useMemo(() => {
     const map = new Map<string, LessonWithResource>();
     for (const l of lessons) map.set(`${l.day}-${l.period}`, l);
@@ -417,7 +487,18 @@ export default function TimetablePage() {
   }
 
   return (
-    <>
+    /*
+     * The dragover that drives auto-scroll sits HERE rather than on the grid or
+     * the strip, because the whole point is the pointer being somewhere neither
+     * of them occupies: at the top of the window, over the page heading, waiting
+     * for a lesson to come into view. A handler on the drop targets themselves
+     * would only fire once the teacher had already reached what they cannot see.
+     *
+     * No preventDefault: that is what marks something a drop target, and this
+     * wrapper is not one. Dropping on it must keep failing, so a resource
+     * released over the page heading goes nowhere.
+     */
+    <div onDragOver={autoScroll.onDragOver} onDrop={autoScroll.stop}>
       <div className={app.hello}>
         <p className={app.helloWhen}>{week ? weekBeginningLabel(week) : " "}</p>
         <h1>Timetable</h1>
@@ -497,6 +578,7 @@ export default function TimetablePage() {
             onOpen={setTarget}
             onDropTarget={setDropOn}
             onDropRun={attach}
+            onPreview={previewAttached}
           />
         ))}
       </div>
@@ -608,11 +690,26 @@ export default function TimetablePage() {
                   onDragEnd={() => {
                     setDragging(null);
                     setDropOn(null);
+                    autoScroll.stop();
                   }}
                   className={`${styles.stripRow} ${dragging === r.id ? styles.stripDragging : ""}`}
                 >
                   <ToolTile icon={tool?.icon ?? "file-text"} solid={toolSolid(tool)} size="sm" />
-                  <span className={styles.stripMain}>
+                  {/* The TITLE opens it, not the row. The row also holds a
+                      select, and a button wrapping a select is invalid markup
+                      that swallows its clicks. Same shape and same reason as
+                      .fileMain in the Library.
+
+                      No guard against a click landing at the end of a drag: a
+                      drag gesture does not synthesise one. A `dragging` check
+                      would be worse than useless, since setDragging(null) in
+                      onDragEnd has not applied by the time a click in the same
+                      tick would read it. */}
+                  <button
+                    type="button"
+                    onClick={() => previewRun(r)}
+                    className={styles.stripMain}
+                  >
                     <span className={styles.stripTitle}>
                       {r.title?.trim() || tool?.name || "Untitled"}
                     </span>
@@ -624,7 +721,7 @@ export default function TimetablePage() {
                         ? `, ${folders.find((f) => f.id === r.folder_id)?.name ?? "Filed"}`
                         : ""}
                     </span>
-                  </span>
+                  </button>
                   <LessonChooser lessons={lessons} periods={periods} onPick={(id) => attach(id, r.id)} />
                 </div>
               );
@@ -671,7 +768,16 @@ export default function TimetablePage() {
           onSave={saveRows}
         />
       )}
-    </>
+
+      {/* Reading a resource, from a cell's chip or a strip row. Cannot stack
+          with the two editors above: the chip and the lesson button are
+          siblings, so opening one is not a route to the other. */}
+      <SharedResourceModal
+        view={previewing}
+        onClose={() => setPreviewing(null)}
+        onOpenInLibrary={openInLibrary}
+      />
+    </div>
   );
 }
 
@@ -684,6 +790,7 @@ function PeriodRow({
   onOpen,
   onDropTarget,
   onDropRun,
+  onPreview,
 }: {
   label: string;
   row: number;
@@ -692,6 +799,7 @@ function PeriodRow({
   onOpen: (t: SlotTarget) => void;
   onDropTarget: (id: string | null) => void;
   onDropRun: (lessonId: string, runId: string) => void;
+  onPreview: (resource: NonNullable<LessonWithResource["resource"]>) => void;
 }) {
   return (
     <>
@@ -717,7 +825,11 @@ function PeriodRow({
           );
         }
 
-        const tool = lesson.resource ? v2ToolForSlug(lesson.resource.tool_slug) : undefined;
+        /* Hoisted out of the JSX: the ternary below does not narrow
+           `lesson.resource` inside a click handler, because a property access
+           is not a narrowable reference once it is captured in a closure. */
+        const attached = lesson.resource;
+        const tool = attached ? v2ToolForSlug(attached.tool_slug) : undefined;
         const href = makeItHref(lesson);
 
         /*
@@ -765,13 +877,28 @@ function PeriodRow({
               </span>
             </button>
 
-            {lesson.resource ? (
-              <span className={styles.attach}>
+            {attached ? (
+              /* A button inside the drop target, which is fine: dragover and
+                 drop bubble, so a drag held over this still reaches the cell's
+                 own handlers and their preventDefault. .lessonBtn above is the
+                 same arrangement and dropping onto it has always worked.
+                 Nothing in the cell is draggable, so no button here can start
+                 a drag of its own.
+
+                 The day and period are in the name because the grid holds up
+                 to twenty five of these and a bare title would not say which
+                 lesson is being read. */
+              <button
+                type="button"
+                aria-label={`Preview ${attached.title?.trim() || tool?.name || "the attached resource"}, ${lesson.subject}, ${d.long}, ${label}`}
+                onClick={() => onPreview(attached)}
+                className={styles.attach}
+              >
                 <ToolTile icon={tool?.icon ?? "file-text"} solid={toolSolid(tool)} size="xs" />
                 <span className={styles.attachName}>
-                  {lesson.resource.title?.trim() || tool?.name || "Attached"}
+                  {attached.title?.trim() || tool?.name || "Attached"}
                 </span>
-              </span>
+              </button>
             ) : href ? (
               /* Make it. The lesson has a topic, so the tool's required fields
                  can genuinely be filled. */

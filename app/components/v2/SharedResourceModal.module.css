@@ -121,6 +121,22 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Waiting on getToolRun. Only a run reaches this: a share carries its own body
+   and renders it on the first frame. */
+.loading {
+  font-size: 0.9rem;
+  color: var(--j-faint);
+  margin: 8px 0 0;
+}
+
+/* Burnt orange rather than red, per globals.css: a resource that is no longer
+   there is the cost of a gap, not a system warning. */
+.loadError {
+  font-size: 0.9rem;
+  color: var(--j-orange-ink);
+  margin: 8px 0 0;
+}
+
 /* ── The structured-output notice ────────────────────────────────────────── */
 
 .notice {

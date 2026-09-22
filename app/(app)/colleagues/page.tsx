@@ -402,7 +402,7 @@ export default function ColleaguesPage() {
       {/* The share stays on screen after it is added, so the teacher can carry
           on reading what they opened it for. Only the feed row behind it goes. */}
       <SharedResourceModal
-        share={viewing}
+        view={viewing ? { kind: "share", share: viewing } : null}
         onClose={() => setViewing(null)}
         onAdded={(_run, share) => onAdded(share)}
       />

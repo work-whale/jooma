@@ -118,7 +118,7 @@ export default function PeriodEditor({
           <span className={styles.periodNum}>Period {i + 1}</span>
           <input
             value={row.label}
-            maxLength={12}
+            maxLength={20}
             onChange={(e) => setLabel(i, e.target.value)}
             aria-label={`Period ${i + 1} label`}
             placeholder={periodLabel(labels, i)}

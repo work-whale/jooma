@@ -447,6 +447,176 @@ test.describe("The rows of the week", () => {
     expect(rows[0]!.subject).toBe("English");
     expect(rows[0]!.period).toBe(0);
   });
+
+  test("a row label runs to twenty characters", async ({ page }) => {
+    await signIn(page, teacher);
+    await page.goto("/timetable");
+    await waitForGrid(page);
+
+    await page.getByRole("button", { name: "Edit rows" }).click();
+    const dialog = page.getByRole("dialog");
+    const field = dialog.getByLabel("Period 1 label");
+
+    /*
+     * Nothing in the database caps this: the pattern's CHECK constrains how MANY
+     * rows there are, not how long a label is. maxLength is therefore the whole
+     * limit, and a regression to the old 12 would silently swallow the end of a
+     * teacher's label as they typed it, with nothing to say why.
+     */
+    await field.fill("Registration AM");
+    await expect(field).toHaveValue("Registration AM");
+    await field.fill("x".repeat(25));
+    await expect(field).toHaveValue("x".repeat(20));
+
+    await field.fill("Registration AM");
+    await dialog.getByRole("button", { name: "Save rows" }).click();
+
+    /* The half worth having: the whole label reaches the cell's accessible name.
+       The gutter wraps a long label onto a second line rather than truncating
+       it, so what a screen reader is given and what the eye is given agree. */
+    await expect(
+      page.getByRole("button", { name: "Add a lesson, Monday, Registration AM" }),
+    ).toBeVisible({ timeout: 30_000 });
+  });
+});
+
+/*
+ * Reading a resource without leaving the week.
+ *
+ * The body is the thing to assert on. A lesson row carries only
+ * (id, title, tool_slug) by design, so the timetable knows a resource's NAME
+ * and nothing else: text from inside the document appearing on screen is proof
+ * that the fetch ran, and it is the one assertion that a broken fetch could not
+ * fake.
+ *
+ * No test for the load-failure branch. It needs getToolRun to come back empty
+ * for a row the grid still shows a chip for, which is a race between a delete
+ * in one tab and a click in another; a test that could reach it would have to
+ * sleep, and a flaky test here is worse than none. The branch is three lines
+ * and reads honestly.
+ */
+test.describe("Reading a resource from the timetable", () => {
+  let teacher: TestTeacher;
+  const week = mondayOf();
+
+  // Two headings and a line of prose: enough for the outline rail to have
+  // something to build, and for the assertions below to look inside the body.
+  const BODY = "# Fractions plan\n\nStarter on the carpet.\n\n## Main\n\nGroup work.";
+
+  test.beforeEach(async () => {
+    teacher = await createTeacher("Tess");
+    await seedPattern(teacher, { yearGroup: "Year 4" });
+  });
+
+  test.afterEach(async () => {
+    await deleteTeacher(teacher);
+  });
+
+  test("the chip on a lesson opens the resource, and offers the library", async ({ page }) => {
+    const resourceId = await seedResource(teacher, "Fractions plan", BODY);
+    await seedLesson(teacher, {
+      weekStart: week,
+      day: "mon",
+      period: 0,
+      subject: "Maths",
+      topic: "Fractions",
+      resourceId,
+    });
+
+    await signIn(page, teacher);
+    await page.goto("/timetable");
+    await waitForGrid(page);
+
+    await page
+      .getByRole("button", { name: "Preview Fractions plan, Maths, Monday, 9:00" })
+      .click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    // THE PROPERTY: this text is not on the lesson row. Seeing it means the
+    // modal went and fetched the run.
+    await expect(dialog.getByText("Starter on the carpet.")).toBeVisible({ timeout: 30_000 });
+
+    /* A run is the teacher's OWN resource, so the share half of the dialog has
+       to stay out of the way: there is no sender to name, and nothing to add to
+       a library it is already in. These two are what a careless change to the
+       union would break, and nothing else in the suite would notice. */
+    await expect(dialog.getByText(/shared by/i)).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: /add to library/i })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: "Open in library" })).toBeVisible();
+  });
+
+  test("the chip reads the resource rather than editing the lesson", async ({ page }) => {
+    const resourceId = await seedResource(teacher, "Fractions plan", BODY);
+    await seedLesson(teacher, {
+      weekStart: week,
+      day: "mon",
+      period: 0,
+      subject: "Maths",
+      topic: "Fractions",
+      resourceId,
+    });
+
+    await signIn(page, teacher);
+    await page.goto("/timetable");
+    await waitForGrid(page);
+
+    await page
+      .getByRole("button", { name: "Preview Fractions plan, Maths, Monday, 9:00" })
+      .click();
+
+    /* The cell holds three click targets in a stack. A chip wired to the lesson
+       editor instead would look almost right, opening A dialog over the right
+       cell, which is exactly the kind of regression that survives a demo. */
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).not.toHaveAttribute("aria-label", "Edit lesson");
+    await expect(dialog.locator("#slot-subject")).toHaveCount(0);
+  });
+
+  test("a resource in the strip can be read, then opened in the library", async ({ page }) => {
+    const resourceId = await seedResource(teacher, "Fractions plan", BODY);
+
+    await signIn(page, teacher);
+    await page.goto("/timetable");
+    await waitForGrid(page);
+
+    /* The strip button's accessible name is the title AND the meta line under
+       it, so this matches on the start rather than the whole string. */
+    await page.getByRole("button", { name: /^Fractions plan/ }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("Starter on the carpet.")).toBeVisible({ timeout: 30_000 });
+
+    await dialog.getByRole("button", { name: "Open in library" }).click();
+
+    // THE PROPERTY: opening a resource means the tool that made it, with the run
+    // in the URL. That is the contract folders/page.tsx holds, and the reason a
+    // resource is editable wherever it is reached from.
+    await expect(page).toHaveURL(new RegExp(`/tools/lesson-planner\\?run=${resourceId}$`));
+  });
+
+  test("choosing a lesson from a strip row attaches it and opens nothing", async ({ page }) => {
+    await seedResource(teacher, "Fractions plan", BODY);
+    await seedLesson(teacher, { weekStart: week, day: "mon", period: 0, subject: "Maths" });
+
+    await signIn(page, teacher);
+    await page.goto("/timetable");
+    await waitForGrid(page);
+
+    await page.getByLabel("Put this on a lesson").selectOption({ label: "Monday, 9:00, Maths" });
+
+    await expect(
+      page.locator("[role=status]").filter({ hasText: /Fractions plan is now on Maths, Monday/ }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    /* THE PROPERTY: the select is a SIBLING of the button that reads the
+       resource, not a child of it. Nesting them would have the select's clicks
+       bubble into the preview, so picking a lesson would attach it AND throw a
+       dialog over the week the teacher was looking at. */
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
 });
 
 test.describe("What the timetable puts on Today", () => {
