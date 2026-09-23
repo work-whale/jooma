@@ -245,9 +245,9 @@ test.describe("Colleagues", () => {
     await signIn(page, bob);
     await page.goto("/colleagues");
 
-    // The title is the open target. It is a button rather than the whole row,
-    // because the row carries Add and Dismiss and a button cannot nest inside
-    // one without swallowing their clicks.
+    // The text column is the open target's button, stretched over the row. The
+    // row itself is not a button, because it carries Add and Dismiss and a
+    // button cannot nest inside one without swallowing their clicks.
     await page.getByRole("button", { name: /Alice's rivers lesson/ }).click();
 
     const dialog = page.getByRole("dialog");
@@ -324,6 +324,75 @@ test.describe("Colleagues", () => {
       .single();
     expect(share?.saved_run_id).toBe(copies?.[0].id);
     expect(share?.saved_at).not.toBeNull();
+  });
+
+  test("anywhere on a shared row opens the preview, except its two actions", async ({
+    page,
+  }) => {
+    /*
+     * The title used to be the only open target, so a press on the tile, the
+     * "Shared by" line or the empty space did nothing. The row is now covered
+     * by the title button's ::after, which is exactly the arrangement that can
+     * quietly eat the clicks of Add and Dismiss if their stacking slips.
+     */
+    await connect(alice, bob);
+    // Two source resources, not one shared twice: shares_once allows a given
+    // resource to reach a given colleague only once.
+    await seedResource(alice, "Alice's rivers lesson", "RIVERS BODY");
+    await seedResource(alice, "Alice's coasts lesson", "COASTS BODY");
+    const { data: runs } = await admin
+      .from("tool_runs")
+      .select("id, title, output")
+      .eq("user_id", alice.id);
+    const { error } = await admin.from("shares").insert(
+      runs!.map((run) => ({
+        sender_id: alice.id,
+        recipient_id: bob.id,
+        source_run_id: run.id,
+        tool_slug: "lesson-planner",
+        title: run.title,
+        input: {},
+        output: run.output,
+      })),
+    );
+    expect(error).toBeNull();
+
+    await signIn(page, bob);
+    await page.goto("/colleagues");
+
+    // The innermost div holding the open button is the row itself.
+    const rowFor = (title: string) =>
+      page
+        .locator("div")
+        .filter({ has: page.getByRole("button", { name: new RegExp(title) }) })
+        .last();
+
+    const dialog = page.getByRole("dialog");
+
+    // The tile, at the row's far left edge: nowhere near the title text.
+    const rivers = rowFor("Alice's rivers lesson");
+    const box = (await rivers.boundingBox())!;
+    await rivers.click({ position: { x: 6, y: box.height / 2 } });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(/shared by alice/i)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+
+    // The "Shared by" line, which sat outside the button before.
+    await rivers.getByText(/shared by alice/i).click();
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+
+    // Dismiss still takes its own click, and does not open the preview.
+    await rowFor("Alice's coasts lesson").getByRole("button", { name: /^dismiss$/i }).click();
+    await expect(page.getByText("Alice's coasts lesson")).toBeHidden();
+    await expect(dialog).toHaveCount(0);
+
+    // Add to library too.
+    await rivers.getByRole("button", { name: /add to library/i }).click();
+    await expect(page.getByText("Alice's rivers lesson")).toBeHidden();
+    await expect(dialog).toHaveCount(0);
   });
 
   test("a recent row on Today still opens, and offers Share", async ({ page }) => {

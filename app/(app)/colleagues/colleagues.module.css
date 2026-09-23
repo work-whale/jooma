@@ -180,6 +180,7 @@
 /* The row is not a button here, because it carries three of its own. Matches
    app.module.css .row otherwise. */
 .sharedRow {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 13px;
@@ -191,10 +192,10 @@
   border-bottom: 0;
 }
 
-/* The title, which opens the resource. A button so it is reachable by keyboard
-   and announced as the action it is, stripped back to look like the text it
-   replaced: the affordance is the row, not a second styled control competing
-   with Add to library beside it. */
+/* The title and meta, which open the resource. A button so it is reachable by
+   keyboard and announced as the action it is, stripped back to look like the
+   text it replaced: the affordance is the row, not a second styled control
+   competing with Add to library beside it. */
 .open {
   display: block;
   width: 100%;
@@ -207,9 +208,36 @@
   cursor: pointer;
 }
 
-.open:hover .rowTitle,
-.open:hover span {
+/* The stretch. Covers the whole row, tile and timestamp included, so a press
+   anywhere on it opens the preview. Add and Dismiss are lifted above it below,
+   or the overlay would take their clicks. */
+.open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--j-r);
+}
+
+.open:focus-visible {
+  outline: none;
+}
+
+.open:focus-visible::after {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+/* :hover on the button covers its ::after, so this fires anywhere on the row
+   except over the two actions. A local class, because a composed module name
+   like app.rowTitle cannot be reached from this file. */
+.open:hover .openTitle {
   color: var(--j-purple);
+}
+
+.sharedRow .act,
+.sharedRow .dismiss {
+  position: relative;
+  z-index: 1;
 }
 
 .act {

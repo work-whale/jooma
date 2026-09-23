@@ -517,13 +517,14 @@ function SharedRow({
     <div className={styles.sharedRow}>
       <ToolTile icon={tool?.icon ?? "file-text"} solid={toolSolid(tool)} size="sm" />
       <span className={app.rowMain}>
-        {/* The TITLE opens it, not the row. The row carries three controls of
-            its own, and a button containing buttons is invalid markup that
-            swallows their clicks. */}
+        {/* The whole row opens it, but the row is not the button. It carries
+            Add and Dismiss, and a button containing buttons is invalid markup
+            that swallows their clicks. So the text column is the button, and
+            its ::after stretches over the row beneath the two actions. */}
         <button type="button" className={styles.open} onClick={onOpen}>
-          <span className={app.rowTitle}>{title}</span>
+          <span className={`${app.rowTitle} ${styles.openTitle}`}>{title}</span>
+          <span className={app.rowMeta}>Shared by {from}</span>
         </button>
-        <span className={app.rowMeta}>Shared by {from}</span>
       </span>
       <button type="button" className={styles.act} onClick={onSave} disabled={saving}>
         {saving ? "Adding" : "Add to library"}
