@@ -13,7 +13,6 @@ import {
   Field,
   Modal,
   Note,
-  PageHead,
   Table,
   Tag,
   Td,
@@ -51,7 +50,10 @@ export interface EmailTemplate {
   click_rate: number | null;
 }
 
-export default function EmailsView({
+/** The automatic transactional emails (invites, password resets, deletion
+ *  notices). Formerly the whole of /admin/emails; now the System emails part
+ *  of its Templates tab, shown only to roles holding see_content. */
+export default function SystemEmails({
   rows,
   mailerReady,
   renderableKeys,
@@ -91,10 +93,14 @@ export default function EmailsView({
 
   return (
     <>
-      <PageHead
-        title="Email templates"
-        sub="Every automatic email Jooma sends. Edit the wording and control which are active."
-      />
+      <div className="mb-3">
+        <h2 className="text-base font-bold" style={{ color: C.ink }}>
+          System emails
+        </h2>
+        <p className="text-sm" style={{ color: C.muted }}>
+          Every automatic email Jooma sends. Edit the wording and control which are active.
+        </p>
+      </div>
 
       <div className="mb-4 space-y-2">
         {!mailerReady ? (

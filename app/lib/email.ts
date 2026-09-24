@@ -16,12 +16,16 @@ import "server-only";
 import sgMail from "@sendgrid/mail";
 import { supabaseAdmin } from "./supabase-admin";
 import { TEMPLATES, type EmailTemplateKey } from "./email-templates";
-import { escapeHtml, siteUrl } from "./email-templates/shared";
+import { interpolate, layout } from "./email-templates/markup";
+import { isUndeliverable } from "./email-templates/broadcast";
 
 export type { EmailTemplateKey };
 // Defined alongside the templates so they can use them without importing this
-// module (which imports the template registry) and creating a cycle.
+// module (which imports the template registry) and creating a cycle. layout()
+// and interpolate() live there too now, so the browser preview can render
+// through the very same functions; they are re-exported here unchanged.
 export { escapeHtml, siteUrl, button } from "./email-templates/shared";
+export { interpolate, layout } from "./email-templates/markup";
 
 let ready = false;
 
@@ -40,45 +44,6 @@ function init(): boolean {
  *  these templates are actually going anywhere. */
 export function mailerConfigured(): boolean {
   return Boolean(process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL);
-}
-
-/** Shared shell for every email: accent bar, logo, card, footer.
- *  Table-based and inline-styled because that is what email clients render. */
-export function layout(content: string): string {
-  const base = siteUrl();
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin:0;padding:0;background-color:#F7F5FC;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F7F5FC;">
-    <tr><td style="background-color:#5B2ED6;height:5px;font-size:0;line-height:0;">&nbsp;</td></tr>
-    <tr>
-      <td style="padding:40px 20px 0 20px;" align="center">
-        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
-          <tr>
-            <td align="center" style="padding-bottom:26px;">
-              <a href="${base}" style="text-decoration:none;font-size:22px;font-weight:800;color:#5B2ED6;letter-spacing:-0.5px;">Jooma</a>
-            </td>
-          </tr>
-          <tr>
-            <td style="background-color:#FFFFFF;border-radius:16px;padding:38px 34px;border:1px solid #EAE6F5;">
-              ${content}
-            </td>
-          </tr>
-          <tr>
-            <td align="center" style="padding:28px 0 40px 0;color:#6D6683;font-size:12px;line-height:1.6;">
-              <p style="margin:0;">&copy; ${new Date().getFullYear()} Jooma. All rights reserved.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
 }
 
 /**
@@ -114,16 +79,39 @@ async function send(
   html: string,
   sender?: EmailSender,
 ): Promise<boolean> {
+  const result = await deliver(to, subject, html, sender);
+  return result.ok;
+}
+
+/** Extras only bulk email uses. Absent for every transactional send. */
+interface DeliveryExtras {
+  text?: string;
+  headers?: Record<string, string>;
+  categories?: string[];
+}
+
+/**
+ * send(), but saying WHY it failed. Bulk email records the reason against each
+ * recipient so the History tab can show it; transactional callers only need
+ * the boolean and keep going through send().
+ */
+async function deliver(
+  to: string,
+  subject: string,
+  html: string,
+  sender?: EmailSender,
+  extras?: DeliveryExtras,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!init()) {
     console.warn("[email] SENDGRID_API_KEY not set — skipping send", { to, subject });
-    return false;
+    return { ok: false, error: "SendGrid is not configured" };
   }
   // The override still falls back to the env var, so a missing
   // ENQUIRY_FROM_EMAIL degrades to the normal sender rather than to no email.
   const from = sender?.from || process.env.SENDGRID_FROM_EMAIL;
   if (!from) {
     console.warn("[email] SENDGRID_FROM_EMAIL not set — skipping send", { to, subject });
-    return false;
+    return { ok: false, error: "SendGrid sender is not configured" };
   }
   try {
     await sgMail.send({
@@ -134,24 +122,51 @@ async function send(
       ...(sender?.replyTo ? { replyTo: sender.replyTo } : {}),
       subject,
       html,
+      // Same rule as replyTo: absent unless set, so a transactional payload is
+      // exactly what it always was.
+      ...(extras?.text ? { text: extras.text } : {}),
+      ...(extras?.headers ? { headers: extras.headers } : {}),
+      ...(extras?.categories ? { categories: extras.categories } : {}),
     });
-    return true;
+    return { ok: true };
   } catch (err) {
     console.error("[email] send failed", { to, subject }, err);
-    return false;
+    const message = err instanceof Error ? err.message : "Delivery failed";
+    return { ok: false, error: message };
   }
 }
 
 /**
- * Fill {{placeholders}} in admin-edited wording. Double braces, not single —
- * /admin/emails shows the available names per template.
+ * Send one bulk email, already rendered by renderBroadcast().
  *
- * Exported so the admin preview route renders through exactly this function
- * rather than its own copy of the regex; a preview that interpolates
- * differently from the sender is worse than no preview.
+ * Addresses on a reserved test domain (.test, .example, .invalid, .localhost)
+ * are skipped rather than sent. The e2e fixtures live on @jooma.test and run
+ * against staging with the real SendGrid key, so without this every test run
+ * would bounce and chip away at the domain's sending reputation. Skipping
+ * still exercises everything up to the network call.
  */
-export function interpolate(template: string, params: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, k) => params[k] ?? "");
+export async function sendBroadcastEmail(
+  to: string,
+  rendered: { subject: string; html: string; text: string },
+  opts: { purpose: string; oneClickUrl: string | null },
+): Promise<{ status: "sent" | "skipped" | "failed"; error?: string }> {
+  if (isUndeliverable(to)) return { status: "skipped", error: "Test address, not sent" };
+
+  // RFC 8058 one-click unsubscribe. Gmail and Yahoo require it of bulk senders,
+  // and it is what puts "Unsubscribe" next to the sender name in the inbox.
+  const headers = opts.oneClickUrl
+    ? {
+        "List-Unsubscribe": `<${opts.oneClickUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      }
+    : undefined;
+
+  const result = await deliver(to, rendered.subject, rendered.html, undefined, {
+    text: rendered.text,
+    headers,
+    categories: ["broadcast", opts.purpose],
+  });
+  return result.ok ? { status: "sent" } : { status: "failed", error: result.error };
 }
 
 /**
