@@ -32,6 +32,9 @@ const MAINTENANCE_ALLOWED = [
   "/api/admin",
   "/terms",
   "/privacy",
+  // Leaving a mailing list is not something to put on hold for an update.
+  "/unsubscribe",
+  "/api/email/unsubscribe",
 ];
 
 // Routes reachable without a session. Everything else redirects to /login.
@@ -69,6 +72,11 @@ const PUBLIC_PATHS = [
   // /api/invites/accept does the granting, and that one requires a session
   // and checks the address itself.
   "/api/invites/check",
+  // The footer link of every bulk email, and the one-click target mail clients
+  // POST to from the List-Unsubscribe header. The reader is usually signed out.
+  // The route checks a per-recipient token and throttles by IP itself.
+  "/unsubscribe",
+  "/api/email/unsubscribe",
   // Stripe calls this server-to-server with no session; it verifies its own
   // signature, so it must bypass the auth redirect.
   "/api/stripe/webhook",
@@ -135,6 +143,10 @@ const GATE_EXEMPT = [
   "/maintenance",
   "/api/stripe/webhook",
   "/api/cron",
+  // An incomplete signup is exactly who a signup reminder goes to, and they
+  // must be able to opt out without first finishing the profile form.
+  "/unsubscribe",
+  "/api/email/unsubscribe",
   "/sitemap.xml",
   "/robots.txt",
   "/googleeff60eae5378a4ab.html",

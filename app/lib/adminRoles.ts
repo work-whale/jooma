@@ -34,7 +34,7 @@ export const ROLE_HINT: Record<string, string> = {
   super_admin: "Everything, including managing admins.",
   support: "Teacher accounts, grants, password resets.",
   finance: "Plans, prices, refunds, invoices.",
-  marketing: "Stats only. No teacher data, no billing, no settings.",
+  marketing: "Stats and bulk emails. No teacher data, no billing, no settings.",
 };
 
 /** Which sidebar section each permission unlocks. One per nav group, plus
@@ -75,6 +75,7 @@ export const PERMISSION_LABEL: Record<string, string> = {
   see_deletions: "See deletion requests",
   manage_admins: "Manage admins",
   export_personal_data: "Export personal data",
+  send_email_campaigns: "Send bulk emails",
 };
 
 // Display order matters here — it reads as a story from least to most
@@ -92,6 +93,7 @@ export const PERMISSION_ORDER = [
   "change_plan",
   "issue_refunds",
   "edit_copy",
+  "send_email_campaigns",
   "onboard_school",
   "toggle_tools",
   "see_deletions",

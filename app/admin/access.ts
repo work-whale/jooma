@@ -68,3 +68,15 @@ export async function requireSection(permission: string) {
   if (!access.can(permission)) redirect(landingPath(access.permissions));
   return { supabase, user, access };
 }
+
+/**
+ * requireSection for a page two kinds of admin reach for different reasons.
+ * /admin/emails is the case: support edits the system emails through
+ * see_content, marketing sends bulk email through send_email_campaigns, and
+ * neither holds the other's permission. The page decides what each one sees.
+ */
+export async function requireAnySection(permissions: string[]) {
+  const { supabase, user, access } = await adminAccess();
+  if (!permissions.some((p) => access.can(p))) redirect(landingPath(access.permissions));
+  return { supabase, user, access };
+}

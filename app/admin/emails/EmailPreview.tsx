@@ -6,21 +6,11 @@
 // calls, wrapped in the same branded layout(), rendered with sample parameters.
 // What lands in a teacher's inbox is what is on screen here.
 //
-// Rendered in an iframe with `sandbox=""` — present but empty, which applies
-// every restriction there is: no scripts, no same-origin, no forms, no
-// navigation. Email HTML is tables and inline styles, so nothing legitimate is
-// lost, and an admin pasting something odd into the body box cannot reach the
-// admin page. dangerouslySetInnerHTML would be wrong twice over: the injection
-// surface, and layout() emitting a full document whose <body> background would
-// bleed into the admin's own styles.
+// Each pane is an EmailFrame: a sandboxed iframe, for the reasons given there.
 
 import { useEffect, useState } from "react";
-import { C, Note, Skeleton } from "../ui";
-
-interface Rendered {
-  subject: string;
-  html: string;
-}
+import { C, Note } from "../ui";
+import EmailFrame, { type RenderedEmail as Rendered } from "./EmailFrame";
 
 async function renderPreview(
   key: string,
@@ -38,42 +28,7 @@ async function renderPreview(
   return (await res.json()) as Rendered;
 }
 
-function Frame({ rendered, label, accent }: { rendered: Rendered | null; label: string; accent: string }) {
-  return (
-    <div className="min-w-0">
-      <div className="text-xs font-medium mb-1.5" style={{ color: accent }}>
-        {label}
-      </div>
-      {rendered === null ? (
-        <Skeleton className="h-105 w-full" />
-      ) : (
-        <div
-          className="rounded-lg border overflow-hidden"
-          style={{ borderColor: C.border }}
-        >
-          {/* The subject changes as often as the body and is invisible inside
-              the frame, so it gets its own strip — the way it appears in an
-              inbox list. */}
-          <div
-            className="px-3 py-2 border-b text-xs truncate"
-            style={{ borderColor: C.divider, backgroundColor: C.page, color: C.ink }}
-            title={rendered.subject}
-          >
-            <span style={{ color: C.muted }}>Subject: </span>
-            {rendered.subject}
-          </div>
-          <iframe
-            title={label}
-            srcDoc={rendered.html}
-            sandbox=""
-            className="w-full block bg-white"
-            style={{ height: 420, border: 0 }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
+const Frame = EmailFrame;
 
 export default function EmailPreview({
   templateKey,

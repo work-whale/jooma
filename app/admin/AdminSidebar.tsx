@@ -40,6 +40,11 @@ interface NavItem {
   /** Feature isn't shippable yet — rendered greyed out and unclickable so it
    *  can't be mistaken for part of the working product during a demo. */
   disabled?: boolean;
+  /** Shown to anyone holding ANY of these, even without the group's own
+   *  permission. For a page more than one role uses for different reasons:
+   *  marketing sends bulk email from Emails & templates without seeing the
+   *  rest of Content. The page itself gates what each of them sees. */
+  anyOf?: string[];
 }
 
 interface NavGroup {
@@ -124,7 +129,12 @@ const NAV: NavGroup[] = [
     perm: "see_content",
     items: [
       { href: "/admin/copy", label: "Website & app copy", icon: PenSquare },
-      { href: "/admin/emails", label: "Email templates", icon: Mail },
+      {
+        href: "/admin/emails",
+        label: "Emails & templates",
+        icon: Mail,
+        anyOf: ["see_content", "send_email_campaigns"],
+      },
       { href: "/admin/announce", label: "Announcements", icon: Megaphone },
     ],
   },
@@ -159,7 +169,14 @@ export default function AdminSidebar({
 }) {
   const pathname = usePathname();
   const allowed = new Set(permissions);
-  const groups = NAV.filter((g) => allowed.has(g.perm));
+  // An item is visible through its group's permission, or through its own
+  // anyOf list. A group with no visible item is not drawn at all.
+  const groups = NAV.map((g) => ({
+    ...g,
+    items: g.items.filter((item) =>
+      item.anyOf ? item.anyOf.some((p) => allowed.has(p)) : allowed.has(g.perm),
+    ),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <aside

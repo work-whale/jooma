@@ -46,15 +46,24 @@ test.afterAll(async () => {
 });
 
 test.describe("marketing", () => {
-  test("sees Stats in the nav and nothing else", async ({ page }) => {
+  test("sees Stats and bulk email in the nav and nothing else", async ({ page }) => {
     await signIn(page, marketing!);
     await page.goto("/admin/stats");
 
     const nav = page.locator("aside");
     await expect(nav.getByRole("link", { name: "Stats" })).toBeVisible();
+    // Through send_email_campaigns, without the rest of the Content group.
+    await expect(nav.getByRole("link", { name: "Emails & templates" })).toBeVisible();
 
     // The sections a marketing contractor must not even know the shape of.
-    for (const hidden of ["Teachers", "Payments & invoices", "Team & roles", "Settings"]) {
+    for (const hidden of [
+      "Teachers",
+      "Payments & invoices",
+      "Team & roles",
+      "Settings",
+      "Website & app copy",
+      "Announcements",
+    ]) {
       await expect(nav.getByRole("link", { name: hidden })).toHaveCount(0);
     }
   });
