@@ -59,6 +59,10 @@ interface CountryVisitors {
 
 /** The deep end of the purple ramp (--j-deep), used only by the visitors strip.
  *  Not in `C` because nothing else in the console has a dark panel. */
+/** Legend and table labels. "free" is the locked state of an account with no
+ *  subscription, so it reads as "No plan". */
+const PLAN_LABEL = { free: "No plan", standard: "Standard", pro: "Pro", max: "Max" } as const;
+
 const DEEP = "#3A1C8F";
 /** Lilac for text and bars on that dark panel, where C.muted is unreadable. */
 const LILAC = "#CDBCF7";
@@ -176,6 +180,7 @@ export default function StatsView({
         (a, m) => ({
           signups: a.signups + m.signups,
           free: a.free + m.free,
+          standard: a.standard + m.standard,
           pro: a.pro + m.pro,
           max: a.max + m.max,
           paid: a.paid + m.paid,
@@ -183,7 +188,7 @@ export default function StatsView({
           // zero would read as a traffic collapse rather than a gap.
           visitors: m.visitors === null ? a.visitors : (a.visitors ?? 0) + m.visitors,
         }),
-        { signups: 0, free: 0, pro: 0, max: 0, paid: 0, visitors: null as number | null },
+        { signups: 0, free: 0, standard: 0, pro: 0, max: 0, paid: 0, visitors: null as number | null },
       ),
     [months],
   );
@@ -216,6 +221,7 @@ export default function StatsView({
         short: m.label.slice(0, 3),
         signups: m.signups,
         free: m.free,
+        standard: m.standard,
         pro: m.pro,
         max: m.max,
         paid: m.paid,
@@ -345,7 +351,7 @@ export default function StatsView({
           foot="Pro and Max"
         />
         <Kpi
-          label="Free to paid"
+          label="Signup to paid"
           value={conversionOf(totals)}
           delta={deltas.conversion}
           foot={RANGE_PHRASE[range]}
@@ -364,7 +370,7 @@ export default function StatsView({
           <CardHeader>
             <CardTitle>Signups by month</CardTitle>
             <div className="flex gap-3.5">
-              {(["free", "pro", "max"] as const).map((k) => (
+              {(["free", "standard", "pro", "max"] as const).map((k) => (
                 <span
                   key={k}
                   className="flex items-center gap-1.5 text-xs font-semibold"
@@ -374,7 +380,7 @@ export default function StatsView({
                     className="w-2.5 h-2.5 rounded-sm block"
                     style={{ backgroundColor: PLAN_COLOUR[k] }}
                   />
-                  {k === "max" ? "Max" : k === "pro" ? "Pro" : "Free"}
+                  {PLAN_LABEL[k]}
                 </span>
               ))}
             </div>
@@ -413,21 +419,24 @@ export default function StatsView({
               <>
                 <PlanMixChart
                   free={totals.free}
+                  standard={totals.standard}
                   pro={totals.pro}
                   max={totals.max}
                   conversion={conversionOf(totals)}
                 />
                 <div className="mt-4 flex flex-col gap-2">
-                  {(["free", "pro", "max"] as const).map((k) => (
+                  {(["free", "standard", "pro", "max"] as const).map((k) => (
                     <div key={k} className="flex items-center gap-2 text-sm">
                       <span
                         className="rounded-full px-2 py-0.5 text-xs font-bold"
                         style={{
-                          backgroundColor: k === "max" ? C.okBg : k === "pro" ? C.brandBg : C.page,
-                          color: k === "max" ? C.ok : k === "pro" ? C.brand : C.muted,
+                          backgroundColor:
+                            k === "max" ? C.okBg : k === "pro" ? C.brandBg : k === "standard" ? C.warnBg : C.page,
+                          color:
+                            k === "max" ? C.ok : k === "pro" ? C.brand : k === "standard" ? C.warn : C.muted,
                         }}
                       >
-                        {k === "max" ? "Max" : k === "pro" ? "Pro" : "Free"}
+                        {PLAN_LABEL[k]}
                       </span>
                       <span
                         className="ml-auto tabular-nums font-semibold"
@@ -454,7 +463,7 @@ export default function StatsView({
       <div className="mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Free to paid conversion</CardTitle>
+            <CardTitle>Signup to paid conversion</CardTitle>
             <span className="text-xs" style={{ color: C.muted }}>
               Share of each month&apos;s signups now on a paid plan
             </span>
@@ -620,7 +629,8 @@ export default function StatsView({
                   <Th>Month</Th>
                   <Th align="right">Visitors</Th>
                   <Th align="right">Signups</Th>
-                  <Th align="right">Free</Th>
+                  <Th align="right">No plan</Th>
+                  <Th align="right">Standard</Th>
                   <Th align="right">Pro</Th>
                   <Th align="right">Max</Th>
                   <Th align="right">Paid</Th>
@@ -641,6 +651,9 @@ export default function StatsView({
                     </Td>
                     <Td align="right" mono>
                       {nf.format(m.free)}
+                    </Td>
+                    <Td align="right" mono>
+                      {nf.format(m.standard)}
                     </Td>
                     <Td align="right" mono>
                       {nf.format(m.pro)}

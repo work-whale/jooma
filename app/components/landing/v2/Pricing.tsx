@@ -15,7 +15,7 @@ import styles from "./Pricing.module.css";
  *  Named PlanCard historically, which now collides with the shared card
  *  component this renders. The component owns the name; this is the data. */
 export interface PricingPlan {
-  id: "free" | "pro" | "max" | "school";
+  id: "standard" | "pro" | "max" | "school";
   name: string;
   price: string;
   per: string;
@@ -24,7 +24,9 @@ export interface PricingPlan {
   /** The purple, most-prominent card. */
   featured?: boolean;
   /** Starts a Stripe checkout for this plan instead of following a link. */
-  checkout?: "pro" | "max";
+  checkout?: "standard" | "pro" | "max";
+  /** The trial line under the button, e.g. "3 days free, then £4.99 a month". */
+  trial?: string | null;
   href?: string;
 }
 
@@ -35,9 +37,8 @@ export interface PricingPlan {
  * The figures are passed in from the server, derived from PLANS, so they cannot
  * drift from what is actually charged and granted.
  *
- * Free is described by what it really is: five resources a month, one a day.
- * The V2 prototype offered "one hundred credits a month" here, which no signup
- * receives.
+ * There is no free plan: every paid card starts a checkout with the free
+ * trial, and says so under its button.
  *
  * The card itself is shared with /welcome and the profile's subscription
  * section, so all three look the same and only have to be styled once.
@@ -47,7 +48,7 @@ export default function Pricing({ plans }: { plans: PricingPlan[] }) {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function startCheckout(plan: "pro" | "max") {
+  async function startCheckout(plan: "standard" | "pro" | "max") {
     setPending(plan);
     setError(null);
     try {
@@ -95,7 +96,7 @@ export default function Pricing({ plans }: { plans: PricingPlan[] }) {
       <div className={shared.shell}>
         <Reveal className={`${shared.secHead} ${shared.secHeadCentre}`}>
           <span className={shared.eyebrow}>Pricing</span>
-          <h2>Start free. Upgrade when it has already saved you a Sunday.</h2>
+          <h2>Try any plan free for three days. Keep it when it has saved you a Sunday.</h2>
         </Reveal>
 
         <Reveal>
@@ -112,6 +113,7 @@ export default function Pricing({ plans }: { plans: PricingPlan[] }) {
                 featured={plan.featured}
                 badge={plan.featured ? "Most popular" : undefined}
                 action={actionFor(plan)}
+                footer={plan.trial ?? undefined}
               />
             ))}
           </PlanCardGrid>
@@ -124,7 +126,8 @@ export default function Pricing({ plans }: { plans: PricingPlan[] }) {
         )}
 
         <p className={styles.note}>
-          Prices include VAT. Cancel any time, see our refund policy.
+          Prices include VAT. Your card is taken when you start, and nothing is charged until
+          the trial ends. Cancel any time before then and you pay nothing.
         </p>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/auth/server";
+import { asPlanId, hasActivePlan } from "@/app/lib/plans";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { SquircleDefs, ToolTile } from "@/app/components/v2/Squircle";
 import Wordmark from "@/app/components/v2/Wordmark";
@@ -31,7 +32,7 @@ const FIRST_STOPS = ["slideshow", "lesson-planner", "worksheet-generator", "quiz
 export default async function WelcomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ code?: string }>;
+  searchParams: Promise<{ code?: string; checkout?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -48,15 +49,19 @@ export default async function WelcomePage({
   // box. Passing it down as a prop means the server and the first client render
   // already agree. The client still reads the stash as a fallback for anyone
   // who arrives here without the query string.
-  const { code } = await searchParams;
+  const { code, checkout } = await searchParams;
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name")
+    .select("first_name, plan")
     .eq("id", user.id)
     .maybeSingle();
 
   const firstName = (profile?.first_name ?? "").trim();
+
+  // An invited teacher an admin already put on a plan has nothing to choose,
+  // and should not be shown a checkout for something they already have.
+  const needsPlan = !hasActivePlan(asPlanId(profile?.plan));
 
   // A tool that has been renamed out of the catalogue is dropped rather than
   // rendered as a blank tile, matching how the rest of the app treats a miss.
@@ -74,14 +79,22 @@ export default async function WelcomePage({
           {firstName ? `Welcome to Jooma, ${firstName}` : "Welcome to Jooma"}
         </h1>
         <p className={styles.lede}>
-          Everything you need for tomorrow is here, and most of it takes about a minute.
-          Pick something to make first.
+          {needsPlan
+            ? "Choose a plan to start your free trial. Every plan has all thirty five tools, and most of them take about a minute."
+            : "Everything you need for tomorrow is here, and most of it takes about a minute. Pick something to make first."}
         </p>
 
-        {/* A code from an ambassador, if they have one. Collapsed to a single
-            line unless a code is waiting in the URL or sessionStorage, so the
-            screen still opens on the tools for everybody else. */}
-        <AmbassadorCode initialCode={code} />
+        {/* The plan choice, the last step of signing up: there is no free plan,
+            so nothing can be generated until a trial starts. A code from an
+            ambassador sits above the cards as a single line unless one is
+            waiting in the URL or sessionStorage. */}
+        {needsPlan && <AmbassadorCode initialCode={code} />}
+
+        {needsPlan && checkout === "cancelled" && (
+          <p className={styles.foot} role="status">
+            No card was taken. Choose a plan whenever you are ready.
+          </p>
+        )}
 
         <ul className={styles.grid}>
           {tools.map((tool) => (
@@ -98,9 +111,13 @@ export default async function WelcomePage({
         </ul>
 
         <Link href="/tools" className={styles.cta}>
-          Go to my tools
+          {needsPlan ? "Look around first" : "Go to my tools"}
         </Link>
-        <p className={styles.foot}>All thirty five tools are waiting there.</p>
+        <p className={styles.foot}>
+          {needsPlan
+            ? "You can browse every tool, and start creating once your trial begins."
+            : "All thirty five tools are waiting there."}
+        </p>
       </div>
     </main>
   );

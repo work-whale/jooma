@@ -37,7 +37,7 @@ import { C } from "../ui";
 
 /** The plan ramp, palest to strongest. Shared by the stacked bars and the
  *  donut so a reader can carry the colour between the two panels. */
-export const PLAN_COLOUR = { free: "#DDD2F7", pro: C.brand, max: C.ok } as const;
+export const PLAN_COLOUR = { free: "#DDD2F7", standard: "#E0A84A", pro: C.brand, max: C.ok } as const;
 
 /** Axis and grid furniture. Muted enough to sit behind the data: an axis that
  *  competes with the bars is noise. */
@@ -77,6 +77,7 @@ export interface ChartMonth {
   short: string;
   signups: number;
   free: number;
+  standard: number;
   pro: number;
   max: number;
   paid: number;
@@ -109,7 +110,8 @@ export function SignupsChart({ data }: { data: ChartMonth[] }) {
                 title={m.label}
                 rows={[
                   ["Signups", nf.format(m.signups)],
-                  ["Free", nf.format(m.free)],
+                  ["No plan", nf.format(m.free)],
+                  ["Standard", nf.format(m.standard)],
                   ["Pro", nf.format(m.pro)],
                   ["Max", nf.format(m.max)],
                 ]}
@@ -118,6 +120,7 @@ export function SignupsChart({ data }: { data: ChartMonth[] }) {
           }}
         />
         <Bar dataKey="free" stackId="plan" fill={PLAN_COLOUR.free} />
+        <Bar dataKey="standard" stackId="plan" fill={PLAN_COLOUR.standard} />
         <Bar dataKey="pro" stackId="plan" fill={PLAN_COLOUR.pro} />
         {/* Only the top band is rounded, so the stack reads as one bar. */}
         <Bar dataKey="max" stackId="plan" fill={PLAN_COLOUR.max} radius={[4, 4, 0, 0]} />
@@ -200,17 +203,20 @@ export function ConversionChart({ data }: { data: ChartMonth[] }) {
  *  the whole range rather than per month: it answers "what is the mix now". */
 export function PlanMixChart({
   free,
+  standard,
   pro,
   max,
   conversion,
 }: {
   free: number;
+  standard: number;
   pro: number;
   max: number;
   conversion: string;
 }) {
   const slices = [
-    { key: "Free", value: free, fill: PLAN_COLOUR.free },
+    { key: "No plan", value: free, fill: PLAN_COLOUR.free },
+    { key: "Standard", value: standard, fill: PLAN_COLOUR.standard },
     { key: "Pro", value: pro, fill: PLAN_COLOUR.pro },
     { key: "Max", value: max, fill: PLAN_COLOUR.max },
   ].filter((s) => s.value > 0);

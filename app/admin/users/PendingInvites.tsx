@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Mail } from "lucide-react";
 import { usePermissions } from "./usePermissions";
+import { asPlanId } from "@/app/lib/plans";
+import { planCardName } from "@/app/lib/plan-copy";
 import { C, PLAN_TONE, Tag } from "../ui";
 import { fmtRelative } from "../format";
 
@@ -84,9 +86,9 @@ export default function PendingInvites({ invites }: { invites: PendingInvite[] }
                   <td className="px-4 py-2.5 font-medium" style={{ color: C.ink }}>
                     {inv.email}
                   </td>
-                  <td className="px-4 py-2.5 capitalize" style={{ color: C.ink2 }}>
+                  <td className="px-4 py-2.5" style={{ color: C.ink2 }}>
                     <Tag tone={PLAN_TONE[inv.invited_plan ?? "free"] ?? "plain"}>
-                      {inv.invited_plan ?? "free"}
+                      {planCardName(asPlanId(inv.invited_plan))}
                     </Tag>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap" style={{ color: C.muted }}>

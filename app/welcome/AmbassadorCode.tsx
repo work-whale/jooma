@@ -1,29 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import PlanCard, { PlanCardGrid } from "@/app/components/plans/PlanCard";
 import {
-  planCardCta,
   planCardName,
   planCardPer,
   planCardPrice,
   planFeatures,
+  planTrialLine,
+  TRIAL_CTA,
 } from "@/app/lib/plan-copy";
+import { TRIAL_DAYS } from "@/app/lib/plans";
 import styles from "./ambassador.module.css";
 
 /*
- * "Got a code?" on the first screen a new teacher sees.
+ * The plan choice on the first screen a new teacher sees, with "Got a code?"
+ * above it.
  *
- * Two separate things happen here, and keeping them apart is the point:
+ * There is no free plan, so choosing one is the signup's last step: every card
+ * starts a Stripe checkout with the free trial, where the card is taken and
+ * nothing is charged until the trial ends.
+ *
+ * Two separate things happen around a code, and keeping them apart is the
+ * point:
  *
  *   CLAIMING records who referred this teacher. It happens once, immediately,
- *   and never expires. Whether they pick Free or a paid plan, the ambassador
- *   gets the credit.
+ *   and never expires. Even if they leave checkout without subscribing, the
+ *   ambassador gets the credit.
  *
  *   The DISCOUNT is Stripe's, and is applied at checkout from the claim. So
- *   somebody can take a code today, choose Free, and subscribe next month with
- *   the discount still waiting for them. Nothing has to be retyped, and the code
+ *   somebody can take a code today, leave, and subscribe next month with the
+ *   discount still waiting for them. Nothing has to be retyped, and the code
  *   does not have to be remembered.
  *
  * This component therefore never grants anything. It calls two server routes
@@ -41,7 +48,7 @@ type Checked =
  *  from lib/plan-copy, which derives them from PLANS and the spend ceiling —
  *  these were once hardcoded as "£7.99" and "£14.99" and could silently drift
  *  from what Stripe actually charges. */
-const OFFERED = ["free", "pro", "max"] as const;
+const OFFERED = ["standard", "pro", "max"] as const;
 
 /** The plan most people should buy: the purple card with the badge. */
 const FEATURED = "pro";
@@ -59,8 +66,6 @@ function readStash(): string {
 }
 
 export default function AmbassadorCode({ initialCode }: { initialCode?: string }) {
-  const router = useRouter();
-
   /*
    * A code stashed three navigations ago, read in a lazy state initializer.
    *
@@ -122,13 +127,13 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
   };
 
   /**
-   * Claim, then go where they asked.
+   * Claim, then start checkout for the plan they chose.
    *
-   * The claim is deliberately made for Free as well as for a paid plan: tracking
-   * a referral who never pays is the whole reason the ambassador table has an
-   * N/A state. It just does not earn a payout.
+   * The claim is made before checkout rather than after it: tracking a referral
+   * who never pays is the whole reason the ambassador table has an N/A state.
+   * It just does not earn a payout.
    */
-  const choose = async (plan: "free" | "pro" | "max") => {
+  const choose = async (plan: (typeof OFFERED)[number]) => {
     setBusy(plan);
     setError(null);
 
@@ -159,18 +164,14 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
         }
       }
 
-      if (plan === "free") {
-        router.push("/tools");
-        return;
-      }
-
       // Checkout resolves the discount from the claim above, server-side. No
       // code is sent from here: one named by the client would be an open
-      // discount anybody could apply.
+      // discount anybody could apply. `from` sends them on to /tools after
+      // paying, and back here if they leave Stripe.
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, from: "welcome" }),
       });
       const json = await res.json();
       if (json.url) {
@@ -184,37 +185,37 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
     setBusy(null);
   };
 
-  if (!open) {
-    return (
-      <button type="button" className={styles.prompt} onClick={() => setOpened(true)}>
-        Got a code from someone? Add it here
-      </button>
-    );
-  }
-
   return (
-    <section className={styles.panel} aria-label="Promo code">
-      <div className={styles.row}>
-        <input
-          value={code}
-          onChange={(e) => {
-            setCode(e.target.value.toUpperCase());
-            setChecked({ state: "idle" });
-          }}
-          onBlur={(e) => check(e.target.value)}
-          placeholder="Enter your code"
-          aria-label="Your code"
-          className={styles.input}
-        />
-        <button
-          type="button"
-          className={styles.apply}
-          onClick={() => check(code)}
-          disabled={checked.state === "checking" || !code.trim()}
-        >
-          {checked.state === "checking" ? "Checking…" : "Apply"}
+    <section className={styles.panel} aria-label="Choose your plan">
+      {/* The code box stays one quiet line unless a code is waiting, so the
+          plans are what this screen opens on. */}
+      {!open ? (
+        <button type="button" className={styles.prompt} onClick={() => setOpened(true)}>
+          Got a code from someone? Add it here
         </button>
-      </div>
+      ) : (
+        <div className={styles.row}>
+          <input
+            value={code}
+            onChange={(e) => {
+              setCode(e.target.value.toUpperCase());
+              setChecked({ state: "idle" });
+            }}
+            onBlur={(e) => check(e.target.value)}
+            placeholder="Enter your code"
+            aria-label="Your code"
+            className={styles.input}
+          />
+          <button
+            type="button"
+            className={styles.apply}
+            onClick={() => check(code)}
+            disabled={checked.state === "checking" || !code.trim()}
+          >
+            {checked.state === "checking" ? "Checking…" : "Apply"}
+          </button>
+        </div>
+      )}
 
       {checked.state === "good" && (
         <p className={styles.good}>
@@ -238,16 +239,18 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
             badge={id === FEATURED ? "Most popular" : undefined}
             action={{
               kind: "button",
-              label: busy === id ? "Just a moment…" : planCardCta(id),
+              label: busy === id ? "Just a moment…" : TRIAL_CTA,
               onClick: () => choose(id),
               disabled: busy !== null,
             }}
+            footer={planTrialLine(id)}
           />
         ))}
       </PlanCardGrid>
 
       <p className={styles.note}>
-        You can start free and subscribe later. Your code stays on your account either way.
+        Your card is needed to start. You won&apos;t be charged until your {TRIAL_DAYS} day
+        trial ends, and you can cancel any time before then.
       </p>
 
       {error && (

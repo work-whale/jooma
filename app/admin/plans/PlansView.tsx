@@ -182,7 +182,9 @@ export default function PlansView({
                 <p className="text-xs mt-0.5" style={{ color: C.muted }}>
                   {p.price_yearly
                     ? `${gbp(Number(p.price_yearly))} ${p.audience === "school" ? "per seat per year" : "a year"}`
-                    : "Free forever"}
+                    : price
+                      ? "Monthly only"
+                      : "Not sold"}
                 </p>
                 <p className="text-xs mt-2" style={{ color: C.ink2 }}>
                   {p.description}

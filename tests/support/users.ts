@@ -187,14 +187,18 @@ export async function createAdminWithRole(
  */
 export async function setPlan(
   teacher: TestTeacher,
-  plan: "pro" | "max",
-  how: "paying" | "comped" | "ending",
+  plan: "standard" | "pro" | "max",
+  how: "paying" | "comped" | "ending" | "trialing",
 ): Promise<void> {
   const { error } = await admin
     .from("profiles")
     .update({
       plan,
-      subscription_status: "active",
+      // A free trial is a real subscription in Stripe's `trialing` state, with
+      // current_period_end set to the moment the trial ends.
+      subscription_status: how === "trialing" ? "trialing" : "active",
+      current_period_end:
+        how === "trialing" ? new Date(Date.now() + 3 * 86_400_000).toISOString() : null,
       // A comp has no Stripe customer and no subscription behind it.
       stripe_customer_id: how === "comped" ? null : `cus_e2e_${teacher.id.slice(0, 8)}`,
       stripe_subscription_id: how === "comped" ? null : `sub_e2e_${teacher.id.slice(0, 8)}`,

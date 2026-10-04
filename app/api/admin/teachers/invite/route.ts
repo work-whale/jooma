@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminRoute } from "@/app/lib/auth/admin-route";
 import { sendTemplate, siteUrl } from "@/app/lib/email";
-import { SELECTABLE_PLANS } from "@/app/lib/plans";
+import { ADMIN_ASSIGNABLE_PLANS } from "@/app/lib/plans";
 import { newInviteToken, hashInviteToken, inviteExpiry } from "@/app/lib/invites";
 
 // Invites teachers by email.
@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
   if (!Array.isArray(rawEmails)) {
     return NextResponse.json({ error: "emails must be an array." }, { status: 400 });
   }
-  // Validate the plan server-side too — the dropdown only offers Free and Pro,
-  // but a crafted request must not be able to place someone on a retired or
-  // unbuilt plan.
-  if (!SELECTABLE_PLANS.some((p) => p.id === plan)) {
+  // Validate the plan server-side too. The dropdown offers "No plan" (the
+  // invitee subscribes themselves, with the trial) and the plans on sale, and a
+  // crafted request must not be able to place someone on an unbuilt plan.
+  if (!ADMIN_ASSIGNABLE_PLANS.some((p) => p.id === plan)) {
     return NextResponse.json({ error: `Can't invite anyone onto the ${plan} plan.` }, { status: 400 });
   }
 

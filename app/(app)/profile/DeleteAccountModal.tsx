@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Modal from "@/app/components/Modal";
 import { INPUT_CLASS } from "@/app/components/ui/FormFields";
+import { planCardPrice } from "@/app/lib/plan-copy";
 
 // The three step deletion flow.
 //
@@ -253,9 +254,9 @@ export default function DeleteAccountModal({
             {/* The off-ramp. Most of the retention value in this whole flow is
                 here: a teacher who is leaving over price or a missing feature
                 has a problem we can sometimes solve. */}
-            {reasonCode === "too_expensive" && stats.plan && stats.plan !== "free" && (
+            {reasonCode === "too_expensive" && stats.plan && stats.plan !== "free" && stats.plan !== "standard" && (
               <p className="text-sm mb-4" style={{ color: "var(--j-body)" }}>
-                Would switching to the free plan work instead?{" "}
+                Would a cheaper plan work instead? Standard is {planCardPrice("standard")} a month.{" "}
                 <Link href="/profile?section=subscription" className="font-semibold underline" style={{ color: "var(--j-purple)" }}>
                   Look at plans
                 </Link>

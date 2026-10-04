@@ -3,11 +3,14 @@ import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { pendingPlanChange } from "@/app/lib/stripe";
 import {
   asPlanId,
+  hasActivePlan,
   PLANS,
   PLAN_CREDITS,
   SELECTABLE_PLAN_IDS,
 } from "@/app/lib/plans";
+import { trialDaysFor } from "@/app/lib/trial";
 import ManageButton from "./ManageButton";
+import CancelSubscriptionButton from "./CancelSubscriptionButton";
 import ResumeButton from "./ResumeButton";
 import PlanPicker from "./PlanPicker";
 import AllowanceMeter from "./AllowanceMeter";
@@ -81,19 +84,21 @@ export default async function OverviewTab({
 
   // Two different flags, deliberately not collapsed into one.
   //
-  // A Stripe CUSTOMER can exist with no subscription: buying a credit top-up
-  // attaches one (see app/api/stripe/topup/route.ts), so a free teacher who has
-  // ever topped up has a card on file worth updating — but nothing to cancel.
-  // Cancel additionally needs the subscription id because Stripe's
-  // subscription_cancel flow takes it as a required parameter.
+  // A Stripe CUSTOMER outlives the subscription: a lapsed subscriber still has
+  // a card on file worth updating, but nothing to cancel. Cancel additionally
+  // needs a LIVE subscription, because Stripe's subscription_cancel flow takes
+  // its id. The id alone is not enough: it is never cleared, so a lapsed
+  // subscriber still carries the old one, and offering them a plan swap would
+  // send it to a subscription Stripe has already closed. They check out again.
   const isSubscriber = Boolean(profile?.stripe_customer_id);
-  const hasSubscription = Boolean(profile?.stripe_subscription_id);
+  const hasSubscription = Boolean(profile?.stripe_subscription_id) && hasActivePlan(plan);
+  const trialing = profile?.subscription_status === "trialing";
 
-  // Every plan a teacher can be on, cheapest first — Free included, because
-  // moving DOWN to it is a plan change like any other and needs somewhere to be
-  // offered. Derived from SELECTABLE_PLAN_IDS so a plan arriving or leaving
-  // needs no change here, and so this can never offer School, which is hidden
-  // and has no self-serve billing.
+  // Every plan a teacher can buy, cheapest first. Derived from
+  // SELECTABLE_PLAN_IDS so a plan arriving or leaving needs no change here, and
+  // so this can never offer School, which is hidden and has no self-serve
+  // billing, or the retired "free" state. Leaving altogether is the Cancel
+  // button above, not a card.
   const ladder = SELECTABLE_PLAN_IDS.slice().sort(
     (a, b) => (PLANS[a].priceMonthly ?? 0) - (PLANS[b].priceMonthly ?? 0),
   );
@@ -149,8 +154,8 @@ export default async function OverviewTab({
           className="rounded-xl px-4 py-3 mb-5 text-sm font-medium"
           style={{ backgroundColor: "#FDF0D5", color: "#8a6d1f" }}
         >
-          Payment received — activating your plan. This usually takes a few
-          seconds; refresh the page to check.
+          All set, activating your plan. This usually takes a few seconds;
+          refresh the page to check.
         </div>
       )}
 
@@ -159,7 +164,9 @@ export default async function OverviewTab({
           className="rounded-xl px-4 py-3 mb-5 text-sm font-medium"
           style={{ backgroundColor: "#DDF0E2", color: "#1f6b3b" }}
         >
-          Payment received — welcome to {planName}!
+          {trialing
+            ? `Your free trial of ${planName} has started. Welcome!`
+            : `Payment received, welcome to ${planName}!`}
         </div>
       )}
 
@@ -190,15 +197,32 @@ export default async function OverviewTab({
             className="text-xs font-semibold px-3 py-1 rounded-full"
             style={{ backgroundColor: "var(--j-tint)", color: "var(--j-faint)" }}
           >
-            {profile?.subscription_status ?? (plan === "free" ? "free" : "—")}
+            {trialing
+              ? "free trial"
+              : hasActivePlan(plan)
+                ? (profile?.subscription_status ?? "active")
+                : "no plan"}
           </span>
         </div>
 
-        {renews && (
+        {!hasActivePlan(plan) && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
-            {ending || ended
-              ? `Access ends on ${renews}.`
-              : `Renews on ${renews}.`}
+            Choose a plan below to start creating.
+            {trialDaysFor(profile) > 0 && " Every plan starts with a free trial."}
+          </p>
+        )}
+
+        {/* During a trial current_period_end IS the trial end, which is also
+            when the first charge happens. */}
+        {renews && hasActivePlan(plan) && (
+          <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
+            {trialing && (ending || ended)
+              ? `Your free trial ends on ${renews}. You won't be charged.`
+              : trialing
+                ? `Your free trial ends on ${renews}. Then £${PLANS[plan].priceMonthly?.toFixed(2)} a month.`
+                : ending || ended
+                  ? `Access ends on ${renews}.`
+                  : `Renews on ${renews}.`}
           </p>
         )}
 
@@ -218,14 +242,13 @@ export default async function OverviewTab({
                 label="Update card"
                 variant="outline"
               />
-              {/* Cancelling now lives on the Free card below, as "Switch to
-                  Free" — same portal flow, same outcome, but framed as the plan
-                  change it actually is and carrying the losses panel. A second
-                  red button here would be the same action twice.
-
-                  Renew stays, because it is not a plan change: it undoes one.
-                  Only ever shown while ENDING — once fully ended there is
-                  nothing to renew, and the "resubscribe" note below covers it. */}
+              {/* Cancel, with its losses panel, while there is something live
+                  to cancel. Renew instead while ENDING: it undoes the cancel.
+                  Once fully ended there is nothing to renew, and the plan cards
+                  below are the way back. */}
+              {hasSubscription && !ending && !ended && (
+                <CancelSubscriptionButton from={plan} trialing={trialing} />
+              )}
               {hasSubscription && ending && <ResumeButton />}
             </div>
           </div>
@@ -250,7 +273,7 @@ export default async function OverviewTab({
 
         {ended && (
           <p className="text-sm mt-4" style={{ color: "var(--j-faint)" }}>
-            You can resubscribe any time from the pricing page.
+            You can subscribe again any time from the plans below.
           </p>
         )}
       </div>
@@ -265,12 +288,14 @@ export default async function OverviewTab({
           plans={ladder}
           current={plan}
           hasSubscription={hasSubscription}
+          trialEligible={trialDaysFor(profile) > 0}
           pendingPlan={pending?.plan ?? null}
           pendingAt={pendingAt}
-          // While a subscription is ending or ended, renewing comes first:
-          // swapping a plan that is about to stop would charge for something
-          // disappearing. Same gate the buttons above use.
-          locked={ending || ended}
+          // While a subscription is ending, renewing comes first: swapping a
+          // plan that is about to stop would charge for something disappearing.
+          // Once it has ENDED (back to no plan) the cards are the way back in,
+          // through a fresh checkout.
+          locked={ending && hasActivePlan(plan)}
         />
       )}
 

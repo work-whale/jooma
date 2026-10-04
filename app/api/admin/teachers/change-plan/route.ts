@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminRoute } from "@/app/lib/auth/admin-route";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
-import { SELECTABLE_PLANS } from "@/app/lib/plans";
+import { ADMIN_ASSIGNABLE_PLANS } from "@/app/lib/plans";
 
 // Moves a teacher between plans from the admin console.
 //
@@ -39,8 +39,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Please give a reason — it goes in the audit log." }, { status: 400 });
   }
   // Enforced server-side as well as in the dropdown: nobody gets moved onto a
-  // retired or unbuilt plan by a crafted request.
-  if (!SELECTABLE_PLANS.some((p) => p.id === plan)) {
+  // retired or unbuilt plan by a crafted request. "free" (no plan) is allowed:
+  // it is how an admin takes a plan away.
+  if (!ADMIN_ASSIGNABLE_PLANS.some((p) => p.id === plan)) {
     return NextResponse.json({ error: `${plan} isn't a plan we sell.` }, { status: 400 });
   }
 
@@ -112,7 +113,10 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // ── Downgrade ──
-      if (profile.stripe_subscription_id) {
+      // A subscription id outlives the subscription (it is never cleared), so a
+      // comp given after a lapsed subscription still carries a closed one.
+      // Cancelling that again would be refused by Stripe; it is case 4.
+      if (profile.stripe_subscription_id && profile.subscription_status !== "canceled") {
         // Case 3.
         if (immediate) {
           await stripe.subscriptions.cancel(profile.stripe_subscription_id);
@@ -137,7 +141,7 @@ export async function POST(req: NextRequest) {
           .eq("id", userId);
         if (error) throw new Error("Could not update the plan.");
         method = "direct";
-        message = "Moved to Free.";
+        message = "Plan removed. They'll need to subscribe to create anything.";
       }
     }
   } catch (err) {

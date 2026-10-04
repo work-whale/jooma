@@ -1,12 +1,8 @@
 {
-  "permissions": {
-    "allow": [
-      "WebSearch",
-      "mcp__plugin_supabase_supabase__apply_migration"
-    ]
-  },
-  "enabledMcpjsonServers": [
-    "supabase",
-    "github"
-  ]
+  "enabledPlugins": {
+    "github@claude-plugins-official": true,
+    "stripe@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
+  }
 }

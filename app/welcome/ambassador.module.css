@@ -33,6 +33,12 @@
   text-align: left;
 }
 
+/* Inside the panel the prompt is the first line, so the panel's own padding
+   already spaces it. */
+.panel .prompt {
+  margin-top: 0;
+}
+
 .row {
   display: flex;
   gap: 8px;

@@ -64,7 +64,9 @@ export default function TermsPage() {
           </Section>
 
           <Section title="7. Subscription and Payment">
-            <p>Jooma offers free and paid subscription plans. Paid features are subject to the pricing displayed on our website at the time of purchase. Subscriptions renew automatically unless cancelled before the renewal date.</p>
+            <p>Jooma is offered through paid monthly subscription plans, at the pricing displayed on our website at the time of purchase. Creating resources requires an active subscription.</p>
+            <p>Your first subscription starts with a 3 day free trial. We take your payment details when the trial starts, and nothing is charged during the trial. When the trial ends, the plan&apos;s monthly fee is charged to that payment method unless you cancelled before then. The free trial is available once per account.</p>
+            <p>Subscriptions renew automatically each month unless cancelled before the renewal date. You can cancel at any time from your account, and you keep your plan until the end of the period already paid for, or until the end of the trial.</p>
             <p>All fees are quoted in GBP and are inclusive of VAT where applicable. Refunds are provided at our discretion, except where required by law.</p>
           </Section>
 

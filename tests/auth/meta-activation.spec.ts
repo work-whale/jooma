@@ -7,21 +7,20 @@ import {
 } from "../support/users";
 
 /*
- * Reporting a Free plan activation to Meta.
+ * Recording a signup's attribution for Meta.
  *
  * WHAT THIS IS ACTUALLY ASSERTING
  *
- * Not that Meta received anything — that needs Events Manager and a human. What
- * it pins is the thing most likely to break silently in our own code: that the
- * event fires exactly once, at the moment the account is genuinely activated,
- * and not before.
+ * That the activation call, which stores the Meta and attribution cookies on the
+ * profile, fires exactly once, at the moment the account is genuinely created,
+ * and not before. StartTrial itself no longer fires here: there is no free plan,
+ * so the trial starts at Stripe Checkout and the webhook reports it (see
+ * startsTrial in tests/unit/trial.spec.ts). The webhook reads the cookies this
+ * call stored, which is why the call still matters.
  *
- * The specification is explicit that StartTrial must fire "only after the Free
- * plan has been successfully activated, not simply when the user clicks the
- * Start Free button". Activation is the profiles row being written, which
- * happens at the end of /complete-profile. These tests drive that real form
- * rather than calling the route directly, because the ordering is the part that
- * is worth protecting.
+ * Creation is the profiles row being written, which happens at the end of
+ * /complete-profile. These tests drive that real form rather than calling the
+ * route directly, because the ordering is the part that is worth protecting.
  *
  * OBSERVED, NOT INTERCEPTED, and that distinction is load-bearing. The client
  * sends this with `keepalive: true` so the request survives the navigation that

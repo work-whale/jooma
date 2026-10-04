@@ -116,13 +116,14 @@ async function postEvent(
 }
 
 /**
- * Report a Free plan activation.
+ * Report a started free trial. Sent from the Stripe webhook when Checkout
+ * completes with a `trialing` subscription (see reportTrialStart there).
  *
  * `event_id` is the user id, which matters twice over. It dedupes this against
- * the browser's own fbq('track','StartTrial', {}, {eventID: userId}) so one
- * activation is not counted as two, AND it collapses a repeat submission of the
- * signup form into a single conversion: the profiles upsert is idempotent, so a
- * teacher who retries after a failed invite step would otherwise report twice.
+ * the browser's own fbq('track','StartTrial', {}, {eventID: userId}), fired by
+ * app/checkout/complete when the teacher returns from Checkout, so one trial is
+ * not counted as two. And it collapses a Stripe retry of the same webhook into a
+ * single conversion. There is one trial per account, so the id is stable.
  * Meta dedupes on event_id within 48 hours, which covers every realistic retry.
  *
  * Do not replace this with a random id without reading that sentence again.

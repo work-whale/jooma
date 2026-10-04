@@ -43,7 +43,7 @@ export interface AnnouncementRow {
 
 const AUDIENCE_LABEL: Record<string, string> = {
   everyone: "Everyone",
-  free: "Free plan only",
+  free: "No plan only",
   paying: "Paying teachers",
   school: "School plans only",
   one_school: "One school",

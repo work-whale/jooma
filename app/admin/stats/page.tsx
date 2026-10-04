@@ -79,6 +79,7 @@ export default async function AdminStatsPage(props: {
     ...m,
     signups: Number(m.signups),
     free: Number(m.free),
+    standard: Number(m.standard),
     pro: Number(m.pro),
     max: Number(m.max),
     paid: Number(m.paid),

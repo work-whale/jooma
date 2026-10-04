@@ -9,6 +9,7 @@ export interface MonthRow {
   label: string;
   signups: number;
   free: number;
+  standard: number;
   pro: number;
   max: number;
   paid: number;
@@ -21,7 +22,8 @@ const HEADERS = [
   "Month",
   "Visitors",
   "Signups",
-  "Free",
+  "No plan",
+  "Standard",
   "Pro",
   "Max",
   "Paid total",
@@ -92,6 +94,7 @@ export function toCsv(rows: MonthRow[]): string {
         cell(r.visitors),
         cell(r.signups),
         cell(r.free),
+        cell(r.standard),
         cell(r.pro),
         cell(r.max),
         cell(r.paid),
@@ -104,6 +107,7 @@ export function toCsv(rows: MonthRow[]): string {
     (a, r) => ({
       signups: a.signups + r.signups,
       free: a.free + r.free,
+      standard: a.standard + r.standard,
       pro: a.pro + r.pro,
       max: a.max + r.max,
       paid: a.paid + r.paid,
@@ -111,7 +115,7 @@ export function toCsv(rows: MonthRow[]): string {
       // month as zero would understate the total and look like a real dip.
       visitors: r.visitors === null ? a.visitors : (a.visitors ?? 0) + r.visitors,
     }),
-    { signups: 0, free: 0, pro: 0, max: 0, paid: 0, visitors: null as number | null },
+    { signups: 0, free: 0, standard: 0, pro: 0, max: 0, paid: 0, visitors: null as number | null },
   );
 
   lines.push(
@@ -120,6 +124,7 @@ export function toCsv(rows: MonthRow[]): string {
       cell(totals.visitors),
       cell(totals.signups),
       cell(totals.free),
+      cell(totals.standard),
       cell(totals.pro),
       cell(totals.max),
       cell(totals.paid),

@@ -38,6 +38,7 @@ const PRICEABLE = new Set<string>(PRICEABLE_PLAN_IDS);
  * nothing.
  */
 function envPriceFor(planId: string): string | null {
+  if (planId === "standard") return process.env.STRIPE_PRICE_STANDARD_MONTHLY || null;
   if (planId === "pro") return process.env.STRIPE_PRICE_PRO_MONTHLY || null;
   if (planId === "max") return process.env.STRIPE_PRICE_MAX_MONTHLY || null;
   return null;

@@ -3,7 +3,13 @@
 // usage counters, and the runtime gates all read from this config so a plan
 // change in one place propagates everywhere.
 
-export type PlanId = "free" | "pro" | "max" | "school";
+// "free" is the DATABASE value for an account with no active subscription. It
+// is not a plan anyone can buy: Free was withdrawn when Standard launched, and
+// every self-serve plan now starts with a trial instead. The value is kept
+// rather than renamed because the database functions, the plan constraints and
+// every audience filter already read 'free' as "not paying", which is exactly
+// what it still means. Teachers see it as "No plan".
+export type PlanId = "free" | "standard" | "pro" | "max" | "school";
 
 // "gdocs" is offered in the export menu but rendered disabled ("coming soon") —
 // a real Google Docs export needs OAuth, a Drive client and consent-screen
@@ -102,25 +108,68 @@ export interface Plan {
 export const PLANS: Record<PlanId, Plan> = {
   free: {
     id: "free",
-    name: "Free Plan",
+    // NOT A PLAN. The locked state of an account with no active subscription:
+    // a new signup who has not checked out yet, a cancelled subscriber, and
+    // every account that was on the old Free tier. They can sign in and look
+    // around, but generate nothing. checkAllGates refuses every cost-bearing
+    // request for this id before any other gate runs, so the zero caps below
+    // are a second line of defence rather than the mechanism.
+    //
+    // `retired` keeps it out of SELECTABLE_PLANS, PRICEABLE_PLAN_IDS and every
+    // plan picker, while existing accounts still resolve real limits.
+    name: "No plan",
     priceMonthly: 0,
     priceYearlyPerMonth: 0,
     priceYearly: 0,
     audience: "teacher",
-    description: "1 a day, 5 a month, watermarked",
+    description: "No active subscription",
     interval: "month",
+    retired: true,
     limits: {
-      dailyGenerations: 1,
-      monthlyGenerations: 5,
+      dailyGenerations: 0,
+      monthlyGenerations: 0,
       aiImageSlideshows: 0,
       watermark: true,
-      // Same formats as every paid plan — see the note on exportFormats above.
+      // Same formats as every paid plan, see the note on exportFormats above.
+      // What they made while subscribed is still theirs to export.
       exportFormats: ["pdf", "docx", "pptx", "gdocs"],
       curriculumAlignment: "limited",
       editableOutputs: false,
       saveLibrary: false,
       prioritySupport: false,
       assistant: false,
+      multiUser: false,
+      sharedLibrary: false,
+      adminDashboard: false,
+      usageAnalytics: false,
+      schoolBranding: false,
+      centralBilling: false,
+    },
+  },
+  standard: {
+    id: "standard",
+    name: "Standard Teacher",
+    // £4.99/mo, matching the Stripe price configured for
+    // STRIPE_PRICE_STANDARD_MONTHLY (or plan_config.stripe_price_monthly).
+    // Monthly only for now: there is no yearly price yet.
+    priceMonthly: 4.99,
+    priceYearlyPerMonth: null,
+    priceYearly: null,
+    audience: "teacher",
+    description: "Every tool, 500 credits, watermarked exports",
+    interval: "month",
+    limits: {
+      dailyGenerations: null,
+      monthlyGenerations: null,
+      aiImageSlideshows: 5,
+      // Beyond the allowance, the one thing that separates it from Pro.
+      watermark: true,
+      exportFormats: ["pdf", "docx", "pptx", "gdocs"],
+      curriculumAlignment: "full",
+      editableOutputs: true,
+      saveLibrary: true,
+      prioritySupport: false,
+      assistant: true,
       multiUser: false,
       sharedLibrary: false,
       adminDashboard: false,
@@ -239,12 +288,23 @@ export const PLANS: Record<PlanId, Plan> = {
   },
 };
 
+/** Where an account with no active subscription sits. See PLANS.free. */
 export const DEFAULT_PLAN: PlanId = "free";
+
+/** Every self-serve plan starts with this many days free. The card is taken at
+ *  checkout and first charged when the trial ends. See app/lib/trial.ts. */
+export const TRIAL_DAYS = 3;
+
+/** True when the account is on a plan that can generate at all. */
+export function hasActivePlan(plan: PlanId): boolean {
+  return plan !== DEFAULT_PLAN;
+}
 
 /**
  * The plans an admin may actually put someone on, in display order.
  *
- * Currently free, pro and max. Excludes `school` (not built: no seats, no
+ * Currently standard, pro and max. Excludes the locked "free" state (retired;
+ * admin screens offer it separately as "No plan") and `school` (not built: no seats, no
  * pooled allowances, no central billing). Offering it in a dropdown would let
  * an admin move a teacher onto a plan that does not function.
  *
@@ -255,6 +315,16 @@ export const DEFAULT_PLAN: PlanId = "free";
 export const SELECTABLE_PLANS: Plan[] = Object.values(PLANS).filter(
   (p) => !p.retired && !p.hidden,
 );
+
+/**
+ * What an admin may put a teacher on: "No plan" first, then SELECTABLE_PLANS.
+ *
+ * "free" is retired from sale, so it is not in SELECTABLE_PLANS, but moving
+ * someone off a plan and inviting someone who must subscribe themselves are both
+ * still real admin actions. The change-plan and invite routes validate against
+ * this, and their dropdowns render it, so the two cannot disagree.
+ */
+export const ADMIN_ASSIGNABLE_PLANS: Plan[] = [PLANS.free, ...SELECTABLE_PLANS];
 
 /** The ids of SELECTABLE_PLANS, for the several places that need the bare
  *  strings — DB `text[]` columns such as topup_packs.available_to, and filter
@@ -289,8 +359,8 @@ export const PRICEABLE_PLAN_IDS: PlanId[] = SELECTABLE_PLANS.filter(
  * `school` is contact-sales and is never somewhere a teacher upgrades to on
  * their own.
  *
- * Returns null for Free: a teacher with no subscription has nothing to swap,
- * so they go through Checkout, not the upgrade route.
+ * A teacher with no subscription ("free") has nothing to swap, so callers send
+ * them through Checkout rather than the upgrade route.
  */
 export function nextPlanUp(plan: PlanId): PlanId | null {
   const ladder = PRICEABLE_PLAN_IDS.slice().sort(
@@ -307,9 +377,9 @@ export function nextPlanUp(plan: PlanId): PlanId | null {
  * The mirror of nextPlanUp, and derived the same way so the ladder follows
  * PLANS rather than a hardcoded "max means pro".
  *
- * Returns null for Pro, and that is not an oversight. Free has no price to swap
- * to — dropping to Free means CANCELLING the subscription and letting it lapse
- * at period end, which is a different mechanism entirely (the portal's
+ * Returns null for Standard, and that is not an oversight. There is no price
+ * below it: leaving Standard means CANCELLING the subscription and letting it
+ * lapse at period end, which is a different mechanism entirely (the portal's
  * subscription_cancel flow, then the webhook writing DEFAULT_PLAN when Stripe
  * finally closes it). Returning "free" here would invite a caller to hand it to
  * /api/stripe/downgrade, where priceIdFor() would throw. The paid ladder and
@@ -336,11 +406,13 @@ export function nextPlanDown(plan: PlanId): PlanId | null {
  * /api/modify refinements and slideshow sub-assets, which are deliberately not
  * counted as "generations". There is no path list to keep in sync.
  *
- * Free is `null` because it is gated by generation COUNT instead; a free user
- * can never spend enough to matter. Pro is £1.50 against £7.99 of revenue.
+ * "free" (no plan) is `null` because it cannot generate at all: checkAllGates
+ * refuses it before the ceiling is read. Pro is £1.50 against £7.99 of revenue.
  */
 export const AI_SPEND_CEILING_PENCE: Record<PlanId, number | null> = {
   free: null,
+  // 75p against £4.99 of revenue: 500 credits, half of Pro's.
+  standard: 75,
   pro: 150,
   // £3.75 against £14.99 of revenue. This is what makes Max's 2,500 credits
   // real: while Max was withdrawn it sat at Pro's 150p, so a Max subscriber
@@ -378,12 +450,10 @@ export const PLAN_CREDITS = 1000;
 
 /**
  * A plan's monthly allowance in credits, derived from its pence ceiling so the
- * two can never drift: Pro 150p → 1,000, Max 375p → 2,500.
+ * two can never drift: Standard 75p → 500, Pro 150p → 1,000, Max 375p → 2,500.
  *
- * `null` for plans with no ceiling (Free, which is gated by generation count
- * instead, and School, which is not modelled). Callers decide how to present
- * that — the landing page shows Free's real "5 resources a month" rather than
- * a credit figure it does not have.
+ * `null` for plans with no ceiling ("free", which cannot generate at all, and
+ * School, which is not modelled).
  */
 export function planCredits(plan: PlanId): number | null {
   const pence = AI_SPEND_CEILING_PENCE[plan];
@@ -410,9 +480,7 @@ export function creditsRemaining(spendPence: number, allowancePence: number): nu
  * cap to enforce but the admin console still needs a denominator for the
  * resource meter. `null` means genuinely uncapped with nothing to meter against.
  *
- * Free is 5/month (alongside 1/day). The earlier "10 resources" figure from the
- * admin console spec is gone: launch pricing settled on 1 a day, 5 a month, and
- * plan_config now stores the same.
+ * "free" (no plan) is 0: it cannot generate anything.
  */
 export function displayResourceAllowance(plan: PlanId): number | null {
   return PLANS[plan].limits.monthlyGenerations;
@@ -420,7 +488,9 @@ export function displayResourceAllowance(plan: PlanId): number | null {
 
 /** Coerce an arbitrary string (e.g. a DB value) into a valid PlanId. */
 export function asPlanId(value: string | null | undefined): PlanId {
-  return value === "pro" || value === "max" || value === "school" ? value : DEFAULT_PLAN;
+  return value === "standard" || value === "pro" || value === "max" || value === "school"
+    ? value
+    : DEFAULT_PLAN;
 }
 
 /** Read the limits object for a plan. */

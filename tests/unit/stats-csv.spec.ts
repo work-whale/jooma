@@ -9,7 +9,8 @@ function row(over: Partial<MonthRow> = {}): MonthRow {
     month_start: "2026-08-01",
     label: "Aug 2026",
     signups: 10,
-    free: 6,
+    free: 4,
+    standard: 2,
     pro: 3,
     max: 1,
     paid: 4,
@@ -50,7 +51,15 @@ test.describe("toCsv", () => {
     const totals = lines[lines.length - 1].split(",");
     expect(totals[1]).toBe("150"); // visitors
     expect(totals[2]).toBe("15"); // signups
-    expect(totals[6]).toBe("5"); // paid
+    expect(totals[7]).toBe("5"); // paid
+  });
+
+  test("has a Standard column beside No plan, Pro and Max", () => {
+    const [header, first, totals] = toCsv([row()]).split("\r\n");
+    const cols = header.replace("﻿", "").split(",");
+    expect(cols.slice(3, 7)).toEqual(["No plan", "Standard", "Pro", "Max"]);
+    expect(first.split(",")[4]).toBe("2");
+    expect(totals.split(",")[4]).toBe("2");
   });
 
   test("a month with no visitor data is blank, not zero", () => {

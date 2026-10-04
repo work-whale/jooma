@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "./usePermissions";
-import { PLANS, SELECTABLE_PLANS, asPlanId } from "@/app/lib/plans";
+import { PLANS, ADMIN_ASSIGNABLE_PLANS, asPlanId } from "@/app/lib/plans";
 import { downloadCsv, toCsv } from "@/app/lib/csv";
 import { FX_USD_TO_GBP, gbpFromUsd, nf } from "../format";
 import { AiChip, Meter, PLAN_TONE, Tag } from "../ui";
@@ -262,11 +262,11 @@ export default function AdminTeachersTable({ rows }: { rows: TeacherRow[] }) {
             style={selectStyle}
           >
             <option value="">All plans</option>
-            {/* Only the plans we actually sell: currently Free, Pro and Max.
-                School isn't built, so listing it here reads as bloat. A
+            {/* No plan, then the plans we actually sell: Standard, Pro and
+                Max. School isn't built, so listing it here reads as bloat. A
                 teacher somehow holding it still renders their badge correctly
                 below. */}
-            {SELECTABLE_PLANS.map((p) => (
+            {ADMIN_ASSIGNABLE_PLANS.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
