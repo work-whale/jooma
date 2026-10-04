@@ -132,6 +132,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
  */
 const PLAN_STYLE: Record<string, { bg: string; color: string }> = {
   free: { bg: "#F1ECFC", color: "#6D6683" },
+  standard: { bg: "#FBF3DF", color: "#8A5A12" },
   pro: { bg: "#E1F5EE", color: "#0F6E56" },
   max: { bg: "#F1ECFC", color: "#5B2ED6" },
   school: { bg: "#F1ECFC", color: "#5B2ED6" },

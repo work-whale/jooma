@@ -36,7 +36,7 @@ test.describe("Max plan", () => {
     await deleteTeacher(teacher);
   });
 
-  test("a free teacher is offered both paid plans, with derived credits", async ({ page }) => {
+  test("a teacher with no plan is offered every paid plan, with derived credits", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/profile?section=subscription");
 
@@ -47,24 +47,28 @@ test.describe("Max plan", () => {
     // The cards carry the SHORT name ("Pro"), not PLANS[].name ("Pro Teacher").
     // The long form is right for an admin console and reads as a mouthful on a
     // pricing card, which is what planCardName exists to separate.
+    await expect(page.getByText("Standard", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Pro", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Max", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("£4.99").first()).toBeVisible();
     await expect(page.getByText("£7.99").first()).toBeVisible();
     await expect(page.getByText("£14.99").first()).toBeVisible();
 
-    // Free is offered too, and marked as the plan they are on — moving down is
-    // a plan change like any other and needs somewhere to live.
-    await expect(page.getByText("£0", { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /your plan/i }).first()).toBeVisible();
+    // There is no Free card any more: "No plan" is a state, not something to
+    // choose, so nothing is marked as theirs.
+    await expect(page.getByText("£0", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /your plan/i })).toHaveCount(0);
 
     // The credit figures are derived from AI_SPEND_CEILING_PENCE, not typed.
     // These are the numbers the ceiling actually grants.
+    await expect(page.getByText("500 credits a month").first()).toBeVisible();
     await expect(page.getByText("1,000 credits a month").first()).toBeVisible();
     await expect(page.getByText("2,500 credits a month").first()).toBeVisible();
 
-    // Both are buyable from here, rather than linking out to /pricing.
-    await expect(page.getByRole("button", { name: "Go Pro" })).toBeEnabled();
-    await expect(page.getByRole("button", { name: "Choose Max" })).toBeEnabled();
+    // All three are buyable from here, each starting the free trial because
+    // this account has never subscribed.
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByText("3 days free, then £4.99 a month").first()).toBeVisible();
   });
 
   test("a Pro subscriber is offered Max, and told what the switch costs", async ({ page }) => {
@@ -107,7 +111,7 @@ test.describe("Max plan", () => {
     // A subscriber sees every plan card, but NOT the buy-from-scratch buttons:
     // those run Checkout, which would start a second subscription alongside the
     // one they have. The swap buttons take their place.
-    await expect(page.getByRole("button", { name: "Go Pro" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Choose Max" })).toHaveCount(0);
   });
 
@@ -164,23 +168,24 @@ test.describe("Max plan", () => {
     expect(called).toBe(false);
   });
 
-  test("a Pro subscriber can drop to Free, but has no paid plan below", async ({ page }) => {
+  test("a Pro subscriber can step down to Standard, or cancel", async ({ page }) => {
     await setPlan(teacher, "pro", "paying");
 
     await signIn(page, teacher);
     await page.goto("/profile?section=subscription");
 
-    // Pro's only step down is Free, so there is no "switch to <paid plan>"
-    // offer — nextPlanDown("pro") is null and the Free card carries the exit.
-    const toFree = page.getByRole("button", { name: /^switch to free$/i }).first();
-    await expect(toFree).toBeVisible();
-
-    await toFree.click();
-
-    // Dropping to Free costs far more than dropping a tier, and the panel says
-    // so before they reach Stripe's own confirmation screen.
+    // Standard is the paid plan below Pro now, and is offered as a swap.
+    const toStandard = page.getByRole("button", { name: /^switch to standard$/i }).first();
+    await expect(toStandard).toBeVisible();
+    await toStandard.click();
     await expect(page.getByText(/what you.d miss out on/i).first()).toBeVisible();
     await expect(page.getByText(/watermark/i).first()).toBeVisible();
+
+    // There is no Free card to drop to. Leaving is the Cancel button, which
+    // says what it costs before handing over to Stripe.
+    await expect(page.getByRole("button", { name: /^switch to free$/i })).toHaveCount(0);
+    await page.getByRole("button", { name: /^cancel subscription$/i }).first().click();
+    await expect(page.getByText(/won.t be able to create new resources/i).first()).toBeVisible();
   });
 
   test("a subscription that is ending offers renewal, not a plan change", async ({ page }) => {
@@ -193,7 +198,7 @@ test.describe("Max plan", () => {
     // for something about to disappear.
     await expect(page.getByText(/set to end/i).first()).toBeVisible();
     await expect(page.getByRole("button", { name: /^switch to pro$/i })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /^switch to free$/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^cancel subscription$/i })).toHaveCount(0);
   });
 
   test("the sidebar offers a top up only when credits are low", async ({ page }) => {

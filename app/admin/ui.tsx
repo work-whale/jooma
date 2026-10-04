@@ -235,6 +235,7 @@ export function Tag({
 /** Plan → tone. Single definition; was duplicated in two files. */
 export const PLAN_TONE: Record<string, Tone> = {
   free: "plain",
+  standard: "warn",
   pro: "ok",
   max: "ai",
   school: "brand",

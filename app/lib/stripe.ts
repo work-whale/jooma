@@ -18,6 +18,7 @@ import "server-only";
 import Stripe from "stripe";
 import type { PlanId } from "./plans";
 import { supabaseAdmin } from "./supabase-admin";
+import { isTrialCheckout } from "./trial";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   // Fail loud at import time in any server context that needs Stripe, rather
@@ -29,13 +30,13 @@ if (!process.env.STRIPE_SECRET_KEY) {
 // TypeScript types and the wire behaviour always match.
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-/** The plans that are self-serve via Stripe Checkout. `free` needs no payment;
- *  `school` is custom/contact-sales (per-seat, invoiced, not a self-serve
- *  Checkout price). */
-export type PaidPlanId = Extract<PlanId, "pro" | "max">;
+/** The plans that are self-serve via Stripe Checkout. `free` is the locked "no
+ *  plan" state and has nothing to buy; `school` is custom/contact-sales
+ *  (per-seat, invoiced, not a self-serve Checkout price). */
+export type PaidPlanId = Extract<PlanId, "standard" | "pro" | "max">;
 
 /** The plans checkout will sell. Anything else is rejected before Stripe. */
-export const PAID_PLAN_IDS: PaidPlanId[] = ["pro", "max"];
+export const PAID_PLAN_IDS: PaidPlanId[] = ["standard", "pro", "max"];
 
 export function isPaidPlanId(value: unknown): value is PaidPlanId {
   return typeof value === "string" && (PAID_PLAN_IDS as string[]).includes(value);
@@ -51,6 +52,7 @@ export function isPaidPlanId(value: unknown): value is PaidPlanId {
  */
 export async function priceIdFor(plan: PaidPlanId): Promise<string> {
   const envPriceId = {
+    standard: process.env.STRIPE_PRICE_STANDARD_MONTHLY,
     pro: process.env.STRIPE_PRICE_PRO_MONTHLY,
     max: process.env.STRIPE_PRICE_MAX_MONTHLY,
   }[plan];
@@ -160,6 +162,7 @@ export async function planForPriceId(
   if (!priceId) return null;
 
   // Cheap path: the prices currently configured in the environment.
+  if (priceId === process.env.STRIPE_PRICE_STANDARD_MONTHLY) return "standard";
   if (priceId === process.env.STRIPE_PRICE_PRO_MONTHLY) return "pro";
   if (priceId === process.env.STRIPE_PRICE_MAX_MONTHLY) return "max";
 
@@ -189,6 +192,34 @@ export async function planForPriceId(
   if (current?.plan_id) return current.plan_id as PlanId;
 
   return null;
+}
+
+/**
+ * Whether the Checkout session a teacher just returned from started a free
+ * trial for them. See isTrialCheckout for the rules.
+ *
+ * Asked of Stripe directly rather than read off the profile: the webhook that
+ * writes `trialing` there races this redirect and usually loses. Any failure
+ * (an edited id, a Stripe hiccup) reads as "no", which only costs the browser
+ * copy of the event; the webhook still sends the server copy.
+ */
+export async function trialStartedBy(
+  sessionId: string | null | undefined,
+  userId: string,
+): Promise<boolean> {
+  if (!sessionId || !sessionId.startsWith("cs_")) return false;
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["subscription"],
+    });
+    return isTrialCheckout(
+      session as unknown as Parameters<typeof isTrialCheckout>[0],
+      userId,
+    );
+  } catch (err) {
+    console.warn("[stripe] trialStartedBy lookup failed", sessionId, err);
+    return false;
+  }
 }
 
 /** A plan change that Stripe is holding until the period ends. */

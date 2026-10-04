@@ -4,6 +4,8 @@ import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { createClient } from "@/app/lib/auth/client";
+import { asPlanId } from "@/app/lib/plans";
+import { planCardName } from "@/app/lib/plan-copy";
 import { fmtDate, nf } from "../format";
 import {
   Btn,
@@ -455,14 +457,12 @@ export default function AmbassadorsView({
                                                 ? "brand"
                                                 : r.current_plan === "pro"
                                                   ? "ok"
-                                                  : "plain"
+                                                  : r.current_plan === "standard"
+                                                    ? "warn"
+                                                    : "plain"
                                             }
                                           >
-                                            {r.current_plan === "max"
-                                              ? "Max"
-                                              : r.current_plan === "pro"
-                                                ? "Pro"
-                                                : "Free"}
+                                            {planCardName(asPlanId(r.current_plan))}
                                           </Tag>
                                         </Td>
                                         <Td align="right">
@@ -604,10 +604,16 @@ function ReferralFilters({
         </span>
         <Pill label="All" count={rows.length} active={plan === ""} onClick={() => onPlan("")} />
         <Pill
-          label="Free"
+          label="No plan"
           count={count((r) => r.current_plan === "free")}
           active={plan === "free"}
           onClick={() => onPlan("free")}
+        />
+        <Pill
+          label="Standard"
+          count={count((r) => r.current_plan === "standard")}
+          active={plan === "standard"}
+          onClick={() => onPlan("standard")}
         />
         <Pill
           label="Pro"

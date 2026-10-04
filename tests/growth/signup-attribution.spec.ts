@@ -177,9 +177,9 @@ test.describe("Signup attribution", () => {
   test("an invited teacher on a paid plan is still attributed", async ({ page }) => {
     // The regression guard for the early return in complete-profile.
     //
-    // shouldSendStartTrial is false for an invited paid signup, and that check
-    // used to sit ABOVE the activation fetch, so the route was never called for
-    // these teachers at all. Their _fbp, _fbc and signup source were all dropped
+    // An invited paid signup never reported a trial, and that check once sat
+    // ABOVE the activation fetch, so the route was never called for these
+    // teachers at all. Their _fbp, _fbc and signup source were all dropped
     // silently. If that early return ever comes back, this is null.
     //
     // The outcome is forced through the invited_plan metadata the insert guard

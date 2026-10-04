@@ -12,20 +12,24 @@
 // involved, so a card can never quote an allowance the guard will not honour.
 // See the note above PENCE_PER_CREDIT in plans.ts.
 
-import { PLANS, planCredits, type PlanId, type PlanLimits } from "./plans";
+import { PLANS, TRIAL_DAYS, planCredits, type PlanId, type PlanLimits } from "./plans";
 
-/** The short name on a card. PLANS holds "Pro Teacher" / "Free Plan", which is
- *  right for an admin console and too long for a pricing card. */
+/** The short name on a card. PLANS holds "Pro Teacher" / "Standard Teacher",
+ *  which is right for an admin console and too long for a pricing card. "free"
+ *  is the locked state of an account with no subscription, never a card for
+ *  sale, so it reads as what it is. */
 const CARD_NAME: Record<PlanId, string> = {
-  free: "Free",
+  free: "No plan",
+  standard: "Standard",
   pro: "Pro",
   max: "Max",
   school: "Schools",
 };
 
-/** What sits under the price. Free is not billed, so it is not "a month". */
+/** What sits under the price. */
 const CARD_PER: Record<PlanId, string> = {
-  free: "Forever",
+  free: "",
+  standard: "a month",
   pro: "a month",
   max: "a month",
   school: "Priced by size",
@@ -34,7 +38,8 @@ const CARD_PER: Record<PlanId, string> = {
 /** Button label. The card heading already names the plan, so "Choose Pro
  *  Teacher" says it twice. */
 const CARD_CTA: Record<PlanId, string> = {
-  free: "Start free",
+  free: "",
+  standard: "Choose Standard",
   pro: "Go Pro",
   max: "Choose Max",
   school: "Talk to us",
@@ -49,7 +54,8 @@ const CARD_CTA: Record<PlanId, string> = {
  * watermark" is a sentence, and only the second one belongs on a card.
  */
 const HIGHLIGHTS: Record<PlanId, string[]> = {
-  free: ["Every tool, nothing locked", "Watermarked exports", "No card needed"],
+  free: [],
+  standard: ["All 35 tools", "Full curriculum alignment", "Watermarked exports", "Top up any time"],
   pro: [
     "Full curriculum alignment",
     "Clean exports, no watermark",
@@ -76,6 +82,21 @@ export function planCardCta(plan: PlanId): string {
   return CARD_CTA[plan];
 }
 
+/** The button label for someone who would get the free trial by choosing this
+ *  plan. The plan name is on the card already. */
+export const TRIAL_CTA = "Start free trial";
+
+/**
+ * The line that explains the trial on a plan's card, e.g. "3 days free, then
+ * £4.99 a month". Derived from PLANS and TRIAL_DAYS so it can never quote a
+ * price Checkout will not charge. Null for a plan with no self-serve price.
+ */
+export function planTrialLine(plan: PlanId): string | null {
+  const price = PLANS[plan].priceMonthly;
+  if (!price) return null;
+  return `${TRIAL_DAYS} days free, then £${price.toFixed(2)} a month`;
+}
+
 /**
  * The price as displayed, including the currency.
  *
@@ -86,33 +107,19 @@ export function planCardCta(plan: PlanId): string {
 export function planCardPrice(plan: PlanId): string {
   const price = PLANS[plan].priceMonthly;
   if (price === null) return "Talk to us";
-  // Free is "£0", not "£0.00". Pence on a price of nothing reads like a
-  // charge that happens to round down, which is the opposite of the point.
   if (price === 0) return "£0";
   return `£${price.toFixed(2)}`;
 }
 
 /**
  * The tick list for a plan's card: its allowance first, then its highlights.
- *
- * Free quotes its real generation caps rather than a credit figure, because it
- * genuinely has none — planCredits("free") is null by design, as Free is gated
- * by COUNT rather than by spend. Showing "0 credits" would be both wrong and
- * discouraging.
  */
 export function planFeatures(plan: PlanId): string[] {
   const lines: string[] = [];
 
-  if (plan === "free") {
-    const { monthlyGenerations, dailyGenerations } = PLANS.free.limits;
-    if (monthlyGenerations !== null && dailyGenerations !== null) {
-      lines.push(`${monthlyGenerations} resources a month, ${dailyGenerations} a day`);
-    }
-  } else {
-    const credits = planCredits(plan);
-    if (credits !== null) {
-      lines.push(`${credits.toLocaleString("en-GB")} credits a month`);
-    }
+  const credits = planCredits(plan);
+  if (credits !== null) {
+    lines.push(`${credits.toLocaleString("en-GB")} credits a month`);
   }
 
   return [...lines, ...HIGHLIGHTS[plan]];
@@ -165,8 +172,7 @@ const LOSS_RULES: LossRule[] = [
         from.monthlyGenerations,
         to.monthlyGenerations,
         (f, t) => `${t} resources a month instead of ${f}`,
-        // The headline loss of dropping to Free, and worth stating in full.
-        `A limit of ${PLANS.free.limits.monthlyGenerations} resources a month`,
+        "Resources a month become capped",
       ),
   },
   {
@@ -176,7 +182,7 @@ const LOSS_RULES: LossRule[] = [
         from.dailyGenerations,
         to.dailyGenerations,
         (f, t) => `${t} resources a day instead of ${f}`,
-        `A limit of ${PLANS.free.limits.dailyGenerations} a day`,
+        "Resources a day become capped",
       ),
   },
   {
@@ -229,6 +235,13 @@ const LOSS_RULES: LossRule[] = [
 export function planLosses(from: PlanId, to: PlanId): string[] {
   if (from === to) return [];
 
+  // Leaving every plan. Without a subscription nothing can be generated at all,
+  // which makes every finer loss below beside the point, and listing "no
+  // assistant" under "you can't create anything" would read as padding.
+  if (to === "free") {
+    return ["You won't be able to create new resources"];
+  }
+
   const lines: string[] = [];
 
   // Credits first: it is the number they actually feel, every month.
@@ -239,10 +252,6 @@ export function planLosses(from: PlanId, to: PlanId): string[] {
       `${(fromCredits - toCredits).toLocaleString("en-GB")} fewer credits a month, ` +
         `${fromCredits.toLocaleString("en-GB")} down to ${toCredits.toLocaleString("en-GB")}`,
     );
-  } else if (fromCredits !== null && toCredits === null && to === "free") {
-    // Free has no credit allowance at all; it is capped by generation count,
-    // which the monthlyGenerations rule below states in its own words.
-    lines.push(`No monthly credits, you have ${fromCredits.toLocaleString("en-GB")} now`);
   }
 
   const fromLimits = PLANS[from].limits;

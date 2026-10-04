@@ -50,7 +50,7 @@ export type AudienceKind = (typeof AUDIENCES)[number];
 
 export const AUDIENCE_LABEL: Record<AudienceKind, string> = {
   all_teachers: "All teachers",
-  free: "Free plan",
+  free: "No plan",
   paying: "Paying teachers",
   incomplete_signups: "Incomplete signups",
   emails: "Chosen addresses",
@@ -58,7 +58,7 @@ export const AUDIENCE_LABEL: Record<AudienceKind, string> = {
 
 export const AUDIENCE_HINT: Record<AudienceKind, string> = {
   all_teachers: "Everyone who finished signing up.",
-  free: "Finished signing up, on the free plan.",
+  free: "Finished signing up, with no active subscription.",
   paying: "On any paid plan.",
   incomplete_signups: "Created an account but never finished their profile.",
   emails: "Specific people with a Jooma account, up to 50.",

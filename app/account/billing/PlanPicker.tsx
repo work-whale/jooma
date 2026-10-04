@@ -9,10 +9,11 @@ import {
   planCardPrice,
   planCardPer,
   planFeatures,
+  planTrialLine,
+  TRIAL_CTA,
 } from "@/app/lib/plan-copy";
 import { PLANS, type PlanId } from "@/app/lib/plans";
 import DowngradeButton from "./DowngradeButton";
-import SwitchToFreeButton from "./SwitchToFreeButton";
 import UpgradeButton from "./UpgradeButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
 
@@ -39,14 +40,17 @@ import CancelDowngradeButton from "./CancelDowngradeButton";
 const FEATURED: PlanId = "pro";
 
 export default function PlanPicker({
-  /** Plans to show, cheapest first, Free included. */
+  /** Plans to show, cheapest first. */
   plans,
-  /** The plan they are on. */
+  /** The plan they are on. "free" means none. */
   current,
-  /** Whether they have a Stripe subscription to change, as opposed to needing
-   *  a fresh checkout. A free teacher who has only bought a top-up has a Stripe
-   *  customer but no subscription, and must go through checkout. */
+  /** Whether they have a live Stripe subscription to change, as opposed to
+   *  needing a fresh checkout. A lapsed subscriber has a customer and an old
+   *  subscription id but nothing live, and must go through checkout. */
   hasSubscription = false,
+  /** Whether a checkout would start with the free trial (first subscription
+   *  only, see lib/trial.ts). Changes the label and adds the trial line. */
+  trialEligible = false,
   /** A scheduled downgrade, read back from Stripe by the server. */
   pendingPlan = null,
   /** When that scheduled change takes effect, already formatted. */
@@ -59,6 +63,7 @@ export default function PlanPicker({
   plans: PlanId[];
   current: PlanId;
   hasSubscription?: boolean;
+  trialEligible?: boolean;
   pendingPlan?: PlanId | null;
   pendingAt?: string | null;
   locked?: boolean;
@@ -106,7 +111,7 @@ export default function PlanPicker({
    * wide, which wraps that to two or three words a line. The card starts the
    * move; the panel underneath explains it with room to be read.
    */
-  function moveFor(id: PlanId): "buy" | "up" | "down" | "free" | null {
+  function moveFor(id: PlanId): "buy" | "up" | "down" | null {
     if (id === current) return null;
     // A change is already scheduled. Offering a second one would stack
     // conflicting schedules, so every other card goes quiet until it is either
@@ -115,10 +120,6 @@ export default function PlanPicker({
     // Cancelling or ended: renewing comes first. Matches the gate the Overview
     // card applies to its own buttons.
     if (locked) return null;
-
-    // Free is not a price to buy, it is where you land when a subscription
-    // lapses. Only reachable from a paid plan, and only by cancelling.
-    if (id === "free") return hasSubscription ? "free" : null;
 
     // No subscription to change — this is a purchase, not a swap.
     if (!hasSubscription) return "buy";
@@ -137,7 +138,7 @@ export default function PlanPicker({
     if (move === "buy") {
       return {
         kind: "button",
-        label: pending === id ? "Starting checkout…" : planCardCta(id),
+        label: pending === id ? "Starting checkout…" : trialEligible ? TRIAL_CTA : planCardCta(id),
         onClick: () => subscribe(id),
         disabled: pending !== null,
       };
@@ -147,8 +148,7 @@ export default function PlanPicker({
     // time closes it again, so the button is a toggle rather than a dead end.
     return {
       kind: "button",
-      label:
-        move === "free" ? "Switch to Free" : `Switch to ${planCardName(id)}`,
+      label: `Switch to ${planCardName(id)}`,
       onClick: () => setChanging(changing === id ? null : id),
       disabled: false,
     };
@@ -175,6 +175,8 @@ export default function PlanPicker({
               </>
             ) : isCurrent && pendingPlan && pendingAt ? (
               <>Yours until {pendingAt}.</>
+            ) : trialEligible && moveFor(id) === "buy" ? (
+              planTrialLine(id)
             ) : null;
 
           return (
@@ -199,12 +201,7 @@ export default function PlanPicker({
           buttons, and a card column is far too narrow to read that in. */}
       {changing && (
         <div className="mt-4">
-          {moveFor(changing) === "free" ? (
-            <SwitchToFreeButton
-              from={current}
-              onClose={() => setChanging(null)}
-            />
-          ) : moveFor(changing) === "up" ? (
+          {moveFor(changing) === "up" ? (
             <UpgradeButton to={changing} onClose={() => setChanging(null)} />
           ) : (
             <DowngradeButton

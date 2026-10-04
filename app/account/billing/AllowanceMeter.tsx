@@ -1,5 +1,6 @@
 import {
   AI_SPEND_CEILING_PENCE,
+  hasActivePlan,
   PLANS,
   creditsRemaining,
   toCredits,
@@ -7,11 +8,9 @@ import {
 } from "@/app/lib/plans";
 import TopUpButton from "./TopUpButton";
 
-// Where a user stands this month. Two different shapes, because the two plans
-// are metered on different things:
-//
-//   Free — a generation COUNT (1 a day, 5 a month, global across all tools).
-//   Paid — measured AI SPEND against a monthly ceiling, plus any credit bought.
+// Where a user stands this month. Paid plans are metered on measured AI SPEND
+// against a monthly ceiling, plus any credit bought, shown as credits. An
+// account with no plan has nothing to meter and renders nothing.
 //
 // Deliberately not shown in the app header: pricing_rules carries a
 // `hide_counter` rule ("show it only above 80% used — a visible counter makes
@@ -116,12 +115,18 @@ export default function AllowanceMeter({
     );
   }
 
-  // ── Free: generation counts ──
+  // No plan: nothing to meter. The plan card above already says to choose one,
+  // and "0 of 0 this month" would read as an allowance that ran out.
+  if (!hasActivePlan(plan)) return null;
+
+  // ── Count-capped plans: generation counts ──
+  // No plan on sale is capped by count today; kept so a count-capped plan
+  // (or School, once modelled) still has a meter.
   const { dailyGenerations, monthlyGenerations } = PLANS[plan].limits;
   if (dailyGenerations === null && monthlyGenerations === null) return null;
 
   const monthFraction =
-    monthlyGenerations !== null ? usedMonth / monthlyGenerations : 0;
+    monthlyGenerations ? usedMonth / monthlyGenerations : 0;
   const outOfMonth = monthlyGenerations !== null && usedMonth >= monthlyGenerations;
   const outOfDay = dailyGenerations !== null && usedToday >= dailyGenerations;
 
@@ -155,7 +160,7 @@ export default function AllowanceMeter({
 
       <p className="text-sm" style={{ color: "var(--j-faint)" }}>
         {outOfMonth
-          ? `Your free generations reset on ${resetsOn()}.`
+          ? `Your generations reset on ${resetsOn()}.`
           : `Resets on ${resetsOn()}.`}
       </p>
     </div>

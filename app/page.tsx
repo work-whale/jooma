@@ -7,6 +7,8 @@ import {
   planCardName,
   planCardPer,
   planCardPrice,
+  planTrialLine,
+  TRIAL_CTA,
   planFeatures,
 } from "@/app/lib/plan-copy";
 
@@ -43,10 +45,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Free is gated by generation count, not credits, so it is described by the
- * count. Pro and Max quote credits, derived from their spend ceilings rather
+ * Standard, Pro and Max quote credits, derived from their spend ceilings rather
  * than typed here, so the page cannot advertise an allowance the guard does
- * not grant.
+ * not grant. Each starts with the free trial, stated under the button.
  *
  * Schools has no price: seats, pooled credits and central billing are not
  * built, so quoting a per teacher figure would be selling something that
@@ -57,7 +58,7 @@ function pricingPlans(): PricingPlan[] {
   // lib/plan-copy, which derives every figure from PLANS and the spend ceiling.
   // They used to be written out here as well as in two other places, and
   // /welcome still had "£7.99" typed as a literal string.
-  const card = (id: "free" | "pro" | "max" | "school") => ({
+  const card = (id: "standard" | "pro" | "max" | "school") => ({
     id,
     name: planCardName(id),
     price: planCardPrice(id),
@@ -65,11 +66,17 @@ function pricingPlans(): PricingPlan[] {
     features: planFeatures(id),
     cta: planCardCta(id),
   });
+  const paid = (id: "standard" | "pro" | "max") => ({
+    ...card(id),
+    cta: TRIAL_CTA,
+    trial: planTrialLine(id),
+    checkout: id,
+  });
 
   return [
-    { ...card("free"), href: "/signup" },
-    { ...card("pro"), featured: true, checkout: "pro" as const },
-    { ...card("max"), checkout: "max" as const },
+    paid("standard"),
+    { ...paid("pro"), featured: true },
+    paid("max"),
     { ...card("school"), href: "/contact?type=school" },
   ];
 }
@@ -192,7 +199,7 @@ export default async function LandingPage({
             "Themes from clean and plain to full illustration",
             "Present from Jooma, or export to PowerPoint and Slides",
           ]}
-          cta={{ href: "/signup", label: "Build a deck free" }}
+          cta={{ href: "/signup", label: "Build a deck" }}
         >
           <SlidePreview />
         </Showcase>
@@ -209,7 +216,7 @@ export default async function LandingPage({
             "Marks on every question, and an answer key with it",
             "Print ready, or send to Google Docs",
           ]}
-          cta={{ href: "/signup", label: "Make a comprehension free" }}
+          cta={{ href: "/signup", label: "Make a comprehension" }}
         >
           <ReadingPreview />
         </Showcase>
@@ -226,7 +233,7 @@ export default async function LandingPage({
             "It opens the right tool with the details already filled in",
             "Every answer can be saved to your library or shared",
           ]}
-          cta={{ href: "/signup", label: "Try Jo free" }}
+          cta={{ href: "/signup", label: "Try Jo" }}
         >
           <JoChat />
         </Showcase>

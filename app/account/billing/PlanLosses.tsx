@@ -4,8 +4,8 @@ import { PLANS, type PlanId } from "@/app/lib/plans";
 /*
  * "What you'd miss out on" — the honest half of a downgrade confirmation.
  *
- * Shown before any plan move DOWN, whether that is Max to Pro or a paid plan to
- * Free. One component for both, so there is a single retention surface rather
+ * Shown before any plan move DOWN, whether that is Max to Pro or cancelling
+ * altogether. One component for both, so there is a single retention surface rather
  * than two that drift.
  *
  * The lines are DERIVED from PLANS[].limits by planLosses(), never written out

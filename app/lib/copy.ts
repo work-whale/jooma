@@ -66,8 +66,8 @@ export const DEFAULTS: CopyMap = {
   "home.hero.h1": "Type a topic. Walk out with the lesson.",
   "home.hero.sub":
     "Jooma turns one line into the slides, the worksheet and the comprehension, matched to your year group. Try it on this page. No sign up, no card.",
-  "home.hero.cta": "Start free",
-  "home.hero.reassure": "Five free resources a month. No card needed.",
+  "home.hero.cta": "Start free trial",
+  "home.hero.reassure": "Three days free on every plan. Cancel any time before it ends.",
   "dash.empty.title": "Nothing here yet",
   "dash.empty.body": "Pick a tool and make your first resource. It takes about a minute.",
 };

@@ -5,30 +5,31 @@ import { type PlanId, PLANS } from "@/app/lib/plans";
 import PlanLosses from "./PlanLosses";
 
 /*
- * "Switch to Free" — the same thing as cancelling, framed as what it actually
- * is: a move to the Free plan.
+ * "Cancel subscription", with what it costs shown before Stripe's own screen.
+ *
+ * This used to be "Switch to Free", on a Free card in the plan picker. There is
+ * no free plan any more, so leaving is what it always really was: cancelling.
  *
  * WHY THIS ISN'T A NEW ROUTE
- * It hands off to the SAME Stripe portal cancel flow the red "Cancel
- * subscription" button has always used. Stripe schedules rather than cancels, so
- * the teacher keeps their paid plan to the end of the period and the webhook
- * writes Free when the subscription finally closes. ResumeButton already undoes
- * it. Every piece of that works; the only thing missing was somewhere to press
- * it that did not read as quitting.
+ * It hands off to the Stripe portal's subscription_cancel flow. Stripe schedules
+ * rather than cancels, so the teacher keeps their plan to the end of the period
+ * (or the end of the free trial) and the webhook writes the locked "no plan"
+ * state when the subscription finally closes. ResumeButton already undoes it.
  *
- * What this adds on top is the losses panel — dropping to Free costs a great
- * deal more than dropping a tier, and that is worth showing before they arrive
- * at Stripe's own confirmation screen rather than after.
+ * What this adds on top is the losses panel, so the consequence is in front of
+ * them before they arrive at Stripe's confirmation rather than after.
  */
 
-export default function SwitchToFreeButton({
+export default function CancelSubscriptionButton({
   from,
-  onClose,
+  trialing = false,
 }: {
   from: PlanId;
-  /** Dismiss the panel; the card that opened it owns whether it is shown. */
-  onClose: () => void;
+  /** Cancelling during the free trial means never being charged at all, which
+   *  is worth saying in those words. */
+  trialing?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,24 +57,47 @@ export default function SwitchToFreeButton({
     }
   }
 
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-block py-2.5 px-5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 cursor-pointer"
+        style={{
+          backgroundColor: "transparent",
+          color: "var(--j-body)",
+          border: "1px solid var(--j-line-2)",
+        }}
+      >
+        Cancel subscription
+      </button>
+    );
+  }
+
   return (
     <div
       className="rounded-xl p-4 border w-full"
       style={{ backgroundColor: "var(--j-card)", borderColor: "var(--j-line)" }}
     >
       <p className="text-sm font-semibold mb-3" style={{ color: "var(--j-ink)" }}>
-        Switch to Free?
+        Cancel your subscription?
       </p>
 
       <PlanLosses from={from} to="free" />
 
       <ul className="text-sm mb-4 space-y-1" style={{ color: "var(--j-body)" }}>
-        <li>You keep {current.name} until your next renewal date.</li>
-        <li>You won&apos;t be charged again.</li>
-        <li>
-          Everything you have already made stays where it is, and you can
-          resubscribe any time.
-        </li>
+        {trialing ? (
+          <>
+            <li>You keep {current.name} until your free trial ends.</li>
+            <li>You won&apos;t be charged anything.</li>
+          </>
+        ) : (
+          <>
+            <li>You keep {current.name} until your next renewal date.</li>
+            <li>You won&apos;t be charged again.</li>
+          </>
+        )}
+        <li>You can subscribe again any time.</li>
       </ul>
 
       <div className="flex flex-wrap gap-2">
@@ -81,13 +105,13 @@ export default function SwitchToFreeButton({
           type="button"
           onClick={() => {
             setError(null);
-            onClose();
+            setOpen(false);
           }}
           disabled={loading}
           className="inline-block py-2.5 px-5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer"
           style={{ backgroundColor: "var(--j-purple)", color: "#fff" }}
         >
-          Stay on {current.name}
+          Keep {current.name}
         </button>
         <button
           type="button"
@@ -100,7 +124,7 @@ export default function SwitchToFreeButton({
             border: "1px solid var(--j-line-2)",
           }}
         >
-          {loading ? "Opening…" : "Continue to Free"}
+          {loading ? "Opening…" : "Continue to cancel"}
         </button>
       </div>
 

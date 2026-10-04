@@ -3,15 +3,18 @@ import type Stripe from "stripe";
 import { stripe, planForPriceId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { DEFAULT_PLAN, TOPUP_PENCE } from "@/app/lib/plans";
-import { isReportablePurchase, sendPurchase } from "@/app/lib/meta-capi";
+import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
+import { isTrialInvoice, startsTrial } from "@/app/lib/trial";
 
 // Stripe → app sync. This is the ONLY place a user's plan is upgraded/downgraded
 // from payment state. It runs with the service-role key (no user session) and
 // must verify the signature on the raw body, so the request is never trusted
 // blindly. This route is exempted from auth in proxy.ts.
 
-// Statuses that should grant the paid plan. Anything else (canceled, unpaid,
-// incomplete_expired, past_due…) falls back to Free.
+// Statuses that should grant the paid plan. `trialing` is the free trial every
+// plan starts with: the card is on file and the teacher has the plan in full.
+// Anything else (canceled, unpaid, incomplete_expired, past_due…) falls back to
+// DEFAULT_PLAN, the locked "no plan" state.
 const ACTIVE_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
   "active",
   "trialing",
@@ -273,6 +276,11 @@ async function markReferralPaid(inv: Stripe.Invoice) {
   const parentType = (inv as unknown as { parent?: { type?: string } }).parent?.type;
   if (parentType !== "subscription_details") return;
 
+  // Nor the GBP 0 invoice a free trial opens with. Nobody has paid yet, and
+  // they may cancel before the first charge; the ambassador is owed when the
+  // trial converts and the real first invoice is paid. See isTrialInvoice.
+  if (isTrialInvoice(inv)) return;
+
   // WHICH PLAN WAS BOUGHT, read from the INVOICE rather than from the profile.
   //
   // The profile would be the obvious source, but it is only right if
@@ -291,9 +299,9 @@ async function markReferralPaid(inv: Stripe.Invoice) {
   const priceId = typeof price === "string" ? price : (price?.id ?? null);
   const plan = priceId ? await planForPriceId(priceId) : null;
 
-  // Pro and Max only. Free is tracked but never payable, and `school` is
-  // invoiced per seat rather than referred.
-  if (plan !== "pro" && plan !== "max") return;
+  // Self-serve paid plans only. A signup who never subscribes is tracked but
+  // never payable, and `school` is invoiced per seat rather than referred.
+  if (plan !== "standard" && plan !== "pro" && plan !== "max") return;
 
   // Note there is deliberately NO check that the amount paid was nonzero. A 100%
   // ambassador code bills GBP 0.00 on the first month, and that subscriber is
@@ -337,6 +345,50 @@ async function markReferralPaid(inv: Stripe.Invoice) {
  * own failures, and this wrapper swallows everything around it.
  */
 /**
+ * Report a started free trial to Meta as StartTrial.
+ *
+ * WHY HERE. The trial starts when Checkout completes with the card on file, and
+ * that is only known server-side, in this webhook. It used to fire when the
+ * profile form was submitted, which was the right moment while Free was a plan
+ * you were on from signup; now a signup who never checks out has started
+ * nothing.
+ *
+ * The advertising cookies were stored on the profile by /api/meta/activation at
+ * signup, before checkout, so they are there to read. No IP or user agent: this
+ * request is Stripe's, and sending Stripe's would corrupt the match.
+ *
+ * This is the SERVER half. The browser half fires from app/checkout/complete
+ * when the teacher lands back from Checkout, with the same event_id, the user
+ * id (see sendStartTrialEvent), so Meta counts the pair once. There is one trial
+ * per account (lib/trial.ts), so the id is stable, and a Stripe retry of this
+ * event collapses into the same conversion too.
+ *
+ * NEVER THROWS: a marketing event must not make Stripe retry a subscription
+ * sync that already succeeded.
+ */
+async function reportTrialStart(userId: string | null) {
+  if (!userId) return;
+  try {
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("meta_fbp, meta_fbc")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+    await sendStartTrialEvent({
+      userId,
+      email: authUser?.user?.email ?? null,
+      fbp: profile?.meta_fbp ?? null,
+      fbc: profile?.meta_fbc ?? null,
+    });
+  } catch (err) {
+    console.error("[stripe/webhook] StartTrial report failed", userId, err);
+  }
+}
+
+/**
  * Undo the claim taken at the top of reportPurchaseToMeta.
  *
  * Called on every path that claims the invoice and then does NOT report it, so
@@ -369,8 +421,10 @@ async function releaseMetaClaim(invoiceId: string | null | undefined) {
 async function reportPurchaseToMeta(inv: Stripe.Invoice) {
   try {
     // Subscription invoices only. A one-off credit top-up is not a purchase of
-    // a plan, and the same check guards markReferralPaid above.
-    if (!isReportablePurchase(inv)) return;
+    // a plan, and the same check guards markReferralPaid above. Nor is the
+    // GBP 0 invoice a free trial opens with: the Purchase is the first real
+    // charge when the trial converts, not the moment a card was put on file.
+    if (!isReportablePurchase(inv) || isTrialInvoice(inv)) return;
 
     // CLAIM THE RIGHT TO REPORT, ATOMICALLY.
     //
@@ -876,6 +930,12 @@ export async function POST(req: NextRequest) {
             sub.metadata = { ...sub.metadata, userId: session.client_reference_id };
           }
           await syncSubscription(sub);
+          // Only from this event, not customer.subscription.created: Checkout
+          // completing is the single moment the trial began, and hanging it
+          // off one event type keeps it to one send per checkout.
+          if (startsTrial(sub)) {
+            await reportTrialStart(sub.metadata?.userId ?? null);
+          }
         } else if (session.mode === "payment" && session.metadata?.kind === "credit_topup") {
           // One-off £1.50 AI credit. No subscription is involved, so this grants
           // an allowance row rather than changing the plan.

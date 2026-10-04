@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, X } from "lucide-react";
-import { SELECTABLE_PLANS } from "@/app/lib/plans";
+import { ADMIN_ASSIGNABLE_PLANS } from "@/app/lib/plans";
 import { parseCsv } from "@/app/lib/csv";
 
 // Sends each address a Supabase invite link by email (via SendGrid — see
@@ -67,7 +67,9 @@ function extractEmails(text: string): { emails: string[]; skipped: number } {
 export default function InviteTeachersModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [emails, setEmails] = useState("");
-  const [plan, setPlan] = useState<string>(SELECTABLE_PLANS[0]?.id ?? "free");
+  // "No plan" by default: an invitee chooses a plan and starts the trial
+  // themselves, like any signup. Anything else is a comp.
+  const [plan, setPlan] = useState<string>("free");
   const [notice, setNotice] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
@@ -239,10 +241,10 @@ export default function InviteTeachersModal({ onClose }: { onClose: () => void }
                 className={fieldClass}
                 style={fieldStyle}
               >
-                {/* The plans we sell — currently Free, Pro and Max. School
-                    isn't built, so inviting someone onto it would put them on
-                    a plan we can't bill. */}
-                {SELECTABLE_PLANS.map((p) => (
+                {/* No plan, then the plans we sell. School isn't built, so
+                    inviting someone onto it would put them on a plan we can't
+                    bill. */}
+                {ADMIN_ASSIGNABLE_PLANS.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>

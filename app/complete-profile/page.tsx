@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/app/lib/auth/client";
-import { shouldSendStartTrial, type ActivationOutcome } from "@/app/lib/meta-events";
+import type { ActivationOutcome } from "@/app/lib/meta-events";
 import { ATTRIBUTION_COOKIE } from "@/app/lib/attribution";
 import DialCodeSelect, {
   DEFAULT_DIAL_CODE as DEFAULT_CODE,
@@ -70,43 +70,28 @@ export default function CompleteProfilePage() {
   const reported = useRef(false);
 
   /**
-   * Report a Free plan activation, to the browser pixel and to our own route.
+   * Record where this signup came from: the Meta cookies and the attribution
+   * cookie, stored on the profile by /api/meta/activation.
    *
-   * Called at every point the teacher ends up on Free, which is not the same as
-   * "whenever this form succeeds": an admin-invited teacher can land directly on
-   * a paid plan, and never started a trial. shouldSendStartTrial holds that rule
-   * and is shared with the server so the two cannot disagree.
+   * NOT a StartTrial any more. There is no free plan to be on from signup; the
+   * trial starts when Stripe Checkout completes. StartTrial fires then, from
+   * the browser on /checkout/complete and from the Stripe webhook, which reads
+   * these same stored cookies. They have to be stored here because the webhook
+   * has no browser to read them from.
+   *
+   * Sent for every signup, invited or not: an invited teacher may still have
+   * arrived from an ad, and their later Purchase is worth attributing.
    *
    * Fire and forget. The caller navigates immediately afterwards, and a signup
    * that worked must never be made to look broken by a marketing pixel, so
    * nothing here is awaited and every failure is swallowed.
    */
-  const reportActivation = (userId: string, outcome: ActivationOutcome) => {
+  const reportActivation = (_userId: string, outcome: ActivationOutcome) => {
     if (reported.current) return;
     reported.current = true;
 
     const fbp = metaCookie("_fbp");
     const fbc = metaCookie("_fbc");
-
-    // ONLY THE BROWSER PIXEL IS CONDITIONAL, and this used to be a bare return
-    // above it, which was a bug with two victims.
-    //
-    // An admin-invited teacher landing on a paid plan reports no StartTrial, so
-    // the old early return meant the route below was never called for them at
-    // all. That route's own comment says it stores the advertising cookies
-    // "regardless of whether this particular signup reports a trial", naming
-    // exactly that teacher: it believed it handled the case and the client
-    // never let it. Their _fbp and _fbc were dropped, costing attribution on a
-    // renewal months later, and their signup source would be lost too.
-    //
-    // The route re-checks this same predicate before sending anything to Meta,
-    // so the event itself stays correctly suppressed.
-    if (shouldSendStartTrial(outcome)) {
-      // eventID, not a random value: it dedupes this against the server copy of
-      // the same event, so one activation is not counted twice. Do not remove it
-      // without reading sendStartTrialEvent in app/lib/meta-capi.ts.
-      window.fbq?.("track", "StartTrial", {}, { eventID: userId });
-    }
 
     // keepalive, because this fires immediately before a navigation: without it
     // the browser is free to cancel the request as the page unloads, which is
@@ -199,7 +184,7 @@ export default function CompleteProfilePage() {
         // report it and let them continue on Free rather than stranding them
         // on a form they cannot get past. The admin can re-invite.
         setError(
-          `${json.error ?? "Your invitation couldn't be applied."} Your account is set up, continuing on the Free plan.`,
+          `${json.error ?? "Your invitation couldn't be applied."} Your account is set up, and you can choose a plan from your account page.`,
         );
         sessionStorage.removeItem("jooma:invite-token");
         // On Free, despite the invite: the row is saved and the copy above says

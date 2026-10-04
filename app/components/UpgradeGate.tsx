@@ -13,7 +13,7 @@ import TopUpModal from "@/app/components/v2/TopUpModal";
 // response body.
 //
 // Three shapes arrive here (see quotaBlockBody in lib/generation-guard.ts):
-//   action: "upgrade" — a free account hit its daily or monthly cap.  402
+//   action: "upgrade" — no active subscription, so nothing to spend.  402
 //   action: "topup"   — a paid account used its monthly AI allowance.  402
 //   action: "wait"    — the fair-use rate limit; clears on its own.    429
 //
@@ -24,7 +24,7 @@ import TopUpModal from "@/app/components/v2/TopUpModal";
 interface QuotaBlock {
   error?: string;
   action?: "upgrade" | "topup" | "wait";
-  reason?: "free_daily" | "free_monthly" | "credit_exhausted" | "rate_limited";
+  reason?: "plan_required" | "credit_exhausted" | "rate_limited";
 }
 
 export default function UpgradeGate() {
@@ -66,9 +66,7 @@ export default function UpgradeGate() {
     ? "Just a moment"
     : isTopUp
       ? "You've used this month's AI allowance"
-      : block.reason === "free_daily"
-        ? "That's your free generation for today"
-        : "You've used all your free generations";
+      : "Choose a plan to start creating";
 
   // The server writes copy that already names the real numbers and reset time,
   // so prefer it over anything hardcoded here. These fallbacks deliberately
@@ -81,7 +79,7 @@ export default function UpgradeGate() {
       ? "You've hit the fair-use limit for this hour. Try again shortly."
       : isTopUp
         ? "Top up to keep going. Extra credits last until the end of the month."
-        : "Upgrade your plan to keep going.");
+        : "Every plan starts with a free trial, and you can cancel before it ends.");
 
   return (
     <div

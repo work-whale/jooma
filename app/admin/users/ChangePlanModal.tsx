@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { PLANS, SELECTABLE_PLANS, asPlanId } from "@/app/lib/plans";
+import { PLANS, ADMIN_ASSIGNABLE_PLANS, asPlanId } from "@/app/lib/plans";
 
 // Changing a plan means different things depending on what's behind the
 // account, and getting it wrong costs real money — so the modal spells out
@@ -29,7 +29,7 @@ export default function ChangePlanModal({
   onClose: () => void;
   onChanged: (msg: string) => void;
 }) {
-  const options = SELECTABLE_PLANS.filter((p) => p.id !== currentPlan);
+  const options = ADMIN_ASSIGNABLE_PLANS.filter((p) => p.id !== currentPlan);
   const [plan, setPlan] = useState<string>(options[0]?.id ?? "free");
   const [reason, setReason] = useState("");
   const [immediate, setImmediate] = useState(false);
@@ -53,7 +53,7 @@ export default function ChangePlanModal({
       ? immediate
         ? `Their Stripe subscription will be cancelled straight away and they'll lose ${currentName} access now.`
         : "Their Stripe subscription will be set to cancel at the end of the current period. They keep access until then."
-      : "They'll move to Free right away. There's no Stripe subscription to cancel."
+      : "Their plan is removed right away and they won't be able to create anything until they subscribe. There's no Stripe subscription to cancel."
     : hasCustomer
       ? `A Stripe subscription will be created at the ${targetName} price and their card will be charged on the normal cycle.`
       : `This teacher has no card on file, so this is a COMP — they'll get ${targetName} for free until you change it back. Nothing will be billed.`;
@@ -92,7 +92,7 @@ export default function ChangePlanModal({
               Change plan
             </h2>
             <p className="text-sm mt-0.5 truncate" style={{ color: "#6D6683" }}>
-              {name} · currently {currentPlan}
+              {name} · currently {currentName}
             </p>
           </div>
           <button
