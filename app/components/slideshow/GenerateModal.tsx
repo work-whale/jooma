@@ -93,6 +93,22 @@ interface Props {
   onClose: () => void;
   /** Values from Jo, seeded into step one. */
   prefill?: SlideshowPrefill | null;
+  /**
+   * "page" renders the wizard inline instead of as a dialog: no overlay, no
+   * close button, no scroll lock. Used on /create, where the wizard IS the page.
+   */
+  variant?: "modal" | "page";
+  /**
+   * Replaces the default hand-off (create a presentation, open the editor).
+   * The guest flow on /create generates in place, with no account to save to.
+   */
+  onSubmit?: (params: GenerationParams) => Promise<void> | void;
+  /** Signed out: hides "use a previous tool output", which reads a library
+   *  the visitor does not have yet. */
+  guest?: boolean;
+  /** Step one's values on every change, so Ask Jo on /create knows what the
+   *  wizard currently says. */
+  onSnapshot?: (s: SlideshowPrefill & { readingLevel: string }) => void;
 }
 
 /**
@@ -119,6 +135,11 @@ const READING_LEVELS = [
 
 const SLIDE_COUNTS = [5, 6, 8, 10, 12, 14];
 
+/** The offered slide count nearest to the one asked for. */
+function nearestSlideCount(n: number): number {
+  return SLIDE_COUNTS.reduce((best, c) => (Math.abs(c - n) < Math.abs(best - n) ? c : best));
+}
+
 // Video search (YouTube Data API) is built and working, but shelved: teachers
 // paste their own link so a human has vetted what plays in a lesson. Flip to
 // true to bring the search UI, and the video-length filter it drives, back.
@@ -137,16 +158,25 @@ const IMAGE_STYLES: { id: ImageStyle; label: string }[] = [
   { id: "comic-book", label: "Comic book" },
 ];
 
-export default function GenerateModal({ onClose, prefill }: Props) {
+export default function GenerateModal({
+  onClose,
+  prefill,
+  variant = "modal",
+  onSubmit,
+  guest = false,
+  onSnapshot,
+}: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const inline = variant === "page";
 
   // Lock background scroll while the modal is open; restore on close.
   useEffect(() => {
+    if (inline) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
-  }, []);
+  }, [inline]);
 
   // Seeded from Jo through useState INITIALISERS, not an effect. The values are
   // a starting point the teacher edits, so re-applying them after a render
@@ -167,15 +197,30 @@ export default function GenerateModal({ onClose, prefill }: Props) {
   // outside that list renders as an empty pill — the same silent drop an
   // off-enum year group would cause. Nearest match keeps the teacher's intent.
   const [slideCount, setSlideCount] = useState(() =>
-    prefill?.slideCount
-      ? SLIDE_COUNTS.reduce((best, n) =>
-          Math.abs(n - prefill.slideCount!) < Math.abs(best - prefill.slideCount!) ? n : best,
-        )
-      : 8,
+    prefill?.slideCount ? nearestSlideCount(prefill.slideCount) : 8,
   );
   const [additionalInstructions, setAdditionalInstructions] = useState(
     prefill?.additionalInstructions ?? "",
   );
+
+  // A NEW prefill after mount: Ask Jo on /create filling the wizard while it is
+  // open ("make it Year 6, 10 slides"). Only the fields Jo sent change; the
+  // rest, and everything on steps two and three, stay as the visitor left
+  // them. Applied during render, React's pattern for state that follows a
+  // prop, rather than remounting the wizard, which threw all of that away.
+  // The initial prefill is the useState seed above, so it is not applied twice.
+  const [seenPrefill, setSeenPrefill] = useState(prefill);
+  if (prefill !== seenPrefill) {
+    setSeenPrefill(prefill);
+    if (prefill?.topic) setTopic(prefill.topic);
+    if (prefill?.year) setYear(prefill.year);
+    if (prefill?.slideCount) setSlideCount(nearestSlideCount(prefill.slideCount));
+    if (prefill?.additionalInstructions) setAdditionalInstructions(prefill.additionalInstructions);
+  }
+
+  useEffect(() => {
+    onSnapshot?.({ topic, year, slideCount, readingLevel, additionalInstructions });
+  }, [onSnapshot, topic, year, slideCount, readingLevel, additionalInstructions]);
   // Auto-grow the instructions textarea with its content (up to a max, then it
   // scrolls). Re-runs when the text changes, incl. when "Generate outline" fills it.
   const instructionsRef = useRef<HTMLTextAreaElement>(null);
@@ -416,12 +461,13 @@ export default function GenerateModal({ onClose, prefill }: Props) {
   };
 
   useEffect(() => {
+    if (inline) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !busy) onClose();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [busy, onClose]);
+  }, [busy, onClose, inline]);
 
   const canContinue = topic.trim().length > 0;
 
@@ -471,6 +517,11 @@ export default function GenerateModal({ onClose, prefill }: Props) {
               }
             : undefined,
       };
+      if (onSubmit) {
+        await onSubmit(params);
+        setBusy(false);
+        return;
+      }
       // Create the presentation up-front so we have an editor URL to navigate to.
       // Persist the params on the row so the editor's Edit button can reopen the
       // prompt and regenerate later. The editor also reads them from sessionStorage
@@ -490,15 +541,21 @@ export default function GenerateModal({ onClose, prefill }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => { if (!busy) onClose(); }}
-      />
+    <div
+      className={inline ? "relative" : "fixed inset-0 z-50 flex items-center justify-center p-4"}
+      role={inline ? undefined : "dialog"}
+      aria-modal={inline ? undefined : true}
+    >
+      {!inline && (
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          onClick={() => { if (!busy) onClose(); }}
+        />
+      )}
       {/* Wrapper: card + optional side panel share a height via items-stretch. */}
-      <div className="relative z-10 flex items-stretch justify-center gap-3 w-full max-h-[90vh]">
+      <div className={inline ? "relative flex items-stretch justify-center gap-3 w-full" : "relative z-10 flex items-stretch justify-center gap-3 w-full max-h-[90vh]"}>
       <div
-        className="relative rounded-2xl shadow-2xl w-full max-w-2xl border overflow-hidden flex flex-col"
+        className={`relative rounded-2xl w-full border overflow-hidden flex flex-col ${inline ? "shadow-sm" : "shadow-2xl max-w-2xl"}`}
         style={{ borderColor: "var(--j-line)", backgroundColor: "var(--j-card)" }}
       >
         {/* Header */}
@@ -507,7 +564,7 @@ export default function GenerateModal({ onClose, prefill }: Props) {
             className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
             style={{ backgroundColor: "var(--j-purple)" }}
           >
-            <Sparkles className="w-5 h-5" style={{ color: "var(--j-purple)" }} />
+            <Sparkles className="w-5 h-5" style={{ color: "#fff" }} />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-semibold" style={{ color: "var(--j-purple)" }}>
@@ -530,14 +587,16 @@ export default function GenerateModal({ onClose, prefill }: Props) {
               />
             ))}
           </div>
-          <button
-            onClick={onClose}
-            disabled={busy}
-            className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors disabled:opacity-40"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {!inline && (
+            <button
+              onClick={onClose}
+              disabled={busy}
+              className="p-1 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors disabled:opacity-40"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Body */}
@@ -799,7 +858,7 @@ export default function GenerateModal({ onClose, prefill }: Props) {
                   }
                 }}
                 onClear={() => { setResourceText(""); setResourceSource(""); setResourceError(null); }}
-                onOpenLibrary={() => setLibraryOpen(true)}
+                onOpenLibrary={guest ? undefined : () => setLibraryOpen(true)}
                 disabled={busy}
               />
             </>
@@ -1269,14 +1328,18 @@ export default function GenerateModal({ onClose, prefill }: Props) {
         <div className="flex items-center justify-between gap-2 p-4 border-t" style={{ borderColor: "var(--j-line)" }}>
           {step === 1 ? (
             <>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={busy}
-                className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
+              {inline ? (
+                <span />
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={busy}
+                  className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setStep(2)}
@@ -1326,12 +1389,12 @@ export default function GenerateModal({ onClose, prefill }: Props) {
                 onClick={handleGenerate}
                 disabled={busy || !topic.trim()}
                 className="px-4 py-2 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 min-w-36 justify-center"
-                style={{ backgroundColor: "var(--j-purple)", color: "var(--j-purple)" }}
+                style={{ backgroundColor: "var(--j-purple)", color: "#fff" }}
               >
                 {busy ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Opening editor…
+                    {onSubmit ? "Starting…" : "Opening editor…"}
                   </>
                 ) : (
                   <>
@@ -1388,7 +1451,7 @@ function ToggleCard({
           {badge && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: "var(--j-purple)", color: "var(--j-purple)" }}
+              style={{ backgroundColor: "var(--j-tint)", color: "var(--j-purple)" }}
             >
               {badge}
             </span>
@@ -1543,7 +1606,8 @@ function InlineUploadZone({
   error: string | null;
   onAttach: (input: ResourceInput) => Promise<void> | void;
   onClear: () => void;
-  onOpenLibrary: () => void;
+  /** Absent for a guest, which hides the button. */
+  onOpenLibrary?: () => void;
   disabled?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -1617,20 +1681,22 @@ function InlineUploadZone({
                       <FileUp className="w-4.5 h-4.5 text-gray-500" />
                     </div>
                   </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); if (!disabled && !busy) onOpenLibrary(); }}
-                    disabled={disabled || busy}
-                    className="flex flex-col items-center gap-1 group disabled:opacity-50"
-                    title="Use a previous tool output"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors group-hover:bg-gray-50"
-                      style={{ borderColor: "var(--j-line)" }}
+                  {onOpenLibrary && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); if (!disabled && !busy) onOpenLibrary(); }}
+                      disabled={disabled || busy}
+                      className="flex flex-col items-center gap-1 group disabled:opacity-50"
+                      title="Use a previous tool output"
                     >
-                      <FolderSymlink className="w-4.5 h-4.5 text-gray-500" />
-                    </div>
-                  </button>
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center border transition-colors group-hover:bg-gray-50"
+                        style={{ borderColor: "var(--j-line)" }}
+                      >
+                        <FolderSymlink className="w-4.5 h-4.5 text-gray-500" />
+                      </div>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); if (!disabled && !busy) setUrlOpen((v) => !v); }}

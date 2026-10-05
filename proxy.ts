@@ -15,6 +15,9 @@ import { isToolEnabled } from "@/app/lib/tool-availability";
 import { profileGateBody } from "@/app/lib/profile-gate";
 import { publicSettings } from "@/app/lib/settings";
 import { applyAttributionCookie } from "@/app/lib/attribution-cookie";
+import { GUEST_COOKIE, newGuestCookie, verifyGuestCookie } from "@/app/lib/guest-cookie";
+import { TRIAL_RUN_HEADER, TRIAL_TOKEN_HEADER, verifyTrialToken } from "@/app/lib/trial-token";
+import { clientIp, guestCallAllowed, guestCookieOptions, trialSecret } from "@/app/lib/guest";
 
 // Reachable while maintenance mode is on. /maintenance itself, obviously, plus
 // the auth routes — an admin has to be able to sign in to turn it back off,
@@ -103,7 +106,61 @@ const PUBLIC_PATHS = [
   // actually was. Not a malformed sitemap, and not a stale one: a redirect.
   "/sitemap.xml",
   "/robots.txt",
+  // The free tries from the landing hero. /create is the page a signed out
+  // visitor makes their deck on, /made/<slug> is a resource a teacher chose to
+  // share on the homepage, and /api/try/* are the guest routes. Each of those
+  // routes checks the signed guest cookie, the per IP limits and the admin
+  // switch itself. /api/try/claim is the exception: it is public here only so
+  // a signed out call gets its own clean 401 from the route, which checks for
+  // a session before anything else.
+  "/create",
+  "/made",
+  "/api/try",
 ];
+
+// The two internal requests a deck makes over HTTP. A teacher's deck forwards
+// the session cookie; a guest deck from /api/try/slideshow has no session and
+// sends a short lived token, bound to its run, instead. Valid ONLY here.
+const TRIAL_SUBREQUEST_PATHS = ["/api/generate-audio", "/api/find-youtube"];
+
+// The slideshow wizard's helper buttons, which a guest on /create needs to
+// finish their inputs: subject suggestion, the outline, vocabulary, a pasted
+// YouTube link and an uploaded resource. Allowed with a valid guest cookie and
+// throttled per IP, since each is a model call someone could script.
+const GUEST_HELPER_PATHS = [
+  "/api/suggest-subject",
+  "/api/generate-lesson-outline",
+  "/api/suggest-vocabulary",
+  "/api/lookup-youtube",
+  "/api/extract-resource",
+];
+const GUEST_HELPER_PER_HOUR = 40;
+
+/**
+ * Whether a request with no session may go through anyway, as part of a
+ * guest's free try. Anything this returns false for falls through to the
+ * usual redirect or 401.
+ */
+async function guestMayPass(request: NextRequest, pathname: string): Promise<boolean> {
+  const secret = trialSecret();
+  if (!secret) return false;
+
+  if (TRIAL_SUBREQUEST_PATHS.includes(pathname)) {
+    return verifyTrialToken(
+      request.headers.get(TRIAL_TOKEN_HEADER),
+      request.headers.get(TRIAL_RUN_HEADER),
+      secret,
+    );
+  }
+
+  if (GUEST_HELPER_PATHS.includes(pathname)) {
+    const guest = verifyGuestCookie(request.cookies.get(GUEST_COOKIE)?.value, secret);
+    if (!guest) return false;
+    return guestCallAllowed(clientIp(request), "guest_helper_ip", GUEST_HELPER_PER_HOUR);
+  }
+
+  return false;
+}
 
 function isPublic(pathname: string) {
   // The marketing landing page at "/" is public (exact match only — we don't
@@ -190,7 +247,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Unauthenticated request to a protected route.
-  if (!user && !isPublic(pathname)) {
+  if (!user && !isPublic(pathname) && !(await guestMayPass(request, pathname))) {
     // API routes must NOT be redirected to the HTML login page — the caller
     // does res.json() and would choke on "<!DOCTYPE html>". Return a clean
     // 401 JSON instead so the error is legible.
@@ -382,6 +439,18 @@ export async function proxy(request: NextRequest) {
   // definition second visits, and first touch wins would skip them anyway.
   applyAttributionCookie(request, response);
 
+  // A visitor arriving at /create becomes a guest: a random id, signed, that
+  // their free tries are kept against until they sign up. Set here because the
+  // page is a server component and cannot set cookies itself, and on
+  // `response` for the same reason as the attribution cookie above.
+  if (!user && pathname === "/create") {
+    const secret = trialSecret();
+    if (secret && !verifyGuestCookie(request.cookies.get(GUEST_COOKIE)?.value, secret)) {
+      const { value } = newGuestCookie(secret);
+      response.cookies.set(GUEST_COOKIE, value, guestCookieOptions);
+    }
+  }
+
   return response;
 }
 
@@ -391,6 +460,8 @@ export const config = {
     // `api/generate-slideshow` is also excluded: the proxy buffers its SSE
     // stream (slides arrive all at once instead of one-by-one), so it bypasses
     // the proxy and authenticates itself inside the route handler.
-    "/((?!api/generate-slideshow|_next/static|_next/image|favicon.ico|svgs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // `api/try/slideshow` is the guest version of the same stream, excluded for
+    // the same reason; it checks the guest cookie and limits itself.
+    "/((?!api/generate-slideshow|api/try/slideshow|_next/static|_next/image|favicon.ico|svgs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

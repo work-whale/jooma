@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Wordmark from "@/app/components/v2/Wordmark";
+import { formatVisitors } from "@/app/lib/visitors";
 import NavAuth from "../NavAuth";
 import shared from "./landing.module.css";
 import styles from "./LandingNav.module.css";
 
 const LINKS = [
-  { href: "#try", label: "Try it" },
+  { href: "#try", label: "Try it free" },
   { href: "#tools", label: "Tools" },
   { href: "#pricing", label: "Pricing" },
   { href: "#schools", label: "Schools" },
@@ -16,6 +17,10 @@ const LINKS = [
 
 /**
  * The sticky landing header.
+ *
+ * Sits transparent over the hero's purple band, white on purple, and turns to
+ * the light bar once the page has scrolled. The visitor count joins it then,
+ * so the figure stays in view after the hero that shows it has gone.
  *
  * Signed out it shows Log in and Start free. Signed in it defers to NavAuth for
  * the avatar dropdown, so the routes into the app (dashboard, admin, billing,
@@ -29,12 +34,14 @@ export default function LandingNav({
   fullName,
   avatarUrl,
   isAdmin,
+  visitors = null,
 }: {
   email: string | null;
   name: string | null;
   fullName: string | null;
   avatarUrl: string | null;
   isAdmin: boolean;
+  visitors?: number | null;
 }) {
   // Drops a hairline under the bar once the page has moved, so the header
   // separates from the content without being a permanent line at rest.
@@ -48,7 +55,7 @@ export default function LandingNav({
   }, []);
 
   return (
-    <header className={`${styles.nav} ${stuck ? styles.stuck : ""}`}>
+    <header className={`${styles.nav} ${stuck ? styles.stuck : styles.onBand}`}>
       <div className={`${shared.shell} ${styles.inner}`}>
         <Link href="/" className={styles.brand} aria-label="Jooma">
           <Wordmark />
@@ -63,14 +70,22 @@ export default function LandingNav({
         </nav>
 
         <div className={styles.right}>
+          {visitors !== null && (
+            <span className={styles.count}>
+              <i className={styles.pip} aria-hidden="true" />
+              <b>{formatVisitors(visitors)}</b>&nbsp;teachers
+            </span>
+          )}
           {email ? (
-            <NavAuth
-              name={name}
-              fullName={fullName}
-              avatarUrl={avatarUrl}
-              email={email}
-              isAdmin={isAdmin}
-            />
+            <span className={styles.auth}>
+              <NavAuth
+                name={name}
+                fullName={fullName}
+                avatarUrl={avatarUrl}
+                email={email}
+                isAdmin={isAdmin}
+              />
+            </span>
           ) : (
             <>
               <Link className={styles.link} href="/login">

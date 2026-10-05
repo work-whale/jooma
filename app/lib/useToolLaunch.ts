@@ -47,7 +47,9 @@ export type PrefillSetters = Record<string, (value: unknown) => void>;
  * Kept as a named set rather than a special case inside the loop so the next
  * field with a meaningful default has an obvious home.
  */
-const NEVER_CLEARED = new Set(["differentiate"]);
+// `complexity` likewise: the comprehension form starts it at "Standard", and a
+// prefill that leaves it out means "as it was", not "no complexity at all".
+const NEVER_CLEARED = new Set(["differentiate", "complexity"]);
 
 /**
  * Whether this page has a Generate button Jo could offer to press.

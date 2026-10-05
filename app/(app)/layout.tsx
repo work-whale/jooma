@@ -3,6 +3,9 @@
 import AppShellV2 from "@/app/components/v2/AppShellV2";
 import { AppShellProvider } from "@/app/components/v2/AppShellContext";
 import UpgradeGate from "@/app/components/UpgradeGate";
+import GuestClaimer from "@/app/components/guest/GuestClaimer";
+import ThenAction from "@/app/components/guest/ThenAction";
+import FreshSharePrompt from "@/app/components/guest/FreshSharePrompt";
 
 /*
  * One shell for the signed-in teacher pages.
@@ -34,6 +37,11 @@ export default function AppRoutesLayout({ children }: { children: React.ReactNod
       {/* Mounted once for all these routes. Pages under /tools inherit the one
           in app/tools/layout.tsx instead. */}
       <AppShellV2 slot={<UpgradeGate />}>{children}</AppShellV2>
+      {/* Free tries from /create, claimed on the first signed in page, and the
+          action the visitor pressed before signing up. Both no-ops otherwise. */}
+      <GuestClaimer />
+      <ThenAction />
+      <FreshSharePrompt />
     </AppShellProvider>
   );
 }

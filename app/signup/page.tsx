@@ -42,8 +42,15 @@ export default function SignupPage() {
   // /welcome, three navigations later. Nothing is verified or granted here —
   // /api/ambassadors/claim does that once there is an account to attach it to.
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("code");
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
     if (code) sessionStorage.setItem("jooma:ambassador-code", code.trim().toUpperCase());
+    // The sign up modal on /create asks for the address first and sends it
+    // here, so the visitor does not type it twice. An invite, read below, wins.
+    const prefill = params.get("email")?.trim();
+    if (prefill && !params.get("invite") && prefill.length <= 254) {
+      queueMicrotask(() => setEmail(prefill));
+    }
   }, []);
 
   useEffect(() => {

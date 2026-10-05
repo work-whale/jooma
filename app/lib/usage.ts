@@ -150,7 +150,10 @@ export async function recordUsage(
   }
   try {
     const uid = userId ?? (await currentUserId());
-    if (!uid) {
+    // A guest generation from /create has no user yet, but it has a run id,
+    // and the spend is real. Kept with a null owner; claimGuestWork hands the
+    // row to the teacher by run_id when the guest signs up.
+    if (!uid && !runId) {
       console.warn(`[usage] no user for ${toolSlug} — token_usage row dropped`);
       return;
     }
@@ -198,7 +201,8 @@ export async function recordAssetCost(
   if (!(costUsd > 0)) return;
   try {
     const uid = userId ?? (await currentUserId());
-    if (!uid) {
+    // See recordUsage: a guest's spend is kept against its run id.
+    if (!uid && !runId) {
       console.warn(`[usage] no user for ${toolSlug} — asset_cost row dropped`);
       return;
     }
@@ -233,6 +237,9 @@ export interface SlideCostBreakdown {
   audio: number;
   youtube?: number;
   images: { label: string; cost_usd: number; count: number }[];
+  /** The deck's run. slide_cost has no run_id column, so a guest deck's row is
+   *  found by this key when claimGuestWork hands it to its new owner. */
+  run_id?: string;
 }
 
 /** Persist the all-in cost (and optional component breakdown) for a generated
@@ -246,7 +253,8 @@ export async function recordSlideCosts(
   if (valid.length === 0) return;
   try {
     const uid = userId ?? (await currentUserId());
-    if (!uid) {
+    // A guest deck carries its run in the breakdown; see recordUsage.
+    if (!uid && !valid.every((r) => r.breakdown?.run_id)) {
       console.warn("[usage] no user for generate-slideshow — slide_cost rows dropped");
       return;
     }
@@ -399,6 +407,13 @@ type StreamParams = Omit<
     /** Ties this generation's telemetry (and any safeguarding flag) to one run. */
     runId?: string | null;
     /**
+     * Called with the full text once the model has finished, BEFORE the stream
+     * closes, for the same freezing reason recordUsage runs there. The guest
+     * route uses it to keep the output for the visitor to claim. Errors are
+     * caught and logged: the reader already has every token.
+     */
+    onComplete?: (text: string, ok: boolean) => Promise<void>;
+    /**
      * The teacher's own words, for safeguarding scanning.
      *
      * Prefer passing this explicitly. Most routes assemble one large user prompt
@@ -419,6 +434,7 @@ export async function streamChat({
   step,
   runId,
   safeguardingText,
+  onComplete,
   ...params
 }: StreamParams): Promise<Response> {
   // Resolve the user NOW, while the request context (and therefore its cookies)
@@ -453,6 +469,8 @@ export async function streamChat({
 
   const encoder = new TextEncoder();
   let usage: Usage | null = null;
+  let full = "";
+  let ok = true;
 
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -461,9 +479,13 @@ export async function streamChat({
           // The include_usage final chunk carries usage and no content delta.
           if (chunk.usage) usage = chunk.usage;
           const text = chunk.choices[0]?.delta?.content ?? "";
-          if (text) controller.enqueue(encoder.encode(text));
+          if (text) {
+            if (onComplete) full += text;
+            controller.enqueue(encoder.encode(text));
+          }
         }
       } catch (err) {
+        ok = false;
         controller.error(err);
       } finally {
         // ORDER MATTERS: record BEFORE closing the stream.
@@ -485,7 +507,14 @@ export async function streamChat({
         // pass over the prompt — microseconds — and it writes nothing at all
         // for the overwhelming majority of generations.
         await recordSafeguardingScan(toolSlug, scanText, userId, runId);
-        controller.close();
+        if (onComplete) {
+          try {
+            await onComplete(full, ok && full.trim().length > 0);
+          } catch (err) {
+            console.error(`[usage] onComplete threw for ${toolSlug}:`, err);
+          }
+        }
+        try { controller.close(); } catch { /* already errored */ }
       }
     },
     cancel() {
