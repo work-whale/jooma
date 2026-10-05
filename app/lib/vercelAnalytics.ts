@@ -207,8 +207,29 @@ export async function visitorsByMonth(months = 12): Promise<Result<VisitorPoint[
  * a wrong one.
  */
 export async function visitorsAllTime(): Promise<number | null> {
-  const { data } = await visitorsByMonth(120);
-  return sumVisitors(data);
+  // From the month tracking began to now, which is all of it. It first asked
+  // for a flat 120 months, and the count never appeared on staging while the
+  // Stats page did: a window reaching back years before the project existed,
+  // past Vercel's analytics retention, is refused, and a refusal hides the
+  // count. If even this is refused one day (retention shorter than the site's
+  // age), the last twelve months, the query Stats runs by default, stand in.
+  const first = await visitorsByMonth(monthsSince(TRACKING_STARTED));
+  if (!first.error) return sumVisitors(first.data);
+
+  console.warn("[analytics] all time visitor count refused, using 12 months:", first.error);
+  const recent = await visitorsByMonth(12);
+  if (recent.error) console.warn("[analytics] landing visitor count unavailable:", recent.error);
+  return sumVisitors(recent.data);
+}
+
+/** The month the production project, and so its analytics, began. */
+const TRACKING_STARTED = { year: 2026, month: 8 };
+
+/** Whole months from the start of that month to the current one, inclusive. */
+function monthsSince(start: { year: number; month: number }): number {
+  const now = new Date();
+  const n = (now.getUTCFullYear() - start.year) * 12 + (now.getUTCMonth() + 1 - start.month) + 1;
+  return Math.max(1, n);
 }
 
 /** Top countries by visitors today, for the strip beside the headline count. */
