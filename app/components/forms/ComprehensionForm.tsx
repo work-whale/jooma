@@ -29,6 +29,8 @@ export interface ComprehensionGuestMode {
   onRefused: (status: number, data: { error?: string; reason?: string }) => void;
   /** The trial row id the guest route returned in its header. */
   onStarted?: (trialId: string | null) => void;
+  /** Every change to the form, so Ask Jo knows what it currently says. */
+  onSnapshot?: (state: Record<string, unknown>) => void;
   /** Rendered where the signed in form shows ToolResults. */
   renderResult: (r: {
     result: string | null;
@@ -103,6 +105,13 @@ export default function ComprehensionForm({
 
   const formState = { curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey, differentiate, differentiationLevels };
   const formSnapshot = JSON.stringify(formState);
+
+  // Tell the guest page what the form says, for Ask Jo. A callback into a ref
+  // on the page, so it causes no render here or there.
+  const onSnapshot = guest?.onSnapshot;
+  useEffect(() => {
+    onSnapshot?.(JSON.parse(formSnapshot) as Record<string, unknown>);
+  }, [formSnapshot, onSnapshot]);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
@@ -141,6 +150,10 @@ export default function ComprehensionForm({
         setTextSource("generate");
       },
       numQuestions: (v) => setNumQuestions(v as number),
+      // Snapped to the control's 50 word steps, within its 100 to 800 range.
+      passageWordCount: (v) =>
+        setPassageWordCount(String(Math.min(800, Math.max(100, Math.round(Number(v) / 50) * 50)))),
+      complexity: (v) => setComplexity(v as Complexity),
       differentiate: (v) => setDifferentiate(v as Differentiate),
       differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
     },

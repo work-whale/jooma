@@ -9,7 +9,14 @@ import {
 } from "@/app/lib/guest-actions";
 import { defaultDomainCodes, keyStageFor } from "@/app/lib/comprehension-domains";
 import { validatePrefill } from "@/app/lib/toolPrefill";
-import { guestPrefillFields, yearFromTopic } from "@/app/lib/guest-tools";
+import {
+  cleanFormContext,
+  countsFromMessage,
+  guestPrefillFields,
+  wantsFormEdit,
+  withFormContext,
+  yearFromTopic,
+} from "@/app/lib/guest-tools";
 
 /*
  * The journey from the hero box to the sign up prompt and back into the app:
@@ -188,5 +195,86 @@ test.describe("the form never opens empty (regression)", () => {
     expect(f).toMatchObject({ topic: "Why bees matter", yearGroup: "Year 5" });
     const g = guestPrefillFields("comprehension-generator", "Bees Year 4", { topic: "Why bees matter" });
     expect(g).toMatchObject({ topic: "Why bees matter", yearGroup: "Year 4" });
+  });
+});
+
+test.describe("Ask Jo knows what the form says (regression)", () => {
+  // Jo only saw the chat. With "Recycling and sustainability" in the form,
+  // "change it to Year 6" came back asking for a topic, with chips for the
+  // water cycle and the solar system, and the form was left as it was.
+  test("the form's values ride on the latest message", () => {
+    const ctx = cleanFormContext("comprehension-generator", {
+      topic: "Recycling and sustainability",
+      yearGroup: "Year 5",
+      passageWordCount: "300",
+      secret: "dropped",
+      ownText: "x".repeat(5000),
+    });
+    expect(ctx).toEqual({ topic: "Recycling and sustainability", yearGroup: "Year 5", passageWordCount: "300" });
+    const msgs = withFormContext(
+      [
+        { role: "user", content: "hello" },
+        { role: "assistant", content: "hi" },
+        { role: "user", content: "can you change to year 6" },
+      ],
+      "comprehension-generator",
+      ctx,
+    );
+    expect(msgs[0].content).toBe("hello");
+    expect(msgs[2].content).toContain("can you change to year 6");
+    expect(msgs[2].content).toContain("Topic: Recycling and sustainability");
+    expect(msgs[2].content).toContain("Keep every value I have not asked to change");
+  });
+
+  test("nothing attached when the form is empty", () => {
+    const m = [{ role: "user" as const, content: "hi" }];
+    expect(withFormContext(m, "slideshow", {})).toEqual(m);
+  });
+
+  test("an edit fills the form; a question gets an answer", () => {
+    for (const edit of [
+      "can you change to year 6 and make the passage length 400 words",
+      "make it 10 slides",
+      "Year 4 please",
+      "use a harder reading level",
+      "set the topic to rainforests",
+    ]) {
+      expect(wantsFormEdit(edit), edit).toBe(true);
+    }
+    for (const q of ["what reading level should I pick?", "how many slides is best for year 3?", "thanks!"]) {
+      expect(wantsFormEdit(q), q).toBe(false);
+    }
+  });
+
+  test("Jo can set the comprehension's passage length and complexity", () => {
+    const p = validatePrefill({
+      slug: "comprehension-generator",
+      fields: { topic: "Recycling", yearGroup: "Year 6", passageWordCount: 400, complexity: "Challenging" },
+    });
+    expect(p?.fields).toMatchObject({ passageWordCount: 400, complexity: "Challenging", yearGroup: "Year 6" });
+  });
+});
+
+test.describe("counts the visitor stated (regression)", () => {
+  // Real Jo, asked "change to year 6 and 10 slides", sent only the year and
+  // then said it had changed both.
+  test("read from the message", () => {
+    expect(countsFromMessage("slideshow", "change to year 6 and 10 slides")).toEqual({ slideCount: 10 });
+    expect(countsFromMessage("comprehension-generator", "make the passage 400 words with 3 questions")).toEqual({
+      passageWordCount: 400,
+      numQuestions: 3,
+    });
+    expect(countsFromMessage("slideshow", "year 6 please")).toEqual({});
+  });
+
+  test("Jo's own value wins, the stated count fills the gap", () => {
+    // Same order as AskJoPanel: the form, then the stated counts, then Jo.
+    const form: Record<string, unknown> = { topic: "Recycling and sustainability", year: "Year 5", slideCount: 8 };
+    const jo: Record<string, unknown> = { topic: "Recycling and sustainability", year: "Year 6" };
+    const merged = validatePrefill({
+      slug: "slideshow",
+      fields: { ...form, ...countsFromMessage("slideshow", "change to year 6 and 10 slides"), ...jo },
+    });
+    expect(merged?.fields).toMatchObject({ topic: "Recycling and sustainability", year: "Year 6", slideCount: 10 });
   });
 });

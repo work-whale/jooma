@@ -333,6 +333,21 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           maximum: 20,
           description: "How many questions. Omit to use the form's default.",
         },
+        // The form's passage length control runs 100 to 800 in steps of 50.
+        // Without this, "make the passage 400 words" had nowhere to land.
+        passageWordCount: {
+          type: "integer",
+          minimum: 100,
+          maximum: 800,
+          description:
+            "Approximate length of the reading passage in words. Only when the " +
+            "teacher asks for a length; omit otherwise.",
+        },
+        complexity: {
+          type: "string",
+          enum: ["Simple", "Standard", "Challenging"],
+          description: "How demanding the passage and questions are. Omit unless asked.",
+        },
         differentiate: differentiateField,
         differentiationLevels: differentiationLevelsField,
       },

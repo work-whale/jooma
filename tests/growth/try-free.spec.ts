@@ -167,6 +167,48 @@ test.describe("signed out", () => {
     await expect(page.locator("#email")).toHaveValue("new.teacher@example.com", NAV);
   });
 
+  test("Ask Jo edits the slides wizard in place and knows the topic (regression)", async ({ page }) => {
+    // Jo used to see only the chat (so it asked for a topic, with chips for
+    // unrelated ones), and its update remounted the wizard. Now the page sends
+    // what the form says, and Jo's fields land without disturbing the rest.
+    await stubGuestApi(page, {
+      prefill: encodePrefill({ slug: "slideshow", fields: { topic: "Recycling and sustainability", year: "Year 5" } }),
+    });
+    let sent: Record<string, unknown> | null = null;
+    await page.route("**/api/try/assistant", (route) => {
+      sent = route.request().postDataJSON();
+      const header = Buffer.from(
+        JSON.stringify({ slug: "slideshow", fields: { year: "Year 6", slideCount: 10 } }),
+        "utf8",
+      ).toString("base64");
+      return route.fulfill({
+        status: 200,
+        headers: { "content-type": "text/plain; charset=utf-8", "x-assistant-tool": header },
+        body: "Done, Year 6 and 10 slides.",
+      });
+    });
+    await page.goto("/create?tool=slides&topic=Recycling%20and%20sustainability%2C%20Year%205");
+
+    const topic = page.locator('input[name="lesson-topic"]');
+    await expect(topic).toHaveValue("Recycling and sustainability", NAV);
+    // Something the visitor typed themselves, which Jo must not wipe.
+    await page.locator('textarea[name="lesson-instructions"]').fill("Include a sorting activity.");
+
+    await page.getByLabel("Message Jo").fill("change to year 6 and 10 slides");
+    await page.getByRole("button", { name: "Send" }).click();
+
+    await expect(page.getByRole("button", { name: /Year 6/ }).first()).toBeVisible(NAV);
+    await expect(page.getByRole("button", { name: /10 slides/ }).first()).toBeVisible();
+    await expect(topic).toHaveValue("Recycling and sustainability");
+    await expect(page.locator('textarea[name="lesson-instructions"]')).toHaveValue("Include a sorting activity.");
+
+    // What Jo was told: the wizard's real values.
+    expect(sent).toMatchObject({
+      guestTool: "slideshow",
+      context: { topic: "Recycling and sustainability", year: "Year 5" },
+    });
+  });
+
   test("today's free try used: the sign up prompt explains it", async ({ page }) => {
     await stubGuestApi(page, { deckStatus: 429 });
     await page.goto("/create?tool=slides&topic=Volcanoes");

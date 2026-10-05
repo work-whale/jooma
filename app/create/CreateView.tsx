@@ -127,10 +127,18 @@ export default function CreateView({
     };
   }, [tool, topic, restored]);
 
+  // ── What the form says right now ─────────────────────────────────────────
+  // Kept in a ref (no renders) from the wizard's and the form's own reports,
+  // and sent with every Ask Jo message so Jo works from the real topic and
+  // values instead of guessing, and only changes what it is asked to.
+  const formNow = useRef<Record<string, unknown>>({});
+  const onSnapshot = useCallback((s: object) => {
+    formNow.current = s as Record<string, unknown>;
+  }, []);
+
   // ── Slides ───────────────────────────────────────────────────────────────
-  // The wizard seeds itself from its prefill once, on mount, so a later fill
-  // from Ask Jo remounts it with the new values.
-  const [wizardKey, setWizardKey] = useState(0);
+  // The wizard applies a new prefill in place (see GenerateModal), so a fill
+  // from Ask Jo changes only what Jo sent.
   const slidePrefill = useMemo(() => slidePrefillFrom(prefill, topic), [prefill, topic]);
 
   const restoredSlides = (restored?.output?.slides as SlideJSON[] | undefined) ?? null;
@@ -254,15 +262,32 @@ export default function CreateView({
 
   const onJoPrefill = useCallback(
     (p: ToolPrefill) => {
-      if (tool === "slideshow") {
-        // Keep the topic they started from unless Jo changed it on purpose.
-        setPrefill(p);
-        if (phase === "form") setWizardKey((k) => k + 1);
-      } else {
-        setPrefill(p);
+      // Jo's fields laid over what the form already says. The comprehension
+      // form clears any prefillable field a new prefill leaves out, so without
+      // this "make it Year 6" would also have emptied the topic.
+      const now = formNow.current;
+      const keep: Record<string, unknown> = {};
+      for (const key of [
+        "topic",
+        "year",
+        "yearGroup",
+        "curriculum",
+        "slideCount",
+        "additionalInstructions",
+        "numQuestions",
+        "complexity",
+        "differentiate",
+        "differentiationLevels",
+      ]) {
+        const v = now[key];
+        if (v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)) keep[key] = v;
       }
+      const words = Number(now.passageWordCount);
+      if (Number.isFinite(words) && words > 0) keep.passageWordCount = words;
+      if (now.textSource === "own") delete keep.topic;
+      setPrefill(validatePrefill({ slug: tool, fields: { ...keep, ...p.fields } }) ?? p);
     },
-    [tool, phase],
+    [tool],
   );
 
   const joIntro =
@@ -271,7 +296,12 @@ export default function CreateView({
       : "Hi, I'm Jo. I have filled in what I could from your topic. Pick the question types you want, or ask me, then press Generate.";
 
   const sidePanel = (
-    <AskJoPanel tool={tool} intro={joIntro} onPrefill={onJoPrefill} />
+    <AskJoPanel
+      tool={tool}
+      intro={joIntro}
+      onPrefill={onJoPrefill}
+      getContext={() => formNow.current}
+    />
   );
 
   const other = tool === "slideshow" ? "comp" : "slides";
@@ -333,7 +363,9 @@ export default function CreateView({
         />
 
         {tool === "slideshow" ? (
-          <div className={styles.grid}>
+          // The deck takes the full width once it exists: Ask Jo is only there
+          // while the inputs are being filled in.
+          <div className={phase === "deck" ? styles.gridWide : styles.grid}>
             <main className={styles.main}>
               {phase === "deck" ? (
                 <>
@@ -382,10 +414,10 @@ export default function CreateView({
                     </p>
                   )}
                   <GenerateModal
-                    key={wizardKey}
                     variant="page"
                     guest
                     prefill={slidePrefill}
+                    onSnapshot={onSnapshot}
                     onClose={() => router.push("/")}
                     onSubmit={startDeck}
                   />
@@ -414,6 +446,7 @@ export default function CreateView({
               launch={launch}
               guest={{
                 endpoint: "/api/try/comprehension",
+                onSnapshot,
                 extraBody: () => ({ website: honeypot.current?.value ?? "" }),
                 onRefused: (_status, data) => openGate("more", data.error ?? null),
                 renderResult: ({ result, isGenerating }) => (

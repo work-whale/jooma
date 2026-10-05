@@ -15,6 +15,15 @@
     radial-gradient(ellipse 760px 460px at 14% 88%, rgba(91, 46, 214, 0.5), transparent 66%),
     linear-gradient(168deg, #4a22b5 0%, #5b2ed6 34%, #4a22b5 68%, #3a1c8f 100%);
   padding: 158px 0 172px;
+  /* The hero is the whole first screen: the band runs at least the height of
+     the viewport (it starts under the transparent nav), and its content sits
+     in the middle of it. svh, so mobile browser chrome does not push it past
+     the fold. */
+  min-height: 100vh;
+  min-height: 100svh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
 }
 
 .band::after {
@@ -29,6 +38,7 @@
   position: relative;
   z-index: 2;
   text-align: center;
+  width: 100%;
 }
 
 .h1 {

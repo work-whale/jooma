@@ -10,7 +10,7 @@ import {
   type ToolClarify,
   type ToolPrefill,
 } from "@/app/lib/toolPrefill";
-import type { GuestToolSlug } from "@/app/lib/guest-tools";
+import { countsFromMessage, type GuestToolSlug } from "@/app/lib/guest-tools";
 import styles from "./guest.module.css";
 
 interface Turn {
@@ -37,10 +37,14 @@ export default function AskJoPanel({
   tool,
   intro,
   onPrefill,
+  getContext,
 }: {
   tool: GuestToolSlug;
   intro: string;
   onPrefill: (prefill: ToolPrefill) => void;
+  /** What the form beside the chat says right now. Sent with each message so
+   *  Jo knows the topic and the current values. */
+  getContext?: () => Record<string, unknown>;
 }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
@@ -75,6 +79,7 @@ export default function AskJoPanel({
           guestTool: tool,
           messages: history.map((t) => ({ role: t.role, content: t.content })),
           askCount: asks.current,
+          context: getContext?.() ?? {},
         }),
       });
       if (!res.ok) {
@@ -89,8 +94,23 @@ export default function AskJoPanel({
       if (toolHeader) {
         try {
           // Re-validated here: a header is not a trusted channel, and this
-          // writes into the form.
-          prefill = validatePrefill(JSON.parse(decodeBase64Utf8(toolHeader)));
+          // writes into the form. Validated as Jo's fields laid over what the
+          // form already says: an edit like "Year 6, 10 slides" carries only
+          // the changed fields, and on its own fails the tool's required topic
+          // and was being thrown away before it reached the form.
+          const raw = JSON.parse(decodeBase64Utf8(toolHeader)) as {
+            slug?: string;
+            fields?: Record<string, unknown>;
+          };
+          prefill = validatePrefill({
+            slug: raw.slug,
+            fields: {
+              ...(getContext?.() ?? {}),
+              // A count the visitor stated, in case Jo left it out.
+              ...countsFromMessage(tool, content),
+              ...(raw.fields ?? {}),
+            },
+          });
         } catch {
           prefill = null;
         }
