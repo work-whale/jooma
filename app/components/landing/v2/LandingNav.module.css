@@ -2,14 +2,93 @@
   position: sticky;
   top: 0;
   z-index: 60;
-  background: rgba(247, 245, 252, 0.85);
+  background: rgba(247, 245, 252, 0.88);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.25s;
+  transition:
+    background 0.3s var(--j-ease),
+    border-color 0.3s,
+    backdrop-filter 0.3s;
 }
 
 .stuck {
   border-bottom-color: var(--j-line);
+}
+
+/* At rest the bar sits over the hero's purple band: no ground of its own,
+   white type, a white button. It turns light once the page scrolls. */
+.onBand {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.onBand .brand {
+  color: #fff;
+}
+
+.onBand .link {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.onBand .link:hover {
+  color: #fff;
+}
+
+.onBand .cta {
+  background: #fff;
+  color: var(--j-deep);
+  box-shadow: 0 8px 22px -12px rgba(16, 6, 45, 0.8);
+}
+
+.onBand .cta:hover {
+  background: var(--j-tint);
+}
+
+/* NavAuth's button is drawn for a light bar; give it one on the band. */
+.onBand .auth > div > button {
+  background: #fff;
+}
+
+/* The visitor count, which only joins the bar once the hero has scrolled away. */
+.count {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.81rem;
+  font-weight: 600;
+  border: 1px solid var(--j-line);
+  background: var(--j-card);
+  color: var(--j-muted);
+  border-radius: var(--j-pill);
+  padding: 7px 14px;
+}
+
+.count b {
+  font-weight: 800;
+  color: var(--j-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stuck .count {
+  display: inline-flex;
+}
+
+.pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4be39b;
+  flex: none;
+}
+
+.auth {
+  display: inline-flex;
+}
+
+@media (max-width: 1140px) {
+  .stuck .count {
+    display: none;
+  }
 }
 
 .inner {

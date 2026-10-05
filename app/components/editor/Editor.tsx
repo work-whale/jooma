@@ -25,6 +25,7 @@ import RegenerateImageDialog from "./RegenerateImageDialog";
 import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
 import SlideshowLoadingAnimation from "./SlideshowLoadingAnimation";
 import PresentationViewer from "./PresentationViewer";
+import ShareToHomePrompt from "@/app/components/guest/ShareToHomePrompt";
 import { saveToolRun } from "@/app/lib/toolRuns";
 import type { FrameShape } from "./frames";
 import MiniSlide from "./MiniSlide";
@@ -49,12 +50,23 @@ import { saveGeneratedImage } from "@/app/lib/generatedImages";
 import { getTheme, DEFAULT_THEME_ID, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { rerenderSlideWithTheme, backgroundDecorations } from "@/app/lib/slideshow-layouts";
 import { parseInlineBold } from "@/app/lib/utils";
+import {
+  deckArtStyle,
+  finishDeck,
+  measureTextLines,
+  mergeSlideImage,
+  newId,
+  placeAudio,
+  placeAudioAnswerPlaceholder,
+  placeAudioAnswers,
+  placeAudioPlaceholder,
+  placeVideo,
+  placeVideoPlaceholder,
+  revealSlide,
+  type DeckSlide,
+} from "@/app/lib/deck-events";
 
-interface SlideState extends SlideJSON {
-  id: string;
-}
-
-const newId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+type SlideState = DeckSlide;
 
 interface GenerationParams {
   topic: string;
@@ -109,46 +121,6 @@ interface Props {
 }
 
 const HISTORY_MAX = 50;
-
-// Canvas-based text measurement used to estimate how many wrapped lines a
-// TextObject spans at a given width. Greedy word-wrap matches what the
-// browser does for CSS `word-wrap: break-word; white-space: pre-wrap`.
-let _measureCanvas: HTMLCanvasElement | null = null;
-function measureTextLines(
-  text: string,
-  maxWidth: number,
-  fontSize: number,
-  fontWeight: string,
-  fontStyle: "normal" | "italic",
-  fontFamily: string,
-): number {
-  if (typeof document === "undefined") return 1;
-  if (!_measureCanvas) _measureCanvas = document.createElement("canvas");
-  const ctx = _measureCanvas.getContext("2d");
-  if (!ctx) return 1;
-  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-  const paragraphs = text.split("\n");
-  let total = 0;
-  for (const p of paragraphs) {
-    if (!p) { total += 1; continue; }
-    // Greedy line break: keep packing words until the next would overflow.
-    const words = p.split(/(\s+)/); // keep whitespace tokens
-    let line = "";
-    let lineCount = 0;
-    for (const w of words) {
-      const test = line + w;
-      if (ctx.measureText(test).width > maxWidth && line.length > 0) {
-        lineCount += 1;
-        line = w.trimStart();
-      } else {
-        line = test;
-      }
-    }
-    if (line.length > 0) lineCount += 1;
-    total += Math.max(1, lineCount);
-  }
-  return Math.max(1, total);
-}
 
 export default function Editor({ presentation, generationParams }: Props) {
   const [title, setTitle] = useState(presentation.title);
@@ -275,6 +247,17 @@ export default function Editor({ presentation, generationParams }: Props) {
     const t = setTimeout(() => setJustFinished(false), 6000);
     return () => clearTimeout(t);
   }, [justFinished]);
+  // Ask whether this deck may appear on the landing page: after a fresh
+  // generation, or when it has just been claimed from a free try (?fresh=1).
+  // Separate from justFinished, which clears itself after a few seconds.
+  const [offerShare, setOfferShare] = useState(false);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("fresh") !== "1") return;
+    url.searchParams.delete("fresh");
+    window.history.replaceState(window.history.state, "", url.toString());
+    queueMicrotask(() => setOfferShare(true));
+  }, []);
   // True from the moment generationParams arrives until the first SSE "meta" event,
   // meaning OpenAI has responded. During this window a full-screen overlay is shown
   // so the user never sees a blank slide + spinner during the AI wait.
@@ -2887,46 +2870,7 @@ export default function Editor({ presentation, generationParams }: Props) {
           .catch((err) => console.warn("Gallery save failed:", err));
       }
       setSlides((prev) => {
-        // Pad-to-index model. Each slide event carries its FINAL array index
-        // (audio/answer/video are reserved at fixed mid-deck positions and
-        // content streams around them). Pad with empty placeholders up to
-        // p.index, then set the slot. The existing placeholder's id (if any
-        // — from meta seed or a previous padding pass) is preserved so the
-        // tray's pop-in animation only fires the first time the slot appears.
-        const next = prev.slice();
-        while (next.length <= p.index) {
-          next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-        }
-        const placeholderId = next[p.index]?.id ?? newId("s");
-        // If this slide's image already arrived (out-of-order), prefer the
-        // image-bearing render so revealing the text doesn't wipe the image.
-        const img = arrivedImages.get(p.index);
-        const src = img ?? p.slide;
-        const replaced: SlideState = {
-          id: placeholderId,
-          shapes: src.shapes ?? p.slide.shapes ?? [],
-          texts: src.texts ?? p.slide.texts ?? [],
-          images: src.images ?? p.slide.images ?? [],
-          audios: p.slide.audios ?? [],
-          videos: p.slide.videos ?? [],
-          callouts: src.callouts ?? p.slide.callouts ?? [],
-          badges: src.badges ?? p.slide.badges ?? [],
-          blockquotes: src.blockquotes ?? p.slide.blockquotes ?? [],
-          activities: src.activities ?? p.slide.activities ?? [],
-          background: src.background ?? p.slide.background ?? "#ffffff",
-          backgroundImage: src.backgroundImage ?? p.slide.backgroundImage,
-          backgroundImageWidth: src.backgroundImageWidth ?? p.slide.backgroundImageWidth,
-          backgroundImageHeight: src.backgroundImageHeight ?? p.slide.backgroundImageHeight,
-          backgroundOffsetX: src.backgroundOffsetX ?? p.slide.backgroundOffsetX,
-          backgroundOffsetY: src.backgroundOffsetY ?? p.slide.backgroundOffsetY,
-          backgroundScale: src.backgroundScale ?? p.slide.backgroundScale,
-          backgroundImagePending: img ? src.backgroundImagePending : p.slide.backgroundImagePending,
-          backgroundArt: src.backgroundArt ?? p.slide.backgroundArt,
-          backgroundArtScrim: src.backgroundArtScrim ?? p.slide.backgroundArtScrim,
-          skeleton: p.slide.skeleton,
-          themeId: p.slide.themeId,
-        };
-        next[p.index] = replaced;
+        const next = revealSlide(prev, p, arrivedImages.get(p.index));
         slidesRef.current = next;
         return next;
       });
@@ -3095,474 +3039,47 @@ export default function Editor({ presentation, generationParams }: Props) {
               // pending placeholder.
               arrivedImages.set(p.index, p.slide);
               setSlides((prev) => {
-                const next = prev.slice();
-                const target = next[p.index];
-                if (!target) return prev;
-                // Preserve the slide id (so React's key + animations stay
-                // stable) and merge in the new image data.
-                next[p.index] = {
-                  id: target.id,
-                  shapes: p.slide.shapes ?? target.shapes,
-                  texts: p.slide.texts ?? target.texts,
-                  images: p.slide.images ?? target.images,
-                  audios: target.audios,
-                  videos: target.videos,
-                  // Re-rendered slide carries fresh callouts/badges/etc with
-                  // any image data merged into ActivityObject.image. Prefer
-                  // the new slide's arrays, fall back to the target's.
-                  callouts: p.slide.callouts ?? target.callouts,
-                  badges: p.slide.badges ?? target.badges,
-                  blockquotes: p.slide.blockquotes ?? target.blockquotes,
-                  activities: p.slide.activities ?? target.activities,
-                  background: p.slide.background ?? target.background,
-                  backgroundImage: p.slide.backgroundImage,
-                  backgroundImageWidth: p.slide.backgroundImageWidth,
-                  backgroundImageHeight: p.slide.backgroundImageHeight,
-                  backgroundOffsetX: p.slide.backgroundOffsetX,
-                  backgroundOffsetY: p.slide.backgroundOffsetY,
-                  backgroundScale: p.slide.backgroundScale,
-                  backgroundImagePending: p.slide.backgroundImagePending,
-                  backgroundArt: p.slide.backgroundArt ?? target.backgroundArt,
-                  backgroundArtScrim: p.slide.backgroundArtScrim ?? target.backgroundArtScrim,
-                  // Keep skeleton + themeId carried by the previous slide so
-                  // image arrival doesn't strip the re-theming metadata.
-                  skeleton: target.skeleton,
-                  themeId: target.themeId,
-                };
+                const next = mergeSlideImage(prev, p);
+                if (next === prev) return prev;
                 slidesRef.current = next;
                 return next;
               });
               scheduleSave();
             } else if (eventName === "video") {
-              const p = payload as {
-                index: number;
-                video: {
-                  videoId: string; title: string; channel: string; description: string;
-                  slideHeading?: string; slideSubtitle?: string;
-                };
-                slideBg?: string;
-                titleColor?: string;
-                mutedColor?: string;
-                accent?: string;
-                headingColor?: string;
-                headingFont?: string;
-                bodyFont?: string;
-              };
               setSlides((prev) => {
-                // Title styled like every other paper-* slide: theme heading
-                // colour, normal title-case, 40pt — no more giant uppercase
-                // "WATCH: ..." block that sticks out from the rest of the deck.
-                const titleColor = p.headingColor ?? p.titleColor ?? "#1a1a1a";
-                const subtitleColor = p.mutedColor ?? "#1a1a1a";
-                const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
-                const bodyFont = p.bodyFont ?? "'Inter', sans-serif";
-                const heading = p.video.slideHeading ?? p.video.title ?? "Watch this together";
-                const subtitle = p.video.slideSubtitle ?? "Let's watch this together to deepen our understanding.";
-
-                // Measure each text block at its width so wrapped headings
-                // (long YouTube titles) push the subtitle + video below them
-                // instead of overlapping. Mirrors the canvas measurement used
-                // by textBbox / hit-testing.
-                const blockWidth = SLIDE_W - 160;
-                const titleFontSize = 40;
-                const titleLH = 1.15;
-                const subtitleFontSize = 22;
-                const subtitleLH = 1.3;
-                const titleLines = measureTextLines(
-                  heading, blockWidth, titleFontSize, "800", "normal", headingFont,
-                );
-                const titleH = titleFontSize * titleLH * titleLines;
-                const subtitleLines = measureTextLines(
-                  subtitle, blockWidth, subtitleFontSize, "500", "normal", bodyFont,
-                );
-                const subtitleH = subtitleFontSize * subtitleLH * subtitleLines;
-
-                const titleY = 80;
-                const subtitleGap = 14;
-                const subtitleY = titleY + titleH + subtitleGap;
-                const videoGap = 28;
-                const vidTop = Math.round(subtitleY + subtitleH + videoGap);
-
-                const titleText: TextObject = {
-                  id: newId("t"),
-                  x: 80, y: titleY, width: blockWidth,
-                  text: heading,
-                  fontSize: titleFontSize, fontWeight: "800",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: headingFont,
-                  color: titleColor,
-                  textAlign: "left",
-                  lineHeight: titleLH,
-                };
-                const subtitleText: TextObject = {
-                  id: newId("t"),
-                  x: 80, y: Math.round(subtitleY), width: blockWidth,
-                  text: subtitle,
-                  fontSize: subtitleFontSize, fontWeight: "500",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: bodyFont,
-                  color: subtitleColor,
-                  textAlign: "left",
-                  lineHeight: subtitleLH,
-                };
-                // 16:9 player. Sized to fill what's left below the text block,
-                // centered horizontally with comfortable side margins.
-                const sideMargin = 160;
-                const maxW = SLIDE_W - sideMargin * 2;
-                const maxH = Math.max(120, SLIDE_H - vidTop - 40);
-                let vidW = maxW;
-                let vidH = Math.round(vidW * 9 / 16);
-                if (vidH > maxH) {
-                  vidH = maxH;
-                  vidW = Math.round(vidH * 16 / 9);
-                }
-                const vidX = Math.round((SLIDE_W - vidW) / 2);
-                const newVid: VideoObject = {
-                  id: newId("v"),
-                  source: "youtube",
-                  src: p.video.videoId,
-                  title: p.video.title,
-                  x: vidX,
-                  y: vidTop,
-                  width: vidW,
-                  height: vidH,
-                  cornerRadius: 3,
-                };
-                // Preserve the slot id (reserved by video-placeholder) so the
-                // tray pop-in animation doesn't re-fire on the swap.
-                const placeholderId = prev[p.index]?.id ?? newId("s");
-                const realSlide: SlideState = {
-                  id: placeholderId,
-                  shapes: [], images: [], audios: [],
-                  texts: [titleText, subtitleText],
-                  videos: [newVid],
-                  background: p.slideBg ?? "#1a1a1a",
-                };
-                const next = prev.slice();
-                while (next.length <= p.index) {
-                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-                }
-                next[p.index] = realSlide;
+                const next = placeVideo(prev, payload as Parameters<typeof placeVideo>[1]);
                 slidesRef.current = next;
                 return next;
               });
               scheduleSave();
             } else if (eventName === "audio-placeholder") {
-              const p = payload as {
-                index: number;
-                slideBg?: string;
-                slideTextColor?: string;
-                panelBg?: string;
-                panelInk?: string;
-                playBg?: string;
-                playInk?: string;
-                headingFont?: string;
-              };
               setSlides((prev) => {
-                // Pad-to-index: reserve this slot now with a pending audio
-                // shimmer. The real audio data fills it via the "audio" event.
-                const playerW = SLIDE_W - 160;
-                const playerH = 80;
-                const playerY = 210;
-                const pendingAudio: AudioObject = {
-                  id: newId("a"),
-                  x: 80, y: playerY,
-                  width: playerW, height: playerH,
-                  src: "",
-                  title: "",
-                  description: "",
-                  questions: [],
-                  panelBg: p.panelBg,
-                  panelInk: p.panelInk,
-                  playBg: p.playBg,
-                  playInk: p.playInk,
-                  headingFont: p.headingFont,
-                  isPending: true,
-                };
-                const placeholderSlide: SlideState = {
-                  id: newId("s"),
-                  shapes: [], images: [],
-                  texts: [],
-                  audios: [pendingAudio],
-                  background: p.slideBg ?? "#0f172a",
-                };
-                const next = prev.slice();
-                while (next.length <= p.index) {
-                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-                }
-                next[p.index] = placeholderSlide;
+                const next = placeAudioPlaceholder(prev, payload as Parameters<typeof placeAudioPlaceholder>[1]);
                 slidesRef.current = next;
                 return next;
               });
             } else if (eventName === "video-placeholder") {
-              const p = payload as {
-                index: number;
-                slideBg?: string;
-                titleColor?: string;
-                mutedColor?: string;
-                accent?: string;
-                headingFont?: string;
-              };
               setSlides((prev) => {
-                const sideMargin = 160;
-                const vidW = SLIDE_W - sideMargin * 2;
-                const vidH = Math.round(vidW * 9 / 16);
-                const vidX = Math.round((SLIDE_W - vidW) / 2);
-                const pendingVideo: VideoObject = {
-                  id: newId("v"),
-                  source: "youtube",
-                  src: "",
-                  x: vidX,
-                  y: 210,
-                  width: vidW,
-                  height: vidH,
-                  cornerRadius: 3,
-                  isPending: true,
-                };
-                const placeholderSlide: SlideState = {
-                  id: newId("s"),
-                  shapes: [], images: [], audios: [],
-                  texts: [],
-                  videos: [pendingVideo],
-                  background: p.slideBg ?? "#1a1a1a",
-                };
-                const next = prev.slice();
-                while (next.length <= p.index) {
-                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-                }
-                next[p.index] = placeholderSlide;
+                const next = placeVideoPlaceholder(prev, payload as Parameters<typeof placeVideoPlaceholder>[1]);
                 slidesRef.current = next;
                 return next;
               });
             } else if (eventName === "audio-answer-placeholder") {
-              const p = payload as {
-                index: number;
-                slideBg?: string;
-                slideTextColor?: string;
-                headingFont?: string;
-              };
               setSlides((prev) => {
-                // Reserve the answer slot — a blank shimmer until the audio
-                // API returns the model answers.
-                const placeholderSlide: SlideState = {
-                  id: newId("s"),
-                  shapes: [], images: [], audios: [], videos: [],
-                  texts: [
-                    {
-                      id: newId("t"),
-                      x: 80, y: 80, width: SLIDE_W - 160,
-                      text: "Answers loading…",
-                      fontSize: 36,
-                      fontWeight: "800",
-                      fontStyle: "normal",
-                      underline: false,
-                      fontFamily: p.headingFont ?? "'Bricolage Grotesque', sans-serif",
-                      color: p.slideTextColor ?? "#1a1a1a",
-                      textAlign: "left",
-                    },
-                  ],
-                  background: p.slideBg ?? "#ffffff",
-                };
-                const next = prev.slice();
-                while (next.length <= p.index) {
-                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-                }
-                next[p.index] = placeholderSlide;
+                const next = placeAudioAnswerPlaceholder(prev, payload as Parameters<typeof placeAudioAnswerPlaceholder>[1]);
                 slidesRef.current = next;
                 return next;
               });
             } else if (eventName === "audio") {
-              const p = payload as {
-                index: number;
-                audio: {
-                  src: string; title: string; description: string;
-                  transcript?: string; questions: string[]; answers?: string[];
-                  panelBg?: string; panelInk?: string;
-                  playBg?: string; playInk?: string;
-                  headingFont?: string;
-                  bodyFont?: string;
-                  slideBg?: string;
-                  slideTextColor?: string;
-                  headingColor?: string;
-                };
-              };
               setSlides((prev) => {
-                // The audio activity gets a dedicated slide. We lay out four
-                // discrete elements so the teacher can edit any of them
-                // independently: a title heading, a description, the audio
-                // player bar, and a numbered questions list.
-                // Slide texts use slideTextColor (palette.text) so they read
-                // against the natural theme bg. Panel internals (player bar)
-                // still use panelInk because they sit on the accent panel.
-                const titleColor = p.audio.headingColor ?? p.audio.slideTextColor ?? "#1a1a2e";
-                const bodyColor = p.audio.slideTextColor ?? "#1a1a2e";
-                const headingFont = p.audio.headingFont ?? "'Bricolage Grotesque', sans-serif";
-                const bodyFont = p.audio.bodyFont ?? "'Inter', sans-serif";
-
-                // Title styled like every other paper-* slide: theme heading
-                // colour, normal title-case, 44pt — no more giant 56pt black
-                // uppercase that sticks out from the rest of the deck.
-                const titleText: TextObject = {
-                  id: newId("t"),
-                  x: 80, y: 80, width: SLIDE_W - 160,
-                  text: p.audio.title || "Audio Activity",
-                  fontSize: 44, fontWeight: "800",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: headingFont,
-                  color: titleColor,
-                  textAlign: "left",
-                };
-                const descText: TextObject = {
-                  id: newId("t"),
-                  x: 80, y: 150, width: SLIDE_W - 160,
-                  text: p.audio.description || "Listen to the audio and answer the questions.",
-                  fontSize: 22, fontWeight: "500",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: bodyFont,
-                  color: bodyColor,
-                  textAlign: "left",
-                };
-
-                const playerW = SLIDE_W - 160;
-                const playerH = 80;
-                const playerY = 210;
-                const newAudio: AudioObject = {
-                  id: newId("a"),
-                  x: 80, y: playerY,
-                  width: playerW, height: playerH,
-                  src: p.audio.src,
-                  title: p.audio.title,
-                  description: p.audio.description,
-                  questions: p.audio.questions ?? [],
-                  transcript: p.audio.transcript,
-                  panelBg: p.audio.panelBg,
-                  panelInk: p.audio.panelInk,
-                  playBg: p.audio.playBg,
-                  playInk: p.audio.playInk,
-                  headingFont: p.audio.headingFont,
-                };
-
-                // Numbered comprehension list — one text element with listType
-                // so the teacher gets the toolbar's bullet/number controls.
-                const questionsText: TextObject | null = (p.audio.questions?.length ?? 0) > 0 ? {
-                  id: newId("t"),
-                  x: 80, y: playerY + playerH + 40,
-                  width: SLIDE_W - 160,
-                  text: (p.audio.questions ?? []).join("\n"),
-                  fontSize: 22, fontWeight: "500",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: bodyFont,
-                  color: bodyColor,
-                  textAlign: "left",
-                  listType: "number",
-                } : null;
-
-                // Preserve the slot id (reserved by audio-placeholder) so the
-                // tray's pop-in animation only fires once.
-                const placeholderId = prev[p.index]?.id ?? newId("s");
-                const realSlide: SlideState = {
-                  id: placeholderId,
-                  shapes: [], images: [],
-                  texts: questionsText ? [titleText, descText, questionsText] : [titleText, descText],
-                  audios: [newAudio],
-                  background: p.audio.slideBg ?? "#0f172a",
-                };
-                const next = prev.slice();
-                while (next.length <= p.index) {
-                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-                }
-                next[p.index] = realSlide;
+                const next = placeAudio(prev, payload as Parameters<typeof placeAudio>[1]);
                 slidesRef.current = next;
                 return next;
               });
               scheduleSave();
             } else if (eventName === "audio-answers") {
-              const p = payload as {
-                index: number;
-                title: string;
-                questions: string[];
-                answers: string[];
-                slideBg?: string;
-                slideTextColor?: string;
-                accent?: string;
-                headingColor?: string;
-                checkBadgeBg?: string;
-                checkBadgeInk?: string;
-                headingFont?: string;
-                bodyFont?: string;
-              };
               setSlides((prev) => {
-                // Build a "Q: ... / A: ..." paired list. We render each as one
-                // long text element so the teacher can edit any line and the
-                // toolbar's lists work naturally.
-                const titleColor = p.headingColor ?? p.slideTextColor ?? "#1a1a1a";
-                const bodyColor = p.slideTextColor ?? "#1a1a1a";
-                const headingFont = p.headingFont ?? "'Bricolage Grotesque', sans-serif";
-                const bodyFont = p.bodyFont ?? "'Inter', sans-serif";
-                const titleText: TextObject = {
-                  id: newId("t"),
-                  x: 80, y: 80, width: SLIDE_W - 240,
-                  text: p.title || "Audio activity — answers",
-                  fontSize: 44, fontWeight: "800",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: headingFont,
-                  color: titleColor,
-                  textAlign: "left",
-                };
-                const pairs = (p.questions ?? []).map((q, i) => {
-                  const a = (p.answers ?? [])[i] ?? "";
-                  return `${i + 1}. ${q}\n   → ${a}`;
-                }).join("\n\n");
-                const answersText: TextObject = {
-                  id: newId("t"),
-                  x: 80, y: 170, width: SLIDE_W - 160,
-                  text: pairs || "Answers unavailable.",
-                  fontSize: 20, fontWeight: "500",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: bodyFont,
-                  color: bodyColor,
-                  textAlign: "left",
-                };
-                // Green ✓ badge in the top-right — same visual cue the
-                // activity-ordering-answer slide uses, so the deck reads
-                // consistently as "this is an answers slide".
-                const badgeSize = 56;
-                const badgeX = SLIDE_W - 60 - badgeSize;
-                const badgeY = 60;
-                const checkBadge: ShapeObject = {
-                  id: newId("sh"),
-                  type: "rect",
-                  x: badgeX, y: badgeY, width: badgeSize, height: badgeSize,
-                  fill: p.checkBadgeBg ?? "#2e9d54",
-                  stroke: "transparent",
-                  strokeWidth: 0,
-                  opacity: 1,
-                  cornerRadius: 10,
-                  shadow: true,
-                };
-                const checkGlyph: TextObject = {
-                  id: newId("t"),
-                  x: badgeX, y: badgeY + (badgeSize - 36) / 2,
-                  width: badgeSize,
-                  text: "✓",
-                  fontSize: 36, fontWeight: "900",
-                  fontStyle: "normal", underline: false,
-                  fontFamily: headingFont,
-                  color: p.checkBadgeInk ?? "#ffffff",
-                  textAlign: "center",
-                };
-                const placeholderId = prev[p.index]?.id ?? newId("s");
-                const realSlide: SlideState = {
-                  id: placeholderId,
-                  shapes: [checkBadge], images: [], audios: [], videos: [],
-                  texts: [titleText, answersText, checkGlyph],
-                  background: p.slideBg ?? "#ffffff",
-                };
-                const next = prev.slice();
-                while (next.length <= p.index) {
-                  next.push({ id: newId("s"), shapes: [], texts: [], images: [], background: "#ffffff" });
-                }
-                next[p.index] = realSlide;
+                const next = placeAudioAnswers(prev, payload as Parameters<typeof placeAudioAnswers>[1]);
                 slidesRef.current = next;
                 return next;
               });
@@ -3571,28 +3088,18 @@ export default function Editor({ presentation, generationParams }: Props) {
               setGenerating(null);
               setPreMeta(false);
               setJustFinished(true);
+              setOfferShare(true);
               // Make sure every slide carries the deck's themed background art.
               // Content slides already get it baked in server-side, but the
               // audio/video slides are built client-side and would otherwise
               // miss it until a manual re-theme. Use the generated art style
               // recorded on slide 0, and sync the editor's toggle to it.
-              const genArtStyle = (slidesRef.current[0]?.artStyleId as ArtStyleId) ?? DEFAULT_ART_STYLE;
-              const genTheme = getTheme(slidesRef.current[0]?.themeId ?? DEFAULT_THEME_ID);
-              const genArt = getThemeArt(genTheme, genArtStyle);
-              setArtStyle(genArtStyle);
-              // Clear any media slots still pending at the end of the run (e.g.
-              // an audio activity whose generation failed) so they don't shimmer
-              // forever — drop them back to an empty frame.
+              setArtStyle(deckArtStyle(slidesRef.current));
+              // Every slide gets the themed background art, and any media slot
+              // still pending (an audio activity whose generation failed) drops
+              // back to an empty frame. See finishDeck in lib/deck-events.
               setSlides((prev) => {
-                const next = prev.map((s) => ({
-                  ...s,
-                  images: (s.images ?? []).map((i) => (i.isPending && !i.src ? { ...i, isPending: false } : i)),
-                  audios: (s.audios ?? []).map((a) => (a.isPending && !a.src ? { ...a, isPending: false } : a)),
-                  videos: (s.videos ?? []).map((v) => (v.isPending && !v.src ? { ...v, isPending: false } : v)),
-                  backgroundImagePending: s.backgroundImagePending && !s.backgroundImage ? false : s.backgroundImagePending,
-                  backgroundArt: s.backgroundArt ?? genArt?.src,
-                  backgroundArtScrim: s.backgroundArtScrim ?? genArt?.scrim,
-                }));
+                const next = finishDeck(prev);
                 slidesRef.current = next;
                 return next;
               });
@@ -4538,6 +4045,8 @@ export default function Editor({ presentation, generationParams }: Props) {
           onClose={() => setPresenting(false)}
         />
       )}
+
+      {offerShare && <ShareToHomePrompt kind="slides" resourceId={presentation.id} />}
 
       {editPromptOpen && savedGenParams && (
         <EditPromptModal

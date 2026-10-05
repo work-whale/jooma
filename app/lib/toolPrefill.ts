@@ -202,7 +202,23 @@ function cleanFields(
 
   const clean: Record<string, string | number | boolean | string[]> = {};
 
-  for (const [key, value] of Object.entries(fields as Record<string, unknown>)) {
+  // The selection prompt tells the model to ALWAYS send `yearGroup`, which is
+  // the name 34 tools use. The slideshow calls the same thing `year`, so the
+  // model's yearGroup was dropped as unknown and "Volcanoes, Year 3" opened the
+  // deck wizard on "Any year". Read it as `year` when that is the tool's name
+  // for it and `year` itself was not sent.
+  const incoming = { ...(fields as Record<string, unknown>) };
+  if (
+    schema.properties.year &&
+    !schema.properties.yearGroup &&
+    incoming.year === undefined &&
+    incoming.yearGroup !== undefined
+  ) {
+    incoming.year = incoming.yearGroup;
+    delete incoming.yearGroup;
+  }
+
+  for (const [key, value] of Object.entries(incoming)) {
     const spec = schema.properties[key];
     if (!spec) continue; // unknown field — drop it rather than pass it through
 

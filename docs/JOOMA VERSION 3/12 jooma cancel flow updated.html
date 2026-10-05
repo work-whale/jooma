@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jooma. Cancellation flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F5FC; --card:#FFFFFF; --tint:#F1ECFC; --tint-2:#E9E2FB;
+  --lilac:#CDBCF7; --lilac-2:#B7A6EC; --mid:#8B6AE8;
+  --purple:#5B2ED6; --deep:#3A1C8F;
+  --ink:#1D1730; --body:#3C3552; --muted:#6D6683; --faint:#9A93AD;
+  --line:#EAE6F5; --line-2:#DDD6EE;
+  --orange:#C2551F; --orange-bg:#FDF1EA; --orange-ink:#8A3C12;
+  --green:#0F8A63; --green-bg:#E6F6EF; --green-ink:#0C6E4E;
+  --r:14px; --r-lg:20px; --r-xl:28px; --pill:999px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--body);font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{color:var(--ink);font-weight:800;letter-spacing:-.032em;line-height:1.08;margin:0}
+h1{font-size:clamp(1.7rem,3.4vw,2.3rem)}
+h2{font-size:1.25rem;letter-spacing:-.025em}
+h3{font-size:1rem;letter-spacing:-.02em}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+svg{display:block}
+:focus-visible{outline:3px solid var(--mid);outline-offset:3px;border-radius:8px}
+
+/* prototype chrome, delete in production */
+.proto{position:sticky;top:0;z-index:90;background:#140B2E;color:#fff;padding:9px 16px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.76rem}
+.proto b{font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:.66rem;color:var(--lilac);margin-right:4px}
+.proto button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:var(--pill);
+  padding:5px 12px;font-size:.74rem;font-weight:700;color:#DCD2FA}
+.proto button:hover{background:rgba(255,255,255,.2);color:#fff}
+.proto button.on{background:#fff;color:#140B2E;border-color:#fff}
+
+.wrap{max-width:720px;margin:0 auto;padding:30px 20px 80px}
+.wrap.wide{max-width:980px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+.top .brand{color:var(--purple)}.top .brand svg{height:21px;width:auto;fill:currentColor}
+.steps{margin-left:auto;display:flex;align-items:center;gap:7px}
+.steps i{width:26px;height:4px;border-radius:2px;background:var(--line-2);transition:background .3s}
+.steps i.on{background:var(--purple)}
+.steps i.done{background:var(--lilac-2)}
+
+/* screens */
+.scr{display:none}
+.scr.on{display:block;animation:rise .35s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lede{font-size:1.02rem;color:var(--muted);margin-top:14px;max-width:56ch}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);padding:30px 32px;
+  box-shadow:0 24px 56px -40px rgba(29,23,48,.4)}
+.card + .card{margin-top:14px}
+
+/* reason list */
+.reasons{margin-top:26px;display:flex;flex-direction:column;gap:9px}
+.rn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);
+  border:1.5px solid var(--line-2);border-radius:var(--r);padding:16px 18px;
+  transition:border-color .18s,background .18s,transform .18s var(--ease)}
+.rn:hover{border-color:var(--lilac-2);transform:translateX(3px)}
+.rn.on{border-color:var(--purple);background:var(--tint)}
+.rn .dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);flex:none;display:grid;place-items:center;transition:border-color .18s}
+.rn .dot::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--purple);transform:scale(0);transition:transform .18s var(--ease)}
+.rn.on .dot{border-color:var(--purple)}
+.rn.on .dot::after{transform:scale(1)}
+.rn .t{min-width:0}
+.rn .t b{display:block;font-size:.98rem;font-weight:700;color:var(--ink)}
+.rn .t span{font-size:.84rem;color:var(--faint)}
+
+/* actions */
+.acts{display:flex;align-items:center;gap:12px;margin-top:28px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:.96rem;font-weight:800;
+  padding:14px 26px;border-radius:var(--pill);transition:transform .18s var(--ease),background .18s,border-color .18s}
+.btn svg{width:15px;height:15px;fill:currentColor}
+.btn-p{background:var(--purple);color:#fff;box-shadow:0 8px 22px -10px rgba(91,46,214,.8)}
+.btn-p:hover{background:#4d24bd;transform:translateY(-2px)}
+.btn-g{background:var(--card);color:var(--ink);border:1.5px solid var(--line-2)}
+.btn-g:hover{border-color:var(--lilac-2);transform:translateY(-2px)}
+.btn-w{background:#fff;color:var(--deep)}
+.btn:disabled{opacity:.42;pointer-events:none}
+.btn-lg{padding:16px 32px;font-size:1.02rem}
+
+/* the always-available exit. never hide this. */
+.exit{margin-left:auto;font-size:.9rem;font-weight:700;color:var(--muted);
+  text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line-2)}
+.exit:hover{color:var(--ink);text-decoration-color:var(--faint)}
+
+/* offers */
+.offer{background:linear-gradient(142deg,#6A3BE4,var(--purple) 46%,var(--deep));color:#fff;
+  border-radius:var(--r-xl);padding:34px 34px 32px;position:relative;overflow:hidden;
+  box-shadow:0 30px 70px -40px rgba(58,28,143,.9)}
+.offer::after{content:"";position:absolute;top:-120px;right:-60px;width:380px;height:300px;
+  background:radial-gradient(ellipse at center,rgba(255,255,255,.2),transparent 68%);pointer-events:none}
+.offer h2,.offer h1{color:#fff;position:relative}
+.offer p{color:#DCD2FA;position:relative}
+.offer .tagline{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.26);border-radius:var(--pill);padding:7px 15px;
+  font-size:.7rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:16px;position:relative}
+.offer .big{font-size:clamp(2.1rem,4.6vw,3rem);font-weight:800;letter-spacing:-.045em;line-height:1;margin:18px 0 6px;color:#fff;position:relative}
+.offer .big s{opacity:.5;font-weight:600;font-size:.46em;margin-right:12px;letter-spacing:-.02em}
+.offer .acts{position:relative}
+
+/* alternatives */
+.alts{margin-top:14px;display:grid;gap:10px}
+.alt{display:flex;align-items:center;gap:14px;background:var(--card);border:1.5px solid var(--line-2);
+  border-radius:var(--r);padding:16px 18px;text-align:left;width:100%;
+  transition:border-color .18s,transform .18s var(--ease)}
+.alt:hover{border-color:var(--lilac-2);transform:translateY(-2px)}
+.alt .ic{width:38px;height:38px;border-radius:12px;background:var(--tint);display:grid;place-items:center;flex:none}
+.alt .ic svg{width:18px;height:18px;fill:var(--purple)}
+.alt .t{min-width:0;flex:1}
+.alt .t b{display:block;font-size:.95rem;color:var(--ink);font-weight:700}
+.alt .t span{font-size:.84rem;color:var(--faint)}
+.alt .go{font-size:.84rem;font-weight:800;color:var(--purple);flex:none}
+
+/* inventory */
+.inv{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:24px}
+.iv{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;
+  display:flex;gap:14px;align-items:flex-start}
+.iv .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.iv .ic svg{width:19px;height:19px;fill:#fff}
+.iv > span:last-child{min-width:0}
+.iv .n{display:block;font-size:1.5rem;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1.05}
+.iv .l{display:block;font-size:.86rem;color:var(--muted);margin-top:2px}
+.iv .w{font-size:.78rem;color:var(--orange-ink);background:var(--orange-bg);border-radius:8px;
+  padding:5px 9px;margin-top:9px;display:inline-block;font-weight:700}
+.iv .k{font-size:.78rem;color:var(--green-ink);background:var(--green-bg);border-radius:8px;
+  padding:5px 9px;margin-top:9px;display:inline-block;font-weight:700}
+
+.timeline{margin-top:20px;border-left:2px solid var(--line-2);padding-left:22px;display:flex;flex-direction:column;gap:18px}
+.tl{position:relative}
+.tl::before{content:"";position:absolute;left:-29px;top:4px;width:12px;height:12px;border-radius:50%;
+  background:var(--card);border:2.5px solid var(--lilac-2)}
+.tl.now::before{background:var(--purple);border-color:var(--purple)}
+.tl.bad::before{border-color:var(--orange)}
+.tl b{display:block;font-size:.93rem;color:var(--ink);font-weight:700}
+.tl span{font-size:.87rem;color:var(--muted)}
+
+/* misc */
+.note{margin-top:22px;font-size:.86rem;color:var(--faint);display:flex;gap:10px;align-items:flex-start}
+.note svg{width:15px;height:15px;fill:var(--faint);flex:none;margin-top:4px}
+textarea{width:100%;margin-top:16px;border:1.5px solid var(--line-2);border-radius:var(--r);padding:14px 16px;
+  font-family:inherit;font-size:.95rem;color:var(--ink);background:var(--card);resize:vertical;min-height:110px;outline:0}
+textarea:focus{border-color:var(--purple)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{background:var(--card);border:1.5px solid var(--line-2);border-radius:var(--pill);padding:8px 15px;
+  font-size:.86rem;font-weight:600;color:var(--body);transition:border-color .18s,background .18s}
+.chip:hover{border-color:var(--lilac-2)}
+.chip.on{background:var(--tint);border-color:var(--purple);color:var(--deep);font-weight:800}
+.pauseopts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;position:relative}
+.po{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.24);border-radius:var(--r);
+  padding:16px 12px;text-align:center;color:#fff;transition:background .18s,border-color .18s}
+.po:hover{background:rgba(255,255,255,.22)}
+.po.on{background:#fff;color:var(--deep);border-color:#fff}
+.po b{display:block;font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+.po span{font-size:.78rem;opacity:.8}
+.po.on span{opacity:.7}
+
+.done-ic{width:62px;height:62px;border-radius:20px;display:grid;place-items:center;margin-bottom:22px}
+.done-ic svg{width:30px;height:30px;fill:#fff}
+.kept{background:var(--green)}
+.gone{background:var(--muted)}
+
+.fine{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);font-size:.82rem;color:var(--faint)}
+.fine a{color:var(--purple);font-weight:700}
+
+@media (max-width:680px){
+  .wrap{padding:22px 16px 60px}
+  .card{padding:24px 20px;border-radius:var(--r-lg)}
+  .offer{padding:26px 22px}
+  .inv{grid-template-columns:1fr}
+  .acts{gap:10px}
+  .acts .btn{width:100%}
+  .exit{margin:4px auto 0;width:100%;text-align:center}
+  .pauseopts{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="proto" id="proto">
+  <b>Prototype</b>
+  <button data-go="reason">1 · Reason</button>
+  <button data-go="offer-discount">2a · Discount</button>
+  <button data-go="offer-pause">2b · Pause</button>
+  <button data-go="offer-fix">2c · Fix it</button>
+  <button data-go="offer-schools">2d · Schools</button>
+  <button data-go="lose">3 · What you lose</button>
+  <button data-go="confirm">4 · Confirm</button>
+  <button data-go="done">5 · Cancelled</button>
+  <button data-go="saved">✓ Saved</button>
+</div>
+
+<div class="wrap" id="wrap">
+  <div class="top">
+    <span class="brand" aria-label="Jooma"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+    <span class="steps" id="steps"><i></i><i></i><i></i><i></i></span>
+  </div>
+
+  <!-- ================= 1. REASON ================= -->
+  <section class="scr" id="s-reason">
+    <h1>Before you go, <span style="color:var(--purple)">what happened?</span></h1>
+    <p class="lede">One tap. It changes what we can do for you on the next screen, and it is the only way we find out what to fix.</p>
+
+    <div class="reasons" id="reasons">
+      <button class="rn" data-r="cost" data-next="offer-discount"><span class="dot"></span>
+        <span class="t"><b>It costs too much right now</b><span>Money is tight, or it is not worth the price yet</span></span></button>
+      <button class="rn" data-r="unused" data-next="offer-pause"><span class="dot"></span>
+        <span class="t"><b>I am not using it enough</b><span>Credits going unused, or a quiet half term</span></span></button>
+      <button class="rn" data-r="term" data-next="offer-pause"><span class="dot"></span>
+        <span class="t"><b>I only needed it for this term</b><span>The planning is done, for now</span></span></button>
+      <button class="rn" data-r="missing" data-next="offer-fix"><span class="dot"></span>
+        <span class="t"><b>Something I need is missing</b><span>A tool, a curriculum, a format</span></span></button>
+      <button class="rn" data-r="broke" data-next="offer-fix"><span class="dot"></span>
+        <span class="t"><b>Something went wrong</b><span>Quality, a bug, or billing</span></span></button>
+      <button class="rn" data-r="other-tool" data-next="offer-discount"><span class="dot"></span>
+        <span class="t"><b>I have found something else</b><span>Another tool is doing the job</span></span></button>
+      <button class="rn" data-r="school" data-next="offer-schools"><span class="dot"></span>
+        <span class="t"><b>My school is buying a licence</b><span>Moving onto a school account</span></span></button>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-p" id="reasonNext" disabled>Continue <i data-i="arrow-right"></i></button>
+      <button class="btn btn-g" data-go="saved">Keep my plan</button>
+    </div>
+  </section>
+
+  <!-- ================= 2a. DISCOUNT ================= -->
+  <section class="scr" id="s-offer-discount">
+    <div class="offer">
+      <span class="tagline"><i data-i="sparkle"></i> A one-off, just for you</span>
+      <h1>Stay for half price.</h1>
+      <p class="big"><s>£7.99</s>£3.99 <span style="font-size:.3em;font-weight:600;letter-spacing:-.01em">a month, for 3 months</span></p>
+      <p>Then back to £7.99. Your library, your streak and your 1,000 credits a month carry on untouched. Cancel whenever you like.</p>
+      <div class="acts">
+        <button class="btn btn-w btn-lg" data-go="saved" data-save="discount-50-3m">Take half price <i data-i="arrow-right"></i></button>
+      </div>
+    </div>
+
+    <h2 style="margin-top:30px">Or change the shape of it</h2>
+    <div class="alts">
+      <button class="alt" data-go="saved" data-save="downgrade-standard">
+        <span class="ic"><i data-i="coins"></i></span>
+        <span class="t"><b>Move to Standard, £4.99 a month</b><span>500 credits instead of 1,000. Everything else stays.</span></span>
+        <span class="go">Switch <i data-i="arrow-right"></i></span></button>
+      <button class="alt" data-go="saved" data-save="switch-annual">
+        <span class="ic"><i data-i="calendar-blank"></i></span>
+        <span class="t"><b>Pay yearly, £79 instead of £95.88</b><span>Works out at £6.58 a month. Two months free.</span></span>
+        <span class="go">Switch <i data-i="arrow-right"></i></span></button>
+      <button class="alt" data-go="offer-pause" data-save="">
+        <span class="ic"><i data-i="pause"></i></span>
+        <span class="t"><b>Pause instead of cancelling</b><span>Up to three months. Nothing is charged, nothing is lost.</span></span>
+        <span class="go">Pause <i data-i="arrow-right"></i></span></button>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-g" data-go="reason"><i data-i="arrow-left"></i> Back</button>
+      <a class="exit" data-go="lose" href="#">No thanks, continue cancelling</a>
+    </div>
+  </section>
+
+  <!-- ================= 2b. PAUSE ================= -->
+  <section class="scr" id="s-offer-pause">
+    <div class="offer">
+      <span class="tagline"><i data-i="pause"></i> Pause, do not cancel</span>
+      <h1>Put Jooma on hold instead.</h1>
+      <p style="margin-top:14px">You are not charged a penny while it is paused. Your library, badges and streak are frozen exactly as they are and wake up with you.</p>
+      <div class="pauseopts" id="pauseopts">
+        <button class="po on" data-p="1"><b>1 month</b><span>Back 2 December</span></button>
+        <button class="po" data-p="2"><b>2 months</b><span>Back 2 January</span></button>
+        <button class="po" data-p="3"><b>3 months</b><span>Back 2 February</span></button>
+      </div>
+      <div class="acts">
+        <button class="btn btn-w btn-lg" data-go="saved" data-save="pause">Pause my plan <i data-i="arrow-right"></i></button>
+      </div>
+    </div>
+
+    <h2 style="margin-top:30px">Or spend less while you are quiet</h2>
+    <div class="alts">
+      <button class="alt" data-go="saved" data-save="downgrade-standard">
+        <span class="ic"><i data-i="coins"></i></span>
+        <span class="t"><b>Move to Standard, £4.99 a month</b><span>500 credits. Plenty for a term of odd jobs.</span></span>
+        <span class="go">Switch <i data-i="arrow-right"></i></span></button>
+      <button class="alt" data-go="offer-discount">
+        <span class="ic"><i data-i="sparkle"></i></span>
+        <span class="t"><b>Half price for three months</b><span>£3.99 a month, then back to normal.</span></span>
+        <span class="go">See it <i data-i="arrow-right"></i></span></button>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-g" data-go="reason"><i data-i="arrow-left"></i> Back</button>
+      <a class="exit" data-go="lose" href="#">No thanks, continue cancelling</a>
+    </div>
+  </section>
+
+  <!-- ================= 2c. FIX IT ================= -->
+  <section class="scr" id="s-offer-fix">
+    <h1>Tell us what went wrong.</h1>
+    <p class="lede">A person reads every one of these. If it is something we can fix, we would rather fix it than lose you.</p>
+
+    <div class="card" style="margin-top:24px">
+      <h3>What was it?</h3>
+      <div class="chips" id="fixchips">
+        <button class="chip">The output was not good enough</button>
+        <button class="chip">A tool I need does not exist</button>
+        <button class="chip">My curriculum is not covered</button>
+        <button class="chip">Exports or formatting</button>
+        <button class="chip">Something was broken</button>
+        <button class="chip">Billing</button>
+      </div>
+      <textarea id="fixtext" placeholder="If you have thirty seconds, what would have kept you?"></textarea>
+      <div class="acts">
+        <button class="btn btn-p" data-go="saved" data-save="support-hold">Send this and keep my plan <i data-i="arrow-right"></i></button>
+        <button class="btn btn-g" data-go="saved" data-save="support-callback">Have someone call me</button>
+      </div>
+      <p class="note"><i data-i="shield-check"></i> <span>Send this and we will hold your plan for 30 days at no charge while we look at it. If we cannot fix it, we will cancel you ourselves and refund the month.</span></p>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-g" data-go="reason"><i data-i="arrow-left"></i> Back</button>
+      <a class="exit" data-go="lose" href="#">No thanks, continue cancelling</a>
+    </div>
+  </section>
+
+  <!-- ================= 2d. SCHOOLS ================= -->
+  <section class="scr" id="s-offer-schools">
+    <h1>Do not cancel yet, we will move you across.</h1>
+    <p class="lede">If your school is setting up a licence, your library, folders and shared resources come with you. Cancelling first means rebuilding it by hand.</p>
+
+    <div class="card" style="margin-top:24px">
+      <div class="alts" style="margin-top:0">
+        <button class="alt" data-go="saved" data-save="schools-handoff">
+          <span class="ic"><i data-i="users-three"></i></span>
+          <span class="t"><b>Put me in touch with the schools team</b><span>We will talk to whoever is buying and move your account over.</span></span>
+          <span class="go">Introduce me <i data-i="arrow-right"></i></span></button>
+        <button class="alt" data-go="saved" data-save="schools-hold">
+          <span class="ic"><i data-i="pause"></i></span>
+          <span class="t"><b>Hold my plan free until the licence starts</b><span>Up to 60 days. Nothing charged, nothing lost.</span></span>
+          <span class="go">Hold it <i data-i="arrow-right"></i></span></button>
+      </div>
+      <p class="note"><i data-i="coins"></i> <span>School licences start at £4.25 per teacher a month and fall to £2.50 with size, so this is usually cheaper for you than Pro.</span></p>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-g" data-go="reason"><i data-i="arrow-left"></i> Back</button>
+      <a class="exit" data-go="lose" href="#">No thanks, continue cancelling</a>
+    </div>
+  </section>
+
+  <!-- ================= 3. WHAT YOU LOSE ================= -->
+  <section class="scr" id="s-lose">
+    <h1>Here is what you built.</h1>
+    <p class="lede">Eight months of work sits in this account. This is exactly what happens to it, so nothing is a surprise later.</p>
+
+    <div class="inv">
+      <div class="iv"><span class="ic" style="background:#5B2ED6"><i data-i="squares-four"></i></span>
+        <span><span class="n" id="n-res">143</span><span class="l">resources in your library</span>
+        <span class="w" id="w-res">View only after 2 November</span></span></div>
+      <div class="iv"><span class="ic" style="background:#0E7490"><i data-i="clock"></i></span>
+        <span><span class="n">42 hours</span><span class="l">of planning saved this year</span>
+        <span class="k">Yours. That does not go anywhere.</span></span></div>
+      <div class="iv"><span class="ic" style="background:#C2551F"><i data-i="medal"></i></span>
+        <span><span class="n">7 badges</span><span class="l">and a 128 day streak</span>
+        <span class="w">Streak resets to zero</span></span></div>
+      <div class="iv"><span class="ic" style="background:#C43D6B"><i data-i="users-three"></i></span>
+        <span><span class="n">9 resources</span><span class="l">shared with 4 colleagues</span>
+        <span class="w">They lose access too</span></span></div>
+      <div class="iv"><span class="ic" style="background:#1D6FD0"><i data-i="coins"></i></span>
+        <span><span class="n">1,000</span><span class="l">credits a month, and 340 left this month</span>
+        <span class="w">Unused credits do not roll over</span></span></div>
+      <div class="iv"><span class="ic" style="background:#4A4458"><i data-i="file-text"></i></span>
+        <span><span class="n">Clean exports</span><span class="l">PowerPoint, Word and PDF</span>
+        <span class="w">Back to watermarked</span></span></div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h3>What happens, and when</h3>
+      <div class="timeline">
+        <div class="tl now"><b>Today</b><span>Nothing changes. You keep everything until the end of the month you have paid for.</span></div>
+        <div class="tl"><b>2 November, when your month ends</b><span>Your library becomes view only. You can still open and read everything, and download it one at a time.</span></div>
+        <div class="tl"><b>Any time before 1 February</b><span>Come back and everything switches straight back on, exactly as you left it.</span></div>
+        <div class="tl bad"><b>1 February, after 90 days</b><span>Resources are deleted for good. We will email you at 30 days and again at 7 days before that happens.</span></div>
+      </div>
+      <p class="note"><i data-i="download-simple"></i> <span>You can download your whole library as a zip at any point, subscribed or not. We will put a link in your cancellation email.</span></p>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-p btn-lg" data-go="saved" data-save="kept-at-inventory">Keep my plan <i data-i="heart"></i></button>
+      <button class="btn btn-g" data-go="confirm">Continue cancelling</button>
+    </div>
+  </section>
+
+  <!-- ================= 4. CONFIRM ================= -->
+  <section class="scr" id="s-confirm">
+    <h1>Cancel your Pro plan?</h1>
+    <p class="lede">You will not be charged again. You keep everything you have until 2 November, which is the end of the month you have already paid for.</p>
+
+    <div class="card" style="margin-top:24px">
+      <div class="timeline" style="margin-top:0">
+        <div class="tl now"><b>Access until 2 November</b><span>28 days left. Full Pro, no restrictions.</span></div>
+        <div class="tl"><b>No further charges</b><span>Your next payment of £7.99 on 2 November will not be taken.</span></div>
+        <div class="tl"><b>Nothing deleted today</b><span>Your 143 resources stay exactly where they are.</span></div>
+      </div>
+      <p class="note"><i data-i="sparkle"></i> <span>The half price offer stays open for 14 days. If you change your mind this week, it is still there.</span></p>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-p btn-lg" data-go="saved" data-save="kept-at-confirm">Keep my plan</button>
+      <button class="btn btn-g" data-go="done" id="confirmCancel">Yes, cancel my plan</button>
+    </div>
+  </section>
+
+  <!-- ================= 5. CANCELLED ================= -->
+  <section class="scr" id="s-done">
+    <span class="done-ic gone"><i data-i="check"></i></span>
+    <h1>Your plan is cancelled.</h1>
+    <p class="lede">No hard feelings and no further charges. We have emailed you a confirmation with a link to download your whole library.</p>
+
+    <div class="card" style="margin-top:24px">
+      <div class="timeline" style="margin-top:0">
+        <div class="tl now"><b>You have Pro until 2 November</b><span>28 days. Use the rest of your credits, there is no reason not to.</span></div>
+        <div class="tl"><b>Then your library goes view only</b><span>Everything stays readable and downloadable.</span></div>
+        <div class="tl bad"><b>1 February</b><span>Resources are deleted. We will warn you twice before then.</span></div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-g"><i data-i="download-simple"></i> Download my library</button>
+        <button class="btn btn-g" data-go="saved" data-save="reactivate">Turn my plan back on</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>One last thing</h3>
+      <p style="margin-top:10px;font-size:.95rem;color:var(--muted)">If you are leaving teaching, or moving schools, tell us and we will keep your library alive for free for a year. No catch, no card.</p>
+      <div class="acts" style="margin-top:18px"><button class="btn btn-g"><i data-i="chat-teardrop-dots"></i> Tell us</button></div>
+    </div>
+
+    <p class="fine">Changed your mind? Your half price offer is open until 19 October. <a href="#" data-go="offer-discount">Take a look</a>.</p>
+  </section>
+
+  <!-- ================= SAVED ================= -->
+  <section class="scr" id="s-saved">
+    <span class="done-ic kept"><i data-i="heart"></i></span>
+    <h1 id="savedH">That is sorted. Nothing changes.</h1>
+    <p class="lede" id="savedP">Your plan carries on exactly as it was. Your library, your streak and your credits are untouched.</p>
+    <div class="card" style="margin-top:24px">
+      <h3>Back to it</h3>
+      <p style="margin-top:10px;font-size:.95rem;color:var(--muted)">You have 340 credits left this month and 28 days to spend them.</p>
+      <div class="acts" style="margin-top:18px">
+        <button class="btn btn-p">Make something <i data-i="arrow-right"></i></button>
+        <button class="btn btn-g">Go to my library</button>
+      </div>
+    </div>
+    <p class="fine">Changed your mind the other way? You can <a href="#" data-go="confirm">cancel from here</a> at any time.</p>
+  </section>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Jooma cancellation flow. Everything that differs per account lives in ACCOUNT,
+// and everything that differs per policy lives in POLICY. The copy reads from
+// these, so the words on screen can never drift from what the backend does.
+// ---------------------------------------------------------------------------
+var ACCOUNT = {
+  name:'Priya', plan:'Pro', price:'£7.99', billing:'monthly',
+  periodEnd:'2 November', daysLeft:28,
+  resources:143, badges:7, streak:128, hoursSaved:42,
+  creditsMonthly:1000, creditsLeft:340, colleagues:4, sharedItems:9,
+  memberSince:'March 2026'
+};
+var POLICY = {
+  // every claim made on screen has to match these
+  accessUntilPeriodEnd:true,
+  libraryAfter:'view-only',   // 'view-only' | 'deleted' | 'kept'
+  graceDays:90,               // view-only window before deletion
+  deleteDate:'1 February',
+  warnAt:[30,7],              // days before deletion
+  streakResets:true,
+  badgesKept:true,
+  creditsRollOver:false,
+  exportAlwaysAvailable:true,
+  offerOpenDays:14
+};
+var OFFERS = {
+  'discount-50-3m':{label:'50% off for 3 months', value:11.97},
+  'downgrade-standard':{label:'Downgraded to Standard', value:null},
+  'switch-annual':{label:'Switched to annual £79', value:79},
+  'pause':{label:'Paused', value:null},
+  'support-hold':{label:'30 day support hold', value:null},
+  'support-callback':{label:'Callback booked', value:null},
+  'schools-handoff':{label:'Handed to schools team', value:null},
+  'schools-hold':{label:'60 day schools hold', value:null},
+  'kept-at-inventory':{label:'Kept, after seeing the inventory', value:null},
+  'kept-at-confirm':{label:'Kept, at the final step', value:null},
+  'reactivate':{label:'Reactivated after cancelling', value:null}
+};
+
+var I = {"arrow-right": "<path d=\"M221.66,133.66l-72,72A8,8,0,0,1,136,200V136H40a8,8,0,0,1,0-16h96V56a8,8,0,0,1,13.66-5.66l72,72A8,8,0,0,1,221.66,133.66Z\"/>", "arrow-up": "<path d=\"M207.39,115.06A8,8,0,0,1,200,120H136v96a8,8,0,0,1-16,0V120H56a8,8,0,0,1-5.66-13.66l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,207.39,115.06Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z\"/>", "blueprint": "<path d=\"M136,120h24v16H136ZM240,64V200a8,8,0,0,1-8,8H48a32,32,0,0,1-32-32V64A32,32,0,0,1,48,32H64a8,8,0,0,1,8,8V56H232A8,8,0,0,1,240,64ZM56,48H48A16,16,0,0,0,32,64v84.29A31.82,31.82,0,0,1,48,144h8Zm120,88V120h16a8,8,0,0,0,0-16H176V96a8,8,0,0,0-16,0v8H136V96a8,8,0,0,0-16,0v8H104a8,8,0,0,0,0,16h16v16H104a8,8,0,0,0,0,16h16v8a8,8,0,0,0,16,0v-8h24v8a8,8,0,0,0,16,0v-8h16a8,8,0,0,0,0-16Z\"/>", "book-open-text": "<path d=\"M232,48H168a32,32,0,0,0-32,32v87.73a8.17,8.17,0,0,1-7.47,8.25,8,8,0,0,1-8.53-8V80A32,32,0,0,0,88,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,23.94,7.9,7.9,0,0,0,5.12,7.55A8,8,0,0,0,136,232a24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM208,168H168.27a8.17,8.17,0,0,1-8.25-7.47,8,8,0,0,1,8-8.53h39.73a8.17,8.17,0,0,1,8.25,7.47A8,8,0,0,1,208,168Zm0-32H168.27a8.17,8.17,0,0,1-8.25-7.47,8,8,0,0,1,8-8.53h39.73a8.17,8.17,0,0,1,8.25,7.47A8,8,0,0,1,208,136Zm0-32H168.27A8.17,8.17,0,0,1,160,96.53,8,8,0,0,1,168,88h39.73A8.17,8.17,0,0,1,216,95.47,8,8,0,0,1,208,104Z\"/>", "calendar-blank": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,48H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24Z\"/>", "caret-left": "<path d=\"M168,48V208a8,8,0,0,1-13.66,5.66l-80-80a8,8,0,0,1,0-11.32l80-80A8,8,0,0,1,168,48Z\"/>", "caret-right": "<path d=\"M181.66,133.66l-80,80A8,8,0,0,1,88,208V48a8,8,0,0,1,13.66-5.66l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "certificate": "<path d=\"M232,86.53V56a16,16,0,0,0-16-16H40A16,16,0,0,0,24,56V184a16,16,0,0,0,16,16H160v24A8,8,0,0,0,172,231l24-13.74L220,231A8,8,0,0,0,232,224V161.47a51.88,51.88,0,0,0,0-74.94ZM128,144H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm0-32H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm88,98.21-16-9.16a8,8,0,0,0-7.94,0l-16,9.16V172a51.88,51.88,0,0,0,40,0ZM196,160a36,36,0,1,1,36-36A36,36,0,0,1,196,160Z\"/>", "chart-bar": "<path d=\"M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1,0-16h8V136a8,8,0,0,1,8-8H72a8,8,0,0,1,8,8v64H96V88a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V200h16V40a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8V200h8A8,8,0,0,1,232,208Z\"/>", "chart-line-up": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM200,192H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v76.69l34.34-34.35a8,8,0,0,1,11.32,0L128,132.69,172.69,88H144a8,8,0,0,1,0-16h48a8,8,0,0,1,8,8v48a8,8,0,0,1-16,0V99.31l-50.34,50.35a8,8,0,0,1-11.32,0L104,131.31l-40,40V176H200a8,8,0,0,1,0,16Z\"/>", "check": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z\"/>", "check-square-offset": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM80,200a8,8,0,0,1-5.66-2.34l-16-16a8,8,0,0,1,11.32-11.32L80,180.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-40,40A8,8,0,0,1,80,200Zm120-8a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16h48V72H72v64a8,8,0,0,1-16,0V64a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z\"/>", "clipboard-text": "<path d=\"M200,32H163.74a47.92,47.92,0,0,0-71.48,0H56A16,16,0,0,0,40,48V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm-72,0a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32Zm32,128H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z\"/>", "clock": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm56,112H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "coins": "<path d=\"M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM56,146.87C36.41,141.4,24,132.39,24,124V109.93c8.16,5.78,19.09,10.44,32,13.57Zm80-23.37c12.91-3.13,23.84-7.79,32-13.57V124c0,8.39-12.41,17.4-32,22.87Zm-16,71.37C100.41,189.4,88,180.39,88,172v-4.17c2.63.1,5.29.17,8,.17,3.88,0,7.67-.13,11.39-.35A121.92,121.92,0,0,0,120,171.41Zm0-44.62A163,163,0,0,1,96,152a163,163,0,0,1-24-1.75V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54Zm64,48a165.45,165.45,0,0,1-48,0V174.4a179.48,179.48,0,0,0,24,1.6,183.74,183.74,0,0,0,24-1.54ZM232,172c0,8.39-12.41,17.4-32,22.87V171.5c12.91-3.13,23.84-7.79,32-13.57Z\"/>", "download-simple": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40A8,8,0,0,0,168,96H136V32a8,8,0,0,0-16,0V96H88a8,8,0,0,0-5.66,13.66Z\"/>", "envelope-simple": "<path d=\"M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-8,144H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z\"/>", "exam": "<path d=\"M96,113.89,107.06,136H84.94ZM232,56V216a8,8,0,0,1-11.58,7.16L192,208.94l-28.42,14.22a8,8,0,0,1-7.16,0L128,208.94,99.58,223.16a8,8,0,0,1-7.16,0L64,208.94,35.58,223.16A8,8,0,0,1,24,216V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.16,156.42l-32-64a8,8,0,0,0-14.32,0l-32,64a8,8,0,0,0,14.32,7.16L76.94,152h38.12l5.78,11.58a8,8,0,1,0,14.32-7.16ZM208,128a8,8,0,0,0-8-8H184V104a8,8,0,0,0-16,0v16H152a8,8,0,0,0,0,16h16v16a8,8,0,0,0,16,0V136h16A8,8,0,0,0,208,128Z\"/>", "eye": "<path d=\"M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>", "file-text": "<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,176H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm-8-56V44l44,44Z\"/>", "folder": "<path d=\"M216,72H131.31L104,44.69A15.88,15.88,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.41,15.41,0,0,0,39.39,216h177.5A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40Z\"/>", "folder-plus": "<path d=\"M216,72H131.31L104,44.69A15.88,15.88,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.41,15.41,0,0,0,39.39,216h177.5A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40Zm112,96H136v16a8,8,0,0,1-16,0V152H104a8,8,0,0,1,0-16h16V120a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16Z\"/>", "footprints": "<path d=\"M216.06,192v12A36,36,0,0,1,144,204V192a8,8,0,0,1,8-8h56A8,8,0,0,1,216.06,192ZM104,160h-56a8,8,0,0,0-8,8v12A36,36,0,0,0,112,180V168A8,8,0,0,0,104,160ZM76,16C64.36,16,53.07,26.31,44.2,45c-13.93,29.38-18.56,73,.29,96a8,8,0,0,0,6.2,2.93h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C98.85,26.31,87.57,16,76,16Zm78.8,152h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C202.93,50.31,191.64,40,180,40s-22.89,10.31-31.77,29c-13.93,29.38-18.56,73,.29,96A8,8,0,0,0,154.76,168Z\"/>", "gavel": "<path d=\"M52.69,99.31a16,16,0,0,1,0-22.63l64-64a16,16,0,0,1,22.63,22.63l-64,64a16,16,0,0,1-22.63,0Zm190.63,17.37a16,16,0,0,0-22.63,0l-64,64a16,16,0,0,0,0,22.63h0a16,16,0,0,0,22.63,0l64-64A16,16,0,0,0,243.32,116.68Zm-35.11-15.8L155.12,47.79a4,4,0,0,0-5.66,0L87.8,109.45a4,4,0,0,0,0,5.66L103,130.34,28.69,204.69a16,16,0,0,0,22.62,22.62L125.66,153l15.23,15.23a4,4,0,0,0,5.66,0l61.66-61.66A4,4,0,0,0,208.21,100.88Z\"/>", "hand-palm": "<path d=\"M216,104v48a88,88,0,0,1-176,0V64a16,16,0,0,1,32,0v56a8,8,0,0,0,16,0V32a16,16,0,0,1,32,0v80a8,8,0,0,0,16,0V48a16,16,0,0,1,32,0v80.67A48.08,48.08,0,0,0,128,176a8,8,0,0,0,16,0,32,32,0,0,1,32-32,8,8,0,0,0,8-8V104a16,16,0,0,1,32,0Z\"/>", "house": "<path d=\"M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z\"/>", "house-line": "<path d=\"M240,208H224V136l2.34,2.34A8,8,0,0,0,237.66,127L139.31,28.68a16,16,0,0,0-22.62,0L18.34,127a8,8,0,0,0,11.32,11.31L32,136v72H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Zm-88,0H104V160a4,4,0,0,1,4-4h40a4,4,0,0,1,4,4Z\"/>", "identification-card": "<path d=\"M112,120a16,16,0,1,1-16-16A16,16,0,0,1,112,120ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.75,166a39.76,39.76,0,0,0-17.19-23.34,32,32,0,1,0-45.12,0A39.84,39.84,0,0,0,56.25,166a8,8,0,0,0,15.5,4c2.64-10.25,13.06-18,24.25-18s21.62,7.73,24.25,18a8,8,0,1,0,15.5-4ZM200,144a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,144Zm0-32a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,112Z\"/>", "lightning": "<path d=\"M213.85,125.46l-112,120a8,8,0,0,1-13.69-7l14.66-73.33L45.19,143.49a8,8,0,0,1-3-13l112-120a8,8,0,0,1,13.69,7L153.18,90.9l57.63,21.61a8,8,0,0,1,3,12.95Z\"/>", "magnifying-glass": "<path d=\"M168,112a56,56,0,1,1-56-56A56,56,0,0,1,168,112Zm61.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88,88,0,1,1,11.32-11.31l50.06,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z\"/>", "map-trifold": "<path d=\"M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM96,176a8,8,0,0,0-1.94.24L40,189.75V62.25L95.07,48.48l.93.46Zm120,17.75-55.07,13.77-.93-.46V80a8,8,0,0,0,1.94-.23L216,66.25Z\"/>", "medal": "<path d=\"M216,96A88,88,0,1,0,72,163.83V240a8,8,0,0,0,11.58,7.16L128,225l44.43,22.21A8.07,8.07,0,0,0,176,248a8,8,0,0,0,8-8V163.83A87.85,87.85,0,0,0,216,96ZM56,96a72,72,0,1,1,72,72A72.08,72.08,0,0,1,56,96Zm16,0a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z\"/>", "megaphone": "<path d=\"M200,72H160.2c-2.91-.17-53.62-3.74-101.91-44.24A16,16,0,0,0,32,40V200a16,16,0,0,0,26.29,12.25c37.77-31.68,77-40.76,93.71-43.3v31.72A16,16,0,0,0,159.12,214l11,7.33A16,16,0,0,0,194.5,212l11.77-44.36A48,48,0,0,0,200,72ZM179,207.89l0,.11-11-7.33V168h21.6ZM200,152H168V88h32a32,32,0,1,1,0,64Z\"/>", "microphone": "<path d=\"M80,128V64a48,48,0,0,1,96,0v64a48,48,0,0,1-96,0Zm128,0a8,8,0,0,0-16,0,64,64,0,0,1-128,0,8,8,0,0,0-16,0,80.11,80.11,0,0,0,72,79.6V240a8,8,0,0,0,16,0V207.6A80.11,80.11,0,0,0,208,128Z\"/>", "newspaper": "<path d=\"M216,48H56A16,16,0,0,0,40,64V184a8,8,0,0,1-16,0V88A8,8,0,0,0,8,88v96.11A24,24,0,0,0,32,208H208a24,24,0,0,0,24-24V64A16,16,0,0,0,216,48ZM176,152H96a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16Z\"/>", "notebook": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM80,208H48V48H80Zm96-56H112a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H112a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z\"/>", "pen-nib": "<path d=\"M243.31,81.36,174.63,12.68a16,16,0,0,0-22.63,0L123.56,41.12l-58,21.76A16,16,0,0,0,55.36,75.23L34.59,199.83a4,4,0,0,0,6.77,3.49l57-57a23.85,23.85,0,0,1-2.29-12.08,24,24,0,1,1,13.6,23.4l-57,57a4,4,0,0,0,3.49,6.77l124.61-20.77a16,16,0,0,0,12.35-10.16l21.77-58.07L243.31,104a16,16,0,0,0,0-22.63ZM208,116.68,139.32,48l24-24L232,92.68Z\"/>", "pencil-simple": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "play": "<path d=\"M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z\"/>", "plus": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM184,136H136v48a8,8,0,0,1-16,0V136H72a8,8,0,0,1,0-16h48V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "presentation-chart": "<path d=\"M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM104,144a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z\"/>", "projector-screen": "<path d=\"M232,64V48a16,16,0,0,0-16-16H40A16,16,0,0,0,24,48V64A16,16,0,0,0,40,80v96H32a8,8,0,0,0,0,16h88v17.38a24,24,0,1,0,16,0V192h88a8,8,0,0,0,0-16h-8V80A16,16,0,0,0,232,64ZM128,240a8,8,0,1,1,8-8A8,8,0,0,1,128,240ZM40,48H216V64H40Z\"/>", "scroll": "<path d=\"M220.8,169.6A8,8,0,0,0,216,168h-8V64a32,32,0,0,0-32-32H40A32,32,0,0,0,8,64C8,77.61,18.05,85.54,19.2,86.4h0A7.89,7.89,0,0,0,24,88a8,8,0,0,0,4.87-14.33h0C28.83,73.62,24,69.74,24,64a16,16,0,0,1,32,0V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32C232,178.39,222,170.46,220.8,169.6ZM104,96h64a8,8,0,0,1,0,16H104a8,8,0,0,1,0-16Zm-8,40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H104A8,8,0,0,1,96,136Zm104,72H107.71A31.82,31.82,0,0,0,112,192a26.92,26.92,0,0,0-1.21-8h102a12.58,12.58,0,0,1,3.23,8A16,16,0,0,1,200,208Z\"/>", "share-network": "<path d=\"M212,200a36,36,0,1,1-69.85-12.25l-53-34.05a36,36,0,1,1,0-51.4l53-34a36.09,36.09,0,1,1,8.67,13.45l-53,34.05a36,36,0,0,1,0,24.5l53,34.05A36,36,0,0,1,212,200Z\"/>", "shield-check": "<path d=\"M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "sparkle": "<path d=\"M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z\"/>", "squares-four": "<path d=\"M120,56v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40h48A16,16,0,0,1,120,56Zm80-16H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm-96,96H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm96,0H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Z\"/>", "student": "<path d=\"M226.53,56.41l-96-32a8,8,0,0,0-5.06,0l-96,32A8,8,0,0,0,24,64v80a8,8,0,0,0,16,0V75.1L73.59,86.29a64,64,0,0,0,20.65,88.05c-18,7.06-33.56,19.83-44.94,37.29a8,8,0,1,0,13.4,8.74C77.77,197.25,101.57,184,128,184s50.23,13.25,65.3,36.37a8,8,0,0,0,13.4-8.74c-11.38-17.46-27-30.23-44.94-37.29a64,64,0,0,0,20.65-88l44.12-14.7a8,8,0,0,0,0-15.18ZM176,120A48,48,0,1,1,89.35,91.55l36.12,12a8,8,0,0,0,5.06,0l36.12-12A47.89,47.89,0,0,1,176,120Z\"/>", "target": "<path d=\"M221.87,83.16A104.1,104.1,0,1,1,195.67,49l22.67-22.68a8,8,0,0,1,11.32,11.32L167.6,99.71h0l-37.71,37.71-23.95,23.95a40,40,0,0,0,62-35.67,8,8,0,1,1,16-.9,56,56,0,0,1-95.5,42.79h0a56,56,0,0,1,73.13-84.43L184.3,60.39a87.88,87.88,0,1,0,23.13,29.67,8,8,0,0,1,14.44-6.9Z\"/>", "text-aa": "<path d=\"M200,156c0,6.5-7.33,12-16,12s-16-5.5-16-12,7.33-12,16-12S200,149.5,200,156ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM143.37,172.88l-44-104a8,8,0,0,0-14.74,0l-44,104a8,8,0,0,0,14.74,6.24L66.84,152h50.32l11.47,27.12a8,8,0,0,0,14.74-6.24ZM216,124c0-15.44-14.36-28-32-28a34.86,34.86,0,0,0-20.78,6.68,8,8,0,0,0,9.56,12.83A18.84,18.84,0,0,1,184,112c8.56,0,15.8,5.36,16,11.76v8A35.24,35.24,0,0,0,184,128c-17.64,0-32,12.56-32,28s14.36,28,32,28a35.13,35.13,0,0,0,16.93-4.26A8,8,0,0,0,216,176ZM73.61,136h36.78L92,92.53Z\"/>", "user": "<path d=\"M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z\"/>", "user-switch": "<path d=\"M84,120a44,44,0,1,1,44,44A44,44,0,0,1,84,120Zm126.16,57.18a8.21,8.21,0,0,0-10.86,2.41,87.42,87.42,0,0,1-5.52,6.85A79.76,79.76,0,0,0,172,165.1a4,4,0,0,0-4.84.32,59.8,59.8,0,0,1-78.26,0A4,4,0,0,0,84,165.1a79.71,79.71,0,0,0-21.79,21.31A87.66,87.66,0,0,1,40.37,136h15.4a8.2,8.2,0,0,0,6.69-3.28,8,8,0,0,0-.8-10.38l-24-24a8,8,0,0,0-11.32,0l-24,24a8,8,0,0,0-.8,10.38A8.2,8.2,0,0,0,8.23,136H24.3a104,104,0,0,0,188.18,52.67A8,8,0,0,0,210.16,177.18Zm45.23-52.24A8,8,0,0,0,248,120H231.7A104,104,0,0,0,43.52,67.33a8,8,0,0,0,13,9.34A88,88,0,0,1,215.63,120H200a8,8,0,0,0-5.66,13.66l24,24a8,8,0,0,0,11.32,0l24-24A8,8,0,0,0,255.39,124.94Z\"/>", "users-three": "<path d=\"M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z\"/>", "warning": "<path d=\"M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z\"/>", "x": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM181.66,170.34a8,8,0,0,1-11.32,11.32L128,139.31,85.66,181.66a8,8,0,0,1-11.32-11.32L116.69,128,74.34,85.66A8,8,0,0,1,85.66,74.34L128,116.69l42.34-42.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "folder-open": "<path d=\"M245,110.64A16,16,0,0,0,232,104H216V88a16,16,0,0,0-16-16H130.67L102.94,51.2a16.14,16.14,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V208h0a8,8,0,0,0,8,8H211.1a8,8,0,0,0,7.59-5.47l28.49-85.47A16.05,16.05,0,0,0,245,110.64ZM93.34,64,123.2,86.4A8,8,0,0,0,128,88h72v16H69.77a16,16,0,0,0-15.18,10.94L40,158.7V64Z\"/>", "user-circle": "<path d=\"M172,120a44,44,0,1,1-44-44A44.05,44.05,0,0,1,172,120Zm60,8A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88.09,88.09,0,0,0-91.47-87.93C77.43,41.89,39.87,81.12,40,128.25a87.65,87.65,0,0,0,22.24,58.16A79.71,79.71,0,0,1,84,165.1a4,4,0,0,1,4.83.32,59.83,59.83,0,0,0,78.28,0,4,4,0,0,1,4.83-.32,79.71,79.71,0,0,1,21.79,21.31A87.62,87.62,0,0,0,216,128Z\"/>", "user-plus": "<path d=\"M256,136a8,8,0,0,1-8,8H232v16a8,8,0,0,1-16,0V144H200a8,8,0,0,1,0-16h16V112a8,8,0,0,1,16,0v16h16A8,8,0,0,1,256,136ZM144,157.68a68,68,0,1,0-71.9,0c-20.65,6.76-39.23,19.39-54.17,37.17A8,8,0,0,0,24,208H192a8,8,0,0,0,6.13-13.15C183.18,177.07,164.6,164.44,144,157.68Z\"/>", "caret-down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z\"/>", "calendar-plus": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM152,160H136v16a8,8,0,0,1-16,0V160H104a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16ZM48,80V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80Z\"/>", "trophy": "<path d=\"M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z\"/>", "fire": "<path d=\"M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z\"/>", "star": "<path d=\"M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.46,16.46,0,0,1,9.37,28.86Z\"/>", "seal-check": "<path d=\"M225.86,102.82c-3.77-3.94-7.67-8-9.14-11.57-1.36-3.27-1.44-8.69-1.52-13.94-.15-9.76-.31-20.82-8-28.51s-18.75-7.85-28.51-8c-5.25-.08-10.67-.16-13.94-1.52-3.56-1.47-7.63-5.37-11.57-9.14C146.28,23.51,138.44,16,128,16s-18.27,7.51-25.18,14.14c-3.94,3.77-8,7.67-11.57,9.14C88,40.64,82.56,40.72,77.31,40.8c-9.76.15-20.82.31-28.51,8S41,67.55,40.8,77.31c-.08,5.25-.16,10.67-1.52,13.94-1.47,3.56-5.37,7.63-9.14,11.57C23.51,109.72,16,117.56,16,128s7.51,18.27,14.14,25.18c3.77,3.94,7.67,8,9.14,11.57,1.36,3.27,1.44,8.69,1.52,13.94.15,9.76.31,20.82,8,28.51s18.75,7.85,28.51,8c5.25.08,10.67.16,13.94,1.52,3.56,1.47,7.63,5.37,11.57,9.14C109.72,232.49,117.56,240,128,240s18.27-7.51,25.18-14.14c3.94-3.77,8-7.67,11.57-9.14,3.27-1.36,8.69-1.44,13.94-1.52,9.76-.15,20.82-.31,28.51-8s7.85-18.75,8-28.51c.08-5.25.16-10.67,1.52-13.94,1.47-3.56,5.37-7.63,9.14-11.57C232.49,146.28,240,138.44,240,128S232.49,109.73,225.86,102.82Zm-52.2,6.84-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "lock-simple": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96Z\"/>", "upload-simple": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM88,80h32v64a8,8,0,0,0,16,0V80h32a8,8,0,0,0,5.66-13.66l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,88,80Z\"/>", "dots-three": "<path d=\"M224,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V96A16,16,0,0,0,224,80ZM60,140a12,12,0,1,1,12-12A12,12,0,0,1,60,140Zm68,0a12,12,0,1,1,12-12A12,12,0,0,1,128,140Zm68,0a12,12,0,1,1,12-12A12,12,0,0,1,196,140Z\"/>", "trash-simple": "<path d=\"M224,56a8,8,0,0,1-8,8h-8V208a16,16,0,0,1-16,16H64a16,16,0,0,1-16-16V64H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,56ZM88,32h80a8,8,0,0,0,0-16H88a8,8,0,0,0,0,16Z\"/>", "chat-circle": "<path d=\"M232,128A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Z\"/>", "chat-teardrop-dots": "<path d=\"M132,24A100.11,100.11,0,0,0,32,124v84a16,16,0,0,0,16,16h84a100,100,0,0,0,0-200ZM88,140a12,12,0,1,1,12-12A12,12,0,0,1,88,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,132,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,176,140Z\"/>", "paper-plane-tilt": "<path d=\"M231.4,44.34s0,.1,0,.15l-58.2,191.94a15.88,15.88,0,0,1-14,11.51q-.69.06-1.38.06a15.86,15.86,0,0,1-14.42-9.15L107,164.15a4,4,0,0,1,.77-4.58l57.92-57.92a8,8,0,0,0-11.31-11.31L96.43,148.26a4,4,0,0,1-4.58.77L17.08,112.64a16,16,0,0,1,2.49-29.8l191.94-58.2.15,0A16,16,0,0,1,231.4,44.34Z\"/>", "link-simple": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM144.56,173.66l-21.45,21.45a44,44,0,0,1-62.22-62.22l21.45-21.46a8,8,0,0,1,11.32,11.31L72.2,144.2a28,28,0,0,0,39.6,39.6l21.45-21.46a8,8,0,0,1,11.31,11.32Zm-34.9-16a8,8,0,0,1-11.32-11.32l48-48a8,8,0,0,1,11.32,11.32Zm85.45-34.55-21.45,21.45a8,8,0,0,1-11.32-11.31L183.8,111.8a28,28,0,0,0-39.6-39.6L122.74,93.66a8,8,0,0,1-11.31-11.32l21.46-21.45a44,44,0,0,1,62.22,62.22Z\"/>", "gear": "<path d=\"M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>", "sign-out": "<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40A8,8,0,0,0,176,88v32H112a8,8,0,0,0,0,16h64v32a8,8,0,0,0,13.66,5.66l40-40A8,8,0,0,0,229.66,122.34Z\"/>", "camera": "<path d=\"M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z\"/>", "crown-simple": "<path d=\"M239.75,90.81c0,.11,0,.21-.07.32L217,195a16,16,0,0,1-15.72,13H54.71A16,16,0,0,1,39,195L16.32,91.13c0-.11-.05-.21-.07-.32A16,16,0,0,1,44,77.39l33.67,36.29,35.8-80.29a1,1,0,0,0,0-.1,16,16,0,0,1,29.06,0,1,1,0,0,0,0,.1l35.8,80.29L212,77.39a16,16,0,0,1,27.71,13.42Z\"/>", "books": "<path d=\"M231.65,194.55,198.46,36.75a16,16,0,0,0-19-12.39L132.65,34.42a16.08,16.08,0,0,0-12.3,19l33.19,157.8A16,16,0,0,0,169.16,224a16.25,16.25,0,0,0,3.38-.36l46.81-10.06A16.09,16.09,0,0,0,231.65,194.55ZM136,50.15c0-.06,0-.09,0-.09l46.8-10,3.33,15.87L139.33,66Zm10,47.38-3.35-15.9,46.82-10.06,3.34,15.9Zm70,100.41-46.8,10-3.33-15.87L212.67,182,216,197.85C216,197.91,216,197.94,216,197.94ZM104,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V48A16,16,0,0,0,104,32ZM56,48h48V64H56Zm48,160H56V192h48v16Z\"/>", "graduation-cap": "<path d=\"M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z\"/>", "sliders-horizontal": "<path d=\"M32,80a8,8,0,0,1,8-8H77.17a28,28,0,0,1,53.66,0H216a8,8,0,0,1,0,16H130.83a28,28,0,0,1-53.66,0H40A8,8,0,0,1,32,80Zm184,88H194.83a28,28,0,0,0-53.66,0H40a8,8,0,0,0,0,16H141.17a28,28,0,0,0,53.66,0H216a8,8,0,0,0,0-16Z\"/>", "list": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM192,184H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Zm0-48H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Zm0-48H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Z\"/>", "grid-four": "<path d=\"M216,56v60a4,4,0,0,1-4,4H136V44a4,4,0,0,1,4-4h60A16,16,0,0,1,216,56ZM116,40H56A16,16,0,0,0,40,56v60a4,4,0,0,0,4,4h76V44A4,4,0,0,0,116,40Zm96,96H136v76a4,4,0,0,0,4,4h60a16,16,0,0,0,16-16V140A4,4,0,0,0,212,136ZM40,140v60a16,16,0,0,0,16,16h60a4,4,0,0,0,4-4V136H44A4,4,0,0,0,40,140Z\"/>", "arrows-out-cardinal": "<path d=\"M96,136H64v24a8,8,0,0,1-13.66,5.66l-32-32a8,8,0,0,1,0-11.32l32-32A8,8,0,0,1,64,96v24H96a8,8,0,0,1,0,16Zm0-72h24V96a8,8,0,0,0,16,0V64h24a8,8,0,0,0,5.66-13.66l-32-32a8,8,0,0,0-11.32,0l-32,32A8,8,0,0,0,96,64Zm141.66,58.34-32-32A8,8,0,0,0,192,96v24H160a8,8,0,0,0,0,16h32v24a8,8,0,0,0,13.66,5.66l32-32A8,8,0,0,0,237.66,122.34ZM160,192H136V160a8,8,0,0,0-16,0v32H96a8,8,0,0,0-5.66,13.66l32,32a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,160,192Z\"/>", "globe-hemisphere-west": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.62,87.62,0,0,1-6.4,32.94l-44.7-27.49a15.92,15.92,0,0,0-6.24-2.23l-22.82-3.08a16.11,16.11,0,0,0-16,7.86h-8.72l-3.8-7.86a15.91,15.91,0,0,0-11-8.67l-8-1.73L96.14,104h16.71a16.06,16.06,0,0,0,7.73-2l12.25-6.76a16.62,16.62,0,0,0,3-2.14l26.91-24.34A15.93,15.93,0,0,0,166,49.1l-.36-.65A88.11,88.11,0,0,1,216,128ZM40,128a87.53,87.53,0,0,1,8.54-37.8l11.34,30.27a16,16,0,0,0,11.62,10l21.43,4.61L96.74,143a16.09,16.09,0,0,0,14.4,9h1.48l-7.23,16.23a16,16,0,0,0,2.86,17.37l.14.14L128,205.94l-1.94,10A88.11,88.11,0,0,1,40,128Z\"/>", "cursor-click": "<path d=\"M220.49,190.83a12,12,0,0,1,0,17L207.8,220.49a12,12,0,0,1-17,0l-56.56-56.57L115,214.09c0,.1-.08.21-.13.32a15.83,15.83,0,0,1-14.6,9.59l-.79,0a15.83,15.83,0,0,1-14.41-11L32.8,52.92A16,16,0,0,1,52.92,32.8L213,85.07a16,16,0,0,1,1.41,29.8l-.32.13-50.17,19.27ZM96,32a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0v8A8,8,0,0,0,96,32ZM16,104h8a8,8,0,0,0,0-16H16a8,8,0,0,0,0,16ZM124.42,39.16a8,8,0,0,0,10.74-3.58l8-16a8,8,0,0,0-14.31-7.16l-8,16A8,8,0,0,0,124.42,39.16Zm-96,81.69-16,8a8,8,0,0,0,7.16,14.31l16-8a8,8,0,1,0-7.16-14.31Z\"/>", "arrow-down": "<path d=\"M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72A8,8,0,0,1,56,136h64V40a8,8,0,0,1,16,0v96h64a8,8,0,0,1,5.66,13.66Z\"/>", "hand-pointing": "<path d=\"M224,104v50.93c0,46.2-36.85,84.55-83,85.06A83.71,83.71,0,0,1,80.6,215.4C58.79,192.33,34.15,136,34.15,136a16,16,0,0,1,6.53-22.23c7.66-4,17.1-.84,21.4,6.62l21,36.44a6.09,6.09,0,0,0,6,3.09l.12,0A8.19,8.19,0,0,0,96,151.74V32a16,16,0,0,1,16.77-16c8.61.4,15.23,7.82,15.23,16.43V104a8,8,0,0,0,8.53,8,8.17,8.17,0,0,0,7.47-8.25V88a16,16,0,0,1,16.77-16c8.61.4,15.23,7.82,15.23,16.43V112a8,8,0,0,0,8.53,8,8.17,8.17,0,0,0,7.47-8.25v-7.28c0-8.61,6.62-16,15.23-16.43A16,16,0,0,1,224,104Z\"/>", "magic-wand": "<path d=\"M248,152a8,8,0,0,1-8,8H224v16a8,8,0,0,1-16,0V160H192a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16A8,8,0,0,1,248,152ZM56,72H72V88a8,8,0,0,0,16,0V72h16a8,8,0,0,0,0-16H88V40a8,8,0,0,0-16,0V56H56a8,8,0,0,0,0,16ZM184,192h-8v-8a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0v-8h8a8,8,0,0,0,0-16ZM219.31,80,80,219.31a16,16,0,0,1-22.62,0L36.68,198.63a16,16,0,0,1,0-22.63L176,36.69a16,16,0,0,1,22.63,0l20.68,20.68A16,16,0,0,1,219.31,80ZM208,68.69,187.31,48l-32,32L176,100.69Z\"/>", "paper-plane-right": "<path d=\"M240,127.89a16,16,0,0,1-8.18,14L63.9,237.9A16.15,16.15,0,0,1,56,240a16,16,0,0,1-15-21.33l27-79.95A4,4,0,0,1,71.72,136H144a8,8,0,0,0,8-8.53,8.19,8.19,0,0,0-8.26-7.47h-72a4,4,0,0,1-3.79-2.72l-27-79.94A16,16,0,0,1,63.84,18.07l168,95.89A16,16,0,0,1,240,127.89Z\"/>", "keyboard": "<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM64,168H48a8,8,0,0,1,0-16H64a8,8,0,0,1,0,16Zm96,0H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm48,0H192a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Zm0-32H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Z\"/>", "arrows-clockwise": "<path d=\"M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1-5.66-13.66L180.65,72a79.48,79.48,0,0,0-54.72-22.09h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27,96,96,0,0,1,192,60.7l18.36-18.36A8,8,0,0,1,224,48ZM186.41,183.29A80,80,0,0,1,75.35,184l18.31-18.31A8,8,0,0,0,88,152H40a8,8,0,0,0-8,8v48a8,8,0,0,0,13.66,5.66L64,195.3a95.42,95.42,0,0,0,66,26.76h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z\"/>", "arrow-up-right": "<path d=\"M200,64V168a8,8,0,0,1-13.66,5.66L140,127.31,69.66,197.66a8,8,0,0,1-11.32-11.32L128.69,116,82.34,69.66A8,8,0,0,1,88,56H192A8,8,0,0,1,200,64Z\"/>", "image": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM156,88a12,12,0,1,1-12,12A12,12,0,0,1,156,88Zm60,112H40V160.69l46.34-46.35a8,8,0,0,1,11.32,0h0L165,181.66a8,8,0,0,0,11.32-11.32l-17.66-17.65L173,138.34a8,8,0,0,1,11.31,0L216,170.07V200Z\"/>", "arrow-left": "<path d=\"M224,128a8,8,0,0,1-8,8H120v64a8,8,0,0,1-13.66,5.66l-72-72a8,8,0,0,1,0-11.32l72-72A8,8,0,0,1,120,56v64h96A8,8,0,0,1,224,128Z\"/>", "pause": "<path d=\"M216,48V208a16,16,0,0,1-16,16H160a16,16,0,0,1-16-16V48a16,16,0,0,1,16-16h40A16,16,0,0,1,216,48ZM96,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V48A16,16,0,0,0,96,32Z\"/>", "heart": "<path d=\"M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z\"/>", "trash": "<path d=\"M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM112,168a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm0-120H96V40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8Z\"/>"};
+function paintIcons(root){
+  (root||document).querySelectorAll('i[data-i]').forEach(function(el){
+    var d=I[el.getAttribute('data-i')]; if(!d) return;
+    var s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    s.setAttribute('viewBox','0 0 256 256'); s.setAttribute('aria-hidden','true');
+    s.innerHTML=d; el.replaceWith(s);
+  });
+}
+paintIcons();
+
+(function(){
+  var reason=null, pauseMonths=1, saveOffer=null;
+  var ORDER=['reason','offer','lose','confirm'];
+
+  // --- analytics. every step and every exit, or none of this can be tuned later
+  function track(ev,data){
+    var payload=Object.assign({event:ev,reason:reason,plan:ACCOUNT.plan,ts:Date.now()},data||{});
+    (window.dataLayer=window.dataLayer||[]).push(payload);
+    console.log('[cancel]',ev,payload);
+  }
+
+  function stepIndex(id){
+    if(id==='reason') return 0;
+    if(id.indexOf('offer')===0) return 1;
+    if(id==='lose') return 2;
+    if(id==='confirm') return 3;
+    return -1;
+  }
+  function paintSteps(id){
+    var k=stepIndex(id), steps=document.querySelectorAll('#steps i');
+    document.getElementById('steps').style.visibility = k<0 ? 'hidden' : 'visible';
+    steps.forEach(function(s,i){
+      s.className = i<k ? 'done' : (i===k ? 'on' : '');
+    });
+  }
+
+  function go(id){
+    document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on')});
+    var el=document.getElementById('s-'+id);
+    if(!el){console.warn('no screen',id);return}
+    el.classList.add('on');
+    paintSteps(id);
+    document.querySelectorAll('#proto button').forEach(function(b){
+      b.classList.toggle('on', b.dataset.go===id);
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+    track('screen_view',{screen:id});
+  }
+  window.gotoScreen=go;
+
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('[data-go]');
+    if(!t) return;
+    e.preventDefault();
+    var save=t.getAttribute('data-save');
+    if(save){
+      saveOffer=save;
+      track('save_accepted',{offer:save, months:(save==='pause'?pauseMonths:null)});
+      var o=OFFERS[save];
+      if(o && t.getAttribute('data-go')==='saved') paintSaved(save,o);
+    }
+    go(t.getAttribute('data-go'));
+  });
+
+  // --- 1. reason
+  var next=document.getElementById('reasonNext');
+  document.querySelectorAll('.rn').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.rn').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      reason=b.dataset.r;
+      next.disabled=false;
+      next.setAttribute('data-go', b.dataset.next);
+      track('reason_selected',{reason:reason});
+    });
+  });
+
+  // --- 2b. pause length
+  document.querySelectorAll('#pauseopts .po').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#pauseopts .po').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on'); pauseMonths=+b.dataset.p;
+    });
+  });
+
+  // --- 2c. fix chips
+  document.querySelectorAll('#fixchips .chip').forEach(function(c){
+    c.addEventListener('click',function(){c.classList.toggle('on')});
+  });
+
+  // --- saved screen wording follows the offer that was taken
+  var COPY={
+    'discount-50-3m':['Half price it is.','Your next three payments are £3.99. After that it goes back to £7.99 and we will email you before it does.'],
+    'downgrade-standard':['You are on Standard now.','£4.99 a month and 500 credits. Your library and everything in it is untouched.'],
+    'switch-annual':['You are on the yearly plan.','£79 for the year, which is £6.58 a month. Your next payment is not due until next October.'],
+    'pause':['Paused. Nothing will be charged.','We will wake your account up and email you the day before it restarts. Everything will be exactly where you left it.'],
+    'support-hold':['Thank you. That is with a person.','Your plan is held free for 30 days while we look at it. We will reply within two working days.'],
+    'support-callback':['Someone will call you.','Usually within one working day. Your plan is held free in the meantime.'],
+    'schools-handoff':['We will be in touch about the licence.','Your plan is held free for 60 days while that is sorted, so do not cancel anything.'],
+    'schools-hold':['Held for 60 days, free.','Nothing will be charged. When the school licence starts we will move your library across.'],
+    'kept-at-inventory':['Good. It is all still yours.','Your plan carries on exactly as it was.'],
+    'kept-at-confirm':['Good. It is all still yours.','Your plan carries on exactly as it was.'],
+    'reactivate':['Welcome back.','Your plan is back on and everything is where you left it.']
+  };
+  function paintSaved(key,o){
+    var c=COPY[key]; if(!c) return;
+    var h=document.getElementById('savedH'), p=document.getElementById('savedP');
+    h.textContent=c[0];
+    p.textContent = key==='pause'
+      ? 'Paused for '+pauseMonths+' month'+(pauseMonths>1?'s':'')+'. '+c[1]
+      : c[1];
+  }
+
+  document.getElementById('confirmCancel').addEventListener('click',function(){
+    track('cancelled',{reason:reason, sawOffer:saveOffer});
+  });
+
+  // --- copy that must match POLICY, written in rather than hard coded
+  document.getElementById('n-res').textContent=ACCOUNT.resources;
+  document.getElementById('w-res').textContent =
+    POLICY.libraryAfter==='view-only' ? 'View only after '+ACCOUNT.periodEnd :
+    POLICY.libraryAfter==='deleted'   ? 'Deleted after '+ACCOUNT.periodEnd : 'Kept in full';
+
+  go('reason');
+})();
+</script>
+</body>
+</html>

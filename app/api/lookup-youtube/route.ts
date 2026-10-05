@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
+import { readGuestId } from "@/app/lib/guest";
 
 export const maxDuration = 15;
 
@@ -42,7 +43,10 @@ export async function GET(req: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
+  // A guest finishing a deck on /create may paste a link too. The proxy has
+  // already checked their cookie and throttled them; this is the same check
+  // again, because this route also guards itself.
+  if (!user && !(await readGuestId())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

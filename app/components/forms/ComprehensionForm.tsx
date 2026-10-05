@@ -14,27 +14,30 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import { defaultDomainCodes, domainsFor, keyStageFor } from "@/app/lib/comprehension-domains";
+
+/**
+ * How the form runs on /create for a signed out visitor. Same fields, same
+ * request; it posts to the guest route and hands the result to the page
+ * instead of saving it to a library the visitor does not have yet.
+ */
+export interface ComprehensionGuestMode {
+  endpoint: string;
+  /** Merged into the request body. Carries the honeypot. */
+  extraBody?: () => Record<string, unknown>;
+  /** A refusal (429 limit, 403 paused). The page shows the sign up modal. */
+  onRefused: (status: number, data: { error?: string; reason?: string }) => void;
+  /** The trial row id the guest route returned in its header. */
+  onStarted?: (trialId: string | null) => void;
+  /** Rendered where the signed in form shows ToolResults. */
+  renderResult: (r: {
+    result: string | null;
+    isGenerating: boolean;
+    input: Record<string, unknown>;
+  }) => React.ReactNode;
+}
 
 const TOOL_SLUG = "comprehension-generator";
-
-const KS1_DOMAINS = [
-  { code: "1a", label: "Word meaning", description: "Draw on knowledge of vocabulary to understand texts" },
-  { code: "1b", label: "Key aspects", description: "Identify and explain key aspects of fiction and non-fiction texts, such as characters, events, titles and information" },
-  { code: "1c", label: "Sequence of events", description: "Identify and explain the sequence of events in texts" },
-  { code: "1d", label: "Inference", description: "Make inferences from the text" },
-  { code: "1e", label: "Prediction", description: "Predict what might happen on the basis of what has been read so far" },
-];
-
-const KS2_DOMAINS = [
-  { code: "2a", label: "Word meaning", description: "Give and explain the meaning of words in context" },
-  { code: "2b", label: "Retrieval", description: "Retrieve and record information, and identify key details from fiction and non-fiction" },
-  { code: "2c", label: "Summarising", description: "Summarise main ideas from more than one paragraph" },
-  { code: "2d", label: "Inference", description: "Make inferences from the text and explain and justify inferences with evidence from the text" },
-  { code: "2e", label: "Prediction", description: "Predict what might happen from details stated and implied" },
-  { code: "2f", label: "Structure", description: "Identify and explain how information and narrative content is related and contributes to meaning as a whole" },
-  { code: "2g", label: "Language choices", description: "Identify and explain how meaning is enhanced through choice of words and phrases" },
-  { code: "2h", label: "Comparison", description: "Make comparisons within the text" },
-];
 
 const QUESTION_TYPES = [
   "Multiple choice",
@@ -54,9 +57,11 @@ const inputClass =
 export default function ComprehensionForm({
   sidebar,
   launch,
+  guest,
 }: {
   sidebar: React.ReactNode;
   launch?: ToolLaunchParams;
+  guest?: ComprehensionGuestMode;
 }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
@@ -79,8 +84,8 @@ export default function ComprehensionForm({
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
 
-  const ks = (!mixed && (yearGroup === "Year 1" || yearGroup === "Year 2")) ? "ks1" : "ks2";
-  const currentDomains = ks === "ks1" ? KS1_DOMAINS : KS2_DOMAINS;
+  const ks = keyStageFor(yearGroup, mixed);
+  const currentDomains = domainsFor(ks);
 
   const prevKsRef = useRef(ks);
   useEffect(() => {
@@ -141,16 +146,32 @@ export default function ComprehensionForm({
     },
   });
 
+  // A form Jo filled starts with every domain for its key stage selected. Runs
+  // after the key stage reset above (effects run in order), and once per key
+  // stage, so a teacher who unticks them all is not overruled. See
+  // defaultDomainCodes for why this is needed at all.
+  const autoDomainsFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!prefilled) return;
+    if (!yearGroup && !mixed) return;
+    if (autoDomainsFor.current === ks) return;
+    autoDomainsFor.current = ks;
+    if (contentDomains.length === 0) setContentDomains(defaultDomainCodes(yearGroup, mixed));
+  }, [prefilled, ks, yearGroup, mixed, contentDomains.length]);
+
   const handleGenerate = async () => {
     setError(null);
     setResult("");
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
     try {
-      const res = await fetch("/api/comprehension-generator", {
+      const res = await fetch(guest?.endpoint ?? "/api/comprehension-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // The guest route keeps the raw form so a claimed run restores into
+          // this form exactly as the visitor left it.
+          ...(guest ? { ...(guest.extraBody?.() ?? {}), formState } : {}),
           curriculum,
           yearGroup: mixed ? "Mixed" : yearGroup,
           textSource,
@@ -170,9 +191,16 @@ export default function ComprehensionForm({
         }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error || "Generation failed");
+        const data = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
+        if (guest && (res.status === 429 || res.status === 403)) {
+          guest.onRefused(res.status, data);
+          setResult(null);
+          setLastGenerated(null);
+          return;
+        }
+        throw new Error(data.error || "Generation failed");
       }
+      guest?.onStarted?.(res.headers.get("x-trial-id"));
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
       while (true) {
@@ -202,7 +230,9 @@ export default function ComprehensionForm({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
         <div className="lg:col-span-1">
           {sidebar}
-          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+          {!guest && (
+            <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+          )}
         </div>
 
         <div className="lg:col-span-2">
@@ -434,14 +464,18 @@ export default function ComprehensionForm({
         <div className="bg-red-50 border border-red-200 rounded-md p-4 text-sm text-red-700">{error}</div>
       )}
 
-      <ToolResults
-        result={result}
-        isGenerating={isGenerating}
-        onChange={(md) => setResult(md)}
-        exportFilename="comprehension-activity"
-        historyMeta={{ toolSlug: TOOL_SLUG, title: topic || null, input: formState }}
-        onSaved={() => setHistoryKey((k) => k + 1)}
-      />
+      {guest ? (
+        guest.renderResult({ result, isGenerating, input: formState })
+      ) : (
+        <ToolResults
+          result={result}
+          isGenerating={isGenerating}
+          onChange={(md) => setResult(md)}
+          exportFilename="comprehension-activity"
+          historyMeta={{ toolSlug: TOOL_SLUG, title: topic || null, input: formState }}
+          onSaved={() => setHistoryKey((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }

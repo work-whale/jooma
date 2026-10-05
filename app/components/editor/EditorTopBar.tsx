@@ -227,6 +227,7 @@ export default function EditorTopBar({
         <div className="w-px h-6 bg-gray-300 mx-2" />
         <button
           onClick={onPresent}
+          data-then="present"
           className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           style={{ backgroundColor: "#1D1730", color: "#fff" }}
           title="Present"
@@ -234,6 +235,9 @@ export default function EditorTopBar({
           <Play className="w-4 h-4" />
           Present
         </button>
+        {/* data-then: a guest who pressed Export on /create and then signed up
+            lands here with ?then=export, and ThenAction opens this menu. */}
+        <span data-then="export" className="contents">
         <DropdownMenu
           ariaLabel="Export options"
           disabled={isExporting}
@@ -257,6 +261,7 @@ export default function EditorTopBar({
             },
           ]}
         />
+        </span>
       </div>
     </div>
   );

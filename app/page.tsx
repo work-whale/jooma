@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/app/lib/auth/server";
 import { getCopy } from "@/app/lib/copy";
+import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
+import { publicShowcase } from "@/app/lib/showcase";
 import {
   planCardCta,
   planCardName,
@@ -14,7 +16,7 @@ import {
 
 import { SquircleDefs } from "@/app/components/v2/Squircle";
 import LandingNav from "@/app/components/landing/v2/LandingNav";
-import Hero from "@/app/components/landing/v2/Hero";
+import HeroV3 from "@/app/components/landing/v2/HeroV3";
 import ProblemStats from "@/app/components/landing/v2/ProblemStats";
 import Showcase from "@/app/components/landing/v2/Showcase";
 import {
@@ -119,7 +121,13 @@ export default async function LandingPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const copy = await getCopy();
+  // The hero's count is the admin Stats visitor figure, all time. Fetched beside
+  // the copy and the showcase rather than after them: none depends on another.
+  const [copy, visitors, showcase] = await Promise.all([
+    getCopy(),
+    visitorsAllTime(),
+    publicShowcase(6),
+  ]);
 
   let firstName: string | null = null;
   let fullName: string | null = null;
@@ -175,15 +183,11 @@ export default async function LandingPage({
         fullName={fullName}
         avatarUrl={avatarUrl}
         isAdmin={isAdmin}
+        visitors={visitors}
       />
 
       <main>
-        <Hero
-          eyebrow={copy["home.hero.eyebrow"]}
-          headline={copy["home.hero.h1"]}
-          sub={copy["home.hero.sub"]}
-          reassure={copy["home.hero.reassure"]}
-        />
+        <HeroV3 headline={copy["home.hero.h1"]} visitors={visitors} showcase={showcase} />
 
         <ProblemStats />
 

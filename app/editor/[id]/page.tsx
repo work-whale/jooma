@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Editor from "@/app/components/editor/Editor";
+import ThenAction from "@/app/components/guest/ThenAction";
 import SlideshowLoadingAnimation from "@/app/components/editor/SlideshowLoadingAnimation";
 import { getPresentation, type Presentation } from "@/app/lib/presentations";
 import { GENERATION_STORAGE_KEY, type GenerationParams } from "@/app/components/slideshow/GenerateModal";
@@ -71,5 +72,11 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
     );
   }
 
-  return <Editor presentation={presentation} generationParams={genParams ?? undefined} />;
+  return (
+    <>
+      <Editor presentation={presentation} generationParams={genParams ?? undefined} />
+      {/* ?then=present|export, for a deck claimed from a free try on /create. */}
+      <ThenAction />
+    </>
+  );
 }

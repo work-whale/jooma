@@ -1,0 +1,542 @@
+/* The guest pieces of /create: the deck and result previews, Ask Jo, and the
+   sign up prompt. */
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.spin {
+  width: 15px;
+  height: 15px;
+  animation: spin 0.9s linear infinite;
+  flex: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Deck ───────────────────────────────────────────────────────────────── */
+
+.deck,
+.result {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  overflow: hidden;
+}
+
+.deckBar,
+.resultBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+.deckTitle {
+  min-width: 0;
+}
+
+.deckTitle h1,
+.deckTitle h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--j-ink);
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deckStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--j-muted);
+}
+
+.deckActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ghostBtn,
+.darkBtn,
+.purpleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ghostBtn svg,
+.darkBtn svg,
+.purpleBtn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ghostBtn {
+  background: var(--j-card);
+  color: var(--j-body);
+  border-color: var(--j-line-2);
+}
+
+.ghostBtn:hover:not(:disabled) {
+  border-color: var(--j-lilac-2);
+}
+
+.darkBtn {
+  background: var(--j-ink);
+  color: #fff;
+}
+
+.purpleBtn {
+  background: var(--j-purple);
+  color: #fff;
+}
+
+.purpleBtn:hover:not(:disabled) {
+  background: #4d24bd;
+}
+
+.ghostBtn:disabled,
+.darkBtn:disabled,
+.purpleBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stage {
+  padding: 18px;
+  background: var(--j-bg);
+}
+
+.stageSlide {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -26px rgba(16, 6, 45, 0.5);
+}
+
+.stageEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 10px;
+  background: var(--j-card);
+  border: 1px dashed var(--j-line-2);
+  color: var(--j-muted);
+  font-weight: 600;
+}
+
+.thumbs {
+  list-style: none;
+  margin: 0;
+  padding: 12px 18px 18px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  background: var(--j-bg);
+}
+
+.thumb {
+  display: block;
+  width: 128px;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--j-card);
+  cursor: pointer;
+}
+
+.thumbOn {
+  border-color: var(--j-purple);
+}
+
+.thumbPending {
+  background: linear-gradient(90deg, var(--j-line) 0%, var(--j-tint) 50%, var(--j-line) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.resultBody {
+  padding: 22px 26px 28px;
+}
+
+/* ── Ask Jo ─────────────────────────────────────────────────────────────── */
+
+.jo {
+  position: sticky;
+  top: 86px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 110px);
+  min-height: 360px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.joHead {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+.joAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--j-purple);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.joName {
+  margin: 0;
+  font-weight: 800;
+  color: var(--j-ink);
+  font-size: 0.95rem;
+}
+
+.joSub {
+  margin: 0;
+  color: var(--j-muted);
+  font-size: 0.8rem;
+}
+
+.joList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.joMsg {
+  max-width: 92%;
+  padding: 10px 13px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.joBot {
+  align-self: flex-start;
+  background: var(--j-tint);
+  color: var(--j-body);
+  border-bottom-left-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.joMe {
+  align-self: flex-end;
+  background: var(--j-purple);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.joChips p {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--j-ink);
+  font-size: 0.82rem;
+}
+
+.joChips div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.joChips button {
+  border: 1px solid var(--j-line-2);
+  background: var(--j-card);
+  color: var(--j-purple);
+  border-radius: var(--j-pill);
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.joError {
+  margin: 0 16px 8px;
+  font-size: 0.82rem;
+  color: #8a1c1c;
+}
+
+.joForm {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--j-line);
+}
+
+.joForm input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--j-line-2);
+  border-radius: var(--j-pill);
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--j-ink);
+  background: var(--j-card);
+}
+
+.joForm input:focus {
+  outline: 2px solid var(--j-mid);
+  outline-offset: 1px;
+}
+
+.joForm button {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--j-purple);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.joForm button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.joForm button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── The sign up prompt ─────────────────────────────────────────────────── */
+
+.gate {
+  position: relative;
+  padding: 34px 30px 24px;
+  text-align: center;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+.gateClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--j-faint);
+  cursor: pointer;
+}
+
+.gateClose:hover {
+  background: var(--j-tint);
+  color: var(--j-ink);
+}
+
+.gateClose svg {
+  width: 18px;
+  height: 18px;
+}
+
+.gateTitle {
+  margin: 0;
+  color: var(--j-ink);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.gateLede {
+  margin: 10px auto 20px;
+  color: var(--j-muted);
+  font-size: 0.92rem;
+  max-width: 36ch;
+}
+
+.google {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--j-line-2);
+  border-radius: var(--j-pill);
+  background: var(--j-card);
+  color: var(--j-ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.google svg {
+  width: 20px;
+  height: 20px;
+}
+
+.google:hover {
+  border-color: var(--j-lilac-2);
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--j-faint);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.or span {
+  flex: 1;
+  height: 1px;
+  background: var(--j-line);
+}
+
+.gateForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gateInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--j-line-2);
+  border-radius: var(--j-pill);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--j-ink);
+  box-sizing: border-box;
+}
+
+.gateInput:focus {
+  outline: 2px solid var(--j-mid);
+  outline-offset: 1px;
+}
+
+.gateSubmit {
+  width: 100%;
+  padding: 13px 16px;
+  border: 0;
+  border-radius: var(--j-pill);
+  background: var(--j-purple);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px -10px rgba(91, 46, 214, 0.8);
+}
+
+.gateSubmit:hover {
+  background: #4d24bd;
+}
+
+.gateError {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: #8a1c1c;
+}
+
+.gateLogin {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--j-purple);
+}
+
+@media (max-width: 1000px) {
+  .jo {
+    position: static;
+    max-height: 460px;
+  }
+}
+
+@media (max-width: 620px) {
+  .gate {
+    padding: 30px 18px 20px;
+  }
+
+  .ghostBtn span {
+    display: none;
+  }
+
+  .stage {
+    padding: 10px;
+  }
+
+  .thumbs {
+    padding: 10px;
+  }
+
+  .resultBody {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin,
+  .thumbPending {
+    animation: none;
+  }
+}

@@ -1,4 +1,5 @@
 import "server-only";
+import { sumVisitors } from "./visitors";
 
 /**
  * Visitor figures from Vercel Web Analytics.
@@ -190,7 +191,24 @@ export async function visitorsToday(): Promise<Result<VisitorTotals>> {
 
 /** One row per month, oldest first. Months before tracking began return zero. */
 export async function visitorsByMonth(months = 12): Promise<Result<VisitorPoint[]>> {
-  return call<VisitorPoint[]>("/aggregate", { ...monthRange(months), by: "month", limit: "24" });
+  // The limit follows the range. It was a fixed 24, which quietly cut the
+  // admin "All" range (120 months) down to two years of visitors.
+  return call<VisitorPoint[]>("/aggregate", {
+    ...monthRange(months),
+    by: "month",
+    limit: String(Math.max(1, months)),
+  });
+}
+
+/**
+ * Every visitor since tracking began, as the sum of the monthly buckets. The
+ * landing page's "teachers using Jooma" figure. Null when Vercel is not
+ * configured or unreachable, and the page hides the count rather than showing
+ * a wrong one.
+ */
+export async function visitorsAllTime(): Promise<number | null> {
+  const { data } = await visitorsByMonth(120);
+  return sumVisitors(data);
 }
 
 /** Top countries by visitors today, for the strip beside the headline count. */

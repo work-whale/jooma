@@ -29,6 +29,7 @@ import {
   Activity,
   TrendingUp,
   ArrowLeft,
+  Images,
   type LucideIcon,
 } from "lucide-react";
 
@@ -136,6 +137,8 @@ const NAV: NavGroup[] = [
         anyOf: ["see_content", "send_email_campaigns"],
       },
       { href: "/admin/announce", label: "Announcements", icon: Megaphone },
+      // Resources teachers offered for the landing page's "Made with Jooma" row.
+      { href: "/admin/showcase", label: "Made with Jooma", icon: Images },
     ],
   },
   {

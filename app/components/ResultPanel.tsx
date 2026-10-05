@@ -8,6 +8,13 @@ import FocusDocumentModal from "@/app/components/FocusDocumentModal";
 import DropdownMenu from "@/app/components/ui/DropdownMenu";
 import { useDocumentActions } from "@/app/lib/useDocumentActions";
 import { saveToolRun } from "@/app/lib/toolRuns";
+import ShareToHomePrompt from "@/app/components/guest/ShareToHomePrompt";
+
+/** Tools whose results can be offered for the landing page's showcase row. */
+const SHAREABLE: Record<string, "comprehension" | "worksheet"> = {
+  "comprehension-generator": "comprehension",
+  "worksheet-generator": "worksheet",
+};
 
 /**
  * Scroll the window so the result panel sits just below the sticky chrome.
@@ -194,6 +201,7 @@ export default function ResultPanel({
   // non-empty result). Refs keep the latest meta without re-firing the effect,
   // and lastSavedRef dedupes against re-renders. A restore sets `result`
   // without toggling busy, so it never triggers a save.
+  const [savedRun, setSavedRun] = useState<{ id: string; slug: string } | null>(null);
   const wasBusyRef = useRef(isBusy);
   const lastSavedRef = useRef<string | null>(null);
   const historyMetaRef = useRef(historyMeta);
@@ -209,7 +217,10 @@ export default function ResultPanel({
     if (lastSavedRef.current === result) return;
     lastSavedRef.current = result;
     saveToolRun({ toolSlug: meta.toolSlug, title: meta.title, input: meta.input, output: result })
-      .then(() => onSavedRef.current?.())
+      .then((run) => {
+        if (SHAREABLE[meta.toolSlug]) setSavedRun({ id: run.id, slug: meta.toolSlug });
+        onSavedRef.current?.();
+      })
       .catch(() => { lastSavedRef.current = null; });
   }, [isBusy, result]);
 
@@ -250,6 +261,7 @@ export default function ResultPanel({
               type="button"
               onClick={() => setFocusOpen(true)}
               disabled={isBusy}
+              data-then="focus"
               aria-label="Open in focused view"
               className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
             >
@@ -258,6 +270,9 @@ export default function ResultPanel({
             </button>
 
             {!isBusy && (
+              // data-then: see ThenAction. A guest who pressed Export on
+              // /create is brought back here with this menu open.
+              <span data-then="export" className="contents">
               <DropdownMenu
                 ariaLabel="Export options"
                 disabled={isExporting !== null}
@@ -281,11 +296,13 @@ export default function ResultPanel({
                 }
                 items={exportItems}
               />
+              </span>
             )}
             <button
               type="button"
               onClick={handleCopy}
               disabled={isBusy}
+              data-then="copy"
               aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
               className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
             >
@@ -320,6 +337,12 @@ export default function ResultPanel({
           title={historyMeta?.title?.trim() || "Your document"}
           onClose={() => setFocusOpen(false)}
         />
+      )}
+
+      {/* Offered once per saved resource, for the tools the landing page's
+          "Made with Jooma" row shows. Keyed so a second generation asks again. */}
+      {savedRun && SHAREABLE[savedRun.slug] && (
+        <ShareToHomePrompt key={savedRun.id} kind={SHAREABLE[savedRun.slug]} resourceId={savedRun.id} />
       )}
     </>
   );

@@ -63,7 +63,7 @@ export type CopyMap = Record<CopyKey, string>;
  */
 export const DEFAULTS: CopyMap = {
   "home.hero.eyebrow": "Built for the UK curriculum",
-  "home.hero.h1": "Type a topic. Walk out with the lesson.",
+  "home.hero.h1": "Think it, Teach it.",
   "home.hero.sub":
     "Jooma turns one line into the slides, the worksheet and the comprehension, matched to your year group. Try it on this page. No sign up, no card.",
   "home.hero.cta": "Start free trial",
