@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
-import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
+import { stripe, priceIdFor, isPaidPlanId, intervalOfPrice } from "@/app/lib/stripe";
 import { PLANS, asPlanId } from "@/app/lib/plans";
 
 // Moves an existing subscriber UP to a more expensive plan (today: Pro to Max)
@@ -123,7 +123,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const priceId = await priceIdFor(target);
+    // Same interval they already bill at: a yearly subscriber moves to the
+    // yearly price of the new plan, a monthly one to the monthly. Switching
+    // interval is not offered here.
+    const priceId = await priceIdFor(target, intervalOfPrice(item.price));
 
     // Already on the target price in Stripe even though our row disagrees —
     // treat as success and let the webhook reconcile, rather than billing a

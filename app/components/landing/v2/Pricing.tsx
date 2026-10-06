@@ -6,6 +6,8 @@ import PlanCard, {
   PlanCardGrid,
   type PlanCardAction,
 } from "@/app/components/plans/PlanCard";
+import BillingToggle from "@/app/components/plans/BillingToggle";
+import { DEFAULT_INTERVAL, type BillingInterval } from "@/app/lib/plans";
 import Reveal from "./Reveal";
 import shared from "./landing.module.css";
 import styles from "./Pricing.module.css";
@@ -28,6 +30,16 @@ export interface PricingPlan {
   /** The trial line under the button, e.g. "3 days free, then £4.99 a month". */
   trial?: string | null;
   href?: string;
+  /** The card as shown with Yearly selected. Everything above is the monthly
+   *  card. Absent fields fall back to it. */
+  yearly?: {
+    price: string;
+    per: string;
+    was?: string;
+    saving?: string;
+    note?: string;
+    trial?: string | null;
+  };
 }
 
 
@@ -43,10 +55,18 @@ export interface PricingPlan {
  * The card itself is shared with /welcome and the profile's subscription
  * section, so all three look the same and only have to be styled once.
  */
-export default function Pricing({ plans }: { plans: PricingPlan[] }) {
+export default function Pricing({
+  plans,
+  savePercent,
+}: {
+  plans: PricingPlan[];
+  /** The best yearly saving, for the toggle's "Save up to 25%". */
+  savePercent: number;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [interval, setBillingInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
 
   async function startCheckout(plan: "standard" | "pro" | "max") {
     setPending(plan);
@@ -55,7 +75,7 @@ export default function Pricing({ plans }: { plans: PricingPlan[] }) {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, interval }),
       });
 
       // Nobody can subscribe without an account, so send them to sign up and
@@ -100,22 +120,29 @@ export default function Pricing({ plans }: { plans: PricingPlan[] }) {
         </Reveal>
 
         <Reveal>
+          <BillingToggle value={interval} onChange={setBillingInterval} savePercent={savePercent} />
           <PlanCardGrid columns={plans.length}>
-            {plans.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                // The Schools card is the anchor target for the Schools nav link.
-                id={plan.id === "school" ? "schools" : undefined}
-                name={plan.name}
-                price={plan.price}
-                per={plan.per}
-                features={plan.features}
-                featured={plan.featured}
-                badge={plan.featured ? "Most popular" : undefined}
-                action={actionFor(plan)}
-                footer={plan.trial ?? undefined}
-              />
-            ))}
+            {plans.map((plan) => {
+              const shown = interval === "year" && plan.yearly ? plan.yearly : null;
+              return (
+                <PlanCard
+                  key={plan.id}
+                  // The Schools card is the anchor target for the Schools nav link.
+                  id={plan.id === "school" ? "schools" : undefined}
+                  name={plan.name}
+                  price={shown?.price ?? plan.price}
+                  per={shown?.per ?? plan.per}
+                  was={shown?.was}
+                  saving={shown?.saving}
+                  note={shown?.note}
+                  features={plan.features}
+                  featured={plan.featured}
+                  badge={plan.featured ? "Most popular" : undefined}
+                  action={actionFor(plan)}
+                  footer={(shown ? shown.trial : plan.trial) ?? undefined}
+                />
+              );
+            })}
           </PlanCardGrid>
         </Reveal>
 

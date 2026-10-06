@@ -37,8 +37,15 @@ export interface PlanCardProps {
   name: string;
   /** Already formatted, including the currency. See planCardPrice(). */
   price: string;
-  /** The line under the price: "a month", "Forever". */
+  /** The line under the price: "a month", "a year". */
   per: string;
+  /** The price before the discount, struck through beside the real one. Only
+   *  yearly cards carry it: twelve monthly payments, e.g. "£59.88". */
+  was?: string;
+  /** A small pill beside the badge naming the discount, e.g. "Save 20%". */
+  saving?: string;
+  /** A second line under `per`, e.g. "Just £4.00 a month, billed yearly". */
+  note?: string;
   features: string[];
   action: PlanCardAction;
   /** The purple, most-prominent card. One per grid. */
@@ -60,6 +67,9 @@ export default function PlanCard({
   name,
   price,
   per,
+  was,
+  saving,
+  note,
   features,
   action,
   featured,
@@ -91,11 +101,26 @@ export default function PlanCard({
           aligned across a row where only one card carries a badge. */}
       <div className={styles.badgeRow}>
         {badge && <span className={styles.badge}>{badge}</span>}
+        {saving && <span className={styles.saving}>{saving}</span>}
       </div>
 
       <h3 className={styles.name}>{name}</h3>
-      <p className={styles.price}>{price}</p>
+      <p className={styles.price}>
+        {/* Struck through on screen, and said in words to a screen reader,
+            which does not announce a strikethrough at all. */}
+        {was && (
+          <>
+            <s className={styles.was}>
+              <span className={styles.srOnly}>Was </span>
+              {was}
+            </s>{" "}
+            <span className={styles.srOnly}>now </span>
+          </>
+        )}
+        <span>{price}</span>
+      </p>
       <p className={styles.per}>{per}</p>
+      {note && <p className={styles.note}>{note}</p>}
 
       <ul className={styles.features}>
         {features.map((feature) => (

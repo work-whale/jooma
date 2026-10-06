@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PLANS, planCredits, type PlanId } from "@/app/lib/plans";
+import { PLANS, planCredits, type BillingInterval, type PlanId } from "@/app/lib/plans";
 import PlanLosses from "./PlanLosses";
 
 /*
@@ -25,8 +25,11 @@ import PlanLosses from "./PlanLosses";
 export default function DowngradeButton({
   from,
   to,
+  interval = "month",
   onClose,
 }: {
+  /** The interval their subscription bills at. The downgrade keeps it. */
+  interval?: BillingInterval;
   /** The plan they are on now. */
   from: PlanId;
   /** The cheaper plan they would move to. */
@@ -43,8 +46,9 @@ export default function DowngradeButton({
   const current = PLANS[from];
   const target = PLANS[to];
   const targetCredits = planCredits(to);
-  const currentPrice = current.priceMonthly?.toFixed(2) ?? null;
-  const targetPrice = target.priceMonthly?.toFixed(2) ?? null;
+  const yearly = interval === "year";
+  const currentPrice = (yearly ? current.priceYearly : current.priceMonthly)?.toFixed(2) ?? null;
+  const targetPrice = (yearly ? target.priceYearly : target.priceMonthly)?.toFixed(2) ?? null;
 
   async function downgrade() {
     setLoading(true);
@@ -97,7 +101,8 @@ export default function DowngradeButton({
         )}
         {targetPrice && currentPrice && (
           <li>
-            You&apos;ll pay £{targetPrice} a month instead of £{currentPrice}.
+            You&apos;ll pay £{targetPrice} a {yearly ? "year" : "month"} instead of £
+            {currentPrice}.
           </li>
         )}
         <li>You can change your mind any time before then.</li>

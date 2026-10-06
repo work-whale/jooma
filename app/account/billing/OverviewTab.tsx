@@ -1,6 +1,6 @@
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { pendingPlanChange } from "@/app/lib/stripe";
+import { subscriptionBilling } from "@/app/lib/stripe";
 import {
   asPlanId,
   hasActivePlan,
@@ -12,6 +12,8 @@ import { trialDaysFor } from "@/app/lib/trial";
 import ManageButton from "./ManageButton";
 import CancelSubscriptionButton from "./CancelSubscriptionButton";
 import ResumeButton from "./ResumeButton";
+import SwitchIntervalButton from "./SwitchIntervalButton";
+import CancelDowngradeButton from "./CancelDowngradeButton";
 import PlanPicker from "./PlanPicker";
 import AllowanceMeter from "./AllowanceMeter";
 import AmbassadorCodeField from "./AmbassadorCodeField";
@@ -107,7 +109,20 @@ export default async function OverviewTab({
   // subscription schedule rather than on the profile — nothing has changed yet,
   // and every column here should keep saying so until it does. Null whenever
   // there is no schedule, or if Stripe is unreachable.
-  const pending = await pendingPlanChange(profile?.stripe_subscription_id);
+  //
+  // Read alongside it: the interval the subscription bills at, which decides
+  // whether the trial line and the plan cards quote a monthly or yearly price.
+  // Only asked of Stripe for a live subscription; anyone else is choosing.
+  // One Stripe read for both.
+  const billing = await subscriptionBilling(profile?.stripe_subscription_id);
+  const pending = billing.pending;
+  const interval = hasSubscription ? billing.interval : "month";
+  const yearly = interval === "year";
+
+  // A waiting change on the SAME plan is a billing switch (yearly to monthly
+  // at renewal), not a plan move. The plan cards would otherwise label their
+  // own current card "Starts on…", so this one is said here instead.
+  const pendingSwitch = pending && pending.plan === plan ? pending : null;
 
   const renews = profile?.current_period_end
     ? new Date(profile.current_period_end).toLocaleDateString("en-GB", {
@@ -219,10 +234,14 @@ export default async function OverviewTab({
             {trialing && (ending || ended)
               ? `Your free trial ends on ${renews}. You won't be charged.`
               : trialing
-                ? `Your free trial ends on ${renews}. Then £${PLANS[plan].priceMonthly?.toFixed(2)} a month.`
+                ? yearly
+                  ? `Your free trial ends on ${renews}. Then £${PLANS[plan].priceYearly?.toFixed(2)} a year.`
+                  : `Your free trial ends on ${renews}. Then £${PLANS[plan].priceMonthly?.toFixed(2)} a month.`
                 : ending || ended
                   ? `Access ends on ${renews}.`
-                  : `Renews on ${renews}.`}
+                  : yearly
+                    ? `Renews yearly on ${renews}.`
+                    : `Renews on ${renews}.`}
           </p>
         )}
 
@@ -251,6 +270,24 @@ export default async function OverviewTab({
               )}
               {hasSubscription && ending && <ResumeButton />}
             </div>
+
+            {/* Monthly or yearly, on the plan they have. Offered only while
+                nothing else is waiting: Stripe holds one schedule per
+                subscription, and a second change would replace the first. */}
+            {hasSubscription && !ending && !ended && !pending && (
+              <SwitchIntervalButton plan={plan} current={interval} />
+            )}
+
+            {pendingSwitch && pendingAt && (
+              <p className="text-sm" style={{ color: "var(--j-body)" }}>
+                Switches to {pendingSwitch.interval === "month" ? "monthly" : "yearly"} billing on{" "}
+                {pendingAt}.{" "}
+                <CancelDowngradeButton
+                  keeping={plan}
+                  label={`Keep ${yearly ? "yearly" : "monthly"} billing`}
+                />
+              </p>
+            )}
           </div>
         ) : (
           /* No CTA here for a teacher with nothing to manage — the plan cards
@@ -289,13 +326,17 @@ export default async function OverviewTab({
           current={plan}
           hasSubscription={hasSubscription}
           trialEligible={trialDaysFor(profile) > 0}
-          pendingPlan={pending?.plan ?? null}
+          pendingPlan={pendingSwitch ? null : (pending?.plan ?? null)}
           pendingAt={pendingAt}
           // While a subscription is ending, renewing comes first: swapping a
           // plan that is about to stop would charge for something disappearing.
           // Once it has ENDED (back to no plan) the cards are the way back in,
           // through a fresh checkout.
-          locked={ending && hasActivePlan(plan)}
+          // A billing switch is waiting too: a plan move now would release its
+          // schedule and quietly drop the switch they were promised.
+          locked={(ending && hasActivePlan(plan)) || Boolean(pendingSwitch)}
+          subscriptionInterval={interval}
+          hasUnusedCode={Boolean(referralCode) && !codeSpent}
         />
       )}
 

@@ -43,6 +43,10 @@ test.describe("Standard plan and the free trial", () => {
     await page.goto("/#pricing");
     const pricing = page.locator("#pricing");
 
+    // The table opens on Yearly (see annual-plan.spec.ts). The figures below
+    // are the monthly ones.
+    await pricing.locator("label", { hasText: "Monthly" }).click();
+
     await expect(pricing.getByText("Standard", { exact: true })).toBeVisible();
     // Exact, because the trial line under the button quotes the price too.
     await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();

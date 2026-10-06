@@ -5,10 +5,12 @@ import { getCopy } from "@/app/lib/copy";
 import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
 import { publicShowcase } from "@/app/lib/showcase";
 import {
+  maxYearlySavingPercent,
   planCardCta,
   planCardName,
   planCardPer,
   planCardPrice,
+  planCardPricing,
   planTrialLine,
   TRIAL_CTA,
   planFeatures,
@@ -73,13 +75,23 @@ function pricingPlans(): PricingPlan[] {
     cta: TRIAL_CTA,
     trial: planTrialLine(id),
     checkout: id,
+    // The same card billed yearly: the real price, twelve monthly payments
+    // struck through beside it, and what it works out at each month.
+    yearly: { ...planCardPricing(id, "year"), trial: planTrialLine(id, "year") },
   });
 
   return [
     paid("standard"),
     { ...paid("pro"), featured: true },
     paid("max"),
-    { ...card("school"), href: "/contact?type=school" },
+    {
+      ...card("school"),
+      href: "/contact?type=school",
+      // No yearly price, but a second line all the same, so its feature list
+      // starts level with the three yearly cards beside it. And true: schools
+      // are invoiced once a year.
+      yearly: { price: planCardPrice("school"), per: planCardPer("school"), note: "Invoiced yearly" },
+    },
   ];
 }
 
@@ -254,7 +266,10 @@ export default async function LandingPage({
 
         <ValueBand />
 
-        <Pricing plans={pricingPlans()} />
+        <Pricing
+          plans={pricingPlans()}
+          savePercent={maxYearlySavingPercent(["standard", "pro", "max"])}
+        />
 
         <Faq />
 

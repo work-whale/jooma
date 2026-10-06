@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PLANS, planCredits, type PlanId } from "@/app/lib/plans";
+import { PLANS, planCredits, type BillingInterval, type PlanId } from "@/app/lib/plans";
 
 // Moves an existing subscriber up a plan. Unlike the checkout button on
 // /pricing, this changes the subscription they already have rather than
@@ -19,9 +19,12 @@ import { PLANS, planCredits, type PlanId } from "@/app/lib/plans";
 
 export default function UpgradeButton({
   to,
+  interval = "month",
   onClose,
 }: {
   to: PlanId;
+  /** The interval their subscription bills at. The upgrade keeps it. */
+  interval?: BillingInterval;
   /** When given, the panel is always open and this dismisses it — the plan
    *  cards own that state so the panel can render full width below the grid
    *  rather than squeezed into a ~200px card column. Without it the component
@@ -39,7 +42,8 @@ export default function UpgradeButton({
 
   const plan = PLANS[to];
   const credits = planCredits(to);
-  const price = plan.priceMonthly?.toFixed(2) ?? null;
+  const yearly = interval === "year";
+  const price = (yearly ? plan.priceYearly : plan.priceMonthly)?.toFixed(2) ?? null;
 
   async function upgrade() {
     setLoading(true);
@@ -102,10 +106,14 @@ export default function UpgradeButton({
             Your monthly credits go up to {credits.toLocaleString("en-GB")}.
           </li>
         )}
-        {price && <li>You&apos;ll pay £{price} a month from your next renewal.</li>}
+        {price && (
+          <li>
+            You&apos;ll pay £{price} a {yearly ? "year" : "month"} from your next renewal.
+          </li>
+        )}
         <li>
-          Today you&apos;ll only be charged the difference for the rest of this
-          month. Your billing date stays the same.
+          Today you&apos;ll only be charged the difference for the rest of this{" "}
+          {yearly ? "billing year" : "month"}. Your billing date stays the same.
         </li>
       </ul>
       <div className="flex flex-wrap gap-2">

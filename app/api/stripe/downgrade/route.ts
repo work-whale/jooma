@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
-import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
+import {
+  stripe,
+  priceIdFor,
+  isPaidPlanId,
+  intervalOfPrice,
+  scheduleNextPhase,
+} from "@/app/lib/stripe";
 import { PLANS, asPlanId } from "@/app/lib/plans";
 
 // Moves an existing subscriber DOWN to a cheaper plan (today: Max to Pro), at
@@ -128,7 +134,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const priceId = await priceIdFor(target);
+    // Same interval they already bill at: a yearly subscriber moves to the
+    // yearly price of the new plan, a monthly one to the monthly. Switching
+    // interval is not offered here.
+    const priceId = await priceIdFor(target, intervalOfPrice(item.price));
 
     // Already billing at the target price even though our row disagrees. Let
     // the webhook reconcile rather than scheduling a phase that changes nothing.
@@ -136,57 +145,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, unchanged: true });
     }
 
-    // One schedule at a time. If they already scheduled a downgrade, replace it
-    // rather than stacking a second — Stripe allows only one schedule per
-    // subscription, so creating another would fail anyway, and releasing first
-    // makes changing their mind from Max-to-Pro to something else just work.
+    // One schedule at a time: a downgrade already scheduled is replaced rather
+    // than stacked, so changing their mind from Max-to-Pro to something else
+    // just works. See scheduleNextPhase for the phases themselves.
     const existing = sub.schedule;
-    const existingId = typeof existing === "string" ? existing : existing?.id;
-    if (existingId) {
-      await stripe.subscriptionSchedules.release(existingId);
-    }
-
-    // from_subscription adopts the live subscription rather than creating a
-    // second one. The schedule starts out with a single phase mirroring the
-    // current period, which is exactly what we want to keep as phase one.
-    const schedule = await stripe.subscriptionSchedules.create({
-      from_subscription: subscriptionId,
-    });
-
-    const currentPhase = schedule.phases[0];
-    if (!currentPhase) {
-      console.error("[stripe/downgrade] schedule has no phases", schedule.id);
-      return NextResponse.json(
-        { error: "Could not change your plan. Please contact support." },
-        { status: 500 },
-      );
-    }
-
-    await stripe.subscriptionSchedules.update(schedule.id, {
-      // end_behavior "release" hands control back to the plain subscription once
-      // the last phase starts, so the subscription carries on renewing at the
-      // new price instead of stopping. The default is "release" but it is worth
-      // being explicit: "cancel" here would silently end their subscription at
-      // the next renewal, which is emphatically not what they asked for.
-      end_behavior: "release",
-      phases: [
-        {
-          // Phase one: what they already paid for, untouched.
-          items: [{ price: item.price.id, quantity: item.quantity ?? 1 }],
-          start_date: currentPhase.start_date,
-          end_date: currentPhase.end_date,
-        },
-        {
-          // Phase two: the cheaper plan, starting the moment phase one ends.
-          items: [{ price: priceId, quantity: item.quantity ?? 1 }],
-          // No proration: nothing is being changed mid-period, so there is
-          // nothing to prorate. Stated rather than left to the default because
-          // a stray proration on a downgrade would issue a credit note for a
-          // period the teacher fully used.
-          proration_behavior: "none",
-        },
-      ],
-      metadata: { userId: user.id },
+    await scheduleNextPhase({
+      subscriptionId,
+      existingScheduleId: typeof existing === "string" ? existing : existing?.id,
+      currentPriceId: item.price.id,
+      quantity: item.quantity ?? 1,
+      nextPriceId: priceId,
+      userId: user.id,
     });
 
     return NextResponse.json({ ok: true });

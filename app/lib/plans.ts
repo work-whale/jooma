@@ -149,12 +149,12 @@ export const PLANS: Record<PlanId, Plan> = {
   standard: {
     id: "standard",
     name: "Standard Teacher",
-    // £4.99/mo, matching the Stripe price configured for
-    // STRIPE_PRICE_STANDARD_MONTHLY (or plan_config.stripe_price_monthly).
-    // Monthly only for now: there is no yearly price yet.
+    // £4.99/mo, £47.99/yr, matching the Stripe prices configured for
+    // STRIPE_PRICE_STANDARD_MONTHLY / STRIPE_PRICE_STANDARD_YEARLY (or the
+    // plan_config.stripe_price_* columns).
     priceMonthly: 4.99,
-    priceYearlyPerMonth: null,
-    priceYearly: null,
+    priceYearlyPerMonth: 4.0,
+    priceYearly: 47.99,
     audience: "teacher",
     description: "Every tool, 500 credits, watermarked exports",
     interval: "month",
@@ -181,11 +181,11 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: "pro",
     name: "Pro Teacher",
-    // £7.99/mo, £79.00/yr — matches the Stripe prices configured for
+    // £7.99/mo, £71.99/yr, matching the Stripe prices configured for
     // STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_YEARLY.
     priceMonthly: 7.99,
-    priceYearlyPerMonth: 6.58,
-    priceYearly: 79.0,
+    priceYearlyPerMonth: 6.0,
+    priceYearly: 71.99,
     audience: "teacher",
     description: "Everything, fair use. For one teacher.",
     interval: "month",
@@ -218,10 +218,11 @@ export const PLANS: Record<PlanId, Plan> = {
     // The Stripe price is configured in plan_config.stripe_price_monthly, with
     // STRIPE_PRICE_MAX_MONTHLY as the fallback. Both are set in staging and
     // production. If neither exists, priceIdFor('max') throws rather than
-    // silently charging the wrong thing.
+    // silently charging the wrong thing. Yearly is £143.99, from
+    // plan_config.stripe_price_yearly or STRIPE_PRICE_MAX_YEARLY.
     priceMonthly: 14.99,
-    priceYearlyPerMonth: 12.42,
-    priceYearly: 149.0,
+    priceYearlyPerMonth: 12.0,
+    priceYearly: 143.99,
     audience: "teacher",
     description: "Adds leadership, inspection and CPD tools",
     interval: "month",
@@ -290,6 +291,17 @@ export const PLANS: Record<PlanId, Plan> = {
 
 /** Where an account with no active subscription sits. See PLANS.free. */
 export const DEFAULT_PLAN: PlanId = "free";
+
+/** How often a self-serve plan bills. Matches Stripe's recurring.interval. */
+export type BillingInterval = "month" | "year";
+
+/** The interval the plan choosers open on. Yearly is the better deal, so it is
+ *  what a teacher sees first; Monthly is one click away. */
+export const DEFAULT_INTERVAL: BillingInterval = "year";
+
+export function isBillingInterval(value: unknown): value is BillingInterval {
+  return value === "month" || value === "year";
+}
 
 /** Every self-serve plan starts with this many days free. The card is taken at
  *  checkout and first charged when the trial ends. See app/lib/trial.ts. */
