@@ -16,6 +16,13 @@
 //
 // During the free trial neither direction charges anything, so both are an
 // immediate price swap that keeps the trial's end date.
+//
+// WITH A PLAN CHANGE AT THE SAME TIME
+// The profile's plan cards can show the other interval, so a teacher can pick,
+// say, Pro yearly while on Standard monthly. The plan rule from the downgrade
+// route wins first: a CHEAPER plan always waits for renewal, because its
+// allowance cannot drop mid-month (see app/api/stripe/downgrade). Otherwise the
+// interval decides, exactly as above: to yearly now, to monthly at renewal.
 import type { BillingInterval } from "./plans";
 
 /** How a switch is carried out. */
@@ -29,8 +36,10 @@ export type IntervalSwitchKind =
 
 /** Why a switch is refused. */
 export type IntervalSwitchRefusal =
-  /** Already billed at that interval. */
+  /** Already billed at that interval, on that plan. */
   | "same"
+  /** Same interval, different plan: the upgrade and downgrade routes' job. */
+  | "not_interval"
   /** The subscription has ended. */
   | "canceled"
   /** Cancelled but not yet ended: renewing comes first. */
@@ -59,20 +68,38 @@ export function intervalSwitchKind({
   status,
   cancelAtPeriodEnd,
   hasSchedule,
+  planMove = "same",
 }: {
   from: BillingInterval;
   to: BillingInterval;
   status: string | null | undefined;
   cancelAtPeriodEnd: boolean;
   hasSchedule: boolean;
+  /** Whether the plan changes too, compared by monthly price. */
+  planMove?: PlanMove;
 }): IntervalSwitchDecision {
-  if (from === to) return { ok: false, reason: "same" };
+  if (from === to) {
+    return { ok: false, reason: planMove === "same" ? "same" : "not_interval" };
+  }
   if (status === "canceled") return { ok: false, reason: "canceled" };
   if (cancelAtPeriodEnd) return { ok: false, reason: "ending" };
   if (hasSchedule) return { ok: false, reason: "scheduled" };
+  if (status !== "active" && status !== "trialing") return { ok: false, reason: "inactive" };
+  // A cheaper plan waits for renewal, trial or not, as every downgrade does.
+  if (planMove === "down") return { ok: true, kind: "at_renewal" };
   if (status === "trialing") return { ok: true, kind: "trial" };
-  if (status !== "active") return { ok: false, reason: "inactive" };
   return { ok: true, kind: to === "year" ? "now" : "at_renewal" };
+}
+
+/** Which way a plan change goes, by monthly price. */
+export type PlanMove = "same" | "up" | "down";
+
+/** Compare two plans' monthly prices. Equal prices count as the same plan's
+ *  rung, which only happens for the same plan. */
+export function planMoveOf(fromMonthly: number, toMonthly: number): PlanMove {
+  if (toMonthly > fromMonthly) return "up";
+  if (toMonthly < fromMonthly) return "down";
+  return "same";
 }
 
 /** What a teacher is told when a switch is refused. */
@@ -80,6 +107,8 @@ export function intervalSwitchRefusalMessage(reason: IntervalSwitchRefusal): str
   switch (reason) {
     case "same":
       return "You're already billed that way.";
+    case "not_interval":
+      return "That's a plan change, not a billing change.";
     case "canceled":
       return "This subscription has ended. Please subscribe again.";
     case "ending":

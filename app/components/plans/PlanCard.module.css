@@ -189,6 +189,24 @@
   color: #fff;
 }
 
+/* The note's row: zero height when there is no note, its natural height when
+   there is, with the change animated. A grid row is the one way to transition
+   to "auto" height without measuring. */
+.noteWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.4s var(--j-ease);
+}
+
+.noteWrap[data-open] {
+  grid-template-rows: 1fr;
+}
+
+.noteWrap > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -342,6 +360,7 @@
 }
 
 .toggleTrack {
+  position: relative;
   display: inline-flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -361,6 +380,13 @@
   pointer-events: none;
 }
 
+/* Above the thumb, so the text sits on the purple rather than under it. */
+.toggleLabel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+}
+
 .toggleOption {
   display: inline-flex;
   align-items: center;
@@ -373,13 +399,50 @@
   cursor: pointer;
   user-select: none;
   transition:
-    background 0.18s,
-    color 0.18s;
+    color 0.3s var(--j-ease),
+    transform 0.15s var(--j-ease);
+}
+
+.toggleLabel:hover .toggleOption {
+  color: var(--j-ink);
+}
+
+/* A small press, so the click is felt before the thumb arrives. */
+.toggleLabel:active .toggleOption {
+  transform: scale(0.96);
 }
 
 .toggleInput:checked + .toggleOption {
-  background: var(--j-purple);
   color: #fff;
+}
+
+/* Before the thumb has been measured (server render, pre-hydration, no
+   JavaScript) the chosen option paints its own background, so the control is
+   never shown with nothing selected. */
+.toggleTrack:not([data-ready]) .toggleInput:checked + .toggleOption {
+  background: var(--j-purple);
+}
+
+/* The purple pill that slides between the options. Placed and sized by
+   BillingToggle from the chosen label; the spring easing overshoots a touch
+   and settles, which is what makes it feel physical rather than a repaint. */
+.toggleThumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: var(--j-pill);
+  background: var(--j-purple);
+  box-shadow: 0 8px 18px -8px rgba(91, 46, 214, 0.75);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.toggleTrack[data-ready] .toggleThumb {
+  opacity: 1;
+  transition:
+    transform 0.5s var(--plan-spring),
+    width 0.5s var(--plan-spring),
+    height 0.5s var(--plan-spring);
 }
 
 .toggleInput:focus-visible + .toggleOption {
@@ -396,4 +459,103 @@
   color: #1f6b3b;
   padding: 3px 8px;
   border-radius: var(--j-pill);
+}
+
+/* ── Motion when the billing toggle switches ──────────────────────────────────
+   Every figure that changes is keyed in PlanCard, so it remounts and plays one
+   of these. They are scoped to cards FOLLOWING a toggle that has actually been
+   switched, so a page load, or a subscriber's cards with no toggle at all,
+   never animate. The cards ripple left to right, a beat apart. */
+
+.grid,
+.toggle {
+  --plan-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes planSwap {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes planSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes planPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Transforms need a box: the price and its line are inline text otherwise. */
+.swap,
+.slideIn,
+.pop {
+  display: inline-block;
+}
+
+.note.swap {
+  display: block;
+}
+
+.toggle[data-switched] ~ .grid .swap {
+  animation: planSwap 0.5s var(--plan-spring) both;
+}
+
+.toggle[data-switched] ~ .grid .slideIn {
+  animation: planSlideIn 0.45s var(--j-ease) both;
+}
+
+.toggle[data-switched] ~ .grid .pop {
+  animation: planPop 0.5s var(--plan-spring) both;
+}
+
+.toggle[data-switched] ~ .grid > :nth-child(2) :is(.swap, .slideIn, .pop) {
+  animation-delay: 0.05s;
+}
+
+.toggle[data-switched] ~ .grid > :nth-child(3) :is(.swap, .slideIn, .pop) {
+  animation-delay: 0.1s;
+}
+
+.toggle[data-switched] ~ .grid > :nth-child(4) :is(.swap, .slideIn, .pop) {
+  animation-delay: 0.15s;
+}
+
+/* The toggle's own "Save up to 25%" pops each time Yearly is chosen. */
+.toggle[data-switched] .toggleInput:checked + .toggleOption .toggleSave {
+  animation: planPop 0.5s var(--plan-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggleTrack[data-ready] .toggleThumb,
+  .toggleOption,
+  .noteWrap {
+    transition: none;
+  }
+
+  .toggle[data-switched] ~ .grid :is(.swap, .slideIn, .pop),
+  .toggle[data-switched] .toggleSave {
+    animation: none;
+  }
 }

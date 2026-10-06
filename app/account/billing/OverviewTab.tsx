@@ -327,6 +327,7 @@ export default async function OverviewTab({
           hasSubscription={hasSubscription}
           trialEligible={trialDaysFor(profile) > 0}
           pendingPlan={pendingSwitch ? null : (pending?.plan ?? null)}
+          pendingInterval={pending?.interval ?? null}
           pendingAt={pendingAt}
           // While a subscription is ending, renewing comes first: swapping a
           // plan that is about to stop would charge for something disappearing.

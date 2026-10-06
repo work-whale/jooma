@@ -17,6 +17,7 @@ import { DEFAULT_INTERVAL, PLANS, type BillingInterval, type PlanId } from "@/ap
 import DowngradeButton from "./DowngradeButton";
 import UpgradeButton from "./UpgradeButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
+import BillingChangePanel from "./BillingChangePanel";
 
 /*
  * Every plan a teacher can be on, and the way to get to each one.
@@ -54,15 +55,17 @@ export default function PlanPicker({
   trialEligible = false,
   /** A scheduled downgrade, read back from Stripe by the server. */
   pendingPlan = null,
+  /** The interval that scheduled change bills at, when it moves interval too. */
+  pendingInterval = null,
   /** When that scheduled change takes effect, already formatted. */
   pendingAt = null,
   /** The subscription is cancelling or has ended. Plan changes are hidden:
    *  renewing comes first, and swapping a plan that is about to stop would
    *  charge for something disappearing. */
   locked = false,
-  /** The interval their live subscription bills at, read from Stripe. Plan
-   *  changes keep it, so the cards quote that interval's prices. Ignored
-   *  without a subscription, where the toggle decides. */
+  /** The interval their live subscription bills at, read from Stripe. The
+   *  toggle opens on it for a subscriber, so the cards first show what they
+   *  pay now; flipping it shows, and offers, the other interval. */
   subscriptionInterval = "month",
   /** They have claimed an ambassador code that is still unused. It discounts
    *  monthly checkouts only, which the picker says when Yearly is chosen. */
@@ -73,20 +76,39 @@ export default function PlanPicker({
   hasSubscription?: boolean;
   trialEligible?: boolean;
   pendingPlan?: PlanId | null;
+  pendingInterval?: BillingInterval | null;
   pendingAt?: string | null;
   locked?: boolean;
   subscriptionInterval?: BillingInterval;
   hasUnusedCode?: boolean;
 }) {
   const [pending, setPending] = useState<PlanId | null>(null);
-  /** The toggle's choice, for a teacher with nothing to change yet. */
-  const [chosenInterval, setChosenInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
-  // A subscriber's cards follow the subscription: switching between monthly
-  // and yearly is not offered, so there is no toggle to follow.
-  const interval = hasSubscription ? subscriptionInterval : chosenInterval;
+  /**
+   * The interval the cards show and act at.
+   *
+   * A subscriber opens on the interval they pay now, so the first thing they
+   * see is their own price, marked as theirs. Someone with nothing yet opens on
+   * Yearly, the better deal, as on the landing page.
+   */
+  const [interval, setIntervalChoice] = useState<BillingInterval>(
+    hasSubscription ? subscriptionInterval : DEFAULT_INTERVAL,
+  );
+  /** True when the cards show the interval a subscriber is NOT billed at, so
+   *  every card there, their own plan's included, is a billing change. */
+  const otherInterval = hasSubscription && interval !== subscriptionInterval;
   const [error, setError] = useState<string | null>(null);
   /** The plan whose confirmation panel is open, below the grid. */
   const [changing, setChanging] = useState<PlanId | null>(null);
+
+  /** Flipping the toggle closes any open confirmation: it was for a price the
+   *  cards no longer show. */
+  function chooseInterval(next: BillingInterval) {
+    setIntervalChoice(next);
+    setChanging(null);
+  }
+
+  /** The card for the plan AND interval they already have. */
+  const isCurrentCard = (id: PlanId) => id === current && !otherInterval;
 
   async function subscribe(plan: PlanId) {
     setPending(plan);
@@ -126,8 +148,8 @@ export default function PlanPicker({
    * wide, which wraps that to two or three words a line. The card starts the
    * move; the panel underneath explains it with room to be read.
    */
-  function moveFor(id: PlanId): "buy" | "up" | "down" | null {
-    if (id === current) return null;
+  function moveFor(id: PlanId): "buy" | "up" | "down" | "billing" | null {
+    if (isCurrentCard(id)) return null;
     // A change is already scheduled. Offering a second one would stack
     // conflicting schedules, so every other card goes quiet until it is either
     // cancelled or lands.
@@ -139,13 +161,17 @@ export default function PlanPicker({
     // No subscription to change — this is a purchase, not a swap.
     if (!hasSubscription) return "buy";
 
+    // The other interval: a billing change, with a plan change if this is not
+    // their plan. /api/stripe/switch-interval decides when it happens.
+    if (otherInterval) return "billing";
+
     return (PLANS[id].priceMonthly ?? 0) > (PLANS[current].priceMonthly ?? 0)
       ? "up"
       : "down";
   }
 
   function actionFor(id: PlanId): PlanCardAction {
-    if (id === current) return { kind: "current" };
+    if (isCurrentCard(id)) return { kind: "current" };
 
     const move = moveFor(id);
     if (!move) return { kind: "none" };
@@ -163,7 +189,12 @@ export default function PlanPicker({
     // time closes it again, so the button is a toggle rather than a dead end.
     return {
       kind: "button",
-      label: `Switch to ${planCardName(id)}`,
+      // Their own plan at the other interval names the interval, since the
+      // plan is not what changes.
+      label:
+        move === "billing" && id === current
+          ? `Switch to ${interval === "year" ? "yearly" : "monthly"}`
+          : `Switch to ${planCardName(id)}`,
       onClick: () => setChanging(changing === id ? null : id),
       disabled: false,
     };
@@ -177,13 +208,11 @@ export default function PlanPicker({
         {hasSubscription ? "Change your plan" : "Choose your plan"}
       </p>
 
-      {!hasSubscription && (
-        <BillingToggle
-          value={chosenInterval}
-          onChange={setChosenInterval}
-          savePercent={maxYearlySavingPercent(plans)}
-        />
-      )}
+      <BillingToggle
+        value={interval}
+        onChange={chooseInterval}
+        savePercent={maxYearlySavingPercent(plans)}
+      />
 
       {!hasSubscription && hasUnusedCode && interval === "year" && (
         <p className="text-sm mb-3 text-center" style={{ color: "var(--j-faint)" }}>
@@ -193,14 +222,20 @@ export default function PlanPicker({
 
       <PlanCardGrid columns={plans.length}>
         {plans.map((id) => {
-          const isCurrent = id === current;
+          const isCurrent = isCurrentCard(id);
           const isPending = pendingPlan === id;
+          // Named only when the scheduled change moves interval as well.
+          const pendingBilled =
+            pendingInterval && pendingInterval !== subscriptionInterval
+              ? `, billed ${pendingInterval === "year" ? "yearly" : "monthly"}`
+              : "";
 
           // Only the two cards involved in a scheduled change say anything.
           const footer =
             isPending && pendingAt ? (
               <>
-                Starts on {pendingAt}. <CancelDowngradeButton keeping={current} />
+                Starts on {pendingAt}
+                {pendingBilled}. <CancelDowngradeButton keeping={current} />
               </>
             ) : isCurrent && pendingPlan && pendingAt ? (
               <>Yours until {pendingAt}.</>
@@ -229,7 +264,15 @@ export default function PlanPicker({
           buttons, and a card column is far too narrow to read that in. */}
       {changing && (
         <div className="mt-4">
-          {moveFor(changing) === "up" ? (
+          {moveFor(changing) === "billing" ? (
+            <BillingChangePanel
+              key={`${changing}-${interval}`}
+              fromPlan={current}
+              toPlan={changing}
+              to={interval}
+              onClose={() => setChanging(null)}
+            />
+          ) : moveFor(changing) === "up" ? (
             <UpgradeButton
               to={changing}
               interval={interval}
