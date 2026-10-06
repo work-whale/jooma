@@ -21,11 +21,22 @@ import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from ".
  *      undone.
  *   5. Cancelling subscriptions, and a second change while one waits, are
  *      refused.
+ *   6. The profile's plan cards carry the toggle for subscribers too. They
+ *      open on the interval paid now; the other interval offers the switch,
+ *      with a plan change if wanted: dearer and yearly happens now, cheaper
+ *      waits for renewal.
+ *
+ * NOTE: the sandbox's webhook posts to the DEPLOYED staging app, which writes
+ * the same staging database. Until staging runs this branch, it reads a yearly
+ * price as "no subscription" and resets the test teacher mid-test, so the UI
+ * checks after a switch to yearly only pass once this code is deployed there.
  */
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const PRO_MONTHLY = process.env.STRIPE_PRICE_PRO_MONTHLY!;
 const PRO_YEARLY = process.env.STRIPE_PRICE_PRO_YEARLY!;
+const STANDARD_MONTHLY = process.env.STRIPE_PRICE_STANDARD_MONTHLY!;
+const MAX_MONTHLY = process.env.STRIPE_PRICE_MAX_MONTHLY!;
 
 test.describe("Switching between monthly and yearly", () => {
   let teacher: TestTeacher;
@@ -45,6 +56,7 @@ test.describe("Switching between monthly and yearly", () => {
   /** A sandbox subscription to Pro, linked to the test teacher's profile. */
   async function subscribe(opts: {
     price: string;
+    plan?: "standard" | "pro" | "max";
     trialDays?: number;
     coupon?: string;
   }): Promise<Stripe.Subscription> {
@@ -67,7 +79,7 @@ test.describe("Switching between monthly and yearly", () => {
     const { error } = await admin
       .from("profiles")
       .update({
-        plan: "pro",
+        plan: opts.plan ?? "pro",
         subscription_status: sub.status,
         stripe_customer_id: customer.id,
         stripe_subscription_id: sub.id,
@@ -197,5 +209,88 @@ test.describe("Switching between monthly and yearly", () => {
     expect(res.status()).toBe(400);
     expect((await res.json()).error).toMatch(/set to end/);
     expect(priceOf(await stripe.subscriptions.retrieve(sub.id))).toBe(PRO_MONTHLY);
+  });
+
+  test("a subscriber's cards open on what they pay, and the toggle offers the other interval", async ({
+    page,
+  }) => {
+    await subscribe({ price: PRO_MONTHLY });
+    await signIn(page, teacher);
+    await page.goto("/profile?section=subscription");
+
+    await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Your plan" })).toBeVisible();
+
+    await page.locator("label", { hasText: "Yearly" }).first().click();
+
+    // Nothing is theirs at the other interval: their own plan offers the
+    // switch, the others offer a plan change with it.
+    await expect(page.getByRole("button", { name: "Your plan" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Switch to yearly", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Switch to Max" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Switch to Standard" })).toBeVisible();
+    await expect(page.locator("s", { hasText: "£95.88" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Switch to yearly", exact: true }).click();
+    await expect(page.getByText("Switch to yearly billing?")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Pay £\d+\.\d{2} and switch$/ })).toBeVisible();
+  });
+
+  test("monthly Standard to yearly Pro from the cards is charged now", async ({ page }) => {
+    const sub = await subscribe({ price: STANDARD_MONTHLY, plan: "standard" });
+    await signIn(page, teacher);
+    await page.goto("/profile?section=subscription");
+
+    await page.locator("label", { hasText: "Yearly" }).first().click();
+    await page.getByRole("button", { name: "Switch to Pro" }).click();
+
+    await expect(page.getByText("Switch to Pro, billed yearly?")).toBeVisible();
+    await expect(page.getByText(/credits go up to 1,000 straight away/)).toBeVisible();
+    const pay = page.getByRole("button", { name: /^Pay £\d+\.\d{2} and switch$/ });
+    await expect(pay).toBeVisible();
+    // £71.99 less the unused part of a £4.99 month.
+    const quoted = Number((await pay.textContent())!.match(/£(\d+\.\d{2})/)![1]);
+    expect(quoted).toBeGreaterThan(66);
+    expect(quoted).toBeLessThan(71.99);
+
+    await pay.click();
+    await expect(page.getByText("Switch to Pro, billed yearly?")).toHaveCount(0);
+
+    const after = await stripe.subscriptions.retrieve(sub.id, { expand: ["latest_invoice"] });
+    expect(priceOf(after)).toBe(PRO_YEARLY);
+    expect(after.status).toBe("active");
+    expect((after.latest_invoice as Stripe.Invoice).amount_paid).toBe(Math.round(quoted * 100));
+  });
+
+  test("monthly Max to yearly Pro waits for renewal, like any move down", async ({ page }) => {
+    const sub = await subscribe({ price: MAX_MONTHLY, plan: "max" });
+    await signIn(page, teacher);
+
+    const preview = await page.request.get("/api/stripe/switch-interval?interval=year&plan=pro");
+    expect((await preview.json()).kind).toBe("at_renewal");
+
+    const res = await page.request.post("/api/stripe/switch-interval", {
+      data: { interval: "year", plan: "pro" },
+    });
+    expect(res.ok()).toBe(true);
+
+    // Still Max monthly today; Pro yearly waits on phase two.
+    const scheduled = await stripe.subscriptions.retrieve(sub.id, { expand: ["schedule"] });
+    expect(priceOf(scheduled)).toBe(MAX_MONTHLY);
+    const phaseTwo = (scheduled.schedule as Stripe.SubscriptionSchedule).phases[1].items[0].price;
+    expect(typeof phaseTwo === "string" ? phaseTwo : phaseTwo.id).toBe(PRO_YEARLY);
+
+    // The card says so, interval included.
+    await page.goto("/profile?section=subscription");
+    await expect(page.getByText(/Starts on .*, billed yearly\./).first()).toBeVisible();
+  });
+
+  test("a plan named in the body must be one that can be bought", async ({ page }) => {
+    await subscribe({ price: PRO_MONTHLY });
+    await signIn(page, teacher);
+    const res = await page.request.post("/api/stripe/switch-interval", {
+      data: { interval: "year", plan: "school" },
+    });
+    expect(res.status()).toBe(400);
   });
 });

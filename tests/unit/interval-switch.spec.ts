@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import {
   intervalSwitchKind,
   intervalSwitchRefusalMessage,
+  planMoveOf,
   usableProrationDate,
   type IntervalSwitchRefusal,
 } from "@/app/lib/interval-switch";
@@ -76,12 +77,70 @@ test.describe("when a switch is refused", () => {
   });
 
   test("every refusal has a message, in the product's voice", () => {
-    const reasons: IntervalSwitchRefusal[] = ["same", "canceled", "ending", "scheduled", "inactive"];
+    const reasons: IntervalSwitchRefusal[] = [
+      "same",
+      "not_interval",
+      "canceled",
+      "ending",
+      "scheduled",
+      "inactive",
+    ];
     for (const reason of reasons) {
       const message = intervalSwitchRefusalMessage(reason);
       expect(message.length).toBeGreaterThan(10);
       expect(message).not.toMatch(/[—–]/);
     }
+  });
+});
+
+test.describe("with a plan change at the same time", () => {
+  test("to yearly on a dearer plan is immediate, like an upgrade", () => {
+    expect(intervalSwitchKind({ ...live, from: "month", to: "year", planMove: "up" })).toEqual({
+      ok: true,
+      kind: "now",
+    });
+  });
+
+  test("a cheaper plan always waits for renewal, whichever way the interval goes", () => {
+    for (const [from, to] of [
+      ["month", "year"],
+      ["year", "month"],
+    ] as const) {
+      expect(intervalSwitchKind({ ...live, from, to, planMove: "down" })).toEqual({
+        ok: true,
+        kind: "at_renewal",
+      });
+      // Even in the trial: its allowance cannot drop mid-period either.
+      expect(
+        intervalSwitchKind({ ...live, status: "trialing", from, to, planMove: "down" }),
+      ).toEqual({ ok: true, kind: "at_renewal" });
+    }
+  });
+
+  test("to monthly on a dearer plan waits for renewal", () => {
+    expect(intervalSwitchKind({ ...live, from: "year", to: "month", planMove: "up" })).toEqual({
+      ok: true,
+      kind: "at_renewal",
+    });
+  });
+
+  test("a dearer plan during the trial swaps now, with nothing charged", () => {
+    expect(
+      intervalSwitchKind({ ...live, status: "trialing", from: "month", to: "year", planMove: "up" }),
+    ).toEqual({ ok: true, kind: "trial" });
+  });
+
+  test("a plan change at the same interval is not this route's to make", () => {
+    expect(intervalSwitchKind({ ...live, from: "month", to: "month", planMove: "up" })).toEqual({
+      ok: false,
+      reason: "not_interval",
+    });
+  });
+
+  test("plans compare by monthly price", () => {
+    expect(planMoveOf(4.99, 7.99)).toBe("up");
+    expect(planMoveOf(14.99, 7.99)).toBe("down");
+    expect(planMoveOf(7.99, 7.99)).toBe("same");
   });
 });
 

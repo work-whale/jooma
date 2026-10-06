@@ -101,7 +101,15 @@ export default function PlanCard({
           aligned across a row where only one card carries a badge. */}
       <div className={styles.badgeRow}>
         {badge && <span className={styles.badge}>{badge}</span>}
-        {saving && <span className={styles.saving}>{saving}</span>}
+        {/* Keyed on their text throughout: when the billing toggle changes a
+            figure, the element remounts and its entrance animation plays. The
+            animation only runs after a real switch (see PlanCard.module.css,
+            .toggle[data-switched] ~ .grid), so nothing moves on page load. */}
+        {saving && (
+          <span key={saving} className={`${styles.saving} ${styles.pop}`}>
+            {saving}
+          </span>
+        )}
       </div>
 
       <h3 className={styles.name}>{name}</h3>
@@ -110,17 +118,33 @@ export default function PlanCard({
             which does not announce a strikethrough at all. */}
         {was && (
           <>
-            <s className={styles.was}>
+            <s key={was} className={`${styles.was} ${styles.slideIn}`}>
               <span className={styles.srOnly}>Was </span>
               {was}
             </s>{" "}
             <span className={styles.srOnly}>now </span>
           </>
         )}
-        <span>{price}</span>
+        <span key={price} className={styles.swap}>
+          {price}
+        </span>
       </p>
-      <p className={styles.per}>{per}</p>
-      {note && <p className={styles.note}>{note}</p>}
+      <p className={styles.per}>
+        <span key={per} className={styles.swap}>
+          {per}
+        </span>
+      </p>
+      {/* Always rendered, collapsed when empty, so the line opens smoothly
+          instead of shoving the feature list down a line in one frame. */}
+      <div className={styles.noteWrap} data-open={note ? "" : undefined}>
+        <div>
+          {note && (
+            <p key={note} className={`${styles.note} ${styles.swap}`}>
+              {note}
+            </p>
+          )}
+        </div>
+      </div>
 
       <ul className={styles.features}>
         {features.map((feature) => (

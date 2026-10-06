@@ -8,10 +8,17 @@ import {
   intervalOfPrice,
   scheduleNextPhase,
 } from "@/app/lib/stripe";
-import { asPlanId, isBillingInterval, type BillingInterval } from "@/app/lib/plans";
+import {
+  asPlanId,
+  isBillingInterval,
+  PLANS,
+  type BillingInterval,
+  type PlanId,
+} from "@/app/lib/plans";
 import {
   intervalSwitchKind,
   intervalSwitchRefusalMessage,
+  planMoveOf,
   usableProrationDate,
   type IntervalSwitchKind,
 } from "@/app/lib/interval-switch";
@@ -27,13 +34,20 @@ import {
 // GET previews the switch so the confirmation can quote the real figure; POST
 // carries it out.
 //
+// AN OPTIONAL PLAN
+// The profile's plan cards can show the other interval, so a teacher can pick
+// Pro yearly while on Standard monthly. `plan` names that target; absent, it is
+// the plan they are on. The plan rule runs first (a cheaper plan waits for
+// renewal), then the interval rule. See intervalSwitchKind.
+//
 // WHAT THIS ROUTE CANNOT DO
 // Same posture as ../upgrade and ../downgrade. The subscription comes from the
 // caller's own profile, the plan is the one they are on, and the price is
 // resolved server-side by priceIdFor(). From the request it reads only the
 // interval (allowlisted) and the preview's proration date (range-checked, see
-// usableProrationDate). It never changes the plan: that is ../upgrade and
-// ../downgrade, and doing both at once is two steps by design.
+// usableProrationDate), plus an optional target plan, allowlisted like every
+// other plan route. A plan change at the SAME interval is refused here: that is
+// ../upgrade and ../downgrade.
 //
 // It does not write profiles either. The plan is unchanged, and the webhook
 // writes the same plan back when Stripe reports the update.
@@ -48,13 +62,15 @@ type Loaded =
       to: BillingInterval;
       kind: IntervalSwitchKind;
       nextPriceId: string;
+      fromPlan: PlanId;
+      toPlan: PlanId;
     };
 
 function refuse(message: string, status = 400) {
   return { error: NextResponse.json({ error: message }, { status }) };
 }
 
-async function load(requestedInterval: unknown): Promise<Loaded> {
+async function load(requestedInterval: unknown, requestedPlan: unknown): Promise<Loaded> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -79,6 +95,13 @@ async function load(requestedInterval: unknown): Promise<Loaded> {
     return refuse("You don't have a subscription to change.");
   }
 
+  // The plan to end up on: theirs unless one is named, and then only a plan
+  // that can be bought. Never `school`, never an arbitrary string.
+  if (requestedPlan !== undefined && requestedPlan !== null && !isPaidPlanId(requestedPlan)) {
+    return refuse("That isn't a plan you can switch to.");
+  }
+  const toPlan = requestedPlan ?? plan;
+
   const sub = await stripe.subscriptions.retrieve(subscriptionId);
   const item = sub.items.data[0];
   if (!item?.price?.id) {
@@ -95,11 +118,21 @@ async function load(requestedInterval: unknown): Promise<Loaded> {
     status: sub.status,
     cancelAtPeriodEnd: Boolean(profile?.cancel_at_period_end) || sub.cancel_at_period_end || cancelAt,
     hasSchedule: Boolean(sub.schedule),
+    planMove: planMoveOf(PLANS[plan].priceMonthly ?? 0, PLANS[toPlan].priceMonthly ?? 0),
   });
   if (!decision.ok) return refuse(intervalSwitchRefusalMessage(decision.reason));
 
-  const nextPriceId = await priceIdFor(plan, to);
-  return { userId: user.id, sub, item, to, kind: decision.kind, nextPriceId };
+  const nextPriceId = await priceIdFor(toPlan, to);
+  return {
+    userId: user.id,
+    sub,
+    item,
+    to,
+    kind: decision.kind,
+    nextPriceId,
+    fromPlan: plan,
+    toPlan,
+  };
 }
 
 /** When the current billing period ends, as ISO. */
@@ -131,14 +164,19 @@ function errorMessage(err: unknown): string | null {
  */
 export async function GET(req: NextRequest) {
   try {
-    const loaded = await load(req.nextUrl.searchParams.get("interval"));
+    const loaded = await load(
+      req.nextUrl.searchParams.get("interval"),
+      req.nextUrl.searchParams.get("plan"),
+    );
     if ("error" in loaded) return loaded.error;
-    const { sub, item, to, kind, nextPriceId } = loaded;
+    const { sub, item, to, kind, nextPriceId, fromPlan, toPlan } = loaded;
 
     const nextPrice = await stripe.prices.retrieve(nextPriceId);
     const base = {
       kind,
       interval: to,
+      fromPlan,
+      toPlan,
       recurringPence: nextPrice.unit_amount ?? 0,
       losesDiscount: kind === "trial" && losesDiscount(sub, to),
     };
@@ -186,11 +224,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as {
     interval?: unknown;
+    plan?: unknown;
     prorationDate?: unknown;
   } | null;
 
   try {
-    const loaded = await load(body?.interval);
+    const loaded = await load(body?.interval, body?.plan);
     if ("error" in loaded) return loaded.error;
     const { userId, sub, item, to, kind, nextPriceId } = loaded;
     const quantity = item.quantity ?? 1;
