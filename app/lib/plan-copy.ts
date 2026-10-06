@@ -159,13 +159,17 @@ export function planWasPrice(plan: PlanId): string | null {
   return full === null ? null : gbp(full);
 }
 
-/** What the yearly price works out at each month, e.g. "£4.00" for Standard. */
+/** What the yearly price works out at each month, e.g. "£3.99" for Standard.
+ *  Rounded down to the penny, so £47.99 a year reads as £3.99 rather than
+ *  £4.00, matching the .99 of every other price on the page. */
 export function planYearlyPerMonth(plan: PlanId): string | null {
   const yearly = PLANS[plan].priceYearly;
-  return yearly ? gbp(pence(yearly / 12)) : null;
+  // The epsilon keeps an exact penny figure (e.g. £48.00 / 12) from flooring a
+  // penny low on floating point noise.
+  return yearly ? gbp(Math.floor((yearly * 100) / 12 + 1e-9) / 100) : null;
 }
 
-/** The line under a yearly price: "Just £4.00 a month, billed yearly". */
+/** The line under a yearly price: "Just £3.99 a month, billed yearly". */
 export function planYearlyNote(plan: PlanId): string | null {
   const perMonth = planYearlyPerMonth(plan);
   return perMonth ? `Just ${perMonth} a month, billed yearly` : null;

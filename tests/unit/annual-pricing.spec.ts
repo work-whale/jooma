@@ -32,7 +32,8 @@ test.describe("yearly prices", () => {
 
   test("the stored per-month figure agrees with the yearly price", () => {
     for (const id of ["standard", "pro", "max"] as const) {
-      const derived = Math.round((PLANS[id].priceYearly! / 12) * 100) / 100;
+      // Rounded down, as the card shows it: £47.99 a year is £3.99 a month.
+      const derived = Math.floor((PLANS[id].priceYearly! * 100) / 12) / 100;
       expect(PLANS[id].priceYearlyPerMonth).toBe(derived);
     }
   });
@@ -44,11 +45,11 @@ test.describe("yearly prices", () => {
     expect(planWasPrice("max")).toBe("£179.88");
   });
 
-  test("each works out at a round figure a month", () => {
-    expect(planYearlyPerMonth("standard")).toBe("£4.00");
-    expect(planYearlyPerMonth("pro")).toBe("£6.00");
-    expect(planYearlyPerMonth("max")).toBe("£12.00");
-    expect(planYearlyNote("pro")).toBe("Just £6.00 a month, billed yearly");
+  test("each works out at a .99 figure a month, rounded down", () => {
+    expect(planYearlyPerMonth("standard")).toBe("£3.99");
+    expect(planYearlyPerMonth("pro")).toBe("£5.99");
+    expect(planYearlyPerMonth("max")).toBe("£11.99");
+    expect(planYearlyNote("pro")).toBe("Just £5.99 a month, billed yearly");
   });
 
   test("the saving is computed, never rounded up past what Stripe gives", () => {
@@ -74,7 +75,7 @@ test.describe("the card at each interval", () => {
     expect(planCardPer("standard", "year")).toBe("a year");
     expect(planTrialLine("standard", "year")).toBe("3 days free, then £47.99 a year");
     expect(planCardPricing("standard", "year")).toEqual({
-      price: "£4.00",
+      price: "£3.99",
       per: "a month",
       was: "£4.99",
       saving: "Save 20%",

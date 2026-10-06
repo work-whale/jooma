@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/app/lib/auth/server";
 import { getCopy } from "@/app/lib/copy";
-import { visitorCountriesAllTime, visitorsAllTime } from "@/app/lib/vercelAnalytics";
-import { topCountries } from "@/app/lib/visitors";
+import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
 import { publicShowcase } from "@/app/lib/showcase";
 import {
   maxYearlySavingPercent,
@@ -131,10 +130,9 @@ export default async function LandingPage({
 
   // The hero's count is the admin Stats visitor figure, all time. Fetched beside
   // the copy and the showcase rather than after them: none depends on another.
-  const [copy, visitors, countries, showcase] = await Promise.all([
+  const [copy, visitors, showcase] = await Promise.all([
     getCopy(),
     visitorsAllTime(),
-    visitorCountriesAllTime(5),
     publicShowcase(6),
   ]);
 
@@ -199,7 +197,6 @@ export default async function LandingPage({
         <HeroV3
           headline={copy["home.hero.h1"]}
           visitors={visitors}
-          countries={topCountries(countries, 5)}
           showcase={showcase}
         />
 
