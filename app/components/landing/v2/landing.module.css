@@ -16,8 +16,15 @@
   -webkit-font-smoothing: antialiased;
   /* Paired with minmax(0, 1fr) on every grid below. Both are needed: without
      the minmax the slide thumbnail strip refuses to shrink and pushes the page
-     wider than a phone viewport; without this, that overflow scrolls. */
+     wider than a phone viewport; without this, that overflow scrolls.
+
+     clip, not hidden. `overflow-x: hidden` quietly makes the page a scroll
+     container, and a sticky element sticks to its nearest scroll container:
+     the nav pinned itself to this box, which never scrolls, and was left
+     behind with the rest of the page. clip hides the overflow without making
+     a scroll container. hidden stays first for any browser without clip. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* The heading reset, and the same `:where()` story as the paragraph rule below.
