@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { supabaseAdmin } from "@/app/lib/supabase-admin";
+import { supabase } from "@/app/lib/supabase";
 import type { SlideJSON } from "@/app/lib/presentations";
 import Wordmark from "@/app/components/v2/Wordmark";
 import MarkdownResult from "@/app/components/MarkdownResult";
@@ -25,15 +25,25 @@ interface Item {
  * One read per request, shared by the page and its metadata. Through
  * public_showcase_item(), which returns an approved, opted in item only:
  * anything else, including a slug for something since withdrawn, is a 404.
+ *
+ * Called as anon, which is who the function is granted to. The service role
+ * holds no execute grant on it, so every slug used to 404.
  */
 const getItem = cache(async (slug: string): Promise<Item | null> => {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
-  const { data, error } = await supabaseAdmin.rpc("public_showcase_item", { p_slug: slug });
+  const { data, error } = await supabase.rpc("public_showcase_item", {
+    p_slug: slug,
+  });
+  if (error) console.warn("[made] could not read:", error.message);
   if (error || !Array.isArray(data) || data.length === 0) return null;
   return data[0] as Item;
 });
 
-const KIND = { slides: "Slides", comprehension: "Comprehension", worksheet: "Worksheet" } as const;
+const KIND = {
+  slides: "Slides",
+  comprehension: "Comprehension",
+  worksheet: "Worksheet",
+} as const;
 
 export async function generateMetadata({
   params,
@@ -55,12 +65,18 @@ export async function generateMetadata({
  * A resource a teacher chose to share on the landing page, with an admin's
  * approval. Public, read only, and one click from making their own.
  */
-export default async function MadePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function MadePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const item = await getItem(slug);
   if (!item) notFound();
 
-  const meta = [item.subject, item.year_label, item.region].filter(Boolean).join(" · ");
+  const meta = [item.subject, item.year_label, item.region]
+    .filter(Boolean)
+    .join(" · ");
   const makeHref =
     item.kind === "slides"
       ? `/create?tool=slides&topic=${encodeURIComponent(item.title)}`
@@ -100,13 +116,18 @@ export default async function MadePage({ params }: { params: Promise<{ slug: str
               <MarkdownResult text={item.output} />
             </article>
           ) : (
-            <p className={styles.by}>This resource is not available any more.</p>
+            <p className={styles.by}>
+              This resource is not available any more.
+            </p>
           )}
         </div>
 
         <section className={styles.cta}>
           <h2>Make one like this in about a minute</h2>
-          <p>Type a topic and Jooma builds it, matched to your year group. Try it free, no account needed.</p>
+          <p>
+            Type a topic and Jooma builds it, matched to your year group. Try it
+            free, no account needed.
+          </p>
           <Link href={makeHref} className={styles.ctaBtn}>
             Make your own
           </Link>

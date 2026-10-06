@@ -152,7 +152,7 @@ export default function ShowcaseView({
                     {[row.subject, row.year_label, row.region].filter(Boolean).join(" · ") ||
                       "No subject, year or country recorded"}
                   </p>
-                  {row.kind === "slides" && row.presentation_id && status === "approved" && (
+                  {status === "approved" && (
                     <Link
                       href={`/made/${row.slug}`}
                       className="inline-block text-xs font-semibold mt-2"
