@@ -85,14 +85,9 @@ function pricingPlans(): PricingPlan[] {
     paid("standard"),
     { ...paid("pro"), featured: true },
     paid("max"),
-    {
-      ...card("school"),
-      href: "/contact?type=school",
-      // No yearly price, but a second line all the same, so its feature list
-      // starts level with the three yearly cards beside it. And true: schools
-      // are invoiced once a year.
-      yearly: { price: planCardPrice("school"), per: planCardPer("school"), note: "Invoiced yearly" },
-    },
+    // Rendered as a full width band under the three paid cards, not a fourth
+    // card beside them.
+    { ...card("school"), href: "/contact?type=school" },
   ];
 }
 

@@ -16,9 +16,19 @@ import styles from "./PlanCard.module.css";
  * interactivity is already a client component and can render this inside itself.
  */
 
+/** "trial" paints the button burnt orange: the free trial is the one call to
+ *  action on the page, so it takes the accent rather than the card's colours. */
+export type PlanCardActionTone = "trial";
+
 export type PlanCardAction =
-  | { kind: "button"; label: string; onClick: () => void; disabled?: boolean }
-  | { kind: "link"; label: string; href: string }
+  | {
+      kind: "button";
+      label: string;
+      onClick: () => void;
+      disabled?: boolean;
+      tone?: PlanCardActionTone;
+    }
+  | { kind: "link"; label: string; href: string; tone?: PlanCardActionTone }
   /** The plan they are on. Rendered as a flat label, not a call to action. */
   | { kind: "current"; label?: string }
   /**
@@ -90,9 +100,11 @@ export default function PlanCard({
 
   // The featured card is purple, so its button has to be white to be visible.
   // Elsewhere the primary action is purple and a secondary one is outlined.
+  // A free trial button is burnt orange on either card.
+  const trial = (action.kind === "button" || action.kind === "link") && action.tone === "trial";
   const actionClass = [
     styles.action,
-    featured ? styles.actionWhite : styles.actionGrey,
+    trial ? styles.actionTrial : featured ? styles.actionWhite : styles.actionGrey,
   ].join(" ");
 
   return (

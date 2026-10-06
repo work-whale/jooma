@@ -103,6 +103,87 @@
   transform: none;
 }
 
+/* Schools: a full width band under the three paid cards. Name and pricing on
+   the left, what it includes in the middle, the enquiry on the right. */
+.school {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(160px, auto) 1fr auto;
+  align-items: center;
+  gap: 18px 32px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-xl);
+  padding: 26px clamp(18px, 3%, 30px);
+}
+
+.schoolHead h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--j-ink);
+}
+
+.schoolHead p {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--j-muted);
+}
+
+.schoolFeatures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.schoolFeatures li {
+  display: flex;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--j-body);
+}
+
+.schoolFeatures li > span {
+  color: var(--j-purple);
+  font-weight: 800;
+}
+
+.schoolAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 28px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  white-space: nowrap;
+  border-radius: var(--j-pill);
+  background: var(--j-card);
+  color: var(--j-ink);
+  border: 1px solid var(--j-line-2);
+  text-decoration: none;
+  transition:
+    transform 0.18s var(--j-ease),
+    border-color 0.18s;
+}
+
+.schoolAction:hover {
+  border-color: var(--j-lilac-2);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 860px) {
+  .school {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .schoolAction {
+    width: 100%;
+  }
+}
+
 .note {
   text-align: center;
   margin-top: 24px;

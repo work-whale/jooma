@@ -69,16 +69,16 @@ test.describe("yearly prices", () => {
 });
 
 test.describe("the card at each interval", () => {
-  test("yearly shows the yearly price, a year", () => {
+  test("yearly leads with the monthly figure, the yearly total under it", () => {
     expect(planCardPrice("standard", "year")).toBe("£47.99");
     expect(planCardPer("standard", "year")).toBe("a year");
     expect(planTrialLine("standard", "year")).toBe("3 days free, then £47.99 a year");
     expect(planCardPricing("standard", "year")).toEqual({
-      price: "£47.99",
-      per: "a year",
-      was: "£59.88",
+      price: "£4.00",
+      per: "a month",
+      was: "£4.99",
       saving: "Save 20%",
-      note: "Just £4.00 a month, billed yearly",
+      note: "£47.99 billed yearly",
     });
   });
 

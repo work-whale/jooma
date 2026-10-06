@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import PlanCard, {
@@ -106,10 +107,15 @@ export default function Pricing({
         label: pending === checkout ? "Starting..." : plan.cta,
         onClick: () => startCheckout(checkout),
         disabled: pending !== null,
+        tone: "trial",
       };
     }
     return { kind: "link", label: plan.cta, href: plan.href ?? "/signup" };
   }
+
+  // Three paid cards in a row, and Schools as a full width band beneath them.
+  const paid = plans.filter((plan) => plan.id !== "school");
+  const school = plans.find((plan) => plan.id === "school");
 
   return (
     <section className={`${shared.sec} ${shared.secAlt}`} id="pricing">
@@ -121,14 +127,12 @@ export default function Pricing({
 
         <Reveal>
           <BillingToggle value={interval} onChange={setBillingInterval} savePercent={savePercent} />
-          <PlanCardGrid columns={plans.length}>
-            {plans.map((plan) => {
+          <PlanCardGrid columns={paid.length}>
+            {paid.map((plan) => {
               const shown = interval === "year" && plan.yearly ? plan.yearly : null;
               return (
                 <PlanCard
                   key={plan.id}
-                  // The Schools card is the anchor target for the Schools nav link.
-                  id={plan.id === "school" ? "schools" : undefined}
                   name={plan.name}
                   price={shown?.price ?? plan.price}
                   per={shown?.per ?? plan.per}
@@ -144,6 +148,27 @@ export default function Pricing({
               );
             })}
           </PlanCardGrid>
+
+          {school && (
+            // The anchor target for the Schools nav link.
+            <div className={styles.school} id="schools">
+              <div className={styles.schoolHead}>
+                <h3>{school.name}</h3>
+                <p>{school.per}, invoiced yearly</p>
+              </div>
+              <ul className={styles.schoolFeatures}>
+                {school.features.map((feature) => (
+                  <li key={feature}>
+                    <span aria-hidden="true">&#10003;</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <Link href={school.href ?? "/contact?type=school"} className={styles.schoolAction}>
+                {school.cta}
+              </Link>
+            </div>
+          )}
         </Reveal>
 
         {error && (

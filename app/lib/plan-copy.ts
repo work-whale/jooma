@@ -200,24 +200,34 @@ export function maxYearlySavingPercent(plans: readonly PlanId[]): number {
   return Math.max(0, ...plans.map((id) => yearlySavingPercent(id) ?? 0));
 }
 
+/** The line under a yearly card's monthly figure: "£47.99 billed yearly". */
+export function planYearlyBilledLine(plan: PlanId): string | null {
+  const yearly = PLANS[plan].priceYearly;
+  return yearly ? `${gbp(yearly)} billed yearly` : null;
+}
+
 /**
  * Everything a PlanCard needs to show a plan's price at an interval.
  *
  * Monthly carries no `was`, `saving` or `note`, so the card renders exactly as
- * it always has. Yearly adds all three. One helper so the landing page,
- * /welcome and the profile cannot each assemble a slightly different card.
+ * it always has. Yearly leads with what it works out at each month, the
+ * monthly plan's price struck through beside it, so the two intervals compare
+ * like for like; the yearly total sits underneath. One helper so the landing
+ * page, /welcome and the profile cannot each assemble a slightly different card.
  */
 export function planCardPricing(
   plan: PlanId,
   interval: BillingInterval,
 ): { price: string; per: string; was?: string; saving?: string; note?: string } {
-  const base = { price: planCardPrice(plan, interval), per: planCardPer(plan, interval) };
-  if (interval !== "year" || !PLANS[plan].priceYearly) return base;
+  const monthly = { price: planCardPrice(plan), per: planCardPer(plan) };
+  const perMonth = interval === "year" ? planYearlyPerMonth(plan) : null;
+  if (!perMonth) return { price: planCardPrice(plan, interval), per: planCardPer(plan, interval) };
   return {
-    ...base,
-    was: planWasPrice(plan) ?? undefined,
+    price: perMonth,
+    per: monthly.per,
+    was: monthly.price,
     saving: planYearlySaving(plan) ?? undefined,
-    note: planYearlyNote(plan) ?? undefined,
+    note: planYearlyBilledLine(plan) ?? undefined,
   };
 }
 

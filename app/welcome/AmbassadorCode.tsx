@@ -256,6 +256,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
               label: busy === id ? "Just a moment…" : TRIAL_CTA,
               onClick: () => choose(id),
               disabled: busy !== null,
+              tone: "trial",
             }}
             footer={planTrialLine(id, interval)}
           />
