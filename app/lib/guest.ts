@@ -129,12 +129,8 @@ export async function trialSettings(): Promise<{ enabled: boolean; dailyCap: num
   }
 }
 
-/** Whether this guest may start a run of `tool` now. */
-export async function checkTrial(
-  guestId: string,
-  ipHash: string,
-  tool: TrialTool,
-): Promise<TrialDecision> {
+/** Whether this guest may start another free run now, of either tool. */
+export async function checkTrial(guestId: string, ipHash: string): Promise<TrialDecision> {
   const settings = await trialSettings();
   if (!settings.enabled) return { ok: false, reason: "disabled" };
 
@@ -149,8 +145,8 @@ export async function checkTrial(
 
   const [all, byGuest, byIp] = await Promise.all([
     base(),
-    base().eq("guest_id", guestId).eq("tool", tool),
-    base().eq("ip_hash", ipHash).eq("tool", tool),
+    base().eq("guest_id", guestId),
+    base().eq("ip_hash", ipHash),
   ]);
   if (all.error || byGuest.error || byIp.error) {
     console.warn("[guest] trial count failed:", all.error ?? byGuest.error ?? byIp.error);
@@ -161,8 +157,8 @@ export async function checkTrial(
     enabled: settings.enabled,
     dailyCap: settings.dailyCap,
     startedToday: all.count ?? 0,
-    guestRunsForTool: byGuest.count ?? 0,
-    ipRunsForTool: byIp.count ?? 0,
+    guestRuns: byGuest.count ?? 0,
+    ipRuns: byIp.count ?? 0,
   });
 }
 

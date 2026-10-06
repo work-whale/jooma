@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Wordmark from "@/app/components/v2/Wordmark";
 import GenerateModal, {
   type GenerationParams,
   type SlideshowPrefill,
@@ -13,19 +13,27 @@ import { JoActivityProvider } from "@/app/lib/JoActivityContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 import AskJoPanel from "@/app/components/guest/AskJoPanel";
 import AuthGateModal from "@/app/components/guest/AuthGateModal";
-import GuestDeckView from "@/app/components/guest/GuestDeckView";
 import GuestResult from "@/app/components/guest/GuestResult";
-import {
-  applyDeckEvent,
-  readSseFrames,
-  seedDeck,
-  type DeckSlide,
-} from "@/app/lib/deck-events";
+import LandingNav from "@/app/components/landing/v2/LandingNav";
+import SlideshowLoadingAnimation from "@/app/components/editor/SlideshowLoadingAnimation";
+import type { EditorGuest } from "@/app/components/editor/EditorGuest";
 import { decodePrefill, encodePrefill, validatePrefill, type ToolPrefill } from "@/app/lib/toolPrefill";
-import type { SlideJSON } from "@/app/lib/presentations";
+import type { Presentation, SlideJSON } from "@/app/lib/presentations";
 import type { GuestAction, GuestKind } from "@/app/lib/guest-actions";
 import { guestPrefillFields, guestToolName, type GuestToolSlug } from "@/app/lib/guest-tools";
 import styles from "./create.module.css";
+
+// The teacher's editor, loaded only once a deck is on its way: it is most of
+// the app's editing code, and a visitor still filling in the form needs none
+// of it.
+const Editor = dynamic(() => import("@/app/components/editor/Editor"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "var(--j-bg)" }}>
+      <SlideshowLoadingAnimation label="Opening the editor" />
+    </div>
+  ),
+});
 
 interface RecentRun {
   id: string;
@@ -141,118 +149,56 @@ export default function CreateView({
   // from Ask Jo changes only what Jo sent.
   const slidePrefill = useMemo(() => slidePrefillFrom(prefill, topic), [prefill, topic]);
 
+  // Once Generate is pressed, or a saved deck is reopened, the page becomes the
+  // teacher's own editor in guest mode (see EditorGuest): the deck streams in
+  // there, and they can edit all of it. Presenting, exporting and the tools
+  // that cost a model call open the sign up prompt.
   const restoredSlides = (restored?.output?.slides as SlideJSON[] | undefined) ?? null;
-  const [phase, setPhase] = useState<"form" | "deck">(restoredSlides ? "deck" : "form");
-  const [slides, setSlides] = useState<SlideJSON[]>(restoredSlides ?? []);
-  const [deckTitle, setDeckTitle] = useState(restored?.title ?? "");
-  const [generating, setGenerating] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number; status?: string } | null>(null);
+  const [deck, setDeck] = useState<{
+    key: number;
+    presentation: Presentation;
+    params: GenerationParams | null;
+  } | null>(() =>
+    restored && restoredSlides
+      ? {
+          key: 0,
+          presentation: {
+            id: restored.id,
+            title: restored.title ?? "Untitled deck",
+            slides: restoredSlides,
+            created_at: "",
+            updated_at: "",
+          },
+          params: null,
+        }
+      : null,
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
-  const startDeck = useCallback(
-    async (params: GenerationParams) => {
-      setFormError(null);
-      setFailed(false);
-      setSlides([]);
-      setProgress(null);
-      setDeckTitle(params.topic);
+  const startDeck = useCallback(async (params: GenerationParams) => {
+    setFormError(null);
+    setDeck((prev) => ({
+      key: (prev?.key ?? 0) + 1,
+      // No id yet: the free try's id comes back with the stream.
+      presentation: { id: "", title: params.topic, slides: [], created_at: "", updated_at: "" },
+      params,
+    }));
+    window.scrollTo({ top: 0 });
+  }, []);
 
-      const res = await fetch("/api/try/slideshow", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...params, website: honeypot.current?.value ?? "" }),
-      });
-      if (!res.ok || !res.body) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
-        if (res.status === 429 || res.status === 403) {
-          openGate("more", data.error ?? null);
-        } else {
-          setFormError(data.error ?? "Something went wrong. Please try again.");
-        }
-        return;
-      }
-
-      setPhase("deck");
-      setGenerating(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      const trialId = res.headers.get("x-trial-id");
-
-      let deck: DeckSlide[] = [];
-      let seeded = false;
-      let completed = false;
-      let title = params.topic;
-      const arrived = new Map<number, SlideJSON>();
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      try {
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const { frames, rest } = readSseFrames(buffer);
-          buffer = rest;
-          for (const { event, payload } of frames) {
-            const p = payload as Record<string, unknown>;
-            if (event === "meta") {
-              if (typeof p.title === "string" && p.title) {
-                title = p.title;
-                setDeckTitle(p.title);
-              }
-              if (!seeded && typeof p.total === "number" && p.total > 0) {
-                deck = seedDeck();
-                seeded = true;
-                setProgress({ current: 0, total: p.total });
-              }
-            } else if (event === "count-correction") {
-              if (typeof p.total === "number" && p.total > 0) {
-                const total = p.total;
-                setProgress((prev) => ({ current: prev?.current ?? 0, total }));
-              }
-            } else if (event === "status") {
-              if (typeof p.message === "string") {
-                const status = p.message;
-                setProgress((prev) => (prev ? { ...prev, status } : { current: 0, total: 0, status }));
-              }
-            } else if (event === "error") {
-              setFailed(true);
-            } else {
-              if (event === "slide" && typeof p.index === "number") {
-                const idx = p.index;
-                const total = typeof p.total === "number" ? p.total : 0;
-                setProgress((prev) => ({ current: idx + 1, total: total || prev?.total || 0 }));
-              }
-              if (event === "complete") completed = true;
-              deck = applyDeckEvent(deck, event, payload, arrived);
-            }
-          }
-          setSlides(deck);
-        }
-      } catch {
-        setFailed(true);
-      } finally {
-        setGenerating(false);
-        setProgress(null);
-      }
-
-      if (!completed || deck.length === 0) {
-        setFailed(true);
-        return;
-      }
-      // Kept for the account they are about to make. The server accepts this
-      // once, for this guest, for a run it saw finish.
-      if (trialId) {
-        await fetch("/api/try/slideshow/finalize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: trialId, title, slides: deck }),
-        }).catch(() => {});
-        router.refresh();
-      }
-    },
-    [openGate, router],
+  const editorGuest = useMemo<EditorGuest>(
+    () => ({
+      gate: (action, message) => openGate(action, message ?? null),
+      honeypot: () => honeypot.current?.value ?? "",
+      onRefused: (message) => {
+        // Back to the form they filled in, still filled in (it stays mounted
+        // under the editor), with the reason in the prompt.
+        setDeck(null);
+        if (message) openGate("more", message);
+        else setFormError("Something went wrong. Please try again.");
+      },
+    }),
+    [openGate],
   );
 
   // ── Comprehension ────────────────────────────────────────────────────────
@@ -307,11 +253,32 @@ export default function CreateView({
   const other = tool === "slideshow" ? "comp" : "slides";
 
   return (
-    <div className={styles.page}>
-      <header className={styles.bar}>
-        <Link href="/" className={styles.brand} aria-label="Jooma home">
-          <Wordmark />
-        </Link>
+    <>
+    {/* The editor, once there is a deck. The page stays mounted underneath,
+        hidden, so a refused run lands back on the form as they left it. */}
+    {deck && (
+      <Editor
+        key={deck.key}
+        presentation={deck.presentation}
+        generationParams={deck.params ?? undefined}
+        guest={editorGuest}
+      />
+    )}
+
+    {/* The landing page's own colours and header, so going from the hero to
+        here reads as one page rather than a jump into the app. */}
+    <div className={styles.page} hidden={!!deck}>
+      <LandingNav email={null} name={null} fullName={null} avatarUrl={null} isAdmin={false} linkBase="/" />
+
+      <div className={styles.shell}>
+        <div className={styles.intro}>
+          <h1>{restoredText ? `Your ${name}` : `Make ${tool === "slideshow" ? "a deck" : "a comprehension"}, free`}</h1>
+          <p>
+            Three free tries a day, no account needed. Sign up to present, export and keep everything
+            you make here.
+          </p>
+        </div>
+
         <nav className={styles.tabs} aria-label="Choose a tool">
           <Link
             href={`/create?tool=slides${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`}
@@ -331,24 +298,6 @@ export default function CreateView({
             Worksheets <em>Coming soon</em>
           </span>
         </nav>
-        <div className={styles.barRight}>
-          <Link href="/login" className={styles.barLink}>
-            Log in
-          </Link>
-          <Link href="/signup" className={styles.barCta}>
-            Start free trial
-          </Link>
-        </div>
-      </header>
-
-      <div className={styles.shell}>
-        <div className={styles.intro}>
-          <h1>{phase === "deck" || restoredText ? `Your ${name}` : `Make ${tool === "slideshow" ? "a deck" : "a comprehension"}, free`}</h1>
-          <p>
-            One free {name} a day, no account needed. Sign up to present, export and keep everything you
-            make here.
-          </p>
-        </div>
 
         {/* Honeypot. Off screen and out of the tab order; a person never fills it. */}
         <input
@@ -363,45 +312,9 @@ export default function CreateView({
         />
 
         {tool === "slideshow" ? (
-          // The deck takes the full width once it exists: Ask Jo is only there
-          // while the inputs are being filled in.
-          <div className={phase === "deck" ? styles.gridWide : styles.grid}>
+          <div className={styles.grid}>
             <main className={styles.main}>
-              {phase === "deck" ? (
-                <>
-                  <GuestDeckView
-                    title={deckTitle}
-                    slides={slides}
-                    generating={generating}
-                    progress={progress}
-                    failed={failed}
-                    onAction={(a) => openGate(a)}
-                  />
-                  {!generating && (
-                    <div className={styles.after}>
-                      <p>
-                        {failed
-                          ? "That one did not finish, so it does not count as your free try."
-                          : "Saved for you. Sign up and it is waiting in your library, ready to present and export."}
-                      </p>
-                      <div>
-                        {failed ? (
-                          <button type="button" className={styles.afterGhost} onClick={() => setPhase("form")}>
-                            Try again
-                          </button>
-                        ) : (
-                          <button type="button" className={styles.afterGhost} onClick={() => openGate("more")}>
-                            Make another
-                          </button>
-                        )}
-                        <button type="button" className={styles.afterCta} onClick={() => openGate("export")}>
-                          Start free trial
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : reading ? (
+              {reading ? (
                 <div className={styles.reading} role="status">
                   <span className={styles.readingDot} aria-hidden="true" />
                   Jo is reading your topic
@@ -424,7 +337,7 @@ export default function CreateView({
                 </>
               )}
             </main>
-            {phase === "form" && sidePanel}
+            {sidePanel}
           </div>
         ) : restoredText ? (
           <div className={styles.grid}>
@@ -485,15 +398,17 @@ export default function CreateView({
           </Link>
         </p>
       </div>
-
-      <AuthGateModal
-        open={gate !== null}
-        kind={kind}
-        action={gate?.action ?? null}
-        message={gate?.message ?? null}
-        googleSignin={googleSignin}
-        onClose={() => setGate(null)}
-      />
     </div>
+
+    {/* Outside the page, which is hidden while the editor is open. */}
+    <AuthGateModal
+      open={gate !== null}
+      kind={kind}
+      action={gate?.action ?? null}
+      message={gate?.message ?? null}
+      googleSignin={googleSignin}
+      onClose={() => setGate(null)}
+    />
+    </>
   );
 }

@@ -3,6 +3,7 @@ import { guestCookieValue, newGuestCookie, verifyGuestCookie } from "@/app/lib/g
 import { signTrialToken, verifyTrialToken, TRIAL_TOKEN_TTL_MS } from "@/app/lib/trial-token";
 import {
   decideTrial,
+  FREE_TRIES_PER_DAY,
   hashIp,
   isTrialTool,
   settingBool,
@@ -15,7 +16,7 @@ import { guestSlugFor, appToolPath } from "@/app/lib/guest-tools";
 
 /*
  * The free tries on /create: the signed guest cookie, the token a guest deck's
- * sub-requests carry, the once a day rule, and the pieces of the landing hero
+ * sub-requests carry, the three a day rule, and the pieces of the landing hero
  * around them. All pure.
  */
 
@@ -72,11 +73,17 @@ test.describe("trial sub-request token", () => {
   });
 });
 
-test.describe("decideTrial (one per tool per day)", () => {
-  const base = { enabled: true, dailyCap: 300, startedToday: 0, guestRunsForTool: 0, ipRunsForTool: 0 };
+test.describe("decideTrial (three a day, across both tools)", () => {
+  const base = { enabled: true, dailyCap: 300, startedToday: 0, guestRuns: 0, ipRuns: 0 };
 
   test("a first visit may generate", () => {
     expect(decideTrial(base)).toEqual({ ok: true });
+  });
+
+  test("the second and third tries are still free", () => {
+    expect(FREE_TRIES_PER_DAY).toBe(3);
+    expect(decideTrial({ ...base, guestRuns: 1, ipRuns: 1 })).toEqual({ ok: true });
+    expect(decideTrial({ ...base, guestRuns: 2, ipRuns: 2 })).toEqual({ ok: true });
   });
 
   test("the switch and the daily cap come first", () => {
@@ -85,19 +92,19 @@ test.describe("decideTrial (one per tool per day)", () => {
     expect(decideTrial({ ...base, dailyCap: 0 })).toEqual({ ok: false, reason: "daily_cap" });
   });
 
-  test("used by this browser OR this network", () => {
-    expect(decideTrial({ ...base, guestRunsForTool: 1 })).toEqual({ ok: false, reason: "used" });
+  test("the fourth is refused, by this browser OR this network", () => {
+    expect(decideTrial({ ...base, guestRuns: 3 })).toEqual({ ok: false, reason: "used" });
     // Clearing cookies does not reset it: the IP still counts.
-    expect(decideTrial({ ...base, ipRunsForTool: 1 })).toEqual({ ok: false, reason: "used" });
+    expect(decideTrial({ ...base, ipRuns: 3 })).toEqual({ ok: false, reason: "used" });
   });
 
   test("refusals read cleanly on the signed out surface", () => {
     for (const r of ["used", "daily_cap", "disabled"] as const) {
-      const msg = trialRefusalMessage(r, "Slides");
+      const msg = trialRefusalMessage(r);
       expect(msg).not.toMatch(/[–—]/);
       expect(msg).not.toMatch(/\bAI\b/);
     }
-    expect(trialRefusalMessage("used", "Slides")).toContain("free Slides");
+    expect(trialRefusalMessage("used")).toContain("three free tries");
   });
 
   test("settings are read defensively", () => {

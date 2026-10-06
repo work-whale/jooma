@@ -125,14 +125,18 @@ const TRIAL_SUBREQUEST_PATHS = ["/api/generate-audio", "/api/find-youtube"];
 
 // The slideshow wizard's helper buttons, which a guest on /create needs to
 // finish their inputs: subject suggestion, the outline, vocabulary, a pasted
-// YouTube link and an uploaded resource. Allowed with a valid guest cookie and
-// throttled per IP, since each is a model call someone could script.
+// YouTube link and an uploaded resource. Plus the picture search in the guest
+// editor's Pictures tab (a paid search API, but no model call). Allowed with a
+// valid guest cookie and throttled per IP, since each is a call someone could
+// script. The editor's model calls are NOT here: in guest mode they open the
+// sign up prompt instead (see components/editor/EditorGuest).
 const GUEST_HELPER_PATHS = [
   "/api/suggest-subject",
   "/api/generate-lesson-outline",
   "/api/suggest-vocabulary",
   "/api/lookup-youtube",
   "/api/extract-resource",
+  "/api/search-web-images",
 ];
 const GUEST_HELPER_PER_HOUR = 40;
 

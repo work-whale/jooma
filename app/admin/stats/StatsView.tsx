@@ -469,7 +469,7 @@ export default function StatsView({
       </div>
 
       {/* ── Free tries from the hero ──────────────────────────────────────────
-          Signed out visitors making one Slides deck or Comprehension a day from
+          Signed out visitors making up to three Slides decks or Comprehensions a day from
           the landing page. A generation of its own, never a signup, so it sits
           apart from the signup figures above. */}
       <div className="mt-6" data-testid="guest-tries">
@@ -555,8 +555,8 @@ export default function StatsView({
           </CardBody>
           <CardFooter>
             <span>
-              Each visitor gets one free try per tool a day, counted by browser and by network.
-              Tries include failed runs, which do not use up the visitor&apos;s free try.{" "}
+              Each visitor gets three free tries a day across Slides and Comprehension, counted by
+              browser and by network. Tries include failed runs, which do not use up a free try.{" "}
               <b>Signed up after</b> means the visitor made an account or logged in and the work
               moved into it, on any day. The rate is out of the tries that produced something.
             </span>

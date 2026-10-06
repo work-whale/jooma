@@ -4,11 +4,12 @@
 //
 //   * an admin switch (app_settings.trial_enabled) turns the whole thing off
 //   * a global cap per day (app_settings.trial_daily_cap) is the spend brake
-//   * one generation per tool per 24 hours, counted by guest cookie AND by IP,
-//     so clearing cookies does not reset it and neither does a new network
+//   * FREE_TRIES_PER_DAY generations per 24 hours, across both tools, counted
+//     by guest cookie AND by IP, so clearing cookies does not reset it and
+//     neither does a new network
 //
-// A failed run does not count. The visitor got nothing, and burning their one
-// try on our error would be the worst first impression we could make.
+// A failed run does not count. The visitor got nothing, and burning one of
+// their tries on our error would be the worst first impression we could make.
 import { createHash } from "node:crypto";
 
 export type TrialTool = "slideshow" | "comprehension-generator";
@@ -18,6 +19,8 @@ export const TRIAL_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Statuses that used up a try. `failed` deliberately absent. */
 export const COUNTED_STATUSES = ["running", "done", "claimed"] as const;
 export const DEFAULT_DAILY_CAP = 300;
+/** Free generations per visitor per 24 hours, Slides and Comprehension together. */
+export const FREE_TRIES_PER_DAY = 3;
 
 export type TrialDecision =
   | { ok: true }
@@ -28,22 +31,24 @@ export function decideTrial(input: {
   dailyCap: number;
   /** Counted runs started by anyone in the last 24 hours. */
   startedToday: number;
-  /** Counted runs of this tool by this guest cookie in the window. */
-  guestRunsForTool: number;
-  /** Counted runs of this tool from this IP in the window. */
-  ipRunsForTool: number;
+  /** Counted runs, of either tool, by this guest cookie in the window. */
+  guestRuns: number;
+  /** Counted runs, of either tool, from this IP in the window. */
+  ipRuns: number;
 }): TrialDecision {
   if (!input.enabled) return { ok: false, reason: "disabled" };
   if (input.startedToday >= Math.max(0, input.dailyCap)) return { ok: false, reason: "daily_cap" };
-  if (input.guestRunsForTool > 0 || input.ipRunsForTool > 0) return { ok: false, reason: "used" };
+  if (input.guestRuns >= FREE_TRIES_PER_DAY || input.ipRuns >= FREE_TRIES_PER_DAY) {
+    return { ok: false, reason: "used" };
+  }
   return { ok: true };
 }
 
 /** The visitor facing line for each refusal. No dashes, no "AI". */
-export function trialRefusalMessage(reason: "disabled" | "daily_cap" | "used", toolName: string): string {
+export function trialRefusalMessage(reason: "disabled" | "daily_cap" | "used"): string {
   switch (reason) {
     case "used":
-      return `You have used today's free ${toolName}. Sign up to keep going, it is free to start.`;
+      return "You have used today's three free tries. Sign up to keep going, it is free to start.";
     case "daily_cap":
       return "Free tries are busy right now. Sign up and you can make it straight away.";
     case "disabled":
