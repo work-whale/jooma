@@ -1,11 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { test, expect, type Page } from "@playwright/test";
 import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { GUEST_COOKIE, guestCookieValue } from "@/app/lib/guest-cookie";
 
 /*
  * The free tries from the landing hero, end to end in the browser.
  *
  *   hero box  ->  /create  ->  Jo fills what it can  ->  the visitor finishes
- *   and generates  ->  a read only preview  ->  any action asks them to sign up
+ *   and generates  ->  the editor, in guest mode  ->  present, export and the
+ *   paid tools ask them to sign up
  *   ->  after signing in, the work is claimed and the action they pressed runs.
  *
  * Every /api/try call is stubbed with page.route, so NOTHING REACHES A MODEL
@@ -76,7 +79,7 @@ async function stubGuestApi(page: Page, opts: { prefill?: string | null; deckSta
       return route.fulfill({
         status: opts.deckStatus,
         json: {
-          error: "You have used today's free Slides. Sign up to keep going, it is free to start.",
+          error: "You have used today's three free tries. Sign up to keep going, it is free to start.",
           reason: "used",
         },
       });
@@ -118,24 +121,19 @@ test.describe("signed out", () => {
     await expect(page.getByLabel("What are you teaching?")).toBeDisabled();
   });
 
-  test("the teacher count carries its countries underneath", async ({ page }) => {
+  test("the teacher count stands alone, with no countries under it", async ({ page }) => {
     await page.goto("/");
 
-    // Both come from Vercel analytics, which a machine without the token
-    // cannot reach. No count means nothing to break down, so nothing to test.
+    // The count comes from Vercel analytics, which a machine without the token
+    // cannot reach.
     const count = page.getByTestId("hero-count");
     test.skip((await count.count()) === 0, "Vercel analytics is not configured here");
 
-    const countries = page.getByTestId("hero-countries");
-    await expect(countries).toBeVisible();
-    const items = countries.locator("li");
-    expect(await items.count()).toBeGreaterThan(0);
-    expect(await items.count()).toBeLessThanOrEqual(5);
-    // A name, not a bare two letter code.
-    await expect(items.first()).not.toHaveText(/^\s*[\d,]+\s*[A-Z]{2}\s*$/);
+    await expect(count).toBeVisible();
+    await expect(page.getByTestId("hero-countries")).toHaveCount(0);
   });
 
-  test("Jo's year lands in the wizard, the deck streams in, and Export asks them to sign up", async ({ page }) => {
+  test("Jo's year lands in the wizard, the deck streams into the editor, and Export asks them to sign up", async ({ page }) => {
     const calls = await stubGuestApi(page, {
       prefill: encodePrefill({ slug: "slideshow", fields: { topic: "Volcanoes and the Ring of Fire", year: "Year 3" } }),
     });
@@ -151,10 +149,9 @@ test.describe("signed out", () => {
     await page.getByRole("button", { name: /^Continue/ }).click();
     await page.getByRole("button", { name: /Generate slideshow/ }).click();
 
-    const deck = page.getByTestId("guest-deck");
-    await expect(deck).toBeVisible();
-    await expect(deck.getByRole("heading", { name: "Volcanoes and the Ring of Fire" })).toBeVisible();
-    await expect(deck.getByText(/1 slides, ready/)).toBeVisible();
+    // The teacher's own editor, in guest mode, with the deck streamed into it.
+    const title = page.getByPlaceholder("Untitled Slideshow");
+    await expect(title).toHaveValue("Volcanoes and the Ring of Fire", NAV);
 
     // What the page sent: the wizard's params plus an empty honeypot, and
     // never a run id of its own (the server mints those).
@@ -162,13 +159,29 @@ test.describe("signed out", () => {
     expect(calls.slideshow[0]).toMatchObject({ topic: "Volcanoes and the Ring of Fire", year: "Year 3", website: "" });
     expect(calls.slideshow[0].runId).toBeUndefined();
 
-    // The finished deck is handed back once, for the account they will make.
-    await expect.poll(() => calls.finalize.length).toBe(1);
+    // The finished deck is saved to the free try, for the account they will make.
+    await expect.poll(() => calls.finalize.length, NAV).toBeGreaterThanOrEqual(1);
     expect(calls.finalize[0]).toMatchObject({ id: "11111111-2222-4333-8444-555555555555" });
     expect((calls.finalize[0].slides as unknown[]).length).toBe(1);
 
-    await deck.getByRole("button", { name: /Export/ }).click();
+    // Editing works, and the edit is saved to the same try.
+    const before = calls.finalize.length;
+    await title.fill("Volcanoes, edited");
+    await expect.poll(() => calls.finalize.length, NAV).toBeGreaterThan(before);
+    expect(calls.finalize.at(-1)).toMatchObject({
+      id: "11111111-2222-4333-8444-555555555555",
+      title: "Volcanoes, edited",
+    });
+
+    // Present is behind sign up.
     const gate = page.getByTestId("auth-gate");
+    await page.getByRole("button", { name: "Present" }).click();
+    await expect(gate.getByRole("heading")).toHaveText("Sign up for free to present your deck");
+    await gate.getByRole("button", { name: "Close" }).click();
+
+    // So is Export, from either format in its menu.
+    await page.getByRole("button", { name: "Export options" }).click();
+    await page.getByRole("menuitem", { name: /PowerPoint/ }).click();
     await expect(gate).toBeVisible();
     await expect(gate.getByRole("heading")).toHaveText("Sign up for free to export your deck");
     await expect(gate.getByRole("link", { name: "I already have an account" })).toHaveAttribute("href", "/login");
@@ -182,6 +195,44 @@ test.describe("signed out", () => {
     await gate.getByRole("button", { name: "Start free trial" }).click();
     await page.waitForURL(/\/signup\?email=new\.teacher%40example\.com/, NAV);
     await expect(page.locator("#email")).toHaveValue("new.teacher@example.com", NAV);
+  });
+
+  test("in the guest editor, Elements, Text and picture search are open, the rest is behind sign up", async ({ page }) => {
+    await stubGuestApi(page);
+    await page.goto("/create?tool=slides&topic=Volcanoes");
+    await expect(page.locator('input[name="lesson-topic"]')).toHaveValue("Volcanoes", NAV);
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /Generate slideshow/ }).click();
+    await expect(page.getByPlaceholder("Untitled Slideshow")).toHaveValue("Volcanoes and the Ring of Fire", NAV);
+
+    const gate = page.getByTestId("auth-gate");
+    const tab = (name: string) => page.getByRole("button", { name, exact: true });
+
+    // Locked tabs open the prompt, never their panel.
+    for (const name of ["Activities", "Audio", "Video"]) {
+      await tab(name).click();
+      await expect(gate.getByRole("heading")).toHaveText("Sign up for free to unlock every editor tool");
+      await gate.getByRole("button", { name: "Close" }).click();
+      await expect(gate).toHaveCount(0);
+    }
+
+    // Open tabs open, with no prompt.
+    await tab("Elements").click();
+    await expect(gate).toHaveCount(0);
+    await tab("Text").click();
+    await expect(gate).toHaveCount(0);
+
+    // Pictures: stock search is open; Upload and generating are not. Reopened
+    // each time: closing the prompt is a click outside the sidebar, which
+    // closes its panel, as any click outside it does.
+    for (const name of ["Upload", "AI generate"]) {
+      await tab("Pictures").click();
+      await expect(gate).toHaveCount(0);
+      await page.getByRole("button", { name, exact: true }).click();
+      await expect(gate).toBeVisible();
+      await gate.getByRole("button", { name: "Close" }).click();
+    }
   });
 
   test("Ask Jo edits the slides wizard in place and knows the topic (regression)", async ({ page }) => {
@@ -226,7 +277,7 @@ test.describe("signed out", () => {
     });
   });
 
-  test("today's free try used: the sign up prompt explains it", async ({ page }) => {
+  test("today's free tries used: the sign up prompt explains it", async ({ page }) => {
     await stubGuestApi(page, { deckStatus: 429 });
     await page.goto("/create?tool=slides&topic=Volcanoes");
 
@@ -237,8 +288,12 @@ test.describe("signed out", () => {
 
     const gate = page.getByTestId("auth-gate");
     await expect(gate).toBeVisible();
-    await expect(gate).toContainText("You have used today's free Slides");
-    await expect(page.getByTestId("guest-deck")).toHaveCount(0);
+    await expect(gate).toContainText("You have used today's three free tries");
+    // Back on the form exactly where they left it, the last step of the
+    // wizard, not in an empty editor.
+    await gate.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByRole("button", { name: /Generate slideshow/ })).toBeVisible();
+    await expect(page.getByPlaceholder("Untitled Slideshow")).toHaveCount(0);
   });
 
   test("a comprehension Jo filled opens ready to generate (regression)", async ({ page }) => {
@@ -284,6 +339,75 @@ test.describe("signed out", () => {
     } finally {
       await deleteTeacher(teacher);
     }
+  });
+});
+
+test.describe("a guest's own creations", () => {
+  // Real rows and the real save route, not stubs: reopening is server side
+  // (the page reads the try against the signed guest cookie) and so is saving.
+  // Nothing here reaches a model.
+  const guestId = randomUUID();
+  const title = `Reopened deck ${Date.now().toString(36)}`;
+  let runId: string;
+
+  test.beforeAll(async () => {
+    const { data, error } = await admin
+      .from("trial_generations")
+      .insert({
+        guest_id: guestId,
+        tool: "slideshow",
+        status: "done",
+        title,
+        input: { topic: title },
+        // Saved once already, two days ago: older than a day, which the save
+        // route used to refuse even though the list still showed the deck.
+        output: { slides: [SLIDE], savedAt: Date.now() - 2 * 24 * 60 * 60 * 1000 },
+        run_id: randomUUID(),
+        ip_hash: "e2e-not-a-real-ip",
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    runId = data.id as string;
+  });
+
+  test.afterAll(async () => {
+    await admin.from("trial_generations").delete().eq("id", runId);
+  });
+
+  test("one of Your creations reopens in the editor, and edits to it save (regression)", async ({ page }) => {
+    const secret = process.env.TRIAL_SECRET?.trim();
+    test.skip(!secret || secret.length < 16, "TRIAL_SECRET is not set in .env.local");
+    await page.context().addCookies([
+      { name: GUEST_COOKIE, value: guestCookieValue(guestId, secret!), url: "http://localhost:3000" },
+    ]);
+
+    await page.goto("/create?tool=slides");
+    const creations = page.getByRole("region", { name: "Your creations" });
+    await expect(creations).toBeVisible(NAV);
+
+    // A click, the way a visitor does it: a client navigation to this same
+    // page, which used to change the URL and open nothing.
+    await creations.getByRole("link", { name: new RegExp(title) }).click();
+    const deckTitle = page.getByPlaceholder("Untitled Slideshow");
+    await expect(deckTitle).toHaveValue(title, NAV);
+
+    // Edited, and saved to the same try.
+    await deckTitle.fill(`${title} edited`);
+    await expect
+      .poll(
+        async () =>
+          (await admin.from("trial_generations").select("title").eq("id", runId).single()).data?.title,
+        NAV,
+      )
+      .toBe(`${title} edited`);
+
+    // The way back is to the list, not the landing page.
+    await expect(page.getByRole("link", { name: "Back to your creations" })).toHaveAttribute(
+      "href",
+      "/create?tool=slides",
+    );
   });
 });
 

@@ -305,6 +305,20 @@
   transform: translateY(-2px);
 }
 
+/* Burnt orange, for "Start free trial": the same accent as the landing page's
+   workload figures. White text holds on it, and it reads on the purple card
+   as well as the white ones. */
+.actionTrial {
+  background: var(--j-orange);
+  color: #fff;
+  box-shadow: 0 12px 24px -14px rgba(194, 85, 31, 0.8);
+}
+
+.actionTrial:hover:not(:disabled) {
+  background: var(--j-orange-ink);
+  transform: translateY(-2px);
+}
+
 .action:disabled {
   opacity: 0.65;
   cursor: default;

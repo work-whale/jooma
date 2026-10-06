@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film, ListChecks, Volume2, MessagesSquare, HelpCircle, CheckSquare, FormInput, Tags, Images, Brain, ToggleLeft, ToggleRight, ArrowUpDown, Palette, ImagePlay } from "lucide-react";
+import { Pencil, Shapes, Type, Image as ImageIcon, Square, Circle, Triangle as TriangleIcon, Minus, X, MoveRight, Star, Hexagon, Loader2, Search, Heart, Cloud, MessageCircle, Plus as PlusIcon, Zap, Pentagon, Octagon, Diamond, Headphones, Film, ListChecks, Volume2, MessagesSquare, HelpCircle, CheckSquare, FormInput, Tags, Images, Brain, ToggleLeft, ToggleRight, ArrowUpDown, Palette, ImagePlay, Lock } from "lucide-react";
 import { parseYouTubeId } from "./youtube";
 import GraphicsPanel from "./GraphicsPanel";
 import PicturesPanel from "./PicturesPanel";
@@ -9,6 +9,7 @@ import FramePicker from "./FramePicker";
 import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
 import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage } from "@/app/lib/generatedImages";
+import { useEditorGuest } from "./EditorGuest";
 
 type TabId = "elements" | "text" | "activities" | "pictures" | "gif" | "audio" | "video";
 
@@ -130,6 +131,15 @@ const ALL_TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 
 const TABS = ALL_TABS.filter((t) => t.id !== "gif" || GIF_ENABLED);
 
+/*
+ * What a guest on /create gets in this sidebar: Elements, Text, and stock and
+ * web picture search. Everything else is behind sign up, and its button opens
+ * the sign up prompt instead of its panel, with a lock on it so the visitor can
+ * see before they click what an account adds. See EditorGuest.
+ */
+const GUEST_LOCKED_TABS: readonly TabId[] = ["activities", "gif", "audio", "video"];
+const GUEST_LOCKED_PICTURES: readonly PictureSubTab[] = ["upload", "ai"];
+
 type ElementSubTab = "shapes" | "graphics" | "frames";
 
 const SUB_TAB_LABELS: Record<ElementSubTab, string> = {
@@ -149,6 +159,10 @@ export default function Sidebar({
   galleryRefreshTrigger = 0,
   openSignal,
 }: Props) {
+  // A signed out visitor on /create: the model calls below open the sign up
+  // prompt instead. See EditorGuest.
+  const guest = useEditorGuest();
+
   // ── Video tab ─────────────────────────────────────────────────────────────
   const videoFileRef = useRef<HTMLInputElement>(null);
   const [videoUrl, setVideoUrl] = useState("");
@@ -176,6 +190,10 @@ export default function Sidebar({
       setVideoSuggestError("Tell us what the video should be about");
       return;
     }
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setVideoSuggestBusy(true);
     setVideoSuggestError(null);
     try {
@@ -199,6 +217,11 @@ export default function Sidebar({
   };
 
   const handleVideoFile = async (file: File) => {
+    // Uploads go to our storage, which a signed out visitor does not get.
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setVideoUploading(true);
     setVideoUploadError(null);
     try {
@@ -230,6 +253,10 @@ export default function Sidebar({
     const hasScript = audioScript.trim().length > 0;
     if (!hasTopic && !hasScript) return;
     if (audioBusy) return;
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setAudioBusy(true);
     setAudioError(null);
     try {
@@ -284,6 +311,10 @@ export default function Sidebar({
 
   const handleAiGenerate = async () => {
     if (!aiPrompt.trim() || aiBusy) return;
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setAiBusy(true);
     setAiError(null);
     try {
@@ -323,6 +354,10 @@ export default function Sidebar({
 
   const handleAddActivityClick = async () => {
     if (!activityPickedKind || !onAddActivity) return;
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setActivityBusy(true);
     setActivityError(null);
     try {
@@ -345,6 +380,15 @@ export default function Sidebar({
   // Watching the nonce means the same tab can be re-opened repeatedly.
   useEffect(() => {
     if (!openSignal) return;
+    // The canvas can ask for a locked tab too (an audio slide's "Swap audio").
+    if (
+      guest &&
+      (GUEST_LOCKED_TABS.includes(openSignal.tab) ||
+        (openSignal.subTab && GUEST_LOCKED_PICTURES.includes(openSignal.subTab)))
+    ) {
+      guest.gate("generate");
+      return;
+    }
     setActive(openSignal.tab);
     if (openSignal.subTab) setPictureSubTab(openSignal.subTab);
   }, [openSignal?.nonce]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -359,6 +403,8 @@ export default function Sidebar({
     // Only fetch when the Pictures tab's AI sub-tab is showing — the gallery
     // rows hold full base64 data, so we keep this lazy.
     if (active !== "pictures" || pictureSubTab !== "ai") return;
+    // A guest has no gallery: it is the teacher's own saved pictures.
+    if (guest) return;
     let cancelled = false;
     setGalleryLoading(true);
     listGeneratedImages({ search: debouncedSearch, limit: 30 })
@@ -366,7 +412,7 @@ export default function Sidebar({
       .catch((err) => { if (!cancelled) console.warn("Gallery fetch failed:", err); })
       .finally(() => { if (!cancelled) setGalleryLoading(false); });
     return () => { cancelled = true; };
-  }, [active, pictureSubTab, debouncedSearch, galleryRefreshTrigger]);
+  }, [active, pictureSubTab, debouncedSearch, galleryRefreshTrigger, guest]);
 
   // Lazy-inject the Google Fonts <link> the first time the sidebar mounts.
   useEffect(() => { injectGoogleFonts(); }, []);
@@ -380,6 +426,12 @@ export default function Sidebar({
   const handleAddByUrl = async () => {
     const u = uploadUrl.trim();
     if (!u || uploadUrlBusy) return;
+    // Fetched by our server, which will not fetch arbitrary addresses for a
+    // signed out visitor. Unreachable through the locked Upload tab anyway.
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setUploadUrlBusy(true);
     setUploadUrlError(null);
     try {
@@ -428,7 +480,19 @@ export default function Sidebar({
   }, [active]);
 
   const handleClick = (id: TabId) => {
+    if (guest && GUEST_LOCKED_TABS.includes(id)) {
+      guest.gate("generate");
+      return;
+    }
     setActive((prev) => (prev === id ? null : id));
+  };
+
+  const handlePictureSubTab = (id: PictureSubTab) => {
+    if (guest && GUEST_LOCKED_PICTURES.includes(id)) {
+      guest.gate("generate");
+      return;
+    }
+    setPictureSubTab(id);
   };
 
   const handleClose = () => setActive(null);
@@ -458,18 +522,24 @@ export default function Sidebar({
       >
         {TABS.map((t) => {
           const isActive = active === t.id;
+          const locked = !!guest && GUEST_LOCKED_TABS.includes(t.id);
           return (
             <button
               key={t.id}
               onClick={() => handleClick(t.id)}
-              className={`w-14 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-colors ${
+              title={locked ? `${t.label}: sign up to use` : undefined}
+              data-locked={locked ? "" : undefined}
+              className={`relative w-14 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-colors ${
                 isActive
                   ? "bg-violet-600 text-white"
-                  : "text-gray-600 hover:bg-violet-100 hover:text-violet-700"
+                  : locked
+                    ? "text-gray-400 hover:bg-violet-100 hover:text-violet-700"
+                    : "text-gray-600 hover:bg-violet-100 hover:text-violet-700"
               }`}
             >
               {t.icon}
               {t.label}
+              {locked && <Lock className="absolute top-1 right-1.5 w-2.5 h-2.5" aria-hidden="true" />}
             </button>
           );
         })}
@@ -669,14 +739,20 @@ export default function Sidebar({
                     : ["stock", "upload", "ai"]) as PictureSubTab[]).map((id) => (
                     <button
                       key={id}
-                      onClick={() => setPictureSubTab(id)}
-                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      onClick={() => handlePictureSubTab(id)}
+                      title={guest && GUEST_LOCKED_PICTURES.includes(id) ? "Sign up to use" : undefined}
+                      className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                         pictureSubTab === id
                           ? "bg-violet-100 text-violet-700"
-                          : "text-gray-600 hover:bg-gray-100"
+                          : guest && GUEST_LOCKED_PICTURES.includes(id)
+                            ? "text-gray-400 hover:bg-gray-100"
+                            : "text-gray-600 hover:bg-gray-100"
                       }`}
                     >
                       {PICTURE_SUB_TAB_LABELS[id]}
+                      {guest && GUEST_LOCKED_PICTURES.includes(id) && (
+                        <Lock className="w-2.5 h-2.5" aria-hidden="true" />
+                      )}
                     </button>
                   ))}
                 </div>

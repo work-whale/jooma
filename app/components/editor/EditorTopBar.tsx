@@ -25,6 +25,9 @@ interface Props {
   onThemeChange?: (id: string) => void;
   artStyle?: ArtStyleId;
   onArtStyleChange?: (style: ArtStyleId) => void;
+  /** A signed out visitor on /create: the way back is the landing page, not
+   *  the teacher's slideshow list, and signing up is one click away. */
+  guest?: { onSignUp: () => void };
 }
 
 const iconBtn = "p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40";
@@ -44,7 +47,10 @@ export default function EditorTopBar({
   onThemeChange,
   artStyle,
   onArtStyleChange,
+  guest,
 }: Props) {
+  const home = guest ? "/" : "/tools/slideshow";
+  const backLabel = guest ? "Back to your creations" : "Back to slideshows";
   const [themeOpen, setThemeOpen] = useState(false);
   const themeBtnRef = useRef<HTMLButtonElement>(null);
   const themeMenuRef = useRef<HTMLDivElement>(null);
@@ -68,16 +74,30 @@ export default function EditorTopBar({
       style={{ borderColor: "#EAE6F5", backgroundColor: "#F7F5FC" }}
     >
       <div className="flex items-center gap-3">
+        {guest ? (
+          // A full load, not a client navigation: the guest editor is a state
+          // of /create itself, so this has to land on a fresh page, whose
+          // "Your creations" list then includes the deck they just made.
+          <a
+            href="/create?tool=slides"
+            className="p-2 -ml-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            title={backLabel}
+            aria-label={backLabel}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </a>
+        ) : (
+          <Link
+            href={home}
+            className="p-2 -ml-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            title={backLabel}
+            aria-label={backLabel}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+        )}
         <Link
-          href="/tools/slideshow"
-          className="p-2 -ml-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-          title="Back to slideshows"
-          aria-label="Back to slideshows"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <Link
-          href="/tools/slideshow"
+          href={home}
           className="hover:opacity-70 transition-opacity"
           style={{ color: "var(--j-purple)" }}
         >
@@ -262,6 +282,16 @@ export default function EditorTopBar({
           ]}
         />
         </span>
+        {guest && (
+          <button
+            type="button"
+            onClick={guest.onSignUp}
+            className="ml-1 text-sm font-bold px-4 py-2 rounded-lg transition-colors hover:brightness-90"
+            style={{ backgroundColor: "var(--j-orange)", color: "#fff" }}
+          >
+            Start free trial
+          </button>
+        )}
       </div>
     </div>
   );

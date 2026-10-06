@@ -26,6 +26,7 @@ import EditAudioPanel, { type ActivityType } from "./EditAudioPanel";
 import SlideshowLoadingAnimation from "./SlideshowLoadingAnimation";
 import PresentationViewer from "./PresentationViewer";
 import ShareToHomePrompt from "@/app/components/guest/ShareToHomePrompt";
+import { EditorGuestContext, type EditorGuest } from "./EditorGuest";
 import { saveToolRun } from "@/app/lib/toolRuns";
 import type { FrameShape } from "./frames";
 import MiniSlide from "./MiniSlide";
@@ -118,11 +119,19 @@ async function hardenAlpha(blob: Blob): Promise<Blob> {
 interface Props {
   presentation: Presentation;
   generationParams?: GenerationParams;
+  /** A signed out visitor on /create. `presentation.id` is then their free
+   *  try's id (or "" before a new deck's run has started), and everything a
+   *  guest cannot do opens the sign up prompt. See EditorGuest. */
+  guest?: EditorGuest;
 }
 
 const HISTORY_MAX = 50;
 
-export default function Editor({ presentation, generationParams }: Props) {
+export default function Editor({ presentation, generationParams, guest }: Props) {
+  // The free try this guest deck saves to, and whether the server has recorded
+  // its run as finished (saves before then are refused). A restored try is both.
+  const guestTrialIdRef = useRef<string | null>(guest ? presentation.id || null : null);
+  const guestReadyRef = useRef(!!guest && !generationParams);
   const [title, setTitle] = useState(presentation.title);
   // The params this deck was generated from (if any), powering the "Edit prompt"
   // button → reopen the prompt and regenerate over this same presentation.
@@ -664,8 +673,13 @@ export default function Editor({ presentation, generationParams }: Props) {
   const bgFileInputRef = useRef<HTMLInputElement>(null);
 
   const openBackgroundFilePicker = useCallback(() => {
+    // Uploading a picture is behind sign up for a guest on /create.
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     bgFileInputRef.current?.click();
-  }, []);
+  }, [guest]);
 
   // ── Drag-and-drop from sidebar onto the slide canvas ────────────────────
   // Frames intercept their own drops via stopPropagation; anything that bubbles
@@ -920,10 +934,35 @@ export default function Editor({ presentation, generationParams }: Props) {
           console.warn(`[persist] Large slides payload: ${(bytes / 1024 / 1024).toFixed(2)} MB`);
         }
       }
-      await updatePresentation(presentation.id, {
-        title: titleRef.current,
-        slides: payload,
-      });
+      if (guest) {
+        // A guest deck is a free try, not a presentation: it saves to the try,
+        // and only once the server has recorded the run as finished.
+        const trialId = guestTrialIdRef.current;
+        if (!trialId || !guestReadyRef.current) {
+          dirtyRef.current = true;
+          setSaveStatus("idle");
+          return;
+        }
+        const res = await fetch("/api/try/slideshow/finalize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: trialId, title: titleRef.current, slides: payload }),
+        });
+        if (res.status === 429) {
+          // Saved a moment ago. Try again shortly with whatever is newest.
+          dirtyRef.current = true;
+          setSaveStatus("idle");
+          if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+          saveTimerRef.current = setTimeout(() => persistRef.current(), 2500);
+          return;
+        }
+        if (!res.ok) throw new Error(`Guest save failed: ${res.status}`);
+      } else {
+        await updatePresentation(presentation.id, {
+          title: titleRef.current,
+          slides: payload,
+        });
+      }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 1500);
     } catch (err: unknown) {
@@ -944,7 +983,12 @@ export default function Editor({ presentation, generationParams }: Props) {
       }
       setSaveStatus("error");
     }
-  }, [presentation.id]);
+  }, [presentation.id, guest]);
+  // For the guest save's retry, which is scheduled from inside persist itself.
+  const persistRef = useRef(persist);
+  useEffect(() => {
+    persistRef.current = persist;
+  }, [persist]);
 
   // Debounced history snapshot. Short enough (300 ms) that a quick sequence of
   // distinct edits (e.g. drag → click → recolor) gets three undo steps, but
@@ -1447,6 +1491,12 @@ export default function Editor({ presentation, generationParams }: Props) {
         reader.onerror = () => reject(reader.error);
         reader.readAsDataURL(blob);
       });
+      // A guest's cutout stays inline: our storage is for teachers' decks, and
+      // it moves into theirs with the rest of the deck when they sign up.
+      if (guest) {
+        updateImage(imageId, { src: dataUrl });
+        return;
+      }
       const res = await fetch("/api/upload-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1473,7 +1523,7 @@ export default function Editor({ presentation, generationParams }: Props) {
       setRemovingBgId(null);
       setRemoveBgPct(null);
     }
-  }, [selectedImageId, removingBgId, updateImage]);
+  }, [selectedImageId, removingBgId, updateImage, guest]);
 
   const updateAudio = useCallback((id: string, patch: Partial<AudioObject>) => {
     mutateActiveSlide((s) => ({
@@ -2864,7 +2914,8 @@ export default function Editor({ presentation, generationParams }: Props) {
     function processRevealItem() {
       const p = reveal.queue.shift();
       if (!p || cancelled) { reveal.timer = null; return; }
-      if (p.galleryImage) {
+      // The picture gallery is a teacher's own; a guest has none to save to.
+      if (p.galleryImage && !guest) {
         saveGeneratedImage({ ...p.galleryImage, source: "slideshow" })
           .then(() => setGalleryRefreshTrigger((n) => n + 1))
           .catch((err) => console.warn("Gallery save failed:", err));
@@ -2913,7 +2964,9 @@ export default function Editor({ presentation, generationParams }: Props) {
     let runRecorded = false;
 
     const recordRun = () => {
-      if (runRecorded) return;
+      // A guest run is recorded by the server, in trial_generations, and
+      // becomes a tool run when it is claimed.
+      if (runRecorded || guest) return;
       runRecorded = true;
       void saveToolRun({
         // The tool's own slug, NOT the API route name ("generate-slideshow").
@@ -2942,15 +2995,42 @@ export default function Editor({ presentation, generationParams }: Props) {
       });
     };
 
-    (async () => {
+    // Started a tick late, and cancelled in the cleanup if that tick has not
+    // come. React's development double run mounts, unmounts and remounts in
+    // one go, so the first run is cancelled before it sends anything. Without
+    // this, every deck in development was requested twice: a wasted generation
+    // for a teacher, and for a guest a second start against their free tries.
+    let started = false;
+    const startTimer = setTimeout(() => void (async () => {
+      started = true;
       try {
-        const r = await fetch("/api/generate-slideshow", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...generationParams, runId }),
-          signal: controller.signal,
-        });
+        // A guest's free try runs through its own gate, which mints the run id
+        // itself and returns the try's id to save the deck against.
+        const r = guest
+          ? await fetch("/api/try/slideshow", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...generationParams, website: guest.honeypot() }),
+              signal: controller.signal,
+            })
+          : await fetch("/api/generate-slideshow", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...generationParams, runId }),
+              signal: controller.signal,
+            });
+        if (guest && !r.ok) {
+          // Refused before it started: today's tries are used, or tries are
+          // paused. Nothing was spent and nothing counted.
+          const data = (await r.json().catch(() => ({}))) as { error?: string };
+          setGenerating(null);
+          setPreMeta(false);
+          guest.onRefused(r.status === 429 || r.status === 403 ? (data.error ?? null) : null);
+          return;
+        }
         if (!r.ok || !r.body) throw new Error("Generation failed");
+        if (guest) guestTrialIdRef.current = r.headers.get("x-trial-id");
+        let completed = false;
         const reader = r.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
@@ -3029,7 +3109,7 @@ export default function Editor({ presentation, generationParams }: Props) {
                 slide: SlideJSON;
                 galleryImage?: { prompt: string; style?: string; dataUrl: string };
               };
-              if (p.galleryImage) {
+              if (p.galleryImage && !guest) {
                 saveGeneratedImage({ ...p.galleryImage, source: "slideshow" })
                   .then(() => setGalleryRefreshTrigger((n) => n + 1))
                   .catch((err) => console.warn("Gallery save failed:", err));
@@ -3085,10 +3165,21 @@ export default function Editor({ presentation, generationParams }: Props) {
               });
               scheduleSave();
             } else if (eventName === "complete") {
+              // Reveal anything still queued first. When the last slide and
+              // "complete" arrive in one chunk, a queued reveal would otherwise
+              // run after this and switch the progress banner back on for good,
+              // and finishDeck below would miss that slide.
+              if (reveal.timer) { clearTimeout(reveal.timer); reveal.timer = null; }
+              while (reveal.queue.length > 0) {
+                processRevealItem();
+                if (reveal.timer) { clearTimeout(reveal.timer); reveal.timer = null; }
+              }
               setGenerating(null);
               setPreMeta(false);
               setJustFinished(true);
-              setOfferShare(true);
+              completed = true;
+              // Offering a deck for the homepage needs an account to credit.
+              if (!guest) setOfferShare(true);
               // Make sure every slide carries the deck's themed background art.
               // Content slides already get it baked in server-side, but the
               // audio/video slides are built client-side and would otherwise
@@ -3127,6 +3218,13 @@ export default function Editor({ presentation, generationParams }: Props) {
             }
           }
         }
+        // The guest route closes the stream only after recording the run as
+        // finished, so from here the try accepts the deck. Save it now, with
+        // anything already edited while the last slides arrived.
+        if (guest && completed && !cancelled) {
+          guestReadyRef.current = true;
+          scheduleSave();
+        }
       } catch (err) {
         if (!cancelled) {
           console.error("Generation stream failed", err);
@@ -3134,10 +3232,11 @@ export default function Editor({ presentation, generationParams }: Props) {
           setPreMeta(false);
         }
       }
-    })();
+    })(), 0);
 
     return () => {
       cancelled = true;
+      clearTimeout(startTimer);
       if (reveal.timer) clearTimeout(reveal.timer);
       controller.abort();
       // Leaving mid-generation still spent the money — the server keeps
@@ -3149,7 +3248,9 @@ export default function Editor({ presentation, generationParams }: Props) {
       //
       // Guarded by runRecorded, so a deck that DID complete isn't logged twice
       // when its editor later unmounts.
-      if (slidesRef.current.length > 0) recordRun();
+      // A run cancelled before its tick never sent a request, so nothing was
+      // spent and there is nothing to record.
+      if (started && slidesRef.current.length > 0) recordRun();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generationParams]);
@@ -3182,6 +3283,7 @@ export default function Editor({ presentation, generationParams }: Props) {
   const slideEntries: SlideEntry[] = slides.map((s) => ({ id: s.id, slide: s }));
 
   return (
+    <EditorGuestContext.Provider value={guest ?? null}>
     <div className="relative flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "var(--j-bg)" }}>
       {/* Full-screen overlay shown while waiting for OpenAI to respond (pre-meta phase).
           Covers the whole editor so the user sees an engaging animation rather than
@@ -3199,11 +3301,12 @@ export default function Editor({ presentation, generationParams }: Props) {
         onTitleChange={handleTitleChange}
         onUndo={undo}
         onRedo={redo}
-        onExport={handleExport}
-        onPresent={() => setPresenting(true)}
+        onExport={guest ? () => guest.gate("export") : handleExport}
+        onPresent={guest ? () => guest.gate("present") : () => setPresenting(true)}
+        guest={guest ? { onSignUp: () => guest.gate(null) } : undefined}
         isExporting={isExporting}
         saveStatus={saveStatus}
-        onEditPrompt={savedGenParams ? () => setEditPromptOpen(true) : undefined}
+        onEditPrompt={savedGenParams && !guest ? () => setEditPromptOpen(true) : undefined}
         disableHistory={!!generating}
         themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
         onThemeChange={handleThemeChange}
@@ -3953,7 +4056,11 @@ export default function Editor({ presentation, generationParams }: Props) {
           onDeleteSlide={contextMenu.kind === "slide" ? () => deleteSlide(activeIndexRef.current) : undefined}
           onChangeBackgroundImage={contextMenu.kind === "slide" ? openBackgroundFilePicker : undefined}
           onRemoveBackgroundImage={contextMenu.kind === "slide" ? removeBackgroundImage : undefined}
-          onRegenerate={contextMenu.kind === "image" && selectedImageId ? () => setRegenerateTargetId(selectedImageId) : undefined}
+          onRegenerate={
+            contextMenu.kind === "image" && selectedImageId
+              ? () => (guest ? guest.gate("generate") : setRegenerateTargetId(selectedImageId))
+              : undefined
+          }
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -4001,6 +4108,11 @@ export default function Editor({ presentation, generationParams }: Props) {
           <EditAudioPanel
             onClose={() => setEditingAudioId(null)}
             onSubmit={async ({ activityType, additionalInstructions }) => {
+              if (guest) {
+                setEditingAudioId(null);
+                guest.gate("generate");
+                return;
+              }
               const res = await fetch("/api/generate-audio", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -4061,5 +4173,6 @@ export default function Editor({ presentation, generationParams }: Props) {
         />
       )}
     </div>
+    </EditorGuestContext.Provider>
   );
 }

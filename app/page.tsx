@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/app/lib/auth/server";
 import { getCopy } from "@/app/lib/copy";
-import { visitorCountriesAllTime, visitorsAllTime } from "@/app/lib/vercelAnalytics";
-import { topCountries } from "@/app/lib/visitors";
+import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
 import { publicShowcase } from "@/app/lib/showcase";
 import {
   maxYearlySavingPercent,
@@ -85,14 +84,9 @@ function pricingPlans(): PricingPlan[] {
     paid("standard"),
     { ...paid("pro"), featured: true },
     paid("max"),
-    {
-      ...card("school"),
-      href: "/contact?type=school",
-      // No yearly price, but a second line all the same, so its feature list
-      // starts level with the three yearly cards beside it. And true: schools
-      // are invoiced once a year.
-      yearly: { price: planCardPrice("school"), per: planCardPer("school"), note: "Invoiced yearly" },
-    },
+    // Rendered as a full width band under the three paid cards, not a fourth
+    // card beside them.
+    { ...card("school"), href: "/contact?type=school" },
   ];
 }
 
@@ -136,10 +130,9 @@ export default async function LandingPage({
 
   // The hero's count is the admin Stats visitor figure, all time. Fetched beside
   // the copy and the showcase rather than after them: none depends on another.
-  const [copy, visitors, countries, showcase] = await Promise.all([
+  const [copy, visitors, showcase] = await Promise.all([
     getCopy(),
     visitorsAllTime(),
-    visitorCountriesAllTime(5),
     publicShowcase(6),
   ]);
 
@@ -204,7 +197,6 @@ export default async function LandingPage({
         <HeroV3
           headline={copy["home.hero.h1"]}
           visitors={visitors}
-          countries={topCountries(countries, 5)}
           showcase={showcase}
         />
 

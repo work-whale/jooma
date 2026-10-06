@@ -1,6 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   MagnifyingGlass,
@@ -18,6 +25,7 @@ import {
   CircleNotch,
   DownloadSimple,
   UsersThree,
+  Globe,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import ShareModal from "@/app/components/v2/ShareModal";
@@ -41,6 +49,12 @@ import {
   type FolderColour,
 } from "@/app/lib/folders";
 import { sharedRunsById, type Share } from "@/app/lib/colleagues";
+import {
+  myShowcaseStatuses,
+  setShowcaseConsent,
+  showcaseTarget,
+  type ShowcaseStatus,
+} from "@/app/lib/showcaseShare";
 import { displayName } from "@/app/lib/colleagueDisplay";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { typeLabel, formatDate } from "@/app/lib/toolRunDisplay";
@@ -136,6 +150,12 @@ function Library() {
   /** Which runs came from a colleague, keyed by run id. The whole share rather
    *  than a set of ids, so a row can name its sender and open the snapshot. */
   const [sharedBy, setSharedBy] = useState<Map<string, Share>>(new Map());
+  /** Where each resource stands with the homepage's "Made with Jooma" row,
+   *  keyed by presentation or run id. Absent means never offered. */
+  const [homepage, setHomepage] = useState<Map<string, ShowcaseStatus>>(
+    new Map(),
+  );
+  const [offering, setOffering] = useState<ToolRun | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -147,7 +167,9 @@ function Library() {
   const [sharing, setSharing] = useState<ToolRun | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ToolRun | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [dropTarget, setDropTarget] = useState<Selection | undefined>(undefined);
+  const [dropTarget, setDropTarget] = useState<Selection | undefined>(
+    undefined,
+  );
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
   // Selection lives in the URL so a refresh, a back button and a shared link
@@ -177,15 +199,19 @@ function Library() {
       // page into "your library could not be loaded", which is both alarming
       // and untrue: the library is fine, one view over it is not available.
       sharedRunsById().catch(() => new Map<string, Share>()),
+      // Same reasoning: without it the menu item simply offers to share.
+      myShowcaseStatuses().catch(() => new Map<string, ShowcaseStatus>()),
     ])
-      .then(([r, f, shared]) => {
+      .then(([r, f, shared, statuses]) => {
         if (cancelled) return;
         setRuns(r);
         setFolders(f);
         setSharedBy(shared);
+        setHomepage(statuses);
       })
       .catch(() => {
-        if (!cancelled) setError("Your library could not be loaded. Refresh to try again.");
+        if (!cancelled)
+          setError("Your library could not be loaded. Refresh to try again.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -254,13 +280,17 @@ function Library() {
       const before = runs.find((r) => r.id === runId);
       if (!before || before.folder_id === folderId) return;
 
-      setRuns((prev) => prev.map((r) => (r.id === runId ? { ...r, folder_id: folderId } : r)));
+      setRuns((prev) =>
+        prev.map((r) => (r.id === runId ? { ...r, folder_id: folderId } : r)),
+      );
       setError(null);
       try {
         await moveRunToFolder(runId, folderId);
       } catch {
         setRuns((prev) =>
-          prev.map((r) => (r.id === runId ? { ...r, folder_id: before.folder_id } : r)),
+          prev.map((r) =>
+            r.id === runId ? { ...r, folder_id: before.folder_id } : r,
+          ),
         );
         setError("That resource could not be moved. Try again.");
       }
@@ -302,14 +332,19 @@ function Library() {
       if (editing) {
         const before = editing;
         setFolders((prev) =>
-          prev.map((f) => (f.id === editing.id ? { ...f, name: name.trim(), colour } : f)),
+          prev.map((f) =>
+            f.id === editing.id ? { ...f, name: name.trim(), colour } : f,
+          ),
         );
         setDraft(null);
         try {
           if (name.trim() !== before.name) await renameFolder(editing.id, name);
-          if (colour !== before.colour) await recolourFolder(editing.id, colour);
+          if (colour !== before.colour)
+            await recolourFolder(editing.id, colour);
         } catch {
-          setFolders((prev) => prev.map((f) => (f.id === editing.id ? before : f)));
+          setFolders((prev) =>
+            prev.map((f) => (f.id === editing.id ? before : f)),
+          );
           setError("That folder could not be updated. Try again.");
         }
         return;
@@ -318,7 +353,9 @@ function Library() {
       setDraft(null);
       try {
         const created = await createFolder(name, colour);
-        setFolders((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+        setFolders((prev) =>
+          [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
+        );
       } catch {
         setError("That folder could not be created. Try again.");
       }
@@ -342,7 +379,9 @@ function Library() {
       // Mirrors `on delete set null` on tool_runs.folder_id, so the counts and
       // the Unfiled card are right without a refetch.
       setRuns((prev) =>
-        prev.map((r) => (r.folder_id === folder.id ? { ...r, folder_id: null } : r)),
+        prev.map((r) =>
+          r.folder_id === folder.id ? { ...r, folder_id: null } : r,
+        ),
       );
       if (selected === folder.id) select(null);
       setError(null);
@@ -408,7 +447,8 @@ function Library() {
         </p>
         <h1>Library</h1>
         <p className={app.helloSub}>
-          Everything you make is filed here. Drag a resource onto a folder to move it.
+          Everything you make is filed here. Drag a resource onto a folder to
+          move it.
         </p>
       </div>
 
@@ -416,7 +456,9 @@ function Library() {
         <button
           type="button"
           className={`${app.btn} ${app.btnP}`}
-          onClick={() => setDraft({ folder: null, name: "", colour: DEFAULT_FOLDER_COLOUR })}
+          onClick={() =>
+            setDraft({ folder: null, name: "", colour: DEFAULT_FOLDER_COLOUR })
+          }
         >
           <FolderPlus className={app.btnIcon} />
           New folder
@@ -538,7 +580,9 @@ function Library() {
                 count={countFor(folder.id)}
                 selected={selected === folder.id}
                 dropping={dropTarget === folder.id}
-                onSelect={() => select(selected === folder.id ? null : folder.id)}
+                onSelect={() =>
+                  select(selected === folder.id ? null : folder.id)
+                }
                 onRename={() =>
                   setDraft({ folder, name: folder.name, colour: folder.colour })
                 }
@@ -551,7 +595,13 @@ function Library() {
             <button
               type="button"
               className={`${styles.folder} ${styles.folderNew}`}
-              onClick={() => setDraft({ folder: null, name: "", colour: DEFAULT_FOLDER_COLOUR })}
+              onClick={() =>
+                setDraft({
+                  folder: null,
+                  name: "",
+                  colour: DEFAULT_FOLDER_COLOUR,
+                })
+              }
             >
               <FolderPlus className={styles.folderNewIcon} />
               New folder
@@ -587,30 +637,39 @@ function Library() {
             // box.
             <div className={view === "list" ? app.panel : undefined}>
               <div className={view === "list" ? styles.rows : styles.filegrid}>
-                {visible.map((run) => (
-                  <ResourceItem
-                    key={run.id}
-                    run={run}
-                    folderLabel={folderName(run.folder_id)}
-                    sharedFrom={
-                      selected === SHARED && sharedBy.get(run.id)?.sender
-                        ? displayName(sharedBy.get(run.id)!.sender!)
-                        : undefined
-                    }
-                    dragging={draggingId === run.id}
-                    deleting={deletingId === run.id}
-                    view={view}
-                    onDragStart={() => setDraggingId(run.id)}
-                    onDragEnd={() => {
-                      setDraggingId(null);
-                      setDropTarget(undefined);
-                    }}
-                    onOpen={() => open(run)}
-                    onMove={() => setMoving(run)}
-                    onShare={() => setSharing(run)}
-                    onDelete={() => setPendingDelete(run)}
-                  />
-                ))}
+                {visible.map((run) => {
+                  const target = showcaseTarget(run);
+                  return (
+                    <ResourceItem
+                      key={run.id}
+                      run={run}
+                      homepage={
+                        target
+                          ? (homepage.get(target.resourceId) ?? null)
+                          : undefined
+                      }
+                      onHomepage={() => setOffering(run)}
+                      folderLabel={folderName(run.folder_id)}
+                      sharedFrom={
+                        selected === SHARED && sharedBy.get(run.id)?.sender
+                          ? displayName(sharedBy.get(run.id)!.sender!)
+                          : undefined
+                      }
+                      dragging={draggingId === run.id}
+                      deleting={deletingId === run.id}
+                      view={view}
+                      onDragStart={() => setDraggingId(run.id)}
+                      onDragEnd={() => {
+                        setDraggingId(null);
+                        setDropTarget(undefined);
+                      }}
+                      onOpen={() => open(run)}
+                      onMove={() => setMoving(run)}
+                      onShare={() => setSharing(run)}
+                      onDelete={() => setPendingDelete(run)}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -643,6 +702,21 @@ function Library() {
           busy={deletingId === pendingDelete.id}
           onCancel={() => setPendingDelete(null)}
           onConfirm={remove}
+        />
+      )}
+
+      {offering && (
+        <HomepageModal
+          run={offering}
+          status={(() => {
+            const target = showcaseTarget(offering);
+            return target ? (homepage.get(target.resourceId) ?? null) : null;
+          })()}
+          onCancel={() => setOffering(null)}
+          onDone={(resourceId, status) => {
+            setHomepage((prev) => new Map(prev).set(resourceId, status));
+            setOffering(null);
+          }}
         />
       )}
 
@@ -779,7 +853,8 @@ function FolderCard({
           style={{ background: swatch.tint, color: swatch.solid }}
           aria-hidden="true"
         >
-          {icon ?? (neutral ? <Stack weight="fill" /> : <FolderIcon weight="fill" />)}
+          {icon ??
+            (neutral ? <Stack weight="fill" /> : <FolderIcon weight="fill" />)}
         </span>
         <h3 className={styles.folderName}>{name}</h3>
         <span className={styles.folderCount}>
@@ -792,8 +867,21 @@ function FolderCard({
 
 /* ── Resource, as a row or a card ────────────────────────────────────────── */
 
+/** The Library menu's wording for each homepage state. Rejected is shown but
+ *  not clickable: a Yes cannot re-queue it, so offering one would be a lie. */
+const HOMEPAGE_LABEL: Record<ShowcaseStatus | "none", string> = {
+  none: "Share on Jooma homepage",
+  declined: "Share on Jooma homepage",
+  withdrawn: "Share on Jooma homepage",
+  pending: "Homepage: waiting for review",
+  approved: "On the Jooma homepage",
+  rejected: "Not chosen for the homepage",
+};
+
 function ResourceItem({
   run,
+  homepage,
+  onHomepage,
   folderLabel,
   sharedFrom,
   dragging,
@@ -807,6 +895,10 @@ function ResourceItem({
   onDelete,
 }: {
   run: ToolRun;
+  /** Where it stands with the homepage row: null if never offered, undefined
+   *  if it is not a kind the row can show, in which case there is no item. */
+  homepage: ShowcaseStatus | null | undefined;
+  onHomepage: () => void;
   folderLabel: string;
   /** Who sent it, in the view where that is the point. Replaces the folder in
    *  the meta line rather than joining it: in "Shared with me" the provenance
@@ -877,71 +969,87 @@ function ResourceItem({
 
   const menu = (
     <Menu label={`${title} menu`} onOpenChange={setMenuOpen}>
-        {(close) => (
-          <>
+      {(close) => (
+        <>
+          <MenuItem
+            icon={<PencilSimple className={styles.menuItemIcon} />}
+            onClick={() => {
+              close();
+              onOpen();
+            }}
+          >
+            Edit
+          </MenuItem>
+          <MenuItem
+            icon={<ShareNetwork className={styles.menuItemIcon} />}
+            onClick={() => {
+              close();
+              onShare();
+            }}
+          >
+            Share with colleagues
+          </MenuItem>
+          {homepage !== undefined && (
             <MenuItem
-              icon={<PencilSimple className={styles.menuItemIcon} />}
+              icon={<Globe className={styles.menuItemIcon} />}
+              disabled={homepage === "rejected"}
               onClick={() => {
                 close();
-                onOpen();
+                onHomepage();
               }}
             >
-              Edit
+              {HOMEPAGE_LABEL[homepage ?? "none"]}
             </MenuItem>
-            <MenuItem
-              icon={<ShareNetwork className={styles.menuItemIcon} />}
-              onClick={() => {
-                close();
-                onShare();
-              }}
-            >
-              Share with colleagues
-            </MenuItem>
-            <MenuItem
-              icon={<FolderIcon className={styles.menuItemIcon} />}
-              onClick={() => {
-                close();
-                onMove();
-              }}
-            >
-              Move to folder
-            </MenuItem>
-            <MenuItem
-              icon={
-                downloading ? (
-                  <CircleNotch className={`${styles.menuItemIcon} ${styles.spin}`} />
-                ) : (
-                  <DownloadSimple className={styles.menuItemIcon} />
-                )
-              }
-              disabled={downloading}
-              onClick={() => {
-                close();
-                void download();
-              }}
-            >
-              Download
-            </MenuItem>
-            <span className={styles.menuSep} />
-            <MenuItem
-              icon={
-                deleting ? (
-                  <CircleNotch className={`${styles.menuItemIcon} ${styles.spin}`} />
-                ) : (
-                  <TrashSimple className={styles.menuItemIcon} />
-                )
-              }
-              danger
-              disabled={deleting}
-              onClick={() => {
-                close();
-                onDelete();
-              }}
-            >
-              Delete
-            </MenuItem>
-          </>
-        )}
+          )}
+          <MenuItem
+            icon={<FolderIcon className={styles.menuItemIcon} />}
+            onClick={() => {
+              close();
+              onMove();
+            }}
+          >
+            Move to folder
+          </MenuItem>
+          <MenuItem
+            icon={
+              downloading ? (
+                <CircleNotch
+                  className={`${styles.menuItemIcon} ${styles.spin}`}
+                />
+              ) : (
+                <DownloadSimple className={styles.menuItemIcon} />
+              )
+            }
+            disabled={downloading}
+            onClick={() => {
+              close();
+              void download();
+            }}
+          >
+            Download
+          </MenuItem>
+          <span className={styles.menuSep} />
+          <MenuItem
+            icon={
+              deleting ? (
+                <CircleNotch
+                  className={`${styles.menuItemIcon} ${styles.spin}`}
+                />
+              ) : (
+                <TrashSimple className={styles.menuItemIcon} />
+              )
+            }
+            danger
+            disabled={deleting}
+            onClick={() => {
+              close();
+              onDelete();
+            }}
+          >
+            Delete
+          </MenuItem>
+        </>
+      )}
     </Menu>
   );
 
@@ -955,8 +1063,14 @@ function ResourceItem({
       >
         <span className={styles.filecardMenu}>{menu}</span>
         <button type="button" className={styles.filecardFace} onClick={onOpen}>
-          <ToolTile icon={tool?.icon ?? "folder"} solid={toolSolid(tool)} size="md" />
-          <span className={`${app.rowTitle} ${styles.filecardTitle}`}>{title}</span>
+          <ToolTile
+            icon={tool?.icon ?? "folder"}
+            solid={toolSolid(tool)}
+            size="md"
+          />
+          <span className={`${app.rowTitle} ${styles.filecardTitle}`}>
+            {title}
+          </span>
           <span className={styles.filecardMeta}>{meta}</span>
         </button>
       </div>
@@ -970,7 +1084,11 @@ function ResourceItem({
       }`}
       {...dragProps}
     >
-      <ToolTile icon={tool?.icon ?? "folder"} solid={toolSolid(tool)} size="sm" />
+      <ToolTile
+        icon={tool?.icon ?? "folder"}
+        solid={toolSolid(tool)}
+        size="sm"
+      />
 
       <button type="button" className={styles.fileMain} onClick={onOpen}>
         <span className={`${app.rowTitle} ${styles.fileTitle}`}>{title}</span>
@@ -1005,7 +1123,8 @@ function Menu({
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -1131,7 +1250,12 @@ function ModalShell({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className={styles.modalCard} role="dialog" aria-modal="true" aria-label={title}>
+      <div
+        className={styles.modalCard}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
         <h2 className={styles.modalTitle}>{title}</h2>
         <p className={styles.modalSub}>{sub}</p>
         {children}
@@ -1204,7 +1328,9 @@ function FolderModal({
               style={{ background: c.tint, color: c.solid }}
               className={`${styles.sw} ${colour === c.key ? styles.swOn : ""}`}
             >
-              {colour === c.key && <Check weight="bold" className={styles.swCheck} />}
+              {colour === c.key && (
+                <Check weight="bold" className={styles.swCheck} />
+              )}
             </button>
           ))}
         </div>
@@ -1214,7 +1340,12 @@ function FolderModal({
         <button type="button" className={styles.modalCancel} onClick={onCancel}>
           Cancel
         </button>
-        <button type="button" className={styles.modalSave} disabled={!valid} onClick={submit}>
+        <button
+          type="button"
+          className={styles.modalSave}
+          disabled={!valid}
+          onClick={submit}
+        >
           {editing ? "Save folder" : "Create folder"}
         </button>
       </div>
@@ -1257,12 +1388,18 @@ function MoveModal({
                 <FolderIcon weight="fill" />
               </span>
               <span className={styles.pickName}>{folder.name}</span>
-              {run.folder_id === folder.id && <Check weight="bold" className={styles.pickCheck} />}
+              {run.folder_id === folder.id && (
+                <Check weight="bold" className={styles.pickCheck} />
+              )}
             </button>
           );
         })}
 
-        <button type="button" className={styles.pick} onClick={() => onPick(null)}>
+        <button
+          type="button"
+          className={styles.pick}
+          onClick={() => onPick(null)}
+        >
           <span
             className={styles.pickChip}
             style={{ background: "var(--j-tint-slate)", color: "#6D6683" }}
@@ -1271,7 +1408,9 @@ function MoveModal({
             <FolderOpen weight="fill" />
           </span>
           <span className={styles.pickName}>Unfiled</span>
-          {!run.folder_id && <Check weight="bold" className={styles.pickCheck} />}
+          {!run.folder_id && (
+            <Check weight="bold" className={styles.pickCheck} />
+          )}
         </button>
       </div>
 
@@ -1279,6 +1418,108 @@ function MoveModal({
         <button type="button" className={styles.modalCancel} onClick={onCancel}>
           Cancel
         </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+/**
+ * Offer a resource for the homepage's "Made with Jooma" row, or take it back.
+ *
+ * The same consent the after-generation prompt asks for, with the same words:
+ * what other teachers will see, and that an admin checks it first. Once offered
+ * it says where it stands, and withdrawing is always one click, whatever stage
+ * it reached.
+ */
+function HomepageModal({
+  run,
+  status,
+  onCancel,
+  onDone,
+}: {
+  run: ToolRun;
+  status: ShowcaseStatus | null;
+  onCancel: () => void;
+  onDone: (resourceId: string, status: ShowcaseStatus) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const title = run.title?.trim() || "Untitled";
+  const live = status === "pending" || status === "approved";
+
+  const answer = async (consent: boolean) => {
+    const target = showcaseTarget(run);
+    if (!target) return;
+    setBusy(true);
+    setFailed(false);
+    try {
+      onDone(
+        target.resourceId,
+        await setShowcaseConsent(target.kind, target.resourceId, consent),
+      );
+    } catch {
+      setFailed(true);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <ModalShell
+      title={
+        status === "approved"
+          ? "On the Jooma homepage"
+          : status === "pending"
+            ? "Waiting for review"
+            : "Share on the Jooma homepage?"
+      }
+      sub={title}
+      onCancel={onCancel}
+    >
+      <p className={styles.confirmBody}>
+        {status === "approved"
+          ? "Other teachers can see this in Made with Jooma on the homepage, with your name. You can take it down at any time."
+          : status === "pending"
+            ? "We check everything before it goes up. You can withdraw it at any time, before or after it is approved."
+            : "Other teachers would see it with your full name, subject, year group and country. We check everything before it goes up."}
+      </p>
+      {failed && (
+        <p className={styles.confirmBody} role="status">
+          That did not go through. Try again.
+        </p>
+      )}
+
+      <div className={styles.modalFoot}>
+        <button
+          type="button"
+          className={styles.modalCancel}
+          onClick={onCancel}
+          disabled={busy}
+        >
+          {live ? "Close" : "Cancel"}
+        </button>
+        {live ? (
+          <button
+            type="button"
+            className={styles.modalDanger}
+            onClick={() => answer(false)}
+            disabled={busy}
+          >
+            {busy
+              ? "Withdrawing..."
+              : status === "approved"
+                ? "Take it down"
+                : "Withdraw"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={styles.modalSave}
+            onClick={() => answer(true)}
+            disabled={busy}
+          >
+            {busy ? "Sending..." : "Yes, share it"}
+          </button>
+        )}
       </div>
     </ModalShell>
   );
@@ -1316,16 +1557,26 @@ function DeleteModal({
       onCancel={onCancel}
     >
       <p className={styles.confirmBody}>
-        <strong>{title}</strong> will be deleted for good, along with any pictures or audio
-        that belong to it. Anything you have already shared with a colleague stays in their
-        library.
+        <strong>{title}</strong> will be deleted for good, along with any
+        pictures or audio that belong to it. Anything you have already shared
+        with a colleague stays in their library.
       </p>
 
       <div className={styles.modalFoot}>
-        <button type="button" className={styles.modalCancel} onClick={onCancel} disabled={busy}>
+        <button
+          type="button"
+          className={styles.modalCancel}
+          onClick={onCancel}
+          disabled={busy}
+        >
           Cancel
         </button>
-        <button type="button" className={styles.modalDanger} onClick={onConfirm} disabled={busy}>
+        <button
+          type="button"
+          className={styles.modalDanger}
+          onClick={onConfirm}
+          disabled={busy}
+        >
           {busy ? "Deleting..." : "Delete"}
         </button>
       </div>
@@ -1351,7 +1602,9 @@ function EmptyState({
           <MagnifyingGlass weight="fill" />
         </span>
         <p className={app.emptyTitle}>Nothing matches that search</p>
-        <p className={app.emptyBody}>Try a shorter word, or clear the search box.</p>
+        <p className={app.emptyBody}>
+          Try a shorter word, or clear the search box.
+        </p>
       </div>
     );
   }
@@ -1378,8 +1631,8 @@ function EmptyState({
         </span>
         <p className={app.emptyTitle}>Nothing added from colleagues yet</p>
         <p className={app.emptyBody}>
-          When a colleague shares something and you add it, it stays here as well as in
-          whichever folder you file it in.
+          When a colleague shares something and you add it, it stays here as
+          well as in whichever folder you file it in.
         </p>
       </div>
     );
@@ -1395,7 +1648,8 @@ function EmptyState({
         </span>
         <p className={app.emptyTitle}>Everything is filed</p>
         <p className={app.emptyBody}>
-          Every resource you have made is in a folder. Open All resources to see them.
+          Every resource you have made is in a folder. Open All resources to see
+          them.
         </p>
       </div>
     );

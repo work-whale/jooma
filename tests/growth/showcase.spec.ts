@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   admin,
+  anonClient,
   asTeacher,
   createAdmin,
   createTeacher,
@@ -108,8 +109,10 @@ test("nothing is public until an admin approves it", async ({ page }) => {
   const { data: item } = await admin.from("showcase_items").select("id, slug").eq("presentation_id", deckId).single();
   expect(item).toBeTruthy();
 
-  // Pending: anon cannot see it.
-  const anonList = await admin.rpc("public_showcase", { p_limit: 24 });
+  // Pending: anon cannot see it. Read as anon, which is how the landing page
+  // and /made read it.
+  const anonList = await anonClient().rpc("public_showcase", { p_limit: 24 });
+  expect(anonList.error).toBeNull();
   expect((anonList.data ?? []).some((r: { slug: string }) => r.slug === item!.slug)).toBe(false);
 
   // A teacher cannot approve their own.
@@ -124,12 +127,32 @@ test("nothing is public until an admin approves it", async ({ page }) => {
   await expect(row).toBeVisible(NAV);
   await row.getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText("On the homepage.")).toBeVisible(NAV);
+
+  // Approved, the console links to the page the public sees.
+  await page.goto("/admin/showcase?status=approved");
+  const live = page.locator("li", { hasText: title });
+  await expect(live.getByRole("link", { name: "Open the public page" })).toHaveAttribute(
+    "href",
+    `/made/${item!.slug}`,
+    NAV,
+  );
 });
 
 test("approved: on the landing page and its own public page, signed out", async ({ page }) => {
   test.skip(!migrated, "showcase migration not pushed yet");
   const { data: item } = await admin.from("showcase_items").select("slug, status").eq("presentation_id", deckId).single();
   expect(item?.status).toBe("approved");
+
+  // Regression: both functions answer anon, which is how the app reads them.
+  // The app used to call them with the service role, which in production held
+  // no execute grant, so the row never rendered and every public page was a 404.
+  const anon = anonClient();
+  const list = await anon.rpc("public_showcase", { p_limit: 24 });
+  expect(list.error).toBeNull();
+  expect((list.data ?? []).some((r: { slug: string }) => r.slug === item!.slug)).toBe(true);
+  const one = await anon.rpc("public_showcase_item", { p_slug: item!.slug });
+  expect(one.error).toBeNull();
+  expect(one.data).toHaveLength(1);
 
   await page.goto(`/made/${item!.slug}`);
   await expect(page.getByRole("heading", { name: title })).toBeVisible(NAV);
@@ -151,6 +174,6 @@ test("a teacher who withdraws drops off the page", async () => {
   expect(error).toBeNull();
   expect(status).toBe("withdrawn");
   const { data: item } = await admin.from("showcase_items").select("slug").eq("presentation_id", deckId).single();
-  const after = await admin.rpc("public_showcase_item", { p_slug: item!.slug });
+  const after = await anonClient().rpc("public_showcase_item", { p_slug: item!.slug });
   expect(after.data ?? []).toHaveLength(0);
 });

@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Pencil, X, ExternalLink, Link2 } from "lucide-react";
 import { parseYouTubeId } from "./youtube";
+import { useEditorGuest } from "./EditorGuest";
 
 export type VideoLength = "short" | "medium" | "long" | "any";
 
@@ -51,6 +52,8 @@ interface Props {
 }
 
 export default function VideoEditPanel({ open, onClose, context, defaults, onApplyVideoId, onApply }: Props) {
+  // A signed out visitor can paste a link, but searching is a model call.
+  const guest = useEditorGuest();
   // URL paste flow
   const [url, setUrl] = useState("");
   const [urlErr, setUrlErr] = useState<string | null>(null);
@@ -91,6 +94,10 @@ export default function VideoEditPanel({ open, onClose, context, defaults, onApp
 
   const handleSearch = async () => {
     const effectiveTopic = topic.trim() || context.deckTitle.trim() || "Lesson";
+    if (guest) {
+      guest.gate("generate");
+      return;
+    }
     setBusy(true);
     setErr(null);
     setCandidates(null);

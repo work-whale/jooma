@@ -7,6 +7,7 @@ import FramePicker from "./FramePicker";
 import { type FrameShape } from "./frames";
 import { isSvgDataUrl, extractSvgColors, swapSvgColor } from "./svg-recolor";
 import ColorPicker from "./ColorPicker";
+import { useEditorGuest } from "./EditorGuest";
 import type { TextObject, ShapeObject, ImageObject, SlideJSON, VideoObject, AudioObject } from "@/app/lib/presentations";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -506,6 +507,7 @@ const AI_QUICK_ACTIONS = [
 // Renders the popover with fixed positioning (no portal) so it escapes the
 // toolbar's overflow-x-auto — same approach as IconPopover.
 function AiTextEdit({ text, onApply }: { text: string; onApply: (next: string) => void }) {
+  const guest = useEditorGuest();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [instruction, setInstruction] = useState("");
@@ -543,6 +545,11 @@ function AiTextEdit({ text, onApply }: { text: string; onApply: (next: string) =
   const run = async (instr: string) => {
     const trimmed = instr.trim();
     if (!trimmed || busy || !text.trim()) return;
+    if (guest) {
+      setOpen(false);
+      guest.gate("generate");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -1044,6 +1051,8 @@ function SlideToolbar({
   onUpdateSlide: (patch: Partial<SlideJSON>) => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  // Uploading a picture is behind sign up for a guest on /create.
+  const guest = useEditorGuest();
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
@@ -1103,7 +1112,7 @@ function SlideToolbar({
       ) : (
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => (guest ? guest.gate("generate") : fileRef.current?.click())}
           className="h-8 px-3 flex items-center gap-1.5 text-xs font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 text-gray-700"
         >
           <ImagePlus className="w-3.5 h-3.5" />

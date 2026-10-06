@@ -153,7 +153,7 @@ export const PLANS: Record<PlanId, Plan> = {
     // STRIPE_PRICE_STANDARD_MONTHLY / STRIPE_PRICE_STANDARD_YEARLY (or the
     // plan_config.stripe_price_* columns).
     priceMonthly: 4.99,
-    priceYearlyPerMonth: 4.0,
+    priceYearlyPerMonth: 3.99,
     priceYearly: 47.99,
     audience: "teacher",
     description: "Every tool, 500 credits, watermarked exports",
@@ -184,7 +184,7 @@ export const PLANS: Record<PlanId, Plan> = {
     // £7.99/mo, £71.99/yr, matching the Stripe prices configured for
     // STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_YEARLY.
     priceMonthly: 7.99,
-    priceYearlyPerMonth: 6.0,
+    priceYearlyPerMonth: 5.99,
     priceYearly: 71.99,
     audience: "teacher",
     description: "Everything, fair use. For one teacher.",
@@ -221,7 +221,7 @@ export const PLANS: Record<PlanId, Plan> = {
     // silently charging the wrong thing. Yearly is £143.99, from
     // plan_config.stripe_price_yearly or STRIPE_PRICE_MAX_YEARLY.
     priceMonthly: 14.99,
-    priceYearlyPerMonth: 12.0,
+    priceYearlyPerMonth: 11.99,
     priceYearly: 143.99,
     audience: "teacher",
     description: "Adds leadership, inspection and CPD tools",

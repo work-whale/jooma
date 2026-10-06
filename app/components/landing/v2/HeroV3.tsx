@@ -2,7 +2,8 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import { V2_TOOLS, toolSolid } from "@/app/lib/tools";
 import { HERO_TOOLS, type HeroToolId } from "@/app/lib/landing/hero-ideas";
-import { formatVisitors, type TopCountry } from "@/app/lib/visitors";
+import { spreadByGroup } from "@/app/lib/landing/spread-by-group";
+import { formatVisitors } from "@/app/lib/visitors";
 import HeroTry from "./HeroTry";
 import MadeWithJooma, { type ShowcaseCard } from "./MadeWithJooma";
 import shared from "./landing.module.css";
@@ -25,14 +26,16 @@ function tiles(size: "tab" | "md" | "xs"): Record<HeroToolId, React.ReactNode> {
 export default function HeroV3({
   headline,
   visitors,
-  countries = [],
   showcase,
 }: {
   headline: string;
   visitors: number | null;
-  countries?: TopCountry[];
   showcase: ShowcaseCard[];
 }) {
+  // A fresh order on every render, with no two tiles of one colour side by
+  // side. A server component, so there is no client render to disagree with.
+  const marquee = spreadByGroup(V2_TOOLS, (t) => t.category);
+
   return (
     <section className={styles.hero} id="try">
       <div className={styles.band}>
@@ -48,22 +51,6 @@ export default function HeroV3({
                 <strong data-testid="hero-count">{formatVisitors(visitors)}</strong>&nbsp;teachers using
                 Jooma right now
               </span>
-
-              {/* Where they are, over the same all time window as the count,
-                  so the strip describes the number above it. */}
-              {countries.length > 0 && (
-                <ul className={styles.countries} data-testid="hero-countries" aria-label="Teachers by country">
-                  {countries.map((c) => (
-                    <li key={c.country} className={styles.country}>
-                      <span className={styles.countryBar} aria-hidden="true">
-                        <span style={{ width: `${c.share}%` }} />
-                      </span>
-                      <strong>{formatVisitors(c.visitors)}</strong>
-                      <span>{c.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
           )}
 
@@ -77,7 +64,7 @@ export default function HeroV3({
                     assistive tech: one list of the tools is enough. */}
                 {[0, 1].map((pass) => (
                   <span key={pass} className={styles.marqSet} aria-hidden={pass === 1 ? true : undefined}>
-                    {V2_TOOLS.map((t) => (
+                    {marquee.map((t) => (
                       <span key={`${pass}-${t.href}`} className={styles.tp} title={t.description}>
                         <ToolTile icon={t.icon} solid={toolSolid(t)} size="xs" />
                         {t.name}

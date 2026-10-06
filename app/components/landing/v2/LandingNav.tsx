@@ -35,6 +35,7 @@ export default function LandingNav({
   avatarUrl,
   isAdmin,
   visitors = null,
+  linkBase = "",
 }: {
   email: string | null;
   name: string | null;
@@ -42,6 +43,9 @@ export default function LandingNav({
   avatarUrl: string | null;
   isAdmin: boolean;
   visitors?: number | null;
+  /** "/" on any page but the landing page, so the section links go back to it
+   *  rather than looking for sections that are not there. */
+  linkBase?: string;
 }) {
   // Drops a hairline under the bar once the page has moved, so the header
   // separates from the content without being a permanent line at rest.
@@ -63,7 +67,7 @@ export default function LandingNav({
 
         <nav className={styles.links}>
           {LINKS.map((link) => (
-            <a key={link.href} className={styles.link} href={link.href}>
+            <a key={link.href} className={styles.link} href={`${linkBase}${link.href}`}>
               {link.label}
             </a>
           ))}

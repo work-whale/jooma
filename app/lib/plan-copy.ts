@@ -159,13 +159,17 @@ export function planWasPrice(plan: PlanId): string | null {
   return full === null ? null : gbp(full);
 }
 
-/** What the yearly price works out at each month, e.g. "£4.00" for Standard. */
+/** What the yearly price works out at each month, e.g. "£3.99" for Standard.
+ *  Rounded down to the penny, so £47.99 a year reads as £3.99 rather than
+ *  £4.00, matching the .99 of every other price on the page. */
 export function planYearlyPerMonth(plan: PlanId): string | null {
   const yearly = PLANS[plan].priceYearly;
-  return yearly ? gbp(pence(yearly / 12)) : null;
+  // The epsilon keeps an exact penny figure (e.g. £48.00 / 12) from flooring a
+  // penny low on floating point noise.
+  return yearly ? gbp(Math.floor((yearly * 100) / 12 + 1e-9) / 100) : null;
 }
 
-/** The line under a yearly price: "Just £4.00 a month, billed yearly". */
+/** The line under a yearly price: "Just £3.99 a month, billed yearly". */
 export function planYearlyNote(plan: PlanId): string | null {
   const perMonth = planYearlyPerMonth(plan);
   return perMonth ? `Just ${perMonth} a month, billed yearly` : null;
@@ -200,24 +204,34 @@ export function maxYearlySavingPercent(plans: readonly PlanId[]): number {
   return Math.max(0, ...plans.map((id) => yearlySavingPercent(id) ?? 0));
 }
 
+/** The line under a yearly card's monthly figure: "£47.99 billed yearly". */
+export function planYearlyBilledLine(plan: PlanId): string | null {
+  const yearly = PLANS[plan].priceYearly;
+  return yearly ? `${gbp(yearly)} billed yearly` : null;
+}
+
 /**
  * Everything a PlanCard needs to show a plan's price at an interval.
  *
  * Monthly carries no `was`, `saving` or `note`, so the card renders exactly as
- * it always has. Yearly adds all three. One helper so the landing page,
- * /welcome and the profile cannot each assemble a slightly different card.
+ * it always has. Yearly leads with what it works out at each month, the
+ * monthly plan's price struck through beside it, so the two intervals compare
+ * like for like; the yearly total sits underneath. One helper so the landing
+ * page, /welcome and the profile cannot each assemble a slightly different card.
  */
 export function planCardPricing(
   plan: PlanId,
   interval: BillingInterval,
 ): { price: string; per: string; was?: string; saving?: string; note?: string } {
-  const base = { price: planCardPrice(plan, interval), per: planCardPer(plan, interval) };
-  if (interval !== "year" || !PLANS[plan].priceYearly) return base;
+  const monthly = { price: planCardPrice(plan), per: planCardPer(plan) };
+  const perMonth = interval === "year" ? planYearlyPerMonth(plan) : null;
+  if (!perMonth) return { price: planCardPrice(plan, interval), per: planCardPer(plan, interval) };
   return {
-    ...base,
-    was: planWasPrice(plan) ?? undefined,
+    price: perMonth,
+    per: monthly.per,
+    was: monthly.price,
     saving: planYearlySaving(plan) ?? undefined,
-    note: planYearlyNote(plan) ?? undefined,
+    note: planYearlyBilledLine(plan) ?? undefined,
   };
 }
 

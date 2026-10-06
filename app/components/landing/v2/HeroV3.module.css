@@ -386,63 +386,6 @@
   }
 }
 
-/* ── Where those teachers are ── */
-.countries {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px 22px;
-  max-width: 100%;
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.country {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 76px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #d8ccfa;
-}
-
-.country strong {
-  margin-top: 6px;
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-
-.countryBar {
-  display: block;
-  width: 100%;
-  height: 4px;
-  border-radius: 999px;
-  background: rgba(205, 188, 247, 0.25);
-  overflow: hidden;
-}
-
-.countryBar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #cdbcf7;
-}
-
-@media (max-width: 560px) {
-  .countries {
-    gap: 12px 16px;
-  }
-
-  .country {
-    min-width: 64px;
-  }
-}
-
 /* ── Every tool, as texture ── */
 .strip {
   margin-top: 46px;

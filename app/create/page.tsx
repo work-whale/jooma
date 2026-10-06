@@ -57,6 +57,11 @@ export default async function CreatePage({
     <div className="jooma-v2">
       <SquircleDefs />
       <CreateView
+        // A fresh view per tool and per reopened run. Choosing one of "Your
+        // creations" is a client navigation to this same page, which would
+        // otherwise keep the view already on screen, whose open deck is set
+        // only when it first mounts: the URL changed and nothing opened.
+        key={`${slug}:${restored?.id ?? ""}`}
         tool={slug}
         topic={restored ? "" : cleanTopic}
         recent={recent}

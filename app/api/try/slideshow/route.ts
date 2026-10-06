@@ -65,11 +65,11 @@ export async function POST(req: NextRequest) {
   if (!guestId) return refuse(403, "Free tries are not available right now.", "disabled");
   const ipHash = hashIp(clientIp(req), secret);
 
-  const decision = await checkTrial(guestId, ipHash, "slideshow");
+  const decision = await checkTrial(guestId, ipHash);
   if (!decision.ok) {
     return refuse(
       decision.reason === "disabled" ? 403 : 429,
-      trialRefusalMessage(decision.reason, "Slides"),
+      trialRefusalMessage(decision.reason),
       decision.reason,
     );
   }

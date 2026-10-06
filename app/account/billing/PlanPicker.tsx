@@ -182,6 +182,7 @@ export default function PlanPicker({
         label: pending === id ? "Starting checkout…" : trialEligible ? TRIAL_CTA : planCardCta(id),
         onClick: () => subscribe(id),
         disabled: pending !== null,
+        tone: trialEligible ? "trial" : undefined,
       };
     }
 

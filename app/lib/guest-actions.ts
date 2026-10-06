@@ -19,6 +19,9 @@ export type GuestAction =
   | "copy"
   | "print"
   | "focus"
+  /** A locked tool inside the guest editor: a model call (pictures, audio,
+   *  activities, rewriting text, finding a video) or our own storage. */
+  | "generate"
   | "more";
 
 /** The `?then=` values the app understands, each a `[data-then]` button. */
@@ -69,6 +72,8 @@ export function gateTitle(kind: GuestKind, action: GuestAction | null): string {
       return `Sign up for free to edit your ${what}`;
     case "share":
       return `Sign up for free to share your ${what}`;
+    case "generate":
+      return "Sign up for free to unlock every editor tool";
     case "more":
       return "Sign up for free to keep making";
     default:

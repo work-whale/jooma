@@ -57,10 +57,10 @@ export async function POST(req: Request) {
   }
   const ipHash = hashIp(clientIp(req), secret);
 
-  const decision = await checkTrial(guestId, ipHash, "comprehension-generator");
+  const decision = await checkTrial(guestId, ipHash);
   if (!decision.ok) {
     return NextResponse.json(
-      { error: trialRefusalMessage(decision.reason, "Comprehension"), reason: decision.reason },
+      { error: trialRefusalMessage(decision.reason), reason: decision.reason },
       { status: decision.reason === "disabled" ? 403 : 429 },
     );
   }
