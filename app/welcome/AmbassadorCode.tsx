@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import PlanCard, { PlanCardGrid } from "@/app/components/plans/PlanCard";
+import BillingToggle from "@/app/components/plans/BillingToggle";
 import {
+  maxYearlySavingPercent,
   planCardName,
-  planCardPer,
-  planCardPrice,
+  planCardPricing,
   planFeatures,
   planTrialLine,
   TRIAL_CTA,
 } from "@/app/lib/plan-copy";
-import { TRIAL_DAYS } from "@/app/lib/plans";
+import { DEFAULT_INTERVAL, TRIAL_DAYS, type BillingInterval } from "@/app/lib/plans";
 import styles from "./ambassador.module.css";
 
 /*
@@ -97,6 +98,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
   const [checked, setChecked] = useState<Checked>({ state: "idle" });
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [interval, setBillingInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
 
   const check = async (value: string) => {
     const trimmed = value.trim();
@@ -171,7 +173,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, from: "welcome" }),
+        body: JSON.stringify({ plan, interval, from: "welcome" }),
       });
       const json = await res.json();
       if (json.url) {
@@ -226,14 +228,26 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
       )}
       {checked.state === "bad" && <p className={styles.bad}>{checked.message}</p>}
 
+      <BillingToggle
+        value={interval}
+        onChange={setBillingInterval}
+        savePercent={maxYearlySavingPercent(OFFERED)}
+      />
+
+      {/* A code is a first-month discount, so checkout applies it to monthly
+          plans only (see app/api/stripe/checkout). Said here, before they pay,
+          rather than discovered at Stripe. */}
+      {checked.state === "good" && checked.offer && interval === "year" && (
+        <p className={styles.good}>Your code applies to monthly plans.</p>
+      )}
+
       <PlanCardGrid columns={OFFERED.length} className={styles.plans}>
         {OFFERED.map((id) => (
           <PlanCard
             key={id}
             compact
             name={planCardName(id)}
-            price={planCardPrice(id)}
-            per={planCardPer(id)}
+            {...planCardPricing(id, interval)}
             features={planFeatures(id)}
             featured={id === FEATURED}
             badge={id === FEATURED ? "Most popular" : undefined}
@@ -243,7 +257,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
               onClick: () => choose(id),
               disabled: busy !== null,
             }}
-            footer={planTrialLine(id)}
+            footer={planTrialLine(id, interval)}
           />
         ))}
       </PlanCardGrid>

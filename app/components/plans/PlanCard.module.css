@@ -103,6 +103,7 @@
 
 .badgeRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-bottom: 14px;
@@ -144,6 +145,60 @@
   color: var(--j-ink);
   letter-spacing: -0.045em;
   line-height: 1;
+}
+
+/* The pre-discount price on a yearly card, struck through and sitting on the
+   price's baseline at a fraction of its size, so the real price stays the
+   thing the eye lands on. */
+.was {
+  font-size: 0.5em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--j-faint);
+  text-decoration-thickness: 2px;
+  vertical-align: baseline;
+  margin-right: 2px;
+}
+
+.featured .was {
+  color: var(--j-lilac);
+}
+
+/* "Save 20%", beside the badge. Green reads as money kept rather than as
+   another brand label, on both the white and the purple card. */
+.saving {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #ddf0e2;
+  color: #1f6b3b;
+  padding: 5px 11px;
+  border-radius: var(--j-pill);
+}
+
+/* What the yearly price works out at each month. */
+.note {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--j-purple);
+  margin-top: 2px;
+}
+
+.featured .note {
+  color: #fff;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Reserved height so the cards' feature lists start on the same line whether or
@@ -270,4 +325,75 @@
 
 .featured .foot {
   color: var(--j-lilac);
+}
+
+/* ── The Monthly / Yearly toggle ──────────────────────────────────────────────
+   Two real radio inputs, visually hidden, with their labels drawn as a pill
+   segmented control. Real radios give arrow-key movement and the right
+   announcement for free. */
+
+.toggle {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 22px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.toggleTrack {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--j-pill);
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  max-width: 100%;
+}
+
+.toggleInput {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.toggleOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: var(--j-pill);
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--j-body);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+
+.toggleInput:checked + .toggleOption {
+  background: var(--j-purple);
+  color: #fff;
+}
+
+.toggleInput:focus-visible + .toggleOption {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+.toggleSave {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #ddf0e2;
+  color: #1f6b3b;
+  padding: 3px 8px;
+  border-radius: var(--j-pill);
 }

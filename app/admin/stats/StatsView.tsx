@@ -7,6 +7,7 @@ import {
   CHANNEL_LABEL,
   labelForSource,
 } from "@/app/lib/attribution";
+import { countryName } from "@/app/lib/visitors";
 import { nf } from "../format";
 import {
   Btn,
@@ -33,6 +34,7 @@ import {
   type ChartMonth,
 } from "./Charts";
 import { conversionOf, deltaOf, toCsv, type Delta, type MonthRow } from "./export";
+import { summariseGuestTries, type GuestTryRow } from "./guestTries";
 import { RANGE_PHRASE, type Range } from "./range";
 
 export type { MonthRow };
@@ -71,31 +73,6 @@ const LILAC = "#CDBCF7";
  *  render NaN% on an empty month. */
 function share(part: number, total: number): number {
   return total > 0 ? (part / total) * 100 : 0;
-}
-
-/** Built in, so a two letter code becomes a country without a lookup table to
- *  maintain. Constructed once rather than per row. */
-const COUNTRY_NAMES =
-  typeof Intl !== "undefined" && "DisplayNames" in Intl
-    ? new Intl.DisplayNames(["en-GB"], { type: "region" })
-    : null;
-
-/**
- * "GB" as "United Kingdom".
- *
- * Anything that is not a resolvable region code passes through unchanged, which
- * covers the two values this data actually carries besides real codes: the
- * literal "Not given" from a teacher who never set one, and a stray code Intl
- * does not know. `of()` throws on a malformed input rather than returning
- * undefined, hence the try.
- */
-function countryName(code: string): string {
-  if (!COUNTRY_NAMES || code.length !== 2) return code;
-  try {
-    return COUNTRY_NAMES.of(code.toUpperCase()) ?? code;
-  } catch {
-    return code;
-  }
 }
 
 /** The movement pill under a KPI figure. Green for a rise, amber for a fall,
@@ -162,6 +139,8 @@ export default function StatsView({
   months,
   countries,
   sources,
+  guestTries,
+  guestTriesError,
   visitorsToday,
   visitorCountries,
   analyticsError,
@@ -170,6 +149,8 @@ export default function StatsView({
   months: MonthRow[];
   countries: CountryRow[];
   sources: SourceRow[];
+  guestTries: GuestTryRow[];
+  guestTriesError: string | null;
   visitorsToday: number | null;
   visitorCountries: CountryVisitors[];
   analyticsError: string | null;
@@ -229,6 +210,8 @@ export default function StatsView({
       })),
     [months],
   );
+
+  const tries = useMemo(() => summariseGuestTries(guestTries), [guestTries]);
 
   const visitorTotal = Math.max(
     1,
@@ -480,6 +463,102 @@ export default function StatsView({
               Each point is that month&apos;s cohort measured <b>today</b>, not within a
               fixed window, so recent months look weaker simply because their teachers have
               had less time to upgrade.
+            </span>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* ── Free tries from the hero ──────────────────────────────────────────
+          Signed out visitors making one Slides deck or Comprehension a day from
+          the landing page. A generation of its own, never a signup, so it sits
+          apart from the signup figures above. */}
+      <div className="mt-6" data-testid="guest-tries">
+        <Card>
+          <CardHeader>
+            <CardTitle>Free tries from the hero</CardTitle>
+            <span className="text-xs" style={{ color: C.muted }}>
+              {RANGE_PHRASE[range]}
+            </span>
+          </CardHeader>
+          <CardBody>
+            {guestTriesError ? (
+              <Note tone="warn">
+                {guestTriesError} The admin_guest_try_stats migration may not be pushed to this
+                database yet. Everything else on this page is unaffected.
+              </Note>
+            ) : (
+              <>
+                <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+                  <Kpi
+                    label="All free tries"
+                    value={nf.format(tries.total.tries)}
+                    foot={`${nf.format(tries.total.claimed)} signed up after (${tries.total.signupRate.toFixed(1)}%)`}
+                  />
+                  {tries.tools.map((t) =>
+                    t.soon && t.tries === 0 ? (
+                      <Kpi key={t.tool} label={t.label} value="Coming soon" foot="Not on the hero yet" />
+                    ) : (
+                      <Kpi
+                        key={t.tool}
+                        label={t.label}
+                        value={nf.format(t.tries)}
+                        foot={`${nf.format(t.claimed)} signed up after (${t.signupRate.toFixed(1)}%)`}
+                      />
+                    ),
+                  )}
+                </div>
+
+                {tries.total.tries === 0 ? (
+                  <div className="mt-4">
+                    <EmptyState title="No free tries in this range" />
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <Table>
+                      <thead>
+                        <tr className="text-left">
+                          <Th>Month</Th>
+                          {tries.tools.map((t) => (
+                            <Th key={t.tool} align="right">
+                              {t.label}
+                            </Th>
+                          ))}
+                          <Th align="right">Failed</Th>
+                          <Th align="right">Signed up after</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tries.months.map((m) => (
+                          <Tr key={m.month_start}>
+                            <Td>
+                              <span style={{ color: C.ink2 }}>{m.label}</span>
+                            </Td>
+                            {tries.tools.map((t) => (
+                              <Td key={t.tool} align="right" mono>
+                                {nf.format(m.byTool[t.tool] ?? 0)}
+                              </Td>
+                            ))}
+                            <Td align="right" mono>
+                              <span style={{ color: C.muted }}>{nf.format(m.failed)}</span>
+                            </Td>
+                            <Td align="right" mono>
+                              {nf.format(m.claimed)}
+                            </Td>
+                          </Tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+              </>
+            )}
+          </CardBody>
+          <CardFooter>
+            <span>
+              Each visitor gets one free try per tool a day, counted by browser and by network.
+              Tries include failed runs, which do not use up the visitor&apos;s free try.{" "}
+              <b>Signed up after</b> means the visitor made an account or logged in and the work
+              moved into it, on any day. The rate is out of the tries that produced something.
             </span>
           </CardFooter>
         </Card>

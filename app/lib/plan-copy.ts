@@ -12,7 +12,14 @@
 // involved, so a card can never quote an allowance the guard will not honour.
 // See the note above PENCE_PER_CREDIT in plans.ts.
 
-import { PLANS, TRIAL_DAYS, planCredits, type PlanId, type PlanLimits } from "./plans";
+import {
+  PLANS,
+  TRIAL_DAYS,
+  planCredits,
+  type BillingInterval,
+  type PlanId,
+  type PlanLimits,
+} from "./plans";
 
 /** The short name on a card. PLANS holds "Pro Teacher" / "Standard Teacher",
  *  which is right for an admin console and too long for a pricing card. "free"
@@ -74,7 +81,9 @@ export function planCardName(plan: PlanId): string {
   return CARD_NAME[plan];
 }
 
-export function planCardPer(plan: PlanId): string {
+/** "a month", or "a year" for a plan that can be bought yearly. */
+export function planCardPer(plan: PlanId, interval: BillingInterval = "month"): string {
+  if (interval === "year" && PLANS[plan].priceYearly) return "a year";
   return CARD_PER[plan];
 }
 
@@ -91,10 +100,15 @@ export const TRIAL_CTA = "Start free trial";
  * £4.99 a month". Derived from PLANS and TRIAL_DAYS so it can never quote a
  * price Checkout will not charge. Null for a plan with no self-serve price.
  */
-export function planTrialLine(plan: PlanId): string | null {
+export function planTrialLine(
+  plan: PlanId,
+  interval: BillingInterval = "month",
+): string | null {
+  const yearly = interval === "year" ? PLANS[plan].priceYearly : null;
+  if (yearly) return `${TRIAL_DAYS} days free, then ${gbp(yearly)} a year`;
   const price = PLANS[plan].priceMonthly;
   if (!price) return null;
-  return `${TRIAL_DAYS} days free, then £${price.toFixed(2)} a month`;
+  return `${TRIAL_DAYS} days free, then ${gbp(price)} a month`;
 }
 
 /**
@@ -104,11 +118,107 @@ export function planTrialLine(plan: PlanId): string | null {
  * enquiry rather than a number — quoting a per teacher figure would be selling
  * something that cannot yet be bought.
  */
-export function planCardPrice(plan: PlanId): string {
+export function planCardPrice(plan: PlanId, interval: BillingInterval = "month"): string {
+  const yearly = interval === "year" ? PLANS[plan].priceYearly : null;
+  if (yearly) return gbp(yearly);
   const price = PLANS[plan].priceMonthly;
   if (price === null) return "Talk to us";
   if (price === 0) return "£0";
-  return `£${price.toFixed(2)}`;
+  return gbp(price);
+}
+
+// ── Yearly: the struck price, the monthly equivalent, the saving ─────────────
+//
+// A yearly card shows three things beside the price: what twelve monthly
+// payments would have cost, struck through; what the yearly price works out at
+// each month; and the saving as a percentage. All three are DERIVED from
+// priceMonthly and priceYearly, so changing either figure in PLANS moves every
+// one of them, and none can claim a saving Stripe does not give.
+
+/** Pounds, always to the penny: "£4.00", never "£4". */
+function gbp(amount: number): string {
+  return `£${amount.toFixed(2)}`;
+}
+
+/** Round to the penny. 4.99 * 12 is 59.879999… in binary floating point. */
+function pence(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
+/** Twelve monthly payments, the figure the yearly price is compared against.
+ *  Null for a plan with no yearly price. */
+function twelveMonths(plan: PlanId): number | null {
+  const { priceMonthly, priceYearly } = PLANS[plan];
+  if (!priceMonthly || !priceYearly) return null;
+  return pence(priceMonthly * 12);
+}
+
+/** The struck-through price on a yearly card, e.g. "£59.88" for Standard. */
+export function planWasPrice(plan: PlanId): string | null {
+  const full = twelveMonths(plan);
+  return full === null ? null : gbp(full);
+}
+
+/** What the yearly price works out at each month, e.g. "£4.00" for Standard. */
+export function planYearlyPerMonth(plan: PlanId): string | null {
+  const yearly = PLANS[plan].priceYearly;
+  return yearly ? gbp(pence(yearly / 12)) : null;
+}
+
+/** The line under a yearly price: "Just £4.00 a month, billed yearly". */
+export function planYearlyNote(plan: PlanId): string | null {
+  const perMonth = planYearlyPerMonth(plan);
+  return perMonth ? `Just ${perMonth} a month, billed yearly` : null;
+}
+
+/** The saving against paying monthly, as a whole percentage: Standard 20. */
+export function yearlySavingPercent(plan: PlanId): number | null {
+  const full = twelveMonths(plan);
+  const yearly = PLANS[plan].priceYearly;
+  if (full === null || !yearly) return null;
+  return Math.round((1 - yearly / full) * 100);
+}
+
+/** What a year costs less than twelve monthly payments: "£23.89" for Pro. For
+ *  the "Switch to yearly and save" button, where pounds land harder than a
+ *  percentage. */
+export function planYearlySavingAmount(plan: PlanId): string | null {
+  const full = twelveMonths(plan);
+  const yearly = PLANS[plan].priceYearly;
+  if (full === null || !yearly) return null;
+  return gbp(pence(full - yearly));
+}
+
+/** The pill beside a yearly price: "Save 20%". */
+export function planYearlySaving(plan: PlanId): string | null {
+  const percent = yearlySavingPercent(plan);
+  return percent ? `Save ${percent}%` : null;
+}
+
+/** The best saving among the given plans, for the toggle: "Save up to 25%". */
+export function maxYearlySavingPercent(plans: readonly PlanId[]): number {
+  return Math.max(0, ...plans.map((id) => yearlySavingPercent(id) ?? 0));
+}
+
+/**
+ * Everything a PlanCard needs to show a plan's price at an interval.
+ *
+ * Monthly carries no `was`, `saving` or `note`, so the card renders exactly as
+ * it always has. Yearly adds all three. One helper so the landing page,
+ * /welcome and the profile cannot each assemble a slightly different card.
+ */
+export function planCardPricing(
+  plan: PlanId,
+  interval: BillingInterval,
+): { price: string; per: string; was?: string; saving?: string; note?: string } {
+  const base = { price: planCardPrice(plan, interval), per: planCardPer(plan, interval) };
+  if (interval !== "year" || !PLANS[plan].priceYearly) return base;
+  return {
+    ...base,
+    was: planWasPrice(plan) ?? undefined,
+    saving: planYearlySaving(plan) ?? undefined,
+    note: planYearlyNote(plan) ?? undefined,
+  };
 }
 
 /**

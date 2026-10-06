@@ -50,6 +50,10 @@ test.describe("Max plan", () => {
     await expect(page.getByText("Standard", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Pro", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Max", { exact: true }).first()).toBeVisible();
+
+    // The cards open on Yearly (see annual-plan.spec.ts). The figures below are
+    // the monthly ones.
+    await page.locator("label", { hasText: "Monthly" }).first().click();
     await expect(page.getByText("£4.99").first()).toBeVisible();
     await expect(page.getByText("£7.99").first()).toBeVisible();
     await expect(page.getByText("£14.99").first()).toBeVisible();

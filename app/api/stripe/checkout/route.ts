@@ -3,13 +3,14 @@ import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
 import { trialDaysFor } from "@/app/lib/trial";
+import { isBillingInterval } from "@/app/lib/plans";
 
 // Creates a Stripe Checkout Session for a paid plan and returns its URL. The
 // browser redirects to it; payment success is confirmed asynchronously by the
 // webhook, not here — never grant access from this route.
 //
-// There are three things to buy: Standard, Pro and Max, all monthly, and each
-// starts with a free trial for a teacher who has never subscribed (see
+// There are three things to buy: Standard, Pro and Max, each monthly or yearly,
+// and each starts with a free trial for a teacher who has never subscribed (see
 // lib/trial.ts). The requested plan is checked against that allowlist rather
 // than trusted, so a crafted body cannot name an arbitrary plan (or a price)
 // and cannot reach `school`, which has no working billing. An absent or
@@ -30,6 +31,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const requested = (body as { plan?: unknown } | null)?.plan;
   const plan = isPaidPlanId(requested) ? requested : "pro";
+  // Monthly unless yearly is asked for by name. Allowlisted like the plan, and
+  // defaulting to monthly keeps every caller that predates yearly billing
+  // charging exactly what it did.
+  const requestedInterval = (body as { interval?: unknown } | null)?.interval;
+  const interval = isBillingInterval(requestedInterval) ? requestedInterval : "month";
   // Where the teacher started from. Only "welcome" is recognised: onboarding
   // sends them on into the product afterwards, and back to the plan choice if
   // they leave Stripe. Anything else keeps the billing page round trip.
@@ -63,15 +69,23 @@ export async function POST(req: NextRequest) {
     .is("first_paid_at", null)
     .maybeSingle();
 
+  // MONTHLY ONLY. Ambassador coupons are duration "once", which discounts the
+  // first INVOICE. On a monthly plan that is the first month, as advertised; on
+  // a yearly plan it would be the whole first year, many times the offer. So a
+  // yearly checkout applies no code automatically and keeps the ordinary code
+  // box instead. The referral itself is untouched: the ambassador is still owed
+  // when the first yearly invoice is paid (markReferralPaid in the webhook).
   const promotionCodeId =
-    (referral?.ambassador_codes as unknown as { promotion_code_id?: string } | null)
-      ?.promotion_code_id ?? null;
+    interval === "month"
+      ? ((referral?.ambassador_codes as unknown as { promotion_code_id?: string } | null)
+          ?.promotion_code_id ?? null)
+      : null;
 
   try {
     // Resolved from plan_config (falling back to the env var), so a price
     // changed in the admin console takes effect on the next checkout without a
     // redeploy.
-    const priceId = await priceIdFor(plan);
+    const priceId = await priceIdFor(plan, interval);
 
     // The free trial, for a first subscription only. The card is still taken
     // now (payment_method_collection "always"), and if it is somehow missing
@@ -99,6 +113,7 @@ export async function POST(req: NextRequest) {
         ...trial,
         metadata: {
           userId: user.id,
+          billingInterval: interval,
           // Carried onto the subscription so attribution survives even if the
           // referral row is ever lost, and so it is visible in the Stripe
           // dashboard beside the charge it discounted.

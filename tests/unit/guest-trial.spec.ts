@@ -10,7 +10,7 @@ import {
   trialRefusalMessage,
 } from "@/app/lib/trial-limits";
 import { safeNextPath } from "@/app/lib/safe-next";
-import { sumVisitors, formatVisitors } from "@/app/lib/visitors";
+import { sumVisitors, formatVisitors, topCountries, countryName } from "@/app/lib/visitors";
 import { guestSlugFor, appToolPath } from "@/app/lib/guest-tools";
 
 /*
@@ -151,6 +151,44 @@ test.describe("the landing count", () => {
 
   test("printed the way the prototype prints it", () => {
     expect(formatVisitors(43271)).toBe("43,271");
+  });
+});
+
+test.describe("the countries under the landing count", () => {
+  test("biggest first, capped, with bars relative to the largest", () => {
+    const rows = topCountries(
+      [
+        { country: "IE", visitors: 250 },
+        { country: "GB", visitors: 1000 },
+        { country: "US", visitors: 500 },
+        { country: "AU", visitors: 100 },
+      ],
+      3,
+    );
+    expect(rows.map((r) => r.country)).toEqual(["GB", "US", "IE"]);
+    expect(rows.map((r) => r.share)).toEqual([100, 50, 25]);
+    expect(rows[0].name).toBe("United Kingdom");
+  });
+
+  test("drops rows with nothing to show", () => {
+    const rows = topCountries([
+      { country: "GB", visitors: 10 },
+      { country: "FR", visitors: 0 },
+      { country: "", visitors: 40 },
+      { country: null, visitors: 40 },
+      { country: "DE", visitors: Number.NaN },
+    ]);
+    expect(rows.map((r) => r.country)).toEqual(["GB"]);
+  });
+
+  test("an empty list when Vercel gave nothing", () => {
+    expect(topCountries(null)).toEqual([]);
+    expect(topCountries([])).toEqual([]);
+  });
+
+  test("country names, with anything unknown passed through", () => {
+    expect(countryName("gb")).toBe("United Kingdom");
+    expect(countryName("Not given")).toBe("Not given");
   });
 });
 

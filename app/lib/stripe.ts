@@ -16,7 +16,7 @@
 // environment.
 import "server-only";
 import Stripe from "stripe";
-import type { PlanId } from "./plans";
+import type { BillingInterval, PlanId } from "./plans";
 import { supabaseAdmin } from "./supabase-admin";
 import { isTrialCheckout } from "./trial";
 
@@ -42,24 +42,43 @@ export function isPaidPlanId(value: unknown): value is PaidPlanId {
   return typeof value === "string" && (PAID_PLAN_IDS as string[]).includes(value);
 }
 
-/**
- * Resolve the configured Stripe Price ID for a paid plan. Billing is monthly
- * only — there is no annual price.
- *
- * Reads plan_config first, falls back to the env var. A DB error is treated the
- * same as "not configured" and falls through to the env var rather than failing
- * checkout: a database blip should not stop someone paying us.
- */
-export async function priceIdFor(plan: PaidPlanId): Promise<string> {
-  const envPriceId = {
+/** The env-var price for a plan at an interval. The recovery path behind
+ *  plan_config, and all local dev needs. */
+function envPriceIdFor(plan: PaidPlanId, interval: BillingInterval): string | undefined {
+  if (interval === "year") {
+    return {
+      standard: process.env.STRIPE_PRICE_STANDARD_YEARLY,
+      pro: process.env.STRIPE_PRICE_PRO_YEARLY,
+      max: process.env.STRIPE_PRICE_MAX_YEARLY,
+    }[plan];
+  }
+  return {
     standard: process.env.STRIPE_PRICE_STANDARD_MONTHLY,
     pro: process.env.STRIPE_PRICE_PRO_MONTHLY,
     max: process.env.STRIPE_PRICE_MAX_MONTHLY,
   }[plan];
+}
+
+/**
+ * Resolve the configured Stripe Price ID for a paid plan, monthly or yearly.
+ *
+ * Reads plan_config first (stripe_price_monthly or stripe_price_yearly), falls
+ * back to the env var. A DB error is treated the same as "not configured" and
+ * falls through to the env var rather than failing checkout: a database blip
+ * should not stop someone paying us.
+ *
+ * `interval` defaults to monthly so every caller written before yearly billing
+ * existed keeps charging exactly what it did.
+ */
+export async function priceIdFor(
+  plan: PaidPlanId,
+  interval: BillingInterval = "month",
+): Promise<string> {
+  const column = interval === "year" ? "stripe_price_yearly" : "stripe_price_monthly";
 
   const { data, error } = await supabaseAdmin
     .from("plan_config")
-    .select("stripe_price_monthly")
+    .select("stripe_price_monthly, stripe_price_yearly")
     .eq("plan_id", plan)
     .maybeSingle();
 
@@ -67,11 +86,36 @@ export async function priceIdFor(plan: PaidPlanId): Promise<string> {
     console.error("[stripe] plan_config price lookup failed, using env", error);
   }
 
-  const priceId = data?.stripe_price_monthly || envPriceId;
+  const priceId = data?.[column] || envPriceIdFor(plan, interval);
   if (!priceId) {
-    throw new Error(`No Stripe price configured for plan=${plan}`);
+    throw new Error(`No Stripe price configured for plan=${plan} interval=${interval}`);
   }
   return priceId;
+}
+
+/**
+ * The interval a Stripe price bills at, as one of ours.
+ *
+ * Anything that is not yearly reads as monthly: those are the only two we sell,
+ * and monthly is what every subscription predating yearly billing is on.
+ */
+export function intervalOfPrice(
+  price: { recurring?: { interval?: string | null } | null } | null | undefined,
+): BillingInterval {
+  return price?.recurring?.interval === "year" ? "year" : "month";
+}
+
+/**
+ * The interval a live subscription bills at, read from Stripe.
+ *
+ * Nothing on `profiles` records it, and nothing needs to: it is a fact about the
+ * Stripe price, which is the authority. Any failure reads as monthly, which
+ * only costs the wording of one sentence, never a charge.
+ */
+export async function subscriptionInterval(
+  subscriptionId: string | null | undefined,
+): Promise<BillingInterval> {
+  return (await subscriptionBilling(subscriptionId)).interval;
 }
 
 /** A resolved top-up: the Stripe price to charge, and the pack it came from.
@@ -161,10 +205,15 @@ export async function planForPriceId(
 ): Promise<PlanId | null> {
   if (!priceId) return null;
 
-  // Cheap path: the prices currently configured in the environment.
+  // Cheap path: the prices currently configured in the environment, monthly
+  // and yearly. A yearly subscriber missing from this list would be read as "no
+  // subscription" and dropped to "No plan" by the webhook.
   if (priceId === process.env.STRIPE_PRICE_STANDARD_MONTHLY) return "standard";
   if (priceId === process.env.STRIPE_PRICE_PRO_MONTHLY) return "pro";
   if (priceId === process.env.STRIPE_PRICE_MAX_MONTHLY) return "max";
+  if (priceId === process.env.STRIPE_PRICE_STANDARD_YEARLY) return "standard";
+  if (priceId === process.env.STRIPE_PRICE_PRO_YEARLY) return "pro";
+  if (priceId === process.env.STRIPE_PRICE_MAX_YEARLY) return "max";
 
   const { data: historic, error: historyErr } = await supabaseAdmin
     .from("plan_price_history")
@@ -180,10 +229,16 @@ export async function planForPriceId(
   // A price set in plan_config but not yet recorded in history — possible if a
   // price were ever changed by hand in the database rather than through the
   // admin route, which writes both.
+  //
+  // Either column: a yearly price is as much the plan's as the monthly one.
+  // Price ids come from Stripe (`price_` plus alphanumerics), so interpolating
+  // one into the filter cannot break out of it; the guard makes that explicit.
+  if (!/^price_[A-Za-z0-9]+$/.test(priceId)) return null;
   const { data: current, error: currentErr } = await supabaseAdmin
     .from("plan_config")
     .select("plan_id")
-    .eq("stripe_price_monthly", priceId)
+    .or(`stripe_price_monthly.eq.${priceId},stripe_price_yearly.eq.${priceId}`)
+    .limit(1)
     .maybeSingle();
 
   if (currentErr) {
@@ -222,14 +277,25 @@ export async function trialStartedBy(
   }
 }
 
-/** A plan change that Stripe is holding until the period ends. */
+/** A plan or billing change that Stripe is holding until the period ends. */
 export interface PendingPlanChange {
-  /** The plan that starts at `at`. */
+  /** The plan that starts at `at`. The SAME plan as now when only the billing
+   *  interval is changing (yearly to monthly at renewal). */
   plan: PlanId;
+  /** The interval billing moves to at `at`. */
+  interval: BillingInterval;
   /** ISO timestamp the new plan takes effect — the current period's end. */
   at: string;
   /** The schedule to release if they change their mind. */
   scheduleId: string;
+}
+
+/** What the billing page needs to know about a live subscription. */
+export interface SubscriptionBilling {
+  /** The interval it bills at now. */
+  interval: BillingInterval;
+  /** A change waiting on a schedule, or null. */
+  pending: PendingPlanChange | null;
 }
 
 /**
@@ -250,38 +316,132 @@ export interface PendingPlanChange {
 export async function pendingPlanChange(
   subscriptionId: string | null | undefined,
 ): Promise<PendingPlanChange | null> {
-  if (!subscriptionId) return null;
+  return (await subscriptionBilling(subscriptionId)).pending;
+}
+
+/**
+ * The interval a subscription bills at and the change waiting on it, from ONE
+ * Stripe read. The billing page needs both on every render.
+ *
+ * Degrades to monthly with nothing pending on any failure, for the reasons
+ * given on pendingPlanChange.
+ */
+export async function subscriptionBilling(
+  subscriptionId: string | null | undefined,
+): Promise<SubscriptionBilling> {
+  const none: SubscriptionBilling = { interval: "month", pending: null };
+  if (!subscriptionId) return none;
+
+  let sub: Stripe.Subscription;
+  try {
+    sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["schedule"] });
+  } catch (err) {
+    console.error("[stripe] subscription billing lookup failed", err);
+    return none;
+  }
+
+  const interval = intervalOfPrice(sub.items.data[0]?.price);
 
   try {
-    const sub = await stripe.subscriptions.retrieve(subscriptionId, {
-      expand: ["schedule"],
-    });
-
-    const schedule = sub.schedule;
-    // Not expanded into an object, or no schedule attached at all.
-    if (!schedule || typeof schedule === "string") return null;
-    // A released or cancelled schedule is no longer going to do anything.
-    if (schedule.status !== "active" && schedule.status !== "not_started") return null;
-
-    // Phase 0 is the period they are in now; the change is phase 1.
-    const upcoming = schedule.phases?.[1];
-    if (!upcoming) return null;
-
-    const priceId =
-      typeof upcoming.items?.[0]?.price === "string"
-        ? upcoming.items[0].price
-        : upcoming.items?.[0]?.price?.id;
-
-    const plan = await planForPriceId(priceId);
-    if (!plan) return null;
-
-    return {
-      plan,
-      at: new Date(upcoming.start_date * 1000).toISOString(),
-      scheduleId: schedule.id,
-    };
+    return { interval, pending: await pendingFromSchedule(sub.schedule) };
   } catch (err) {
     console.error("[stripe] pendingPlanChange lookup failed", err);
-    return null;
+    return { interval, pending: null };
   }
+}
+
+/** Read the waiting change off an expanded schedule, or null. */
+async function pendingFromSchedule(
+  schedule: Stripe.Subscription["schedule"],
+): Promise<PendingPlanChange | null> {
+  // Not expanded into an object, or no schedule attached at all.
+  if (!schedule || typeof schedule === "string") return null;
+  // A released or cancelled schedule is no longer going to do anything.
+  if (schedule.status !== "active" && schedule.status !== "not_started") return null;
+
+  // Phase 0 is the period they are in now; the change is phase 1.
+  const upcoming = schedule.phases?.[1];
+  if (!upcoming) return null;
+
+  const price = upcoming.items?.[0]?.price;
+  const priceId = typeof price === "string" ? price : price?.id;
+  if (!priceId) return null;
+
+  const plan = await planForPriceId(priceId);
+  if (!plan) return null;
+
+  // A phase item's price arrives as a bare id. Its interval is what tells a
+  // yearly-to-monthly switch apart from a plan change, so fetch it.
+  const priceObject = typeof price === "string" ? await stripe.prices.retrieve(priceId) : price;
+
+  return {
+    plan,
+    interval: intervalOfPrice(priceObject as { recurring?: { interval?: string | null } | null }),
+    at: new Date(upcoming.start_date * 1000).toISOString(),
+    scheduleId: schedule.id,
+  };
+}
+
+/**
+ * Park a new price on a subscription schedule that starts at renewal.
+ *
+ * Shared by a downgrade and by a yearly-to-monthly switch, which are the same
+ * operation: keep everything they paid for until the period ends, then bill the
+ * new price. Any schedule already attached is released first, since Stripe
+ * allows only one per subscription.
+ *
+ * from_subscription adopts the live subscription rather than creating a second
+ * one. The schedule starts with a single phase mirroring the current period,
+ * which is exactly what we keep as phase one.
+ */
+export async function scheduleNextPhase(opts: {
+  subscriptionId: string;
+  existingScheduleId: string | null | undefined;
+  currentPriceId: string;
+  quantity: number;
+  nextPriceId: string;
+  userId: string;
+}): Promise<void> {
+  const { subscriptionId, existingScheduleId, currentPriceId, quantity, nextPriceId, userId } =
+    opts;
+
+  if (existingScheduleId) {
+    await stripe.subscriptionSchedules.release(existingScheduleId);
+  }
+
+  const schedule = await stripe.subscriptionSchedules.create({
+    from_subscription: subscriptionId,
+  });
+
+  const currentPhase = schedule.phases[0];
+  if (!currentPhase) {
+    throw new Error(`Schedule ${schedule.id} has no phases`);
+  }
+
+  await stripe.subscriptionSchedules.update(schedule.id, {
+    // end_behavior "release" hands control back to the plain subscription once
+    // the last phase starts, so the subscription carries on renewing at the
+    // new price instead of stopping. The default is "release" but it is worth
+    // being explicit: "cancel" here would silently end their subscription at
+    // the next renewal, which is emphatically not what they asked for.
+    end_behavior: "release",
+    phases: [
+      {
+        // Phase one: what they already paid for, untouched.
+        items: [{ price: currentPriceId, quantity }],
+        start_date: currentPhase.start_date,
+        end_date: currentPhase.end_date,
+      },
+      {
+        // Phase two: the new price, starting the moment phase one ends.
+        items: [{ price: nextPriceId, quantity }],
+        // No proration: nothing is being changed mid-period, so there is
+        // nothing to prorate. Stated rather than left to the default because
+        // a stray proration here would issue a credit note for a period the
+        // teacher fully used.
+        proration_behavior: "none",
+      },
+    ],
+    metadata: { userId },
+  });
 }

@@ -3,16 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import PlanCard, { PlanCardGrid, type PlanCardAction } from "@/app/components/plans/PlanCard";
+import BillingToggle from "@/app/components/plans/BillingToggle";
 import {
+  maxYearlySavingPercent,
   planCardCta,
   planCardName,
-  planCardPrice,
-  planCardPer,
+  planCardPricing,
   planFeatures,
   planTrialLine,
   TRIAL_CTA,
 } from "@/app/lib/plan-copy";
-import { PLANS, type PlanId } from "@/app/lib/plans";
+import { DEFAULT_INTERVAL, PLANS, type BillingInterval, type PlanId } from "@/app/lib/plans";
 import DowngradeButton from "./DowngradeButton";
 import UpgradeButton from "./UpgradeButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
@@ -59,6 +60,13 @@ export default function PlanPicker({
    *  renewing comes first, and swapping a plan that is about to stop would
    *  charge for something disappearing. */
   locked = false,
+  /** The interval their live subscription bills at, read from Stripe. Plan
+   *  changes keep it, so the cards quote that interval's prices. Ignored
+   *  without a subscription, where the toggle decides. */
+  subscriptionInterval = "month",
+  /** They have claimed an ambassador code that is still unused. It discounts
+   *  monthly checkouts only, which the picker says when Yearly is chosen. */
+  hasUnusedCode = false,
 }: {
   plans: PlanId[];
   current: PlanId;
@@ -67,8 +75,15 @@ export default function PlanPicker({
   pendingPlan?: PlanId | null;
   pendingAt?: string | null;
   locked?: boolean;
+  subscriptionInterval?: BillingInterval;
+  hasUnusedCode?: boolean;
 }) {
   const [pending, setPending] = useState<PlanId | null>(null);
+  /** The toggle's choice, for a teacher with nothing to change yet. */
+  const [chosenInterval, setChosenInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
+  // A subscriber's cards follow the subscription: switching between monthly
+  // and yearly is not offered, so there is no toggle to follow.
+  const interval = hasSubscription ? subscriptionInterval : chosenInterval;
   const [error, setError] = useState<string | null>(null);
   /** The plan whose confirmation panel is open, below the grid. */
   const [changing, setChanging] = useState<PlanId | null>(null);
@@ -84,7 +99,7 @@ export default function PlanPicker({
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, interval }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
@@ -162,6 +177,20 @@ export default function PlanPicker({
         {hasSubscription ? "Change your plan" : "Choose your plan"}
       </p>
 
+      {!hasSubscription && (
+        <BillingToggle
+          value={chosenInterval}
+          onChange={setChosenInterval}
+          savePercent={maxYearlySavingPercent(plans)}
+        />
+      )}
+
+      {!hasSubscription && hasUnusedCode && interval === "year" && (
+        <p className="text-sm mb-3 text-center" style={{ color: "var(--j-faint)" }}>
+          Your code applies to monthly plans.
+        </p>
+      )}
+
       <PlanCardGrid columns={plans.length}>
         {plans.map((id) => {
           const isCurrent = id === current;
@@ -176,15 +205,14 @@ export default function PlanPicker({
             ) : isCurrent && pendingPlan && pendingAt ? (
               <>Yours until {pendingAt}.</>
             ) : trialEligible && moveFor(id) === "buy" ? (
-              planTrialLine(id)
+              planTrialLine(id, interval)
             ) : null;
 
           return (
             <PlanCard
               key={id}
               name={planCardName(id)}
-              price={planCardPrice(id)}
-              per={planCardPer(id)}
+              {...planCardPricing(id, interval)}
               features={planFeatures(id)}
               featured={id === FEATURED}
               badge={id === FEATURED ? "Most popular" : undefined}
@@ -202,11 +230,16 @@ export default function PlanPicker({
       {changing && (
         <div className="mt-4">
           {moveFor(changing) === "up" ? (
-            <UpgradeButton to={changing} onClose={() => setChanging(null)} />
+            <UpgradeButton
+              to={changing}
+              interval={interval}
+              onClose={() => setChanging(null)}
+            />
           ) : (
             <DowngradeButton
               from={current}
               to={changing}
+              interval={interval}
               onClose={() => setChanging(null)}
             />
           )}

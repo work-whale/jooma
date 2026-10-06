@@ -15,7 +15,15 @@ import { PLANS, type PlanId } from "@/app/lib/plans";
  * than another button competing with the card's main action.
  */
 
-export default function CancelDowngradeButton({ keeping }: { keeping: PlanId }) {
+export default function CancelDowngradeButton({
+  keeping,
+  label,
+}: {
+  keeping: PlanId;
+  /** Overrides "Keep {plan}", e.g. "Keep yearly billing" when the waiting
+   *  change is a billing switch rather than a plan move. */
+  label?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +56,7 @@ export default function CancelDowngradeButton({ keeping }: { keeping: PlanId }) 
         className="font-semibold underline transition-opacity hover:opacity-70 disabled:opacity-60 cursor-pointer"
         style={{ color: "inherit", background: "none", border: 0, padding: 0, font: "inherit" }}
       >
-        {loading ? "Cancelling…" : `Keep ${PLANS[keeping].name}`}
+        {loading ? "Cancelling…" : (label ?? `Keep ${PLANS[keeping].name}`)}
       </button>
       {error && (
         <span className="block mt-1" style={{ color: "#c2342b" }}>
