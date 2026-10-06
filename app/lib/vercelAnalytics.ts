@@ -222,6 +222,28 @@ export async function visitorsAllTime(): Promise<number | null> {
   return sumVisitors(recent.data);
 }
 
+/**
+ * Top countries over the same all time window as visitorsAllTime(), for the
+ * strip under the landing count, so the breakdown describes the number above
+ * it. Same fallback to twelve months, and an empty list rather than an error
+ * when neither works: the page simply leaves the strip out.
+ */
+export async function visitorCountriesAllTime(limit = 5): Promise<CountryVisitors[]> {
+  const byCountry = (months: number) =>
+    call<CountryVisitors[]>("/aggregate", {
+      ...monthRange(months),
+      by: "country",
+      limit: String(limit),
+    });
+
+  const first = await byCountry(monthsSince(TRACKING_STARTED));
+  if (!first.error) return first.data ?? [];
+
+  const recent = await byCountry(12);
+  if (recent.error) console.warn("[analytics] landing country breakdown unavailable:", recent.error);
+  return recent.data ?? [];
+}
+
 /** The month the production project, and so its analytics, began. */
 const TRACKING_STARTED = { year: 2026, month: 8 };
 

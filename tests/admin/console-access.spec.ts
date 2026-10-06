@@ -165,7 +165,7 @@ test.describe("marketing", () => {
       "Total signups",
       "This month",
       "Paying teachers",
-      "Free to paid",
+      "Signup to paid",
       "Visitors",
     ]) {
       await expect(labels.filter({ hasText: new RegExp(`^${tile}$`) })).toBeVisible();
@@ -177,7 +177,7 @@ test.describe("marketing", () => {
     await page.goto("/admin/stats");
 
     await expect(page.getByText("Plan mix")).toBeVisible();
-    await expect(page.getByText("Free to paid conversion")).toBeVisible();
+    await expect(page.getByText("Signup to paid conversion")).toBeVisible();
 
     // Recharts renders to SVG, and renders nothing at all if the data shape is
     // wrong. Waiting on the surface is the cheapest proof the chart mounted:
@@ -199,6 +199,22 @@ test.describe("marketing", () => {
     await expect(page.getByText(/so far today/i)).toBeVisible();
     await expect(page.getByText(/Counted per day, not live/)).toBeVisible();
     await expect(page.getByText(/on site right now/i)).toHaveCount(0);
+  });
+
+  test("sees the free tries from the hero, one tile per tool", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+
+    const panel = page.getByTestId("guest-tries");
+    await expect(panel.getByText("Free tries from the hero")).toBeVisible();
+    // The warning is what shows when the RPC fails. Its absence proves the
+    // migration is pushed and the function answered for this role.
+    await expect(panel.getByText(/could not be loaded/)).toHaveCount(0);
+
+    const labels = panel.locator("p.uppercase");
+    for (const tile of ["All free tries", "Slides", "Comprehension", "Worksheet"]) {
+      await expect(labels.filter({ hasText: new RegExp(`^${tile}$`) })).toBeVisible();
+    }
   });
 });
 
@@ -256,6 +272,20 @@ test.describe("the database, not just the interface", () => {
 
     expect(error).toBeNull();
     expect(Array.isArray(data)).toBe(true);
+  });
+
+  test("the free tries stats follow the same gate", async () => {
+    // Counts from trial_generations, a table no signed in role can read
+    // directly. The definer function is the only way in, so it must refuse
+    // support as firmly as the signup functions do.
+    const refused = await (await asTeacher(support!)).rpc("admin_guest_try_stats", { p_months: 3 });
+    expect(refused.error).not.toBeNull();
+    expect(refused.error?.message ?? "").toMatch(/cannot see stats|not authorized/i);
+
+    const allowed = await (await asTeacher(marketing!)).rpc("admin_guest_try_stats", { p_months: 3 });
+    expect(allowed.error).toBeNull();
+    // Three months, three tools, zero rows included.
+    expect(allowed.data).toHaveLength(9);
   });
 
   test("marketing is refused everything else", async () => {

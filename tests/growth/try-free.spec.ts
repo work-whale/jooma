@@ -118,6 +118,23 @@ test.describe("signed out", () => {
     await expect(page.getByLabel("What are you teaching?")).toBeDisabled();
   });
 
+  test("the teacher count carries its countries underneath", async ({ page }) => {
+    await page.goto("/");
+
+    // Both come from Vercel analytics, which a machine without the token
+    // cannot reach. No count means nothing to break down, so nothing to test.
+    const count = page.getByTestId("hero-count");
+    test.skip((await count.count()) === 0, "Vercel analytics is not configured here");
+
+    const countries = page.getByTestId("hero-countries");
+    await expect(countries).toBeVisible();
+    const items = countries.locator("li");
+    expect(await items.count()).toBeGreaterThan(0);
+    expect(await items.count()).toBeLessThanOrEqual(5);
+    // A name, not a bare two letter code.
+    await expect(items.first()).not.toHaveText(/^\s*[\d,]+\s*[A-Z]{2}\s*$/);
+  });
+
   test("Jo's year lands in the wizard, the deck streams in, and Export asks them to sign up", async ({ page }) => {
     const calls = await stubGuestApi(page, {
       prefill: encodePrefill({ slug: "slideshow", fields: { topic: "Volcanoes and the Ring of Fire", year: "Year 3" } }),
