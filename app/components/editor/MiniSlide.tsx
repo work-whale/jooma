@@ -280,11 +280,23 @@ const MiniImage = memo(function MiniImage({ image, srcOverride }: { image: Image
   const isEmptyFrame = isFrame && !image.src;
   const frameStyle = getFrameStyle(image.frame, image.cornerRadius);
 
+  // A generated deck often saves an image without its natural size. The editor
+  // measures it on load (ImageElement), but falling back to the frame's own
+  // size here drew the photo squashed into the frame. So measure it from the
+  // <img> as it loads, the same way, and cover-fit with CSS until then. Kept
+  // per src: a thumbnail URL is the same picture at a smaller width, so its
+  // aspect ratio, which is all the maths below uses, is the original's.
+  const shownSrc = srcOverride ?? image.src;
+  const [measured, setMeasured] = useState<{ src: string; w: number; h: number } | null>(null);
+  const known = image.naturalWidth && image.naturalHeight
+    ? { w: image.naturalWidth, h: image.naturalHeight }
+    : measured && measured.src === shownSrc ? measured : null;
+
   // Same metrics as the editor's ImageElement (pixel-space pan/zoom).
   // ImageElement always cover-fits regardless of frame, so MiniSlide must too —
   // otherwise framed canvas crops won't match the tray thumbnail.
-  const nW = image.naturalWidth ?? image.width;
-  const nH = image.naturalHeight ?? image.height;
+  const nW = known?.w ?? image.width;
+  const nH = known?.h ?? image.height;
   const userScale = Math.max(1, image.innerScale ?? 1);
   const coverScale = Math.max(image.width / nW, image.height / nH);
   const finalScale = coverScale * userScale;
@@ -344,9 +356,15 @@ const MiniImage = memo(function MiniImage({ image, srcOverride }: { image: Image
               {image.src && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={srcOverride ?? image.src}
+                  src={shownSrc}
                   alt=""
                   draggable={false}
+                  onLoad={known ? undefined : (e) => {
+                    const el = e.currentTarget;
+                    if (el.naturalWidth && el.naturalHeight) {
+                      setMeasured({ src: shownSrc!, w: el.naturalWidth, h: el.naturalHeight });
+                    }
+                  }}
                   style={{
                     position: "absolute",
                     left: imgLeft,
@@ -355,6 +373,7 @@ const MiniImage = memo(function MiniImage({ image, srcOverride }: { image: Image
                     height: scaledH,
                     maxWidth: "none",
                     maxHeight: "none",
+                    objectFit: known ? undefined : "cover",
                     display: "block",
                     userSelect: "none",
                     transform: `scale(${image.flipX ? -1 : 1}, ${image.flipY ? -1 : 1})`,
