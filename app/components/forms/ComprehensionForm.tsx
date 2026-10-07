@@ -241,14 +241,18 @@ export default function ComprehensionForm({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
-        <div className="lg:col-span-1">
-          {sidebar}
-          {!guest && (
-            <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
-          )}
-        </div>
+        {/* A guest with no sidebar has nothing for the side column, so the
+            form takes the full width rather than leaving a blank third. */}
+        {(sidebar || !guest) && (
+          <div className="lg:col-span-1">
+            {sidebar}
+            {!guest && (
+              <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+            )}
+          </div>
+        )}
 
-        <div className="lg:col-span-2">
+        <div className={sidebar || !guest ? "lg:col-span-2" : "lg:col-span-3"}>
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
 
