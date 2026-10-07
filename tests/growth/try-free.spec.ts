@@ -235,7 +235,21 @@ test.describe("signed out", () => {
     }
   });
 
-  test("Ask Jo edits the slides wizard in place and knows the topic (regression)", async ({ page }) => {
+  test("Ask Jo is hidden on the free tries for now, on both tools", async ({ page }) => {
+    await stubGuestApi(page);
+
+    await page.goto("/create?tool=slides&topic=Volcanoes");
+    await expect(page.locator('input[name="lesson-topic"]')).toHaveValue("Volcanoes", NAV);
+    await expect(page.getByTestId("ask-jo")).toHaveCount(0);
+
+    await page.goto("/create?tool=comp&topic=Volcanoes");
+    await expect(page.locator("[data-jo-generate]")).toBeVisible(NAV);
+    await expect(page.getByTestId("ask-jo")).toHaveCount(0);
+  });
+
+  // Off while Ask Jo is hidden on /create (SHOW_ASK_JO in CreateView). Turn it
+  // back on with the panel.
+  test.skip("Ask Jo edits the slides wizard in place and knows the topic (regression)", async ({ page }) => {
     // Jo used to see only the chat (so it asked for a topic, with chips for
     // unrelated ones), and its update remounted the wizard. Now the page sends
     // what the form says, and Jo's fields land without disturbing the rest.

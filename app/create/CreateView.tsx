@@ -35,6 +35,11 @@ const Editor = dynamic(() => import("@/app/components/editor/Editor"), {
   ),
 });
 
+// Ask Jo is off on the free tries while it is reworked. Jo still reads the
+// topic and fills the form; only the chat beside it is hidden. Flip this back
+// to show the panel again.
+const SHOW_ASK_JO = false;
+
 interface RecentRun {
   id: string;
   tool: string;
@@ -241,14 +246,14 @@ export default function CreateView({
       ? "Hi, I'm Jo. I have filled in what I could from your topic. Change anything you like, or ask me, then press Generate on the last step."
       : "Hi, I'm Jo. I have filled in what I could from your topic. Pick the question types you want, or ask me, then press Generate.";
 
-  const sidePanel = (
+  const sidePanel = SHOW_ASK_JO ? (
     <AskJoPanel
       tool={tool}
       intro={joIntro}
       onPrefill={onJoPrefill}
       getContext={() => formNow.current}
     />
-  );
+  ) : null;
 
   const other = tool === "slideshow" ? "comp" : "slides";
 
@@ -312,7 +317,7 @@ export default function CreateView({
         />
 
         {tool === "slideshow" ? (
-          <div className={styles.grid}>
+          <div className={sidePanel ? styles.grid : undefined}>
             <main className={styles.main}>
               {reading ? (
                 <div className={styles.reading} role="status">
