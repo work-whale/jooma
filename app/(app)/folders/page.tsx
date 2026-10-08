@@ -933,8 +933,19 @@ function ResourceItem({
   const download = async () => {
     setDownloading(true);
     try {
-      const { exportToDocx } = await import("@/app/lib/exportUtils");
-      await exportToDocx(run.output, title);
+      // A designed Worksheet or Comprehension builds its own, styled document.
+      const { parseSheet } = await import("@/app/lib/sheets/normalize");
+      const sheet = parseSheet(run.output);
+      if (sheet) {
+        const [{ buildSheetDocx }, { triggerDownload }] = await Promise.all([
+          import("@/app/lib/sheets/docx"),
+          import("@/app/lib/exportUtils"),
+        ]);
+        triggerDownload(await buildSheetDocx(sheet), `${title}.docx`);
+      } else {
+        const { exportToDocx } = await import("@/app/lib/exportUtils");
+        await exportToDocx(run.output, title);
+      }
     } catch {
       // Deliberately quiet. The row has nowhere to put an error, and a failed
       // download is self-evident: no file appears.

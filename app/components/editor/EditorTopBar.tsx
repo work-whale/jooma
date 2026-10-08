@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useEffect, useRef, useState } from "react";
-import { Undo2, Redo2, Download, ArrowLeft, Palette, Check, Play, Pencil, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Undo2, Redo2, Download, ArrowLeft, Palette, Play, Pencil, ChevronDown, X } from "lucide-react";
 import DropdownMenu from "@/app/components/ui/DropdownMenu";
 import Wordmark from "@/app/components/v2/Wordmark";
-import { SLIDESHOW_THEMES, THEME_CATEGORIES, getThemesByCategory, ART_STYLES, getThemeArt, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import ThemePicker from "@/app/components/slideshow/ThemePicker";
+import { SLIDESHOW_THEMES, getThemeArt, type ArtStyleId } from "@/app/lib/slideshowThemes";
 
 interface Props {
   title: string;
@@ -30,7 +31,8 @@ interface Props {
   guest?: { onSignUp: () => void };
 }
 
-const iconBtn = "p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40";
+// Light on the dark purple bar (--j-editor-chrome).
+const iconBtn = "p-2 rounded-lg text-white/85 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-40";
 
 export default function EditorTopBar({
   title,
@@ -70,8 +72,9 @@ export default function EditorTopBar({
 
   return (
     <div
+      data-editor-chrome="top"
       className="h-14 shrink-0 flex items-center justify-between px-4 border-b"
-      style={{ borderColor: "#EAE6F5", backgroundColor: "#F7F5FC" }}
+      style={{ borderColor: "var(--j-editor-chrome-line)", backgroundColor: "var(--j-editor-chrome)" }}
     >
       <div className="flex items-center gap-3">
         {guest ? (
@@ -80,7 +83,7 @@ export default function EditorTopBar({
           // "Your creations" list then includes the deck they just made.
           <a
             href="/create?tool=slides"
-            className="p-2 -ml-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="p-2 -ml-2 rounded-lg text-white/85 hover:bg-white/10 hover:text-white transition-colors"
             title={backLabel}
             aria-label={backLabel}
           >
@@ -89,7 +92,7 @@ export default function EditorTopBar({
         ) : (
           <Link
             href={home}
-            className="p-2 -ml-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="p-2 -ml-2 rounded-lg text-white/85 hover:bg-white/10 hover:text-white transition-colors"
             title={backLabel}
             aria-label={backLabel}
           >
@@ -98,20 +101,20 @@ export default function EditorTopBar({
         )}
         <Link
           href={home}
-          className="hover:opacity-70 transition-opacity"
-          style={{ color: "var(--j-purple)" }}
+          className="hover:opacity-80 transition-opacity"
+          style={{ color: "#fff" }}
         >
           <Wordmark height={22} />
         </Link>
-        <span className="text-gray-400">/</span>
+        <span className="text-white/40">/</span>
         <input
           type="text"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Untitled Slideshow"
-          className="bg-transparent text-sm text-gray-800 focus:outline-none focus:bg-white focus:px-2 focus:py-1 focus:rounded-lg transition-all min-w-56"
+          className="bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none focus:bg-white/10 focus:px-2 focus:py-1 focus:rounded-lg transition-all min-w-56"
         />
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-white/60">
           {saveStatus === "saving" && "Saving..."}
           {saveStatus === "saved" && "Saved"}
           {saveStatus === "error" && "Save failed"}
@@ -121,8 +124,8 @@ export default function EditorTopBar({
             type="button"
             onClick={onEditPrompt}
             disabled={disableHistory}
-            className="ml-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-lg border px-2.5 py-1.5 text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40"
-            style={{ borderColor: "#EAE6F5" }}
+            className="ml-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-lg border px-2.5 py-1.5 text-white hover:bg-white/10 transition-colors disabled:opacity-40"
+            style={{ borderColor: "rgba(255, 255, 255, 0.25)" }}
             title="Edit the original prompt and regenerate"
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -148,14 +151,14 @@ export default function EditorTopBar({
         >
           <Redo2 className="w-4 h-4" />
         </button>
-        <div className="w-px h-6 bg-gray-300 mx-2" />
+        <div className="w-px h-6 bg-white/20 mx-2" />
         {onThemeChange && (
           <div className="relative">
             <button
               ref={themeBtnRef}
               type="button"
               onClick={() => setThemeOpen((v) => !v)}
-              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-white border border-white/25 rounded-lg hover:bg-white/10 transition-colors"
               title="Switch theme"
             >
               <Palette className="w-3.5 h-3.5" />
@@ -173,83 +176,46 @@ export default function EditorTopBar({
               <span>{activeTheme.name}</span>
             </button>
             {themeOpen && (
+              // A drawer rather than a dropdown: the picker shows each theme as a
+              // rendered slide, which needs room, and stays open while the teacher
+              // tries a few on the real deck behind it.
               <div
                 ref={themeMenuRef}
-                className="absolute right-0 top-full mt-1 w-80 max-h-[80vh] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg p-1 z-50"
+                role="dialog"
+                aria-label="Choose your theme"
+                className="fixed right-3 top-16 bottom-3 w-[440px] max-w-[calc(100vw-1.5rem)] bg-white border rounded-2xl shadow-2xl z-50 flex flex-col"
+                style={{ borderColor: "var(--j-line)" }}
               >
-                {THEME_CATEGORIES.map((cat) => {
-                  const themes = getThemesByCategory(cat.id);
-                  if (themes.length === 0) return null;
-                  return (
-                    <Fragment key={cat.id}>
-                      <div className="px-2 pt-2 pb-1 flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                          {cat.label}
-                        </span>
-                        {/* Watercolor/Illustration toggle only on the categories
-                            that actually have both variants (Classic & Scenic). */}
-                        {onArtStyleChange && (cat.id === "classic" || cat.id === "scenic") && (
-                          <div className="flex gap-0.5 p-0.5 rounded-md bg-gray-100 shrink-0">
-                            {ART_STYLES.map((s) => {
-                              const active = (artStyle ?? "watercolor") === s.id;
-                              return (
-                                <button
-                                  key={s.id}
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); onArtStyleChange(s.id); }}
-                                  className={`px-1.5 py-0.5 text-[9px] font-medium rounded transition-colors ${
-                                    active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                                  }`}
-                                >
-                                  {s.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      {themes.map((t) => (
+                <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--j-line)" }}>
+                  <p className="text-sm font-semibold text-gray-900">Choose your theme</p>
                   <button
-                    key={t.id}
                     type="button"
-                    onClick={() => { onThemeChange(t.id); setThemeOpen(false); }}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs text-left rounded-md hover:bg-gray-50"
+                    onClick={() => setThemeOpen(false)}
+                    aria-label="Close themes"
+                    className="p-1 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                   >
-                    <span
-                      className="inline-block w-5 h-5 rounded-md border shrink-0 bg-cover bg-center"
-                      style={{
-                        backgroundColor: t.palette.background,
-                        backgroundImage: (() => {
-                          const a = getThemeArt(t, artStyle ?? "watercolor");
-                          return a ? `url(${a.src})` : undefined;
-                        })(),
-                        borderColor: "#EAE6F5",
-                      }}
-                    />
-                    <span
-                      className="inline-block w-1.5 h-5 rounded-sm shrink-0"
-                      style={{ backgroundColor: t.palette.accent }}
-                    />
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-medium text-gray-800 truncate">{t.name}</span>
-                      <span className="block text-[10px] text-gray-500 truncate">{t.description}</span>
-                    </span>
-                    {t.id === activeTheme.id && <Check className="w-3.5 h-3.5 text-violet-600 shrink-0" />}
+                    <X className="w-4 h-4" />
                   </button>
-                      ))}
-                    </Fragment>
-                  );
-                })}
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <ThemePicker
+                    value={activeTheme.id}
+                    onChange={onThemeChange}
+                    artStyle={artStyle ?? "watercolor"}
+                    onArtStyleChange={(s) => onArtStyleChange?.(s)}
+                    compact
+                  />
+                </div>
               </div>
             )}
           </div>
         )}
-        <div className="w-px h-6 bg-gray-300 mx-2" />
+        <div className="w-px h-6 bg-white/20 mx-2" />
         <button
           onClick={onPresent}
           data-then="present"
-          className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-          style={{ backgroundColor: "#1D1730", color: "#fff" }}
+          className="flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:brightness-95"
+          style={{ backgroundColor: "#fff", color: "var(--j-deep)" }}
           title="Present"
         >
           <Play className="w-4 h-4" />
@@ -261,7 +227,7 @@ export default function EditorTopBar({
         <DropdownMenu
           ariaLabel="Export options"
           disabled={isExporting}
-          triggerClassName="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+          triggerClassName="flex items-center gap-2 bg-[var(--j-lilac)] hover:bg-[var(--j-lilac-2)] text-stone-800 text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
           menuClassName="w-56"
           trigger={
             <>

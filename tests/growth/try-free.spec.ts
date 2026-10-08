@@ -323,11 +323,21 @@ test.describe("signed out", () => {
         },
       }),
     );
+    // The route streams the comprehension as a sheet (JSON), not markdown.
     await page.route("**/api/try/comprehension", (route) =>
       route.fulfill({
         status: 200,
         headers: { "content-type": "text/plain; charset=utf-8", "x-trial-id": "abc" },
-        body: "# Why do bees matter?\n\nBees carry pollen from flower to flower.\n\n## 2b Retrieval\n\n1. What do bees carry? [1 mark]",
+        body: JSON.stringify({
+          title: "Why do bees matter?",
+          objective: "",
+          intro: { variant: "fact", label: "", text: "", emoji: "" },
+          sections: [
+            { title: "Read the text", emoji: "📖", instructions: "", blocks: [{ type: "passage", title: "Busy bees", paragraphs: ["Bees carry pollen from flower to flower."] }] },
+            { title: "Retrieval", emoji: "🔎", instructions: "", blocks: [{ type: "short", prompt: "What do bees carry?", quote: "", lines: 2, answer: "Pollen", marks: 1, domain: "2b" }] },
+          ],
+          teacherNotes: [],
+        }),
       }),
     );
     await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");

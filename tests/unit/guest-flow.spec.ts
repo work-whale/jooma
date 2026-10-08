@@ -180,6 +180,13 @@ test.describe("the form never opens empty (regression)", () => {
     expect(yearFromTopic("Volcanoes")).toBeNull();
   });
 
+  test("reads Nursery as a class, never the topic nursery rhymes", () => {
+    // Curriculum alignment now covers Nursery, so the slides wizard offers it.
+    expect(yearFromTopic("Colours for nursery")).toBe("Nursery");
+    expect(yearFromTopic("Nursery rhymes")).toBeNull();
+    expect(yearFromTopic("Nursery rhymes, Year 1")).toBe("Year 1");
+  });
+
   test("without Jo, the topic and year still make a valid prefill", () => {
     const c = validatePrefill({
       slug: "comprehension-generator",

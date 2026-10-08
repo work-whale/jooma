@@ -7,7 +7,7 @@ import SlideshowLoadingAnimation from "@/app/components/editor/SlideshowLoadingA
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "var(--j-bg)" }}>
+    <div className="fixed inset-0 flex items-center justify-center" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
       <SlideshowLoadingAnimation label="Opening slideshow" />
     </div>
   );

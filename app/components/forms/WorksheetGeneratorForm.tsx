@@ -12,7 +12,6 @@ import {
   AdditionalContextField,
   type OutputDetail,
 } from "@/app/components/fields";
-import { QUESTION_TYPES } from "@/app/components/fields/QuestionTypesField";
 import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { toTitleCase } from "@/app/lib/formOptions";
 import ToolResults from "@/app/components/ToolResults";
@@ -24,6 +23,7 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import type { ToolRun } from "@/app/lib/toolRuns";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 
 const TOOL_SLUG = "worksheet-generator";
 
@@ -38,7 +38,10 @@ export default function WorksheetGeneratorForm({
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
   const [learningObjective, setLearningObjective] = useState("");
-  const [questionTypes, setQuestionTypes] = useState<string[]>([...QUESTION_TYPES]);
+  // Starts empty: the teacher ticks only the formats they want. Optional, so
+  // an empty pick means "a mix that suits the subject" rather than a disabled
+  // Generate, which is also what keeps a form Jo prefilled ready to go.
+  const [questionTypes, setQuestionTypes] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
   const [differentiate, setDifferentiate] = useState<Differentiate>("no");
   const [differentiationLevels, setDifferentiationLevels] = useState<string[]>([]);
@@ -51,9 +54,11 @@ export default function WorksheetGeneratorForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its sheet save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate =
-    curriculum && (mixed || yearGroup) && subject.trim() && learningObjective.trim() && questionTypes.length > 0 &&
+    curriculum && (mixed || yearGroup) && subject.trim() && learningObjective.trim() &&
     (differentiate === "no" || differentiationLevels.length > 0);
 
   // Raw form state — saved as history input so a past run can refill the form.
@@ -68,7 +73,7 @@ export default function WorksheetGeneratorForm({
     setMixed(Boolean(i.mixed));
     setSubject((i.subject as string) ?? "");
     setLearningObjective((i.learningObjective as string) ?? "");
-    setQuestionTypes((i.questionTypes as string[]) ?? [...QUESTION_TYPES]);
+    setQuestionTypes((i.questionTypes as string[]) ?? []);
     setQuestionCount((i.questionCount as number) ?? 10);
     const d = restoreDifferentiation(i);
     setDifferentiate(d.differentiate);
@@ -76,6 +81,7 @@ export default function WorksheetGeneratorForm({
     setOutputDetail((i.outputDetail as OutputDetail) ?? "detailed");
     setAdditionalInfo((i.additionalInfo as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -100,6 +106,7 @@ export default function WorksheetGeneratorForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
     try {
@@ -123,14 +130,10 @@ export default function WorksheetGeneratorForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/©/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      // The route streams the sheet as JSON; each update arrives here as a
+      // whole, valid sheet, so the page fills in block by block.
+      const finished = await readSheetStream(res, "worksheet", { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject) }, setResult);
+      if (!finished) throw new Error("The worksheet came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -160,7 +163,7 @@ export default function WorksheetGeneratorForm({
             <SubjectField value={subject} onChange={setSubject} />
             <LearningObjectiveField value={learningObjective} onChange={setLearningObjective} />
 
-            <QuestionTypesField value={questionTypes} onChange={setQuestionTypes} />
+            <QuestionTypesField value={questionTypes} onChange={setQuestionTypes} optional />
             <QuestionCountField value={questionCount} onChange={setQuestionCount} />
 
             <OutputDetailField value={outputDetail} onChange={setOutputDetail} />
@@ -191,10 +194,10 @@ export default function WorksheetGeneratorForm({
                 onConfirm={() => {
                   setCurriculum(""); setYearGroup(""); setMixed(false);
                   setSubject(""); setLearningObjective("");
-                  setQuestionTypes([...QUESTION_TYPES]); setQuestionCount(10);
+                  setQuestionTypes([]); setQuestionCount(10);
                   setDifferentiate("no"); setDifferentiationLevels([]); setOutputDetail("detailed");
                   setAdditionalInfo("");
-                  setResult(null); setError(null); setConfirmingReset(false);
+                  setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
@@ -215,6 +218,7 @@ export default function WorksheetGeneratorForm({
         exportFilename={`worksheet-${subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
     </div>
   );

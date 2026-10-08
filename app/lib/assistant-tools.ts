@@ -114,7 +114,9 @@ const GENDERS = ["Male", "Female", "Non-Binary"] as const;
  * handling, so a value from the other list would be discarded here.
  */
 export const SLIDESHOW_YEARS = [
-  "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6",
+  // Nursery first: curriculum alignment covers it (Development Matters), so a
+  // Nursery deck needs to be something the wizard and Jo can actually choose.
+  "Nursery", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6",
   "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12", "Year 13",
   "Adult learners",
 ] as const;
@@ -277,8 +279,9 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       },
       required: ["subject", "learningObjective"],
     },
-    // WorksheetGeneratorForm.tsx:56. questionTypes is deliberately absent: the
-    // form defaults it to every type, so it is never the missing piece.
+    // WorksheetGeneratorForm.tsx canGenerate. questionTypes is deliberately
+    // absent: it starts empty and is optional (empty means a mix suited to the
+    // subject), so it is never the missing piece.
     gating: ["curriculum", "yearGroup", "subject", "learningObjective"],
   },
   {

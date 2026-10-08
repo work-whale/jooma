@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { extractHeadings, headingIdAt } from "@/app/lib/headings";
+import { cleanMathText } from "@/app/lib/math-text";
 
 function renderInline(text: string): React.ReactNode[] {
   const parts = text.split("\u00A9").join("(c)").split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
@@ -24,7 +25,8 @@ function stripCodeFence(text: string): string {
 
 export default function MarkdownResult({ text }: { text: string }) {
   // AI sometimes outputs © (U+00A9) instead of (c) when labelling sub-questions
-  const sanitized = stripCodeFence(text).replace(/\u00A9/g, "(c)");
+  // ...and LaTeX for maths, which nothing here typesets (see math-text.ts).
+  const sanitized = cleanMathText(stripCodeFence(text).replace(/\u00A9/g, "(c)"));
   const lines = sanitized.split("\n");
   const elements: React.ReactNode[] = [];
   let i = 0;

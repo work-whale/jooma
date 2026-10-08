@@ -27,6 +27,17 @@ export const GOOGLE_FONTS: GoogleFont[] = [
   { name: "Karla", family: "'Karla', sans-serif", category: "sans-serif" },
   { name: "Fira Sans", family: "'Fira Sans', sans-serif", category: "sans-serif" },
   { name: "Mulish", family: "'Mulish', sans-serif", category: "sans-serif" },
+  { name: "Space Grotesk", family: "'Space Grotesk', sans-serif", category: "sans-serif" },
+  { name: "Source Sans 3", family: "'Source Sans 3', sans-serif", category: "sans-serif" },
+  // Readability faces, used by the Basic themes: Lexend for dyslexic readers,
+  // Atkinson Hyperlegible for low vision, Andika for early readers.
+  { name: "Lexend", family: "'Lexend', sans-serif", category: "sans-serif" },
+  { name: "Atkinson Hyperlegible", family: "'Atkinson Hyperlegible', sans-serif", category: "sans-serif" },
+  { name: "Andika", family: "'Andika', sans-serif", category: "sans-serif" },
+  // Rounded display faces, used by the Playful themes.
+  { name: "Fredoka", family: "'Fredoka', sans-serif", category: "display" },
+  { name: "Baloo 2", family: "'Baloo 2', sans-serif", category: "display" },
+  { name: "Lilita One", family: "'Lilita One', sans-serif", category: "display" },
   // Display (impactful)
   { name: "Oswald", family: "'Oswald', sans-serif", category: "display" },
   { name: "Bebas Neue", family: "'Bebas Neue', sans-serif", category: "display" },
@@ -43,6 +54,7 @@ export const GOOGLE_FONTS: GoogleFont[] = [
   { name: "Lora", family: "'Lora', serif", category: "serif" },
   { name: "PT Serif", family: "'PT Serif', serif", category: "serif" },
   { name: "EB Garamond", family: "'EB Garamond', serif", category: "serif" },
+  { name: "Fraunces", family: "'Fraunces', serif", category: "serif" },
   // Handwriting (informal)
   { name: "Dancing Script", family: "'Dancing Script', cursive", category: "handwriting" },
   { name: "Pacifico", family: "'Pacifico', cursive", category: "handwriting" },
@@ -51,6 +63,7 @@ export const GOOGLE_FONTS: GoogleFont[] = [
   { name: "Architects Daughter", family: "'Architects Daughter', cursive", category: "handwriting" },
   { name: "Shadows Into Light", family: "'Shadows Into Light', cursive", category: "handwriting" },
   { name: "Indie Flower", family: "'Indie Flower', cursive", category: "handwriting" },
+  { name: "Patrick Hand", family: "'Patrick Hand', cursive", category: "handwriting" },
   // Monospace (code/labels)
   { name: "JetBrains Mono", family: "'JetBrains Mono', monospace", category: "monospace" },
   { name: "Fira Code", family: "'Fira Code', monospace", category: "monospace" },

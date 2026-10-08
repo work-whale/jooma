@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, X } from "@phosphor-icons/react/dist/ssr";
 import MarkdownResult from "@/app/components/MarkdownResult";
+import SheetDocument from "@/app/components/sheets/SheetDocument";
 import { OutlineRail } from "@/app/components/OutputOutline";
+import { parseSheet } from "@/app/lib/sheets/normalize";
+import { sheetOutline } from "@/app/lib/sheets/markdown";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import { saveSharedToLibrary, type Share } from "@/app/lib/colleagues";
 import { displayName } from "@/app/lib/colleagueDisplay";
@@ -193,6 +196,8 @@ function SharedResourceDialog({
    * spinner that resolves into one.
    */
   const structured = isStructuredOutput(slug, output ?? undefined);
+  // A designed Worksheet or Comprehension: drawn as its pages, read only.
+  const sheet = useMemo(() => parseSheet(output), [output]);
 
   const add = async () => {
     if (view.kind !== "share") return;
@@ -245,7 +250,7 @@ function SharedResourceDialog({
               a short resource gets the full width without a special case. A
               null markdown counts as none of them, so a loading run gets the
               full width too and the rail appears when the body lands. */}
-          {!structured && <OutlineRail markdown={output} scrollRoot={body} />}
+          {!structured && <OutlineRail markdown={sheet ? sheetOutline(sheet) : output} scrollRoot={body} />}
 
           {/* Every state below goes INSIDE .content, never beside it: the
               one-column rule keys off `.content:only-child`, so a sibling here
@@ -261,6 +266,8 @@ function SharedResourceDialog({
               <p className={styles.loading} role="status">
                 Opening
               </p>
+            ) : sheet ? (
+              <SheetDocument doc={sheet} />
             ) : (
               <MarkdownResult text={output} />
             )}

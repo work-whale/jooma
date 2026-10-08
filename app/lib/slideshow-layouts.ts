@@ -12,8 +12,9 @@ import type {
   BlockquoteObject,
   ActivityObject,
 } from "./presentations";
-import type { SlideshowTheme, ArtStyleId } from "./slideshowThemes";
-import { getThemeArt, DEFAULT_ART_STYLE } from "./slideshowThemes";
+import type { SlideshowTheme, ArtStyleId, ThemeDesign } from "./slideshowThemes";
+import { getThemeArt, DEFAULT_ART_STYLE, themeDesign } from "./slideshowThemes";
+import { cleanMathText } from "./math-text";
 
 const SLIDE_W = 1280;
 const SLIDE_H = 720;
@@ -1530,11 +1531,41 @@ function renderActivityVocabMatch(spec: SlideSpec, t: Theme, answerMode: boolean
 
 // ── Public renderer ────────────────────────────────────────────────────────
 
+/** Every piece of copy a layout can place, with leaked LaTeX turned into plain
+ *  maths. A safety net under the prompt's rule: a `\frac` that slips through
+ *  still reads as a fraction on the canvas, in present mode and in the PPTX,
+ *  none of which typeset TeX. */
+function cleanSpecText(spec: SlideSpec): SlideSpec {
+  const c = (v?: string) => (v ? cleanMathText(v) : v);
+  const list = (v?: string[]) => v?.map((s) => cleanMathText(s));
+  return {
+    ...spec,
+    title: cleanMathText(spec.title ?? ""),
+    subtitle: c(spec.subtitle),
+    body: c(spec.body),
+    bullets: list(spec.bullets),
+    subHook: c(spec.subHook),
+    calloutLabel: c(spec.calloutLabel),
+    calloutBody: c(spec.calloutBody),
+    bulletsLeadIn: c(spec.bulletsLeadIn),
+    blockquoteText: c(spec.blockquoteText),
+    activityItems: list(spec.activityItems),
+    statValue: c(spec.statValue),
+    statCaption: c(spec.statCaption),
+    twoColLeftBody: c(spec.twoColLeftBody),
+    twoColRightBody: c(spec.twoColRightBody),
+    col1Body: c(spec.col1Body),
+    col2Body: c(spec.col2Body),
+    col3Body: c(spec.col3Body),
+  };
+}
+
 export function renderSlide(
-  spec: SlideSpec,
+  rawSpec: SlideSpec,
   baseTheme?: SlideshowTheme,
   artStyle: ArtStyleId = DEFAULT_ART_STYLE,
 ): SlideJSON {
+  const spec = cleanSpecText(rawSpec);
   // Use the user-picked theme's accent if available, otherwise the AI-chosen one.
   const accent = baseTheme?.palette.accent || spec.accentColor || "#7c3aed";
   // The theme's natural palette already encodes its look — for Dark theme that
@@ -1544,7 +1575,7 @@ export function renderSlide(
   const t = themeFor(spec.colorScheme, accent, baseTheme);
   activeTheme = baseTheme;
   try {
-    const slide = applyThemeDecorations(renderForLayout(spec, t), spec, baseTheme);
+    const slide = applyThemeDesign(applyThemeDecorations(renderForLayout(spec, t), spec, baseTheme), spec, baseTheme);
     // Themed full-bleed illustration background, resolved for the chosen style.
     const art = baseTheme ? getThemeArt(baseTheme, artStyle) : undefined;
     if (art) {
@@ -1567,9 +1598,319 @@ function applyThemeDecorations(
   theme: SlideshowTheme | undefined,
 ): SlideJSON {
   if (!theme) return slide;
-  const decorations = getThemeDecorations(theme, spec, slide);
+  const decorations = asBackdrop(getThemeDecorations(theme, spec, slide));
   if (decorations.length === 0) return slide;
   return { ...slide, shapes: [...decorations, ...slide.shapes] };
+}
+
+/** Decorations sit under everything, photos included, and cannot be dragged
+ *  off by accident. A negative z puts them below the image layer (base 0) in
+ *  the editor and the thumbnails, and the PPTX export draws them first. */
+function asBackdrop(shapes: ShapeObject[], base = -1000): ShapeObject[] {
+  return shapes.map((sh, i) => ({ ...sh, z: base + i, locked: true }));
+}
+
+// ── Theme design: title, card, frame, callout ────────────────────────────
+// Applied after the layout, so every layout keeps its geometry and only the
+// treatment changes with the theme. See ThemeDesign in slideshowThemes.ts.
+
+/** Layouts that sit on the slide's paper and so take the theme's card. The
+ *  full-bleed covers and the activity layouts draw their own surfaces. */
+const CARD_LAYOUTS = new Set<SlideLayout>([
+  "title-hero", "paper-image-right", "paper-image-left", "paper-two-images",
+  "paper-image-right-badge", "paper-banner-image-top", "paper-quote", "paper-vocab-grid",
+]);
+
+function applyThemeDesign(slide: SlideJSON, spec: SlideSpec, theme: SlideshowTheme | undefined): SlideJSON {
+  if (!theme || slide.backgroundImage) return slide;
+  const d = themeDesign(theme);
+  const p = theme.palette;
+
+  const texts = [...slide.texts];
+  const extra: ShapeObject[] = [];
+
+  // The title is the heading-weight text that carries the spec's title.
+  const ti = texts.findIndex((tx) => tx.text === spec.title && parseInt(tx.fontWeight, 10) >= 700);
+  if (ti !== -1 && d.title !== "plain") {
+    const { shapes, text } = titleTreatment(texts[ti], d.title, theme);
+    extra.push(...shapes);
+    texts[ti] = text;
+  }
+
+  const shapes = slide.shapes.flatMap((sh) => (sh.id.startsWith("cobg") ? calloutTreatment(sh, d.callout, theme) : [sh]));
+  const images = slide.images.map((im, i) => frameImage(im, d.frame, p, i));
+  const card = CARD_LAYOUTS.has(spec.layout) ? cardShapes(d.card, theme) : [];
+
+  // Card under the content but above the motif; title marks above the card.
+  const backdropCount = shapes.findIndex((sh) => !sh.id.startsWith("dec_"));
+  const head = backdropCount === -1 ? shapes : shapes.slice(0, backdropCount);
+  const rest = backdropCount === -1 ? [] : shapes.slice(backdropCount);
+  return { ...slide, texts, images, shapes: [...head, ...asBackdrop(card, -500), ...extra, ...rest] };
+}
+
+/** Rough single-line width of a heading, for sizing a mark behind it. The same
+ *  0.55 em glyph estimate the layouts use for wrapping. */
+function headingWidth(text: string, fontSize: number, maxWidth: number): number {
+  return Math.min(maxWidth, Math.max(fontSize * 2, text.length * fontSize * 0.55));
+}
+
+function titleTreatment(
+  title: TextObject,
+  style: ThemeDesign["title"],
+  theme: SlideshowTheme,
+): { shapes: ShapeObject[]; text: TextObject } {
+  const p = theme.palette;
+  const lines = estimateTextLines(title.text, title.width, title.fontSize);
+  const lineH = title.fontSize * 1.2;
+  const height = lines * lineH;
+  const w = headingWidth(title.text, title.fontSize, title.width);
+  // A centred title's marks follow it to the middle of its box.
+  const left = title.textAlign === "center" ? title.x + (title.width - w) / 2 : title.x;
+  const mark = (x: number, y: number, width: number, height: number, fill: string, opacity = 1, radius = 4): ShapeObject => ({
+    id: nid("ttl"), type: "rect", x, y, width, height, fill,
+    stroke: "transparent", strokeWidth: 0, opacity, cornerRadius: radius,
+  });
+
+  switch (style) {
+    case "underline": {
+      const barW = Math.min(96, Math.max(56, w * 0.25));
+      const x = title.textAlign === "center" ? title.x + (title.width - barW) / 2 : title.x;
+      return { shapes: [mark(x, title.y + height + 3, barW, 7, p.accent, 1, 4)], text: title };
+    }
+    case "highlight": {
+      // A marker swash across the lower half of the last line.
+      const lastChars = title.text.length - Math.floor((title.width / (title.fontSize * 0.55)) * (lines - 1));
+      const lastW = headingWidth(title.text.slice(-Math.max(1, lastChars)), title.fontSize, title.width);
+      const lx = title.textAlign === "center" ? title.x + (title.width - lastW) / 2 : title.x;
+      const y = title.y + (lines - 1) * lineH + title.fontSize * 0.62;
+      return { shapes: [mark(lx - 8, y, lastW + 16, title.fontSize * 0.46, p.accent, 0.28, 8)], text: title };
+    }
+    case "pill": {
+      const padX = 22;
+      const padY = 10;
+      const pillW = Math.min(title.width + padX, w + padX * 2);
+      const pill: ShapeObject = {
+        ...mark(left - padX, title.y - padY, pillW, height + padY * 2, p.accent, 1, Math.min(36, (height + padY * 2) / 2)),
+        stroke: p.text,
+        strokeWidth: 3,
+      };
+      return { shapes: [pill], text: { ...title, color: p.overlayText || "#FFFFFF" } };
+    }
+    case "kicker":
+      return { shapes: [mark(title.textAlign === "center" ? title.x + (title.width - 56) / 2 : title.x, title.y - 20, 56, 4, p.accent, 1, 2)], text: title };
+    default:
+      return { shapes: [], text: title };
+  }
+}
+
+function calloutTreatment(box: ShapeObject, style: ThemeDesign["callout"], theme: SlideshowTheme): ShapeObject[] {
+  const p = theme.palette;
+  switch (style) {
+    case "sticky":
+      // A note with a strip of tape across its top edge.
+      return [
+        { ...box, cornerRadius: 6, shadow: true },
+        {
+          id: nid("cotape"), type: "rect",
+          x: box.x + box.width / 2 - 44, y: box.y - 11, width: 88, height: 22,
+          fill: p.accent, stroke: "transparent", strokeWidth: 0, opacity: 0.35, cornerRadius: 3, rotation: -3,
+        },
+      ];
+    case "rule":
+      // The tint keeps its colour; an accent bar down the left edge.
+      return [
+        { ...box, cornerRadius: 10 },
+        {
+          id: nid("cobar"), type: "rect",
+          x: box.x, y: box.y, width: 7, height: box.height,
+          fill: p.accent, stroke: "transparent", strokeWidth: 0, opacity: 1, cornerRadius: 3,
+        },
+      ];
+    case "outline":
+      return [{ ...box, fill: p.paperBg ?? p.background, stroke: p.text, strokeWidth: 2.5, cornerRadius: 14 }];
+    default:
+      return [box];
+  }
+}
+
+function frameImage(im: ImageObject, frame: ThemeDesign["frame"], p: SlideshowTheme["palette"], index: number): ImageObject {
+  // Only the layouts' own photos: anything without a frame setting is a
+  // graphic the teacher placed, and stays as it is.
+  if (im.frame === undefined) return im;
+  switch (frame) {
+    case "square":
+      return { ...im, frame: "none", cornerRadius: 0 };
+    case "circle": {
+      const size = Math.min(im.width, im.height);
+      return { ...im, frame: "circle", x: im.x + (im.width - size) / 2, y: im.y + (im.height - size) / 2, width: size, height: size };
+    }
+    case "blob":
+      return { ...im, frame: "blob" };
+    case "arch":
+      return { ...im, frame: "arch" };
+    case "polaroid":
+      return {
+        ...im, frame: "rounded", cornerRadius: 4, strokeColor: "#FFFFFF", strokeWidth: 14, strokeAlign: "inside",
+        shadow: true, rotation: index % 2 === 0 ? -2 : 2,
+      };
+    case "sticker":
+      return { ...im, frame: "rounded", cornerRadius: 26, strokeColor: p.text, strokeWidth: 5, strokeAlign: "inside", shadow: true };
+    default:
+      return im;
+  }
+}
+
+/** The sheet under a paper layout. Inset 40px, which the layouts were drawn
+ *  for: their content sits between x 80 and 1220, y 80 and 680. */
+function cardShapes(card: ThemeDesign["card"], theme: SlideshowTheme): ShapeObject[] {
+  const p = theme.palette;
+  const sheet = (over: Partial<ShapeObject>): ShapeObject => ({
+    id: nid("dec"), type: "rect", x: 40, y: 40, width: SLIDE_W - 80, height: SLIDE_H - 80,
+    fill: p.paperBg ?? p.background, stroke: "transparent", strokeWidth: 0, opacity: 1, cornerRadius: 28, ...over,
+  });
+  switch (card) {
+    case "soft":
+      return [sheet({ shadow: true })];
+    case "outline":
+      return [sheet({ fill: "transparent", stroke: p.muted, strokeWidth: 3, x: 34, y: 34, width: SLIDE_W - 68, height: SLIDE_H - 68 })];
+    case "offset":
+      // A hard shadow offset down and right, then the sheet with an ink edge:
+      // the "sticker" volume.
+      return [sheet({ fill: p.text, x: 52, y: 52, opacity: 0.9 }), sheet({ stroke: p.text, strokeWidth: 3 })];
+    default:
+      return [];
+  }
+}
+
+// ── Motifs ────────────────────────────────────────────────────────────────
+
+/** Small seeded generator, so a slide's motif is the same every time it is
+ *  rendered (mulberry32 over a string hash). */
+function seeded(seed: string): () => number {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  let a = h >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function motifShapes(motif: ThemeDesign["motif"], theme: SlideshowTheme, seed: string): ShapeObject[] {
+  const p = theme.palette;
+  const rnd = seeded(seed);
+  const pick = <T,>(list: T[]) => list[Math.floor(rnd() * list.length)];
+  const shape = (type: ShapeObject["type"], x: number, y: number, w: number, h: number, fill: string, opacity: number, extra: Partial<ShapeObject> = {}): ShapeObject => ({
+    id: nid("dec"), type, x, y, width: w, height: h, fill, stroke: "transparent", strokeWidth: 0, opacity, ...extra,
+  });
+  // Points along the slide's edges, clear of the content box, for scattering.
+  const edgePoint = (): [number, number] => {
+    const side = Math.floor(rnd() * 4);
+    if (side === 0) return [40 + rnd() * (SLIDE_W - 80), 8 + rnd() * 44];
+    if (side === 1) return [40 + rnd() * (SLIDE_W - 80), SLIDE_H - 50 + rnd() * 38];
+    if (side === 2) return [6 + rnd() * 40, 60 + rnd() * (SLIDE_H - 120)];
+    return [SLIDE_W - 46 + rnd() * 36, 60 + rnd() * (SLIDE_H - 120)];
+  };
+  const brights = [p.accent, p.headingColor ?? p.accent, p.badgeBg ?? p.accent, "#FFC93C", "#3DB6F2", "#7ED957"];
+
+  switch (motif) {
+    case "confetti":
+      return Array.from({ length: 16 }, () => {
+        const [x, y] = edgePoint();
+        const kind = pick(["rect", "ellipse", "triangle"] as const);
+        const size = 12 + rnd() * 14;
+        return shape(kind, x, y, kind === "rect" ? size * 0.55 : size, size, pick(brights), 0.9, { rotation: Math.round(rnd() * 360) });
+      });
+    case "dots": {
+      // Halftone clusters in two corners, the dots shrinking away from it.
+      const out: ShapeObject[] = [];
+      const corner = (cx: number, cy: number) => {
+        for (let r = 0; r < 5; r++) {
+          for (let c = 0; c < 5 - r; c++) {
+            const d = 16 - (r + c) * 2;
+            if (d < 5) continue;
+            const x = cx === 0 ? 14 + c * 26 : SLIDE_W - 30 - c * 26;
+            const y = cy === 0 ? 14 + r * 26 : SLIDE_H - 30 - r * 26;
+            out.push(shape("ellipse", x, y, d, d, p.accent, 0.3));
+          }
+        }
+      };
+      corner(SLIDE_W, 0);
+      corner(0, SLIDE_H);
+      return out;
+    }
+    case "stars": {
+      const out = Array.from({ length: 9 }, () => {
+        const [x, y] = edgePoint();
+        const size = 14 + rnd() * 26;
+        return shape("star", x, y, size, size, pick([p.accent, p.headingColor ?? p.accent, p.muted]), 0.85, { rotation: Math.round(rnd() * 40) - 20 });
+      });
+      // Two small planets on the dark theme, which a starfield wants.
+      const dark = isDark(p.background);
+      if (dark) {
+        out.push(shape("ellipse", SLIDE_W - 120, 30, 64, 64, p.calloutBgFun ?? p.accent, 0.9));
+        out.push(shape("ellipse", 26, SLIDE_H - 96, 44, 44, p.calloutBgRemember ?? p.accent, 0.9));
+      }
+      return out;
+    }
+    case "doodles": {
+      const ink = p.muted;
+      const kinds = ["star", "heart", "cloud", "bolt", "plus"] as const;
+      return Array.from({ length: 8 }, () => {
+        const [x, y] = edgePoint();
+        const kind = pick([...kinds]);
+        const size = 22 + rnd() * 22;
+        return shape(kind, x, y, kind === "cloud" ? size * 1.5 : size, size, "transparent", 0.7, {
+          stroke: ink, strokeWidth: 3, rotation: Math.round(rnd() * 30) - 15,
+        });
+      });
+    }
+    case "blobs": {
+      const pastels = ["#FFD6E0", "#FFE9B0", "#D3F5E0", "#D6E6FF", "#E8DDFF"];
+      const start = Math.floor(rnd() * pastels.length);
+      const c = (i: number) => pastels[(start + i) % pastels.length];
+      return [
+        shape("ellipse", -120, -110, 300, 260, c(0), 0.85),
+        shape("ellipse", SLIDE_W - 150, -90, 240, 210, c(1), 0.8),
+        shape("ellipse", SLIDE_W - 220, SLIDE_H - 140, 330, 260, c(2), 0.85),
+        shape("ellipse", -90, SLIDE_H - 120, 220, 200, c(3), 0.8),
+      ];
+    }
+    case "grid": {
+      const out: ShapeObject[] = [];
+      for (let x = 80; x < SLIDE_W; x += 80) out.push(shape("rect", x, 0, 1.5, SLIDE_H, p.accent, 0.12));
+      for (let y = 80; y < SLIDE_H; y += 80) out.push(shape("rect", 0, y, SLIDE_W, 1.5, p.accent, 0.12));
+      return out;
+    }
+    case "rules":
+      return [
+        shape("rect", 80, 30, SLIDE_W - 160, 1.5, p.text, 0.28),
+        shape("rect", 80, SLIDE_H - 32, SLIDE_W - 160, 1.5, p.text, 0.28),
+        shape("rect", 80, 24, 12, 12, p.accent, 1),
+      ];
+    case "corners":
+      return [
+        shape("rect", 32, 32, 72, 4, p.accent, 0.9),
+        shape("rect", 32, 32, 4, 72, p.accent, 0.9),
+        shape("rect", SLIDE_W - 104, SLIDE_H - 36, 72, 4, p.accent, 0.9),
+        shape("rect", SLIDE_W - 36, SLIDE_H - 104, 4, 72, p.accent, 0.9),
+      ];
+    default:
+      return [];
+  }
+}
+
+/** True for a dark background, by perceived luminance. */
+function isDark(hex: string): boolean {
+  const m = hex.replace("#", "").match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const [r, g, b] = [m[1], m[2], m[3]].map((v) => parseInt(v, 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 90;
 }
 
 function getThemeDecorations(
@@ -1583,6 +1924,11 @@ function getThemeDecorations(
   // The title-cover renderer already places its own larger bubble cluster.
   // Skip to avoid stacking two sets of shapes.
   if (spec.layout === "title-cover") return [];
+  // A designed theme draws its motif. Seeded by the slide's own content, so a
+  // re-render (theme switch, reload) puts every piece back where it was, while
+  // neighbouring slides still differ.
+  const motif = themeDesign(theme).motif;
+  if (motif !== "none") return motifShapes(motif, theme, `${spec.layout}|${spec.title ?? ""}`);
   switch (theme.id) {
     case "light":
       return [

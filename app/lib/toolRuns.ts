@@ -132,10 +132,9 @@ export async function getToolRun(id: string): Promise<ToolRun | null> {
 /**
  * File a resource into a folder, or out of one with `null`.
  *
- * The only UPDATE this codebase makes to tool_runs, and the reason the table
- * gained an update policy in 20260902000000_folders. A generation is otherwise
- * a historical fact; where the teacher decided to put it afterwards is not part
- * of that.
+ * One of two UPDATEs this codebase makes to tool_runs (the other is a sheet's
+ * autosave, below), and the reason the table gained an update policy in
+ * 20260902000000_folders.
  *
  * Lives here rather than in folders.ts because it writes tool_runs, and this
  * module is that table's only gateway.
@@ -146,6 +145,19 @@ export async function moveRunToFolder(runId: string, folderId: string | null): P
     .from("tool_runs")
     .update({ folder_id: folderId })
     .eq("id", runId);
+  if (error) throw error;
+}
+
+/**
+ * Save a teacher's edits to a resource they own.
+ *
+ * Only the designed Worksheet and Comprehension sheets call this: they are
+ * edited in place and autosave, the way a deck does. Same owner update policy
+ * as moveRunToFolder above, so RLS confines it to the teacher's own rows.
+ */
+export async function updateToolRunOutput(runId: string, output: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("tool_runs").update({ output }).eq("id", runId);
   if (error) throw error;
 }
 

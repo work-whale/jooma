@@ -2756,7 +2756,50 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           slide.background = { color: noHash(s.background) };
         }
 
-        // Images first (background layer)
+        // Every editor shape as its PowerPoint equivalent. Anything unmapped
+        // used to fall back to "line", which turned a theme's hearts and
+        // clouds into stray strokes.
+        const PPTX_SHAPE: Record<ShapeType, string> = {
+          rect: "rect", ellipse: "ellipse", triangle: "triangle", line: "line", arrow: "rightArrow",
+          star: "star5", hexagon: "hexagon", pentagon: "pentagon", octagon: "octagon", diamond: "diamond",
+          heart: "heart", cloud: "cloud", speech: "wedgeRoundRectCallout", plus: "mathPlus", bolt: "lightningBolt",
+        };
+        const addShapeToSlide = (sh: ShapeObject) => {
+          const rot = ((sh.rotation ?? 0) % 360 + 360) % 360;
+          const shapeType =
+            sh.type === "rect" && sh.cornerRadius && sh.cornerRadius > 0 ? "roundRect" : PPTX_SHAPE[sh.type] ?? "rect";
+          const isLineLike = sh.type === "line";
+          const noFill = !sh.fill || sh.fill === "transparent" || sh.fill === "none";
+          slide.addShape(shapeType as Parameters<typeof slide.addShape>[0], {
+            x: toIn(sh.x, "w"),
+            y: toIn(sh.y, "h"),
+            w: toIn(sh.width, "w"),
+            h: toIn(sh.height, "h"),
+            fill: isLineLike
+              ? undefined
+              : noFill
+              ? { type: "none" }
+              : { color: noHash(sh.fill), transparency: Math.round((1 - sh.opacity) * 100) },
+            line: sh.strokeWidth > 0 && sh.stroke && sh.stroke !== "transparent"
+              ? { color: noHash(sh.stroke), width: sh.strokeWidth / 1.333, transparency: noFill ? Math.round((1 - sh.opacity) * 100) : undefined }
+              : isLineLike
+              ? { color: noHash(sh.stroke) || "000000", width: (sh.strokeWidth || 4) / 1.333 }
+              : { type: "none" },
+            rectRadius: sh.type === "rect" && sh.cornerRadius
+              ? Math.min(0.5, sh.cornerRadius / Math.min(sh.width, sh.height))
+              : undefined,
+            rotate: rot || undefined,
+            flipH: sh.flipX || undefined,
+            flipV: sh.flipY || undefined,
+            shadow: sh.shadow ? { type: "outer", color: "000000", blur: 8, offset: 4, angle: 45, opacity: 0.4 } : undefined,
+          });
+        };
+
+        // A theme's backdrop (motif, card) carries a negative z: drawn before
+        // the photos, so a corner of confetti never lands on top of one.
+        for (const sh of s.shapes) if ((sh.z ?? 0) < 0) addShapeToSlide(sh);
+
+        // Images next (background layer)
         for (const im of s.images) {
           // pptxgenjs rotate is in degrees (0-360)
           const rot = ((im.rotation ?? 0) % 360 + 360) % 360;
@@ -2775,44 +2818,8 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           });
         }
 
-        // Shapes
-        for (const sh of s.shapes) {
-          const rot = ((sh.rotation ?? 0) % 360 + 360) % 360;
-          const shapeType =
-            sh.type === "rect"
-              ? sh.cornerRadius && sh.cornerRadius > 0 ? "roundRect" : "rect"
-              : sh.type === "ellipse"
-              ? "ellipse"
-              : sh.type === "triangle"
-              ? "triangle"
-              : sh.type === "star"
-              ? "star5"
-              : sh.type === "hexagon"
-              ? "hexagon"
-              : sh.type === "arrow"
-              ? "rightArrow"
-              : "line";
-          const isLineLike = sh.type === "line";
-          slide.addShape(shapeType, {
-            x: toIn(sh.x, "w"),
-            y: toIn(sh.y, "h"),
-            w: toIn(sh.width, "w"),
-            h: toIn(sh.height, "h"),
-            fill: isLineLike ? undefined : { color: noHash(sh.fill), transparency: Math.round((1 - sh.opacity) * 100) },
-            line: sh.strokeWidth > 0
-              ? { color: noHash(sh.stroke), width: sh.strokeWidth / 1.333 }
-              : isLineLike
-              ? { color: noHash(sh.stroke) || "000000", width: (sh.strokeWidth || 4) / 1.333 }
-              : { type: "none" },
-            rectRadius: sh.type === "rect" && sh.cornerRadius
-              ? Math.min(0.5, sh.cornerRadius / Math.min(sh.width, sh.height))
-              : undefined,
-            rotate: rot || undefined,
-            flipH: sh.flipX || undefined,
-            flipV: sh.flipY || undefined,
-            shadow: sh.shadow ? { type: "outer", color: "000000", blur: 8, offset: 4, angle: 45, opacity: 0.4 } : undefined,
-          });
-        }
+        // Shapes, over the photos as they are on the canvas
+        for (const sh of s.shapes) if ((sh.z ?? 0) >= 0) addShapeToSlide(sh);
 
         // Texts on top
         for (const t of s.texts) {
@@ -3284,14 +3291,14 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
   return (
     <EditorGuestContext.Provider value={guest ?? null}>
-    <div className="relative flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "var(--j-bg)" }}>
+    <div className="relative flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
       {/* Full-screen overlay shown while waiting for OpenAI to respond (pre-meta phase).
           Covers the whole editor so the user sees an engaging animation rather than
           a blank slide + spinner during the 10-20 second AI wait. */}
       {preMeta && (
         <div
           className="absolute inset-0 z-200 flex flex-col items-center justify-center pointer-events-none"
-          style={{ backgroundColor: "var(--j-bg)" }}
+          style={{ backgroundColor: "var(--j-editor-canvas)" }}
         >
           <SlideshowLoadingAnimation label="Planning your deck…" subtitle="This usually takes about 15 seconds" />
         </div>
@@ -3424,7 +3431,11 @@ export default function Editor({ presentation, generationParams, guest }: Props)
             onClose={() => setFontPanelOpen(false)}
           />
         )}
-        <div className="flex-1 min-h-0 min-w-0 relative bg-gray-300">
+        <div
+          data-editor-chrome="canvas"
+          className="flex-1 min-h-0 min-w-0 relative"
+          style={{ backgroundColor: "var(--j-editor-canvas)" }}
+        >
           <div
             ref={viewportRef}
             className="absolute inset-0 overflow-auto [&::-webkit-scrollbar]:hidden"

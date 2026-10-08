@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Download, Loader2, Maximize2, Printer } from "lucide-react";
 import MarkdownResult from "@/app/components/MarkdownResult";
+import SheetDocument from "@/app/components/sheets/SheetDocument";
+import { parseSheet } from "@/app/lib/sheets/normalize";
+import type { SheetDoc } from "@/app/lib/sheets/types";
 import type { GuestAction } from "@/app/lib/guest-actions";
 import styles from "./guest.module.css";
 
@@ -68,6 +71,13 @@ export default function GuestResult({
     return () => window.clearTimeout(t);
   }, [result, isGenerating]);
 
+  // The designed sheet, editable for this visit. Edits are not kept: the
+  // stored copy is the one claimed into the library on sign up. A new result
+  // drops them, which is the "adjust state while rendering" pattern.
+  const sheet = useMemo(() => parseSheet(result), [result]);
+  const [edited, setEdited] = useState<{ base: string | null; doc: SheetDoc } | null>(null);
+  const shownSheet = edited && edited.base === result ? edited.doc : sheet;
+
   if (result === null) return null;
   const ready = !isGenerating && result.trim().length > 0;
 
@@ -105,9 +115,20 @@ export default function GuestResult({
           </button>
         </div>
       </header>
-      <div className={styles.resultBody}>
-        <MarkdownResult text={result} />
-      </div>
+      {shownSheet ? (
+        <div className="bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
+          <SheetDocument
+            doc={shownSheet}
+            edit={ready}
+            streaming={isGenerating}
+            onChange={(doc) => setEdited({ base: result, doc })}
+          />
+        </div>
+      ) : (
+        <div className={styles.resultBody}>
+          <MarkdownResult text={result} />
+        </div>
+      )}
     </section>
   );
 }
