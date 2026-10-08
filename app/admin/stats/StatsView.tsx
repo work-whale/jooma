@@ -34,7 +34,12 @@ import {
   type ChartMonth,
 } from "./Charts";
 import { conversionOf, deltaOf, toCsv, type Delta, type MonthRow } from "./export";
-import { summariseGuestTries, type GuestTryRow } from "./guestTries";
+import {
+  summariseGuestFunnel,
+  summariseGuestTries,
+  type GuestFunnelRow,
+  type GuestTryRow,
+} from "./guestTries";
 import { RANGE_PHRASE, type Range } from "./range";
 
 export type { MonthRow };
@@ -141,6 +146,8 @@ export default function StatsView({
   sources,
   guestTries,
   guestTriesError,
+  guestFunnel,
+  guestFunnelError,
   visitorsToday,
   visitorCountries,
   analyticsError,
@@ -151,6 +158,8 @@ export default function StatsView({
   sources: SourceRow[];
   guestTries: GuestTryRow[];
   guestTriesError: string | null;
+  guestFunnel: GuestFunnelRow[];
+  guestFunnelError: string | null;
   visitorsToday: number | null;
   visitorCountries: CountryVisitors[];
   analyticsError: string | null;
@@ -212,6 +221,7 @@ export default function StatsView({
   );
 
   const tries = useMemo(() => summariseGuestTries(guestTries), [guestTries]);
+  const funnel = useMemo(() => summariseGuestFunnel(guestFunnel), [guestFunnel]);
 
   const visitorTotal = Math.max(
     1,
@@ -488,11 +498,52 @@ export default function StatsView({
               </Note>
             ) : (
               <>
-                <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+                {/* People, not runs: who went from a free try to a new teacher.
+                    Each step is a share of the step before it. */}
+                <div data-testid="guest-funnel">
+                  {guestFunnelError ? (
+                    <Note tone="warn">
+                      {guestFunnelError} The admin_guest_try_funnel migration may not be pushed to
+                      this database yet. The tries below are unaffected.
+                    </Note>
+                  ) : (
+                    <>
+                      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+                        <Kpi
+                          label="Tried it"
+                          value={nf.format(funnel.total.tried)}
+                          foot="People, not tries"
+                        />
+                        <Kpi
+                          label="New accounts"
+                          value={nf.format(funnel.total.new_accounts)}
+                          foot={`${funnel.total.newRate.toFixed(1)}% of people who tried`}
+                        />
+                        <Kpi
+                          label="Started the trial"
+                          value={nf.format(funnel.total.started_trial)}
+                          foot={`${funnel.total.trialRate.toFixed(1)}% of new accounts`}
+                        />
+                        <Kpi
+                          label="Paying now"
+                          value={nf.format(funnel.total.paying)}
+                          foot={`${funnel.total.payRate.toFixed(1)}% of trials`}
+                        />
+                      </div>
+                      <p className="mt-2 text-xs" style={{ color: C.muted }}>
+                        {nf.format(funnel.total.existing_logins)}{" "}
+                        {funnel.total.existing_logins === 1 ? "teacher" : "teachers"} who already
+                        had an account logged in after trying. Not counted above.
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="mt-4 grid gap-3 grid-cols-2 lg:grid-cols-4">
                   <Kpi
                     label="All free tries"
                     value={nf.format(tries.total.tries)}
-                    foot={`${nf.format(tries.total.claimed)} signed up after (${tries.total.signupRate.toFixed(1)}%)`}
+                    foot={`${nf.format(tries.total.failed)} failed`}
                   />
                   {tries.tools.map((t) =>
                     t.soon && t.tries === 0 ? (
@@ -502,7 +553,7 @@ export default function StatsView({
                         key={t.tool}
                         label={t.label}
                         value={nf.format(t.tries)}
-                        foot={`${nf.format(t.claimed)} signed up after (${t.signupRate.toFixed(1)}%)`}
+                        foot={`${nf.format(t.succeeded)} produced something`}
                       />
                     ),
                   )}
@@ -524,7 +575,8 @@ export default function StatsView({
                             </Th>
                           ))}
                           <Th align="right">Failed</Th>
-                          <Th align="right">Signed up after</Th>
+                          <Th align="right">New accounts</Th>
+                          <Th align="right">Trials</Th>
                         </tr>
                       </thead>
                       <tbody>
@@ -542,7 +594,14 @@ export default function StatsView({
                               <span style={{ color: C.muted }}>{nf.format(m.failed)}</span>
                             </Td>
                             <Td align="right" mono>
-                              {nf.format(m.claimed)}
+                              {guestFunnelError
+                                ? "n/a"
+                                : nf.format(funnel.byMonth[m.month_start]?.new_accounts ?? 0)}
+                            </Td>
+                            <Td align="right" mono>
+                              {guestFunnelError
+                                ? "n/a"
+                                : nf.format(funnel.byMonth[m.month_start]?.started_trial ?? 0)}
                             </Td>
                           </Tr>
                         ))}
@@ -557,8 +616,11 @@ export default function StatsView({
             <span>
               Each visitor gets three free tries a day across Slides and Comprehension, counted by
               browser and by network. Tries include failed runs, which do not use up a free try.{" "}
-              <b>Signed up after</b> means the visitor made an account or logged in and the work
-              moved into it, on any day. The rate is out of the tries that produced something.
+              <b>New accounts</b> counts people, once each, in the month they first tried, and only
+              when the account was made after that try. A teacher who already had an account and
+              logged in is left out. A try links to an account only when the visitor signs up in
+              the same browser, so these figures read low. <b>Paying now</b> means the trial
+              ended and the card was charged.
             </span>
           </CardFooter>
         </Card>

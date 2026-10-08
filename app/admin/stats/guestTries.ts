@@ -1,8 +1,14 @@
 // The "Free tries from the hero" panel's arithmetic.
 //
 // Pure and DOM-free, like export.ts, so the totals and rates can be unit tested
-// without the database. The rows come from admin_guest_try_stats(), one per
-// month per tool.
+// without the database. Two sources:
+//
+//   admin_guest_try_stats()   RUNS, one row per month per tool. Activity only.
+//   admin_guest_try_funnel()  PEOPLE, one row per month of first try: tried,
+//                             new account, started the trial, paying now.
+//
+// Signups come only from the funnel. The runs' `claimed` count moves for a
+// login as much as a signup, and once per deck, so it is not shown as one.
 
 export interface GuestTryRow {
   month_start: string;
@@ -36,8 +42,6 @@ export interface GuestToolTotal extends GuestTryTool {
   claimed: number;
   /** Summed per month, so a guest active in two months counts twice. */
   guests: number;
-  /** Claimed over succeeded, as a percentage. Zero when nothing succeeded. */
-  signupRate: number;
 }
 
 export interface GuestTryMonth {
@@ -46,17 +50,12 @@ export interface GuestTryMonth {
   /** Tries per tool key. */
   byTool: Record<string, number>;
   failed: number;
-  claimed: number;
 }
 
 export interface GuestTrySummary {
   tools: GuestToolTotal[];
   months: GuestTryMonth[];
-  total: { tries: number; succeeded: number; failed: number; claimed: number; signupRate: number };
-}
-
-function rate(part: number, whole: number): number {
-  return whole > 0 ? (part / whole) * 100 : 0;
+  total: { tries: number; succeeded: number; failed: number };
 }
 
 export function summariseGuestTries(rows: GuestTryRow[]): GuestTrySummary {
@@ -72,16 +71,13 @@ export function summariseGuestTries(rows: GuestTryRow[]): GuestTrySummary {
     const mine = rows.filter((r) => r.tool === t.tool);
     const sum = (k: "tries" | "succeeded" | "failed" | "claimed" | "guests") =>
       mine.reduce((a, r) => a + r[k], 0);
-    const succeeded = sum("succeeded");
-    const claimed = sum("claimed");
     return {
       ...t,
       tries: sum("tries"),
-      succeeded,
+      succeeded: sum("succeeded"),
       failed: sum("failed"),
-      claimed,
+      claimed: sum("claimed"),
       guests: sum("guests"),
-      signupRate: rate(claimed, succeeded),
     };
   });
 
@@ -89,10 +85,9 @@ export function summariseGuestTries(rows: GuestTryRow[]): GuestTrySummary {
   for (const r of rows) {
     const m =
       byMonth.get(r.month_start) ??
-      { month_start: r.month_start, label: r.label, byTool: {}, failed: 0, claimed: 0 };
+      { month_start: r.month_start, label: r.label, byTool: {}, failed: 0 };
     m.byTool[r.tool] = (m.byTool[r.tool] ?? 0) + r.tries;
     m.failed += r.failed;
-    m.claimed += r.claimed;
     byMonth.set(r.month_start, m);
   }
   const months = [...byMonth.values()].sort((a, b) => a.month_start.localeCompare(b.month_start));
@@ -102,10 +97,72 @@ export function summariseGuestTries(rows: GuestTryRow[]): GuestTrySummary {
       tries: a.tries + t.tries,
       succeeded: a.succeeded + t.succeeded,
       failed: a.failed + t.failed,
-      claimed: a.claimed + t.claimed,
     }),
-    { tries: 0, succeeded: 0, failed: 0, claimed: 0 },
+    { tries: 0, succeeded: 0, failed: 0 },
   );
 
-  return { tools: totals, months, total: { ...total, signupRate: rate(total.claimed, total.succeeded) } };
+  return { tools: totals, months, total };
+}
+
+// ── The funnel: people, not runs ─────────────────────────────────────────────
+
+export interface GuestFunnelRow {
+  month_start: string;
+  label: string;
+  /** Distinct people whose first try fell in this month. */
+  tried: number;
+  /** Their account was created after their first try. */
+  new_accounts: number;
+  /** Of the new accounts, went through checkout and started the trial. */
+  started_trial: number;
+  /** Of the new accounts, the subscription is active now: the trial charged. */
+  paying: number;
+  /** Had an account before trying and logged in. Not a conversion. */
+  existing_logins: number;
+}
+
+type FunnelCounts = Omit<GuestFunnelRow, "month_start" | "label">;
+
+export interface GuestFunnelSummary {
+  total: FunnelCounts & {
+    /** New accounts over tried, as a percentage. */
+    newRate: number;
+    /** Trials over new accounts. */
+    trialRate: number;
+    /** Paying over trials. */
+    payRate: number;
+  };
+  /** Keyed by month_start, to line up with the runs table. */
+  byMonth: Record<string, FunnelCounts>;
+}
+
+/** Each step as a percentage of the step before it. Zero, not NaN, when the
+ *  step before is empty. */
+function rate(part: number, whole: number): number {
+  return whole > 0 ? (part / whole) * 100 : 0;
+}
+
+export function summariseGuestFunnel(rows: GuestFunnelRow[]): GuestFunnelSummary {
+  const zero: FunnelCounts = { tried: 0, new_accounts: 0, started_trial: 0, paying: 0, existing_logins: 0 };
+  const keys = Object.keys(zero) as (keyof FunnelCounts)[];
+
+  const byMonth: Record<string, FunnelCounts> = {};
+  const t = { ...zero };
+  for (const r of rows) {
+    const m = (byMonth[r.month_start] ??= { ...zero });
+    for (const k of keys) {
+      m[k] += r[k];
+      t[k] += r[k];
+    }
+  }
+
+  return {
+    total: {
+      ...t,
+      newRate: rate(t.new_accounts, t.tried),
+      trialRate: rate(t.started_trial, t.new_accounts),
+      payRate: rate(t.paying, t.started_trial),
+    },
+    byMonth,
+  };
 }

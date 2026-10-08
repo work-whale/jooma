@@ -216,6 +216,25 @@ test.describe("marketing", () => {
       await expect(labels.filter({ hasText: new RegExp(`^${tile}$`) })).toBeVisible();
     }
   });
+
+  test("counts new teachers from the hero as people, logins left out", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+
+    // The funnel has its own RPC, admin_guest_try_funnel. Its warning missing
+    // means that migration is pushed and answered for this role.
+    const funnel = page.getByTestId("guest-funnel");
+    await expect(funnel.getByText(/could not be loaded/)).toHaveCount(0);
+
+    const labels = funnel.locator("p.uppercase");
+    for (const tile of ["Tried it", "New accounts", "Started the trial", "Paying now"]) {
+      await expect(labels.filter({ hasText: new RegExp(`^${tile}$`) })).toBeVisible();
+    }
+    await expect(funnel.getByText(/Not counted above/)).toBeVisible();
+
+    // The old run-based figure counted logins and every deck. It must not return.
+    await expect(page.getByTestId("guest-tries").getByText(/signed up after/i)).toHaveCount(0);
+  });
 });
 
 test.describe("other roles", () => {
