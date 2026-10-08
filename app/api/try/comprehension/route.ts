@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { comprehensionMessages, type GenerateRequest } from "@/app/lib/comprehension-prompt";
+import { finishSheet } from "@/app/lib/sheets/context";
 import {
   checkTrial,
   clientIp,
@@ -89,13 +90,18 @@ export async function POST(req: Request) {
     streamed = await streamChat({
       toolSlug: "comprehension-generator",
       ...(await modelFor("comprehension-generator", "gpt-4o")),
-      max_completion_tokens: 4096,
+      max_completion_tokens: 8000,
       messages: built.messages,
+      response_format: built.response_format,
       runId,
       onComplete: async (text, ok) => {
+        // Stored as the finished sheet, exactly as the browser normalises it,
+        // so a claimed run opens in the tool as a sheet (with the teacher's own
+        // passage placed back where the model never saw it).
+        const sheet = ok ? finishSheet("comprehension", text, body) : null;
         await finishTrialRun(
           trialId,
-          ok ? { status: "done", output: { text } } : { status: "failed" },
+          sheet ? { status: "done", output: { text: sheet } } : { status: "failed" },
         );
       },
     });

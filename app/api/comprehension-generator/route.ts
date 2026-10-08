@@ -5,6 +5,8 @@ import { comprehensionMessages, type GenerateRequest } from "@/app/lib/comprehen
 
 export type { GenerateRequest };
 
+/** Streams a comprehension as sheet JSON (app/lib/sheets); see
+ *  comprehension-prompt.ts for the prompt and the schema. */
 export async function POST(req: NextRequest) {
   const body: GenerateRequest = await req.json();
 
@@ -16,7 +18,9 @@ export async function POST(req: NextRequest) {
   return streamChat({
     toolSlug: "comprehension-generator",
     ...(await labModelFor(body, "comprehension-generator", "gpt-4o")),
-    max_completion_tokens: 4096,
+    // A passage and its questions as JSON: more headroom than the markdown had.
+    max_completion_tokens: 8000,
     messages: built.messages,
+    response_format: built.response_format,
   });
 }

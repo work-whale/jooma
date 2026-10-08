@@ -90,6 +90,7 @@ export default function QuestionTypesField({
             key={type}
             type="button"
             onClick={() => toggle(type)}
+            aria-pressed={value.includes(type)}
             className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${
               value.includes(type)
                 ? "bg-stone-700 text-white border-stone-700"
@@ -103,6 +104,9 @@ export default function QuestionTypesField({
 
       {value.length === 0 && !optional && (
         <p className="text-xs text-red-500">Select at least one question type.</p>
+      )}
+      {value.length === 0 && optional && (
+        <p className="text-xs text-gray-400">None picked: you will get a mix that suits the subject.</p>
       )}
 
       {showCounts && value.length > 0 && (

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/auth/client";
 import MiniSlide from "@/app/components/editor/MiniSlide";
 import type { SlideJSON } from "@/app/lib/presentations";
+import { outputExcerpt } from "@/app/lib/sheets/markdown";
 import { fmtDateTime } from "../format";
 import { Btn, C, Card, EmptyState, FilterBar, Note, PageHead, Tag, useToast } from "../ui";
 
@@ -129,7 +130,7 @@ export default function ShowcaseView({
                     <MiniSlide slide={row.first_slide} width={240} themeId={row.first_slide.themeId} thumbnailMode />
                   ) : (
                     <p className="p-3 text-xs leading-relaxed" style={{ color: C.muted }}>
-                      {(row.excerpt ?? "").slice(0, 260)}
+                      {outputExcerpt(row.excerpt ?? "").slice(0, 260)}
                     </p>
                   )}
                 </div>

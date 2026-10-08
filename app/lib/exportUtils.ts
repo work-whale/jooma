@@ -13,6 +13,7 @@ import {
   BorderStyle,
   PageBreak,
 } from "docx";
+import { cleanMathText } from "@/app/lib/math-text";
 
 /**
  * Sentinel marking a hard page break, on a line of its own.
@@ -43,7 +44,7 @@ function parseInlineRuns(text: string): TextRun[] {
 
 // --- DOCX export ---
 export async function exportToDocx(text: string, filename: string) {
-  const lines = text.split("\n");
+  const lines = cleanMathText(text).split("\n");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const children: any[] = [];
   let i = 0;
@@ -465,7 +466,7 @@ function friendlyTitle(filename: string): string {
 }
 
 function markdownToHtml(text: string): string {
-  const sanitized = text.replace(/\u00A9/g, "(c)");
+  const sanitized = cleanMathText(text.replace(/\u00A9/g, "(c)"));
   const lines = sanitized.split("\n");
   const out: string[] = [];
   let i = 0;
@@ -533,7 +534,7 @@ function markdownToHtml(text: string): string {
   return out.join("\n");
 }
 
-function triggerDownload(blob: Blob, filename: string) {
+export function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

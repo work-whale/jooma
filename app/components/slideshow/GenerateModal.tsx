@@ -1,15 +1,16 @@
 "use client";
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import NextImage from "next/image";
-import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, HelpCircle, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
+import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import { parseYouTubeId } from "@/app/components/editor/youtube";
 import ResourceLibraryModal from "./ResourceLibraryModal";
-import { THEME_CATEGORIES, getThemesByCategory, DEFAULT_THEME_ID, ART_STYLES, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
-import { COUNTRIES, CURRICULA, getCurriculaForCountry, getSubjectsForCurriculum, getStrandsForSubject } from "@/app/lib/curriculum";
+import { DEFAULT_THEME_ID, DEFAULT_ART_STYLE, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import ThemePicker from "./ThemePicker";
+import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
+import { STAGE_LABEL, curriculumNameFor, isCurriculumYear, stageForYear, type NcStatement } from "@/app/lib/national-curriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
 import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
@@ -61,9 +62,10 @@ export interface GenerationParams {
    *  "wikipedia.org/wiki/Photosynthesis". Shown in the UI as a chip and used
    *  in the AI prompt header. */
   resourceSource?: string;
-  /** Curriculum alignment — collected via the "Align to curriculum" toggle.
-   *  Sent to the AI as additional context so the deck targets the right
-   *  subject/strand. No standards lookup behind it (yet). */
+  /** Curriculum alignment, from the "Align to curriculum" card. `statements`
+   *  are the ones the teacher ticked, verbatim from
+   *  app/lib/national-curriculum; the deck is built to teach them. Decks saved
+   *  before the statement picker carry only subject and strand. */
   curriculum?: {
     countryId: string;
     countryName: string;
@@ -71,6 +73,9 @@ export interface GenerationParams {
     grade: string;
     subject: string;
     strand: string;
+    stage?: string;
+    year?: string;
+    statements?: { id: string; text: string }[];
   };
 }
 
@@ -231,6 +236,9 @@ export default function GenerateModal({
     el.style.height = `${Math.min(el.scrollHeight, 260)}px`;
   }, [additionalInstructions]);
   const [themeId, setThemeId] = useState<string>(DEFAULT_THEME_ID);
+  // Until the teacher picks a theme, the last step opens on the default design
+  // for the year: Playful up to Year 6, Professional after.
+  const [themeTouched, setThemeTouched] = useState(false);
   const [artStyle, setArtStyle] = useState<ArtStyleId>(DEFAULT_ART_STYLE);
 
   const [includeObjectives, setIncludeObjectives] = useState(false);
@@ -246,14 +254,13 @@ export default function GenerateModal({
   const [vocabInput, setVocabInput] = useState("");
   const [includeAudio, setIncludeAudio] = useState(false);
   const [includeYouTube, setIncludeYouTube] = useState(false);
-  // Curriculum alignment — toggled off by default. The dropdowns below cascade
-  // off the selected country / curriculum / subject.
+  // Curriculum alignment — toggled off by default. The card owns its
+  // dropdowns and the topic match; the wizard keeps what was chosen, and the
+  // ticked statements in full, to send with the deck.
   const [alignCurriculum, setAlignCurriculum] = useState(false);
-  const [curCountryId, setCurCountryId] = useState("england");
-  const [curCurriculumId, setCurCurriculumId] = useState("england-national");
-  const [curGrade, setCurGrade] = useState("");
-  const [curSubject, setCurSubject] = useState("");
-  const [curStrand, setCurStrand] = useState("");
+  const [curSelection, setCurSelection] = useState<CurriculumSelection>(EMPTY_SELECTION);
+  const [curStatements, setCurStatements] = useState<NcStatement[]>([]);
+  const curYear = curSelection.year || year;
   // Resource attached in Step 1 — always available (no toggle).
   // When attached, the extracted text gets sent to the AI as base material.
   const [resourceText, setResourceText] = useState("");
@@ -286,41 +293,26 @@ export default function GenerateModal({
   const [error, setError] = useState<string | null>(null);
   const [outlineBusy, setOutlineBusy] = useState(false);
   const [outlineError, setOutlineError] = useState<string | null>(null);
-  const [subjectSuggesting, setSubjectSuggesting] = useState(false);
 
-  // Auto-fill the curriculum subject/strand from the topic (via AI) when the
-  // "Align to curriculum" section is opened. Keyed by curriculum + topic so it
-  // runs once per combination and never overrides a subject the user picked.
-  const subjectSuggestKeyRef = useRef("");
-  useEffect(() => {
-    if (!alignCurriculum || !topic.trim() || curSubject) return;
-    const subjects = getSubjectsForCurriculum(curCurriculumId);
-    if (subjects.length === 0) return;
-    const key = `${curCurriculumId}::${topic.trim().toLowerCase()}`;
-    if (subjectSuggestKeyRef.current === key) return;
-    subjectSuggestKeyRef.current = key;
-    let cancelled = false;
-    setSubjectSuggesting(true);
-    (async () => {
-      try {
-        const res = await fetch("/api/suggest-subject", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic: topic.trim(), subjects }),
-        });
-        if (!res.ok || cancelled) return;
-        const { subject, strand } = (await res.json()) as { subject: string; strand: string };
-        if (cancelled || !subject) return;
-        setCurSubject(subject);
-        if (strand) setCurStrand(strand);
-      } catch {
-        /* best-effort — leave the dropdown for the user to fill */
-      } finally {
-        if (!cancelled) setSubjectSuggesting(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [alignCurriculum, topic, curCurriculumId, curSubject]);
+  /** What "Align to curriculum" sends: the ticked statements, verbatim, with
+   *  where they come from. Undefined when the card is off, the year is not
+   *  covered, or nothing is ticked. */
+  const curriculumParam = (): GenerationParams["curriculum"] => {
+    if (!alignCurriculum || !isCurriculumYear(curYear) || curStatements.length === 0) return undefined;
+    const stage = stageForYear(curYear);
+    const strands = new Set(curStatements.map((s) => s.strand));
+    return {
+      countryId: "england",
+      countryName: "England",
+      curriculumName: curriculumNameFor(curYear),
+      grade: curYear,
+      year: curYear,
+      stage: stage ? STAGE_LABEL[stage] : undefined,
+      subject: curSelection.subject || curStatements[0].subject,
+      strand: curSelection.strand || (strands.size === 1 ? curStatements[0].strand : ""),
+      statements: curStatements.map((s) => ({ id: s.id, text: s.text })),
+    };
+  };
 
   // Resolve the pasted YouTube link: parse the id locally, then confirm with
   // YouTube that it exists and will actually play in an embed. Catching a dead
@@ -380,13 +372,12 @@ export default function GenerateModal({
           topic: topic.trim(),
           year: year || undefined,
           readingLevel,
-          // Feed the subject/curriculum the wizard already knows so the outline
-          // is subject-aware and curriculum-aligned, not just topic + year.
-          subject: curSubject || undefined,
-          curriculum: alignCurriculum && curCurriculumId
-            ? (CURRICULA.find((c) => c.id === curCurriculumId)?.name ?? undefined)
-            : undefined,
-          strand: alignCurriculum ? (curStrand || undefined) : undefined,
+          // Feed the curriculum the wizard already knows so the outline is
+          // built on the ticked statements, not just topic + year.
+          subject: (alignCurriculum && curSelection.subject) || undefined,
+          curriculum: curriculumParam()?.curriculumName,
+          strand: curriculumParam()?.strand || undefined,
+          statements: curriculumParam()?.statements?.map((s) => s.text),
         }),
       });
       if (!r.ok) {
@@ -504,18 +495,7 @@ export default function GenerateModal({
         artStyle,
         resourceText: resourceText || undefined,
         resourceSource: resourceSource || undefined,
-        curriculum:
-          alignCurriculum && curSubject && curStrand
-            ? {
-                countryId: curCountryId,
-                countryName: COUNTRIES.find((c) => c.id === curCountryId)?.name ?? "",
-                curriculumName:
-                  CURRICULA.find((c) => c.id === curCurriculumId)?.name ?? "",
-                grade: curGrade || year || "",
-                subject: curSubject,
-                strand: curStrand,
-              }
-            : undefined,
+        curriculum: curriculumParam(),
       };
       if (onSubmit) {
         await onSubmit(params);
@@ -602,125 +582,14 @@ export default function GenerateModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {step === 3 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {THEME_CATEGORIES.map((cat) => {
-                const themes = getThemesByCategory(cat.id);
-                if (themes.length === 0) return null;
-                return (
-                  <Fragment key={cat.id}>
-                    <div className="col-span-2 sm:col-span-3 flex items-center justify-between gap-2 mt-2 first:mt-0">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs font-semibold text-gray-700">{cat.label}</span>
-                        <span className="text-[10px] text-gray-400">{cat.description}</span>
-                      </div>
-                      {/* Art-style toggle only on the categories with both variants. */}
-                      {(cat.id === "classic" || cat.id === "scenic") && (
-                        <div className="flex gap-0.5 p-0.5 rounded-lg bg-gray-100 shrink-0">
-                          {ART_STYLES.map((s) => {
-                            const active = artStyle === s.id;
-                            return (
-                              <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => setArtStyle(s.id)}
-                                className={`px-2 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
-                                  active ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                                }`}
-                              >
-                                {s.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                    {themes.map((t) => {
-                      const selected = themeId === t.id;
-                      const art = getThemeArt(t, artStyle);
-                      return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setThemeId(t.id)}
-                    disabled={busy}
-                    className="rounded-xl border-2 overflow-hidden text-left transition-shadow hover:shadow-md focus:outline-none disabled:opacity-60"
-                    style={{
-                      borderColor: selected ? "var(--j-purple)" : "var(--j-line)",
-                      backgroundColor: "#fff",
-                    }}
-                    aria-pressed={selected}
-                  >
-                    <div
-                      className="aspect-4/3 p-3 flex flex-col justify-between relative overflow-hidden"
-                      style={{
-                        backgroundColor: t.palette.background,
-                        color: t.palette.text,
-                        fontFamily: t.fonts.heading,
-                      }}
-                    >
-                      {/* Thumbnail-resolution preview of the theme art. next/image
-                          serves a small, optimised (WebP) version sized to the card
-                          and lazy-loads it, rather than the full-res slide PNG. */}
-                      {art && (
-                        <NextImage
-                          src={art.src}
-                          alt=""
-                          fill
-                          sizes="240px"
-                          style={{ objectFit: "cover", objectPosition: "center" }}
-                        />
-                      )}
-                      {/* Legibility veil over the illustration background */}
-                      {art && (
-                        <div className="absolute inset-0" style={{ backgroundColor: art.scrim }} />
-                      )}
-                      <div
-                        className="relative h-1 w-8 rounded-full"
-                        style={{ backgroundColor: t.palette.accent }}
-                      />
-                      <div className="relative">
-                        <p
-                          className="text-sm font-bold leading-tight"
-                          style={{ fontFamily: t.fonts.heading, color: t.palette.headingColor ?? t.palette.text }}
-                        >
-                          {t.name}
-                        </p>
-                        <p
-                          className="text-[10px] mt-0.5 leading-tight"
-                          style={{ color: t.palette.muted, fontFamily: t.fonts.body }}
-                        >
-                          Lorem ipsum dolor sit amet
-                        </p>
-                      </div>
-                    </div>
-                    <div
-                      className="px-3 py-2 border-t flex items-center justify-between"
-                      style={{ borderColor: selected ? "var(--j-purple)" : "var(--j-line)" }}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold truncate" style={{ color: "var(--j-purple)" }}>
-                          {t.name}
-                        </p>
-                        <p className="text-[10px] text-gray-500 truncate">{t.description}</p>
-                      </div>
-                      {selected && (
-                        <div
-                          className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: "var(--j-purple)" }}
-                        >
-                          <svg viewBox="0 0 20 20" className="w-2.5 h-2.5 text-white fill-current">
-                            <path d="M7.6 13.6 4 10l1.4-1.4 2.2 2.2 7-7L16 5.2z" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                      );
-                    })}
-                  </Fragment>
-                );
-              })}
-            </div>
+            <ThemePicker
+              value={themeId}
+              onChange={(id) => { setThemeId(id); setThemeTouched(true); }}
+              artStyle={artStyle}
+              onArtStyleChange={setArtStyle}
+              initialFamily={getTheme(themeId).family}
+              disabled={busy}
+            />
           ) : step === 1 ? (
             <>
               {/* Topic input */}
@@ -867,33 +736,17 @@ export default function GenerateModal({
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Lesson</p>
                 <div className="space-y-2">
-                  <CurriculumAlignmentCard
+                  <CurriculumAlignment
                     checked={alignCurriculum}
-                    onChange={setAlignCurriculum}
-                    countryId={curCountryId}
-                    onCountryChange={(id) => {
-                      setCurCountryId(id);
-                      // Cascade: when country flips, default to its first
-                      // curriculum (if any) and reset subject/strand.
-                      const first = getCurriculaForCountry(id)[0]?.id ?? "";
-                      setCurCurriculumId(first);
-                      setCurSubject("");
-                      setCurStrand("");
+                    onCheckedChange={setAlignCurriculum}
+                    topic={topic}
+                    stepYear={year}
+                    value={curSelection}
+                    onChange={(next, selected) => {
+                      setCurSelection(next);
+                      setCurStatements(selected);
                     }}
-                    curriculumId={curCurriculumId}
-                    onCurriculumChange={(id) => {
-                      setCurCurriculumId(id);
-                      setCurSubject("");
-                      setCurStrand("");
-                    }}
-                    grade={curGrade || year}
-                    onGradeChange={setCurGrade}
-                    subject={curSubject}
-                    onSubjectChange={(s) => { setCurSubject(s); setCurStrand(""); }}
-                    strand={curStrand}
-                    onStrandChange={setCurStrand}
                     disabled={busy}
-                    suggesting={subjectSuggesting}
                   />
                   <ToggleCard
                     icon={<Target className="w-4 h-4 text-rose-600" />}
@@ -1364,7 +1217,10 @@ export default function GenerateModal({
               </button>
               <button
                 type="button"
-                onClick={() => setStep(3)}
+                onClick={() => {
+                  if (!themeTouched) setThemeId(DEFAULT_THEME_FOR_FAMILY[defaultFamilyForYear(year)]);
+                  setStep(3);
+                }}
                 disabled={busy}
                 className="px-4 py-2 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
                 style={{ backgroundColor: "var(--j-purple)", color: "#fff" }}
@@ -1477,12 +1333,6 @@ function ToggleCard({
   );
 }
 
-// "Align to curriculum" toggle card. When checked, expands into a small form
-// with cascading dropdowns (country → curriculum → subject → strand) plus a
-// grade selector. The picked values are forwarded to the AI as extra context.
-// Country picker with flag images. Native <select> can't render <img> inside
-// <option>, and emoji flags don't render on Windows — so this is a custom
-// dropdown that fetches SVG flags from flagcdn.com (same pattern as the
 // ── PillSelect ────────────────────────────────────────────────────────────────
 // Inline pill button that opens a small dropdown list. Used in Step 1 for Year,
 // Reading Level, and Slide Count — replacing the old 3-column grid of selects.
@@ -1779,7 +1629,6 @@ function InlineUploadZone({
   );
 }
 
-// CountrySelect in /complete-profile). Used inside CurriculumAlignmentCard.
 // Legacy ResourceAttachmentCard — currently unused but kept for potential reuse.
 function ResourceAttachmentCard({
   checked,
@@ -1971,249 +1820,5 @@ function ResourceButton({
         </span>
       )}
     </button>
-  );
-}
-
-function CountryDropdown({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  onChange: (id: string) => void;
-  disabled?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const selected = COUNTRIES.find((c) => c.id === value) ?? COUNTRIES[0];
-
-  // Close when clicking outside.
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
-  }, [open]);
-
-  return (
-    <div ref={wrapperRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        disabled={disabled}
-        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none disabled:opacity-60"
-        style={{ borderColor: "var(--j-line)" }}
-      >
-        <FlagImg code={selected.flagCode} className="w-4 h-3 shrink-0" />
-        <span className="flex-1 text-left truncate">{selected.name}</span>
-        <ChevronRight className="w-3 h-3 text-gray-500 rotate-90 shrink-0" />
-      </button>
-      {open && (
-        <div
-          className="absolute z-20 mt-1 left-0 w-full max-h-64 overflow-y-auto bg-white border rounded-lg shadow-lg py-1"
-          style={{ borderColor: "var(--j-line)" }}
-        >
-          {COUNTRIES.map((c) => {
-            const isSel = c.id === selected.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => { onChange(c.id); setOpen(false); }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs hover:bg-gray-50 text-left"
-                style={isSel ? { backgroundColor: "var(--j-tint)" } : undefined}
-              >
-                <FlagImg code={c.flagCode} className="w-4 h-3 shrink-0" />
-                <span className="flex-1 truncate">{c.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Inline flagcdn.com image — matches the pattern used in /complete-profile.
-// Renders an aspect-correct rectangular flag SVG so it works on Windows
-// (which doesn't draw emoji flags) and the UK subdivisions.
-function FlagImg({ code, className }: { code: string; className?: string }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return (
-    <img
-      src={`https://flagcdn.com/${code}.svg`}
-      alt=""
-      aria-hidden="true"
-      className={`inline-block object-cover rounded-sm ${className ?? ""}`}
-    />
-  );
-}
-
-function CurriculumAlignmentCard({
-  checked,
-  onChange,
-  countryId, onCountryChange,
-  curriculumId, onCurriculumChange,
-  grade, onGradeChange,
-  subject, onSubjectChange,
-  strand, onStrandChange,
-  disabled,
-  suggesting,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  countryId: string;
-  onCountryChange: (id: string) => void;
-  curriculumId: string;
-  onCurriculumChange: (id: string) => void;
-  grade: string;
-  onGradeChange: (g: string) => void;
-  subject: string;
-  onSubjectChange: (s: string) => void;
-  strand: string;
-  onStrandChange: (s: string) => void;
-  disabled?: boolean;
-  suggesting?: boolean;
-}) {
-  const [hintOpen, setHintOpen] = useState(false);
-  const curricula = getCurriculaForCountry(countryId);
-  const subjects = getSubjectsForCurriculum(curriculumId);
-  const strands = getStrandsForSubject(curriculumId, subject);
-  const selectCls =
-    "w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none disabled:opacity-60 truncate";
-
-  return (
-    <div
-      className="rounded-xl border transition-colors overflow-hidden"
-      style={
-        checked
-          ? { backgroundColor: "#fff", borderColor: "var(--j-purple)" }
-          : { backgroundColor: "#fff", borderColor: "var(--j-line)" }
-      }
-    >
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        disabled={disabled}
-        className="w-full flex items-center gap-3 p-3 text-left disabled:opacity-60"
-      >
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-emerald-100">
-          <BookOpen className="w-4 h-4 text-emerald-600" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: "var(--j-purple)" }}>Align to curriculum</p>
-          <p className="text-xs text-gray-500 truncate">Tailor the deck to a specific subject and strand</p>
-        </div>
-        <div
-          className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
-          style={
-            checked
-              ? { backgroundColor: "var(--j-purple)", borderColor: "var(--j-purple)" }
-              : { borderColor: "var(--j-line)" }
-          }
-        >
-          {checked && (
-            <svg viewBox="0 0 20 20" className="w-3 h-3 text-white fill-current">
-              <path d="M7.6 13.6 4 10l1.4-1.4 2.2 2.2 7-7L16 5.2z" />
-            </svg>
-          )}
-        </div>
-      </button>
-      {checked && (
-        <div className="px-3 pb-3 pt-3 space-y-2" style={{ borderTop: "1px solid #F0EFE8" }}>
-          {/* Row 1: country · curriculum · grade */}
-          <div className="grid grid-cols-3 gap-2">
-            <CountryDropdown
-              value={countryId}
-              onChange={onCountryChange}
-              disabled={disabled}
-            />
-            <select
-              value={curriculumId}
-              onChange={(e) => onCurriculumChange(e.target.value)}
-              disabled={disabled || curricula.length === 0}
-              className={selectCls}
-              style={{ borderColor: "var(--j-line)" }}
-            >
-              {curricula.length === 0 ? (
-                <option value="">No curriculum available</option>
-              ) : (
-                curricula.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))
-              )}
-            </select>
-            <select
-              value={grade}
-              onChange={(e) => onGradeChange(e.target.value)}
-              disabled={disabled}
-              className={selectCls}
-              style={{ borderColor: "var(--j-line)" }}
-            >
-              <option value="">Select grade</option>
-              {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </div>
-
-          {/* Row 2: subject (full width) — auto-suggested from the topic */}
-          <div className="relative">
-            <select
-              value={subject}
-              onChange={(e) => onSubjectChange(e.target.value)}
-              disabled={disabled || subjects.length === 0}
-              className={selectCls}
-              style={{ borderColor: "var(--j-line)" }}
-            >
-              <option value="">{suggesting ? "Finding best subject…" : "Select subject"}</option>
-              {subjects.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
-            </select>
-            {suggesting && (
-              <Loader2 className="w-4 h-4 text-gray-400 animate-spin absolute right-7 top-1/2 -translate-y-1/2 pointer-events-none" />
-            )}
-          </div>
-
-          {/* Row 3: strand (full width, cascades off subject) */}
-          <select
-            value={strand}
-            onChange={(e) => onStrandChange(e.target.value)}
-            disabled={disabled || !subject || strands.length === 0}
-            className={selectCls}
-            style={{ borderColor: "var(--j-line)" }}
-          >
-            <option value="">{subject ? "Select strand" : "Pick a subject first"}</option>
-            {strands.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-
-          {/* Footer: "Can't see a standard?" tooltip — purely informational */}
-          <div className="relative inline-block">
-            <button
-              type="button"
-              onClick={() => setHintOpen((v) => !v)}
-              disabled={disabled}
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 disabled:opacity-60"
-            >
-              <HelpCircle className="w-3 h-3" />
-              Can&apos;t see a standard?
-            </button>
-            {hintOpen && (
-              <div
-                className="absolute z-10 left-0 mt-1 w-72 p-3 bg-white rounded-xl border shadow-lg"
-                style={{ borderColor: "var(--j-line)" }}
-              >
-                <p className="text-xs font-semibold text-gray-900 mb-1">Don&apos;t worry — this is optional</p>
-                <p className="text-[11px] text-gray-600 leading-snug">
-                  Jooma still designs accurate, classroom-ready decks without a curriculum strand attached.
-                  Leave the toggle off if your topic doesn&apos;t fit a standard.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
   );
 }

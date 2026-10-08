@@ -4,7 +4,7 @@ import {
   visitorsByMonth,
   visitorsToday,
 } from "@/app/lib/vercelAnalytics";
-import type { GuestTryRow } from "./guestTries";
+import type { GuestFunnelRow, GuestTryRow } from "./guestTries";
 import { monthsFor, parseRange } from "./range";
 import StatsView, {
   type CountryRow,
@@ -57,6 +57,7 @@ export default async function AdminStatsPage(props: {
     { data: byCountry },
     { data: bySource },
     { data: guestTries, error: guestTriesError },
+    { data: guestFunnel, error: guestFunnelError },
     today,
     visitorMonths,
     countryVisitors,
@@ -65,6 +66,7 @@ export default async function AdminStatsPage(props: {
     supabase.rpc("admin_signup_stats_by_country", { p_months: months, p_limit: 10 }),
     supabase.rpc("admin_signup_stats_by_source", { p_months: months }),
     supabase.rpc("admin_guest_try_stats", { p_months: months }),
+    supabase.rpc("admin_guest_try_funnel", { p_months: months }),
     visitorsToday(),
     visitorsByMonth(months),
     visitorsByCountryToday(6),
@@ -90,6 +92,7 @@ export default async function AdminStatsPage(props: {
   }));
 
   if (guestTriesError) console.warn("[stats] admin_guest_try_stats failed:", guestTriesError.message);
+  if (guestFunnelError) console.warn("[stats] admin_guest_try_funnel failed:", guestFunnelError.message);
 
   return (
     <StatsView
@@ -118,6 +121,17 @@ export default async function AdminStatsPage(props: {
       // Its own error, not the page's: until the migration is pushed this one
       // panel says so and everything else renders as before.
       guestTriesError={guestTriesError ? "Free try figures could not be loaded." : null}
+      guestFunnel={((guestFunnel ?? []) as GuestFunnelRow[]).map((f) => ({
+        ...f,
+        month_start: String(f.month_start),
+        tried: Number(f.tried),
+        new_accounts: Number(f.new_accounts),
+        started_trial: Number(f.started_trial),
+        paying: Number(f.paying),
+        existing_logins: Number(f.existing_logins),
+      }))}
+      // Its own error again, so the funnel can be pushed after the tries.
+      guestFunnelError={guestFunnelError ? "Signup figures could not be loaded." : null}
       visitorsToday={today.data?.visitors ?? null}
       visitorCountries={countryVisitors.data ?? []}
       analyticsError={today.error}

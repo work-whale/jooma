@@ -5,6 +5,8 @@ import { X, ChevronLeft, Loader2, Folder, FileText, Presentation } from "lucide-
 import { listRecentRuns, type ToolRun } from "@/app/lib/toolRuns";
 import { listPresentations, getPresentation, type PresentationListItem } from "@/app/lib/presentations";
 import { TOOLS } from "@/app/lib/tools";
+import { parseSheet } from "@/app/lib/sheets/normalize";
+import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
 
 const SLIDESHOW_SLUG = "__slideshows__";
 
@@ -90,7 +92,9 @@ export default function ResourceLibraryModal({
 
   const pickRun = (run: ToolRun) => {
     if (!run.output?.trim()) return;
-    onSelect(run.output, run.title || folder?.label || "Tool output");
+    // A designed sheet is JSON; the lesson material is its text.
+    const sheet = parseSheet(run.output);
+    onSelect(sheet ? sheetToMarkdown(sheet) : run.output, run.title || folder?.label || "Tool output");
     onClose();
   };
 

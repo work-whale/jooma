@@ -1,7 +1,15 @@
 // The comprehension prompt, shared by the paid route and the guest one on
-// /create so a guest's passage is written exactly the way a teacher's is.
+// /create so a guest's sheet is written exactly the way a teacher's is.
+//
+// Returns a designed sheet (app/lib/sheets): a "Read the text" section holding
+// the passage, then one section per reading domain. A teacher's own passage is
+// never sent back through the model to be copied out: the model writes only
+// the questions, and the passage is placed on the sheet as the teacher wrote it
+// (see sheetContext in app/lib/sheets/context.ts).
+
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
 
 export interface GenerateRequest {
   curriculum: string;
@@ -19,18 +27,32 @@ export interface GenerateRequest {
   differentiationLevels?: string[];
 }
 
+const SYSTEM =
+  "You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and the KS1 to KS4 reading assessment frameworks. " +
+  "You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills, from retrieval and inference to evaluation. " +
+  "Your passages are well crafted and rich enough to sustain real comprehension work, and your questions are precise and matched to the domain they assess. " +
+  "You return the activity as JSON that matches the given schema exactly. Write in UK English. " +
+  "Never use LaTeX or backslash notation for any numbers or maths: write plain symbols such as × ÷ ² and fractions such as 3/4.";
 
-const SYSTEM = "You are an expert UK English teacher and literacy specialist with in-depth knowledge of the National Curriculum for English and KS1–KS4 reading assessment frameworks. You create high-quality, age-appropriate reading comprehension activities that develop the full range of reading skills — from retrieval and inference through to evaluation and critical response. Your passages are well-crafted, purposeful, and rich enough to sustain genuine comprehension work. Your questions are precise, unambiguous, and matched to the content domain they are assessing. Write in professional UK English.";
+const QUESTION_TYPE_GUIDANCE: Record<string, string> = {
+  "Multiple choice": "Multiple choice: an mcq with 3 or 4 options, one correct and the rest believable distractors.",
+  "Short answer": "Short answer: a short question needing one or two sentences (lines 2).",
+  "Extended writing": "Extended writing: a long question needing a developed paragraph that draws on evidence (lines 6 to 8).",
+  "True / False": "True / False: a truefalse question with 3 or 4 statements about the text.",
+  "Gap fill": "Gap fill: a fillblanks question with sentences from or based on the text, ___ for each gap.",
+  "Vocabulary in context": "Vocabulary in context: a short question with quote set to the exact word or phrase from the passage, asking what it means as used there or why the author chose it.",
+};
 
 /**
- * Validate a request and build its messages. Returns `{ error }` for a request
- * the model should never see.
+ * Validate a request and build its messages and response format. Returns
+ * `{ error }` for a request the model should never see.
  */
-export function comprehensionMessages(
-  body: GenerateRequest,
-):
+export function comprehensionMessages(body: GenerateRequest):
   | { error: string }
-  | { messages: { role: "system" | "user"; content: string }[] } {
+  | {
+      messages: { role: "system" | "user"; content: string }[];
+      response_format: ReturnType<typeof sheetResponseFormat>;
+    } {
   const {
     curriculum,
     yearGroup,
@@ -50,110 +72,73 @@ export function comprehensionMessages(
   if (!curriculum || !yearGroup || !textSource || !Array.isArray(contentDomains) || contentDomains.length === 0) {
     return { error: "Missing required fields" };
   }
-
   if (textSource === "generate" && !topic?.trim()) {
     return { error: "Topic is required when generating text" };
   }
-
   if (textSource === "own" && !ownText?.trim()) {
     return { error: "Text is required when using own text" };
   }
 
-  const domainList = contentDomains.join(", ");
+  const perDomain = Math.min(10, Math.max(1, Math.round(numQuestions || 1)));
+  const words = Math.min(1000, Math.max(80, Math.round(passageWordCount)));
+  const kinds = kindsForTypes("comprehension", questionTypes);
 
-  const QUESTION_TYPE_GUIDANCE: Record<string, string> = {
-    "Multiple choice":
-      "Multiple choice — pose a question, then list 3–4 plausible options on separate lines labelled A), B), C), D). Exactly one option must be correct; the others must be believable distractors. Do not reveal the correct option within the question itself.",
-    "Short answer":
-      "Short answer — require a one- or two-sentence written response.",
-    "Extended writing":
-      "Extended writing — require a longer, developed paragraph response, typically drawing together several points or evidence from the text.",
-    "True / False":
-      "True / False — give a statement about the text and ask the pupil to decide whether it is True or False (optionally asking them to justify their choice).",
-    "Gap fill":
-      "Gap fill — provide a sentence drawn from or based on the text with one or more words removed, shown as a blank (______), for the pupil to complete.",
-    "Vocabulary in context":
-      "Vocabulary in context — quote a specific word or phrase from the passage and ask the pupil to explain its meaning as it is used in the text.",
-  };
+  const typesLine = questionTypes.length
+    ? `Write every question in ONLY these formats${questionTypes.length > 1 ? ", spreading them so each is used" : ""}:\n${questionTypes.map((t) => `  - ${QUESTION_TYPE_GUIDANCE[t] ?? t}`).join("\n")}`
+    : "Use a mix of formats that suits the year group: multiple choice, short answers, true or false, a gap fill, and an extended answer for the hardest domain.";
 
-  const selectedGuidance = questionTypes
-    .map((t) => QUESTION_TYPE_GUIDANCE[t] ?? t)
-    .map((g) => `  - ${g}`)
+  const complexityLine =
+    complexity === "Challenging"
+      ? "Include at least one question per domain that needs an extended response or a comparison."
+      : complexity === "Simple"
+      ? "Keep questions direct: answers found in the text or needing a simple inference."
+      : "Balance retrieval and inference, with one higher-order question per domain.";
+
+  const answersLine = includeAnswerKey
+    ? "Fill every answer field correctly: they become the answer page. For extended questions, put a model answer in answer and 2 or 3 success criteria in criteria."
+    : "The teacher does not want an answer page: leave every answer field empty (empty strings, empty lists, and 0 or [] for indices). Still set pairs and order correctly.";
+
+  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
+  const notesLine = adaptation
+    ? `teacherNotes: one note titled "Differentiation": ${adaptation}`
+    : "teacherNotes: an empty list.";
+
+  const domainSections = contentDomains
+    .map((d, i) => `  ${i + 2}. One section for "${d}": titled with the domain's name (for example "Retrieval"), a fitting emoji, a one-line instruction, and exactly ${perDomain} question${perDomain === 1 ? "" : "s"}, each with domain set to the code at the start of "${d}" (for example "2b").`)
     .join("\n");
 
-  const questionTypeInstruction = questionTypes.length > 0
-    ? `\n- You MUST write every question using ONLY the following question format(s)${questionTypes.length > 1 ? ", spreading them across the questions so each selected format is used" : ""}. Do not use any other format:\n${selectedGuidance}`
-    : "";
-
-  const answerKeyInstruction = includeAnswerKey
-    ? "\nAfter the questions, include a clearly labelled Answer Key section with model answers for each question."
-    : "";
-
-  // Opt-in: empty when the teacher chose not to differentiate. Distinct from
-  // `complexity`, which pitches the passage's reading demand rather than
-  // adapting the task for attainment bands.
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const adaptationInstruction = adaptation
-    ? `\n\nDIFFERENTIATION — ${adaptation} Add this as a clearly labelled "Differentiation" section after the questions.`
-    : "";
-
-  const complexityInstruction =
-    complexity === "Challenging"
-      ? "Include at least one question per domain that requires extended written response or comparative analysis."
-      : complexity === "Simple"
-      ? "Keep questions direct and ensure answers can be found explicitly in the text or require simple inference."
-      : "Balance retrieval and inference questions with one higher-order thinking question per domain.";
-
-  const userPrompt =
+  const passageLines =
     textSource === "generate"
-      ? `Generate a complete reading comprehension activity on the topic: "${topic}" for ${yearGroup} students following the ${curriculum}.
+      ? `- Write an original, engaging passage on: "${topic}", of about ${words} words, for ${complexity.toLowerCase()} readers in ${yearGroup}. Continuous prose in 3 to 7 paragraphs, no lists. Accurate if non-fiction; crafted, with character and detail, if fiction. Varied sentences and rich but accessible vocabulary.
+- sections, in this order:
+  1. A section titled "Read the text" (emoji 📖, instruction "Read the text carefully, then answer the questions.") holding ONE passage block (its title and paragraphs), then a wordbank block titled "Key words" with 4 to 6 challenging words from the passage.
+${domainSections}`
+      : `- The passage is the teacher's own text, given below. It is printed on the sheet exactly as written, so do NOT include a passage block or copy it out.
+- sections, one per domain:
+${domainSections}`;
 
-Part 1 — Reading Passage
+  const prompt = `Create a reading comprehension for ${yearGroup} pupils following the ${curriculum}.
 
-Write an original, engaging non-fiction or fiction passage of approximately ${passageWordCount} words. The passage must:
-- Be written at a complexity level appropriate for ${complexity} readers in ${yearGroup}
-- Use varied sentence structures and a rich but accessible vocabulary suited to the year group
-- Contain sufficient content depth to support ${numQuestions} question(s) per content domain
-- Be clearly titled with a heading above the passage
-- Avoid bullet points or lists — the passage must be written in continuous prose paragraphs
-- Be accurate and well-researched if non-fiction; show craft and characterisation if fiction
-
-Part 2 — Comprehension Questions
-
-Below the passage, write ${numQuestions} comprehension question(s) for each of the following content domains: ${domainList}.
-
-Formatting and quality rules:
-- Start each content domain group with a Markdown heading on its own line, written exactly as "## 2b – Retrieval" (a literal ## followed by a space, then the domain). Do not wrap the heading in ** or any other characters.
-- Number questions sequentially within each group (1., 2., etc.)
-- Questions must be clearly rooted in the passage — do not ask questions that cannot be answered from the text
-- For inference and evaluation questions, phrase them to require evidence from the text (e.g. "Using evidence from the text, explain...")
-- Allocate marks to each question in brackets, e.g. [2 marks] — align mark allocations with the complexity of the response required
-- ${complexityInstruction}${questionTypeInstruction}
-
-${answerKeyInstruction}${adaptationInstruction}`
-      : `Using the passage below, create a reading comprehension activity for ${yearGroup} students following the ${curriculum}.
-
-The questions should be at ${complexity.toLowerCase()} complexity level.
-
-Write ${numQuestions} comprehension question(s) for each of the following content domains: ${domainList}.
-
-Formatting and quality rules:
-- Start each content domain group with a Markdown heading on its own line, written exactly as "## 2b – Retrieval" (a literal ## followed by a space, then the domain). Do not wrap the heading in ** or any other characters.
-- Number questions sequentially within each group (1., 2., etc.)
-- Questions must be clearly rooted in the passage — every question must be answerable from the text provided
-- For inference and evaluation questions, phrase them to require evidence from the text (e.g. "Using evidence from the text, explain...")
-- Allocate marks to each question in brackets, e.g. [2 marks] — align mark allocations with the complexity of the response required
-- ${complexityInstruction}${questionTypeInstruction}
-
-${answerKeyInstruction}${adaptationInstruction}
-
-PASSAGE:
-${ownText}`;
+HOW TO BUILD IT
+- title: ${textSource === "generate" ? "the passage's title" : "a short title for this activity, based on the text"}.
+- objective: what the pupil is learning, starting "I am learning to", matched to the chosen domains.
+- intro: a one-sentence hook about the subject of the text, variant "fact", label "Did you know?" and a fitting emoji. Leave its text empty if nothing true and interesting fits.
+${passageLines}
+- Every question must be answerable from the passage. Inference and evaluation questions ask for evidence ("Using evidence from the text, explain..."). Paragraphs are numbered on the sheet, so refer to them ("In paragraph 2...") when it helps.
+- marks match the demand: 1 for simple retrieval, 2 or 3 for an inference with evidence, more for extended answers.
+- ${complexityLine}
+- ${typesLine}
+- ${answersLine}
+- ${notesLine}
+- No emoji anywhere except the emoji fields. Do not number anything: questions are numbered on the page.${
+    textSource === "own" ? `\n\nPASSAGE:\n${ownText}` : ""
+  }`;
 
   return {
     messages: [
       { role: "system", content: buildSystem(SYSTEM) },
-      { role: "user", content: userPrompt },
+      { role: "user", content: prompt },
     ],
+    response_format: sheetResponseFormat({ tool: "comprehension", kinds, passage: textSource === "generate" }),
   };
 }

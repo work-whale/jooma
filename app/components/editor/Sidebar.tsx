@@ -513,12 +513,15 @@ export default function Sidebar({
     <div
       ref={sidebarRef}
       className="flex shrink-0 relative z-20 [&_button]:cursor-pointer [&_a]:cursor-pointer [&_label]:cursor-pointer"
-      style={{ backgroundColor: "#F7F5FC" }}
+      style={{ backgroundColor: "var(--j-editor-chrome)" }}
     >
-      {/* Vertical icon strip */}
+      {/* Vertical icon strip, on the editor's dark purple chrome. The flyout
+          panel beside it stays light: it is full of forms and thumbnails that
+          need to read as the page, not the frame. */}
       <div
+        data-editor-chrome="rail"
         className="flex flex-col items-center py-3 gap-1 border-r"
-        style={{ borderColor: "#EAE6F5", width: 72, backgroundColor: "#F7F5FC" }}
+        style={{ borderColor: "var(--j-editor-chrome-line)", width: 72, backgroundColor: "var(--j-editor-chrome)" }}
       >
         {TABS.map((t) => {
           const isActive = active === t.id;
@@ -531,10 +534,10 @@ export default function Sidebar({
               data-locked={locked ? "" : undefined}
               className={`relative w-14 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-colors ${
                 isActive
-                  ? "bg-violet-600 text-white"
+                  ? "bg-white text-stone-800"
                   : locked
-                    ? "text-gray-400 hover:bg-violet-100 hover:text-violet-700"
-                    : "text-gray-600 hover:bg-violet-100 hover:text-violet-700"
+                    ? "text-white/45 hover:bg-white/10 hover:text-white"
+                    : "text-white/85 hover:bg-white/10 hover:text-white"
               }`}
             >
               {t.icon}

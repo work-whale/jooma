@@ -16,6 +16,9 @@ interface RequestBody {
   subject?: string;
   curriculum?: string;
   strand?: string;
+  /** The curriculum statements the teacher ticked in "Align to curriculum",
+   *  verbatim. The outline's objectives are built on these when present. */
+  statements?: string[];
 }
 
 const outlineSchema = {
@@ -46,6 +49,12 @@ export async function POST(req: NextRequest) {
   const subjectLine = body.subject?.trim() ? `Subject: ${body.subject.trim()}.` : "";
   const curriculumLine = body.curriculum?.trim() ? `Curriculum: ${body.curriculum.trim()}.` : "";
   const strandLine = body.strand?.trim() ? `Curriculum strand/unit: ${body.strand.trim()}.` : "";
+  const statements = (Array.isArray(body.statements) ? body.statements : [])
+    .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    .slice(0, 12);
+  const statementsBlock = statements.length
+    ? `Curriculum statements this lesson must teach towards (quoted from the curriculum):\n${statements.map((s) => `- ${s.trim()}`).join("\n")}\nBase the learning objectives directly on these statements, and keep every concept and activity within them.`
+    : "";
 
   const prompt = `Sketch a brief lesson outline for: "${body.topic}".
 
@@ -54,6 +63,7 @@ ${yearLine}
 ${readingLine}
 ${curriculumLine}
 ${strandLine}
+${statementsBlock}
 
 Frame the objectives, concepts and activities for the stated subject, year group and curriculum where given — pitch the depth to the year/reading level and use subject-appropriate terminology.
 

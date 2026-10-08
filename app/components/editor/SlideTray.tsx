@@ -91,11 +91,14 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
   return (
     <div
       ref={trayRef}
-      className="inline-flex items-center gap-3 px-3 py-3 rounded-2xl shadow-lg border max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden backdrop-blur-md"
+      data-editor-chrome="tray"
+      className="inline-flex items-center gap-3 px-3 py-3 rounded-2xl shadow-lg border max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden"
       style={{
         scrollbarWidth: "none",
-        backgroundColor: "rgba(241, 239, 227, 0.3)",
-        borderColor: "rgba(218, 216, 208, 0.3)",
+        // Burnt orange behind the mini slides, solid rather than the old frosted
+        // glass, so the filmstrip reads as its own strip on the purple stage.
+        backgroundColor: "var(--j-editor-tray)",
+        borderColor: "rgba(138, 60, 18, 0.35)",
       }}
     >
       {slides.map((entry, i) => {
@@ -136,7 +139,7 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
             {canDrag && dropIndex === i && dragIndex !== null && (
               <div
                 className="absolute -left-2 top-0 bottom-0 w-1 rounded-full"
-                style={{ backgroundColor: "var(--j-purple)" }}
+                style={{ backgroundColor: "#fff" }}
               />
             )}
             <button
@@ -150,8 +153,9 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
                 e.dataTransfer.setData("text/plain", String(i));
               }}
               onDragEnd={() => { setDragIndex(null); setDropIndex(null); }}
+              aria-current={i === activeIndex ? "true" : undefined}
               className={`relative rounded-lg overflow-hidden border-2 bg-white transition-all ${
-                i === activeIndex ? "border-violet-600" : "border-gray-200 hover:border-gray-400"
+                i === activeIndex ? "border-white shadow-md" : "border-white/25 hover:border-white/70"
               } ${isBeingDragged ? "opacity-40 scale-95" : ""} ${canDrag ? "cursor-grab active:cursor-grabbing" : ""}`}
             >
               <MiniSlide slide={entry.slide} width={THUMB_W} themeId={themeId} />
@@ -191,7 +195,7 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
             {canDrag && dropIndex === slides.length && i === slides.length - 1 && dragIndex !== null && (
               <div
                 className="absolute -right-2 top-0 bottom-0 w-1 rounded-full"
-                style={{ backgroundColor: "var(--j-purple)" }}
+                style={{ backgroundColor: "#fff" }}
               />
             )}
           </div>
@@ -199,7 +203,7 @@ export default function SlideTray({ slides, activeIndex, onSelect, onAdd, onDele
       })}
       <button
         onClick={onAdd}
-        className="shrink-0 rounded-lg border-2 border-dashed border-gray-300 text-gray-500 hover:border-violet-400 hover:text-violet-600 flex items-center justify-center gap-1.5 text-sm font-medium transition-colors"
+        className="shrink-0 rounded-lg border-2 border-dashed border-white/60 text-white hover:border-white hover:bg-white/10 flex items-center justify-center gap-1.5 text-sm font-medium transition-colors"
         style={{ width: THUMB_W, height: THUMB_W * (720 / 1280) }}
       >
         <Plus className="w-4 h-4" />

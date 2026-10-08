@@ -59,15 +59,19 @@ export interface RequestBody {
   /** Short label for the resource shown in the prompt header ("report.pdf",
    *  "wikipedia.org/wiki/..."). */
   resourceSource?: string;
-  /** Curriculum alignment from the GenerateModal — country, named curriculum,
-   *  grade, subject, strand. Used purely as AI prompt context so the deck
-   *  targets the right area. */
+  /** Curriculum alignment from the GenerateModal. `statements` are the ones
+   *  the teacher ticked, verbatim from app/lib/national-curriculum, and are
+   *  what the deck is built to teach. Saved decks from before the statement
+   *  picker carry only subject and strand, which still work. */
   curriculum?: {
     countryName: string;
     curriculumName: string;
     grade: string;
     subject: string;
     strand: string;
+    stage?: string;
+    year?: string;
+    statements?: { id: string; text: string }[];
   };
 }
 
@@ -554,10 +558,28 @@ function buildPrompt(body: RequestBody): string {
 Apply these throughout the ENTIRE deck — they shape the tone, content, examples, vocabulary, image choices, and which slides to include. Where they conflict with the default style, the teacher's instructions WIN. Every slide should visibly reflect them, not just the title slide.`
     : "";
   // Curriculum alignment — only emitted when the user toggled it on in the
-  // generate modal AND picked subject + strand. Tells the AI to ground the
-  // deck in a specific syllabus area.
-  const curriculumLine = body.curriculum && body.curriculum.subject && body.curriculum.strand
-    ? `Curriculum alignment: ${body.curriculum.countryName} · ${body.curriculum.curriculumName}${body.curriculum.grade ? " · " + body.curriculum.grade : ""} · subject "${body.curriculum.subject}", strand "${body.curriculum.strand}". Anchor the deck's vocabulary, examples, and depth in this strand — DO NOT drift into other strands or subjects.`
+  // generate modal. With statements ticked, the deck is built to teach those
+  // exact statements at that year's level; an older saved deck carries only a
+  // subject and strand, and keeps the one-line version.
+  const cur = body.curriculum;
+  const curStatements = (cur?.statements ?? [])
+    .map((s) => (typeof s?.text === "string" ? s.text.trim() : ""))
+    .filter(Boolean)
+    .slice(0, 12);
+  const curYear = cur?.year || cur?.grade || body.year || "";
+  const curriculumLine = cur && curStatements.length > 0
+    ? `═══════════════════════════════════════════════════
+CURRICULUM ALIGNMENT (the teacher chose these; follow them exactly)
+═══════════════════════════════════════════════════
+${[cur.curriculumName, cur.stage, curYear, cur.subject, cur.strand].filter(Boolean).join(" · ")}
+This deck must teach towards these statements, quoted from the curriculum:
+${curStatements.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}
+- Pitch every slide at the level these statements set for ${curYear || "this year group"}. Do NOT introduce content, vocabulary or methods from later years.
+- Every content slide must clearly serve at least one of these statements. Do not drift into other strands or subjects.
+- If a learning objectives slide is included, base each objective on these statements, reworded for pupils.
+- The activity slides must check understanding of these statements.`
+    : cur && cur.subject && cur.strand
+    ? `Curriculum alignment: ${cur.countryName} · ${cur.curriculumName}${cur.grade ? " · " + cur.grade : ""} · subject "${cur.subject}", strand "${cur.strand}". Anchor the deck's vocabulary, examples, and depth in this strand — DO NOT drift into other strands or subjects.`
     : "";
   // Teacher-supplied resource (URL / PDF / DOCX / TXT) extracted server-side.
   // Pasted verbatim into the prompt as base material so the AI uses the
@@ -712,6 +734,10 @@ ANALOGIES (deck-wide, not per slide)
 FACTS & NUMBERS
 - Weave specific numbers and named entities into prose. NEVER list them as bare facts.
 - Examples: "99.8% of the total mass", "150 million km", "30 AU", "Mercury, Venus, Earth, Mars".
+
+MATHS NOTATION
+- Write every calculation in plain text with the symbols × ÷ + − = ² ³ √ and fractions as 3/4.
+- NEVER use LaTeX or TeX: no backslashes, no \\( \\) or \\[ \\] delimiters, no $...$, no \\frac, \\times or ^ notation. Nothing on the slide typesets it, so it would show as raw symbols.
 
 CALLOUTS (calloutVariant + calloutLabel + calloutBody)
 - Add ONE callout to MOST content slides — vary the variant across the deck:

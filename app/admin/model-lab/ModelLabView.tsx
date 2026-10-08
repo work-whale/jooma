@@ -44,6 +44,23 @@ import {
   useToast,
 } from "../ui";
 import { LAB_TOOLS, labToolBySlug } from "./samples";
+import { parsePartialJson } from "@/app/lib/sheets/stream";
+import { normalizeDraft } from "@/app/lib/sheets/normalize";
+import { sheetContext } from "@/app/lib/sheets/context";
+import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
+
+/**
+ * What to show for a run. Worksheet and Comprehension stream a sheet as JSON;
+ * shown as the same markdown Copy gives a teacher, so candidates can be read
+ * side by side. Partial JSON is read as far as it has got.
+ */
+function labText(slug: string, output: string): string {
+  const tool = slug === "worksheet-generator" ? "worksheet" : slug === "comprehension-generator" ? "comprehension" : null;
+  if (!tool) return output;
+  const raw = parsePartialJson(output);
+  if (!raw) return output;
+  return sheetToMarkdown(normalizeDraft(raw, sheetContext(tool, {})), { answers: true });
+}
 
 /** One model under test, and whatever we know about its run so far. */
 interface Candidate {
@@ -317,7 +334,7 @@ export default function ModelLabView() {
                     className="whitespace-pre-wrap text-sm leading-relaxed max-h-[28rem] overflow-y-auto"
                     style={{ color: C.ink2, fontFamily: "inherit" }}
                   >
-                    {c.output}
+                    {labText(slug, c.output)}
                   </pre>
                 ) : (
                   <p className="text-sm" style={{ color: C.muted }}>

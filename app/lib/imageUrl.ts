@@ -9,11 +9,11 @@
 //
 // No "use client" and no imports — safe from either side.
 //
-// !! IMAGE TRANSFORMATION IS NOT ENABLED ON THIS SUPABASE PROJECT.
-// The /render/image/ endpoint this function rewrites to answers
+// !! IMAGE TRANSFORMATION IS ON IN PRODUCTION, NOT ON STAGING.
+// On staging the /render/image/ endpoint this function rewrites to answers
 //   403 {"error":"FeatureNotEnabled","message":"feature not enabled for this tenant"}
 // for every object, in every bucket. Verified against both `images` and
-// `avatars` with real uploaded files.
+// `avatars` with real uploaded files. Production serves it (checked Oct 2026).
 //
 // So any <img> pointed at a transformed URL fails to load. Avatar used to do
 // this and it made avatar uploads look broken: the file uploaded fine, the
@@ -30,14 +30,17 @@
  *  Non-Supabase URLs and data URLs pass through unchanged. Width is rounded to
  *  the next 100 to maximise CDN cache hits.
  *
- *  Only `width` is specified — the CDN preserves the source's aspect ratio
- *  automatically. Specifying `resize=cover` without `height` produced a
- *  visibly stretched image, so we leave it off.
+ *  `resize=contain` is what keeps the shape. With `width` alone the endpoint
+ *  falls back to `cover` and keeps the source's HEIGHT: a 1024x1024 picture
+ *  asked for at width=200 came back 200x1024. MiniSlide then draws it at the
+ *  picture's saved natural size, so every thumbnail was squashed sideways.
+ *  `contain` with only a width scales both sides (3120x2336 -> 200x150).
+ *  `fill` is worse still, and `cover` needs a height we don't have.
  *
  *  Supabase URL shape:
  *    .../storage/v1/object/public/<bucket>/<path>
  *  Transformed shape:
- *    .../storage/v1/render/image/public/<bucket>/<path>?width=N&quality=75
+ *    .../storage/v1/render/image/public/<bucket>/<path>?width=N&resize=contain&quality=75
  */
 export function toThumbnailUrl(src: string | undefined, targetWidth: number): string | undefined {
   if (!src) return src;
@@ -46,5 +49,5 @@ export function toThumbnailUrl(src: string | undefined, targetWidth: number): st
   const w = Math.max(100, Math.min(1280, Math.ceil(targetWidth / 100) * 100));
   const transformed = src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
   const sep = transformed.includes("?") ? "&" : "?";
-  return `${transformed}${sep}width=${w}&quality=75`;
+  return `${transformed}${sep}width=${w}&resize=contain&quality=75`;
 }

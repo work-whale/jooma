@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Loader2, Copy, Check, FileText, FileDown, Download, ChevronDown, Printer, Maximize2 } from "lucide-react";
 import RichTextEditor from "@/app/components/RichTextEditor";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import FocusDocumentModal from "@/app/components/FocusDocumentModal";
 import DropdownMenu from "@/app/components/ui/DropdownMenu";
 import { useDocumentActions } from "@/app/lib/useDocumentActions";
-import { saveToolRun } from "@/app/lib/toolRuns";
+import { saveToolRun, updateToolRunOutput } from "@/app/lib/toolRuns";
+import { cleanMathText } from "@/app/lib/math-text";
+import { isSheetOutput, parseSheet } from "@/app/lib/sheets/normalize";
+import SheetWorkspace, { type SaveState } from "@/app/components/sheets/SheetWorkspace";
 import ShareToHomePrompt from "@/app/components/guest/ShareToHomePrompt";
 
 /** Tools whose results can be offered for the landing page's showcase row. */
@@ -47,6 +50,9 @@ interface ResultPanelProps {
   historyMeta?: { toolSlug: string; title?: string | null; input: Record<string, unknown> };
   /** Called after a run is successfully saved (to refresh the history list). */
   onSaved?: () => void;
+  /** The saved run on screen, when the form restored one from history. A
+   *  designed sheet autosaves its edits into it. */
+  runId?: string | null;
 }
 
 export default function ResultPanel({
@@ -58,6 +64,7 @@ export default function ResultPanel({
   maxWidth = true,
   historyMeta,
   onSaved,
+  runId = null,
 }: ResultPanelProps) {
   /*
    * Copy and export, shared with the focused reading view.
@@ -67,8 +74,23 @@ export default function ResultPanel({
    * there is nothing yet; the panel returns null on that pass anyway, so the
    * actions are never reachable with an empty document.
    */
+  /*
+   * The document as the teacher sees it: LaTeX the model leaked turned into
+   * plain maths (see math-text.ts). Everything downstream reads this rather
+   * than `result`, so the editor, copy, export, focus view and the saved run
+   * all agree. Idempotent, so the editor's own round trip through onChange
+   * settles on the same string instead of fighting it.
+   *
+   * A designed sheet (Worksheet, Comprehension) is JSON, not markdown, and is
+   * shown by SheetWorkspace instead. It is never run through cleanMathText as
+   * a whole: that would read JSON escapes such as \n as maths. Its strings
+   * were already cleaned one by one when it was normalised.
+   */
+  const sheet = useMemo(() => parseSheet(result), [result]);
+  const shown = useMemo(() => (result === null ? null : sheet ? result : cleanMathText(result)), [result, sheet]);
+
   const { copied, isExporting, exportError, handleCopy, exportItems } = useDocumentActions(
-    result ?? "",
+    shown ?? "",
     exportFilename,
     {
       pdf: <FileDown className="w-3.5 h-3.5" />,
@@ -208,23 +230,102 @@ export default function ResultPanel({
   const onSavedRef = useRef(onSaved);
   historyMetaRef.current = historyMeta;
   onSavedRef.current = onSaved;
+
+  /*
+   * Autosave, for designed sheets only. The run edits go into is the one this
+   * panel just saved, or the one the form restored (`runId`). `persistedRef`
+   * is what that row holds now, so an edit that changes nothing writes
+   * nothing. Markdown results keep their old behaviour: saved once, when the
+   * generation finishes.
+   */
+  const ownRunIdRef = useRef<string | null>(null);
+  const persistedRef = useRef<string | null>(null);
+  const latestRef = useRef(result);
+  const runIdPropRef = useRef(runId);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  useEffect(() => {
+    latestRef.current = result;
+  }, [result]);
+
   useEffect(() => {
     const wasBusy = wasBusyRef.current;
     wasBusyRef.current = isBusy;
+    // A new generation is a new run; edits must never land on the last one.
+    if (!wasBusy && isBusy) ownRunIdRef.current = null;
     if (!wasBusy || isBusy) return; // only on the busy -> idle edge
     const meta = historyMetaRef.current;
     if (!meta || !result || result.trim() === "") return;
     if (lastSavedRef.current === result) return;
     lastSavedRef.current = result;
-    saveToolRun({ toolSlug: meta.toolSlug, title: meta.title, input: meta.input, output: result })
+    const output = isSheetOutput(result) ? result : cleanMathText(result);
+    saveToolRun({ toolSlug: meta.toolSlug, title: meta.title, input: meta.input, output })
       .then((run) => {
+        ownRunIdRef.current = run.id;
+        persistedRef.current = output;
+        // Edited while the save was in flight: those edits go in now.
+        const latest = latestRef.current;
+        if (isSheetOutput(latest) && latest !== output) {
+          updateToolRunOutput(run.id, latest as string).then(() => { persistedRef.current = latest; }).catch(() => {});
+        }
         if (SHAREABLE[meta.toolSlug]) setSavedRun({ id: run.id, slug: meta.toolSlug });
         onSavedRef.current?.();
       })
       .catch(() => { lastSavedRef.current = null; });
   }, [isBusy, result]);
 
-  if (result === null) return null;
+  useEffect(() => {
+    if (runId !== runIdPropRef.current) {
+      // A run restored from history: what is on screen is what is stored.
+      runIdPropRef.current = runId;
+      ownRunIdRef.current = null;
+      persistedRef.current = result;
+      return;
+    }
+    if (!sheet || isBusy || result === null) return;
+    const id = ownRunIdRef.current ?? runId;
+    if (!id || result === persistedRef.current) return;
+    const output = result;
+    const timer = window.setTimeout(() => {
+      setSaveState("saving");
+      updateToolRunOutput(id, output)
+        .then(() => {
+          persistedRef.current = output;
+          setSaveState("saved");
+        })
+        .catch(() => setSaveState("error"));
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [result, runId, isBusy, sheet]);
+
+  // An edit to the sheet, from the page or from undo. Marked as already
+  // scrolled for the same reason as handleEditorChange above.
+  const handleSheetChange = (next: string) => {
+    lastScrolledRef.current = next;
+    onChange(next);
+  };
+
+  if (result === null || shown === null) return null;
+
+  if (sheet) {
+    return (
+      <>
+        <SheetWorkspace
+          panelRef={panelRef}
+          value={result}
+          doc={sheet}
+          onChange={handleSheetChange}
+          isGenerating={isGenerating}
+          isRefining={isRefining}
+          filename={exportFilename}
+          saveState={saveState}
+          maxWidth={maxWidth}
+        />
+        {savedRun && SHAREABLE[savedRun.slug] && (
+          <ShareToHomePrompt key={savedRun.id} kind={SHAREABLE[savedRun.slug]} resourceId={savedRun.id} />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -318,12 +419,12 @@ export default function ResultPanel({
 
         {isBusy ? (
           <div className="py-8 px-4 sm:py-12 sm:px-8 lg:py-20 lg:px-24 min-h-48">
-            <MarkdownResult text={result} />
+            <MarkdownResult text={shown} />
             <span className="inline-block w-px h-[1em] bg-gray-500 animate-pulse ml-px align-text-bottom" />
             <div ref={bottomRef} />
           </div>
         ) : (
-          <RichTextEditor value={result} onChange={handleEditorChange} />
+          <RichTextEditor value={shown} onChange={handleEditorChange} />
         )}
       </div>
 
@@ -332,7 +433,7 @@ export default function ResultPanel({
           onChange on every keystroke). */}
       {focusOpen && (
         <FocusDocumentModal
-          markdown={result}
+          markdown={shown}
           filename={exportFilename}
           title={historyMeta?.title?.trim() || "Your document"}
           onClose={() => setFocusOpen(false)}

@@ -7,14 +7,62 @@
 // the modal and renderer read from this list dynamically.
 
 /** Groups themes in the picker. `classic` = clean timeless skins, `scenic` =
- *  illustrated landscapes, and one group per school subject. */
+ *  illustrated landscapes, and one group per school subject. Within a family
+ *  tab these become the filter chips (Scenic, Maths, Science...). */
 export type ThemeCategory = "classic" | "scenic" | "math" | "science" | "history" | "english";
+
+/**
+ * The three style families the theme picker is organised by.
+ *
+ *   playful       bright and bold, rounded type, motifs: younger classes.
+ *   professional  calm and editorial, serif or grotesk type, fine rules.
+ *   basic         plain and legible, no motifs: low stimulation and access.
+ */
+export type ThemeFamily = "playful" | "professional" | "basic";
+
+/** Accessibility qualities a theme was designed for, shown as filter chips. */
+export type ThemeTag = "dyslexia-friendly" | "low-stimulation" | "high-contrast";
+
+/**
+ * How a theme draws the parts every generated slide shares. Applied by
+ * renderSlide (slideshow-layouts.ts) on top of the layout, so each layout keeps
+ * its geometry and only the treatment changes. Everything it draws is shapes,
+ * texts and image settings the editor already has, so it survives editing,
+ * thumbnails, present mode and the PPTX export.
+ */
+export interface ThemeDesign {
+  /** plain; underline (accent bar under the title); highlight (marker swash
+   *  behind it); pill (title set white on an accent pill); kicker (a short
+   *  accent rule above it, the editorial convention). */
+  title: "plain" | "underline" | "highlight" | "pill" | "kicker";
+  /** A sheet under the slide's content: none, soft (paper with a shadow),
+   *  outline (a drawn border), offset (ink border with a hard offset shadow). */
+  card: "none" | "soft" | "outline" | "offset";
+  /** How photos are framed. polaroid adds a white border, shadow and a tilt;
+   *  sticker a thick ink outline. */
+  frame: "rounded" | "square" | "circle" | "blob" | "arch" | "polaroid" | "sticker";
+  /** Callout boxes: tint (flat colour), sticky (note with a strip of tape),
+   *  rule (tint with an accent bar), outline (drawn box, no fill). */
+  callout: "tint" | "sticky" | "rule" | "outline";
+  /** Decoration drawn behind the content, always under photos. */
+  motif: "none" | "confetti" | "dots" | "stars" | "doodles" | "blobs" | "grid" | "rules" | "corners";
+}
+
+/** Each family's default treatment. A theme overrides what it needs. */
+export const FAMILY_DESIGN: Record<ThemeFamily, ThemeDesign> = {
+  playful: { title: "underline", card: "none", frame: "rounded", callout: "tint", motif: "none" },
+  professional: { title: "kicker", card: "none", frame: "rounded", callout: "rule", motif: "none" },
+  basic: { title: "plain", card: "none", frame: "rounded", callout: "tint", motif: "none" },
+};
 
 export interface SlideshowTheme {
   id: string;
   name: string;
   description: string;
   category: ThemeCategory;
+  family: ThemeFamily;
+  tags?: ThemeTag[];
+  design?: Partial<ThemeDesign>;
   palette: {
     background: string;       // default slide bg color
     text: string;             // primary text color
@@ -84,8 +132,8 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   {
     id: "paper",
     name: "Paper",
-    description: "Cream paper, sienna headings — textbook feel",
-    category: "classic",
+    description: "Cream paper and sienna headings, a textbook feel",
+    category: "classic", family: "professional",
     backgroundArt: "/scenes/paper.png",
     artIllustration: "/scenes/paper-illus.png",
     backgroundArtScrim: "rgba(251, 245, 227, 0.55)",
@@ -123,7 +171,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "light",
     name: "Light",
     description: "Clean and crisp",
-    category: "classic",
+    category: "classic", family: "basic",
     backgroundArt: "/scenes/light.png",
     artIllustration: "/scenes/light-illus.png",
     backgroundArtScrim: "rgba(255, 255, 255, 0.5)",
@@ -160,7 +208,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "dark",
     name: "Dark",
     description: "For the night owls",
-    category: "classic",
+    category: "classic", family: "professional",
     backgroundArt: "/scenes/dark.png",
     artIllustration: "/scenes/dark-illus.png",
     backgroundArtScrim: "rgba(10, 10, 26, 0.55)",
@@ -197,7 +245,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "warm",
     name: "Warm",
     description: "Editorial and cosy",
-    category: "classic",
+    category: "classic", family: "professional",
     backgroundArt: "/scenes/warm.png",
     artIllustration: "/scenes/warm-illus.png",
     backgroundArtScrim: "rgba(253, 246, 227, 0.55)",
@@ -234,7 +282,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "bold",
     name: "Bold",
     description: "Make a statement",
-    category: "classic",
+    category: "classic", family: "playful",
     backgroundArt: "/scenes/bold.png",
     artIllustration: "/scenes/bold-illus.png",
     backgroundArtScrim: "rgba(254, 243, 199, 0.55)",
@@ -279,7 +327,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "ocean",
     name: "Ocean",
     description: "Calm coastal blues with a wave horizon",
-    category: "scenic",
+    category: "scenic", family: "playful",
     backgroundArt: "/scenes/ocean.png",
     artIllustration: "/scenes/ocean-illus.png",
     backgroundArtScrim: "rgba(246, 251, 253, 0.5)",
@@ -316,7 +364,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "desert",
     name: "Desert",
     description: "Warm sands, dunes and a low sun",
-    category: "scenic",
+    category: "scenic", family: "playful",
     backgroundArt: "/scenes/desert.png",
     artIllustration: "/scenes/desert-illus.png",
     backgroundArtScrim: "rgba(253, 248, 236, 0.5)",
@@ -353,7 +401,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "cloudy",
     name: "Cloudy",
     description: "Soft overcast sky with drifting clouds",
-    category: "scenic",
+    category: "scenic", family: "playful",
     backgroundArt: "/scenes/cloudy.png",
     artIllustration: "/scenes/cloudy-illus.png",
     backgroundArtScrim: "rgba(255, 255, 255, 0.42)",
@@ -390,7 +438,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "forest",
     name: "Forest",
     description: "Fresh sage hills and treetops",
-    category: "scenic",
+    category: "scenic", family: "playful",
     palette: {
       background: "#e6efe4",
       paperBg: "#f6fbf4",
@@ -427,7 +475,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     id: "dusk",
     name: "Dusk",
     description: "Warm sunset glow over the horizon",
-    category: "scenic",
+    category: "scenic", family: "playful",
     backgroundArt: "/scenes/dusk.png",
     artIllustration: "/scenes/dusk-illus.png",
     backgroundArtScrim: "rgba(254, 246, 240, 0.55)",
@@ -469,8 +517,8 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   {
     id: "math",
     name: "Math",
-    description: "Indigo geometry — rulers, compass, shapes",
-    category: "math",
+    description: "Indigo geometry: rulers, compass and shapes",
+    category: "math", family: "professional",
     backgroundArt: "/scenes/math.png",
     artIllustration: "/scenes/math.png",
     backgroundArtScrim: "rgba(244, 246, 253, 0.42)",
@@ -506,8 +554,8 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   {
     id: "science",
     name: "Science",
-    description: "Teal lab — atoms, molecules, beakers",
-    category: "science",
+    description: "Teal lab: atoms, molecules and beakers",
+    category: "science", family: "professional",
     backgroundArt: "/scenes/science.png",
     artIllustration: "/scenes/science.png",
     backgroundArtScrim: "rgba(244, 251, 250, 0.42)",
@@ -543,8 +591,8 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   {
     id: "history",
     name: "History",
-    description: "Parchment — columns, scrolls, amphora",
-    category: "history",
+    description: "Parchment: columns, scrolls and amphora",
+    category: "history", family: "professional",
     backgroundArt: "/scenes/history.png",
     artIllustration: "/scenes/history.png",
     backgroundArtScrim: "rgba(250, 243, 226, 0.40)",
@@ -580,8 +628,8 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   {
     id: "english",
     name: "English",
-    description: "Literary cream — books, quill, ink",
-    category: "english",
+    description: "Literary cream: books, quill and ink",
+    category: "english", family: "professional",
     backgroundArt: "/scenes/english.png",
     artIllustration: "/scenes/english.png",
     backgroundArtScrim: "rgba(253, 250, 243, 0.40)",
@@ -621,7 +669,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   // heading in the picker, alongside the original. Light, clear centres keep
   // dark text legible; backgrounds in /public/scenes/<id>.png.
   {
-    id: "math-pop", name: "Math · Pop", description: "Coral & yellow geometry confetti", category: "math",
+    id: "math-pop", name: "Math · Pop", description: "Coral & yellow geometry confetti", category: "math", family: "playful",
     backgroundArt: "/scenes/math-pop.png", artIllustration: "/scenes/math-pop.png", backgroundArtScrim: "rgba(255, 244, 239, 0.40)",
     palette: {
       background: "#fff4ef", paperBg: "#fffaf7", paperShadow: "rgba(42, 26, 46, 0.10)",
@@ -633,7 +681,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "math-neon", name: "Math · Neon", description: "Electric violet & cyan geometry", category: "math",
+    id: "math-neon", name: "Math · Neon", description: "Electric violet & cyan geometry", category: "math", family: "playful",
     backgroundArt: "/scenes/math-neon.png", artIllustration: "/scenes/math-neon.png", backgroundArtScrim: "rgba(241, 243, 255, 0.40)",
     palette: {
       background: "#f1f3ff", paperBg: "#fafbff", paperShadow: "rgba(26, 21, 53, 0.10)",
@@ -645,7 +693,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "math-citrus", name: "Math · Citrus", description: "Zesty orange & lime geometry", category: "math",
+    id: "math-citrus", name: "Math · Citrus", description: "Zesty orange & lime geometry", category: "math", family: "playful",
     backgroundArt: "/scenes/math-citrus.png", artIllustration: "/scenes/math-citrus.png", backgroundArtScrim: "rgba(246, 251, 233, 0.40)",
     palette: {
       background: "#f6fbe9", paperBg: "#fbfdf2", paperShadow: "rgba(46, 42, 20, 0.10)",
@@ -657,7 +705,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "science-pop", name: "Science · Lab Pop", description: "Bright beakers, bubbles & atoms", category: "science",
+    id: "science-pop", name: "Science · Lab Pop", description: "Bright beakers, bubbles & atoms", category: "science", family: "playful",
     backgroundArt: "/scenes/science-pop.png", artIllustration: "/scenes/science-pop.png", backgroundArtScrim: "rgba(238, 254, 248, 0.40)",
     palette: {
       background: "#eefef8", paperBg: "#f6fffb", paperShadow: "rgba(17, 64, 58, 0.12)",
@@ -669,7 +717,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "science-cosmic", name: "Science · Cosmic", description: "Purple atoms, planets & stars", category: "science",
+    id: "science-cosmic", name: "Science · Cosmic", description: "Purple atoms, planets & stars", category: "science", family: "playful",
     backgroundArt: "/scenes/science-cosmic.png", artIllustration: "/scenes/science-cosmic.png", backgroundArtScrim: "rgba(244, 240, 255, 0.40)",
     palette: {
       background: "#f4f0ff", paperBg: "#fbf9ff", paperShadow: "rgba(34, 26, 64, 0.12)",
@@ -681,7 +729,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "science-botanic", name: "Science · Botanic", description: "Leaves, DNA & blooms", category: "science",
+    id: "science-botanic", name: "Science · Botanic", description: "Leaves, DNA & blooms", category: "science", family: "playful",
     backgroundArt: "/scenes/science-botanic.png", artIllustration: "/scenes/science-botanic.png", backgroundArtScrim: "rgba(241, 251, 239, 0.40)",
     palette: {
       background: "#f1fbef", paperBg: "#f8fdf7", paperShadow: "rgba(31, 64, 35, 0.12)",
@@ -693,7 +741,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "history-pop", name: "History · Pop", description: "Bright columns, amphora & scrolls", category: "history",
+    id: "history-pop", name: "History · Pop", description: "Bright columns, amphora & scrolls", category: "history", family: "playful",
     backgroundArt: "/scenes/history-pop.png", artIllustration: "/scenes/history-pop.png", backgroundArtScrim: "rgba(253, 243, 230, 0.40)",
     palette: {
       background: "#fdf3e6", paperBg: "#fff9f0", paperShadow: "rgba(58, 36, 24, 0.12)",
@@ -705,7 +753,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "history-explorer", name: "History · Explorer", description: "Maps, compass & ships", category: "history",
+    id: "history-explorer", name: "History · Explorer", description: "Maps, compass & ships", category: "history", family: "playful",
     backgroundArt: "/scenes/history-explorer.png", artIllustration: "/scenes/history-explorer.png", backgroundArtScrim: "rgba(253, 246, 233, 0.40)",
     palette: {
       background: "#fdf6e9", paperBg: "#fffaf0", paperShadow: "rgba(58, 42, 26, 0.12)",
@@ -717,7 +765,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
   },
   {
-    id: "history-royal", name: "History · Royal", description: "Crowns, castles & shields", category: "history",
+    id: "history-royal", name: "History · Royal", description: "Crowns, castles & shields", category: "history", family: "playful",
     backgroundArt: "/scenes/history-royal.png", artIllustration: "/scenes/history-royal.png", backgroundArtScrim: "rgba(250, 242, 232, 0.40)",
     palette: {
       background: "#faf2e8", paperBg: "#fdf8f0", paperShadow: "rgba(46, 26, 51, 0.12)",
@@ -729,7 +777,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
   },
   {
-    id: "english-storybook", name: "English · Storybook", description: "Books, quill & speech bubbles", category: "english",
+    id: "english-storybook", name: "English · Storybook", description: "Books, quill & speech bubbles", category: "english", family: "playful",
     backgroundArt: "/scenes/english-storybook.png", artIllustration: "/scenes/english-storybook.png", backgroundArtScrim: "rgba(255, 247, 238, 0.40)",
     palette: {
       background: "#fff7ee", paperBg: "#fffbf5", paperShadow: "rgba(58, 34, 48, 0.10)",
@@ -741,7 +789,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "english-comic", name: "English · Comic", description: "Bold speech bubbles & bursts", category: "english",
+    id: "english-comic", name: "English · Comic", description: "Bold speech bubbles & bursts", category: "english", family: "playful",
     backgroundArt: "/scenes/english-comic.png", artIllustration: "/scenes/english-comic.png", backgroundArtScrim: "rgba(255, 249, 240, 0.40)",
     palette: {
       background: "#fff9f0", paperBg: "#fffcf6", paperShadow: "rgba(26, 19, 32, 0.10)",
@@ -753,7 +801,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "english-poetry", name: "English · Poetry", description: "Quills, feathers & ink swirls", category: "english",
+    id: "english-poetry", name: "English · Poetry", description: "Quills, feathers & ink swirls", category: "english", family: "playful",
     backgroundArt: "/scenes/english-poetry.png", artIllustration: "/scenes/english-poetry.png", backgroundArtScrim: "rgba(250, 245, 255, 0.40)",
     palette: {
       background: "#faf5ff", paperBg: "#fdfbff", paperShadow: "rgba(46, 36, 64, 0.10)",
@@ -763,6 +811,223 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
       activityCardBg: "#ece0f3", activityCardInk: "#2e2440", speechBubbleStroke: "#2e2440", checkBadgeBg: "#2e9d54", checkBadgeInk: "#ffffff",
     },
     fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
+  },
+
+  // ── Designed themes ──────────────────────────────────────────────────────
+  // No background PNG: each one's look comes from its `design` (title
+  // treatment, card, photo frame, callout style and a code-drawn motif), so it
+  // renders the same in the editor, the thumbnails, present mode and the PPTX.
+
+  // Playful: bright and bold, for younger classes.
+  {
+    id: "confetti", name: "Confetti", description: "Sunny yellow with a burst of confetti", category: "classic", family: "playful",
+    palette: {
+      background: "#FFF4CC", paperBg: "#FFFBEA", paperShadow: "rgba(110, 72, 0, 0.14)",
+      text: "#2B1D3A", muted: "#6A5878", accent: "#E8457A", overlayText: "#FFFFFF", headingColor: "#D02F68",
+      calloutBgKey: "#FFE08A", calloutInkKey: "#2B1D3A", calloutBgRemember: "#D5EEFF", calloutInkRemember: "#16324F",
+      calloutBgFun: "#FFD6E5", calloutInkFun: "#4A1530", badgeBg: "#E8457A", badgeInk: "#FFFFFF", blockquoteRule: "#E8457A",
+      activityCardBg: "#FFE9A8", activityCardInk: "#2B1D3A", speechBubbleStroke: "#2B1D3A", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Lilita One', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "highlight", frame: "blob", callout: "sticky", motif: "confetti" },
+  },
+  {
+    id: "sticker", name: "Sticker", description: "Crisp white, bold outlines and stars", category: "classic", family: "playful",
+    palette: {
+      background: "#FFFFFF", paperBg: "#FFFFFF", paperShadow: "rgba(22, 22, 22, 0.12)",
+      text: "#161616", muted: "#4F4F4F", accent: "#FF6B35", overlayText: "#FFFFFF", headingColor: "#161616",
+      calloutBgKey: "#FFE3D6", calloutInkKey: "#161616", calloutBgRemember: "#DCEBFF", calloutInkRemember: "#161616",
+      calloutBgFun: "#FFF1B8", calloutInkFun: "#161616", badgeBg: "#161616", badgeInk: "#FFFFFF", blockquoteRule: "#FF6B35",
+      activityCardBg: "#FFE9DF", activityCardInk: "#161616", speechBubbleStroke: "#161616", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Fredoka', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "pill", frame: "sticker", callout: "outline", motif: "stars" },
+  },
+  {
+    id: "doodle", name: "Doodle", description: "Notebook paper with hand-drawn doodles", category: "classic", family: "playful",
+    palette: {
+      background: "#FFFDF4", paperBg: "#FFFFFF", paperShadow: "rgba(39, 39, 39, 0.10)",
+      text: "#272727", muted: "#5F5F5F", accent: "#2F6FED", overlayText: "#FFFFFF", headingColor: "#1F3B8C",
+      calloutBgKey: "#FFF2A8", calloutInkKey: "#272727", calloutBgRemember: "#DDEBFF", calloutInkRemember: "#1F2F4D",
+      calloutBgFun: "#FFDDE8", calloutInkFun: "#4A1F2E", badgeBg: "#2F6FED", badgeInk: "#FFFFFF", blockquoteRule: "#2F6FED",
+      activityCardBg: "#EEF3FF", activityCardInk: "#272727", speechBubbleStroke: "#272727", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Patrick Hand', cursive", body: "'Andika', sans-serif" },
+    design: { title: "underline", frame: "polaroid", callout: "sticky", motif: "doodles" },
+  },
+  {
+    id: "space", name: "Space", description: "Deep navy with stars and planets", category: "classic", family: "playful",
+    palette: {
+      background: "#15163D", paperBg: "#1E1F52", paperShadow: "rgba(0, 0, 0, 0.35)",
+      text: "#F3F1FF", muted: "#B9B5E6", accent: "#FFC93C", overlayText: "#FFFFFF", headingColor: "#FFD45E",
+      calloutBgKey: "#3B3214", calloutInkKey: "#FFE7A3", calloutBgRemember: "#1D2F55", calloutInkRemember: "#CFE0FF",
+      calloutBgFun: "#3A1F4D", calloutInkFun: "#F2D9FF", badgeBg: "#FFC93C", badgeInk: "#15163D", blockquoteRule: "#FFC93C",
+      activityCardBg: "#262869", activityCardInk: "#F3F1FF", speechBubbleStroke: "#F3F1FF", checkBadgeBg: "#22C55E", checkBadgeInk: "#0B1020",
+    },
+    fonts: { heading: "'Baloo 2', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "plain", frame: "circle", callout: "tint", motif: "stars" },
+  },
+  {
+    id: "rainbow", name: "Rainbow", description: "Soft rainbow shapes on clean white", category: "classic", family: "playful",
+    palette: {
+      background: "#FFFFFF", paperBg: "#FFFFFF", paperShadow: "rgba(36, 50, 74, 0.10)",
+      text: "#24324A", muted: "#5D6B82", accent: "#7B61FF", overlayText: "#FFFFFF", headingColor: "#3A2E9C",
+      calloutBgKey: "#FFF0C2", calloutInkKey: "#24324A", calloutBgRemember: "#DDEBFF", calloutInkRemember: "#1D3557",
+      calloutBgFun: "#FFE0EC", calloutInkFun: "#5A1F3A", badgeBg: "#7B61FF", badgeInk: "#FFFFFF", blockquoteRule: "#7B61FF",
+      activityCardBg: "#EFEBFF", activityCardInk: "#24324A", speechBubbleStroke: "#24324A", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Fredoka', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "underline", frame: "arch", callout: "tint", motif: "blobs" },
+  },
+  {
+    id: "chalkboard", name: "Chalkboard", description: "Classroom green board and chalk", category: "classic", family: "playful",
+    palette: {
+      background: "#24453A", paperBg: "#2B5145", paperShadow: "rgba(0, 0, 0, 0.3)",
+      text: "#F4F1E6", muted: "#C9D7CF", accent: "#F7D36B", overlayText: "#FFFFFF", headingColor: "#F7D36B",
+      calloutBgKey: "#3D5A2E", calloutInkKey: "#F9EFC5", calloutBgRemember: "#2D4B5C", calloutInkRemember: "#D7ECF7",
+      calloutBgFun: "#5A3B4A", calloutInkFun: "#F7DDE8", badgeBg: "#F7D36B", badgeInk: "#24453A", blockquoteRule: "#F7D36B",
+      activityCardBg: "#2F5A4D", activityCardInk: "#F4F1E6", speechBubbleStroke: "#F4F1E6", checkBadgeBg: "#7BD389", checkBadgeInk: "#123026",
+    },
+    fonts: { heading: "'Patrick Hand', cursive", body: "'Andika', sans-serif" },
+    design: { title: "underline", card: "outline", frame: "polaroid", callout: "outline", motif: "doodles" },
+  },
+
+  // Professional: calm and editorial.
+  {
+    id: "editorial", name: "Editorial", description: "Ivory pages, serif headings, fine rules", category: "classic", family: "professional",
+    palette: {
+      background: "#F8F5EE", paperBg: "#FFFFFF", paperShadow: "rgba(31, 29, 26, 0.08)",
+      text: "#1F1D1A", muted: "#6D675E", accent: "#B4532A", overlayText: "#FFFFFF", headingColor: "#1F1D1A",
+      calloutBgKey: "#F4E6D8", calloutInkKey: "#1F1D1A", calloutBgRemember: "#E3ECEF", calloutInkRemember: "#1D2F36",
+      calloutBgFun: "#EEE5F0", calloutInkFun: "#2E2236", badgeBg: "#1F1D1A", badgeInk: "#F8F5EE", blockquoteRule: "#B4532A",
+      activityCardBg: "#EFE8DC", activityCardInk: "#1F1D1A", speechBubbleStroke: "#1F1D1A", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Fraunces', serif", body: "'Source Sans 3', sans-serif" },
+    design: { title: "kicker", frame: "square", callout: "rule", motif: "rules" },
+  },
+  {
+    id: "midnight", name: "Midnight", description: "Navy and gold, quietly confident", category: "classic", family: "professional",
+    palette: {
+      background: "#0F1B2D", paperBg: "#16243A", paperShadow: "rgba(0, 0, 0, 0.35)",
+      text: "#EEF2F7", muted: "#A9B6C8", accent: "#D4A64A", overlayText: "#FFFFFF", headingColor: "#F0D398",
+      calloutBgKey: "#2B2614", calloutInkKey: "#F6E3B4", calloutBgRemember: "#16304A", calloutInkRemember: "#CFE3F7",
+      calloutBgFun: "#2A1F3D", calloutInkFun: "#E9D5FF", badgeBg: "#D4A64A", badgeInk: "#0F1B2D", blockquoteRule: "#D4A64A",
+      activityCardBg: "#1B2C45", activityCardInk: "#EEF2F7", speechBubbleStroke: "#EEF2F7", checkBadgeBg: "#22C55E", checkBadgeInk: "#0F1B2D",
+    },
+    fonts: { heading: "'Fraunces', serif", body: "'Inter', sans-serif" },
+    design: { title: "kicker", frame: "rounded", callout: "rule", motif: "corners" },
+  },
+  {
+    id: "blueprint", name: "Blueprint", description: "Technical blue on a fine grid", category: "classic", family: "professional",
+    palette: {
+      background: "#EAF1FB", paperBg: "#F7FAFE", paperShadow: "rgba(19, 41, 75, 0.10)",
+      text: "#13294B", muted: "#4D6385", accent: "#1F5FBF", overlayText: "#FFFFFF", headingColor: "#13294B",
+      calloutBgKey: "#DCE8F8", calloutInkKey: "#13294B", calloutBgRemember: "#E2F1EC", calloutInkRemember: "#163F33",
+      calloutBgFun: "#ECE6F8", calloutInkFun: "#2C2350", badgeBg: "#1F5FBF", badgeInk: "#FFFFFF", blockquoteRule: "#1F5FBF",
+      activityCardBg: "#DDE8F7", activityCardInk: "#13294B", speechBubbleStroke: "#13294B", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Space Grotesk', sans-serif", body: "'Inter', sans-serif" },
+    design: { title: "kicker", card: "outline", frame: "square", callout: "rule", motif: "grid" },
+  },
+  {
+    id: "slate", name: "Slate", description: "Cool grey and teal, clean and modern", category: "classic", family: "professional",
+    palette: {
+      background: "#EEF1F5", paperBg: "#FFFFFF", paperShadow: "rgba(15, 23, 42, 0.10)",
+      text: "#1E293B", muted: "#64748B", accent: "#0F766E", overlayText: "#FFFFFF", headingColor: "#0F172A",
+      calloutBgKey: "#DDF1EE", calloutInkKey: "#0F2A27", calloutBgRemember: "#E2E8F0", calloutInkRemember: "#1E293B",
+      calloutBgFun: "#EDE9FE", calloutInkFun: "#2E1065", badgeBg: "#0F766E", badgeInk: "#FFFFFF", blockquoteRule: "#0F766E",
+      activityCardBg: "#E2E8F0", activityCardInk: "#1E293B", speechBubbleStroke: "#1E293B", checkBadgeBg: "#16A34A", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Space Grotesk', sans-serif", body: "'Inter', sans-serif" },
+    design: { title: "underline", card: "soft", frame: "rounded", callout: "rule" },
+  },
+  {
+    id: "folio", name: "Folio", description: "Gallery white with a vermilion accent", category: "classic", family: "professional",
+    palette: {
+      background: "#FFFFFF", paperBg: "#FFFFFF", paperShadow: "rgba(17, 17, 17, 0.08)",
+      text: "#111111", muted: "#5E5E5E", accent: "#E4572E", overlayText: "#FFFFFF", headingColor: "#111111",
+      calloutBgKey: "#FDE7DF", calloutInkKey: "#3A140A", calloutBgRemember: "#E8EEF6", calloutInkRemember: "#162436",
+      calloutBgFun: "#F1EAF8", calloutInkFun: "#2B1A3D", badgeBg: "#111111", badgeInk: "#FFFFFF", blockquoteRule: "#E4572E",
+      activityCardBg: "#F3F3F3", activityCardInk: "#111111", speechBubbleStroke: "#111111", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Playfair Display', serif", body: "'Inter', sans-serif" },
+    design: { title: "kicker", frame: "square", callout: "rule", motif: "corners" },
+  },
+  {
+    id: "ledger", name: "Ledger", description: "Parchment and maroon, scholarly and warm", category: "classic", family: "professional",
+    palette: {
+      background: "#F6F0E6", paperBg: "#FFFBF4", paperShadow: "rgba(45, 27, 20, 0.10)",
+      text: "#2D1B14", muted: "#7A6255", accent: "#7A1F2B", overlayText: "#FFFFFF", headingColor: "#7A1F2B",
+      calloutBgKey: "#F1E2CC", calloutInkKey: "#2D1B14", calloutBgRemember: "#E4E6D6", calloutInkRemember: "#2F3324",
+      calloutBgFun: "#EEDDD9", calloutInkFun: "#4A1C24", badgeBg: "#7A1F2B", badgeInk: "#FFFBF4", blockquoteRule: "#7A1F2B",
+      activityCardBg: "#EFE4D2", activityCardInk: "#2D1B14", speechBubbleStroke: "#2D1B14", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Fraunces', serif", body: "'Lora', serif" },
+    design: { title: "kicker", card: "soft", frame: "rounded", callout: "rule", motif: "corners" },
+  },
+
+  // Basic: plain and legible, nothing drawn behind the content.
+  {
+    id: "clean", name: "Clean", description: "Plain white, nothing to distract", category: "classic", family: "basic",
+    tags: ["low-stimulation"],
+    palette: {
+      background: "#FFFFFF", paperBg: "#FFFFFF", paperShadow: "rgba(26, 26, 46, 0.08)",
+      text: "#1A1A2E", muted: "#5B6478", accent: "#5B2ED6", overlayText: "#FFFFFF", headingColor: "#1A1A2E",
+      calloutBgKey: "#F1ECFC", calloutInkKey: "#1A1A2E", calloutBgRemember: "#E6F1FB", calloutInkRemember: "#1A1A2E",
+      calloutBgFun: "#FBF3DF", calloutInkFun: "#1A1A2E", badgeBg: "#1A1A2E", badgeInk: "#FFFFFF", blockquoteRule: "#5B2ED6",
+      activityCardBg: "#F4F2F8", activityCardInk: "#1A1A2E", speechBubbleStroke: "#1A1A2E", checkBadgeBg: "#16A34A", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+  },
+  {
+    id: "mono", name: "Mono", description: "Black on white and nothing else", category: "classic", family: "basic",
+    tags: ["high-contrast", "low-stimulation"],
+    palette: {
+      background: "#FFFFFF", paperBg: "#FFFFFF", paperShadow: "rgba(0, 0, 0, 0.10)",
+      text: "#000000", muted: "#3D3D3D", accent: "#000000", overlayText: "#FFFFFF", headingColor: "#000000",
+      calloutBgKey: "#F2F2F2", calloutInkKey: "#000000", calloutBgRemember: "#F2F2F2", calloutInkRemember: "#000000",
+      calloutBgFun: "#F2F2F2", calloutInkFun: "#000000", badgeBg: "#000000", badgeInk: "#FFFFFF", blockquoteRule: "#000000",
+      activityCardBg: "#F2F2F2", activityCardInk: "#000000", speechBubbleStroke: "#000000", checkBadgeBg: "#000000", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
+    design: { frame: "square", callout: "outline" },
+  },
+  {
+    id: "readable", name: "Readable", description: "Cream background and Lexend, easier to read", category: "classic", family: "basic",
+    tags: ["dyslexia-friendly", "low-stimulation"],
+    palette: {
+      background: "#FBF6E9", paperBg: "#FFFCF3", paperShadow: "rgba(31, 36, 48, 0.08)",
+      text: "#1F2430", muted: "#4A5162", accent: "#2F6F9F", overlayText: "#FFFFFF", headingColor: "#1F2430",
+      calloutBgKey: "#F3E9CF", calloutInkKey: "#1F2430", calloutBgRemember: "#E1ECF4", calloutInkRemember: "#1F2430",
+      calloutBgFun: "#EDE6F2", calloutInkFun: "#1F2430", badgeBg: "#2F6F9F", badgeInk: "#FFFFFF", blockquoteRule: "#2F6F9F",
+      activityCardBg: "#F1EAD7", activityCardInk: "#1F2430", speechBubbleStroke: "#1F2430", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Lexend', sans-serif", body: "'Lexend', sans-serif" },
+  },
+  {
+    id: "high-contrast", name: "High Contrast", description: "Black and yellow, for low vision", category: "classic", family: "basic",
+    tags: ["high-contrast"],
+    palette: {
+      background: "#0B0B0B", paperBg: "#161616", paperShadow: "rgba(0, 0, 0, 0.4)",
+      text: "#FFFFFF", muted: "#E6E6E6", accent: "#FFE066", overlayText: "#FFFFFF", headingColor: "#FFE066",
+      calloutBgKey: "#2B2610", calloutInkKey: "#FFF3B0", calloutBgRemember: "#10243A", calloutInkRemember: "#D6EBFF",
+      calloutBgFun: "#2A1736", calloutInkFun: "#F0DBFF", badgeBg: "#FFE066", badgeInk: "#0B0B0B", blockquoteRule: "#FFE066",
+      activityCardBg: "#1E1E1E", activityCardInk: "#FFFFFF", speechBubbleStroke: "#FFFFFF", checkBadgeBg: "#4ADE80", checkBadgeInk: "#0B0B0B",
+    },
+    fonts: { heading: "'Atkinson Hyperlegible', sans-serif", body: "'Atkinson Hyperlegible', sans-serif" },
+    design: { title: "underline", frame: "square", callout: "outline" },
+  },
+  {
+    id: "calm", name: "Calm", description: "Soft sage, gentle on the eyes", category: "classic", family: "basic",
+    tags: ["low-stimulation"],
+    palette: {
+      background: "#EEF4F0", paperBg: "#F8FBF9", paperShadow: "rgba(35, 51, 43, 0.08)",
+      text: "#23332B", muted: "#5C6E64", accent: "#4F7F69", overlayText: "#FFFFFF", headingColor: "#2E4A3D",
+      calloutBgKey: "#E1EDE5", calloutInkKey: "#23332B", calloutBgRemember: "#E3ECF2", calloutInkRemember: "#23332B",
+      calloutBgFun: "#ECE8F2", calloutInkFun: "#23332B", badgeBg: "#4F7F69", badgeInk: "#FFFFFF", blockquoteRule: "#4F7F69",
+      activityCardBg: "#E3ECE6", activityCardInk: "#23332B", speechBubbleStroke: "#23332B", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Lexend', sans-serif", body: "'Nunito', sans-serif" },
   },
 ];
 
@@ -787,4 +1052,58 @@ export const THEME_CATEGORIES: { id: ThemeCategory; label: string; description: 
 /** Themes belonging to a category, in their declared order. */
 export function getThemesByCategory(category: ThemeCategory): SlideshowTheme[] {
   return SLIDESHOW_THEMES.filter((t) => t.category === category);
+}
+
+/** The picker's three tabs, in order. */
+export const THEME_FAMILIES: { id: ThemeFamily; label: string; description: string }[] = [
+  { id: "playful", label: "Playful", description: "Bright and bold, made for younger classes" },
+  { id: "professional", label: "Professional", description: "Calm, editorial and polished" },
+  { id: "basic", label: "Basic", description: "Plain and easy to read" },
+];
+
+/** A theme's full treatment: its family's defaults with its own overrides. */
+export function themeDesign(theme: SlideshowTheme): ThemeDesign {
+  return { ...FAMILY_DESIGN[theme.family], ...theme.design };
+}
+
+/** Themes in a family, designed ones first and subject ones last. */
+export function getThemesByFamily(family: ThemeFamily): SlideshowTheme[] {
+  const inFamily = SLIDESHOW_THEMES.filter((t) => t.family === family);
+  const designed = inFamily.filter((t) => !t.backgroundArt);
+  const art = inFamily.filter((t) => !!t.backgroundArt);
+  return [...designed, ...art];
+}
+
+/** The filter chip a theme sits under within its family, if any. */
+export function themeGroupLabel(theme: SlideshowTheme): string | null {
+  switch (theme.category) {
+    case "scenic": return "Scenic";
+    case "math": return "Maths";
+    case "science": return "Science";
+    case "history": return "History";
+    case "english": return "English";
+    default: return null;
+  }
+}
+
+export const THEME_TAG_LABEL: Record<ThemeTag, string> = {
+  "dyslexia-friendly": "Dyslexia-friendly",
+  "low-stimulation": "Low stimulation",
+  "high-contrast": "High contrast",
+};
+
+/** The design a new deck starts on in each family, until the teacher picks. */
+export const DEFAULT_THEME_FOR_FAMILY: Record<ThemeFamily, string> = {
+  playful: "sticker",
+  professional: "paper",
+  basic: "clean",
+};
+
+/** Which tab the picker opens on: Playful up to Year 6, Professional after. */
+export function defaultFamilyForYear(year: string | undefined | null): ThemeFamily {
+  if (!year) return "playful";
+  if (year === "Nursery" || year === "Reception") return "playful";
+  const n = Number(year.match(/^Year (\d{1,2})$/)?.[1]);
+  if (Number.isFinite(n) && n >= 1 && n <= 6) return "playful";
+  return "professional";
 }

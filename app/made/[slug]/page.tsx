@@ -6,6 +6,8 @@ import { supabase } from "@/app/lib/supabase";
 import type { SlideJSON } from "@/app/lib/presentations";
 import Wordmark from "@/app/components/v2/Wordmark";
 import MarkdownResult from "@/app/components/MarkdownResult";
+import SheetDocument from "@/app/components/sheets/SheetDocument";
+import { parseSheet } from "@/app/lib/sheets/normalize";
 import MadeDeck from "./MadeDeck";
 import styles from "./made.module.css";
 
@@ -74,6 +76,8 @@ export default async function MadePage({
   const item = await getItem(slug);
   if (!item) notFound();
 
+  // A designed Worksheet or Comprehension is drawn as its pages.
+  const sheet = parseSheet(item.output);
   const meta = [item.subject, item.year_label, item.region]
     .filter(Boolean)
     .join(" · ");
@@ -111,6 +115,8 @@ export default async function MadePage({
         <div className={styles.body}>
           {item.kind === "slides" && item.slides?.length ? (
             <MadeDeck slides={item.slides} />
+          ) : sheet ? (
+            <SheetDocument doc={sheet} anchors={false} />
           ) : item.output ? (
             <article className={styles.doc}>
               <MarkdownResult text={item.output} />

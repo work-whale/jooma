@@ -34,7 +34,11 @@ export function appToolPath(slug: GuestToolSlug): string {
 export function yearFromTopic(topic: string): string | null {
   if (/\breception\b/i.test(topic)) return "Reception";
   const m = topic.match(/\b(?:year|yr|y)\s*([1-9]|1[0-3])\b/i);
-  return m ? `Year ${Number(m[1])}` : null;
+  if (m) return `Year ${Number(m[1])}`;
+  // Nursery as a class ("Colours for nursery"), never the topic "nursery
+  // rhymes", and only when no numbered year was written.
+  if (/\bnursery\b(?!\s+rhymes?\b)/i.test(topic)) return "Nursery";
+  return null;
 }
 
 /**

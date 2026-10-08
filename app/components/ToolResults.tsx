@@ -1,8 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import StickyMask from "@/app/components/ui/StickyMask";
 import { OutlineHover } from "@/app/components/OutputOutline";
 import ResultPanel from "@/app/components/ResultPanel";
+import { parseSheet } from "@/app/lib/sheets/normalize";
+import { sheetOutline } from "@/app/lib/sheets/markdown";
 
 /*
  * The results half of a tool page: the sticky mask, the outline column and the
@@ -37,6 +40,9 @@ interface ToolResultsProps {
     input: Record<string, unknown>;
   };
   onSaved: () => void;
+  /** The run restored from history, if any. Worksheet and Comprehension
+   *  autosave edits to their designed sheets into it. */
+  runId?: string | null;
 }
 
 export default function ToolResults({
@@ -47,7 +53,14 @@ export default function ToolResults({
   exportFilename,
   historyMeta,
   onSaved,
+  runId,
 }: ToolResultsProps) {
+  // A designed sheet is JSON; its outline is its section headings.
+  const outline = useMemo(() => {
+    const sheet = parseSheet(result);
+    return sheet ? sheetOutline(sheet) : result;
+  }, [result]);
+
   return (
     <>
       {result !== null && <StickyMask />}
@@ -82,7 +95,7 @@ export default function ToolResults({
                   when it appears in the document. (Carried over from
                   EYFSPlannerForm, where it was recorded against that tool's
                   three include* toggles but is true of every tool.) */}
-              <OutlineHover markdown={result} />
+              <OutlineHover markdown={outline} />
             </div>
           </div>
         )}
@@ -104,6 +117,7 @@ export default function ToolResults({
             maxWidth={false}
             historyMeta={historyMeta}
             onSaved={onSaved}
+            runId={runId}
           />
         </div>
       </div>

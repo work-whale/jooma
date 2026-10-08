@@ -15,6 +15,7 @@ import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import { defaultDomainCodes, domainsFor, keyStageFor } from "@/app/lib/comprehension-domains";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 
 /**
  * How the form runs on /create for a signed out visitor. Same fields, same
@@ -85,6 +86,8 @@ export default function ComprehensionForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its sheet save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const ks = keyStageFor(yearGroup, mixed);
   const currentDomains = domainsFor(ks);
@@ -132,6 +135,7 @@ export default function ComprehensionForm({
     setDifferentiate(d.differentiate);
     setDifferentiationLevels(d.levels);
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -175,6 +179,7 @@ export default function ComprehensionForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
     try {
@@ -214,14 +219,16 @@ export default function ComprehensionForm({
         throw new Error(data.error || "Generation failed");
       }
       guest?.onStarted?.(res.headers.get("x-trial-id"));
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/©/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      // The route streams the sheet as JSON; each update arrives here as a
+      // whole, valid sheet. The teacher's own text is placed back in here,
+      // exactly as they wrote it: it is never sent back through the model.
+      const finished = await readSheetStream(
+        res,
+        "comprehension",
+        { yearGroup: mixed ? "Mixed" : yearGroup, includeAnswerKey, textSource, ownText: textSource === "own" ? ownText : undefined },
+        setResult,
+      );
+      if (!finished) throw new Error("The comprehension came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -467,7 +474,7 @@ export default function ComprehensionForm({
                   setNumQuestions(5); setIncludeAnswerKey(true);
                   setDifferentiate("no"); setDifferentiationLevels([]);
                   setTopic(""); setPassageWordCount("300"); setOwnText("");
-                  setResult(null); setError(null); setConfirmingReset(false);
+                  setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
@@ -491,6 +498,7 @@ export default function ComprehensionForm({
           exportFilename="comprehension-activity"
           historyMeta={{ toolSlug: TOOL_SLUG, title: topic || null, input: formState }}
           onSaved={() => setHistoryKey((k) => k + 1)}
+          runId={runId}
         />
       )}
     </div>

@@ -371,6 +371,15 @@ summary {
   /* The signed-in app's fixed sidebar. */
   --j-nav: 250px;
 
+  /* The slide editor's chrome: dark purple for the top bar and the tool rail,
+     a light purple stage behind the slide, and burnt orange behind the slide
+     tray. Tokens rather than hexes so the guest editor on /create and the
+     teacher's editor cannot drift apart. */
+  --j-editor-chrome: var(--j-deep);
+  --j-editor-chrome-line: rgba(255, 255, 255, 0.1);
+  --j-editor-canvas: var(--j-tint-2);
+  --j-editor-tray: var(--j-orange);
+
   /* Soft tints, paired with the category solids in app/lib/tools.ts. These sit
      behind an icon or a metric glyph, never behind body copy: they are too low
      contrast to carry text. The prototype hardcoded each of these at every call

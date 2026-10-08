@@ -53,7 +53,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
 
   if (notFound) {
     return (
-      <div className="flex items-center justify-center h-screen text-sm text-gray-500" style={{ backgroundColor: "var(--j-bg)" }}>
+      <div className="flex items-center justify-center h-screen text-sm text-gray-500" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
         Presentation not found — redirecting…
       </div>
     );
@@ -63,7 +63,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
     // Match the Editor's pre-generation overlay when we arrived here to generate,
     // so the loader transitions seamlessly (no label/layout change) into it.
     return (
-      <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "var(--j-bg)" }}>
+      <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
         <SlideshowLoadingAnimation
           label={genParams ? "Planning your deck…" : "Loading slideshow"}
           subtitle={genParams ? "This usually takes about 15 seconds" : undefined}
