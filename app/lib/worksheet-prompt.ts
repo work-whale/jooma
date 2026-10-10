@@ -6,7 +6,7 @@
 // question, which becomes the answer page.
 
 import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { bandName, bandPitch, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
 
 export interface WorksheetRequest {
@@ -18,6 +18,9 @@ export interface WorksheetRequest {
   questionCount?: number;
   differentiate?: Differentiate;
   differentiationLevels?: string[];
+  /** Set when this request is one band's version of a differentiated set
+   *  (app/lib/bands.ts). The whole sheet is then pitched at that band. */
+  band?: string;
   outputDetail?: "condensed" | "standard" | "detailed";
   additionalInfo?: string | null;
 }
@@ -71,9 +74,16 @@ export function worksheetRequest(body: WorksheetRequest):
       ? "Balance brevity and clarity."
       : "Make it thorough, with full model answers.";
 
+  // One band's version: the whole sheet is pitched at it, and its notes say
+  // how, in place of the blended advice.
+  const band = isBand(body.band) ? body.band : null;
+  const pitchLine = band ? `\n- ${bandPitch(band)}` : "";
+
   // Opt-in: empty when the teacher chose not to differentiate.
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const notesLine = adaptation
+  const adaptation = band ? "" : differentiationPrompt(differentiate, differentiationLevels);
+  const notesLine = band
+    ? `teacherNotes: two notes. One titled "Common misconceptions" with 3 to 5 points, each naming a misconception and how to address it. One titled "How this version is pitched: ${bandName(band)}" with 2 to 4 points on what was adapted for these pupils and how to support them while they work.`
+    : adaptation
     ? `teacherNotes: two notes. One titled "Common misconceptions" with 3 to 5 points, each naming a misconception and how to address it. One titled "Differentiation": ${adaptation}`
     : `teacherNotes: one note titled "Common misconceptions" with 3 to 5 points, each naming a misconception and how to address it.`;
 
@@ -85,7 +95,7 @@ export function worksheetRequest(body: WorksheetRequest):
 - Learning objective: ${learningObjective}
 - Questions: about ${count} in total.
 - ${detailLine}
-- ${typesLine}${additionalInfo ? `\n- Teacher's additional instructions (follow them): ${additionalInfo}` : ""}
+- ${typesLine}${pitchLine}${additionalInfo ?`\n- Teacher's additional instructions (follow them): ${additionalInfo}` : ""}
 
 HOW TO BUILD IT
 - title: specific and engaging, about the topic. Never just "Worksheet".

@@ -934,8 +934,13 @@ function ResourceItem({
     setDownloading(true);
     try {
       // A designed Worksheet or Comprehension builds its own, styled document.
-      const { parseSheet } = await import("@/app/lib/sheets/normalize");
-      const sheet = parseSheet(run.output);
+      // Of a set of differentiated versions, the first.
+      const [{ parseSheet }, { primaryOutput }] = await Promise.all([
+        import("@/app/lib/sheets/normalize"),
+        import("@/app/lib/bands"),
+      ]);
+      const output = primaryOutput(run.output);
+      const sheet = parseSheet(output);
       if (sheet) {
         const [{ buildSheetDocx }, { triggerDownload }] = await Promise.all([
           import("@/app/lib/sheets/docx"),
@@ -944,7 +949,7 @@ function ResourceItem({
         triggerDownload(await buildSheetDocx(sheet), `${title}.docx`);
       } else {
         const { exportToDocx } = await import("@/app/lib/exportUtils");
-        await exportToDocx(run.output, title);
+        await exportToDocx(output, title);
       }
     } catch {
       // Deliberately quiet. The row has nowhere to put an error, and a failed

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { DifferentiationField, WriteField, FeaturesField, WordCountField } from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { readTextStream, runBands } from "@/app/lib/runBands";
+import { bandOutput, replaceBandOutput } from "@/app/lib/bands";
 import ToolResults from "@/app/components/ToolResults";
 import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
@@ -50,6 +52,8 @@ export default function ModelTextGeneratorForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The differentiated version on screen, so Refine changes that one only.
+  const [band, setBand] = useState<string | null>(null);
 
   const lengthNum = parseInt(lengthWords, 10);
   const canGenerate =
@@ -98,8 +102,8 @@ export default function ModelTextGeneratorForm({
     setResult("");
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
-    try {
-      const res = await fetch("/api/model-text-generator", {
+    const send = (extra: Record<string, unknown> = {}) =>
+      fetch("/api/model-text-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -111,20 +115,27 @@ export default function ModelTextGeneratorForm({
           differentiate,
           differentiationLevels,
           lengthWords: lengthNum,
+          ...extra,
         }),
       });
+    const tidy = (chunk: string) => chunk.replace(/\u00A9/g, "(c)");
+    try {
+      // Differentiated: one model text per band, each in its own tab.
+      if (differentiate === "yes") {
+        await runBands({
+          bands: orderedBands(differentiationLevels),
+          start: (band, bandIndex) => send({ band, bandIndex }),
+          read: (res, onOutput) => readTextStream(res, onOutput, tidy),
+          onUpdate: setResult,
+        });
+        return;
+      }
+      const res = await send();
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      await readTextStream(res, setResult, tidy);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -202,6 +213,8 @@ export default function ModelTextGeneratorForm({
         exportFilename={`model-text-${write.slice(0, 30).replace(/\s+/g, "-") || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: write || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        activeBand={band}
+        onActiveBandChange={setBand}
       />
 
       {result && !isGenerating && (
@@ -210,22 +223,16 @@ export default function ModelTextGeneratorForm({
           chips={REFINE_CHIPS}
           onRefine={async (instruction) => {
             setIsRefining(true);
+            // Only the version on screen is refined; the others are kept.
+            const base = result;
             try {
               const res = await fetch("/api/modify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
+                body: JSON.stringify({ currentContent: bandOutput(base, band), instruction }),
               });
               if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
+              await readTextStream(res, (refined) => setResult(replaceBandOutput(base, band, refined)));
             } catch {
               // silently fail — result stays as-is
             } finally {

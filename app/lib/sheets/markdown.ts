@@ -5,6 +5,7 @@
 
 import { isSheetOutput } from "./normalize";
 import { parsePartialJson } from "./stream";
+import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
@@ -104,6 +105,13 @@ export function answerText(q: SheetQuestion): string {
  * Markdown is returned as it is.
  */
 export function outputExcerpt(output: string): string {
+  // Differentiated versions: the first one, read from the cut-off set the
+  // same way. Its output arrives as a (possibly cut-off) string.
+  if (isBandSetOutput(output)) {
+    const set = parsePartialJson(output) as { bands?: { output?: unknown }[] } | null;
+    const first = set?.bands?.[0]?.output;
+    return typeof first === "string" ? outputExcerpt(first) : "";
+  }
   if (!isSheetOutput(output)) return output;
   const raw = parsePartialJson(output) as Partial<SheetDoc> | null;
   if (!raw) return "";

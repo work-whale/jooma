@@ -7,6 +7,7 @@ import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
 import { OutlineRail } from "@/app/components/OutputOutline";
 import { parseSheet } from "@/app/lib/sheets/normalize";
+import { primaryOutput } from "@/app/lib/bands";
 import { sheetOutline } from "@/app/lib/sheets/markdown";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import { saveSharedToLibrary, type Share } from "@/app/lib/colleagues";
@@ -110,7 +111,8 @@ function SharedResourceDialog({
    * across the wire for the sake of the one a teacher might read.
    */
   const [output, setOutput] = useState<string | null>(
-    view.kind === "share" ? view.share.output : null,
+    // Of a set of differentiated versions, the first.
+    view.kind === "share" ? primaryOutput(view.share.output) : null,
   );
   const [loadError, setLoadError] = useState(false);
 
@@ -134,7 +136,8 @@ function SharedResourceDialog({
         // hides, which are indistinguishable and mean the same thing here:
         // there is nothing to read.
         if (!run) setLoadError(true);
-        else setOutput(run.output);
+        // Of a set of differentiated versions, the first.
+        else setOutput(primaryOutput(run.output));
       } catch {
         if (!cancelled) setLoadError(true);
       }

@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, differentiationSummary, type Differentiate } from "@/app/lib/differentiation";
+import {
+  bandPitch,
+  bandUsageStep,
+  differentiationPrompt,
+  differentiationSummary,
+  isBand,
+  type Differentiate,
+} from "@/app/lib/differentiation";
 
 export interface HomeworkRequest {
   curriculum: string;
@@ -11,6 +18,9 @@ export interface HomeworkRequest {
   learningObjective: string;
   differentiate?: Differentiate;
   differentiationLevels?: string[];
+  /** One band's version of a differentiated set (app/lib/bands.ts). */
+  band?: string;
+  bandIndex?: number;
   questionTypes?: string[];
   questionCounts?: Record<string, number>;
   homeworkType: string;
@@ -73,11 +83,13 @@ export async function POST(req: NextRequest) {
 
   // Opt-in. When off, the task carries no Support/Core/Challenge split and no
   // differentiation line in the brief — the homework is simply pitched at the
-  // year group.
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const summary = differentiationSummary(differentiate, differentiationLevels);
+  // year group. One band's version is pitched at that band throughout instead,
+  // with no split: the other bands are their own documents.
+  const band = isBand(body.band) ? body.band : null;
+  const adaptation = band ? "" : differentiationPrompt(differentiate, differentiationLevels);
+  const summary = band ? "" : differentiationSummary(differentiate, differentiationLevels);
   const differentiationBrief = summary ? `\n- Differentiation: ${summary}` : "";
-  const taskDifferentiation = adaptation ? ` ${adaptation}` : "";
+  const taskDifferentiation = band ? ` ${bandPitch(band)}` : adaptation ? ` ${adaptation}` : "";
 
   const userPrompt = `Create a high-quality, classroom-ready homework task for the following:
 
@@ -153,6 +165,7 @@ ${answerSection}`;
 
   return streamChat({
     toolSlug: "homework-generator",
+    step: bandUsageStep(body.band, body.bandIndex),
     ...(await modelFor("homework-generator", "gpt-4o")),
     max_completion_tokens: 4096,
     messages: [

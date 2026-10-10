@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { WordCountField, DifferentiationField } from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { runBands } from "@/app/lib/runBands";
 import { Wand2, Upload, Check } from "lucide-react";
 import ToolResults from "@/app/components/ToolResults";
 import ConfirmModal from "@/app/components/ConfirmModal";
@@ -182,8 +183,9 @@ export default function ComprehensionForm({
     setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
-    try {
-      const res = await fetch(guest?.endpoint ?? "/api/comprehension-generator", {
+    const info = { yearGroup: mixed ? "Mixed" : yearGroup, includeAnswerKey, textSource, ownText: textSource === "own" ? ownText : undefined };
+    const send = (extra: Record<string, unknown> = {}) =>
+      fetch(guest?.endpoint ?? "/api/comprehension-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -206,8 +208,23 @@ export default function ComprehensionForm({
           includeAnswerKey,
           differentiate,
           differentiationLevels,
+          ...extra,
         }),
       });
+    try {
+      // Differentiated: one whole comprehension per band, each in its own tab.
+      // Signed in only: on /create each band would spend one of a guest's
+      // daily tries, so a guest keeps the single sheet with its blended note.
+      if (!guest && differentiate === "yes") {
+        await runBands({
+          bands: orderedBands(differentiationLevels),
+          start: (band, bandIndex) => send({ band, bandIndex }),
+          read: (res, onOutput) => readSheetStream(res, "comprehension", info, onOutput),
+          onUpdate: setResult,
+        });
+        return;
+      }
+      const res = await send();
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
         if (guest && (res.status === 429 || res.status === 403)) {
@@ -222,12 +239,7 @@ export default function ComprehensionForm({
       // The route streams the sheet as JSON; each update arrives here as a
       // whole, valid sheet. The teacher's own text is placed back in here,
       // exactly as they wrote it: it is never sent back through the model.
-      const finished = await readSheetStream(
-        res,
-        "comprehension",
-        { yearGroup: mixed ? "Mixed" : yearGroup, includeAnswerKey, textSource, ownText: textSource === "own" ? ownText : undefined },
-        setResult,
-      );
+      const finished = await readSheetStream(res, "comprehension", info, setResult);
       if (!finished) throw new Error("The comprehension came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
