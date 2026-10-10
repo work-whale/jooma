@@ -49,7 +49,9 @@ import {
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
 import { getTheme, DEFAULT_THEME_ID, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
-import { rerenderSlideWithTheme, backgroundDecorations } from "@/app/lib/slideshow-layouts";
+import { rethemeDeck } from "@/app/lib/deck-theme";
+import { useSlidesJoPanel } from "@/app/components/jo/useSlidesJoPanel";
+import type { SlidesBridge } from "@/app/components/jo/useSlidesJo";
 import { parseInlineBold } from "@/app/lib/utils";
 import {
   deckArtStyle,
@@ -131,6 +133,8 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   // The free try this guest deck saves to, and whether the server has recorded
   // its run as finished (saves before then are refused). A restored try is both.
   const guestTrialIdRef = useRef<string | null>(guest ? presentation.id || null : null);
+  /** The same, as state, for Ask Jo: its free messages are counted per try. */
+  const [guestTrialId, setGuestTrialId] = useState<string | null>(guest ? presentation.id || null : null);
   const guestReadyRef = useRef(!!guest && !generationParams);
   const [title, setTitle] = useState(presentation.title);
   // The params this deck was generated from (if any), powering the "Edit prompt"
@@ -2424,119 +2428,13 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   };
 
   // ── Theme switching ────────────────────────────────────────────────────────
-  // Re-renders every slide that carries a `skeleton` (i.e. AI-generated slides)
-  // under the new theme, preserving images and audio/video objects. Edits the
-  // user has made to text content, positions, or colors WILL be overwritten —
-  // that's the trade-off for true "skin" behaviour. Dedicated audio/video
-  // placeholder slides are left alone since they don't have a re-renderable
-  // skeleton.
+  // Moves the deck onto another theme (see rethemeDeck in lib/deck-theme.ts,
+  // shared with Ask Jo). AI slides are rebuilt from their skeletons, so their
+  // hand edits are overwritten; that is the trade-off for a true "skin".
   const handleThemeChange = useCallback((nextThemeId: string) => {
     if (generating) return; // editing locked while the deck streams in
-    const theme = getTheme(nextThemeId);
     setSlides((prev) => {
-      const next = prev.map((s, i) => {
-        // Audio activity slide: re-colour bg, panel, and any slide-level
-        // texts so it follows the new theme.
-        if ((s.audios?.length ?? 0) > 0) {
-          // Match the rest of the deck: heading texts (weight ≥ 600) take the
-          // theme heading colour + heading font; body texts take the body
-          // colour + font. Previously everything was recoloured to palette.text,
-          // so the title lost its themed (e.g. sienna) heading colour.
-          const headingColor = theme.palette.headingColor ?? theme.palette.accent;
-          return {
-            ...s,
-            background: theme.palette.background,
-            shapes: [
-              ...backgroundDecorations(theme, !!s.backgroundImage),
-              ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
-            ],
-            texts: s.texts.map((t) => {
-              const isHeading = parseInt(t.fontWeight, 10) >= 600;
-              return {
-                ...t,
-                color: isHeading ? headingColor : theme.palette.text,
-                fontFamily: isHeading ? theme.fonts.heading : theme.fonts.body,
-              };
-            }),
-            audios: (s.audios ?? []).map((a) => ({
-              ...a,
-              panelBg: theme.palette.accent,
-              panelInk: theme.palette.overlayText,
-              playBg: theme.palette.background,
-              playInk: theme.palette.text,
-              headingFont: theme.fonts.heading,
-            })),
-            themeId: i === 0 ? nextThemeId : s.themeId,
-          };
-        }
-        // YouTube video slide: re-colour bg + slide-level texts. The first
-        // text element (heading) uses the accent for emphasis; the rest
-        // (subtitle) use muted.
-        if ((s.videos?.length ?? 0) > 0) {
-          return {
-            ...s,
-            background: theme.palette.background,
-            shapes: [
-              ...backgroundDecorations(theme, !!s.backgroundImage),
-              ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
-            ],
-            texts: s.texts.map((t, ti) => ({
-              ...t,
-              color: ti === 0 ? theme.palette.accent : theme.palette.muted,
-              fontFamily: ti === 0 ? theme.fonts.heading : t.fontFamily,
-            })),
-            themeId: i === 0 ? nextThemeId : s.themeId,
-          };
-        }
-        if (!s.skeleton) {
-          // No skeleton (audio-answer slide, manual slide, or pre-skeleton-fix
-          // deck): we can't rebuild from the layout spec, but a theme switch is
-          // a skin change, so recolour the background + text and swap fonts —
-          // otherwise these slides get stranded on the previous theme (e.g. the
-          // audio-answer slide kept its cream "Paper" look while every other
-          // slide moved to the new theme). Heading texts (weight ≥ 600) take the
-          // heading colour; everything else takes the body text colour.
-          const headingColor = theme.palette.headingColor ?? theme.palette.accent;
-          const newTexts = s.texts.map((t) => {
-            const isHeading = parseInt(t.fontWeight, 10) >= 600;
-            return {
-              ...t,
-              fontFamily: isHeading ? theme.fonts.heading : theme.fonts.body,
-              color: isHeading ? headingColor : theme.palette.text,
-            };
-          });
-          return {
-            ...s,
-            background: theme.palette.background,
-            shapes: [
-              ...backgroundDecorations(theme, !!s.backgroundImage),
-              ...(s.shapes ?? []).filter((sh) => !sh.id.startsWith("dec_")),
-            ],
-            texts: newTexts,
-            themeId: i === 0 ? nextThemeId : s.themeId,
-          };
-        }
-        // AI content slide: re-render from skeleton, preserve id.
-        const rebuilt = rerenderSlideWithTheme(s, theme, artStyle);
-        return {
-          ...rebuilt,
-          id: s.id,
-          themeId: i === 0 ? nextThemeId : rebuilt.themeId,
-        } as SlideState;
-      });
-      if (next[0]) next[0] = { ...next[0], themeId: nextThemeId };
-      // Apply (or clear) the theme's full-bleed illustration background on every
-      // slide, resolved for the current art style. Set unconditionally so
-      // switching AWAY from an art theme removes it.
-      const art = getThemeArt(theme, artStyle);
-      for (let i = 0; i < next.length; i++) {
-        next[i] = {
-          ...next[i],
-          backgroundArt: art?.src,
-          backgroundArtScrim: art?.scrim,
-        };
-      }
-      if (next[0]) next[0] = { ...next[0], artStyleId: artStyle };
+      const next = rethemeDeck(prev, nextThemeId, artStyle);
       slidesRef.current = next;
       return next;
     });
@@ -2565,9 +2463,33 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   const handleFit = useCallback(() => {
     const v = viewportRef.current;
     if (!v) return;
+    autoFitRef.current = true;
     const pad = 64;
     const z = Math.min((v.clientWidth - pad) / SLIDE_W, (v.clientHeight - pad) / SLIDE_H);
     setZoom(Math.max(0.1, Math.min(z, 4)));
+  }, []);
+
+  // Until the teacher zooms themselves, keep the whole slide in view as the
+  // canvas changes width: the window, or Ask Jo's column opening and folding.
+  // Never above 100%, which is where the editor has always opened.
+  const autoFitRef = useRef(true);
+  const manualZoom = useCallback((z: number) => {
+    autoFitRef.current = false;
+    setZoom(z);
+  }, []);
+  useEffect(() => {
+    const v = viewportRef.current;
+    if (!v) return;
+    const fit = () => {
+      if (!autoFitRef.current || v.clientWidth === 0) return;
+      const pad = 64;
+      const z = Math.min((v.clientWidth - pad) / SLIDE_W, (v.clientHeight - pad) / SLIDE_H, 1);
+      setZoom(Math.max(0.1, z));
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(v);
+    fit();
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -2582,6 +2504,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       const cx = mx + v.scrollLeft;
       const cy = my + v.scrollTop;
       const clampedDelta = Math.max(-50, Math.min(50, e.deltaY));
+      autoFitRef.current = false;
       setZoom((oldZoom) => {
         const newZoom = Math.max(0.1, Math.min(oldZoom * (1 - clampedDelta * 0.005), 4));
         if (newZoom === oldZoom) return oldZoom;
@@ -3036,7 +2959,10 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           return;
         }
         if (!r.ok || !r.body) throw new Error("Generation failed");
-        if (guest) guestTrialIdRef.current = r.headers.get("x-trial-id");
+        if (guest) {
+          guestTrialIdRef.current = r.headers.get("x-trial-id");
+          setGuestTrialId(guestTrialIdRef.current);
+        }
         let completed = false;
         const reader = r.body.getReader();
         const decoder = new TextDecoder();
@@ -3264,6 +3190,61 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  // ── Ask Jo ──────────────────────────────────────────────────────────────
+  // Jo edits the deck through this bridge onto the editor's own state: it
+  // shows its working copy without saving while a turn plays, then commits
+  // once, so the whole turn is one undo step and one save.
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
+  const joBridge = useMemo<SlidesBridge>(
+    () => ({
+      getSlides: () => slidesRef.current,
+      getActiveIndex: () => activeIndexRef.current,
+      artStyle: () => artStyle,
+      show: (next) => {
+        slidesRef.current = next as SlideState[];
+        setSlides(next as SlideState[]);
+      },
+      commit: (next) => {
+        slidesRef.current = next as SlideState[];
+        setSlides(next as SlideState[]);
+        scheduleSave();
+      },
+      checkpoint: () => {
+        flushPendingHistory();
+        pushHistory(slidesRef.current);
+      },
+      goTo: (index) => {
+        activeIndexRef.current = index;
+        setActiveIndex(index);
+        clearSelection();
+      },
+    }),
+    [artStyle, scheduleSave, flushPendingHistory, pushHistory, clearSelection],
+  );
+  // Opens itself each time a deck finishes generating.
+  const [joOpenSignal, setJoOpenSignal] = useState(0);
+  const [wasGenerating, setWasGenerating] = useState(!!generating);
+  if (!!generating !== wasGenerating) {
+    setWasGenerating(!!generating);
+    if (!generating) setJoOpenSignal((n) => n + 1);
+  }
+  const jo = useSlidesJoPanel({
+    bridge: joBridge,
+    canvasRef: canvasAreaRef,
+    slideRef: slideWrapperRef,
+    activeSlideId: slides[activeIndex]?.id ?? null,
+    docRef: !guest && presentation.id ? { kind: "presentation", id: presentation.id } : null,
+    guest: guest
+      ? {
+          trialId: guestTrialId,
+          honeypot: guest.honeypot,
+          onSignUp: () => guest.gate("more", "Sign up free to keep editing with Jo. Your deck comes with you."),
+        }
+      : null,
+    disabled: generating ? "Jo can help as soon as your deck is ready" : null,
+    openSignal: joOpenSignal,
+  });
+
   const currentSlide = slides[activeIndex];
 
   // Memoize the bg-image CSS url(...) string — re-creating a megabyte-sized data URL
@@ -3323,7 +3304,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       <div className="flex flex-1 min-h-0 relative">
         {/* Sidebar is made non-interactive (no editing) while the deck streams
             in — no dim, the user can still scroll/navigate the slides. */}
-        <div className={`flex shrink-0${generating ? " pointer-events-none" : ""}`}>
+        <div className={`flex shrink-0${generating || jo.joBusy ? " pointer-events-none" : ""}`}>
         <Sidebar
           onAddShape={addShape}
           onAddText={addText}
@@ -3432,10 +3413,12 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           />
         )}
         <div
+          ref={canvasAreaRef}
           data-editor-chrome="canvas"
-          className="flex-1 min-h-0 min-w-0 relative"
+          className={`flex-1 min-h-0 min-w-0 relative${jo.joBusy ? " pointer-events-none" : ""}`}
           style={{ backgroundColor: "var(--j-editor-canvas)" }}
         >
+          {jo.overlay}
           <div
             ref={viewportRef}
             className="absolute inset-0 overflow-auto [&::-webkit-scrollbar]:hidden"
@@ -3905,7 +3888,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           </div>
           <ZoomControls
             zoom={zoom}
-            onChange={setZoom}
+            onChange={manualZoom}
             onFit={handleFit}
             slideIndex={activeIndex}
             slideCount={slides.length}
@@ -4016,6 +3999,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           onApplyVideoId={applyVideoId}
           onApply={applyVideoCandidate}
         />
+        {jo.panel}
       </div>
 
       {contextMenu && (

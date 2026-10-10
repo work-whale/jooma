@@ -343,6 +343,50 @@ test.describe("signed out", () => {
     await expect(page.getByTestId("auth-gate")).toContainText("keep editing with Jo");
   });
 
+  test("in the guest editor, Jo edits the deck on the page and the free try saves it", async ({ page }) => {
+    const calls = await stubGuestApi(page);
+    const bodies: Record<string, unknown>[] = [];
+    await page.route("**/api/try/jo**", (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { left: 3 } });
+      const body = route.request().postDataJSON() as { snapshot: { slides: { id: string; texts?: { id: string }[] }[] } };
+      bodies.push(body as unknown as Record<string, unknown>);
+      const slide = body.snapshot.slides[0];
+      return route.fulfill({
+        status: 200,
+        headers: { "content-type": "text/plain; charset=utf-8", "x-jo-prompts-left": "2" },
+        body: JSON.stringify({
+          reply: "I'll make the title friendlier.",
+          clarify: null,
+          ops: [{ op: "setSlideText", label: "Rewording the title", slideId: slide.id, textId: slide.texts?.[0]?.id ?? "t1", text: "Volcanoes: Earth's fiery mountains" }],
+          summary: "The title is friendlier.",
+        }),
+      });
+    });
+
+    await page.goto("/create?tool=slides&topic=Volcanoes");
+    await expect(page.locator('input[name="lesson-topic"]')).toHaveValue("Volcanoes", NAV);
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /Generate slideshow/ }).click();
+    await expect(page.locator("[data-text-id]").first()).toBeVisible(NAV);
+
+    const panel = page.getByTestId("jo-panel");
+    await expect(panel).toBeVisible();
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("3 free messages", NAV);
+    await page.getByTestId("jo-input").fill("Make the title friendlier");
+    await page.getByTestId("jo-send").click();
+
+    await expect(page.getByTestId("jo-canvas-focus")).toContainText("Rewording the title", NAV);
+    await expect(page.locator("[data-text-id]").filter({ hasText: "Volcanoes: Earth's fiery mountains" })).toBeVisible(NAV);
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("2 free messages", NAV);
+    expect(bodies[0]).toMatchObject({ kind: "slides", trialId: "11111111-2222-4333-8444-555555555555", website: "" });
+
+    // The free try keeps Jo's edit, through the editor's own save.
+    await expect
+      .poll(() => JSON.stringify(calls.finalize.at(-1) ?? {}).includes("Earth's fiery mountains"), NAV)
+      .toBe(true);
+  });
+
   test("the server's limit shows the same card (regression)", async ({ page }) => {
     await stubGuestApi(page);
     await stubComprehension(page);

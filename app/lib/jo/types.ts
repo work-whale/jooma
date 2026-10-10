@@ -9,7 +9,7 @@
 import type { SheetBlock } from "@/app/lib/sheets/types";
 
 /** The kind of document Jo is editing. Each has its own op vocabulary. */
-export type JoDocKind = "sheet";
+export type JoDocKind = "sheet" | "slides";
 
 /** A follow up question, asked instead of editing when a request is vague. */
 export interface JoClarify {
@@ -64,7 +64,75 @@ export type SheetOp =
   | DeleteSectionOp
   | SetDesignOp;
 
-export type JoOp = SheetOp;
+// ── Slide ops ───────────────────────────────────────────────────────────────
+
+/** The words of an AI slide, as its layout knows them (SlideSpec). A list
+ *  field (bullets) is one item per line. */
+export const SLIDE_TEXT_KEYS = [
+  "title",
+  "subtitle",
+  "subHook",
+  "body",
+  "bulletsLeadIn",
+  "bullets",
+  "calloutVariant",
+  "calloutLabel",
+  "calloutBody",
+  "badgeText",
+  "blockquoteText",
+  "blockquoteAttribution",
+  "attribution",
+  "statValue",
+  "statCaption",
+  "twoColLeftTitle",
+  "twoColLeftBody",
+  "twoColRightTitle",
+  "twoColRightBody",
+  "col1Title",
+  "col1Body",
+  "col2Title",
+  "col2Body",
+  "col3Title",
+  "col3Body",
+] as const;
+export type SlideTextKey = (typeof SLIDE_TEXT_KEYS)[number];
+
+/** Layouts Jo may add a slide in: the deck's own content layouts. Each takes
+ *  one picture, found from imageQuery once the slide is in. */
+export const ADDABLE_LAYOUTS = [
+  "paper-image-right",
+  "paper-image-left",
+  "paper-banner-image-top",
+  "paper-image-right-badge",
+  "paper-quote",
+] as const;
+export type AddableLayout = (typeof ADDABLE_LAYOUTS)[number];
+
+export interface SlideField {
+  key: SlideTextKey;
+  value: string;
+}
+
+/** One text box on a slide with no layout to rebuild from. */
+export interface SetSlideTextOp extends OpBase { op: "setSlideText"; slideId: string; textId: string; text: string }
+/** New words for an AI slide, rebuilt in its layout and the deck's theme. */
+export interface RewriteSlideOp extends OpBase { op: "rewriteSlide"; slideId: string; fields: SlideField[] }
+/** `afterSlideId` "" puts it first. */
+export interface AddSlideOp extends OpBase {
+  op: "addSlide";
+  afterSlideId: string;
+  layout: AddableLayout;
+  fields: SlideField[];
+  imageQuery: string;
+}
+export interface DeleteSlideOp extends OpBase { op: "deleteSlide"; slideId: string }
+/** `afterSlideId` "" moves it to the front. */
+export interface MoveSlideOp extends OpBase { op: "moveSlide"; slideId: string; afterSlideId: string }
+export interface SetThemeOp extends OpBase { op: "setTheme"; themeId: string }
+
+export type SlideOp = SetSlideTextOp | RewriteSlideOp | AddSlideOp | DeleteSlideOp | MoveSlideOp | SetThemeOp;
+
+export type JoOp = SheetOp | SlideOp;
 
 /** A model's whole answer for one turn, in the order it streams. */
 export interface JoResponse {

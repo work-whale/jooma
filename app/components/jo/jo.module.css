@@ -651,6 +651,68 @@ button.step:hover {
   font-weight: 700;
 }
 
+/* ── In the slides editor: a full height column beside the canvas ─────── */
+
+.dock[data-variant="editor"] {
+  position: relative;
+  top: 0;
+  align-self: stretch;
+  height: auto;
+  border-radius: 0;
+  border-width: 0 0 0 1px;
+  box-shadow: none;
+}
+
+/* ── On the slide canvas: Jo's ring around what it is changing ─────────── */
+
+.canvasRing {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--j-mid), 0 0 0 8px rgba(139, 106, 232, 0.22);
+  background: rgba(241, 236, 252, 0.18);
+  transition: left 0.3s var(--j-ease), top 0.3s var(--j-ease), width 0.3s var(--j-ease), height 0.3s var(--j-ease);
+}
+
+.canvasRing[data-whole="true"] {
+  border-radius: 4px;
+  background: none;
+  box-shadow: 0 0 0 3px var(--j-mid), 0 0 0 10px rgba(139, 106, 232, 0.2);
+}
+
+.canvasLabel {
+  position: absolute;
+  top: -15px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+  padding: 3px 11px 3px 3px;
+  border-radius: var(--j-pill);
+  background: var(--j-deep);
+  color: #fff;
+  font: 600 12px/1.2 var(--font-secondary);
+  box-shadow: 0 4px 12px rgba(58, 28, 143, 0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canvasLabel i {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  background: var(--j-purple);
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 /* ── The floating button on small screens ──────────────────────────────── */
 
 .fab {
@@ -659,7 +721,8 @@ button.step:hover {
 
 @media (max-width: 1023px) {
   .dock,
-  .dock[data-open="false"] {
+  .dock[data-open="false"],
+  .dock[data-variant="editor"] {
     position: fixed;
     top: auto;
     left: 0;
@@ -668,6 +731,7 @@ button.step:hover {
     z-index: 60;
     width: auto;
     height: min(78vh, 640px);
+    border-width: 1px;
     border-radius: var(--j-r-xl) var(--j-r-xl) 0 0;
     box-shadow: 0 -12px 40px rgba(29, 23, 48, 0.22);
     transform: translateY(0);
@@ -719,5 +783,8 @@ button.step:hover {
   .thinking i,
   .spin {
     animation: none;
+  }
+  .canvasRing {
+    transition: none;
   }
 }

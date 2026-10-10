@@ -53,6 +53,7 @@ export default function JoPanel({
   guest = null,
   disabled = null,
   openSignal = 0,
+  variant = "dock",
 }: {
   session: Session;
   adapter: JoAdapter;
@@ -66,6 +67,8 @@ export default function JoPanel({
   disabled?: string | null;
   /** Bumped by the page when a generation finishes, to open the panel. */
   openSignal?: number;
+  /** "editor": a full height column beside the slide canvas. */
+  variant?: "dock" | "editor";
 }) {
   const { messages, busy, send, stop, undo, promptsLeft, blocked } = session;
 
@@ -157,7 +160,7 @@ export default function JoPanel({
         Ask Jo
       </button>
 
-      <aside className={styles.dock} data-open={open} aria-label="Ask Jo" data-testid="jo-panel">
+      <aside className={styles.dock} data-open={open} data-variant={variant} aria-label="Ask Jo" data-testid="jo-panel">
         <button type="button" className={styles.rail} onClick={() => setOpen(true)} aria-label="Open Ask Jo" data-testid="jo-rail">
           <JoOrb busy={busy} />
           {unread && <span className={styles.unread} aria-label="New reply" />}

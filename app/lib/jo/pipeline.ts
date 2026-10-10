@@ -20,7 +20,8 @@ import { modelFor } from "@/app/lib/tool-model";
 import { isEducationRelated, OFF_TOPIC_REPLY } from "@/app/lib/assistant-prompt";
 import type { SheetTool } from "@/app/lib/sheets/types";
 import { joSheetResponseFormat } from "./sheet-schema";
-import { JO_MAX_ASKS, joSheetSystem } from "./prompts";
+import { joSlidesResponseFormat } from "./slide-schema";
+import { JO_MAX_ASKS, joSheetSystem, joSlidesSystem } from "./prompts";
 import type { JoTurnBody } from "./types";
 
 /** Marks a refusal, sent as a whole JSON answer with no ops. */
@@ -28,8 +29,9 @@ export const JO_REFUSAL_HEADER = "x-jo-refusal";
 
 const MAX_HISTORY = 16;
 const MAX_MESSAGE_CHARS = 4_000;
-/** A sheet as JSON is a few thousand characters; this is a generous ceiling
- *  that still stops a forged body from filling the context. */
+/** A sheet or a deck's words as JSON are a few thousand characters (a deck's
+ *  snapshot carries no images); this is a generous ceiling that still stops a
+ *  forged body from filling the context. */
 const MAX_SNAPSHOT_CHARS = 120_000;
 
 export interface JoTurnOptions {
@@ -51,19 +53,45 @@ function wholeAnswer(reply: string, headers: Record<string, string> = {}): Respo
   });
 }
 
-function sheetToolOf(snapshot: unknown): SheetTool | null {
-  if (!snapshot || typeof snapshot !== "object") return null;
-  const s = snapshot as { tool?: unknown; sections?: unknown };
-  if (!Array.isArray(s.sections)) return null;
-  return s.tool === "worksheet" || s.tool === "comprehension" ? s.tool : null;
+/** What Jo is editing this turn: what to call it, and how to answer. */
+interface JoTarget {
+  /** As a teacher would say it: "worksheet", "slide deck". */
+  name: string;
+  /** Heads the document in the prompt. */
+  heading: string;
+  system: string;
+  response_format: ReturnType<typeof joSheetResponseFormat> | ReturnType<typeof joSlidesResponseFormat>;
+}
+
+function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget | null {
+  const snap = body.snapshot && typeof body.snapshot === "object" ? (body.snapshot as Record<string, unknown>) : null;
+  if (!snap) return null;
+  if (body.kind === "sheet") {
+    const tool = snap.tool;
+    if (!Array.isArray(snap.sections) || (tool !== "worksheet" && tool !== "comprehension")) return null;
+    return {
+      name: tool === "worksheet" ? "worksheet" : "reading comprehension",
+      heading: "THE SHEET NOW (JSON)",
+      system: joSheetSystem({ tool: tool as SheetTool, canAsk, guest }),
+      response_format: joSheetResponseFormat(tool as SheetTool),
+    };
+  }
+  if (body.kind === "slides") {
+    if (!Array.isArray(snap.slides) || snap.slides.length === 0) return null;
+    return {
+      name: "slide deck",
+      heading: "THE DECK NOW (JSON)",
+      system: joSlidesSystem({ canAsk, guest }),
+      response_format: joSlidesResponseFormat(),
+    };
+  }
+  return null;
 }
 
 export async function runJoTurn(body: JoTurnBody, opts: JoTurnOptions = {}): Promise<Response> {
-  if (body?.kind !== "sheet") {
-    return NextResponse.json({ error: "Jo can't edit this yet." }, { status: 400 });
-  }
-  const tool = sheetToolOf(body.snapshot);
-  if (!tool) return NextResponse.json({ error: "Missing document" }, { status: 400 });
+  const askCount = Math.max(0, Math.min(JO_MAX_ASKS, Number.isFinite(body?.askCount) ? Number(body.askCount) : 0));
+  const target = body ? targetFor(body, askCount < JO_MAX_ASKS, !!opts.guest) : null;
+  if (!target) return NextResponse.json({ error: "Missing document" }, { status: 400 });
   const snapshot = JSON.stringify(body.snapshot);
   if (snapshot.length > MAX_SNAPSHOT_CHARS) {
     return NextResponse.json({ error: "This document is too long for Jo to edit." }, { status: 413 });
@@ -79,12 +107,11 @@ export async function runJoTurn(body: JoTurnBody, opts: JoTurnOptions = {}): Pro
   const latest = [...history].reverse().find((m) => m.role === "user");
   if (!latest) return NextResponse.json({ error: "No message provided" }, { status: 400 });
 
-  const askCount = Math.max(0, Math.min(JO_MAX_ASKS, Number.isFinite(body.askCount) ? Number(body.askCount) : 0));
   const userId = opts.guest ? null : await currentUserId();
   const title = (body.snapshot as { title?: unknown }).title;
   const opener = {
     role: "assistant" as const,
-    content: `Here is your ${tool === "worksheet" ? "worksheet" : "reading comprehension"}${typeof title === "string" && title ? `, "${title.slice(0, 120)}"` : ""}. What would you like me to change on it?`,
+    content: `Here is your ${target.name}${typeof title === "string" && title ? `, "${title.slice(0, 120)}"` : ""}. What would you like me to change on it?`,
   };
 
   if (!(await isEducationRelated([opener, ...history], userId))) {
@@ -98,10 +125,10 @@ export async function runJoTurn(body: JoTurnBody, opts: JoTurnOptions = {}): Pro
       ...(opts.guest ? { step: "guest" } : {}),
       runId: opts.guest?.runId ?? null,
       max_completion_tokens: opts.guest ? 5000 : 8000,
-      response_format: joSheetResponseFormat(tool),
+      response_format: target.response_format,
       messages: [
-        { role: "system", content: joSheetSystem({ tool, canAsk: askCount < JO_MAX_ASKS, guest: !!opts.guest }) },
-        { role: "system", content: `THE SHEET NOW (JSON):\n${snapshot}${body.focus ? `\n\nThe teacher last worked on: ${String(body.focus).slice(0, 60)}` : ""}` },
+        { role: "system", content: target.system },
+        { role: "system", content: `${target.heading}:\n${snapshot}${body.focus ? `\n\nThe teacher is looking at: ${String(body.focus).slice(0, 60)}` : ""}` },
         opener,
         ...history,
       ],
