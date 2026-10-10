@@ -12,6 +12,9 @@ import { cleanMathText } from "@/app/lib/math-text";
 import { isSheetOutput, parseSheet } from "@/app/lib/sheets/normalize";
 import SheetWorkspace, { type SaveState } from "@/app/components/sheets/SheetWorkspace";
 import ShareToHomePrompt from "@/app/components/guest/ShareToHomePrompt";
+import { useMarkdownJoPanel } from "@/app/components/jo/useMarkdownJoPanel";
+import { v2ToolForSlug } from "@/app/lib/tools";
+import { useRestoredRun } from "@/app/lib/RestoredRunContext";
 
 /** Tools whose results can be offered for the landing page's showcase row. */
 const SHAREABLE: Record<string, "comprehension" | "worksheet"> = {
@@ -247,6 +250,15 @@ export default function ResultPanel({
    *  (Jo keeps its conversation against it). ownRunIdRef stays the source of
    *  truth for the saves themselves. */
   const [savedRunId, setSavedRunId] = useState<string | null>(null);
+  // The run a form reopened, when it does not pass `runId` itself (most text
+  // tools). Taken on each restore; dropped when a new generation starts.
+  const restoredRun = useRestoredRun();
+  const [restoredId, setRestoredId] = useState<string | null>(null);
+  const [seenRestore, setSeenRestore] = useState(0);
+  if (restoredRun && restoredRun.at !== seenRestore) {
+    setSeenRestore(restoredRun.at);
+    setRestoredId(restoredRun.id);
+  }
   useEffect(() => {
     latestRef.current = result;
   }, [result]);
@@ -258,6 +270,7 @@ export default function ResultPanel({
     if (!wasBusy && isBusy) {
       ownRunIdRef.current = null;
       setSavedRunId(null);
+      setRestoredId(null);
     }
     if (!wasBusy || isBusy) return; // only on the busy -> idle edge
     const meta = historyMetaRef.current;
@@ -313,8 +326,33 @@ export default function ResultPanel({
     onChange(next);
   };
 
-  const joRunId = isBusy ? null : (savedRunId ?? runId);
+  const joRunId = isBusy ? null : (savedRunId ?? runId ?? restoredId);
   const joDocRef = useMemo(() => (joRunId ? { kind: "tool_run" as const, id: joRunId } : null), [joRunId]);
+
+  // ── Ask Jo, for the text tools ──
+  // Markdown results are otherwise saved once, when the generation finishes,
+  // and the teacher's own edits are not. Jo's are: each turn is written to the
+  // run, so a reopened document matches the conversation kept beside it.
+  const mdRef = useRef<HTMLDivElement>(null);
+  const [mdOpenSignal, setMdOpenSignal] = useState(0);
+  const [mdWasBusy, setMdWasBusy] = useState(isBusy);
+  if (isBusy !== mdWasBusy) {
+    setMdWasBusy(isBusy);
+    if (!isBusy) setMdOpenSignal((n) => n + 1);
+  }
+  const mdJo = useMarkdownJoPanel({
+    markdown: sheet ? null : shown,
+    commit: (md) => {
+      handleEditorChange(md);
+      const id = ownRunIdRef.current ?? runId ?? restoredId;
+      if (id) updateToolRunOutput(id, md).catch(() => {});
+    },
+    containerRef: mdRef,
+    toolName: historyMeta ? (v2ToolForSlug(historyMeta.toolSlug)?.name ?? "") : "",
+    docRef: sheet ? null : joDocRef,
+    disabled: isBusy ? "Jo can help as soon as this is finished" : null,
+    openSignal: mdOpenSignal,
+  });
 
   if (result === null || shown === null) return null;
 
@@ -437,7 +475,13 @@ export default function ResultPanel({
             <div ref={bottomRef} />
           </div>
         ) : (
-          <RichTextEditor value={shown} onChange={handleEditorChange} />
+          <div className="flex items-start gap-4 lg:pr-4 lg:pt-4">
+            <div ref={mdRef} className={`relative flex-1 min-w-0${mdJo.joBusy ? " pointer-events-none" : ""}`}>
+              <RichTextEditor value={mdJo.shown ?? shown} onChange={handleEditorChange} />
+              {mdJo.overlay}
+            </div>
+            {mdJo.panel}
+          </div>
         )}
       </div>
 

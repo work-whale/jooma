@@ -21,7 +21,9 @@ import { isEducationRelated, OFF_TOPIC_REPLY } from "@/app/lib/assistant-prompt"
 import type { SheetTool } from "@/app/lib/sheets/types";
 import { joSheetResponseFormat } from "./sheet-schema";
 import { joSlidesResponseFormat } from "./slide-schema";
-import { JO_MAX_ASKS, joSheetSystem, joSlidesSystem } from "./prompts";
+import { joMarkdownResponseFormat } from "./md-schema";
+import { joListResponseFormat } from "./list-schema";
+import { JO_MAX_ASKS, joListSystem, joMarkdownSystem, joSheetSystem, joSlidesSystem } from "./prompts";
 import type { JoTurnBody } from "./types";
 
 /** Marks a refusal, sent as a whole JSON answer with no ops. */
@@ -60,7 +62,11 @@ interface JoTarget {
   /** Heads the document in the prompt. */
   heading: string;
   system: string;
-  response_format: ReturnType<typeof joSheetResponseFormat> | ReturnType<typeof joSlidesResponseFormat>;
+  response_format:
+    | ReturnType<typeof joSheetResponseFormat>
+    | ReturnType<typeof joSlidesResponseFormat>
+    | ReturnType<typeof joMarkdownResponseFormat>
+    | ReturnType<typeof joListResponseFormat>;
 }
 
 function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget | null {
@@ -83,6 +89,26 @@ function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget 
       heading: "THE DECK NOW (JSON)",
       system: joSlidesSystem({ canAsk, guest }),
       response_format: joSlidesResponseFormat(),
+    };
+  }
+  if (body.kind === "markdown") {
+    if (!Array.isArray(snap.sections) || snap.sections.length === 0) return null;
+    const toolName = typeof snap.toolName === "string" ? snap.toolName.replace(/[^\w\s&'-]/g, "").slice(0, 60) : "";
+    return {
+      name: toolName ? `${toolName.toLowerCase()} document` : "document",
+      heading: "THE DOCUMENT NOW (JSON)",
+      system: joMarkdownSystem({ canAsk, guest, toolName }),
+      response_format: joMarkdownResponseFormat(),
+    };
+  }
+  if (body.kind === "quiz" || body.kind === "staffSlides") {
+    if (!Array.isArray(snap.items) || snap.items.length === 0) return null;
+    const quiz = body.kind === "quiz";
+    return {
+      name: quiz ? "quiz" : "Staff Slides deck",
+      heading: quiz ? "THE QUIZ NOW (JSON)" : "THE DECK NOW (JSON)",
+      system: joListSystem({ canAsk, guest, tool: body.kind }),
+      response_format: joListResponseFormat(body.kind),
     };
   }
   return null;

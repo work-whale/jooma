@@ -12,6 +12,7 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import { saveToolRun, type ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import { useListJoPanel } from "@/app/components/jo/useListJoPanel";
 
 const TOOL_SLUG = "cpd-slideshow";
 
@@ -932,6 +933,27 @@ export default function CpdSlideshowForm({
       .catch((err) => console.warn("[cpd-slideshow] could not save run:", err));
   };
 
+  // ── Ask Jo ──
+  // Jo's turn is saved the way a refine is: as a new run in the history.
+  const slidesListRef = useRef<HTMLDivElement>(null);
+  const [joOpenSignal, setJoOpenSignal] = useState(0);
+  const [joWasGenerating, setJoWasGenerating] = useState(isGenerating);
+  if (isGenerating !== joWasGenerating) {
+    setJoWasGenerating(isGenerating);
+    if (!isGenerating) setJoOpenSignal((n) => n + 1);
+  }
+  const jo = useListJoPanel<SlideData>({
+    tool: "staffSlides",
+    values: slides ?? [],
+    commit: (next) => {
+      setSlides(next);
+      persist(next);
+    },
+    containerRef: slidesListRef,
+    disabled: isGenerating || isRefining ? "Jo can help as soon as this is finished" : null,
+    openSignal: joOpenSignal,
+  });
+
   const restore = (run: ToolRun) => {
     const i = run.input;
     setTopic((i.topic as string) ?? "");
@@ -1258,17 +1280,23 @@ export default function CpdSlideshowForm({
             )}
           </div>
 
-          <div className="bg-stone-400 rounded-xl px-16 py-14 space-y-8">
-            {slides!.map((slide, i) => {
-              const props = { key: i, slide, index: i, total: isGenerating ? expectedCount : slides!.length };
-              if (slide.type === "title")      return <TitleSlide      {...props} />;
-              if (slide.type === "quote")      return <QuoteSlide      {...props} />;
-              if (slide.type === "stat")       return <StatSlide       {...props} />;
-              if (slide.type === "two-column") return <TwoColumnSlide  {...props} />;
-              if (slide.type === "activity")   return <ActivitySlide   {...props} />;
-              return <ContentSlide {...props} />;
+          <div className="flex items-start gap-4">
+          <div ref={slidesListRef} className={`relative flex-1 min-w-0 bg-stone-400 rounded-xl px-16 py-14 space-y-8${jo.joBusy ? " pointer-events-none" : ""}`}>
+            {(isGenerating ? slides! : jo.shown).map((slide, i, all) => {
+              const props = { slide, index: i, total: isGenerating ? expectedCount : all.length };
+              const card =
+                slide.type === "title" ? <TitleSlide {...props} />
+                : slide.type === "quote" ? <QuoteSlide {...props} />
+                : slide.type === "stat" ? <StatSlide {...props} />
+                : slide.type === "two-column" ? <TwoColumnSlide {...props} />
+                : slide.type === "activity" ? <ActivitySlide {...props} />
+                : <ContentSlide {...props} />;
+              return <div key={i} data-jo-item={i}>{card}</div>;
             })}
             {isGenerating && <SlideSkeleton />}
+            {jo.overlay}
+          </div>
+          {jo.panel}
           </div>
         </div>
       )}

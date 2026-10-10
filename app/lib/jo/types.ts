@@ -9,7 +9,7 @@
 import type { SheetBlock } from "@/app/lib/sheets/types";
 
 /** The kind of document Jo is editing. Each has its own op vocabulary. */
-export type JoDocKind = "sheet" | "slides";
+export type JoDocKind = "sheet" | "slides" | "markdown" | "quiz" | "staffSlides";
 
 /** A follow up question, asked instead of editing when a request is vague. */
 export interface JoClarify {
@@ -132,7 +132,31 @@ export interface SetThemeOp extends OpBase { op: "setTheme"; themeId: string }
 
 export type SlideOp = SetSlideTextOp | RewriteSlideOp | AddSlideOp | DeleteSlideOp | MoveSlideOp | SetThemeOp;
 
-export type JoOp = SheetOp | SlideOp;
+// ── Markdown ops (the text tools) ──────────────────────────────────────────
+
+/** New text for one section; `heading` "" keeps its heading. */
+export interface ReplaceSectionOp extends OpBase { op: "replaceSection"; sectionId: string; heading: string; markdown: string }
+/** A new section after afterSectionId ("" for the top), level 1 to 3. */
+export interface InsertSectionOp extends OpBase { op: "insertSection"; afterSectionId: string; level: number; heading: string; markdown: string }
+export interface DeleteMdSectionOp extends OpBase { op: "deleteSection"; sectionId: string }
+/** One phrase in a section changed, for a small edit in a long section. */
+export interface EditTextOp extends OpBase { op: "editText"; sectionId: string; find: string; replace: string }
+
+export type MdOp = ReplaceSectionOp | InsertSectionOp | DeleteMdSectionOp | EditTextOp;
+
+// ── List ops (Quiz questions, Staff Slides) ─────────────────────────────────
+
+/** One item (a question or a slide) rewritten whole. */
+export interface ReplaceItemOp extends OpBase { op: "replaceItem"; itemId: string; item: unknown }
+/** A new item after afterItemId ("" for the start). */
+export interface InsertItemOp extends OpBase { op: "insertItem"; afterItemId: string; item: unknown }
+export interface DeleteItemOp extends OpBase { op: "deleteItem"; itemId: string }
+/** `afterItemId` "" moves it to the start. */
+export interface MoveItemOp extends OpBase { op: "moveItem"; itemId: string; afterItemId: string }
+
+export type ListOp = ReplaceItemOp | InsertItemOp | DeleteItemOp | MoveItemOp;
+
+export type JoOp = SheetOp | SlideOp | MdOp | ListOp;
 
 /** A model's whole answer for one turn, in the order it streams. */
 export interface JoResponse {
