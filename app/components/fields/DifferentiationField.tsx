@@ -44,7 +44,12 @@ export default function DifferentiationField({
               name={name}
               value={val}
               checked={value === val}
-              onChange={() => onChange(val)}
+              onChange={() => {
+                onChange(val);
+                // EXS is the standard version, so switching on starts with it:
+                // the standard sheet is made unless the teacher unticks it.
+                if (val === "yes" && levels.length === 0) onLevelsChange(["EXS"]);
+              }}
               className="accent-gray-900"
             />
             {val.charAt(0).toUpperCase() + val.slice(1)}
@@ -55,7 +60,7 @@ export default function DifferentiationField({
       {value === "yes" && (
         <div className="space-y-2 pt-1">
           <p className="text-xs text-gray-500">
-            Select the attainment bands to adapt for — choose as many as apply.
+            Select the attainment bands to adapt for, as many as apply. EXS is the standard version.
           </p>
 
           <div className="flex flex-wrap gap-3">

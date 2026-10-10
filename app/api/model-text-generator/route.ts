@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { bandPitch, bandUsageStep, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 
 export interface ModelTextGeneratorRequest {
   curriculum: string;
@@ -12,6 +12,9 @@ export interface ModelTextGeneratorRequest {
   keywords?: string | null;
   differentiate?: Differentiate;
   differentiationLevels?: string[];
+  /** One band's version of a differentiated set (app/lib/bands.ts). */
+  band?: string;
+  bandIndex?: number;
   lengthWords: number;
 }
 
@@ -33,9 +36,16 @@ export async function POST(req: NextRequest) {
     ? `\nKeywords to incorporate into the text: ${keywords}`
     : "";
 
-  // Opt-in: empty when the teacher chose not to differentiate.
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const abilityLine = adaptation ? `\n\nDIFFERENTIATION — ${adaptation}` : "";
+  // Opt-in: empty when the teacher chose not to differentiate. One band's
+  // version is a model text written at that band's level: the exemplar these
+  // pupils can realistically aim for, not the blended advice.
+  const band = isBand(body.band) ? body.band : null;
+  const adaptation = band ? "" : differentiationPrompt(differentiate, differentiationLevels);
+  const abilityLine = band
+    ? `\n\nPITCH: ${bandPitch(band)} For a model text, that means the vocabulary, sentence craft and features a pupil at this level can realistically aim for, and an analysis written so they can follow it.`
+    : adaptation
+    ? `\n\nDIFFERENTIATION — ${adaptation}`
+    : "";
 
   const userPrompt = `Write a high-quality model text for classroom use with the following specifications:
 
@@ -67,6 +77,7 @@ Do not use any emojis. Write the model text in the appropriate register and styl
 
   return streamChat({
     toolSlug: "model-text-generator",
+    step: bandUsageStep(body.band, body.bandIndex),
     ...(await modelFor("model-text-generator", "gpt-4o")),
     max_completion_tokens: 8192,
     messages: [

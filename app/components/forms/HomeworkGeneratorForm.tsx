@@ -3,7 +3,9 @@
 import { useState, useRef } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, LearningObjectiveField, DifferentiationField, QuestionTypesField, AdditionalContextField } from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { readTextStream, runBands } from "@/app/lib/runBands";
+import { bandOutput, replaceBandOutput } from "@/app/lib/bands";
 import { toTitleCase } from "@/app/lib/formOptions";
 import { Upload, X, Search, ImageIcon } from "lucide-react";
 import ToolResults from "@/app/components/ToolResults";
@@ -89,6 +91,8 @@ export default function HomeworkGeneratorForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The differentiated version on screen, so Refine changes that one only.
+  const [band, setBand] = useState<string | null>(null);
 
   const canGenerate =
     curriculum &&
@@ -177,8 +181,8 @@ export default function HomeworkGeneratorForm({
     setResult("");
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
-    try {
-      const res = await fetch("/api/homework-generator", {
+    const send = (extra: Record<string, unknown> = {}) =>
+      fetch("/api/homework-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -197,20 +201,27 @@ export default function HomeworkGeneratorForm({
           lessonContent: lessonContent.trim() || undefined,
           imageBase64: imageBase64 || undefined,
           imageMediaType: imageMediaType || undefined,
+          ...extra,
         }),
       });
+    const tidy = (chunk: string) => chunk.replace(/©/g, "(c)");
+    try {
+      // Differentiated: one whole homework per band, each in its own tab.
+      if (differentiate === "yes") {
+        await runBands({
+          bands: orderedBands(differentiationLevels),
+          start: (band, bandIndex) => send({ band, bandIndex }),
+          read: (res, onOutput) => readTextStream(res, onOutput, tidy),
+          onUpdate: setResult,
+        });
+        return;
+      }
+      const res = await send();
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/©/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      await readTextStream(res, setResult, tidy);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -449,6 +460,8 @@ export default function HomeworkGeneratorForm({
         exportFilename={`homework-${subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        activeBand={band}
+        onActiveBandChange={setBand}
       />
 
       {result && !isGenerating && (
@@ -457,22 +470,16 @@ export default function HomeworkGeneratorForm({
           chips={REFINE_CHIPS}
           onRefine={async (instruction) => {
             setIsRefining(true);
+            // Only the version on screen is refined; the others are kept.
+            const base = result;
             try {
               const res = await fetch("/api/modify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: result, instruction }),
+                body: JSON.stringify({ currentContent: bandOutput(base, band), instruction }),
               });
               if (!res.ok) throw new Error("Refinement failed");
-              let refined = "";
-              const reader = res.body!.getReader();
-              const decoder = new TextDecoder();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                refined += decoder.decode(value, { stream: true });
-                setResult(refined);
-              }
+              await readTextStream(res, (refined) => setResult(replaceBandOutput(base, band, refined)));
             } catch {
               // result stays as-is
             } finally {

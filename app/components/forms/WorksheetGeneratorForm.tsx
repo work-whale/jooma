@@ -12,7 +12,8 @@ import {
   AdditionalContextField,
   type OutputDetail,
 } from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { runBands } from "@/app/lib/runBands";
 import { toTitleCase } from "@/app/lib/formOptions";
 import ToolResults from "@/app/components/ToolResults";
 import ConfirmModal from "@/app/components/ConfirmModal";
@@ -109,14 +110,15 @@ export default function WorksheetGeneratorForm({
     setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
-    try {
-      const res = await fetch("/api/worksheet-generator", {
+    const info = { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject) };
+    const send = (extra: Record<string, unknown> = {}) =>
+      fetch("/api/worksheet-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           curriculum,
-          yearGroup: mixed ? "Mixed" : yearGroup,
-          subject: toTitleCase(subject),
+          yearGroup: info.yearGroup,
+          subject: info.subject,
           learningObjective,
           questionTypes,
           questionCount,
@@ -124,15 +126,28 @@ export default function WorksheetGeneratorForm({
           differentiationLevels,
           outputDetail,
           additionalInfo: additionalInfo.trim() || null,
+          ...extra,
         }),
       });
+    try {
+      // Differentiated: one whole sheet per band, each in its own tab.
+      if (differentiate === "yes") {
+        await runBands({
+          bands: orderedBands(differentiationLevels),
+          start: (band, bandIndex) => send({ band, bandIndex }),
+          read: (res, onOutput) => readSheetStream(res, "worksheet", info, onOutput),
+          onUpdate: setResult,
+        });
+        return;
+      }
+      const res = await send();
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
       // The route streams the sheet as JSON; each update arrives here as a
       // whole, valid sheet, so the page fills in block by block.
-      const finished = await readSheetStream(res, "worksheet", { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject) }, setResult);
+      const finished = await readSheetStream(res, "worksheet", info, setResult);
       if (!finished) throw new Error("The worksheet came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

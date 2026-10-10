@@ -8,7 +8,7 @@
 // (see sheetContext in app/lib/sheets/context.ts).
 
 import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { bandName, bandPitch, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
 
 export interface GenerateRequest {
@@ -25,6 +25,9 @@ export interface GenerateRequest {
   includeAnswerKey?: boolean;
   differentiate?: Differentiate;
   differentiationLevels?: string[];
+  /** Set when this request is one band's version of a differentiated set
+   *  (app/lib/bands.ts). The passage and questions are then pitched at it. */
+  band?: string;
 }
 
 const SYSTEM =
@@ -79,8 +82,12 @@ export function comprehensionMessages(body: GenerateRequest):
     return { error: "Text is required when using own text" };
   }
 
+  const band = isBand(body.band) ? body.band : null;
   const perDomain = Math.min(10, Math.max(1, Math.round(numQuestions || 1)));
-  const words = Math.min(1000, Math.max(80, Math.round(passageWordCount)));
+  // The supported versions read a shorter passage on the same topic, so the
+  // reading load matches the questions.
+  const lighter = band === "WBS" || band === "WTS";
+  const words = Math.min(1000, Math.max(80, Math.round(passageWordCount * (lighter ? 0.7 : 1))));
   const kinds = kindsForTypes("comprehension", questionTypes);
 
   const typesLine = questionTypes.length
@@ -98,10 +105,19 @@ export function comprehensionMessages(body: GenerateRequest):
     ? "Fill every answer field correctly: they become the answer page. For extended questions, put a model answer in answer and 2 or 3 success criteria in criteria."
     : "The teacher does not want an answer page: leave every answer field empty (empty strings, empty lists, and 0 or [] for indices). Still set pairs and order correctly.";
 
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const notesLine = adaptation
+  const adaptation = band ? "" : differentiationPrompt(differentiate, differentiationLevels);
+  const notesLine = band
+    ? `teacherNotes: one note titled "How this version is pitched: ${bandName(band)}" with 2 to 4 points on what was adapted for these pupils and how to support them while they read and answer.`
+    : adaptation
     ? `teacherNotes: one note titled "Differentiation": ${adaptation}`
     : "teacherNotes: an empty list.";
+  const pitchLine = band
+    ? `\n- ${bandPitch(band)}${
+        textSource === "generate"
+          ? " Write the passage itself at this pitch too: same topic, with vocabulary and sentence length to match."
+          : " The passage is fixed, so pitch the questions and their support."
+      }`
+    : "";
 
   const domainSections = contentDomains
     .map((d, i) => `  ${i + 2}. One section for "${d}": titled with the domain's name (for example "Retrieval"), a fitting emoji, a one-line instruction, and exactly ${perDomain} question${perDomain === 1 ? "" : "s"}, each with domain set to the code at the start of "${d}" (for example "2b").`)
@@ -127,7 +143,7 @@ ${passageLines}
 - Every question must be answerable from the passage. Inference and evaluation questions ask for evidence ("Using evidence from the text, explain..."). Paragraphs are numbered on the sheet, so refer to them ("In paragraph 2...") when it helps.
 - marks match the demand: 1 for simple retrieval, 2 or 3 for an inference with evidence, more for extended answers.
 - ${complexityLine}
-- ${typesLine}
+- ${typesLine}${pitchLine}
 - ${answersLine}
 - ${notesLine}
 - No emoji anywhere except the emoji fields. Do not number anything: questions are numbered on the page.${

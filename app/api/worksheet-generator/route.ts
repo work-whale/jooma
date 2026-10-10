@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { worksheetRequest, type WorksheetRequest } from "@/app/lib/worksheet-prompt";
+import { bandUsageStep } from "@/app/lib/differentiation";
 
 export type { WorksheetRequest };
 
@@ -11,7 +12,7 @@ export type { WorksheetRequest };
  * app/lib/worksheet-prompt.ts.
  */
 export async function POST(req: NextRequest) {
-  const body: WorksheetRequest = await req.json();
+  const body: WorksheetRequest & { bandIndex?: number } = await req.json();
 
   const built = worksheetRequest(body);
   if ("error" in built) {
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
 
   return streamChat({
     toolSlug: "worksheet-generator",
+    step: bandUsageStep(body.band, body.bandIndex),
     ...(await modelFor("worksheet-generator", "gpt-4o")),
     // JSON carries more tokens than the markdown it replaced; a 40 question
     // sheet with its answers needs the headroom.

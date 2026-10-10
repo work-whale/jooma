@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import StickyMask from "@/app/components/ui/StickyMask";
 import { OutlineHover } from "@/app/components/OutputOutline";
 import ResultPanel from "@/app/components/ResultPanel";
 import { parseSheet } from "@/app/lib/sheets/normalize";
 import { sheetOutline } from "@/app/lib/sheets/markdown";
+import { bandOutput } from "@/app/lib/bands";
+import type { DifferentiationBand } from "@/app/lib/differentiation";
 
 /*
  * The results half of a tool page: the sticky mask, the outline column and the
@@ -43,6 +45,10 @@ interface ToolResultsProps {
   /** The run restored from history, if any. Worksheet and Comprehension
    *  autosave edits to their designed sheets into it. */
   runId?: string | null;
+  /** The differentiated version on screen, for a form that needs to know it
+   *  (Refine works on that version only). Kept here when omitted. */
+  activeBand?: string | null;
+  onActiveBandChange?: (band: DifferentiationBand) => void;
 }
 
 export default function ToolResults({
@@ -54,12 +60,20 @@ export default function ToolResults({
   historyMeta,
   onSaved,
   runId,
+  activeBand,
+  onActiveBandChange,
 }: ToolResultsProps) {
-  // A designed sheet is JSON; its outline is its section headings.
+  // Here rather than in ResultPanel, so the outline follows the tab too.
+  const [ownBand, setOwnBand] = useState<string | null>(null);
+  const band = activeBand !== undefined ? activeBand : ownBand;
+
+  // A designed sheet is JSON; its outline is its section headings. With
+  // differentiated versions, the outline is the version on screen.
   const outline = useMemo(() => {
-    const sheet = parseSheet(result);
-    return sheet ? sheetOutline(sheet) : result;
-  }, [result]);
+    const view = result === null ? null : bandOutput(result, band);
+    const sheet = parseSheet(view);
+    return sheet ? sheetOutline(sheet) : view;
+  }, [result, band]);
 
   return (
     <>
@@ -118,6 +132,8 @@ export default function ToolResults({
             historyMeta={historyMeta}
             onSaved={onSaved}
             runId={runId}
+            activeBand={band}
+            onActiveBandChange={onActiveBandChange ?? setOwnBand}
           />
         </div>
       </div>

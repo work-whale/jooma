@@ -8,6 +8,7 @@ import Wordmark from "@/app/components/v2/Wordmark";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
 import { parseSheet } from "@/app/lib/sheets/normalize";
+import { primaryOutput } from "@/app/lib/bands";
 import MadeDeck from "./MadeDeck";
 import styles from "./made.module.css";
 
@@ -76,8 +77,10 @@ export default async function MadePage({
   const item = await getItem(slug);
   if (!item) notFound();
 
-  // A designed Worksheet or Comprehension is drawn as its pages.
-  const sheet = parseSheet(item.output);
+  // A designed Worksheet or Comprehension is drawn as its pages. Of a set of
+  // differentiated versions, the first.
+  const output = primaryOutput(item.output);
+  const sheet = parseSheet(output);
   const meta = [item.subject, item.year_label, item.region]
     .filter(Boolean)
     .join(" · ");
@@ -117,9 +120,9 @@ export default async function MadePage({
             <MadeDeck slides={item.slides} />
           ) : sheet ? (
             <SheetDocument doc={sheet} anchors={false} />
-          ) : item.output ? (
+          ) : output ? (
             <article className={styles.doc}>
-              <MarkdownResult text={item.output} />
+              <MarkdownResult text={output} />
             </article>
           ) : (
             <p className={styles.by}>

@@ -15,6 +15,16 @@ import ShareToHomePrompt from "@/app/components/guest/ShareToHomePrompt";
 import { useMarkdownJoPanel } from "@/app/components/jo/useMarkdownJoPanel";
 import { v2ToolForSlug } from "@/app/lib/tools";
 import { useRestoredRun } from "@/app/lib/RestoredRunContext";
+import { isBandSetOutput, parseBandSet, saveableBandSet, serializeBandSet, withBand } from "@/app/lib/bands";
+import BandTabs from "@/app/components/BandTabs";
+import type { DifferentiationBand } from "@/app/lib/differentiation";
+
+/** What a run stores for this output: a band set without its streaming flags
+ *  or failed bands, a sheet as it is, markdown cleaned of leaked LaTeX. */
+function storable(output: string): string | null {
+  if (isBandSetOutput(output)) return saveableBandSet(output);
+  return isSheetOutput(output) ? output : cleanMathText(output);
+}
 
 /** Tools whose results can be offered for the landing page's showcase row. */
 const SHAREABLE: Record<string, "comprehension" | "worksheet"> = {
@@ -56,6 +66,11 @@ interface ResultPanelProps {
   /** The saved run on screen, when the form restored one from history. A
    *  designed sheet autosaves its edits into it. */
   runId?: string | null;
+  /** The differentiated version on screen, when the result holds one per band
+   *  (app/lib/bands.ts). Controlled by a form that needs it (Refine works on
+   *  the version on screen); otherwise the panel keeps it itself. */
+  activeBand?: string | null;
+  onActiveBandChange?: (band: DifferentiationBand) => void;
 }
 
 export default function ResultPanel({
@@ -68,7 +83,24 @@ export default function ResultPanel({
   historyMeta,
   onSaved,
   runId = null,
+  activeBand: activeBandProp,
+  onActiveBandChange,
 }: ResultPanelProps) {
+  /*
+   * Differentiated versions. A result holding one output per band shows the
+   * band on screen as if it were the whole result: everything below reads
+   * `view`, and every edit is written back into that band's slot, so the save
+   * and the autosave keep working on the whole set as one stored string.
+   */
+  const bandSet = useMemo(() => parseBandSet(result), [result]);
+  const [ownBand, setOwnBand] = useState<string | null>(null);
+  const chosenBand = activeBandProp !== undefined ? activeBandProp : ownBand;
+  const selectBand = onActiveBandChange ?? setOwnBand;
+  const band = bandSet ? (bandSet.bands.find((b) => b.band === chosenBand) ?? bandSet.bands[0]) : null;
+  const view = band ? band.output : result;
+  /** An edit to the version on screen, as the whole result. */
+  const toResult = (next: string) => (bandSet && band ? serializeBandSet(withBand(bandSet, band.band, { output: next })) : next);
+
   /*
    * Copy and export, shared with the focused reading view.
    *
@@ -89,12 +121,15 @@ export default function ResultPanel({
    * a whole: that would read JSON escapes such as \n as maths. Its strings
    * were already cleaned one by one when it was normalised.
    */
-  const sheet = useMemo(() => parseSheet(result), [result]);
-  const shown = useMemo(() => (result === null ? null : sheet ? result : cleanMathText(result)), [result, sheet]);
+  const sheet = useMemo(() => parseSheet(view), [view]);
+  const shown = useMemo(() => (view === null ? null : sheet ? view : cleanMathText(view)), [view, sheet]);
 
+  // A differentiated version exports under its band, so the files can sit
+  // side by side: "worksheet-maths-WBS".
+  const filename = band ? `${exportFilename}-${band.band}` : exportFilename;
   const { copied, isExporting, exportError, handleCopy, exportItems } = useDocumentActions(
     shown ?? "",
-    exportFilename,
+    filename,
     {
       pdf: <FileDown className="w-3.5 h-3.5" />,
       docx: <FileText className="w-3.5 h-3.5" />,
@@ -199,8 +234,10 @@ export default function ResultPanel({
   // as a new result and scroll on every keystroke. Marking the outgoing markdown
   // as already-scrolled is what makes keying on identity safe.
   const handleEditorChange = (md: string) => {
-    lastScrolledRef.current = md;
-    onChange(md);
+    const next = toResult(md);
+    lastScrolledRef.current = next;
+    onChange(next);
+    return next;
   };
 
   // Listen for scroll — disable auto-scroll if user scrolls up, re-enable if they reach the bottom
@@ -277,7 +314,9 @@ export default function ResultPanel({
     if (!meta || !result || result.trim() === "") return;
     if (lastSavedRef.current === result) return;
     lastSavedRef.current = result;
-    const output = isSheetOutput(result) ? result : cleanMathText(result);
+    // Null when every differentiated version failed: nothing worth a run.
+    const output = storable(result);
+    if (!output) return;
     saveToolRun({ toolSlug: meta.toolSlug, title: meta.title, input: meta.input, output })
       .then((run) => {
         ownRunIdRef.current = run.id;
@@ -285,8 +324,9 @@ export default function ResultPanel({
         persistedRef.current = output;
         // Edited while the save was in flight: those edits go in now.
         const latest = latestRef.current;
-        if (isSheetOutput(latest) && latest !== output) {
-          updateToolRunOutput(run.id, latest as string).then(() => { persistedRef.current = latest; }).catch(() => {});
+        const latestOutput = (isSheetOutput(latest) || isBandSetOutput(latest)) ? storable(latest as string) : null;
+        if (latestOutput && latestOutput !== output) {
+          updateToolRunOutput(run.id, latestOutput).then(() => { persistedRef.current = latestOutput; }).catch(() => {});
         }
         if (SHAREABLE[meta.toolSlug]) setSavedRun({ id: run.id, slug: meta.toolSlug });
         onSavedRef.current?.();
@@ -303,10 +343,12 @@ export default function ResultPanel({
       persistedRef.current = result;
       return;
     }
+    // `sheet` is the version on screen, so a set of differentiated sheets
+    // autosaves too, as the whole set.
     if (!sheet || isBusy || result === null) return;
     const id = ownRunIdRef.current ?? runId;
-    if (!id || result === persistedRef.current) return;
-    const output = result;
+    const output = storable(result);
+    if (!id || !output || output === persistedRef.current) return;
     const timer = window.setTimeout(() => {
       setSaveState("saving");
       updateToolRunOutput(id, output)
@@ -322,8 +364,9 @@ export default function ResultPanel({
   // An edit to the sheet, from the page or from undo. Marked as already
   // scrolled for the same reason as handleEditorChange above.
   const handleSheetChange = (next: string) => {
-    lastScrolledRef.current = next;
-    onChange(next);
+    const whole = toResult(next);
+    lastScrolledRef.current = whole;
+    onChange(whole);
   };
 
   const joRunId = isBusy ? null : (savedRunId ?? runId ?? restoredId);
@@ -343,12 +386,15 @@ export default function ResultPanel({
   const mdJo = useMarkdownJoPanel({
     markdown: sheet ? null : shown,
     commit: (md) => {
-      handleEditorChange(md);
+      const next = handleEditorChange(md);
       const id = ownRunIdRef.current ?? runId ?? restoredId;
-      if (id) updateToolRunOutput(id, md).catch(() => {});
+      const output = bandSet ? storable(next) : next;
+      if (id && output) updateToolRunOutput(id, output).catch(() => {});
     },
     containerRef: mdRef,
-    toolName: historyMeta ? (v2ToolForSlug(historyMeta.toolSlug)?.name ?? "") : "",
+    toolName: historyMeta
+      ? `${v2ToolForSlug(historyMeta.toolSlug)?.name ?? ""}${band ? ` (the ${band.band} version)` : ""}`
+      : "",
     docRef: sheet ? null : joDocRef,
     disabled: isBusy ? "Jo can help as soon as this is finished" : null,
     openSignal: mdOpenSignal,
@@ -356,17 +402,38 @@ export default function ResultPanel({
 
   if (result === null || shown === null) return null;
 
+  const tabs = bandSet && band ? (
+    <BandTabs bands={bandSet.bands} active={band.band} onSelect={selectBand} disabled={mdJo.joBusy} />
+  ) : null;
+
+  if (band?.error) {
+    return (
+      <>
+        {tabs}
+        <div ref={panelRef} className="bg-white border border-gray-200 rounded-3xl shadow-sm px-6 py-10 text-sm text-gray-700">
+          <p className="font-semibold text-gray-900">The {band.band} version could not be made.</p>
+          <p className="mt-1 text-red-600">{band.error}</p>
+          <p className="mt-3 text-gray-500">The other versions are kept. Generate again to make this one.</p>
+        </div>
+      </>
+    );
+  }
+
   if (sheet) {
     return (
       <>
+        {tabs}
+        {/* Keyed by band: each version is its own document, with its own undo
+            history, and Jo's overlay never carries over from another one. */}
         <SheetWorkspace
+          key={band?.band ?? "sheet"}
           panelRef={panelRef}
-          value={result}
+          value={view as string}
           doc={sheet}
           onChange={handleSheetChange}
           isGenerating={isGenerating}
           isRefining={isRefining}
-          filename={exportFilename}
+          filename={filename}
           saveState={saveState}
           maxWidth={maxWidth}
           joDocRef={joDocRef}
@@ -380,6 +447,7 @@ export default function ResultPanel({
 
   return (
     <>
+      {tabs}
       <div ref={panelRef} className={`bg-white border border-gray-200 rounded-3xl shadow-sm${maxWidth ? " max-w-7xl mx-auto" : ""}`} style={{ overflow: "clip" }}>
         {/* z-30, not z-10: sticky + z-index creates a stacking context, so the
             export menu's z-20 cannot escape this header. RichTextEditor's
@@ -477,7 +545,9 @@ export default function ResultPanel({
         ) : (
           <div className="flex items-start gap-4 lg:pr-4 lg:pt-4">
             <div ref={mdRef} className={`relative flex-1 min-w-0${mdJo.joBusy ? " pointer-events-none" : ""}`}>
-              <RichTextEditor value={mdJo.shown ?? shown} onChange={handleEditorChange} />
+              {/* Keyed by band so switching versions remounts the editor rather
+                  than letting its round trip write one version into another. */}
+              <RichTextEditor key={band?.band} value={mdJo.shown ?? shown} onChange={handleEditorChange} />
               {mdJo.overlay}
             </div>
             {mdJo.panel}
@@ -491,7 +561,7 @@ export default function ResultPanel({
       {focusOpen && (
         <FocusDocumentModal
           markdown={shown}
-          filename={exportFilename}
+          filename={filename}
           title={historyMeta?.title?.trim() || "Your document"}
           onClose={() => setFocusOpen(false)}
         />
