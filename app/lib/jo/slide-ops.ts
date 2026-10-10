@@ -12,7 +12,7 @@
 
 import { cleanMathText } from "@/app/lib/math-text";
 import { renderSlide, rerenderSlideWithTheme, type SlideSpec } from "@/app/lib/slideshow-layouts";
-import { DEFAULT_THEME_ID, SLIDESHOW_THEMES, getTheme, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { DEFAULT_ART_STYLE, DEFAULT_THEME_ID, PICKER_THEMES, getTheme, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { newId, type DeckSlide } from "@/app/lib/deck-events";
 import { rethemeDeck } from "@/app/lib/deck-theme";
 import { ADDABLE_LAYOUTS, SLIDE_TEXT_KEYS, type SlideField, type SlideOp, type SlideTextKey } from "./types";
@@ -59,7 +59,7 @@ function skeletonFields(spec: SlideSpec): Partial<Record<SlideTextKey, string>> 
 export function deckSnapshot(slides: DeckSlide[]) {
   return {
     themeId: deckThemeId(slides),
-    themes: SLIDESHOW_THEMES.map((t) => ({ id: t.id, name: t.name })),
+    themes: PICKER_THEMES.map((t) => ({ id: t.id, name: t.name })),
     slides: slides.map((s, i) => {
       const kind = slideKind(s);
       const spec = s.skeleton as SlideSpec | undefined;
@@ -223,8 +223,9 @@ export function applySlideOp(slides: DeckSlide[], op: SlideOp, artStyle: ArtStyl
       return { slides: next, focus: { slideId: op.slideId } };
     }
     case "setTheme": {
-      if (!SLIDESHOW_THEMES.some((t) => t.id === op.themeId) || op.themeId === themeId) return null;
-      const next = rethemeDeck(slides, op.themeId, artStyle);
+      if (!PICKER_THEMES.some((t) => t.id === op.themeId) || op.themeId === themeId) return null;
+      // A new theme always takes the watercolor art, as the picker does.
+      const next = rethemeDeck(slides, op.themeId, DEFAULT_ART_STYLE);
       return { slides: next, focus: next[0] ? { slideId: next[0].id } : null };
     }
   }

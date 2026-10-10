@@ -48,7 +48,7 @@ import {
   type ActivityObject,
 } from "@/app/lib/presentations";
 import { saveGeneratedImage } from "@/app/lib/generatedImages";
-import { getTheme, DEFAULT_THEME_ID, getThemeArt, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { getTheme, DEFAULT_THEME_ID, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { rethemeDeck } from "@/app/lib/deck-theme";
 import { useSlidesJoPanel } from "@/app/components/jo/useSlidesJoPanel";
 import type { SlidesBridge } from "@/app/components/jo/useSlidesJo";
@@ -278,9 +278,10 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   // Bumped each time we persist a new AI image to the cross-project gallery
   // (Supabase `generated_images`). Triggers a refetch in the Sidebar.
   const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0);
-  // Deck-level background art style ("watercolor" | "illustration"), stored on
-  // slides[0].artStyleId. Drives which art variant of the theme is stamped on
-  // every slide.
+  // Deck-level background art style, stored on slides[0].artStyleId. New and
+  // re-themed decks always take "watercolor"; an older deck made with the
+  // "illustration" art keeps it until its theme changes, so slides added to it
+  // still match.
   const [artStyle, setArtStyle] = useState<ArtStyleId>(
     () => (presentation.slides?.[0]?.artStyleId as ArtStyleId) ?? DEFAULT_ART_STYLE,
   );
@@ -2434,27 +2435,11 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   const handleThemeChange = useCallback((nextThemeId: string) => {
     if (generating) return; // editing locked while the deck streams in
     setSlides((prev) => {
-      const next = rethemeDeck(prev, nextThemeId, artStyle);
+      const next = rethemeDeck(prev, nextThemeId, DEFAULT_ART_STYLE);
       slidesRef.current = next;
       return next;
     });
-    scheduleSave();
-  }, [scheduleSave, artStyle, generating]);
-
-  // ── Background art style switching ──────────────────────────────────────────
-  // Re-stamps every slide's illustration background with the chosen style's
-  // variant (watercolor ↔ illustration) for the deck's current theme.
-  const handleArtStyleChange = useCallback((nextStyle: ArtStyleId) => {
-    if (generating) return; // editing locked while the deck streams in
-    setArtStyle(nextStyle);
-    const theme = getTheme(slidesRef.current[0]?.themeId ?? DEFAULT_THEME_ID);
-    const art = getThemeArt(theme, nextStyle);
-    setSlides((prev) => {
-      const next = prev.map((s) => ({ ...s, backgroundArt: art?.src, backgroundArtScrim: art?.scrim }));
-      if (next[0]) next[0] = { ...next[0], artStyleId: nextStyle };
-      slidesRef.current = next;
-      return next;
-    });
+    setArtStyle(DEFAULT_ART_STYLE);
     scheduleSave();
   }, [scheduleSave, generating]);
 
@@ -3299,7 +3284,6 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
         onThemeChange={handleThemeChange}
         artStyle={artStyle}
-        onArtStyleChange={handleArtStyleChange}
       />
       <div className="flex flex-1 min-h-0 relative">
         {/* Sidebar is made non-interactive (no editing) while the deck streams

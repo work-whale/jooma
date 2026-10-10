@@ -17,6 +17,7 @@ import {
   Undo2,
 } from "lucide-react";
 import DropdownMenu, { type DropdownItem } from "@/app/components/ui/DropdownMenu";
+import Hint from "@/app/components/ui/Hint";
 import { serializeSheet } from "@/app/lib/sheets/normalize";
 import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
 import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
@@ -39,8 +40,11 @@ import type { JoDocRef } from "@/app/lib/jo/threads";
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
-const btn =
-  "flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer";
+const btnBase =
+  "flex items-center gap-1.5 text-sm border rounded-md px-3 py-1.5 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer";
+const btn = `${btnBase} bg-white text-gray-600 border-gray-300 hover:bg-(--j-tint) hover:border-(--j-lilac) hover:text-(--j-deep)`;
+/** Preview and Design while they are on: brand purple, back to white when off. */
+const btnOn = `${btnBase} bg-(--j-purple) text-white border-(--j-purple) hover:bg-(--j-deep) hover:border-(--j-deep)`;
 
 export default function SheetWorkspace({
   value,
@@ -209,42 +213,54 @@ export default function SheetWorkspace({
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={undo} disabled={busy || past.length === 0} aria-label="Undo" title="Undo" className={btn}>
-            <Undo2 className="w-3.5 h-3.5" />
-          </button>
-          <button type="button" onClick={redo} disabled={busy || future.length === 0} aria-label="Redo" title="Redo" className={btn}>
-            <Redo2 className="w-3.5 h-3.5" />
-          </button>
-          <button type="button" onClick={() => setPreview((p) => !p)} disabled={busy} aria-pressed={preview} className={btn}>
-            {preview ? <Pencil className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{preview ? "Edit" : "Preview"}</span>
-          </button>
-          <button type="button" onClick={() => setDesignOpen((o) => !o)} disabled={busy} aria-expanded={designOpen} className={btn}>
-            <Palette className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Design</span>
-          </button>
+          <Hint text="Undo (Ctrl+Z)">
+            <button type="button" onClick={undo} disabled={busy || past.length === 0} aria-label="Undo" className={btn}>
+              <Undo2 className="w-3.5 h-3.5" />
+            </button>
+          </Hint>
+          <Hint text="Redo (Ctrl+Shift+Z)">
+            <button type="button" onClick={redo} disabled={busy || future.length === 0} aria-label="Redo" className={btn}>
+              <Redo2 className="w-3.5 h-3.5" />
+            </button>
+          </Hint>
+          <Hint text={preview ? "Back to editing" : "See the sheet as pupils will"}>
+            <button type="button" onClick={() => setPreview((p) => !p)} disabled={busy} aria-pressed={preview} className={preview ? btnOn : btn} data-testid="sheet-preview-toggle">
+              {preview ? <Pencil className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{preview ? "Edit" : "Preview"}</span>
+            </button>
+          </Hint>
+          <Hint text="Theme, text size and what shows on the page">
+            <button type="button" onClick={() => setDesignOpen((o) => !o)} disabled={busy} aria-expanded={designOpen} className={designOpen ? btnOn : btn} data-testid="sheet-design-toggle">
+              <Palette className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Design</span>
+            </button>
+          </Hint>
           {!busy && (
-            <span data-then="export" className="contents">
-              <DropdownMenu
-                ariaLabel="Export options"
-                disabled={exporting !== null}
-                triggerClassName={btn}
-                menuClassName="w-[min(15rem,calc(100vw-2rem))]"
-                trigger={
-                  <>
-                    {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                    <span className="hidden sm:inline">{exporting === "pdf" ? "Building PDF…" : exporting ? "Building…" : "Export"}</span>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </>
-                }
-                items={exportItems}
-              />
-            </span>
+            <Hint text="Download a PDF or Word file, or print">
+              <span data-then="export" className="contents">
+                <DropdownMenu
+                  ariaLabel="Export options"
+                  disabled={exporting !== null}
+                  triggerClassName={btn}
+                  menuClassName="w-[min(15rem,calc(100vw-2rem))]"
+                  trigger={
+                    <>
+                      {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                      <span className="hidden sm:inline">{exporting === "pdf" ? "Building PDF…" : exporting ? "Building…" : "Export"}</span>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </>
+                  }
+                  items={exportItems}
+                />
+              </span>
+            </Hint>
           )}
-          <button type="button" onClick={handleCopy} disabled={busy} data-then="copy" aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"} className={btn}>
-            {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{copied ? "Copied!" : "Copy to clipboard"}</span>
-          </button>
+          <Hint text="Copy the sheet as text" align="end">
+            <button type="button" onClick={handleCopy} disabled={busy} data-then="copy" aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"} className={btn}>
+              {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{copied ? "Copied!" : "Copy to clipboard"}</span>
+            </button>
+          </Hint>
         </div>
       </div>
 
@@ -256,7 +272,9 @@ export default function SheetWorkspace({
             <SheetDocument doc={jo.shown ?? doc} edit={!preview && !jo.joBusy} onChange={commit} streaming={generating} joFocus={jo.joFocus} />
           </div>
           {designOpen && !busy && (
-            <div className="xl:w-80 shrink-0 xl:sticky xl:top-32 xl:self-start">
+            // Sticky beside the pages, and never taller than the window: the
+            // panel scrolls on its own rather than running off the bottom.
+            <div className="xl:w-80 shrink-0 xl:sticky xl:top-32 xl:self-start xl:max-h-[calc(100dvh-9rem)] xl:overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
               <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={() => setDesignOpen(false)} />
             </div>
           )}

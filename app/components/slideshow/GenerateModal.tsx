@@ -7,7 +7,7 @@ import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, Che
 import { createPresentation } from "@/app/lib/presentations";
 import { parseYouTubeId } from "@/app/components/editor/youtube";
 import ResourceLibraryModal from "./ResourceLibraryModal";
-import { DEFAULT_THEME_ID, DEFAULT_ART_STYLE, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme, type ArtStyleId } from "@/app/lib/slideshowThemes";
+import { DEFAULT_THEME_ID, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme } from "@/app/lib/slideshowThemes";
 import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
 import { STAGE_LABEL, curriculumNameFor, isCurriculumYear, stageForYear, type NcStatement } from "@/app/lib/national-curriculum";
@@ -239,7 +239,6 @@ export default function GenerateModal({
   // Until the teacher picks a theme, the last step opens on the default design
   // for the year: Playful up to Year 6, Professional after.
   const [themeTouched, setThemeTouched] = useState(false);
-  const [artStyle, setArtStyle] = useState<ArtStyleId>(DEFAULT_ART_STYLE);
 
   const [includeObjectives, setIncludeObjectives] = useState(false);
   const [includeVocab, setIncludeVocab] = useState(false);
@@ -492,7 +491,6 @@ export default function GenerateModal({
         imageMixWeb: imageSource === "auto" ? imageMixWeb : undefined,
         imageStyle: imageSource === "web" ? undefined : imageStyle,
         themeId,
-        artStyle,
         resourceText: resourceText || undefined,
         resourceSource: resourceSource || undefined,
         curriculum: curriculumParam(),
@@ -585,8 +583,6 @@ export default function GenerateModal({
             <ThemePicker
               value={themeId}
               onChange={(id) => { setThemeId(id); setThemeTouched(true); }}
-              artStyle={artStyle}
-              onArtStyleChange={setArtStyle}
               initialFamily={getTheme(themeId).family}
               disabled={busy}
             />

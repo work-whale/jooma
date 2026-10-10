@@ -2,7 +2,7 @@
 // order as the sheet one (reply, clarify, ops, summary); see sheet-schema.ts.
 
 import { strictObject } from "@/app/lib/sheets/schema";
-import { SLIDESHOW_THEMES } from "@/app/lib/slideshowThemes";
+import { PICKER_THEMES } from "@/app/lib/slideshowThemes";
 import { ADDABLE_LAYOUTS, SLIDE_TEXT_KEYS } from "./types";
 
 const str = { type: "string" } as const;
@@ -24,7 +24,7 @@ export function joSlidesResponseFormat() {
     op("addSlide", { afterSlideId: str, layout: { type: "string", enum: [...ADDABLE_LAYOUTS] }, fields, imageQuery: str }),
     op("deleteSlide", { slideId: str }),
     op("moveSlide", { slideId: str, afterSlideId: str }),
-    op("setTheme", { themeId: { type: "string", enum: SLIDESHOW_THEMES.map((t) => t.id) } }),
+    op("setTheme", { themeId: { type: "string", enum: PICKER_THEMES.map((t) => t.id) } }),
   ];
   const schema = strictObject({
     reply: str,

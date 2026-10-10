@@ -40,7 +40,7 @@ test("three families, each with its own designs, Playful first for a primary cla
   await expect(picker.locator('[data-theme-id="sticker"]')).toHaveAttribute("aria-pressed", "true");
 
   await picker.getByRole("tab", { name: "Basic" }).click();
-  for (const id of ["clean", "mono", "readable", "high-contrast", "calm"]) {
+  for (const id of ["clean", "mono", "readable", "high-contrast", "calm", "soft-blue", "warm-grey", "night-read", "peach", "ink-cream"]) {
     await expect(picker.locator(`[data-theme-id="${id}"]`)).toBeVisible();
   }
   // Nothing from another family on this tab.
@@ -50,6 +50,24 @@ test("three families, each with its own designs, Playful first for a primary cla
   await expect(picker.locator('[data-theme-id="readable"]')).toHaveAttribute("aria-pressed", "true");
 
   await page.screenshot({ path: "test-results/theme-picker.png" });
+});
+
+test("the noisy subject variants and Bold are gone, the new designs are in, and there is no art style switch", async ({ page }) => {
+  const picker = await openThemeStep(page, "Year 3");
+  for (const id of ["sunbeam", "lagoon", "meadow", "candy", "grape", "daydream", "tangerine"]) {
+    await expect(picker.locator(`[data-theme-id="${id}"]`)).toBeVisible();
+  }
+  for (const id of ["math-pop", "science-cosmic", "english-comic", "bold"]) {
+    await expect(picker.locator(`[data-theme-id="${id}"]`)).toHaveCount(0);
+  }
+  await expect(picker.getByRole("button", { name: "Watercolor", exact: true })).toHaveCount(0);
+  await expect(picker.getByRole("button", { name: "Illustration", exact: true })).toHaveCount(0);
+
+  await picker.getByRole("tab", { name: "Professional" }).click();
+  for (const id of ["rust", "fern", "coast", "storm", "plum", "dune"]) {
+    await expect(picker.locator(`[data-theme-id="${id}"]`)).toBeVisible();
+  }
+  await page.screenshot({ path: "test-results/theme-picker-new.png" });
 });
 
 test("Professional first for an older class", async ({ page }) => {

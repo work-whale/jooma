@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { THEME_FAMILIES, THEME_TAG_LABEL, type ThemeFamily } from "@/app/lib/slideshowThemes";
 import { getSheetTheme, SHEET_THEMES, type SheetTheme } from "@/app/lib/sheets/themes";
 import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
+import { hasDifferentiationNote } from "@/app/lib/sheets/visibility";
 
 /*
  * The Design panel: a sheet's theme, text size and page setup. Every change is
@@ -34,6 +35,7 @@ export default function SheetDesignPanel({
   const current = getSheetTheme(design.themeId);
   const [family, setFamily] = useState<ThemeFamily>(current.family);
   const hasPassage = doc.sections.some((s) => s.blocks.some((b) => b.type === "passage"));
+  const hasDiffNote = hasDifferentiationNote(doc);
 
   return (
     <aside className="flex flex-col gap-5 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm" aria-label="Design" data-testid="sheet-design-panel">
@@ -102,7 +104,18 @@ export default function SheetDesignPanel({
           ))}
         </div>
         <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />
+        <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />
+        {doc.intro && <Toggle label={doc.intro.label || "Did you know?"} checked={design.intro !== false} onChange={(intro) => onDesign({ intro })} />}
         <Toggle label="Answers page" checked={design.answers} onChange={(answers) => onDesign({ answers })} />
+        {hasDiffNote && (
+          <Toggle
+            label="Differentiation note"
+            hint="Shown with the answers"
+            checked={design.diffNote !== false}
+            disabled={!design.answers}
+            onChange={(diffNote) => onDesign({ diffNote })}
+          />
+        )}
         {hasPassage && <Toggle label="Paragraph numbers" checked={design.lineNumbers} onChange={(lineNumbers) => onDesign({ lineNumbers })} />}
       </section>
     </aside>
@@ -146,11 +159,32 @@ function ThemeCard({ theme, selected, onPick }: { theme: SheetTheme; selected: b
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  label,
+  hint,
+  checked,
+  disabled = false,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
-    <label className="flex items-center justify-between gap-3 py-1 text-sm text-gray-800 cursor-pointer">
-      {label}
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4 accent-(--j-purple) cursor-pointer" />
+    <label className={`flex items-center justify-between gap-3 py-1 text-sm text-gray-800 ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}>
+      <span className="flex flex-col">
+        {label}
+        {hint && <span className="text-xs text-gray-500">{hint}</span>}
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-4 h-4 accent-(--j-purple) cursor-pointer disabled:cursor-not-allowed"
+      />
     </label>
   );
 }

@@ -31,7 +31,7 @@ export function joSheetResponseFormat(tool: SheetTool) {
     op("addSection", { afterSectionId: str, title: str, emoji: str, instructions: str, blocks: { type: "array", items: block } }),
     op("deleteSection", { sectionId: str }),
     op("setDesign", {
-      key: { type: "string", enum: ["fontScale", "answers", "nameDate", "lineNumbers", "paper"] },
+      key: { type: "string", enum: ["fontScale", "answers", "nameDate", "lineNumbers", "paper", "objective", "intro", "diffNote"] },
       value: str,
     }),
   ];

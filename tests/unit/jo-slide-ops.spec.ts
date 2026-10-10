@@ -148,6 +148,10 @@ test.describe("other slide ops", () => {
     expect(look(applied.slides)).toEqual(look(rethemeDeck(d, "dark", DEFAULT_ART_STYLE)));
     expect(applySlideOp(d, op({ op: "setTheme", label: "x", themeId: "paper" }), DEFAULT_ART_STYLE)).toBeNull();
     expect(applySlideOp(d, op({ op: "setTheme", label: "x", themeId: "neon" }), DEFAULT_ART_STYLE)).toBeNull();
+    // A theme taken out of the picker is out of Jo's reach too.
+    expect(applySlideOp(d, op({ op: "setTheme", label: "x", themeId: "math-pop" }), DEFAULT_ART_STYLE)).toBeNull();
+    // A new theme always takes the watercolor art, whatever the deck had.
+    expect(applySlideOp(d, op({ op: "setTheme", label: "x", themeId: "lagoon" }), "illustration")!.slides[0].artStyleId).toBe(DEFAULT_ART_STYLE);
   });
 
   test("focus points at the slide, and the box, an op is about to change", () => {

@@ -34,7 +34,7 @@ OPS
 - insertBlock: add a block to a section, after afterBlockId ("" for the top of the section).
 - deleteBlock, deleteSection: remove one.
 - addSection: a new section after afterSectionId ("" for the top) with its blocks.
-- setDesign: fontScale (s, m, l, xl), answers / nameDate / lineNumbers (true or false), paper (a4, letter).
+- setDesign: fontScale (s, m, l, xl), answers / nameDate / lineNumbers / objective / intro / diffNote (true or false), paper (a4, letter). objective shows the learning objective, intro the "Did you know?" box, diffNote the differentiation note on the answers page.
 
 RULES
 - Keep every answer key right. If you change a question, update its answers, pairs or order to match. If you change a passage, check the questions still fit it.

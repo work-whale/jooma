@@ -24,8 +24,8 @@ interface Props {
   disableHistory?: boolean;
   themeId?: string;
   onThemeChange?: (id: string) => void;
+  /** The deck's art style, for the swatch on the theme button. */
   artStyle?: ArtStyleId;
-  onArtStyleChange?: (style: ArtStyleId) => void;
   /** A signed out visitor on /create: the way back is the landing page, not
    *  the teacher's slideshow list, and signing up is one click away. */
   guest?: { onSignUp: () => void };
@@ -48,7 +48,6 @@ export default function EditorTopBar({
   themeId,
   onThemeChange,
   artStyle,
-  onArtStyleChange,
   guest,
 }: Props) {
   const home = guest ? "/" : "/tools/slideshow";
@@ -201,8 +200,6 @@ export default function EditorTopBar({
                   <ThemePicker
                     value={activeTheme.id}
                     onChange={onThemeChange}
-                    artStyle={artStyle ?? "watercolor"}
-                    onArtStyleChange={(s) => onArtStyleChange?.(s)}
                     compact
                   />
                 </div>

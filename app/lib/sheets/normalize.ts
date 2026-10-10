@@ -29,7 +29,7 @@ const CALLOUT_DEFAULTS: Record<SheetCallout["variant"], { label: string; emoji: 
 };
 
 export function defaultDesign(tool: SheetTool, themeId: string): SheetDesign {
-  return { themeId, fontScale: "m", nameDate: true, answers: true, paper: "a4", lineNumbers: tool === "comprehension" };
+  return { themeId, fontScale: "m", nameDate: true, answers: true, paper: "a4", lineNumbers: tool === "comprehension", objective: true, intro: true, diffNote: true };
 }
 
 // The copyright sign becomes "(c)", as the markdown tools always did.

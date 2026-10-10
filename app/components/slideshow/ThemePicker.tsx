@@ -5,13 +5,11 @@ import MiniSlide from "@/app/components/editor/MiniSlide";
 import { injectGoogleFonts } from "@/app/components/editor/googleFonts";
 import { renderSlide, type SlideSpec } from "@/app/lib/slideshow-layouts";
 import {
-  ART_STYLES,
   THEME_FAMILIES,
   THEME_TAG_LABEL,
   getTheme,
   getThemesByFamily,
   themeGroupLabel,
-  type ArtStyleId,
   type SlideshowTheme,
   type ThemeFamily,
   type ThemeTag,
@@ -31,8 +29,6 @@ import {
 interface Props {
   value: string;
   onChange: (themeId: string) => void;
-  artStyle: ArtStyleId;
-  onArtStyleChange: (style: ArtStyleId) => void;
   /** The tab to open on. Defaults to the selected theme's family. */
   initialFamily?: ThemeFamily;
   /** Two columns rather than three, for the editor's narrow drawer. */
@@ -75,8 +71,6 @@ type Filter = { kind: "all" } | { kind: "group"; label: string } | { kind: "tag"
 export default function ThemePicker({
   value,
   onChange,
-  artStyle,
-  onArtStyleChange,
   initialFamily,
   compact = false,
   disabled,
@@ -102,7 +96,6 @@ export default function ThemePicker({
       ? themeGroupLabel(t) === filter.label
       : (t.tags ?? []).includes(filter.tag),
   );
-  const hasArt = shown.some((t) => t.artIllustration && t.artIllustration !== t.backgroundArt);
 
   return (
     <div data-testid="theme-picker" className="space-y-3">
@@ -138,22 +131,6 @@ export default function ThemePicker({
           {chips.tags.map((tag) => (
             <Chip key={tag} on={filter.kind === "tag" && filter.tag === tag} onClick={() => setFilter({ kind: "tag", tag })}>{THEME_TAG_LABEL[tag]}</Chip>
           ))}
-          {hasArt && (
-            <div className="ml-auto flex gap-0.5 p-0.5 rounded-lg bg-gray-100 shrink-0">
-              {ART_STYLES.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => onArtStyleChange(s.id)}
-                  className={`px-2 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
-                    artStyle === s.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
@@ -163,7 +140,6 @@ export default function ThemePicker({
           <ThemeCard
             key={t.id}
             theme={t}
-            artStyle={artStyle}
             selected={t.id === value}
             onSelect={() => onChange(t.id)}
             disabled={disabled}
@@ -177,22 +153,21 @@ export default function ThemePicker({
 
 function ThemeCard({
   theme,
-  artStyle,
   selected,
   onSelect,
   disabled,
   width,
 }: {
   theme: SlideshowTheme;
-  artStyle: ArtStyleId;
   selected: boolean;
   onSelect: () => void;
   disabled?: boolean;
   width: number;
 }) {
-  // One rendered slide per theme and art style. Cheap: a layout pass over a
-  // single spec, and memoised so a re-render of the grid does not redo it.
-  const slide = useMemo(() => renderSlide(SAMPLE, theme, artStyle), [theme, artStyle]);
+  // One rendered slide per theme, with its watercolor art where it has any.
+  // Cheap: a layout pass over a single spec, and memoised so a re-render of
+  // the grid does not redo it.
+  const slide = useMemo(() => renderSlide(SAMPLE, theme), [theme]);
   // MiniSlide scales to the exact width it is given, so the card measures
   // itself rather than guessing: the wizard is a dialog on one page and the
   // whole page on /create.
