@@ -30,7 +30,9 @@
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r-lg);
-  overflow: hidden;
+  /* clip, not hidden: hidden makes this a scroll container, and Ask Jo's
+     sticky panel inside would then scroll away with the page. */
+  overflow: clip;
 }
 
 .deckBar,

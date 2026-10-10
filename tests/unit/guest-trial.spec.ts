@@ -4,6 +4,8 @@ import { signTrialToken, verifyTrialToken, TRIAL_TOKEN_TTL_MS } from "@/app/lib/
 import {
   decideTrial,
   FREE_TRIES_PER_DAY,
+  GUEST_JO_PROMPTS,
+  joPromptsLeft,
   hashIp,
   isTrialTool,
   settingBool,
@@ -207,5 +209,17 @@ test.describe("guest tool slugs", () => {
     expect(guestSlugFor("ws")).toBeNull();
     expect(guestSlugFor(undefined)).toBeNull();
     expect(appToolPath("slideshow")).toBe("/tools/slideshow");
+  });
+});
+
+test.describe("Ask Jo on a free try: three messages per generation", () => {
+  test("counts down from three and never below none", () => {
+    expect(GUEST_JO_PROMPTS).toBe(3);
+    expect([0, 1, 2, 3, 4].map(joPromptsLeft)).toEqual([3, 2, 1, 0, 0]);
+  });
+
+  test("a nonsense count is treated as none left, not as unlimited", () => {
+    expect(joPromptsLeft(Number.NaN)).toBe(0);
+    expect(joPromptsLeft(-2)).toBe(3);
   });
 });

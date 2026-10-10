@@ -243,6 +243,10 @@ export default function ResultPanel({
   const latestRef = useRef(result);
   const runIdPropRef = useRef(runId);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  /** The run this panel saved, as state, for the things that render from it
+   *  (Jo keeps its conversation against it). ownRunIdRef stays the source of
+   *  truth for the saves themselves. */
+  const [savedRunId, setSavedRunId] = useState<string | null>(null);
   useEffect(() => {
     latestRef.current = result;
   }, [result]);
@@ -251,7 +255,10 @@ export default function ResultPanel({
     const wasBusy = wasBusyRef.current;
     wasBusyRef.current = isBusy;
     // A new generation is a new run; edits must never land on the last one.
-    if (!wasBusy && isBusy) ownRunIdRef.current = null;
+    if (!wasBusy && isBusy) {
+      ownRunIdRef.current = null;
+      setSavedRunId(null);
+    }
     if (!wasBusy || isBusy) return; // only on the busy -> idle edge
     const meta = historyMetaRef.current;
     if (!meta || !result || result.trim() === "") return;
@@ -261,6 +268,7 @@ export default function ResultPanel({
     saveToolRun({ toolSlug: meta.toolSlug, title: meta.title, input: meta.input, output })
       .then((run) => {
         ownRunIdRef.current = run.id;
+        setSavedRunId(run.id);
         persistedRef.current = output;
         // Edited while the save was in flight: those edits go in now.
         const latest = latestRef.current;
@@ -278,6 +286,7 @@ export default function ResultPanel({
       // A run restored from history: what is on screen is what is stored.
       runIdPropRef.current = runId;
       ownRunIdRef.current = null;
+      setSavedRunId(null);
       persistedRef.current = result;
       return;
     }
@@ -304,6 +313,9 @@ export default function ResultPanel({
     onChange(next);
   };
 
+  const joRunId = isBusy ? null : (savedRunId ?? runId);
+  const joDocRef = useMemo(() => (joRunId ? { kind: "tool_run" as const, id: joRunId } : null), [joRunId]);
+
   if (result === null || shown === null) return null;
 
   if (sheet) {
@@ -319,6 +331,7 @@ export default function ResultPanel({
           filename={exportFilename}
           saveState={saveState}
           maxWidth={maxWidth}
+          joDocRef={joDocRef}
         />
         {savedRun && SHAREABLE[savedRun.slug] && (
           <ShareToHomePrompt key={savedRun.id} kind={SHAREABLE[savedRun.slug]} resourceId={savedRun.id} />

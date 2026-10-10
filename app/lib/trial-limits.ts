@@ -22,6 +22,16 @@ export const DEFAULT_DAILY_CAP = 300;
 /** Free generations per visitor per 24 hours, Slides and Comprehension together. */
 export const FREE_TRIES_PER_DAY = 3;
 
+/** Messages a visitor may send Jo about one free generation before signing up.
+ *  Every message counts, typed or tapped. */
+export const GUEST_JO_PROMPTS = 3;
+
+/** How many of a free try's Jo prompts are left, from the number used. */
+export function joPromptsLeft(used: number): number {
+  const n = Number.isFinite(used) ? Math.floor(used) : GUEST_JO_PROMPTS;
+  return Math.max(0, Math.min(GUEST_JO_PROMPTS, GUEST_JO_PROMPTS - n));
+}
+
 export type TrialDecision =
   | { ok: true }
   | { ok: false; reason: "disabled" | "daily_cap" | "used" };

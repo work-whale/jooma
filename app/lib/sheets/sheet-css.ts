@@ -152,9 +152,17 @@ export const SHEET_CSS = `
 .js-streaming .js-page-body > :last-child { animation: js-in .35s ease-out both; }
 @keyframes js-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
+/* Jo at work: the piece being edited, ringed in Jooma purple, with a label. */
+.js-sheet [data-jo] { position: relative; border-radius: 10px; transition: box-shadow .3s ease, background-color .3s ease; }
+.js-sheet [data-jo-active] { box-shadow: 0 0 0 2px #8B6AE8, 0 0 0 7px rgba(139,106,232,.16); background-color: rgba(241,236,252,.45); }
+.js-jo-label { position: absolute; top: -13px; left: 10px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; max-width: calc(100% - 20px); padding: 3px 10px 3px 3px; border-radius: 999px; background: #3A1C8F; color: #fff; font: 600 11px/1.2 system-ui, sans-serif; box-shadow: 0 4px 12px rgba(58,28,143,.25); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: js-in .25s ease-out both; pointer-events: none; }
+.js-jo-label i { flex: none; width: 18px; height: 18px; border-radius: 6px; background: #5B2ED6; display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .js-sheet [data-jo] { transition: none; } .js-jo-label { animation: none; } }
+
 @media print {
   .js-pages { gap: 0; }
   .js-page { box-shadow: none; border-radius: 0; break-after: page; }
-  .js-tools, .js-add-row, .js-mini { display: none !important; }
+  .js-tools, .js-add-row, .js-mini, .js-jo-label { display: none !important; }
+  .js-sheet [data-jo-active] { box-shadow: none; background: none; }
 }
 `;
