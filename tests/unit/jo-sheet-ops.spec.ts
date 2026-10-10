@@ -116,6 +116,9 @@ test.describe("applySheetOp", () => {
     expect(applySheetOp(doc, op({ op: "setDesign", label: "x", key: "fontScale", value: "XL" }))!.doc.design.fontScale).toBe("xl");
     expect(applySheetOp(doc, op({ op: "setDesign", label: "x", key: "answers", value: "false" }))!.doc.design.answers).toBe(false);
     expect(applySheetOp(doc, op({ op: "setDesign", label: "x", key: "paper", value: "a3" }))).toBeNull();
+    for (const key of ["objective", "intro", "diffNote"] as const) {
+      expect(applySheetOp(doc, op({ op: "setDesign", label: "x", key, value: "false" }))!.doc.design[key], key).toBe(false);
+    }
   });
 
   test("an op that does not fit the sheet does nothing and leaves it untouched", () => {

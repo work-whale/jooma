@@ -51,7 +51,7 @@ export interface AddSectionOp extends OpBase {
 export interface DeleteSectionOp extends OpBase { op: "deleteSection"; sectionId: string }
 export interface SetDesignOp extends OpBase {
   op: "setDesign";
-  key: "fontScale" | "answers" | "nameDate" | "lineNumbers" | "paper";
+  key: "fontScale" | "answers" | "nameDate" | "lineNumbers" | "paper" | "objective" | "intro" | "diffNote";
   value: string;
 }
 

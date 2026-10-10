@@ -1900,9 +1900,68 @@ function motifShapes(motif: ThemeDesign["motif"], theme: SlideshowTheme, seed: s
         shape("rect", SLIDE_W - 104, SLIDE_H - 36, 72, 4, p.accent, 0.9),
         shape("rect", SLIDE_W - 36, SLIDE_H - 104, 4, 72, p.accent, 0.9),
       ];
+    // The quiet scenes. Each keeps to a strip along one edge or a corner, so
+    // it gives the slide a sense of place without sitting behind the words.
+    case "waves":
+      return [
+        shape("ellipse", -160, SLIDE_H - 46, 780, 150, p.accent, 0.32),
+        shape("ellipse", SLIDE_W - 600, SLIDE_H - 30, 780, 140, p.headingColor ?? p.accent, 0.26),
+        shape("ellipse", 280, SLIDE_H - 16, 200, 50, surface(p), 0.5),
+        shape("ellipse", SLIDE_W - 420, SLIDE_H - 12, 160, 40, surface(p), 0.4),
+      ];
+    case "hills":
+      return [
+        shape("ellipse", -220, SLIDE_H - 64, 660, 210, p.activityCardBg ?? p.accent, 0.9),
+        shape("ellipse", SLIDE_W - 460, SLIDE_H - 46, 680, 190, p.calloutBgRemember ?? p.accent, 0.9),
+        shape("triangle", 70, SLIDE_H - 128, 44, 88, p.headingColor ?? p.accent, 0.45),
+        shape("triangle", 112, SLIDE_H - 108, 34, 68, p.headingColor ?? p.accent, 0.35),
+      ];
+    case "sun":
+      return [
+        shape("ellipse", SLIDE_W - 150, -110, 260, 260, p.calloutBgKey ?? p.accent, 1),
+        ...([[SLIDE_W - 206, 30, 12], [SLIDE_W - 178, 150, 9], [SLIDE_W - 70, 176, 11]] as const).map(([x, y, d]) =>
+          shape("ellipse", x, y, d, d, p.accent, 0.55),
+        ),
+      ];
+    case "clouds": {
+      const fill = surface(p);
+      // One peeking in at the top left, one small in the strip above the
+      // content, one at the bottom right: clear of the title and the photo.
+      return [
+        shape("cloud", -46, -18, 190, 96, fill, 0.95),
+        shape("cloud", 520, 4, 120, 58, fill, 0.85),
+        shape("cloud", SLIDE_W - 176, SLIDE_H - 86, 170, 84, fill, 0.9),
+      ];
+    }
+    case "sprinkles": {
+      const colours = [p.accent, p.headingColor ?? p.accent, p.badgeBg ?? p.accent, p.blockquoteRule ?? p.accent];
+      const corner = (x0: number, y0: number) =>
+        Array.from({ length: 5 }, () => {
+          const kind = pick(["rect", "ellipse", "triangle"] as const);
+          const size = 12 + rnd() * 10;
+          return shape(kind, x0 + rnd() * 150, y0 + rnd() * 70, kind === "rect" ? size * 0.5 : size, size, pick(colours), 0.9, { rotation: Math.round(rnd() * 360) });
+        });
+      return [...corner(SLIDE_W - 180, 18), ...corner(26, SLIDE_H - 96)];
+    }
+    case "leaves": {
+      const leaf = (x: number, y: number, rotation: number, fill: string) => shape("ellipse", x, y, 48, 18, fill, 0.55, { rotation });
+      const a = p.accent;
+      const b = p.headingColor ?? p.accent;
+      return [
+        leaf(22, 34, -35, a), leaf(58, 20, 15, b), leaf(26, 74, -70, b),
+        leaf(SLIDE_W - 72, SLIDE_H - 58, -35, a), leaf(SLIDE_W - 108, SLIDE_H - 40, 15, b), leaf(SLIDE_W - 70, SLIDE_H - 96, -70, b),
+      ];
+    }
     default:
       return [];
   }
+}
+
+/** A colour a step off the background, for foam and clouds: the paper colour
+ *  where it differs, else a soft tint from the palette. */
+function surface(p: SlideshowTheme["palette"]): string {
+  if (p.paperBg && p.paperBg.toUpperCase() !== p.background.toUpperCase()) return p.paperBg;
+  return p.calloutBgRemember ?? p.accent;
 }
 
 /** True for a dark background, by perceived luminance. */

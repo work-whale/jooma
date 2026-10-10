@@ -69,6 +69,21 @@ test.describe("sheet as text", () => {
     expect(sheetToMarkdown(sample(false))).not.toContain("## Answers");
   });
 
+  test("Copy leaves out the objective, the intro and the differentiation note when each is switched off", () => {
+    const base = sample();
+    const doc: SheetDoc = { ...base, teacherNotes: [...base.teacherNotes, { title: "How this version is pitched: Working towards", points: ["Shorter sums."] }] };
+    const on = sheetToMarkdown(doc);
+    expect(on).toContain("**Learning objective:**");
+    expect(on).toContain("**Did you know?**");
+    expect(on).toContain("## How this version is pitched");
+    const off = sheetToMarkdown({ ...doc, design: { ...doc.design, objective: false, intro: false, diffNote: false } });
+    expect(off).not.toContain("Learning objective");
+    expect(off).not.toContain("Did you know?");
+    expect(off).not.toContain("How this version is pitched");
+    // Only that note goes: the misconceptions stay.
+    expect(off).toContain("## Misconceptions");
+  });
+
   test("the outline's ids are the ones the page gives its headings", () => {
     const outline = sheetOutline(sample());
     expect(extractHeadings(outline).map((h) => h.text)).toEqual(["Fractions", "Warm up", "Problems", "Answers"]);

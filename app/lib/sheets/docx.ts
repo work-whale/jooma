@@ -26,6 +26,7 @@ import {
 } from "docx";
 import { answerText, hasAnswersPage, questionNumbers } from "./markdown";
 import { getSheetTheme } from "./themes";
+import { showsIntro, showsObjective, visibleNotes } from "./visibility";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
@@ -252,8 +253,8 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
   }
   if (doc.subtitle) children.push(para(doc.subtitle.toUpperCase(), { bold: true, color: hex(c.muted), size: size - 4, after: 40 }));
   children.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] }));
-  if (doc.objective) children.push(box([new Paragraph({ children: [tr("Learning objective:  ", { bold: true, color: hex(c.heading) }), ...runs(doc.objective, { size })] })], hex(c.soft), hex(c.soft)), spacer());
-  if (doc.intro) children.push(...block({ id: "intro", type: "callout", ...doc.intro }));
+  if (doc.objective && showsObjective(doc)) children.push(box([new Paragraph({ children: [tr("Learning objective:  ", { bold: true, color: hex(c.heading) }), ...runs(doc.objective, { size })] })], hex(c.soft), hex(c.soft)), spacer());
+  if (doc.intro && showsIntro(doc)) children.push(...block({ id: "intro", type: "callout", ...doc.intro }));
 
   for (const s of doc.sections) {
     const title = `${theme.look.emoji && s.emoji ? `${s.emoji}  ` : ""}${s.title}`;
@@ -283,7 +284,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
         for (const cr of criteria) children.push(new Paragraph({ bullet: { level: 0 }, children: runs(cr, { size }) }));
       }
     }
-    for (const note of doc.teacherNotes) {
+    for (const { note } of visibleNotes(doc)) {
       children.push(spacer());
       children.push(
         box(

@@ -188,6 +188,88 @@ test("add a question, mark its answer, and restyle the sheet from Design", async
   await page.screenshot({ path: "test-results/worksheet-design.png", fullPage: true });
 });
 
+test("Design switches the learning objective and the Did you know? box off, and the toolbar shows what is on", async ({ page }) => {
+  const runId = await seedSheetRun("Toggle check");
+  await openRun(page, runId);
+  const pages = sheet(page).locator(".js-pages");
+  await expect(pages.locator(".js-objective")).toHaveCount(1);
+  await expect(pages.locator(".js-callout")).toHaveCount(1);
+
+  const WHITE = "rgb(255, 255, 255)";
+  const PURPLE = "rgb(91, 46, 214)";
+  const design = page.getByTestId("sheet-design-toggle");
+  const preview = page.getByTestId("sheet-preview-toggle");
+
+  // A short description on hover, and the brand tint behind the button.
+  await expect(design).toHaveCSS("background-color", WHITE);
+  // Hovered again until it shows: the page can still be settling (Jo's panel
+  // opening) and move the button out from under the pointer.
+  await expect(async () => {
+    await design.hover();
+    await expect(page.getByText("Theme, text size and what shows on the page")).toHaveCSS("opacity", "1", { timeout: 2_000 });
+  }).toPass();
+  await expect(design).toHaveCSS("background-color", "rgb(241, 236, 252)");
+
+  // Purple while the panel is open, white again once it is closed. The
+  // pointer moves away first: over the button, it shows the darker hover.
+  await design.click();
+  await page.mouse.move(0, 0);
+  await expect(design).toHaveCSS("background-color", PURPLE);
+  const panel = page.getByTestId("sheet-design-panel");
+
+  // Stuck beside the pages, the panel never runs past the bottom of the
+  // window: it scrolls on its own, so its last toggle can still be reached.
+  // A short laptop window, where the full panel cannot fit.
+  const viewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 1280, height: 600 });
+  // The page itself, not the panel under the pointer, which now scrolls too.
+  await page.evaluate(() => window.scrollBy(0, 800));
+  const scroller = page.getByTestId("sheet-design-scroll");
+  // All of it on screen once the scroll settles: not scrolled away at the
+  // top, not cut off below.
+  await expect
+    .poll(async () => {
+      const box = (await scroller.boundingBox())!;
+      return box.y >= 0 && box.y + box.height <= 600;
+    })
+    .toBe(true);
+  await panel.getByLabel("Answers page").scrollIntoViewIfNeeded();
+  await expect(panel.getByLabel("Answers page")).toBeInViewport();
+  await page.setViewportSize(viewport);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.mouse.move(0, 0);
+
+  await panel.getByLabel("Learning objective").uncheck();
+  await expect(pages.locator(".js-objective")).toHaveCount(0);
+  await panel.getByLabel("Did you know?").uncheck();
+  await expect(pages.locator(".js-callout")).toHaveCount(0);
+  await expect.poll(async () => (await storedSheet(runId)).design, NAV).toMatchObject({ objective: false, intro: false });
+  // This sheet is not differentiated, so there is no note to switch.
+  await expect(panel.getByLabel("Differentiation note")).toHaveCount(0);
+  await panel.getByRole("button", { name: "Close design" }).click();
+  await page.mouse.move(0, 0);
+  await expect(design).toHaveCSS("background-color", WHITE);
+
+  // Preview is the same: purple while on.
+  await preview.click();
+  await page.mouse.move(0, 0);
+  await expect(preview).toHaveAttribute("aria-pressed", "true");
+  await expect(preview).toHaveCSS("background-color", PURPLE);
+  await preview.click();
+  await page.mouse.move(0, 0);
+  await expect(preview).toHaveCSS("background-color", WHITE);
+
+  // Back on, after a reload, both are drawn again.
+  await page.reload();
+  await expect(sheet(page)).toHaveAttribute("data-ready", "true", NAV);
+  await expect(pages.locator(".js-objective")).toHaveCount(0);
+  await design.click();
+  await panel.getByLabel("Learning objective").check();
+  await panel.getByLabel("Did you know?").check();
+  await expect(pages.locator(".js-objective")).toHaveCount(1);
+  await expect(pages.locator(".js-callout")).toHaveCount(1);
+});
+
 test("exports the pages as a PDF and the sheet as a Word document", async ({ page }) => {
   const runId = await seedSheetRun("Export check");
   await openRun(page, runId);

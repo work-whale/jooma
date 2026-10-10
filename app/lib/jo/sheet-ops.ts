@@ -47,6 +47,9 @@ export function sheetSnapshot(doc: SheetDoc) {
       nameDate: doc.design.nameDate,
       lineNumbers: doc.design.lineNumbers,
       paper: doc.design.paper,
+      objective: doc.design.objective !== false,
+      intro: doc.design.intro !== false,
+      diffNote: doc.design.diffNote !== false,
     },
     sections: doc.sections.map((s) => ({
       id: s.id,
@@ -168,6 +171,9 @@ function design(doc: SheetDoc, key: string, value: string): SheetDoc | null {
     case "answers":
     case "nameDate":
     case "lineNumbers":
+    case "objective":
+    case "intro":
+    case "diffNote":
       if (v !== "true" && v !== "false") return null;
       patch[key] = v === "true";
       break;

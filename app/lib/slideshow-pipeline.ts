@@ -51,7 +51,8 @@ export interface RequestBody {
   imageMixWeb?: number;
   imageStyle?: ImageStyle;
   themeId?: string;
-  /** Background art style: "watercolor" (default) | "illustration". */
+  /** No longer read: new decks always take the watercolor art. Older saved
+   *  generation params may still carry it. */
   artStyle?: string;
   /** Text extracted from a teacher-supplied resource (URL or uploaded file)
    *  via /api/extract-resource. Anchors the AI to the actual lesson content. */
@@ -905,7 +906,7 @@ export function slideshowStream({
   const webParts = Math.max(0, Math.min(10, Math.round(body.imageMixWeb ?? 8)));
   let imgCount = 0;
   const theme = getTheme(body.themeId);
-  const artStyle: ArtStyleId = body.artStyle === "illustration" ? "illustration" : DEFAULT_ART_STYLE;
+  const artStyle: ArtStyleId = DEFAULT_ART_STYLE;
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {

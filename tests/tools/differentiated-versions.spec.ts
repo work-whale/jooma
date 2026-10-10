@@ -262,3 +262,41 @@ test("homework for WTS and EXS: two documents in tabs, and Refine changes only t
       ["EXS", "# Shorter homework"],
     ]);
 });
+
+test("each version's differentiation note can be switched off in Design", async ({ page }) => {
+  await signIn(page, teacher);
+  await page.route("**/api/worksheet-generator", (route) => {
+    const body = route.request().postDataJSON() as Record<string, unknown>;
+    return route.fulfill({ status: 200, headers: { "content-type": "text/plain; charset=utf-8" }, body: JSON.stringify(modelSheet(body.band as string)) });
+  });
+  const fields = { ...WORKSHEET_FIELDS, differentiate: "yes", differentiationLevels: ["WBS", "GDS"] };
+  await page.goto(`/tools/worksheet-generator?prefill=${encodePrefill({ slug: "worksheet-generator", fields })}`);
+  await generate(page).click(NAV);
+  await expect(tabs(page).getByRole("tab")).toHaveCount(2, NAV);
+  await expect(sheet(page)).toHaveAttribute("data-ready", "true", NAV);
+  const notes = sheet(page).locator(".js-pages .js-note");
+  await expect(notes.filter({ hasText: "How this version is pitched: WBS" })).toHaveCount(1);
+  await expect.poll(async () => (await latestRun("worksheet-generator"))?.output.slice(0, 21), NAV).toBe('{"kind":"jooma-bands"');
+  const runId = (await latestRun("worksheet-generator"))!.id;
+
+  await page.getByRole("button", { name: "Design", exact: true }).click();
+  const panel = page.getByTestId("sheet-design-panel");
+  await expect(panel.getByText("Shown with the answers")).toBeVisible();
+  await panel.getByLabel("Differentiation note").uncheck();
+  await expect(notes).toHaveCount(0);
+  await expect
+    .poll(async () => {
+      const wbs = (await storedBands(runId)).find((b) => b.band === "WBS")!;
+      return (JSON.parse(wbs.output) as { design: { diffNote?: boolean } }).design.diffNote;
+    }, NAV)
+    .toBe(false);
+
+  // The answers page off: the note's toggle has nothing to switch.
+  await panel.getByLabel("Answers page").uncheck();
+  await expect(panel.getByLabel("Differentiation note")).toBeDisabled();
+
+  // The other version keeps its own note.
+  await tab(page, "GDS").click();
+  await expect(sheet(page).locator(".js-pages h1.js-title")).toHaveText(TITLES.GDS);
+  await expect(notes.filter({ hasText: "How this version is pitched: GDS" })).toHaveCount(1);
+});

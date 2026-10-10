@@ -7,6 +7,7 @@ import { isSheetOutput } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
+import { showsIntro, showsObjective, visibleNotes } from "./visibility";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
@@ -128,7 +129,7 @@ export function outputExcerpt(output: string): string {
 /** Whether the sheet ends with an answers page: switched on, and something to
  *  put on it. */
 export function hasAnswersPage(doc: SheetDoc): boolean {
-  return doc.design.answers && (doc.teacherNotes.length > 0 || doc.sections.some((s) => s.blocks.some(isQuestion)));
+  return doc.design.answers && (visibleNotes(doc).length > 0 || doc.sections.some((s) => s.blocks.some(isQuestion)));
 }
 
 /**
@@ -148,8 +149,8 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
   const numbers = questionNumbers(doc);
   const out: string[] = [`# ${doc.title || "Worksheet"}`];
   if (doc.subtitle) out.push(`*${doc.subtitle}*`);
-  if (doc.objective) out.push(`**Learning objective:** ${doc.objective}`);
-  if (doc.intro) out.push(`> **${doc.intro.label}** ${doc.intro.text}`);
+  if (doc.objective && showsObjective(doc)) out.push(`**Learning objective:** ${doc.objective}`);
+  if (doc.intro && showsIntro(doc)) out.push(`> **${doc.intro.label}** ${doc.intro.text}`);
   for (const s of doc.sections) {
     out.push(`## ${s.title}`);
     if (s.instructions) out.push(`*${s.instructions}*`);
@@ -159,7 +160,7 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
   if (withAnswers) {
     const answers = doc.sections.flatMap((s) => s.blocks).filter(isQuestion).map((q) => ({ n: numbers.get(q.id)!, a: answerText(q) })).filter((x) => x.a);
     if (answers.length) out.push("## Answers", ...answers.map((x) => `${x.n}. ${x.a}`));
-    for (const note of doc.teacherNotes) out.push(`## ${note.title || "Teacher notes"}`, ...note.points.map((p) => `- ${p}`));
+    for (const { note } of visibleNotes(doc)) out.push(`## ${note.title || "Teacher notes"}`, ...note.points.map((p) => `- ${p}`));
   }
   return out.join("\n\n");
 }

@@ -7,6 +7,7 @@ import { paginate, type PageUnit } from "@/app/lib/sheets/paginate";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
 import { answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
+import { showsIntro, showsObjective, visibleNotes } from "@/app/lib/sheets/visibility";
 import {
   addSection,
   deleteBlock,
@@ -149,7 +150,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
           label="title"
           {...(live && ids[0] ? { id: ids[0] } : {})}
         />
-        {(doc.objective || editing) && (
+        {showsObjective(doc) && (doc.objective || editing) && (
           <div className="js-objective">
             {theme.look.emoji && <span aria-hidden="true">🎯</span>}
             <p>
@@ -162,7 +163,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     ),
   });
 
-  if (doc.intro) {
+  if (doc.intro && showsIntro(doc)) {
     const intro = doc.intro;
     units.push({
       key: "intro",
@@ -326,7 +327,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         });
       }),
     );
-    doc.teacherNotes.forEach((note, ni) => {
+    visibleNotes(doc).forEach(({ note, index: ni }) => {
       const setNote = (next: typeof note | null) =>
         commit({ ...doc, teacherNotes: next ? doc.teacherNotes.map((n, j) => (j === ni ? next : n)) : doc.teacherNotes.filter((_, j) => j !== ni) });
       units.push({

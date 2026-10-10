@@ -25,6 +25,13 @@ export interface SheetDesign {
   paper: "a4" | "letter";
   /** Line numbers down the side of a reading passage. */
   lineNumbers: boolean;
+  /** The learning objective under the title. Missing means on. */
+  objective?: boolean;
+  /** The hook box at the top, e.g. "Did you know?". Missing means on. */
+  intro?: boolean;
+  /** The note on the answers page saying who this version is pitched at.
+   *  Missing means on. */
+  diffNote?: boolean;
 }
 
 export interface SheetDoc {

@@ -44,8 +44,13 @@ export interface ThemeDesign {
   /** Callout boxes: tint (flat colour), sticky (note with a strip of tape),
    *  rule (tint with an accent bar), outline (drawn box, no fill). */
   callout: "tint" | "sticky" | "rule" | "outline";
-  /** Decoration drawn behind the content, always under photos. */
-  motif: "none" | "confetti" | "dots" | "stars" | "doodles" | "blobs" | "grid" | "rules" | "corners";
+  /** Decoration drawn behind the content, always under photos. The last six
+   *  are quiet hints of a scene, kept to the edges and corners: waves along
+   *  the bottom, low hills, a sun peeking in, a few clouds, a sprinkle of
+   *  confetti, a few leaves. */
+  motif:
+    | "none" | "confetti" | "dots" | "stars" | "doodles" | "blobs" | "grid" | "rules" | "corners"
+    | "waves" | "hills" | "sun" | "clouds" | "sprinkles" | "leaves";
 }
 
 /** Each family's default treatment. A theme overrides what it needs. */
@@ -62,6 +67,9 @@ export interface SlideshowTheme {
   category: ThemeCategory;
   family: ThemeFamily;
   tags?: ThemeTag[];
+  /** Taken out of the picker. Kept here so decks already made with it still
+   *  find their theme (getTheme) and look as they did. */
+  retired?: true;
   design?: Partial<ThemeDesign>;
   palette: {
     background: string;       // default slide bg color
@@ -283,6 +291,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     name: "Bold",
     description: "Make a statement",
     category: "classic", family: "playful",
+    retired: true,
     backgroundArt: "/scenes/bold.png",
     artIllustration: "/scenes/bold-illus.png",
     backgroundArtScrim: "rgba(254, 243, 199, 0.55)",
@@ -669,7 +678,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
   // heading in the picker, alongside the original. Light, clear centres keep
   // dark text legible; backgrounds in /public/scenes/<id>.png.
   {
-    id: "math-pop", name: "Math · Pop", description: "Coral & yellow geometry confetti", category: "math", family: "playful",
+    id: "math-pop", name: "Math · Pop", description: "Coral & yellow geometry confetti", category: "math", family: "playful", retired: true,
     backgroundArt: "/scenes/math-pop.png", artIllustration: "/scenes/math-pop.png", backgroundArtScrim: "rgba(255, 244, 239, 0.40)",
     palette: {
       background: "#fff4ef", paperBg: "#fffaf7", paperShadow: "rgba(42, 26, 46, 0.10)",
@@ -681,7 +690,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "math-neon", name: "Math · Neon", description: "Electric violet & cyan geometry", category: "math", family: "playful",
+    id: "math-neon", name: "Math · Neon", description: "Electric violet & cyan geometry", category: "math", family: "playful", retired: true,
     backgroundArt: "/scenes/math-neon.png", artIllustration: "/scenes/math-neon.png", backgroundArtScrim: "rgba(241, 243, 255, 0.40)",
     palette: {
       background: "#f1f3ff", paperBg: "#fafbff", paperShadow: "rgba(26, 21, 53, 0.10)",
@@ -693,7 +702,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "math-citrus", name: "Math · Citrus", description: "Zesty orange & lime geometry", category: "math", family: "playful",
+    id: "math-citrus", name: "Math · Citrus", description: "Zesty orange & lime geometry", category: "math", family: "playful", retired: true,
     backgroundArt: "/scenes/math-citrus.png", artIllustration: "/scenes/math-citrus.png", backgroundArtScrim: "rgba(246, 251, 233, 0.40)",
     palette: {
       background: "#f6fbe9", paperBg: "#fbfdf2", paperShadow: "rgba(46, 42, 20, 0.10)",
@@ -705,7 +714,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "science-pop", name: "Science · Lab Pop", description: "Bright beakers, bubbles & atoms", category: "science", family: "playful",
+    id: "science-pop", name: "Science · Lab Pop", description: "Bright beakers, bubbles & atoms", category: "science", family: "playful", retired: true,
     backgroundArt: "/scenes/science-pop.png", artIllustration: "/scenes/science-pop.png", backgroundArtScrim: "rgba(238, 254, 248, 0.40)",
     palette: {
       background: "#eefef8", paperBg: "#f6fffb", paperShadow: "rgba(17, 64, 58, 0.12)",
@@ -717,7 +726,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "science-cosmic", name: "Science · Cosmic", description: "Purple atoms, planets & stars", category: "science", family: "playful",
+    id: "science-cosmic", name: "Science · Cosmic", description: "Purple atoms, planets & stars", category: "science", family: "playful", retired: true,
     backgroundArt: "/scenes/science-cosmic.png", artIllustration: "/scenes/science-cosmic.png", backgroundArtScrim: "rgba(244, 240, 255, 0.40)",
     palette: {
       background: "#f4f0ff", paperBg: "#fbf9ff", paperShadow: "rgba(34, 26, 64, 0.12)",
@@ -729,7 +738,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "science-botanic", name: "Science · Botanic", description: "Leaves, DNA & blooms", category: "science", family: "playful",
+    id: "science-botanic", name: "Science · Botanic", description: "Leaves, DNA & blooms", category: "science", family: "playful", retired: true,
     backgroundArt: "/scenes/science-botanic.png", artIllustration: "/scenes/science-botanic.png", backgroundArtScrim: "rgba(241, 251, 239, 0.40)",
     palette: {
       background: "#f1fbef", paperBg: "#f8fdf7", paperShadow: "rgba(31, 64, 35, 0.12)",
@@ -741,7 +750,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Inter', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "history-pop", name: "History · Pop", description: "Bright columns, amphora & scrolls", category: "history", family: "playful",
+    id: "history-pop", name: "History · Pop", description: "Bright columns, amphora & scrolls", category: "history", family: "playful", retired: true,
     backgroundArt: "/scenes/history-pop.png", artIllustration: "/scenes/history-pop.png", backgroundArtScrim: "rgba(253, 243, 230, 0.40)",
     palette: {
       background: "#fdf3e6", paperBg: "#fff9f0", paperShadow: "rgba(58, 36, 24, 0.12)",
@@ -753,7 +762,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "history-explorer", name: "History · Explorer", description: "Maps, compass & ships", category: "history", family: "playful",
+    id: "history-explorer", name: "History · Explorer", description: "Maps, compass & ships", category: "history", family: "playful", retired: true,
     backgroundArt: "/scenes/history-explorer.png", artIllustration: "/scenes/history-explorer.png", backgroundArtScrim: "rgba(253, 246, 233, 0.40)",
     palette: {
       background: "#fdf6e9", paperBg: "#fffaf0", paperShadow: "rgba(58, 42, 26, 0.12)",
@@ -765,7 +774,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
   },
   {
-    id: "history-royal", name: "History · Royal", description: "Crowns, castles & shields", category: "history", family: "playful",
+    id: "history-royal", name: "History · Royal", description: "Crowns, castles & shields", category: "history", family: "playful", retired: true,
     backgroundArt: "/scenes/history-royal.png", artIllustration: "/scenes/history-royal.png", backgroundArtScrim: "rgba(250, 242, 232, 0.40)",
     palette: {
       background: "#faf2e8", paperBg: "#fdf8f0", paperShadow: "rgba(46, 26, 51, 0.12)",
@@ -777,7 +786,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Playfair Display', serif", body: "'Lora', serif" },
   },
   {
-    id: "english-storybook", name: "English · Storybook", description: "Books, quill & speech bubbles", category: "english", family: "playful",
+    id: "english-storybook", name: "English · Storybook", description: "Books, quill & speech bubbles", category: "english", family: "playful", retired: true,
     backgroundArt: "/scenes/english-storybook.png", artIllustration: "/scenes/english-storybook.png", backgroundArtScrim: "rgba(255, 247, 238, 0.40)",
     palette: {
       background: "#fff7ee", paperBg: "#fffbf5", paperShadow: "rgba(58, 34, 48, 0.10)",
@@ -789,7 +798,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "english-comic", name: "English · Comic", description: "Bold speech bubbles & bursts", category: "english", family: "playful",
+    id: "english-comic", name: "English · Comic", description: "Bold speech bubbles & bursts", category: "english", family: "playful", retired: true,
     backgroundArt: "/scenes/english-comic.png", artIllustration: "/scenes/english-comic.png", backgroundArtScrim: "rgba(255, 249, 240, 0.40)",
     palette: {
       background: "#fff9f0", paperBg: "#fffcf6", paperShadow: "rgba(26, 19, 32, 0.10)",
@@ -801,7 +810,7 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     fonts: { heading: "'Archivo Black', sans-serif", body: "'Inter', sans-serif" },
   },
   {
-    id: "english-poetry", name: "English · Poetry", description: "Quills, feathers & ink swirls", category: "english", family: "playful",
+    id: "english-poetry", name: "English · Poetry", description: "Quills, feathers & ink swirls", category: "english", family: "playful", retired: true,
     backgroundArt: "/scenes/english-poetry.png", artIllustration: "/scenes/english-poetry.png", backgroundArtScrim: "rgba(250, 245, 255, 0.40)",
     palette: {
       background: "#faf5ff", paperBg: "#fdfbff", paperShadow: "rgba(46, 36, 64, 0.10)",
@@ -1029,6 +1038,233 @@ export const SLIDESHOW_THEMES: SlideshowTheme[] = [
     },
     fonts: { heading: "'Lexend', sans-serif", body: "'Nunito', sans-serif" },
   },
+
+  // The second designed set: more colour, each with a light touch of
+  // decoration (a sun peeking in, a ripple of sea, a few leaves) kept to the
+  // edges, so it lifts the slide without competing with the lesson.
+
+  // Playful.
+  {
+    id: "sunbeam", name: "Sunbeam", description: "Sunshine yellow with a cobalt pop", category: "classic", family: "playful",
+    palette: {
+      background: "#FFE066", paperBg: "#FFF6CC", paperShadow: "rgba(90, 70, 0, 0.14)",
+      text: "#1D1A2F", muted: "#4A4560", accent: "#2546F0", overlayText: "#FFFFFF", headingColor: "#1F3BD1",
+      calloutBgKey: "#FFF3B3", calloutInkKey: "#1D1A2F", calloutBgRemember: "#DCE4FF", calloutInkRemember: "#14235E",
+      calloutBgFun: "#FFD6E0", calloutInkFun: "#4A1530", badgeBg: "#2546F0", badgeInk: "#FFFFFF", blockquoteRule: "#2546F0",
+      activityCardBg: "#FFF1A6", activityCardInk: "#1D1A2F", speechBubbleStroke: "#1D1A2F", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Baloo 2', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "underline", frame: "rounded", callout: "tint", motif: "sun" },
+  },
+  {
+    id: "lagoon", name: "Lagoon", description: "Deep teal water and coral", category: "classic", family: "playful",
+    palette: {
+      background: "#0E5E6F", paperBg: "#12707F", paperShadow: "rgba(0, 0, 0, 0.3)",
+      text: "#FFF8EC", muted: "#CFE6E6", accent: "#FF8A70", overlayText: "#FFFFFF", headingColor: "#FFC9A8",
+      calloutBgKey: "#1D4C57", calloutInkKey: "#FFE9D6", calloutBgRemember: "#134B5B", calloutInkRemember: "#D6F3F5",
+      calloutBgFun: "#5A2F3A", calloutInkFun: "#FFE0E6", badgeBg: "#FF8A70", badgeInk: "#0B2E36", blockquoteRule: "#FF8A70",
+      activityCardBg: "#13707F", activityCardInk: "#FFF8EC", speechBubbleStroke: "#FFF8EC", checkBadgeBg: "#4ADE80", checkBadgeInk: "#0B2E36",
+    },
+    fonts: { heading: "'Fredoka', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "underline", frame: "rounded", callout: "tint", motif: "waves" },
+  },
+  {
+    id: "meadow", name: "Meadow", description: "Spring green hills and a red poppy", category: "classic", family: "playful",
+    palette: {
+      background: "#E6F4DC", paperBg: "#F6FBF1", paperShadow: "rgba(30, 53, 36, 0.10)",
+      text: "#1E3524", muted: "#4B6352", accent: "#E2483D", overlayText: "#FFFFFF", headingColor: "#2F6B3A",
+      calloutBgKey: "#FFE1DC", calloutInkKey: "#4A1410", calloutBgRemember: "#C5E3B3", calloutInkRemember: "#1E3524",
+      calloutBgFun: "#FFF0BF", calloutInkFun: "#3D2E00", badgeBg: "#E2483D", badgeInk: "#FFFFFF", blockquoteRule: "#E2483D",
+      activityCardBg: "#B5D99F", activityCardInk: "#1E3524", speechBubbleStroke: "#1E3524", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Fredoka', sans-serif", body: "'Andika', sans-serif" },
+    design: { title: "underline", frame: "arch", callout: "tint", motif: "hills" },
+  },
+  {
+    id: "candy", name: "Candy", description: "Bubblegum pink with a sprinkle on top", category: "classic", family: "playful",
+    palette: {
+      background: "#FFD3E2", paperBg: "#FFF0F5", paperShadow: "rgba(90, 20, 60, 0.12)",
+      text: "#3B0D2C", muted: "#6E3A5A", accent: "#C2185B", overlayText: "#FFFFFF", headingColor: "#8E1450",
+      calloutBgKey: "#FFF0F5", calloutInkKey: "#3B0D2C", calloutBgRemember: "#E1E8FF", calloutInkRemember: "#1C2559",
+      calloutBgFun: "#FFF2C4", calloutInkFun: "#3D2E00", badgeBg: "#8E1450", badgeInk: "#FFFFFF", blockquoteRule: "#C2185B",
+      activityCardBg: "#FFE4EE", activityCardInk: "#3B0D2C", speechBubbleStroke: "#3B0D2C", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Lilita One', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "pill", frame: "blob", callout: "sticky", motif: "sprinkles" },
+  },
+  {
+    id: "grape", name: "Grape", description: "Purple night with lime stars", category: "classic", family: "playful",
+    palette: {
+      background: "#4B2A8C", paperBg: "#573399", paperShadow: "rgba(0, 0, 0, 0.3)",
+      text: "#FFFFFF", muted: "#D9CCF5", accent: "#C6F432", overlayText: "#FFFFFF", headingColor: "#C6F432",
+      calloutBgKey: "#3A2070", calloutInkKey: "#EAFFB0", calloutBgRemember: "#2F2F7A", calloutInkRemember: "#DCE2FF",
+      calloutBgFun: "#6A2A6E", calloutInkFun: "#FFD9F5", badgeBg: "#C6F432", badgeInk: "#2A1450", blockquoteRule: "#C6F432",
+      activityCardBg: "#5E3AA3", activityCardInk: "#FFFFFF", speechBubbleStroke: "#FFFFFF", checkBadgeBg: "#4ADE80", checkBadgeInk: "#1A0B33",
+    },
+    fonts: { heading: "'Baloo 2', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "plain", frame: "circle", callout: "tint", motif: "stars" },
+  },
+  {
+    id: "daydream", name: "Daydream", description: "Pale sky, soft clouds, orange accents", category: "classic", family: "playful",
+    palette: {
+      background: "#C7E3FF", paperBg: "#FFFFFF", paperShadow: "rgba(19, 41, 75, 0.10)",
+      text: "#13294B", muted: "#4A5E80", accent: "#FF8A00", overlayText: "#FFFFFF", headingColor: "#1E3A8A",
+      calloutBgKey: "#FFE7C7", calloutInkKey: "#3D2200", calloutBgRemember: "#FFFFFF", calloutInkRemember: "#13294B",
+      calloutBgFun: "#EDE4FF", calloutInkFun: "#2E1A5C", badgeBg: "#FF8A00", badgeInk: "#13294B", blockquoteRule: "#FF8A00",
+      activityCardBg: "#EAF4FF", activityCardInk: "#13294B", speechBubbleStroke: "#13294B", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Fredoka', sans-serif", body: "'Nunito', sans-serif" },
+    design: { title: "underline", frame: "polaroid", callout: "tint", motif: "clouds" },
+  },
+  {
+    id: "tangerine", name: "Tangerine", description: "Juicy orange with indigo ink", category: "classic", family: "playful",
+    palette: {
+      background: "#FF8A3D", paperBg: "#FFA765", paperShadow: "rgba(80, 30, 0, 0.16)",
+      text: "#1B1030", muted: "#3F2A3D", accent: "#2B2D8F", overlayText: "#FFFFFF", headingColor: "#1B1030",
+      calloutBgKey: "#FFE3C7", calloutInkKey: "#1B1030", calloutBgRemember: "#FFF4E0", calloutInkRemember: "#1B1030",
+      calloutBgFun: "#FFD1DC", calloutInkFun: "#3B0D2C", badgeBg: "#1B1030", badgeInk: "#FFFFFF", blockquoteRule: "#2B2D8F",
+      activityCardBg: "#FFB27A", activityCardInk: "#1B1030", speechBubbleStroke: "#1B1030", checkBadgeBg: "#1F9D55", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Lilita One', sans-serif", body: "'Rubik', sans-serif" },
+    design: { title: "underline", frame: "sticker", callout: "outline", motif: "dots" },
+  },
+
+  // Professional.
+  {
+    id: "rust", name: "Rust", description: "Terracotta and cream with gold corners", category: "classic", family: "professional",
+    palette: {
+      background: "#A6452B", paperBg: "#B4533A", paperShadow: "rgba(0, 0, 0, 0.25)",
+      text: "#FFF6EA", muted: "#F3D5C5", accent: "#F6C177", overlayText: "#FFFFFF", headingColor: "#FFE2B0",
+      calloutBgKey: "#8E3A22", calloutInkKey: "#FFE9C9", calloutBgRemember: "#7A3A2E", calloutInkRemember: "#FFE0D6",
+      calloutBgFun: "#5E3A4A", calloutInkFun: "#FFDDE8", badgeBg: "#F6C177", badgeInk: "#3A160B", blockquoteRule: "#F6C177",
+      activityCardBg: "#B85C42", activityCardInk: "#FFF6EA", speechBubbleStroke: "#FFF6EA", checkBadgeBg: "#86EFAC", checkBadgeInk: "#1A2E1A",
+    },
+    fonts: { heading: "'Fraunces', serif", body: "'Source Sans 3', sans-serif" },
+    design: { title: "kicker", frame: "square", callout: "rule", motif: "corners" },
+  },
+  {
+    id: "fern", name: "Fern", description: "Forest green, cream and a few leaves", category: "classic", family: "professional",
+    palette: {
+      background: "#1F3D2B", paperBg: "#26492F", paperShadow: "rgba(0, 0, 0, 0.3)",
+      text: "#F4EFE1", muted: "#C5D3C4", accent: "#E9B949", overlayText: "#FFFFFF", headingColor: "#F2CB6B",
+      calloutBgKey: "#2E4A22", calloutInkKey: "#FCEFC4", calloutBgRemember: "#23413A", calloutInkRemember: "#D4EDE3",
+      calloutBgFun: "#4A3A24", calloutInkFun: "#F9E4C2", badgeBg: "#E9B949", badgeInk: "#1F3D2B", blockquoteRule: "#E9B949",
+      activityCardBg: "#2B5136", activityCardInk: "#F4EFE1", speechBubbleStroke: "#F4EFE1", checkBadgeBg: "#7BD389", checkBadgeInk: "#123026",
+    },
+    fonts: { heading: "'Lora', serif", body: "'Karla', sans-serif" },
+    design: { title: "kicker", frame: "rounded", callout: "rule", motif: "leaves" },
+  },
+  {
+    id: "coast", name: "Coast", description: "Crisp white, deep navy, a ripple of sea", category: "classic", family: "professional",
+    palette: {
+      background: "#FFFFFF", paperBg: "#F3F8FC", paperShadow: "rgba(11, 37, 64, 0.08)",
+      text: "#0B2540", muted: "#4D6580", accent: "#0EA5E9", overlayText: "#FFFFFF", headingColor: "#0B2540",
+      calloutBgKey: "#E0F2FE", calloutInkKey: "#0B2540", calloutBgRemember: "#EEF2F6", calloutInkRemember: "#0B2540",
+      calloutBgFun: "#FDEBD8", calloutInkFun: "#4A2508", badgeBg: "#0B2540", badgeInk: "#FFFFFF", blockquoteRule: "#0EA5E9",
+      activityCardBg: "#EEF4FA", activityCardInk: "#0B2540", speechBubbleStroke: "#0B2540", checkBadgeBg: "#16A34A", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Manrope', sans-serif", body: "'Inter', sans-serif" },
+    design: { title: "kicker", frame: "rounded", callout: "rule", motif: "waves" },
+  },
+  {
+    id: "storm", name: "Storm", description: "Slate grey sky with an amber glow", category: "classic", family: "professional",
+    palette: {
+      background: "#4F5B66", paperBg: "#5E6B77", paperShadow: "rgba(0, 0, 0, 0.25)",
+      text: "#FFFFFF", muted: "#D7DEE4", accent: "#FFC857", overlayText: "#FFFFFF", headingColor: "#FFFFFF",
+      calloutBgKey: "#3F4A55", calloutInkKey: "#FFE6A8", calloutBgRemember: "#44525E", calloutInkRemember: "#E1ECF5",
+      calloutBgFun: "#5B4B5E", calloutInkFun: "#F3DDEB", badgeBg: "#FFC857", badgeInk: "#2A2F36", blockquoteRule: "#FFC857",
+      activityCardBg: "#5A6874", activityCardInk: "#FFFFFF", speechBubbleStroke: "#FFFFFF", checkBadgeBg: "#4ADE80", checkBadgeInk: "#1A2E1A",
+    },
+    fonts: { heading: "'Space Grotesk', sans-serif", body: "'Inter', sans-serif" },
+    design: { title: "underline", frame: "rounded", callout: "tint", motif: "clouds" },
+  },
+  {
+    id: "plum", name: "Plum", description: "Lilac paper and aubergine ink", category: "classic", family: "professional",
+    palette: {
+      background: "#F5EEF6", paperBg: "#FFFFFF", paperShadow: "rgba(42, 20, 48, 0.08)",
+      text: "#2A1430", muted: "#6B5470", accent: "#8E2C6B", overlayText: "#FFFFFF", headingColor: "#5A1846",
+      calloutBgKey: "#F3DCEB", calloutInkKey: "#2A1430", calloutBgRemember: "#E6E9F5", calloutInkRemember: "#1E2344",
+      calloutBgFun: "#FCEFD6", calloutInkFun: "#3D2A05", badgeBg: "#8E2C6B", badgeInk: "#FFFFFF", blockquoteRule: "#8E2C6B",
+      activityCardBg: "#EFE4F1", activityCardInk: "#2A1430", speechBubbleStroke: "#2A1430", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Playfair Display', serif", body: "'Lato', sans-serif" },
+    design: { title: "kicker", frame: "square", callout: "rule", motif: "rules" },
+  },
+  {
+    id: "dune", name: "Dune", description: "Warm sand, low dunes and a teal accent", category: "classic", family: "professional",
+    palette: {
+      background: "#EFE3CC", paperBg: "#FAF4E8", paperShadow: "rgba(58, 42, 26, 0.10)",
+      text: "#3A2A1A", muted: "#6F5B45", accent: "#127C7A", overlayText: "#FFFFFF", headingColor: "#3A2A1A",
+      calloutBgKey: "#D6EDEA", calloutInkKey: "#0E3B3A", calloutBgRemember: "#E6D3B0", calloutInkRemember: "#3A2A1A",
+      calloutBgFun: "#F3DCD2", calloutInkFun: "#4A1F12", badgeBg: "#127C7A", badgeInk: "#FFFFFF", blockquoteRule: "#127C7A",
+      activityCardBg: "#DCC59A", activityCardInk: "#3A2A1A", speechBubbleStroke: "#3A2A1A", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Bricolage Grotesque', sans-serif", body: "'Work Sans', sans-serif" },
+    design: { title: "kicker", frame: "arch", callout: "rule", motif: "hills" },
+  },
+
+  // Basic.
+  {
+    id: "soft-blue", name: "Soft Blue", description: "Pale blue and white, quiet and clear", category: "classic", family: "basic",
+    tags: ["low-stimulation"],
+    palette: {
+      background: "#F2F6FC", paperBg: "#FFFFFF", paperShadow: "rgba(28, 43, 66, 0.08)",
+      text: "#1C2B42", muted: "#52627A", accent: "#2B5BD7", overlayText: "#FFFFFF", headingColor: "#1C2B42",
+      calloutBgKey: "#E3ECFB", calloutInkKey: "#1C2B42", calloutBgRemember: "#EEF1F5", calloutInkRemember: "#1C2B42",
+      calloutBgFun: "#FBF1E1", calloutInkFun: "#1C2B42", badgeBg: "#2B5BD7", badgeInk: "#FFFFFF", blockquoteRule: "#2B5BD7",
+      activityCardBg: "#E9EFF8", activityCardInk: "#1C2B42", speechBubbleStroke: "#1C2B42", checkBadgeBg: "#16A34A", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Nunito', sans-serif", body: "'Nunito', sans-serif" },
+  },
+  {
+    id: "warm-grey", name: "Warm Grey", description: "Soft stone with a gentle sun", category: "classic", family: "basic",
+    palette: {
+      background: "#F5F3EF", paperBg: "#FFFFFF", paperShadow: "rgba(43, 40, 36, 0.08)",
+      text: "#2B2824", muted: "#5F5A52", accent: "#B45309", overlayText: "#FFFFFF", headingColor: "#2B2824",
+      calloutBgKey: "#F1D9BC", calloutInkKey: "#2B2824", calloutBgRemember: "#E9E6E0", calloutInkRemember: "#2B2824",
+      calloutBgFun: "#EDE7F1", calloutInkFun: "#2B2824", badgeBg: "#2B2824", badgeInk: "#FFFFFF", blockquoteRule: "#B45309",
+      activityCardBg: "#ECE8E1", activityCardInk: "#2B2824", speechBubbleStroke: "#2B2824", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Source Sans 3', sans-serif", body: "'Source Sans 3', sans-serif" },
+    design: { motif: "sun" },
+  },
+  {
+    id: "night-read", name: "Night Read", description: "Dark and low glare for dim rooms", category: "classic", family: "basic",
+    tags: ["low-stimulation"],
+    palette: {
+      background: "#1C1F26", paperBg: "#242832", paperShadow: "rgba(0, 0, 0, 0.35)",
+      text: "#E8E6E3", muted: "#A9ADB6", accent: "#8AB4F8", overlayText: "#FFFFFF", headingColor: "#F1EFEC",
+      calloutBgKey: "#2A3346", calloutInkKey: "#DCE7FB", calloutBgRemember: "#2B2F38", calloutInkRemember: "#E8E6E3",
+      calloutBgFun: "#3A2E3E", calloutInkFun: "#F0DDF2", badgeBg: "#8AB4F8", badgeInk: "#1C1F26", blockquoteRule: "#8AB4F8",
+      activityCardBg: "#2B2F38", activityCardInk: "#E8E6E3", speechBubbleStroke: "#E8E6E3", checkBadgeBg: "#4ADE80", checkBadgeInk: "#0B1020",
+    },
+    fonts: { heading: "'Atkinson Hyperlegible', sans-serif", body: "'Atkinson Hyperlegible', sans-serif" },
+  },
+  {
+    id: "peach", name: "Peach", description: "Warm peach and Lexend, easy on the eyes", category: "classic", family: "basic",
+    tags: ["dyslexia-friendly"],
+    palette: {
+      background: "#FFF1E8", paperBg: "#FFF9F4", paperShadow: "rgba(43, 33, 24, 0.08)",
+      text: "#2B2118", muted: "#5E4E42", accent: "#C2410C", overlayText: "#FFFFFF", headingColor: "#2B2118",
+      calloutBgKey: "#FFE2CF", calloutInkKey: "#2B2118", calloutBgRemember: "#E5EEF3", calloutInkRemember: "#2B2118",
+      calloutBgFun: "#EFE6F3", calloutInkFun: "#2B2118", badgeBg: "#C2410C", badgeInk: "#FFFFFF", blockquoteRule: "#C2410C",
+      activityCardBg: "#FCE8DA", activityCardInk: "#2B2118", speechBubbleStroke: "#2B2118", checkBadgeBg: "#2E7D4F", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Lexend', sans-serif", body: "'Lexend', sans-serif" },
+  },
+  {
+    id: "ink-cream", name: "Ink on Cream", description: "Pure black on cream, strong and clear", category: "classic", family: "basic",
+    tags: ["high-contrast"],
+    palette: {
+      background: "#FFF8E1", paperBg: "#FFFDF3", paperShadow: "rgba(0, 0, 0, 0.10)",
+      text: "#000000", muted: "#262626", accent: "#0033CC", overlayText: "#FFFFFF", headingColor: "#000000",
+      calloutBgKey: "#FFF0B3", calloutInkKey: "#000000", calloutBgRemember: "#E0E8FF", calloutInkRemember: "#000000",
+      calloutBgFun: "#F5E0FF", calloutInkFun: "#000000", badgeBg: "#000000", badgeInk: "#FFF8E1", blockquoteRule: "#0033CC",
+      activityCardBg: "#FFF0C2", activityCardInk: "#000000", speechBubbleStroke: "#000000", checkBadgeBg: "#000000", checkBadgeInk: "#FFFFFF",
+    },
+    fonts: { heading: "'Atkinson Hyperlegible', sans-serif", body: "'Atkinson Hyperlegible', sans-serif" },
+    design: { title: "underline", frame: "square", callout: "outline" },
+  },
 ];
 
 /** Default theme for newly-created decks. Paper matches the textbook feel of
@@ -1066,9 +1302,12 @@ export function themeDesign(theme: SlideshowTheme): ThemeDesign {
   return { ...FAMILY_DESIGN[theme.family], ...theme.design };
 }
 
-/** Themes in a family, designed ones first and subject ones last. */
+/** The themes a teacher can pick: all but the retired ones. */
+export const PICKER_THEMES: SlideshowTheme[] = SLIDESHOW_THEMES.filter((t) => !t.retired);
+
+/** Pickable themes in a family, designed ones first and art ones last. */
 export function getThemesByFamily(family: ThemeFamily): SlideshowTheme[] {
-  const inFamily = SLIDESHOW_THEMES.filter((t) => t.family === family);
+  const inFamily = PICKER_THEMES.filter((t) => t.family === family);
   const designed = inFamily.filter((t) => !t.backgroundArt);
   const art = inFamily.filter((t) => !!t.backgroundArt);
   return [...designed, ...art];
