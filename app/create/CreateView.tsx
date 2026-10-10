@@ -11,7 +11,6 @@ import GenerateModal, {
 import ComprehensionForm from "@/app/components/forms/ComprehensionForm";
 import { JoActivityProvider } from "@/app/lib/JoActivityContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
-import AskJoPanel from "@/app/components/guest/AskJoPanel";
 import AuthGateModal from "@/app/components/guest/AuthGateModal";
 import GuestResult from "@/app/components/guest/GuestResult";
 import LandingNav from "@/app/components/landing/v2/LandingNav";
@@ -34,11 +33,6 @@ const Editor = dynamic(() => import("@/app/components/editor/Editor"), {
     </div>
   ),
 });
-
-// Ask Jo is off on the free tries while it is reworked. Jo still reads the
-// topic and fills the form; only the chat beside it is hidden. Flip this back
-// to show the panel again.
-const SHOW_ASK_JO = false;
 
 interface RecentRun {
   id: string;
@@ -140,15 +134,6 @@ export default function CreateView({
     };
   }, [tool, topic, restored]);
 
-  // ── What the form says right now ─────────────────────────────────────────
-  // Kept in a ref (no renders) from the wizard's and the form's own reports,
-  // and sent with every Ask Jo message so Jo works from the real topic and
-  // values instead of guessing, and only changes what it is asked to.
-  const formNow = useRef<Record<string, unknown>>({});
-  const onSnapshot = useCallback((s: object) => {
-    formNow.current = s as Record<string, unknown>;
-  }, []);
-
   // ── Slides ───────────────────────────────────────────────────────────────
   // The wizard applies a new prefill in place (see GenerateModal), so a fill
   // from Ask Jo changes only what Jo sent.
@@ -211,49 +196,17 @@ export default function CreateView({
 
   const restoredText = typeof restored?.output?.text === "string" ? (restored.output.text as string) : null;
 
-  const onJoPrefill = useCallback(
-    (p: ToolPrefill) => {
-      // Jo's fields laid over what the form already says. The comprehension
-      // form clears any prefillable field a new prefill leaves out, so without
-      // this "make it Year 6" would also have emptied the topic.
-      const now = formNow.current;
-      const keep: Record<string, unknown> = {};
-      for (const key of [
-        "topic",
-        "year",
-        "yearGroup",
-        "curriculum",
-        "slideCount",
-        "additionalInstructions",
-        "numQuestions",
-        "complexity",
-        "differentiate",
-        "differentiationLevels",
-      ]) {
-        const v = now[key];
-        if (v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)) keep[key] = v;
-      }
-      const words = Number(now.passageWordCount);
-      if (Number.isFinite(words) && words > 0) keep.passageWordCount = words;
-      if (now.textSource === "own") delete keep.topic;
-      setPrefill(validatePrefill({ slug: tool, fields: { ...keep, ...p.fields } }) ?? p);
-    },
-    [tool],
+  // The free try Ask Jo edits: the reopened one, or the one just generated
+  // (its id comes back with the stream).
+  const [compTrialId, setCompTrialId] = useState<string | null>(restored?.id ?? null);
+  const guestJo = useMemo(
+    () => ({
+      trialId: compTrialId,
+      honeypot: () => honeypot.current?.value ?? "",
+      onSignUp: () => openGate("more", "Sign up free to keep editing with Jo. Your comprehension comes with you."),
+    }),
+    [compTrialId, openGate],
   );
-
-  const joIntro =
-    tool === "slideshow"
-      ? "Hi, I'm Jo. I have filled in what I could from your topic. Change anything you like, or ask me, then press Generate on the last step."
-      : "Hi, I'm Jo. I have filled in what I could from your topic. Pick the question types you want, or ask me, then press Generate.";
-
-  const sidePanel = SHOW_ASK_JO ? (
-    <AskJoPanel
-      tool={tool}
-      intro={joIntro}
-      onPrefill={onJoPrefill}
-      getContext={() => formNow.current}
-    />
-  ) : null;
 
   const other = tool === "slideshow" ? "comp" : "slides";
 
@@ -317,7 +270,7 @@ export default function CreateView({
         />
 
         {tool === "slideshow" ? (
-          <div className={sidePanel ? styles.grid : undefined}>
+          <div>
             <main className={styles.main}>
               {reading ? (
                 <div className={styles.reading} role="status">
@@ -335,19 +288,17 @@ export default function CreateView({
                     variant="page"
                     guest
                     prefill={slidePrefill}
-                    onSnapshot={onSnapshot}
                     onClose={() => router.push("/")}
                     onSubmit={startDeck}
                   />
                 </>
               )}
             </main>
-            {sidePanel}
           </div>
         ) : restoredText ? (
           <div className={styles.grid}>
             <main className={styles.main}>
-              <GuestResult result={restoredText} isGenerating={false} onAction={(a) => openGate(a)} />
+              <GuestResult result={restoredText} isGenerating={false} onAction={(a) => openGate(a)} jo={guestJo} />
             </main>
           </div>
         ) : reading ? (
@@ -360,15 +311,15 @@ export default function CreateView({
             {/* No key: a new prefill from Ask Jo is applied by useToolLaunch
                 over the live form, which keeps a passage already written. */}
             <ComprehensionForm
-              sidebar={sidePanel}
+              sidebar={null}
               launch={launch}
               guest={{
                 endpoint: "/api/try/comprehension",
-                onSnapshot,
                 extraBody: () => ({ website: honeypot.current?.value ?? "" }),
                 onRefused: (_status, data) => openGate("more", data.error ?? null),
+                onStarted: setCompTrialId,
                 renderResult: ({ result, isGenerating }) => (
-                  <GuestResult result={result} isGenerating={isGenerating} onAction={(a) => openGate(a)} />
+                  <GuestResult result={result} isGenerating={isGenerating} onAction={(a) => openGate(a)} jo={guestJo} />
                 ),
               }}
             />

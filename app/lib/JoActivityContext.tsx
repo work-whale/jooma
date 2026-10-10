@@ -14,6 +14,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -166,6 +167,17 @@ export function JoActivityProvider({ children }: { children: React.ReactNode }) 
 
   const dismiss = useCallback(() => setStatus("done"), []);
   const accept = useCallback(() => setStatus("done"), []);
+
+  // Pressing the form's own Generate answers the panel's question, so the
+  // panel goes. Left up, it sat over the result, where Ask Jo now lives.
+  useEffect(() => {
+    if (status === "idle" || status === "filling") return;
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as Element | null)?.closest?.("[data-jo-generate]")) setStatus("idle");
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [status]);
 
   const publisher = useMemo<JoActivityPublisher>(
     () => ({ begin, advance, finish, abort, onStop }),

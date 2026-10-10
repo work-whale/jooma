@@ -102,9 +102,12 @@ export interface SheetDocumentProps {
   fit?: boolean;
   /** Drawn for a PDF or Print: square corners, no shadow. */
   exporting?: boolean;
+  /** The piece Jo is working on, ringed and labelled. Its key is the piece's
+   *  `data-jo`: "head", "intro", "sh:<sectionId>" or a block id. */
+  joFocus?: { key: string; label: string } | null;
 }
 
-export default function SheetDocument({ doc, edit = false, onChange, streaming = false, anchors = true, fit = true, exporting = false }: SheetDocumentProps) {
+export default function SheetDocument({ doc, edit = false, onChange, streaming = false, anchors = true, fit = true, exporting = false, joFocus = null }: SheetDocumentProps) {
   const editing = edit && !streaming && !!onChange;
   const theme = getSheetTheme(doc.design.themeId);
   const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
@@ -441,12 +444,29 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
 
   // ── Drawing ─────────────────────────────────────────────────────────────
 
+  // Jo's ring and label, on the live pages only: the measuring copy must be
+  // identical whatever Jo is doing, or the page breaks would move. The label
+  // is absolutely placed, so the ring changes no heights either.
+  const joMark = (key: string, live: boolean) => {
+    if (!live) return {};
+    const active = joFocus?.key === key;
+    return { "data-jo": key, ...(active ? { "data-jo-active": "" } : {}) };
+  };
+  const joLabel = (key: string, live: boolean) =>
+    live && joFocus?.key === key && joFocus.label ? (
+      <span className="js-jo-label" role="status">
+        <i aria-hidden="true">J</i>
+        {joFocus.label}
+      </span>
+    ) : null;
+
   const drawPassage = (blockId: string, from: number, to: number, live: boolean) => {
     const entry = passageTools.get(blockId);
     if (!entry) return null;
     const { block, tools, patch } = entry;
     return (
-      <div className="js-block" key={`${blockId}:${from}`} data-block="passage">
+      <div className="js-block" key={`${blockId}:${from}`} data-block="passage" {...(from === 0 ? joMark(blockId, live) : {})}>
+        {from === 0 && joLabel(blockId, live)}
         {live && editing && from === 0 && tools}
         <PassageView
           title={block.title}
@@ -466,7 +486,12 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     for (let k = 0; k < indices.length; k++) {
       const u = units[indices[k]];
       if (!u.para) {
-        out.push(<div key={u.key}>{u.render?.(true)}</div>);
+        out.push(
+          <div key={u.key} {...joMark(u.key, true)}>
+            {joLabel(u.key, true)}
+            {u.render?.(true)}
+          </div>,
+        );
         continue;
       }
       let end = k;

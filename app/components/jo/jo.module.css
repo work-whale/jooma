@@ -1,0 +1,791 @@
+/* Ask Jo, the editor panel. Jooma tokens only (globals.css :root). */
+
+.dock {
+  /* Clears the result panels' sticky header (lg:top-8 plus its own height). */
+  --jo-top: 112px;
+  position: sticky;
+  top: var(--jo-top);
+  align-self: flex-start;
+  flex: none;
+  width: 360px;
+  height: min(calc(100vh - var(--jo-top) - 24px), 780px);
+  display: flex;
+  flex-direction: column;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  box-shadow: 0 10px 30px rgba(58, 28, 143, 0.08);
+  overflow: hidden;
+  font-family: var(--font-secondary);
+  color: var(--j-body);
+  transition: width 0.25s var(--j-ease);
+}
+
+.dock[data-open="false"] {
+  width: 56px;
+}
+
+/* ── The slim strip when minimised ─────────────────────────────────────── */
+
+.rail {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  height: 100%;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  width: 100%;
+  color: var(--j-deep);
+}
+
+.dock[data-open="false"] .rail {
+  display: flex;
+}
+
+.dock[data-open="false"] .body {
+  display: none;
+}
+
+.railLabel {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font: 700 12px/1 var(--font-primary);
+  letter-spacing: 0.04em;
+  color: var(--j-deep);
+}
+
+.unread {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--j-orange);
+  box-shadow: 0 0 0 3px var(--j-card);
+}
+
+/* ── Jo's mark ─────────────────────────────────────────────────────────── */
+
+.orb {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--j-deep);
+  color: #fff;
+  position: relative;
+}
+
+.orb svg {
+  width: 17px;
+  height: 17px;
+}
+
+.orbSmall {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+}
+
+.orbSmall svg {
+  width: 13px;
+  height: 13px;
+}
+
+.orb[data-busy="true"]::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  border: 2px solid var(--j-lilac);
+  animation: jo-pulse 1.4s var(--j-ease) infinite;
+}
+
+@keyframes jo-pulse {
+  0% { opacity: 0.9; transform: scale(0.92); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+
+/* ── Open panel ────────────────────────────────────────────────────────── */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  border-bottom: 1px solid var(--j-line);
+  background: linear-gradient(180deg, var(--j-tint) 0%, var(--j-card) 100%);
+}
+
+.headText {
+  min-width: 0;
+  flex: 1;
+}
+
+.headText b {
+  display: block;
+  font: 700 14px/1.2 var(--font-primary);
+  color: var(--j-ink);
+}
+
+.headText span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--j-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iconBtn {
+  all: unset;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--j-muted);
+  cursor: pointer;
+  flex: none;
+}
+
+.iconBtn:hover {
+  background: var(--j-tint-2);
+  color: var(--j-deep);
+}
+
+.iconBtn:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 1px;
+}
+
+.iconBtn[aria-pressed="true"] {
+  background: var(--j-tint-2);
+  color: var(--j-purple);
+}
+
+.iconBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.iconBtn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 14px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────── */
+
+.hello {
+  margin: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hello p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--j-body);
+}
+
+.hello p b {
+  font-family: var(--font-primary);
+  color: var(--j-ink);
+}
+
+.starters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.starter {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 9px 12px;
+  border-radius: var(--j-r);
+  background: var(--j-bg);
+  border: 1px solid var(--j-line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--j-deep);
+  text-align: left;
+}
+
+.starter:hover {
+  border-color: var(--j-lilac);
+  background: var(--j-tint);
+}
+
+.starter:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Messages ──────────────────────────────────────────────────────────── */
+
+.user {
+  align-self: flex-end;
+  max-width: 86%;
+  padding: 9px 12px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--j-purple);
+  color: #fff;
+  font-size: 13.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.jo {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.joBody {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.joText {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--j-body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.joError {
+  margin: 0;
+  font-size: 13px;
+  color: #B42318;
+}
+
+.thinking {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.thinking i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--j-lilac-2);
+  animation: jo-dot 1.1s ease-in-out infinite;
+}
+
+.thinking i:nth-child(2) { animation-delay: 0.15s; }
+.thinking i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes jo-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+
+.msgTools {
+  display: flex;
+  gap: 2px;
+  margin-top: -2px;
+}
+
+.msgTools .iconBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.msgTools .iconBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Changes card ──────────────────────────────────────────────────────── */
+
+.changes {
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r);
+  background: var(--j-bg);
+  overflow: hidden;
+}
+
+.changesHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 10px;
+}
+
+.changesToggle {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 12.5px/1 var(--font-primary);
+  color: var(--j-deep);
+  flex: 1;
+}
+
+.changesToggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.undo {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--j-purple);
+  padding: 5px 9px;
+  border-radius: var(--j-pill);
+  background: var(--j-card);
+  border: 1px solid var(--j-line-2);
+}
+
+.undo:hover {
+  border-color: var(--j-purple);
+}
+
+.undo svg {
+  width: 13px;
+  height: 13px;
+}
+
+.undone {
+  font-size: 12px;
+  color: var(--j-muted);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0 6px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  color: var(--j-body);
+}
+
+button.step {
+  cursor: pointer;
+}
+
+button.step:hover {
+  background: var(--j-tint);
+  color: var(--j-deep);
+}
+
+.step svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.step[data-state="working"] {
+  color: var(--j-deep);
+  font-weight: 600;
+}
+
+.step[data-state="done"] svg {
+  color: #12805C;
+}
+
+.step[data-state="skipped"] {
+  color: var(--j-faint);
+  text-decoration: line-through;
+}
+
+.stepGo {
+  margin-left: auto;
+  color: var(--j-faint);
+}
+
+.spin {
+  animation: jo-spin 0.9s linear infinite;
+}
+
+@keyframes jo-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Follow up question ────────────────────────────────────────────────── */
+
+.ask {
+  border: 1px solid var(--j-lilac);
+  background: var(--j-tint);
+  border-radius: var(--j-r);
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ask p {
+  margin: 0;
+  font: 700 13px/1.4 var(--font-primary);
+  color: var(--j-ink);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.option {
+  all: unset;
+  cursor: pointer;
+  padding: 6px 11px;
+  border-radius: var(--j-pill);
+  border: 1px solid var(--j-line-2);
+  background: var(--j-card);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--j-purple);
+}
+
+.option:hover {
+  border-color: var(--j-purple);
+}
+
+.option[aria-pressed="true"] {
+  background: var(--j-purple);
+  border-color: var(--j-purple);
+  color: #fff;
+}
+
+.option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.askFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--j-muted);
+}
+
+.askSend {
+  all: unset;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--j-pill);
+  background: var(--j-deep);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.askSend:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Composer ──────────────────────────────────────────────────────────── */
+
+.composer {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--j-line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border: 1.5px solid var(--j-line-2);
+  border-radius: 16px;
+  background: var(--j-card);
+}
+
+.inputRow:focus-within {
+  border-color: var(--j-purple);
+  box-shadow: 0 0 0 3px var(--j-tint-2);
+}
+
+.input {
+  all: unset;
+  flex: 1;
+  min-height: 22px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 5px 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--j-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.input::placeholder {
+  color: var(--j-faint);
+}
+
+.send {
+  all: unset;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--j-purple);
+  color: #fff;
+  cursor: pointer;
+}
+
+.send:disabled {
+  background: var(--j-line-2);
+  cursor: not-allowed;
+}
+
+.send[data-stop="true"] {
+  background: var(--j-ink);
+}
+
+.send svg {
+  width: 16px;
+  height: 16px;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--j-faint);
+}
+
+.meta b {
+  color: var(--j-purple);
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--j-muted);
+}
+
+.signup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--j-r);
+  background: var(--j-deep);
+  color: #fff;
+}
+
+.signup p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.signup b {
+  font-family: var(--font-primary);
+  font-size: 14px;
+}
+
+.signup button {
+  all: unset;
+  cursor: pointer;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: var(--j-pill);
+  background: #fff;
+  color: var(--j-deep);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── In the slides editor: a full height column beside the canvas ─────── */
+
+.dock[data-variant="editor"] {
+  position: relative;
+  top: 0;
+  align-self: stretch;
+  height: auto;
+  border-radius: 0;
+  border-width: 0 0 0 1px;
+  box-shadow: none;
+}
+
+/* ── On the slide canvas: Jo's ring around what it is changing ─────────── */
+
+.canvasRing {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--j-mid), 0 0 0 8px rgba(139, 106, 232, 0.22);
+  background: rgba(241, 236, 252, 0.18);
+  transition: left 0.3s var(--j-ease), top 0.3s var(--j-ease), width 0.3s var(--j-ease), height 0.3s var(--j-ease);
+}
+
+.canvasRing[data-whole="true"] {
+  border-radius: 4px;
+  background: none;
+  box-shadow: 0 0 0 3px var(--j-mid), 0 0 0 10px rgba(139, 106, 232, 0.2);
+}
+
+.canvasLabel {
+  position: absolute;
+  top: -15px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+  padding: 3px 11px 3px 3px;
+  border-radius: var(--j-pill);
+  background: var(--j-deep);
+  color: #fff;
+  font: 600 12px/1.2 var(--font-secondary);
+  box-shadow: 0 4px 12px rgba(58, 28, 143, 0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canvasLabel i {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  background: var(--j-purple);
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ── The floating button on small screens ──────────────────────────────── */
+
+.fab {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .dock,
+  .dock[data-open="false"],
+  .dock[data-variant="editor"] {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: auto;
+    height: min(78vh, 640px);
+    border-width: 1px;
+    border-radius: var(--j-r-xl) var(--j-r-xl) 0 0;
+    box-shadow: 0 -12px 40px rgba(29, 23, 48, 0.22);
+    transform: translateY(0);
+    transition: transform 0.28s var(--j-ease);
+  }
+
+  .dock[data-open="false"] {
+    transform: translateY(105%);
+    visibility: hidden;
+  }
+
+  .dock[data-open="false"] .rail {
+    display: none;
+  }
+
+  .fab {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 59;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 8px 8px;
+    border: 0;
+    border-radius: var(--j-pill);
+    background: var(--j-deep);
+    color: #fff;
+    font: 700 14px/1 var(--font-primary);
+    box-shadow: 0 10px 26px rgba(58, 28, 143, 0.32);
+    cursor: pointer;
+  }
+
+  .fab .orb {
+    background: var(--j-purple);
+  }
+
+  .fab[hidden] {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock,
+  .dock[data-open="false"] {
+    transition: none;
+  }
+  .orb[data-busy="true"]::after,
+  .thinking i,
+  .spin {
+    animation: none;
+  }
+  .canvasRing {
+    transition: none;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, TopicField, LessonCountField, AnswerTypeField } from "@/app/components/fields";
 import { toTitleCase } from "@/app/lib/formOptions";
@@ -15,6 +15,7 @@ import Card from "@/app/components/ui/Card";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import { saveToolRun, type ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
+import { useListJoPanel } from "@/app/components/jo/useListJoPanel";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 
 const TOOL_SLUG = "quiz-generator";
@@ -493,6 +494,27 @@ export default function QuizGeneratorForm({
     setQuestions((prev) => prev.filter((_, idx) => idx !== i));
   };
 
+  // ── Ask Jo ──
+  // Jo's turn is saved the way a refine is: as a new run in the history.
+  const quizListRef = useRef<HTMLDivElement>(null);
+  const [joOpenSignal, setJoOpenSignal] = useState(0);
+  const [joWasGenerating, setJoWasGenerating] = useState(isGenerating);
+  if (isGenerating !== joWasGenerating) {
+    setJoWasGenerating(isGenerating);
+    if (!isGenerating) setJoOpenSignal((n) => n + 1);
+  }
+  const jo = useListJoPanel<QuizQuestion>({
+    tool: "quiz",
+    values: questions,
+    commit: (next) => {
+      setQuestions(next);
+      persist(next);
+    },
+    containerRef: quizListRef,
+    disabled: isGenerating || isRefining || isAdding ? "Jo can help as soon as this is finished" : null,
+    openSignal: joOpenSignal,
+  });
+
   const handleGenerate = async () => {
     setError(null);
     setIsGenerating(true);
@@ -663,7 +685,8 @@ export default function QuizGeneratorForm({
 
       {/* Results panel */}
       {questions.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6">
+        <div className="flex items-start gap-4">
+        <div className="flex-1 min-w-0 bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900">My results</h2>
@@ -674,16 +697,18 @@ export default function QuizGeneratorForm({
             <DownloadDropdown questions={questions} subject={subject} topic={topic} />
           </div>
 
-          <div className="space-y-4">
-            {questions.map((q, i) => (
-              <QuizCard
-                key={i}
-                question={q}
-                index={i}
-                onChange={(updated) => updateQuestion(i, updated)}
-                onRemove={() => removeQuestion(i)}
-              />
+          <div ref={quizListRef} className={`relative space-y-4${jo.joBusy ? " pointer-events-none" : ""}`}>
+            {jo.shown.map((q, i) => (
+              <div key={i} data-jo-item={i}>
+                <QuizCard
+                  question={q}
+                  index={i}
+                  onChange={(updated) => updateQuestion(i, updated)}
+                  onRemove={() => removeQuestion(i)}
+                />
+              </div>
             ))}
+            {jo.overlay}
           </div>
 
           {/* Add buttons */}
@@ -713,6 +738,8 @@ export default function QuizGeneratorForm({
           <div className="flex justify-end pt-2">
             <DownloadDropdown questions={questions} subject={subject} topic={topic} />
           </div>
+        </div>
+        {jo.panel}
         </div>
       )}
 

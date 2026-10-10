@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { History, Trash2, Loader2 } from "lucide-react";
 import Card from "@/app/components/ui/Card";
 import { listToolRuns, deleteToolRun, type ToolRun } from "@/app/lib/toolRuns";
+import { usePublishRestoredRun } from "@/app/lib/RestoredRunContext";
 
 interface ToolHistoryPanelProps {
   toolSlug: string;
@@ -33,6 +34,7 @@ export default function ToolHistoryPanel({
   const [runs, setRuns] = useState<ToolRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const publishRestored = usePublishRestoredRun();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -95,7 +97,10 @@ export default function ToolHistoryPanel({
               <div className="group flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-(--j-tint) transition-colors">
                 <button
                   type="button"
-                  onClick={() => onRestore(run)}
+                  onClick={() => {
+                    onRestore(run);
+                    publishRestored(run.id);
+                  }}
                   className="min-w-0 flex-1 text-left cursor-pointer"
                 >
                   <p className="text-sm font-medium text-gray-800 truncate">

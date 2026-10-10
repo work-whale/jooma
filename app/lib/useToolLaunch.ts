@@ -23,6 +23,7 @@ import { getToolRun, type ToolRun } from "@/app/lib/toolRuns";
 import { decodePrefill } from "@/app/lib/toolPrefill";
 import { assistantToolFor } from "@/app/lib/assistant-tools";
 import { usePrefersReducedMotion } from "@/app/lib/usePrefersReducedMotion";
+import { usePublishRestoredRun } from "@/app/lib/RestoredRunContext";
 import { useJoActivityPublisher } from "@/app/lib/JoActivityContext";
 import {
   buildFillPlan,
@@ -117,6 +118,12 @@ export function useToolLaunch(opts: {
 
   const reducedMotion = usePrefersReducedMotion();
   const publisher = useJoActivityPublisher();
+  // Tells the result panel which run it is now showing (RestoredRunContext).
+  const publishRestored = usePublishRestoredRun();
+  const publishRestoredRef = useRef(publishRestored);
+  useEffect(() => {
+    publishRestoredRef.current = publishRestored;
+  });
 
   // ?run= wins when both are present: a saved run is a real artefact, a prefill
   // is only a suggestion about one that does not exist yet.
@@ -145,6 +152,7 @@ export function useToolLaunch(opts: {
         if (appliedRun.current === runId) return;
         appliedRun.current = runId;
         ref.current.onRestore(run);
+        publishRestoredRef.current(run.id);
       } catch {
         /* Same outcome as not found. */
       }

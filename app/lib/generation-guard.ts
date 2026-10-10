@@ -141,6 +141,10 @@ const COST_BEARING_PATHS: ReadonlySet<string> = new Set([
   // and the assistant is additionally gated in proxy.ts via can(plan,
   // "assistant").
   "/api/assistant",
+  // Jo editing a resource, and reading a reply aloud. Same reasoning as the
+  // assistant: real spend, not a new resource.
+  "/api/jo",
+  "/api/jo/speak",
   "/api/modify",
   "/api/generate",
   "/api/generate-image",
@@ -194,11 +198,12 @@ export function toolSlugFor(method: string, pathname: string): string | null {
 // Paths the assistant owns, page and API. Checked against can(plan, "assistant")
 // before the spend gates, because a plan that cannot use the feature at all
 // should not cost a gate round-trip to refuse.
-const ASSISTANT_API = "/api/assistant";
+// Jo's in-place edits and its voice are the same feature, so the same plan.
+const ASSISTANT_APIS: ReadonlySet<string> = new Set(["/api/assistant", "/api/jo", "/api/jo/speak"]);
 
 /** True when this request targets the assistant API. */
 export function isAssistantRequest(method: string, pathname: string): boolean {
-  return method === "POST" && pathname === ASSISTANT_API;
+  return method === "POST" && ASSISTANT_APIS.has(pathname);
 }
 
 export type QuotaBlockReason =

@@ -463,6 +463,8 @@ function TextElement({ text, selected, zoom, onSelect, onUpdate, onCommit, onSna
   return (
     <div
       ref={containerRef}
+      // Lets Ask Jo find this box on the canvas to ring it while it edits.
+      data-text-id={text.id}
       style={{
         position: "absolute",
         left: text.x,

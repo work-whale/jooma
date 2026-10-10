@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Download, Loader2, Maximize2, Printer } from "lucide-react";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
 import { parseSheet } from "@/app/lib/sheets/normalize";
 import type { SheetDoc } from "@/app/lib/sheets/types";
 import type { GuestAction } from "@/app/lib/guest-actions";
+import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
 import styles from "./guest.module.css";
 
 /**
@@ -18,10 +19,14 @@ export default function GuestResult({
   result,
   isGenerating,
   onAction,
+  jo,
 }: {
   result: string | null;
   isGenerating: boolean;
   onAction: (action: GuestAction) => void;
+  /** Ask Jo on this free try: the trial row it edits, the page's honeypot,
+   *  and the sign up prompt for when the free messages run out. */
+  jo: { trialId: string | null; honeypot: () => string; onSignUp: () => void };
 }) {
   // Scrolling, the same as the signed in result panel (ResultPanel.tsx): follow
   // the passage down the page while it streams, unless the visitor has
@@ -78,6 +83,26 @@ export default function GuestResult({
   const [edited, setEdited] = useState<{ base: string | null; doc: SheetDoc } | null>(null);
   const shownSheet = edited && edited.base === result ? edited.doc : sheet;
 
+  // ── Ask Jo ──
+  // Jo's edits land in the same visit-only state as the visitor's own, and
+  // the panel opens itself once the comprehension has finished.
+  const pagesRef = useRef<HTMLDivElement>(null);
+  const commit = useCallback((doc: SheetDoc) => setEdited({ base: result, doc }), [result]);
+  const [openSignal, setOpenSignal] = useState(0);
+  const [wasGenerating, setWasGenerating] = useState(isGenerating);
+  if (isGenerating !== wasGenerating) {
+    setWasGenerating(isGenerating);
+    if (!isGenerating) setOpenSignal((n) => n + 1);
+  }
+  const ask = useSheetJoPanel({
+    doc: shownSheet,
+    commit,
+    containerRef: pagesRef,
+    guest: jo,
+    disabled: isGenerating ? "Jo can help as soon as this is finished" : null,
+    openSignal,
+  });
+
   if (result === null) return null;
   const ready = !isGenerating && result.trim().length > 0;
 
@@ -116,13 +141,17 @@ export default function GuestResult({
         </div>
       </header>
       {shownSheet ? (
-        <div className="bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
-          <SheetDocument
-            doc={shownSheet}
-            edit={ready}
-            streaming={isGenerating}
-            onChange={(doc) => setEdited({ base: result, doc })}
-          />
+        <div className="flex gap-4 bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
+          <div className="flex-1 min-w-0" ref={pagesRef}>
+            <SheetDocument
+              doc={ask.shown ?? shownSheet}
+              edit={ready && !ask.joBusy}
+              streaming={isGenerating}
+              onChange={commit}
+              joFocus={ask.joFocus}
+            />
+          </div>
+          {ask.panel}
         </div>
       ) : (
         <div className={styles.resultBody}>

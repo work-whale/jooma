@@ -98,6 +98,38 @@ async function stubGuestApi(page: Page, opts: { prefill?: string | null; deckSta
   return calls;
 }
 
+const TRIAL_ID = "22222222-3333-4444-8555-666666666666";
+
+/** A comprehension free try, streamed as a sheet, with Jo's form fill. */
+async function stubComprehension(page: Page) {
+  await page.route("**/api/try/prefill", (route) =>
+    route.fulfill({
+      json: {
+        prefill: encodePrefill({
+          slug: "comprehension-generator",
+          fields: { topic: "Why do bees matter?", yearGroup: "Year 4", curriculum: "2014 National Curriculum" },
+        }),
+      },
+    }),
+  );
+  await page.route("**/api/try/comprehension", (route) =>
+    route.fulfill({
+      status: 200,
+      headers: { "content-type": "text/plain; charset=utf-8", "x-trial-id": TRIAL_ID },
+      body: JSON.stringify({
+        title: "Why do bees matter?",
+        objective: "",
+        intro: { variant: "fact", label: "", text: "", emoji: "" },
+        sections: [
+          { title: "Read the text", emoji: "📖", instructions: "", blocks: [{ type: "passage", title: "Busy bees", paragraphs: ["Bees carry pollen from flower to flower."] }] },
+          { title: "Retrieval", emoji: "🔎", instructions: "", blocks: [{ type: "short", prompt: "What do bees carry?", quote: "", lines: 2, answer: "Pollen", marks: 1, domain: "2b" }] },
+        ],
+        teacherNotes: [],
+      }),
+    }),
+  );
+}
+
 test.describe("signed out", () => {
   test("the hero box opens /create with the tool and topic", async ({ page }) => {
     await stubGuestApi(page);
@@ -235,60 +267,140 @@ test.describe("signed out", () => {
     }
   });
 
-  test("Ask Jo is hidden on the free tries for now, on both tools", async ({ page }) => {
+  test("Ask Jo is not on the forms, only beside a finished comprehension, which opens it", async ({ page }) => {
     await stubGuestApi(page);
+    // Folded on an earlier visit: a finished generation opens it again.
+    await page.addInitScript(() => window.localStorage.setItem("jooma:jo-open", "0"));
 
     await page.goto("/create?tool=slides&topic=Volcanoes");
     await expect(page.locator('input[name="lesson-topic"]')).toHaveValue("Volcanoes", NAV);
-    await expect(page.getByTestId("ask-jo")).toHaveCount(0);
+    await expect(page.getByTestId("jo-panel")).toHaveCount(0);
 
-    await page.goto("/create?tool=comp&topic=Volcanoes");
-    await expect(page.locator("[data-jo-generate]")).toBeVisible(NAV);
-    await expect(page.getByTestId("ask-jo")).toHaveCount(0);
+    // Registered after the slides check: its prefill answers for the comprehension.
+    await stubComprehension(page);
+
+    await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
+    const generate = page.locator("[data-jo-generate]");
+    await expect(generate).toBeEnabled(NAV);
+    await expect(page.getByTestId("jo-panel")).toHaveCount(0);
+    await generate.click();
+
+    await expect(page.getByTestId("guest-result")).toContainText("Bees carry pollen", NAV);
+    await expect(page.getByTestId("jo-panel")).toHaveAttribute("data-open", "true");
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("3 free messages with Jo left");
+    // No voice on a free try: it is offered on sign up instead.
+    await expect(page.getByTestId("jo-voice-toggle")).toHaveCount(0);
   });
 
-  // Off while Ask Jo is hidden on /create (SHOW_ASK_JO in CreateView). Turn it
-  // back on with the panel.
-  test.skip("Ask Jo edits the slides wizard in place and knows the topic (regression)", async ({ page }) => {
-    // Jo used to see only the chat (so it asked for a topic, with chips for
-    // unrelated ones), and its update remounted the wizard. Now the page sends
-    // what the form says, and Jo's fields land without disturbing the rest.
-    await stubGuestApi(page, {
-      prefill: encodePrefill({ slug: "slideshow", fields: { topic: "Recycling and sustainability", year: "Year 5" } }),
-    });
-    let sent: Record<string, unknown> | null = null;
-    await page.route("**/api/try/assistant", (route) => {
-      sent = route.request().postDataJSON();
-      const header = Buffer.from(
-        JSON.stringify({ slug: "slideshow", fields: { year: "Year 6", slideCount: 10 } }),
-        "utf8",
-      ).toString("base64");
+  test("a visitor gets three messages with Jo per comprehension, then the sign up card", async ({ page }) => {
+    await stubGuestApi(page);
+    await stubComprehension(page);
+
+    const bodies: Record<string, unknown>[] = [];
+    await page.route("**/api/try/jo**", (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { left: 3 } });
+      bodies.push(route.request().postDataJSON());
+      const n = bodies.length;
+      const body =
+        n === 1
+          ? { reply: "Which part?", clarify: { question: "What should change?", options: ["The passage", "The questions"], multi: false }, ops: [], summary: "" }
+          : { reply: "On it.", clarify: null, ops: [{ op: "setText", label: `Rewording question ${n}`, target: "s1b0.prompt", text: `What do bees carry, take ${n}?` }], summary: "Reworded." };
       return route.fulfill({
         status: 200,
-        headers: { "content-type": "text/plain; charset=utf-8", "x-assistant-tool": header },
-        body: "Done, Year 6 and 10 slides.",
+        headers: { "content-type": "text/plain; charset=utf-8", "x-jo-prompts-left": String(3 - n) },
+        body: JSON.stringify(body),
       });
     });
-    await page.goto("/create?tool=slides&topic=Recycling%20and%20sustainability%2C%20Year%205");
 
-    const topic = page.locator('input[name="lesson-topic"]');
-    await expect(topic).toHaveValue("Recycling and sustainability", NAV);
-    // Something the visitor typed themselves, which Jo must not wipe.
-    await page.locator('textarea[name="lesson-instructions"]').fill("Include a sorting activity.");
+    await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
+    await page.locator("[data-jo-generate]").click({ timeout: 120_000 });
+    const result = page.getByTestId("guest-result");
+    await expect(result).toContainText("Bees carry pollen", NAV);
 
-    await page.getByLabel("Message Jo").fill("change to year 6 and 10 slides");
-    await page.getByRole("button", { name: "Send" }).click();
+    // 1: a question back. Answering it is the second message.
+    await page.getByTestId("jo-input").fill("change it");
+    await page.getByTestId("jo-send").click();
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("2 free messages", NAV);
+    await page.getByTestId("jo-question").getByRole("button", { name: "The questions" }).click();
+    await expect(result).toContainText("What do bees carry, take 2?", NAV);
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("1 free message ");
 
-    await expect(page.getByRole("button", { name: /Year 6/ }).first()).toBeVisible(NAV);
-    await expect(page.getByRole("button", { name: /10 slides/ }).first()).toBeVisible();
-    await expect(topic).toHaveValue("Recycling and sustainability");
-    await expect(page.locator('textarea[name="lesson-instructions"]')).toHaveValue("Include a sorting activity.");
+    // 3: the last one, then the card in place of the box.
+    await page.getByTestId("jo-input").fill("again please");
+    await page.getByTestId("jo-send").click();
+    await expect(result).toContainText("What do bees carry, take 3?", NAV);
+    await expect(page.getByTestId("jo-signup")).toBeVisible();
+    await expect(page.getByTestId("jo-input")).toHaveCount(0);
+    // What was done stays readable above it.
+    await expect(page.getByTestId("jo-changes")).toHaveCount(2);
 
-    // What Jo was told: the wizard's real values.
-    expect(sent).toMatchObject({
-      guestTool: "slideshow",
-      context: { topic: "Recycling and sustainability", year: "Year 5" },
+    // Every message carried the free try and the honeypot, and the sheet.
+    for (const b of bodies) {
+      expect(b).toMatchObject({ kind: "sheet", trialId: TRIAL_ID, website: "" });
+    }
+
+    await page.getByTestId("jo-signup").getByRole("button", { name: "Sign up free" }).click();
+    await expect(page.getByTestId("auth-gate")).toContainText("keep editing with Jo");
+  });
+
+  test("in the guest editor, Jo edits the deck on the page and the free try saves it", async ({ page }) => {
+    const calls = await stubGuestApi(page);
+    const bodies: Record<string, unknown>[] = [];
+    await page.route("**/api/try/jo**", (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { left: 3 } });
+      const body = route.request().postDataJSON() as { snapshot: { slides: { id: string; texts?: { id: string }[] }[] } };
+      bodies.push(body as unknown as Record<string, unknown>);
+      const slide = body.snapshot.slides[0];
+      return route.fulfill({
+        status: 200,
+        headers: { "content-type": "text/plain; charset=utf-8", "x-jo-prompts-left": "2" },
+        body: JSON.stringify({
+          reply: "I'll make the title friendlier.",
+          clarify: null,
+          ops: [{ op: "setSlideText", label: "Rewording the title", slideId: slide.id, textId: slide.texts?.[0]?.id ?? "t1", text: "Volcanoes: Earth's fiery mountains" }],
+          summary: "The title is friendlier.",
+        }),
+      });
     });
+
+    await page.goto("/create?tool=slides&topic=Volcanoes");
+    await expect(page.locator('input[name="lesson-topic"]')).toHaveValue("Volcanoes", NAV);
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /Generate slideshow/ }).click();
+    await expect(page.locator("[data-text-id]").first()).toBeVisible(NAV);
+
+    const panel = page.getByTestId("jo-panel");
+    await expect(panel).toBeVisible();
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("3 free messages", NAV);
+    await page.getByTestId("jo-input").fill("Make the title friendlier");
+    await page.getByTestId("jo-send").click();
+
+    await expect(page.getByTestId("jo-canvas-focus")).toContainText("Rewording the title", NAV);
+    await expect(page.locator("[data-text-id]").filter({ hasText: "Volcanoes: Earth's fiery mountains" })).toBeVisible(NAV);
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("2 free messages", NAV);
+    expect(bodies[0]).toMatchObject({ kind: "slides", trialId: "11111111-2222-4333-8444-555555555555", website: "" });
+
+    // The free try keeps Jo's edit, through the editor's own save.
+    await expect
+      .poll(() => JSON.stringify(calls.finalize.at(-1) ?? {}).includes("Earth's fiery mountains"), NAV)
+      .toBe(true);
+  });
+
+  test("the server's limit shows the same card (regression)", async ({ page }) => {
+    await stubGuestApi(page);
+    await stubComprehension(page);
+    await page.route("**/api/try/jo**", (route) =>
+      route.request().method() === "GET"
+        ? route.fulfill({ json: { left: 1 } })
+        : route.fulfill({ status: 403, json: { error: "That's your free messages with Jo for this one.", code: "jo_trial_limit", left: 0 } }),
+    );
+    await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
+    await page.locator("[data-jo-generate]").click({ timeout: 120_000 });
+    await expect(page.getByTestId("jo-prompts-left")).toContainText("1 free message ", NAV);
+    await page.getByTestId("jo-input").fill("shorter please");
+    await page.getByTestId("jo-send").click();
+    await expect(page.getByTestId("jo-signup")).toBeVisible(NAV);
   });
 
   test("today's free tries used: the sign up prompt explains it", async ({ page }) => {

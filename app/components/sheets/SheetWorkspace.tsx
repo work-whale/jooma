@@ -23,6 +23,8 @@ import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
 import SheetDocument from "./SheetDocument";
 import SheetDesignPanel from "./SheetDesignPanel";
 import { exportSheetDocx, exportSheetPdf, printSheet } from "./sheetExport";
+import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
+import type { JoDocRef } from "@/app/lib/jo/threads";
 
 /*
  * A generated Worksheet or Comprehension, as the teacher works on it: the
@@ -50,6 +52,7 @@ export default function SheetWorkspace({
   saveState = "idle",
   maxWidth = true,
   panelRef,
+  joDocRef = null,
 }: {
   value: string;
   doc: SheetDoc;
@@ -60,8 +63,10 @@ export default function SheetWorkspace({
   saveState?: SaveState;
   maxWidth?: boolean;
   panelRef?: Ref<HTMLDivElement>;
+  /** The saved run, where the conversation with Jo is kept. */
+  joDocRef?: JoDocRef | null;
 }) {
-  const busy = isGenerating || isRefining;
+  const generating = isGenerating || isRefining;
 
   // ── Undo ────────────────────────────────────────────────────────────────
   // Whole serialised sheets: small, and a design change undoes as cleanly as
@@ -104,6 +109,25 @@ export default function SheetWorkspace({
     setPast((p) => [...p, value]);
     emit(next);
   };
+
+  // ── Ask Jo ──────────────────────────────────────────────────────────────
+  // Opens itself each time a generation finishes, the moment Jo can help.
+  const pagesRef = useRef<HTMLDivElement>(null);
+  const [openSignal, setOpenSignal] = useState(0);
+  const [wasGenerating, setWasGenerating] = useState(generating);
+  if (generating !== wasGenerating) {
+    setWasGenerating(generating);
+    if (!generating) setOpenSignal((n) => n + 1);
+  }
+  const jo = useSheetJoPanel({
+    doc,
+    commit,
+    containerRef: pagesRef,
+    docRef: joDocRef,
+    disabled: generating ? "Jo can help as soon as this is finished" : null,
+    openSignal,
+  });
+  const busy = generating || jo.joBusy;
 
   // Ctrl+Z and Ctrl+Shift+Z (or Ctrl+Y), except while typing in a field,
   // where the browser's own undo is the one that is wanted.
@@ -161,6 +185,8 @@ export default function SheetWorkspace({
     ? "Generating…"
     : isRefining
       ? "Refining…"
+      : jo.joBusy
+        ? "Jo is editing…"
       : saveState === "saving"
         ? "Saving…"
         : saveState === "saved"
@@ -224,15 +250,18 @@ export default function SheetWorkspace({
 
       {exportError && <p className="px-6 py-2 text-sm text-red-600 border-b border-gray-200">{exportError}</p>}
 
-      <div className="flex flex-col-reverse xl:flex-row gap-4 bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
-        <div className="flex-1 min-w-0">
-          <SheetDocument doc={doc} edit={!preview} onChange={commit} streaming={busy} />
-        </div>
-        {designOpen && !busy && (
-          <div className="xl:w-80 shrink-0 xl:sticky xl:top-32 xl:self-start">
-            <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={() => setDesignOpen(false)} />
+      <div className="flex gap-4 bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
+        <div className="flex-1 min-w-0 flex flex-col-reverse xl:flex-row gap-4">
+          <div className="flex-1 min-w-0" ref={pagesRef}>
+            <SheetDocument doc={jo.shown ?? doc} edit={!preview && !jo.joBusy} onChange={commit} streaming={generating} joFocus={jo.joFocus} />
           </div>
-        )}
+          {designOpen && !busy && (
+            <div className="xl:w-80 shrink-0 xl:sticky xl:top-32 xl:self-start">
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={() => setDesignOpen(false)} />
+            </div>
+          )}
+        </div>
+        {jo.panel}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { JoActivityProvider } from "@/app/lib/JoActivityContext";
+import { RestoredRunProvider } from "@/app/lib/RestoredRunContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -99,7 +100,7 @@ function ToolPageChrome({
           whole document — which is exactly the bug that let one click anywhere
           in the app cancel a fill. */}
       <div className="grow" data-jo-form="">
-        {children}
+        <RestoredRunProvider>{children}</RestoredRunProvider>
       </div>
       <JoActivityPanel />
     </JoActivityProvider>

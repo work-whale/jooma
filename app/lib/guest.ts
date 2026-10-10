@@ -231,6 +231,47 @@ export async function guestCallAllowed(
 
 export { hashIp };
 
+/**
+ * Use one of a free try's Jo prompts (or, with `refund`, give one back).
+ *
+ * Returns the count now used and the run id the spend is recorded against, or
+ * null when the limit is reached, the run is not this guest's, or the call
+ * failed. Failing closed: a database error must not become free model calls.
+ * See use_trial_jo_prompt in 20261010000000_jo_editor.sql.
+ */
+export async function spendTrialJoPrompt(
+  trialId: string,
+  guestId: string,
+  max: number,
+  refund = false,
+): Promise<{ used: number; runId: string } | null> {
+  const { data, error } = await supabaseAdmin.rpc("use_trial_jo_prompt", {
+    p_id: trialId,
+    p_guest: guestId,
+    p_max: max,
+    p_refund: refund,
+  });
+  if (error) {
+    console.warn("[guest] jo prompt count failed:", error.message);
+    return null;
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as { used?: number; run_id?: string } | undefined;
+  return row && typeof row.used === "number" && row.run_id ? { used: row.used, runId: row.run_id } : null;
+}
+
+/** How many Jo prompts this guest has used on one of their free tries, or null
+ *  when the run is not theirs. */
+export async function trialJoPromptsUsed(trialId: string, guestId: string): Promise<number | null> {
+  const { data, error } = await supabaseAdmin
+    .from("trial_generations")
+    .select("jo_prompts")
+    .eq("id", trialId)
+    .eq("guest_id", guestId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return Number((data as { jo_prompts?: number }).jo_prompts ?? 0);
+}
+
 export interface GuestRunSummary {
   id: string;
   tool: TrialTool;
