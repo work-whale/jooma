@@ -9,6 +9,7 @@ import { createClient } from "@/app/lib/auth/client";
 import {
   PENDING_ACTION_KEY,
   gateTitle,
+  guestNoun,
   type GuestAction,
   type GuestKind,
 } from "@/app/lib/guest-actions";
@@ -86,7 +87,7 @@ export default function AuthGateModal({
     window.location.assign(`/signup?email=${encodeURIComponent(value)}`);
   };
 
-  const what = kind === "slides" ? "deck" : "comprehension";
+  const what = guestNoun(kind);
 
   return (
     <Modal open={open} onClose={onClose} width="min(440px, 94vw)">

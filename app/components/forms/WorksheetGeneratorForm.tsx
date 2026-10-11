@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import {
   SubjectField,
@@ -25,15 +25,22 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import type { ComprehensionGuestMode } from "@/app/components/forms/ComprehensionForm";
 
 const TOOL_SLUG = "worksheet-generator";
+
+/** How the form runs on /create for a signed out visitor: the same shape as
+ *  the comprehension form's guest mode. */
+export type WorksheetGuestMode = ComprehensionGuestMode;
 
 export default function WorksheetGeneratorForm({
   sidebar,
   launch,
+  guest,
 }: {
   sidebar: React.ReactNode;
   launch?: ToolLaunchParams;
+  guest?: WorksheetGuestMode;
 }) {
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
@@ -66,6 +73,13 @@ export default function WorksheetGeneratorForm({
   const formState = { curriculum, yearGroup, mixed, subject, learningObjective, questionTypes, questionCount, differentiate, differentiationLevels, outputDetail, additionalInfo };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  // Tell the guest page what the form says, for Ask Jo. A callback into a ref
+  // on the page, so it causes no render here or there.
+  const onSnapshot = guest?.onSnapshot;
+  useEffect(() => {
+    onSnapshot?.(JSON.parse(formSnapshot) as Record<string, unknown>);
+  }, [formSnapshot, onSnapshot]);
 
   const restore = (run: ToolRun) => {
     const i = run.input;
@@ -112,10 +126,13 @@ export default function WorksheetGeneratorForm({
     setLastGenerated(formSnapshot);
     const info = { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject) };
     const send = (extra: Record<string, unknown> = {}) =>
-      fetch("/api/worksheet-generator", {
+      fetch(guest?.endpoint ?? "/api/worksheet-generator", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // The guest route keeps the raw form so a claimed run restores into
+          // this form exactly as the visitor left it.
+          ...(guest ? { ...(guest.extraBody?.() ?? {}), formState } : {}),
           curriculum,
           yearGroup: info.yearGroup,
           subject: info.subject,
@@ -131,7 +148,9 @@ export default function WorksheetGeneratorForm({
       });
     try {
       // Differentiated: one whole sheet per band, each in its own tab.
-      if (differentiate === "yes") {
+      // Signed in only: on /create each band would spend one of a guest's
+      // daily tries, so a guest keeps the single sheet with its blended note.
+      if (!guest && differentiate === "yes") {
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
@@ -142,9 +161,16 @@ export default function WorksheetGeneratorForm({
       }
       const res = await send();
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error || "Generation failed");
+        const data = (await res.json().catch(() => ({}))) as { error?: string; reason?: string };
+        if (guest && (res.status === 429 || res.status === 403)) {
+          guest.onRefused(res.status, data);
+          setResult(null);
+          setLastGenerated(null);
+          return;
+        }
+        throw new Error(data.error || "Generation failed");
       }
+      guest?.onStarted?.(res.headers.get("x-trial-id"));
       // The route streams the sheet as JSON; each update arrives here as a
       // whole, valid sheet, so the page fills in block by block.
       const finished = await readSheetStream(res, "worksheet", info, setResult);
@@ -160,12 +186,18 @@ export default function WorksheetGeneratorForm({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
-        <div className="lg:col-span-1">
-          {sidebar}
-          <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
-        </div>
+        {/* A guest with no sidebar has nothing for the side column, so the
+            form takes the full width rather than leaving a blank third. */}
+        {(sidebar || !guest) && (
+          <div className="lg:col-span-1">
+            {sidebar}
+            {!guest && (
+              <ToolHistoryPanel toolSlug={TOOL_SLUG} reloadSignal={historyKey} onRestore={restore} />
+            )}
+          </div>
+        )}
 
-        <div className="lg:col-span-2">
+        <div className={sidebar || !guest ? "lg:col-span-2" : "lg:col-span-3"}>
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
             <CurriculumYearFields
@@ -226,15 +258,19 @@ export default function WorksheetGeneratorForm({
         <div className="bg-red-50 border border-red-200 rounded-md p-4 text-sm text-red-700">{error}</div>
       )}
 
-      <ToolResults
-        result={result}
-        isGenerating={isGenerating}
-        onChange={(md) => setResult(md)}
-        exportFilename={`worksheet-${subject || "export"}`}
-        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
-        onSaved={() => setHistoryKey((k) => k + 1)}
-        runId={runId}
-      />
+      {guest ? (
+        guest.renderResult({ result, isGenerating, input: formState })
+      ) : (
+        <ToolResults
+          result={result}
+          isGenerating={isGenerating}
+          onChange={(md) => setResult(md)}
+          exportFilename={`worksheet-${subject || "export"}`}
+          historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
+          onSaved={() => setHistoryKey((k) => k + 1)}
+          runId={runId}
+        />
+      )}
     </div>
   );
 }

@@ -8,7 +8,8 @@ import GenerateModal, {
   type GenerationParams,
   type SlideshowPrefill,
 } from "@/app/components/slideshow/GenerateModal";
-import ComprehensionForm from "@/app/components/forms/ComprehensionForm";
+import ComprehensionForm, { type ComprehensionGuestMode } from "@/app/components/forms/ComprehensionForm";
+import WorksheetGeneratorForm from "@/app/components/forms/WorksheetGeneratorForm";
 import { JoActivityProvider } from "@/app/lib/JoActivityContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 import AuthGateModal from "@/app/components/guest/AuthGateModal";
@@ -18,8 +19,14 @@ import SlideshowLoadingAnimation from "@/app/components/editor/SlideshowLoadingA
 import type { EditorGuest } from "@/app/components/editor/EditorGuest";
 import { decodePrefill, encodePrefill, validatePrefill, type ToolPrefill } from "@/app/lib/toolPrefill";
 import type { Presentation, SlideJSON } from "@/app/lib/presentations";
-import type { GuestAction, GuestKind } from "@/app/lib/guest-actions";
-import { guestPrefillFields, guestToolName, type GuestToolSlug } from "@/app/lib/guest-tools";
+import { guestNoun, type GuestAction, type GuestKind } from "@/app/lib/guest-actions";
+import {
+  guestPrefillFields,
+  guestSlugFor,
+  guestToolName,
+  heroIdFor,
+  type GuestToolSlug,
+} from "@/app/lib/guest-tools";
 import styles from "./create.module.css";
 
 // The teacher's editor, loaded only once a deck is on its way: it is most of
@@ -40,6 +47,21 @@ interface RecentRun {
   title: string | null;
   created_at: string;
 }
+
+/** The tools in the order the tabs show them. */
+const TOOLS: readonly GuestToolSlug[] = ["slideshow", "comprehension-generator", "worksheet-generator"];
+
+const KIND: Record<GuestToolSlug, GuestKind> = {
+  slideshow: "slides",
+  "comprehension-generator": "comprehension",
+  "worksheet-generator": "worksheet",
+};
+
+const MAKE: Record<GuestToolSlug, string> = {
+  slideshow: "a deck",
+  "comprehension-generator": "a comprehension",
+  "worksheet-generator": "a worksheet",
+};
 
 interface Restored {
   id: string;
@@ -73,7 +95,7 @@ export default function CreateView({
   googleSignin: boolean;
 }) {
   const router = useRouter();
-  const kind: GuestKind = tool === "slideshow" ? "slides" : "comprehension";
+  const kind = KIND[tool];
   const name = guestToolName(tool);
   const honeypot = useRef<HTMLInputElement>(null);
 
@@ -191,24 +213,48 @@ export default function CreateView({
     [openGate],
   );
 
-  // ── Comprehension ────────────────────────────────────────────────────────
+  // ── Comprehension and Worksheet ──────────────────────────────────────────
+  // Both are sheets: the same guest mode on their forms, the same result panel
+  // and the same Ask Jo on the finished page.
   const launch = useMemo(() => (prefill ? { prefill: encodePrefill(prefill) } : undefined), [prefill]);
 
   const restoredText = typeof restored?.output?.text === "string" ? (restored.output.text as string) : null;
 
   // The free try Ask Jo edits: the reopened one, or the one just generated
   // (its id comes back with the stream).
-  const [compTrialId, setCompTrialId] = useState<string | null>(restored?.id ?? null);
+  const [sheetTrialId, setSheetTrialId] = useState<string | null>(restored?.id ?? null);
   const guestJo = useMemo(
     () => ({
-      trialId: compTrialId,
+      trialId: sheetTrialId,
       honeypot: () => honeypot.current?.value ?? "",
-      onSignUp: () => openGate("more", "Sign up free to keep editing with Jo. Your comprehension comes with you."),
+      onSignUp: () =>
+        openGate("more", `Sign up free to keep editing with Jo. Your ${guestNoun(kind)} comes with you.`),
     }),
-    [compTrialId, openGate],
+    [sheetTrialId, openGate, kind],
+  );
+  const sheetKind = kind === "worksheet" ? "worksheet" : "comprehension";
+  const sheetGuest = useMemo<ComprehensionGuestMode>(
+    () => ({
+      endpoint: tool === "worksheet-generator" ? "/api/try/worksheet" : "/api/try/comprehension",
+      extraBody: () => ({ website: honeypot.current?.value ?? "" }),
+      onRefused: (_status, data) => openGate("more", data.error ?? null),
+      onStarted: setSheetTrialId,
+      renderResult: ({ result, isGenerating }) => (
+        <GuestResult
+          kind={sheetKind}
+          result={result}
+          isGenerating={isGenerating}
+          onAction={(a) => openGate(a)}
+          jo={guestJo}
+        />
+      ),
+    }),
+    [tool, sheetKind, openGate, guestJo],
   );
 
-  const other = tool === "slideshow" ? "comp" : "slides";
+  const toolHref = (slug: GuestToolSlug) =>
+    `/create?tool=${heroIdFor(slug)}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`;
+  const others = TOOLS.filter((t) => t !== tool);
 
   return (
     <>
@@ -230,7 +276,7 @@ export default function CreateView({
 
       <div className={styles.shell}>
         <div className={styles.intro}>
-          <h1>{restoredText ? `Your ${name}` : `Make ${tool === "slideshow" ? "a deck" : "a comprehension"}, free`}</h1>
+          <h1>{restoredText ? `Your ${name}` : `Make ${MAKE[tool]}, free`}</h1>
           <p>
             Three free tries a day, no account needed. Sign up to present, export and keep everything
             you make here.
@@ -238,23 +284,16 @@ export default function CreateView({
         </div>
 
         <nav className={styles.tabs} aria-label="Choose a tool">
-          <Link
-            href={`/create?tool=slides${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`}
-            className={`${styles.tab} ${tool === "slideshow" ? styles.tabOn : ""}`}
-            aria-current={tool === "slideshow" ? "page" : undefined}
-          >
-            Slides
-          </Link>
-          <Link
-            href={`/create?tool=comp${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`}
-            className={`${styles.tab} ${tool !== "slideshow" ? styles.tabOn : ""}`}
-            aria-current={tool !== "slideshow" ? "page" : undefined}
-          >
-            Comprehension
-          </Link>
-          <span className={`${styles.tab} ${styles.tabOff}`} aria-disabled="true">
-            Worksheets <em>Coming soon</em>
-          </span>
+          {TOOLS.map((t) => (
+            <Link
+              key={t}
+              href={toolHref(t)}
+              className={`${styles.tab} ${tool === t ? styles.tabOn : ""}`}
+              aria-current={tool === t ? "page" : undefined}
+            >
+              {t === "worksheet-generator" ? "Worksheets" : guestToolName(t)}
+            </Link>
+          ))}
         </nav>
 
         {/* Honeypot. Off screen and out of the tab order; a person never fills it. */}
@@ -298,7 +337,13 @@ export default function CreateView({
         ) : restoredText ? (
           <div className={styles.grid}>
             <main className={styles.main}>
-              <GuestResult result={restoredText} isGenerating={false} onAction={(a) => openGate(a)} jo={guestJo} />
+              <GuestResult
+                kind={sheetKind}
+                result={restoredText}
+                isGenerating={false}
+                onAction={(a) => openGate(a)}
+                jo={guestJo}
+              />
             </main>
           </div>
         ) : reading ? (
@@ -310,19 +355,11 @@ export default function CreateView({
           <JoActivityProvider>
             {/* No key: a new prefill from Ask Jo is applied by useToolLaunch
                 over the live form, which keeps a passage already written. */}
-            <ComprehensionForm
-              sidebar={null}
-              launch={launch}
-              guest={{
-                endpoint: "/api/try/comprehension",
-                extraBody: () => ({ website: honeypot.current?.value ?? "" }),
-                onRefused: (_status, data) => openGate("more", data.error ?? null),
-                onStarted: setCompTrialId,
-                renderResult: ({ result, isGenerating }) => (
-                  <GuestResult result={result} isGenerating={isGenerating} onAction={(a) => openGate(a)} jo={guestJo} />
-                ),
-              }}
-            />
+            {tool === "worksheet-generator" ? (
+              <WorksheetGeneratorForm sidebar={null} launch={launch} guest={sheetGuest} />
+            ) : (
+              <ComprehensionForm sidebar={null} launch={launch} guest={sheetGuest} />
+            )}
             <JoActivityPanel />
           </JoActivityProvider>
         )}
@@ -333,11 +370,11 @@ export default function CreateView({
             <p>Saved to your account when you sign up.</p>
             <ul>
               {recent.map((r) => {
-                const t = r.tool === "slideshow" ? "slides" : "comp";
+                const slug = guestSlugFor(r.tool) ?? "comprehension-generator";
                 return (
                   <li key={r.id}>
-                    <Link href={`/create?tool=${t}&run=${r.id}`}>
-                      <b>{r.tool === "slideshow" ? "Slides" : "Comprehension"}</b>
+                    <Link href={`/create?tool=${heroIdFor(slug)}&run=${r.id}`}>
+                      <b>{guestToolName(slug)}</b>
                       <span>{r.title || "Untitled"}</span>
                     </Link>
                   </li>
@@ -348,10 +385,9 @@ export default function CreateView({
         )}
 
         <p className={styles.switch}>
-          Want the other one?{" "}
-          <Link href={`/create?tool=${other}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`}>
-            Try {other === "slides" ? "Slides" : "Comprehension"} instead
-          </Link>
+          Want something else? Try{" "}
+          <Link href={toolHref(others[0])}>{guestToolName(others[0])}</Link> or{" "}
+          <Link href={toolHref(others[1])}>{guestToolName(others[1])}</Link> instead.
         </p>
       </div>
     </div>

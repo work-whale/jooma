@@ -37,8 +37,8 @@ export const HERO_TOOLS: readonly HeroTool[] = [
     name: "Worksheets",
     icon: "file-text",
     solid: "#0F8A63",
-    available: false,
-    placeholder: "Worksheets are coming soon",
+    available: true,
+    placeholder: "What should they practise? Try Equivalent fractions, Year 4",
   },
 ];
 
@@ -46,18 +46,23 @@ export function heroTool(id: HeroToolId): HeroTool {
   return HERO_TOOLS.find((t) => t.id === id) ?? HERO_TOOLS[0];
 }
 
+// The first three are what a visitor sees before pressing More ideas.
 export const HERO_IDEAS: readonly [HeroToolId, string][] = [
   ["slides", "Recycling and sustainability, Year 5"],
   ["comp", "The Great Fire of London, Year 2"],
   ["slides", "Volcanoes and the Ring of Fire, Year 3"],
+  ["ws", "Equivalent fractions, Year 4"],
   ["comp", "Why do bees matter? Year 2"],
+  ["ws", "Column addition, Year 3"],
   ["slides", "Ancient Egypt, Year 5"],
   ["comp", "Life in Victorian Britain, Year 5"],
+  ["ws", "Fronted adverbials, Year 4"],
   ["slides", "Light and shadows, Year 3"],
   ["comp", "The water cycle, Year 4"],
-  ["slides", "Equivalent fractions, Year 4"],
-  ["comp", "The Titanic, Year 6"],
+  ["ws", "Place value to 1,000, Year 3"],
   ["slides", "Persuasive writing, Year 6"],
+  ["comp", "The Titanic, Year 6"],
+  ["ws", "States of matter, Year 4"],
   ["comp", "Florence Nightingale, Year 2"],
 ];
 

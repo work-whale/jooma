@@ -32,7 +32,7 @@ export interface GuestTryTool {
 export const GUEST_TRY_TOOLS: readonly GuestTryTool[] = [
   { tool: "slideshow", label: "Slides" },
   { tool: "comprehension-generator", label: "Comprehension" },
-  { tool: "worksheet-generator", label: "Worksheet", soon: true },
+  { tool: "worksheet-generator", label: "Worksheet" },
 ];
 
 export interface GuestToolTotal extends GuestTryTool {

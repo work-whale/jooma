@@ -10,17 +10,24 @@ import type { GuestAction } from "@/app/lib/guest-actions";
 import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
 import styles from "./guest.module.css";
 
+const COPY = {
+  comprehension: { title: "Your comprehension", writing: "Writing the passage and questions" },
+  worksheet: { title: "Your worksheet", writing: "Writing the questions" },
+} as const;
+
 /**
- * A guest's comprehension, to read. The result panel's own buttons, each of
- * which opens the sign up prompt: focus, export, print and copy are all there
- * the moment the passage is in their library.
+ * A guest's comprehension or worksheet, to read. The result panel's own
+ * buttons, each of which opens the sign up prompt: focus, export, print and
+ * copy are all there the moment the sheet is in their library.
  */
 export default function GuestResult({
+  kind = "comprehension",
   result,
   isGenerating,
   onAction,
   jo,
 }: {
+  kind?: "comprehension" | "worksheet";
   result: string | null;
   isGenerating: boolean;
   onAction: (action: GuestAction) => void;
@@ -85,7 +92,7 @@ export default function GuestResult({
 
   // ── Ask Jo ──
   // Jo's edits land in the same visit-only state as the visitor's own, and
-  // the panel opens itself once the comprehension has finished.
+  // the panel opens itself once the sheet has finished.
   const pagesRef = useRef<HTMLDivElement>(null);
   const commit = useCallback((doc: SheetDoc) => setEdited({ base: result, doc }), [result]);
   const [openSignal, setOpenSignal] = useState(0);
@@ -105,21 +112,22 @@ export default function GuestResult({
 
   if (result === null) return null;
   const ready = !isGenerating && result.trim().length > 0;
+  const copy = COPY[kind];
 
   return (
     <section
       ref={panelRef}
       className={styles.result}
-      aria-label="Your comprehension"
+      aria-label={copy.title}
       data-testid="guest-result"
     >
       <header className={styles.resultBar}>
         <div className={styles.deckTitle}>
-          <h2>Your comprehension</h2>
+          <h2>{copy.title}</h2>
           {isGenerating ? (
             <span className={styles.deckStatus} role="status">
               <Loader2 className={styles.spin} aria-hidden="true" />
-              Writing the passage and questions
+              {copy.writing}
             </span>
           ) : (
             <span className={styles.deckStatus}>Ready</span>

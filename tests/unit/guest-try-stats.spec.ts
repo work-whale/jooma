@@ -49,11 +49,11 @@ test.describe("free tries summary", () => {
     expect(s.months[0]).not.toHaveProperty("claimed");
   });
 
-  test("Worksheet is always listed, flagged as coming soon", () => {
+  test("Worksheet is always listed, and no longer flagged as coming soon", () => {
     const s = summariseGuestTries([]);
     expect(s.tools.map((t) => t.label)).toEqual(["Slides", "Comprehension", "Worksheet"]);
     const ws = s.tools.find((t) => t.tool === "worksheet-generator")!;
-    expect(ws.soon).toBe(true);
+    expect(ws.soon).toBeFalsy();
     expect(ws.tries).toBe(0);
     expect(s.months).toEqual([]);
   });

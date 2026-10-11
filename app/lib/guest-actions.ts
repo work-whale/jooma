@@ -7,7 +7,12 @@
 // Pure, for tests/unit. No dashes or the word for machine intelligence in any
 // string: these are shown on the signed out surface.
 
-export type GuestKind = "slides" | "comprehension";
+export type GuestKind = "slides" | "comprehension" | "worksheet";
+
+/** What the modal calls the thing they made. */
+export function guestNoun(kind: GuestKind): string {
+  return kind === "slides" ? "deck" : kind;
+}
 
 export type GuestAction =
   | "present"
@@ -57,7 +62,7 @@ export function isThenAction(v: string | null | undefined): v is ThenAction {
 
 /** The modal's heading, written for the thing they just tried to do. */
 export function gateTitle(kind: GuestKind, action: GuestAction | null): string {
-  const what = kind === "slides" ? "deck" : "comprehension";
+  const what = guestNoun(kind);
   switch (action) {
     case "present":
       return "Sign up for free to present your deck";
@@ -112,7 +117,8 @@ export function claimDestination(
   if (item.kind === "slides") {
     return `/editor/${encodeURIComponent(item.id)}?${params.toString()}`;
   }
-  return `/tools/comprehension-generator?${params.toString()}`;
+  const tool = item.kind === "worksheet" ? "worksheet-generator" : "comprehension-generator";
+  return `/tools/${tool}?${params.toString()}`;
 }
 
 /** Read the remembered action, tolerating anything odd in storage. */
@@ -122,7 +128,7 @@ export function parsePendingAction(raw: string | null): PendingAction | null {
     const v = JSON.parse(raw) as Partial<PendingAction>;
     if (
       typeof v.action === "string" &&
-      (v.kind === "slides" || v.kind === "comprehension") &&
+      (v.kind === "slides" || v.kind === "comprehension" || v.kind === "worksheet") &&
       typeof v.at === "number"
     ) {
       return { action: v.action as GuestAction, kind: v.kind, at: v.at };

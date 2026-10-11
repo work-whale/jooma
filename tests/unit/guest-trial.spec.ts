@@ -118,10 +118,11 @@ test.describe("decideTrial (three a day, across both tools)", () => {
     expect(settingInt("lots", 300)).toBe(300);
   });
 
-  test("only the two guest tools", () => {
+  test("only the guest tools", () => {
     expect(isTrialTool("slideshow")).toBe(true);
     expect(isTrialTool("comprehension-generator")).toBe(true);
-    expect(isTrialTool("worksheet-generator")).toBe(false);
+    expect(isTrialTool("worksheet-generator")).toBe(true);
+    expect(isTrialTool("lesson-plan")).toBe(false);
   });
 
   test("an IP is stored as a keyed hash, never as itself", () => {
@@ -206,7 +207,8 @@ test.describe("guest tool slugs", () => {
     expect(guestSlugFor("slides")).toBe("slideshow");
     expect(guestSlugFor("comp")).toBe("comprehension-generator");
     expect(guestSlugFor("slideshow")).toBe("slideshow");
-    expect(guestSlugFor("ws")).toBeNull();
+    expect(guestSlugFor("ws")).toBe("worksheet-generator");
+    expect(guestSlugFor("quiz")).toBeNull();
     expect(guestSlugFor(undefined)).toBeNull();
     expect(appToolPath("slideshow")).toBe("/tools/slideshow");
   });

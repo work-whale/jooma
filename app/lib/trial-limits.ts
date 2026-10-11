@@ -4,7 +4,7 @@
 //
 //   * an admin switch (app_settings.trial_enabled) turns the whole thing off
 //   * a global cap per day (app_settings.trial_daily_cap) is the spend brake
-//   * FREE_TRIES_PER_DAY generations per 24 hours, across both tools, counted
+//   * FREE_TRIES_PER_DAY generations per 24 hours, across every tool, counted
 //     by guest cookie AND by IP, so clearing cookies does not reset it and
 //     neither does a new network
 //
@@ -12,14 +12,14 @@
 // their tries on our error would be the worst first impression we could make.
 import { createHash } from "node:crypto";
 
-export type TrialTool = "slideshow" | "comprehension-generator";
+export type TrialTool = "slideshow" | "comprehension-generator" | "worksheet-generator";
 
-export const TRIAL_TOOLS: readonly TrialTool[] = ["slideshow", "comprehension-generator"];
+export const TRIAL_TOOLS: readonly TrialTool[] = ["slideshow", "comprehension-generator", "worksheet-generator"];
 export const TRIAL_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Statuses that used up a try. `failed` deliberately absent. */
 export const COUNTED_STATUSES = ["running", "done", "claimed"] as const;
 export const DEFAULT_DAILY_CAP = 300;
-/** Free generations per visitor per 24 hours, Slides and Comprehension together. */
+/** Free generations per visitor per 24 hours, every tool together. */
 export const FREE_TRIES_PER_DAY = 3;
 
 /** Messages a visitor may send Jo about one free generation before signing up.
@@ -41,9 +41,9 @@ export function decideTrial(input: {
   dailyCap: number;
   /** Counted runs started by anyone in the last 24 hours. */
   startedToday: number;
-  /** Counted runs, of either tool, by this guest cookie in the window. */
+  /** Counted runs, of any tool, by this guest cookie in the window. */
   guestRuns: number;
-  /** Counted runs, of either tool, from this IP in the window. */
+  /** Counted runs, of any tool, from this IP in the window. */
   ipRuns: number;
 }): TrialDecision {
   if (!input.enabled) return { ok: false, reason: "disabled" };

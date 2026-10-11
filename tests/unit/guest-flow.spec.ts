@@ -13,6 +13,9 @@ import {
   cleanFormContext,
   countsFromMessage,
   guestPrefillFields,
+  guestSlugFor,
+  heroIdFor,
+  subjectFromTopic,
   wantsFormEdit,
   withFormContext,
   yearFromTopic,
@@ -29,10 +32,18 @@ test.describe("hero Create", () => {
     expect(heroHref("comp", "  Bees  ")).toBe("/create?tool=comp&topic=Bees");
   });
 
-  test("an empty box goes nowhere, and Worksheets is not open yet", () => {
+  test("an empty box goes nowhere", () => {
     expect(heroHref("slides", "   ")).toBeNull();
-    expect(heroHref("ws", "Fractions")).toBeNull();
-    expect(HERO_TOOLS.find((t) => t.id === "ws")?.available).toBe(false);
+    expect(heroHref("ws", "  ")).toBeNull();
+  });
+
+  test("Worksheets is open and lands on its guest tool", () => {
+    expect(HERO_TOOLS.find((t) => t.id === "ws")?.available).toBe(true);
+    expect(heroHref("ws", "Fractions, Year 4")).toBe("/create?tool=ws&topic=Fractions%2C+Year+4");
+    expect(guestSlugFor("ws")).toBe("worksheet-generator");
+    expect(guestSlugFor("worksheet-generator")).toBe("worksheet-generator");
+    expect(heroIdFor("worksheet-generator")).toBe("ws");
+    expect(HERO_IDEAS.some(([id]) => id === "ws")).toBe(true);
   });
 
   test("ideas wrap round and only point at open tools", () => {
@@ -59,6 +70,7 @@ test.describe("the sign up prompt", () => {
     expect(gateTitle("slides", "present")).toBe("Sign up for free to present your deck");
     expect(gateTitle("comprehension", "copy")).toBe("Sign up for free to copy your comprehension");
     expect(gateTitle("slides", "more")).toBe("Sign up for free to keep making");
+    expect(gateTitle("worksheet", "export")).toBe("Sign up for free to export your worksheet");
   });
 
   test("remembers only the actions the app can replay", () => {
@@ -68,6 +80,8 @@ test.describe("the sign up prompt", () => {
     expect(thenFor("comprehension", "print")).toBe("export");
     expect(thenFor("comprehension", "copy")).toBe("copy");
     expect(thenFor("comprehension", "present")).toBeNull();
+    expect(thenFor("worksheet", "print")).toBe("export");
+    expect(thenFor("worksheet", "focus")).toBe("focus");
   });
 
   test("ignores anything odd in storage", () => {
@@ -105,6 +119,16 @@ test.describe("claimDestination (after sign up)", () => {
       now,
     );
     expect(to).toBe("/tools/comprehension-generator?run=run-1&then=copy&fresh=1");
+  });
+
+  test("one worksheet restores into its tool", () => {
+    const to = claimDestination(
+      [{ kind: "worksheet", id: "run-2" }],
+      { action: "export", kind: "worksheet", at: now },
+      now,
+    );
+    expect(to).toBe("/tools/worksheet-generator?run=run-2&then=export&fresh=1");
+    expect(parsePendingAction(JSON.stringify({ action: "export", kind: "worksheet", at: 5 }))?.kind).toBe("worksheet");
   });
 
   test("a stale or mismatched action is dropped, the item still opens", () => {
@@ -197,6 +221,49 @@ test.describe("the form never opens empty (regression)", () => {
     expect(s?.fields).toMatchObject({ topic: "Volcanoes, Year 3", year: "Year 3" });
   });
 
+  test("a worksheet's topic becomes its learning objective, and the prefill is valid", () => {
+    // Without Jo: the subject is read from the topic too, since the worksheet
+    // requires one and a prefill missing it would open an empty form.
+    const f = guestPrefillFields("worksheet-generator", "Equivalent fractions, Year 4", null);
+    expect(f).toMatchObject({ learningObjective: "Equivalent fractions, Year 4", yearGroup: "Year 4", subject: "Maths" });
+    expect(f.topic).toBeUndefined();
+    const w = validatePrefill({ slug: "worksheet-generator", fields: f });
+    expect(w?.fields).toMatchObject({
+      learningObjective: "Equivalent fractions, Year 4",
+      yearGroup: "Year 4",
+      subject: "Maths",
+      curriculum: "2014 National Curriculum",
+    });
+    // Jo's own objective is kept, and a stray topic from Jo is dropped.
+    const g = guestPrefillFields("worksheet-generator", "Fractions y4", {
+      topic: "Fractions",
+      learningObjective: "To find equivalent fractions",
+      subject: "Maths",
+    });
+    expect(g).toMatchObject({ learningObjective: "To find equivalent fractions", subject: "Maths", yearGroup: "Year 4" });
+    expect(g.topic).toBeUndefined();
+    // Jo's subject wins over the guess.
+    expect(guestPrefillFields("worksheet-generator", "Fractions", { subject: "Mathematics" }).subject).toBe("Mathematics");
+  });
+
+  test("every worksheet idea on the hero opens a valid form without Jo", () => {
+    for (const [id, text] of HERO_IDEAS) {
+      if (id !== "ws") continue;
+      const p = validatePrefill({ slug: "worksheet-generator", fields: guestPrefillFields("worksheet-generator", text, null) });
+      expect(p, text).not.toBeNull();
+    }
+  });
+
+  test("reads a subject out of the topic", () => {
+    expect(subjectFromTopic("Column addition, Year 3")).toBe("Maths");
+    expect(subjectFromTopic("Place value to 1,000, Year 3")).toBe("Maths");
+    expect(subjectFromTopic("Fronted adverbials, Year 4")).toBe("English");
+    expect(subjectFromTopic("States of matter, Year 4")).toBe("Science");
+    expect(subjectFromTopic("The Romans in Britain")).toBe("History");
+    expect(subjectFromTopic("Rivers of the world")).toBe("Geography");
+    expect(subjectFromTopic("Something else entirely")).toBeNull();
+  });
+
   test("Jo's own answers win; the topic only fills gaps", () => {
     const f = guestPrefillFields("comprehension-generator", "Bees Year 4", { topic: "Why bees matter", yearGroup: "Year 5" });
     expect(f).toMatchObject({ topic: "Why bees matter", yearGroup: "Year 5" });
@@ -231,6 +298,15 @@ test.describe("Ask Jo knows what the form says (regression)", () => {
     expect(msgs[2].content).toContain("can you change to year 6");
     expect(msgs[2].content).toContain("Topic: Recycling and sustainability");
     expect(msgs[2].content).toContain("Keep every value I have not asked to change");
+  });
+
+  test("a worksheet's form is described in its own words", () => {
+    const ctx = cleanFormContext("worksheet-generator", { subject: "Maths", questionCount: 12, topic: "dropped" });
+    expect(ctx).toEqual({ subject: "Maths", questionCount: 12 });
+    const [m] = withFormContext([{ role: "user", content: "make it harder" }], "worksheet-generator", ctx);
+    expect(m.content).toContain("The Worksheet form");
+    expect(m.content).toContain("Number of questions: 12");
+    expect(countsFromMessage("worksheet-generator", "make it 15 questions")).toEqual({ questionCount: 15 });
   });
 
   test("nothing attached when the form is empty", () => {
