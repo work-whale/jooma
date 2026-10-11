@@ -87,24 +87,6 @@
   color: var(--j-deep);
 }
 
-.tabOff,
-.tabOff:hover {
-  cursor: default;
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.tabOff em {
-  font-style: normal;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-  border-radius: var(--j-pill);
-  padding: 2px 7px;
-}
 
 .grid {
   display: grid;

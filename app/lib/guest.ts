@@ -129,7 +129,7 @@ export async function trialSettings(): Promise<{ enabled: boolean; dailyCap: num
   }
 }
 
-/** Whether this guest may start another free run now, of either tool. */
+/** Whether this guest may start another free run now, of any tool. */
 export async function checkTrial(guestId: string, ipHash: string): Promise<TrialDecision> {
   const settings = await trialSettings();
   if (!settings.enabled) return { ok: false, reason: "disabled" };

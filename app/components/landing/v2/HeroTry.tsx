@@ -19,8 +19,9 @@ import styles from "./HeroV3.module.css";
  *
  * Create opens /create with the tool and topic, where the visitor finishes the
  * inputs with Jo and makes the real thing without an account. An empty box
- * asks for a topic rather than opening the tool with nothing, and Worksheets is
- * shown, not hidden, until the guest flow supports it.
+ * asks for a topic rather than opening the tool with nothing. A tool the guest
+ * flow does not support yet (`available: false`) is shown with a badge, not
+ * hidden.
  *
  * The tiles arrive pre-rendered from the server: the icon set is the SSR build
  * of Phosphor, and passing nodes keeps it out of this bundle.

@@ -130,6 +130,49 @@ async function stubComprehension(page: Page) {
   );
 }
 
+/** A worksheet free try, streamed as a sheet, with Jo's form fill. Returns the
+ *  request bodies the page sent. */
+async function stubWorksheet(page: Page) {
+  const sent: Record<string, unknown>[] = [];
+  await page.route("**/api/try/prefill", (route) =>
+    route.fulfill({
+      json: {
+        prefill: encodePrefill({
+          slug: "worksheet-generator",
+          fields: {
+            curriculum: "2014 National Curriculum",
+            yearGroup: "Year 4",
+            subject: "Maths",
+            learningObjective: "To find equivalent fractions",
+          },
+        }),
+      },
+    }),
+  );
+  await page.route("**/api/try/worksheet", (route) => {
+    sent.push(route.request().postDataJSON());
+    return route.fulfill({
+      status: 200,
+      headers: { "content-type": "text/plain; charset=utf-8", "x-trial-id": TRIAL_ID },
+      body: JSON.stringify({
+        title: "Equivalent fractions",
+        objective: "I am learning to find equivalent fractions.",
+        intro: { variant: "fact", label: "", text: "", emoji: "" },
+        sections: [
+          {
+            title: "Warm up",
+            emoji: "🔥",
+            instructions: "Circle the right answer.",
+            blocks: [{ type: "mcq", prompt: "Which fraction is equal to 1/2?", options: ["2/4", "1/3", "3/4", "2/3"], answers: [0], marks: 1 }],
+          },
+        ],
+        teacherNotes: [],
+      }),
+    });
+  });
+  return sent;
+}
+
 test.describe("signed out", () => {
   test("the hero box opens /create with the tool and topic", async ({ page }) => {
     await stubGuestApi(page);
@@ -143,14 +186,58 @@ test.describe("signed out", () => {
     await expect(page.locator('input[name="lesson-topic"]')).toHaveValue(/Volcanoes/, NAV);
   });
 
-  test("an empty box does not navigate, and Worksheets is not open yet", async ({ page }) => {
+  test("an empty box does not navigate", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: /^Create/ }).click();
     await expect(page).toHaveURL(/\/$|\/#try$/);
+  });
 
-    await page.getByRole("tab", { name: /Worksheets/ }).click();
-    await expect(page.getByText("Coming soon").first()).toBeVisible();
-    await expect(page.getByLabel("What are you teaching?")).toBeDisabled();
+  test("Worksheets is open on the hero and lands on its guest tool", async ({ page }) => {
+    await stubWorksheet(page);
+    await page.goto("/");
+
+    const tab = page.getByRole("tab", { name: /Worksheets/ });
+    await tab.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+    await expect(tab).not.toContainText("Coming soon");
+    const box = page.getByLabel("What are you teaching?");
+    await expect(box).toBeEnabled();
+    await box.fill("Equivalent fractions, Year 4");
+
+    await page.getByRole("link", { name: /^Create/ }).click();
+    await page.waitForURL(/\/create\?tool=ws&topic=Equivalent/, NAV);
+    await expect(page.getByRole("heading", { name: "Make a worksheet, free" })).toBeVisible(NAV);
+    await expect(page.getByRole("link", { name: "Worksheets" })).toHaveAttribute("aria-current", "page");
+  });
+
+  test("a guest worksheet streams into the page, and Export asks them to sign up", async ({ page }) => {
+    const sent = await stubWorksheet(page);
+    await page.goto("/create?tool=ws&topic=Equivalent%20fractions%2C%20Year%204");
+
+    const generate = page.locator("[data-jo-generate]");
+    await expect(generate).toBeEnabled(NAV);
+    await generate.click();
+
+    const result = page.getByTestId("guest-result");
+    await expect(result.getByRole("heading", { name: "Your worksheet" })).toBeVisible(NAV);
+    // Fractions are drawn stacked, so match the words before them.
+    await expect(result).toContainText("Which fraction is equal to", NAV);
+
+    // The guest route, with the honeypot and the raw form for the claim, and
+    // one sheet only: a guest never sends a band.
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      website: "",
+      subject: "Maths",
+      learningObjective: "To find equivalent fractions",
+      formState: { yearGroup: "Year 4" },
+    });
+    expect(sent[0]).not.toHaveProperty("band");
+
+    await result.getByRole("button", { name: /Export/ }).click();
+    await expect(page.getByTestId("auth-gate").getByRole("heading")).toHaveText(
+      "Sign up for free to export your worksheet",
+    );
   });
 
   test("the teacher count stands alone, with no countries under it", async ({ page }) => {

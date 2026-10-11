@@ -7,7 +7,7 @@
 //
 //   * a deck becomes a presentations row (plus the tool_runs row the editor
 //     writes for every generated deck)
-//   * a comprehension becomes a tool_runs row
+//   * a comprehension or a worksheet becomes a tool_runs row
 //   * the run's spend (token_usage, asset_cost, slide_cost), recorded with no
 //     owner while they were a guest, is handed to them by run id
 //
@@ -15,19 +15,26 @@
 // the guest cookie's signature.
 import "server-only";
 import { supabaseAdmin } from "./supabase-admin";
+import type { TrialTool } from "./trial-limits";
+
+const UNTITLED: Record<TrialTool, string> = {
+  slideshow: "Untitled deck",
+  "comprehension-generator": "Comprehension",
+  "worksheet-generator": "Worksheet",
+};
 
 const CLAIM_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface ClaimedItem {
-  kind: "slides" | "comprehension";
-  /** presentations.id for slides, tool_runs.id for a comprehension. */
+  kind: "slides" | "comprehension" | "worksheet";
+  /** presentations.id for slides, tool_runs.id for the others. */
   id: string;
   title: string;
 }
 
 interface TrialRow {
   id: string;
-  tool: "slideshow" | "comprehension-generator";
+  tool: TrialTool;
   title: string | null;
   input: Record<string, unknown> | null;
   output: { slides?: unknown[]; text?: string } | null;
@@ -50,7 +57,7 @@ async function reownSpend(userId: string, runId: string): Promise<void> {
 }
 
 async function createResource(userId: string, row: TrialRow): Promise<ClaimedItem | null> {
-  const title = (row.title ?? "").trim() || (row.tool === "slideshow" ? "Untitled deck" : "Comprehension");
+  const title = (row.title ?? "").trim() || UNTITLED[row.tool];
 
   if (row.tool === "slideshow") {
     const slides = row.output?.slides;
@@ -87,7 +94,7 @@ async function createResource(userId: string, row: TrialRow): Promise<ClaimedIte
     .from("tool_runs")
     .insert({
       user_id: userId,
-      tool_slug: "comprehension-generator",
+      tool_slug: row.tool,
       title,
       input: row.input ?? {},
       output: text,
@@ -96,10 +103,10 @@ async function createResource(userId: string, row: TrialRow): Promise<ClaimedIte
     .select("id")
     .single();
   if (error || !data) {
-    console.error("[claim] could not create comprehension run:", error);
+    console.error("[claim] could not create tool run:", row.tool, error);
     return null;
   }
-  return { kind: "comprehension", id: data.id as string, title };
+  return { kind: row.tool === "worksheet-generator" ? "worksheet" : "comprehension", id: data.id as string, title };
 }
 
 /**

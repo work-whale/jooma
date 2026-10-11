@@ -1,23 +1,30 @@
-// The two tools a signed out visitor can use on /create, and how the hero's
-// short ids map to the slugs the rest of the app uses. Pure, shared by the
-// page, the guest routes and the tests.
+// The tools a signed out visitor can use on /create, and how the hero's short
+// ids map to the slugs the rest of the app uses. Pure, shared by the page, the
+// guest routes and the tests.
 import type { HeroToolId } from "./landing/hero-ideas";
 
-export type GuestToolSlug = "slideshow" | "comprehension-generator";
+export type GuestToolSlug = "slideshow" | "comprehension-generator" | "worksheet-generator";
 
 export const GUEST_TOOL_BY_HERO: Partial<Record<HeroToolId, GuestToolSlug>> = {
   slides: "slideshow",
   comp: "comprehension-generator",
+  ws: "worksheet-generator",
 };
 
 export function guestSlugFor(tool: string | null | undefined): GuestToolSlug | null {
   if (tool === "slides" || tool === "slideshow") return "slideshow";
   if (tool === "comp" || tool === "comprehension-generator") return "comprehension-generator";
+  if (tool === "ws" || tool === "worksheet-generator") return "worksheet-generator";
   return null;
 }
 
+/** The hero's short id for a slug, as /create's links spell it. */
+export function heroIdFor(slug: GuestToolSlug): HeroToolId {
+  return slug === "slideshow" ? "slides" : slug === "comprehension-generator" ? "comp" : "ws";
+}
+
 export function guestToolName(slug: GuestToolSlug): string {
-  return slug === "slideshow" ? "Slides" : "Comprehension";
+  return slug === "slideshow" ? "Slides" : slug === "comprehension-generator" ? "Comprehension" : "Worksheet";
 }
 
 /** Where a signed in teacher who lands on /create belongs instead. */
@@ -41,6 +48,27 @@ export function yearFromTopic(topic: string): string | null {
   return null;
 }
 
+/** Words that name a subject, checked in order. Primary topics only: enough to
+ *  place the hero's ideas and what teachers commonly type there. */
+const SUBJECT_WORDS: [string, RegExp][] = [
+  ["Maths", /\b(fractions?|decimals?|percentages?|place value|addition|subtraction|multiplication|division|times tables?|column (?:addition|subtraction|method)|multiply|divide|add(?:ing)?|subtract(?:ing)?|number bonds?|shapes?|angles?|perimeter|area|volume|measures?|money|telling the time|ratio|algebra|equations?|negative numbers|rounding|statistics|graphs?|maths?|mathematics)\b/i],
+  ["English", /\b(adverbials?|adverbs?|adjectives?|nouns?|verbs?|pronouns?|prepositions?|conjunctions?|clauses?|grammar|punctuation|apostrophes?|commas?|speech marks|spelling|phonics|prefix(?:es)?|suffix(?:es)?|homophones?|tenses?|persuasive|poetry|poems?|narrative|instructions writing|english)\b/i],
+  ["Science", /\b(states of matter|solids?|liquids?|gases|forces?|magnets?|friction|gravity|plants?|habitats?|food chains?|animals including humans|life cycles?|light|shadows|sound|electricity|circuits?|rocks?|soils?|fossils|evolution|digestive|skeleton|teeth|earth and space|solar system|planets?|materials?|science)\b/i],
+  ["Geography", /\b(rivers?|mountains?|volcanoes?|earthquakes?|continents?|oceans?|climate|weather|maps?|compass|rainforests?|geography)\b/i],
+  ["History", /\b(romans?|vikings?|anglo saxons?|tudors?|victorians?|egypt(?:ians?)?|greeks?|stone age|bronze age|iron age|world war|great fire|history)\b/i],
+];
+
+/**
+ * The subject a topic implies: "Equivalent fractions, Year 4" is Maths. The
+ * worksheet form requires a subject and has no topic field, so when Jo is slow
+ * or leaves it out this is what keeps the form from opening empty. Null when
+ * nothing matches; Jo's own answer always wins.
+ */
+export function subjectFromTopic(topic: string): string | null {
+  for (const [subject, re] of SUBJECT_WORDS) if (re.test(topic)) return subject;
+  return null;
+}
+
 /**
  * What the form opens with: Jo's fields when they arrived, and in any case the
  * topic and any year written in it. So a slow or partial reply from Jo still
@@ -52,7 +80,20 @@ export function guestPrefillFields(
   jo: Record<string, unknown> | null,
 ): Record<string, unknown> {
   const fields: Record<string, unknown> = { ...(jo ?? {}) };
-  if (typeof fields.topic !== "string" || !fields.topic.trim()) fields.topic = topic;
+  if (slug === "worksheet-generator") {
+    // No topic field on a worksheet: the subject matter rides in the learning
+    // objective, which its schema requires (see assistant-tools.ts).
+    delete fields.topic;
+    if (typeof fields.learningObjective !== "string" || !fields.learningObjective.trim()) {
+      fields.learningObjective = topic;
+    }
+    if (typeof fields.subject !== "string" || !fields.subject.trim()) {
+      const subject = subjectFromTopic(topic);
+      if (subject) fields.subject = subject;
+    }
+  } else if (typeof fields.topic !== "string" || !fields.topic.trim()) {
+    fields.topic = topic;
+  }
   const yearKey = slug === "slideshow" ? "year" : "yearGroup";
   if (fields[yearKey] === undefined) {
     const y = yearFromTopic(topic);
@@ -85,6 +126,14 @@ const CONTEXT_FIELDS: Record<GuestToolSlug, Record<string, string>> = {
     passageWordCount: "Passage length in words",
     complexity: "Complexity",
     numQuestions: "Questions per content domain",
+  },
+  "worksheet-generator": {
+    subject: "Subject",
+    learningObjective: "Learning objective",
+    yearGroup: "Year group",
+    curriculum: "Curriculum",
+    questionCount: "Number of questions",
+    outputDetail: "Level of detail",
   },
 };
 
@@ -168,6 +217,9 @@ export function countsFromMessage(slug: GuestToolSlug, message: string): Record<
   if (slug === "slideshow") {
     const slides = n(/\b(\d{1,2})\s*(?:content\s*)?slides?\b/);
     if (slides !== undefined) out.slideCount = slides;
+  } else if (slug === "worksheet-generator") {
+    const qs = n(/\b(\d{1,2})\s*questions?\b/);
+    if (qs !== undefined) out.questionCount = qs;
   } else {
     const words = n(/\b(\d{2,4})\s*words?\b/);
     if (words !== undefined) out.passageWordCount = words;

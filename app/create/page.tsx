@@ -10,7 +10,7 @@ import CreateView from "./CreateView";
 
 export const metadata: Metadata = {
   title: "Try Jooma free",
-  description: "Make a slide deck or a comprehension from one line. Free to try, no sign up needed.",
+  description: "Make a slide deck, a comprehension or a worksheet from one line. Free to try, no sign up needed.",
   // A working tool page, not a page to rank. The landing page is the canonical.
   robots: { index: false, follow: true },
 };
