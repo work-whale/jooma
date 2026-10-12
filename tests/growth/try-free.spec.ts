@@ -379,6 +379,22 @@ test.describe("signed out", () => {
     await expect(page.getByTestId("jo-voice-toggle")).toHaveCount(0);
   });
 
+  test("Jo's welcome sits at the top of an empty panel, not the bottom (regression)", async ({ page }) => {
+    await stubGuestApi(page);
+    await stubComprehension(page);
+    await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
+    await page.locator("[data-jo-generate]").click({ timeout: 120_000 });
+    await expect(page.getByTestId("guest-result")).toContainText("Bees carry pollen", NAV);
+
+    const list = page.getByTestId("jo-messages");
+    const hello = list.getByText("Hi, I'm Jo.");
+    await expect(hello).toBeVisible();
+    const listTop = (await list.boundingBox())!.y;
+    const helloTop = (await hello.boundingBox())!.y;
+    // The list's padding and Jo's mark above the words, not a screenful of gap.
+    expect(helloTop - listTop).toBeLessThan(80);
+  });
+
   test("a visitor gets three messages with Jo per comprehension, then the sign up card", async ({ page }) => {
     await stubGuestApi(page);
     await stubComprehension(page);
@@ -562,6 +578,112 @@ test.describe("signed out", () => {
     } finally {
       await deleteTeacher(teacher);
     }
+  });
+});
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("the hero's band runs up under the two row header, with no strip above it (regression)", async ({ page }) => {
+    await page.goto("/");
+    const nav = page.locator("[data-landing-nav]");
+    await expect(nav).toBeVisible();
+    // The band is the hero's first child; it starts at the very top edge.
+    const band = page.locator("#try > div").first();
+    expect((await band.boundingBox())!.y).toBeLessThanOrEqual(0);
+    // And nothing scrolls sideways.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  });
+
+  test("/create keeps the three tools on one row", async ({ page }) => {
+    await stubComprehension(page);
+    await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
+    const tabs = page.getByRole("navigation", { name: "Choose a tool" }).getByRole("link");
+    await expect(tabs).toHaveCount(3, NAV);
+    const tops = await tabs.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(new Set(tops).size).toBe(1);
+  });
+
+  test("the slide editor folds its bar and its sidebar into one menu", async ({ page }) => {
+    await stubGuestApi(page);
+    await page.goto("/create?tool=slides&topic=Volcanoes");
+    await expect(page.locator('input[name="lesson-topic"]')).toHaveValue("Volcanoes", NAV);
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /^Continue/ }).click();
+    await page.getByRole("button", { name: /Generate slideshow/ }).click();
+    await expect(page.getByPlaceholder("Untitled Slideshow")).toHaveValue("Volcanoes and the Ring of Fire", NAV);
+
+    // Nothing runs off the screen, and the rail has given its width to the slide.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+    await expect(page.locator('[data-editor-chrome="rail"]')).toBeHidden();
+    await expect(page.getByRole("button", { name: "Present" })).toHaveCount(0);
+    const burger = page.getByTestId("editor-menu-button");
+    const box = (await burger.boundingBox())!;
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+
+    // The sidebar's tabs open its panel from the menu.
+    await burger.click();
+    const menu = page.getByTestId("editor-menu");
+    await menu.getByRole("button", { name: "Elements" }).click();
+    await expect(menu).toHaveCount(0);
+    const panel = page.getByTestId("editor-sidebar-panel");
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Rectangle" })).toBeVisible();
+    await panel.getByRole("button", { name: "Close panel" }).click();
+    await expect(panel).toBeHidden();
+
+    // A locked tab still asks them to sign up, and so does Present.
+    const gate = page.getByTestId("auth-gate");
+    await burger.click();
+    await expect(menu.getByRole("button", { name: "Audio" })).toHaveAttribute("data-locked", "");
+    await menu.getByRole("button", { name: "Audio" }).click();
+    await expect(gate.getByRole("heading")).toHaveText("Sign up for free to unlock every editor tool");
+    await gate.getByRole("button", { name: "Close" }).click();
+
+    await burger.click();
+    await menu.getByRole("button", { name: "Present" }).click();
+    await expect(gate.getByRole("heading")).toHaveText("Sign up for free to present your deck");
+  });
+
+  test("a finished sheet is left in view: Ask Jo waits behind its button, then opens as a sheet", async ({ page }) => {
+    await stubGuestApi(page);
+    await stubComprehension(page);
+    await page.route("**/api/try/jo**", (route) => route.fulfill({ json: { left: 3 } }));
+
+    await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
+    // On a phone the "Jo filled this in" panel sits over the form's own
+    // button, and offers to press it.
+    await expect(page.locator("[data-jo-generate]")).toBeEnabled(NAV);
+    await page.getByRole("button", { name: "Yes, generate" }).click(NAV);
+    const result = page.getByTestId("guest-result");
+    await expect(result).toContainText("Bees carry pollen", NAV);
+
+    // Not opened over the sheet by the finished generation.
+    const panel = page.getByTestId("jo-panel");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    const fab = page.getByTestId("jo-fab");
+    await expect(fab).toBeVisible();
+
+    // The result's heading lands below the sticky header, not under it.
+    const heading = result.getByRole("heading", { name: "Your comprehension" });
+    await expect
+      .poll(async () => {
+        const navBottom = (await page.locator("[data-landing-nav]").boundingBox())!;
+        const h = (await heading.boundingBox())!;
+        return h.y >= navBottom.y + navBottom.height;
+      }, NAV)
+      .toBe(true);
+
+    await fab.click();
+    await expect(panel).toHaveAttribute("data-open", "true");
+    await expect(page.getByTestId("jo-input")).toBeVisible();
+    // Short enough to leave the top of the page in view.
+    expect((await panel.boundingBox())!.y).toBeGreaterThan(844 * 0.3);
+
+    await page.getByTestId("jo-minimise").click();
+    await expect(panel).toHaveAttribute("data-open", "false");
+    // Folding the phone sheet is not remembered for the wide screen dock.
+    expect(await page.evaluate(() => localStorage.getItem("jooma:jo-open"))).toBeNull();
   });
 });
 

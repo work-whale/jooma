@@ -19,11 +19,14 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import type { JoAdapter, JoMessage, useJoSession } from "./useJoSession";
 import type { useJoVoice } from "./useJoVoice";
 import styles from "./jo.module.css";
 
 const OPEN_KEY = "jooma:jo-open";
+/** Where the dock becomes a bottom sheet (jo.module.css). */
+const SHEET_QUERY = "(max-width: 1023px)";
 
 type Session = ReturnType<typeof useJoSession>;
 type Voice = ReturnType<typeof useJoVoice>;
@@ -78,15 +81,27 @@ export default function JoPanel({
   // has already finished (the free try draws it with the result) still counts
   // it, which is why the signal is compared with zero rather than its first
   // value.
-  const [open, setOpenState] = useState(true);
+  //
+  // On a phone the panel is a sheet over the page, so it waits for a tap on
+  // the button: opening itself would cover the very thing just made. That
+  // choice is not remembered, so folding the sheet on a phone leaves the
+  // docked panel open on a wide screen.
+  const sheet = useMediaQuery(SHEET_QUERY);
+  const [dockOpen, setDockOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const open = sheet ? sheetOpen : dockOpen;
   const mountSignal = useRef(openSignal);
   useEffect(() => {
     // After mount: localStorage is not there on the server.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (mountSignal.current === 0) setOpenState(readOpen());
+    if (mountSignal.current === 0) setDockOpen(readOpen());
   }, []);
   const setOpen = (on: boolean) => {
-    setOpenState(on);
+    if (sheet) {
+      setSheetOpen(on);
+      return;
+    }
+    setDockOpen(on);
     try {
       window.localStorage.setItem(OPEN_KEY, on ? "1" : "0");
     } catch {
@@ -96,8 +111,20 @@ export default function JoPanel({
   const [seenSignal, setSeenSignal] = useState(0);
   if (openSignal !== seenSignal) {
     setSeenSignal(openSignal);
-    if (openSignal > 0) setOpenState(true);
+    if (openSignal > 0) setDockOpen(true);
   }
+
+  // With the sheet up, the page's own scrolling (Jo showing an edit with
+  // scrollIntoView) aims at the part of the screen the sheet leaves clear.
+  useEffect(() => {
+    if (!sheet || !sheetOpen) return;
+    const root = document.documentElement;
+    const before = root.style.scrollPaddingBottom;
+    root.style.scrollPaddingBottom = "min(62svh, 560px)";
+    return () => {
+      root.style.scrollPaddingBottom = before;
+    };
+  }, [sheet, sheetOpen]);
 
   // A reply that finished while folded.
   const [unread, setUnread] = useState(false);
@@ -154,10 +181,12 @@ export default function JoPanel({
         onClick={() => setOpen(true)}
         hidden={open}
         aria-label="Ask Jo"
+        data-variant={variant}
         data-testid="jo-fab"
       >
         <JoOrb small busy={busy} />
         Ask Jo
+        {unread && <span className={styles.unread} aria-label="New reply" />}
       </button>
 
       <aside className={styles.dock} data-open={open} data-variant={variant} aria-label="Ask Jo" data-testid="jo-panel">

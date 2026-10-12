@@ -197,8 +197,10 @@
 
 /* ── Empty state ───────────────────────────────────────────────────────── */
 
+/* At the top of the list, where the conversation will start, not pushed to
+   the bottom with an empty gap above it. */
 .hello {
-  margin: auto 0 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -731,7 +733,10 @@ button.step:hover {
     bottom: 0;
     z-index: 60;
     width: auto;
-    height: min(78vh, 640px);
+    /* Short enough to leave the top of the page in view, so an edit Jo makes
+       can be watched above the sheet (JoPanel pads the scroll to match). */
+    height: min(62vh, 560px);
+    height: min(62svh, 560px);
     border-width: 1px;
     border-radius: var(--j-r-xl) var(--j-r-xl) 0 0;
     box-shadow: 0 -12px 40px rgba(29, 23, 48, 0.22);
@@ -768,6 +773,16 @@ button.step:hover {
 
   .fab .orb {
     background: var(--j-purple);
+  }
+
+  /* In the slide editor the slide tray runs along the bottom edge: the
+     button sits in the row above it, opposite the zoom controls. */
+  .fab[data-variant="editor"] {
+    bottom: 128px;
+  }
+
+  .fab .unread {
+    box-shadow: 0 0 0 3px var(--j-deep);
   }
 
   .fab[hidden] {

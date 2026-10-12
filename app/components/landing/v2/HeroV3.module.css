@@ -712,6 +712,11 @@
 }
 
 @media (max-width: 860px) {
+  /* The bar is two rows here (LandingNav.module.css). */
+  .hero {
+    margin-top: -96px;
+  }
+
   .band {
     padding: 126px 0 148px;
   }
