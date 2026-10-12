@@ -180,11 +180,13 @@ test.describe("Standard plan and the free trial", () => {
     await expect(page.getByText(/your free trial ends on/i).first()).toBeVisible();
     await expect(page.getByText(/then £4\.99 a month/i).first()).toBeVisible();
 
-    // Already subscribed, so the cards offer swaps and never a second trial.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
-
     await page.getByRole("button", { name: /^cancel subscription$/i }).first().click();
     await expect(page.getByText(/won.t be charged anything/i).first()).toBeVisible();
+
+    // Already subscribed, so the plan cards offer swaps and never a second trial.
+    await page.goto("/pricing");
+    await expect(page.getByRole("button", { name: "Your plan" }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
   });
 
   test("a lapsed subscriber can come back, but without a second trial", async ({ page }) => {
@@ -201,7 +203,7 @@ test.describe("Standard plan and the free trial", () => {
       .eq("id", teacher.id);
 
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     await expect(page.getByRole("button", { name: "Choose Standard" }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);

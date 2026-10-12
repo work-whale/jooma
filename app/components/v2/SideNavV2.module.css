@@ -217,6 +217,81 @@
   flex: none;
 }
 
+/* ── Ambassador nav item ─────────────────────────────────────────────────── */
+
+.navitemGold {
+  color: var(--j-gold);
+}
+
+.navitemGold:hover {
+  background: var(--j-gold-bg);
+  color: var(--j-gold);
+}
+
+.navitemGoldOn,
+.navitemGoldOn:hover {
+  background: var(--j-gold);
+  color: #fff;
+}
+
+/* ── Plan ────────────────────────────────────────────────────────────────────
+ *
+ * Above the credit meter, for every plan including none. Plain like the meter
+ * it sits on, except for an ambassador, whose card takes the gold tint. */
+
+.plan {
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r);
+  padding: 12px 13px;
+  margin-bottom: 14px;
+}
+
+.planGold {
+  background: var(--j-gold-bg);
+  border-color: color-mix(in srgb, var(--j-gold) 30%, transparent);
+}
+
+.planPill {
+  font-size: 0.71rem;
+  font-weight: 800;
+  color: var(--j-deep);
+  background: var(--j-tint);
+  border-radius: var(--j-pill);
+  padding: 3px 9px;
+  min-width: 2.5em;
+  text-align: center;
+}
+
+.planPillGold {
+  color: #fff;
+  background: var(--j-gold);
+}
+
+.upgrade {
+  display: block;
+  text-align: center;
+  background: var(--j-purple);
+  color: #fff;
+  border-radius: var(--j-pill);
+  padding: 9px;
+  font-size: 0.83rem;
+  font-weight: 800;
+  margin-top: 10px;
+  transition: background 0.15s;
+}
+
+.upgrade:hover {
+  background: var(--j-deep);
+}
+
+.planGold .upgrade {
+  background: var(--j-gold);
+}
+
+.planGold .upgrade:hover {
+  background: color-mix(in srgb, var(--j-gold) 80%, #000);
+}
+
 /* ── Credit meter ────────────────────────────────────────────────────────── */
 
 .meterTop {

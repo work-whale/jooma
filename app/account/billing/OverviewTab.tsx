@@ -1,26 +1,19 @@
+import Link from "next/link";
 import { createClient } from "@/app/lib/auth/server";
-import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { subscriptionBilling } from "@/app/lib/stripe";
-import {
-  asPlanId,
-  hasActivePlan,
-  PLANS,
-  PLAN_CREDITS,
-  SELECTABLE_PLAN_IDS,
-} from "@/app/lib/plans";
+import { hasActivePlan, PLANS, PLAN_CREDITS } from "@/app/lib/plans";
 import { trialDaysFor } from "@/app/lib/trial";
+import { loadPlanState } from "./loadPlanState";
 import ManageButton from "./ManageButton";
 import CancelSubscriptionButton from "./CancelSubscriptionButton";
 import ResumeButton from "./ResumeButton";
 import SwitchIntervalButton from "./SwitchIntervalButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
-import PlanPicker from "./PlanPicker";
 import AllowanceMeter from "./AllowanceMeter";
-import AmbassadorCodeField from "./AmbassadorCodeField";
 
 // Overview: current plan, where they stand against this month's allowance, and
-// the actions that change either. The proxy guarantees a session by the time
-// this renders.
+// the actions that manage the billing itself. CHOOSING a plan happens on
+// /pricing, which the current-plan card links to; this page used to carry the
+// plan cards too. The proxy guarantees a session by the time this renders.
 export default async function OverviewTab({
   checkout,
   topup,
@@ -36,35 +29,11 @@ export default async function OverviewTab({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [
-    { data: profile },
-    { data: usedMonth },
-    { data: usedToday },
-    { data: spend },
-    { data: referral },
-  ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select(
-        "plan, subscription_status, cancel_at_period_end, current_period_end, stripe_customer_id, stripe_subscription_id",
-      )
-      .eq("id", user?.id ?? "")
-      .maybeSingle(),
+  const [state, { data: usedMonth }, { data: usedToday }, { data: spend }] = await Promise.all([
+    loadPlanState(supabase, user?.id ?? ""),
     supabase.rpc("my_generation_count_this_month"),
     supabase.rpc("my_generation_count_today"),
     supabase.rpc("monthly_ai_spend", { uid: user?.id ?? "" }),
-    // The ambassador code they have claimed, if any.
-    //
-    // SERVICE ROLE, not the caller's client. ambassador_referrals is admin-only
-    // with no teacher read policy — deliberately, since a teacher-writable
-    // referral would let anyone assign themselves an ambassador — so the user's
-    // own client sees nothing here and the field would always offer an input.
-    // Scoped by their own id, so it can only ever find their own row.
-    supabaseAdmin
-      .from("ambassador_referrals")
-      .select("first_paid_at, ambassador_codes ( code )")
-      .eq("user_id", user?.id ?? "")
-      .maybeSingle(),
   ]);
 
   // monthly_ai_spend returns one row; supabase-js hands back an array.
@@ -73,92 +42,28 @@ export default async function OverviewTab({
     | null
     | undefined;
 
-  const plan = asPlanId(profile?.plan);
-  const planName = PLANS[plan].name;
-
-  // The code field has three states, and "spent" is the one worth being explicit
-  // about: once first_paid_at is set the one-month discount has been used, so
-  // there is nothing to offer and nothing to tell them to do. Showing an input
-  // then would invite a second code that attribution would refuse anyway.
-  const referralCode =
-    (referral?.ambassador_codes as unknown as { code?: string } | null)?.code ?? null;
-  const codeSpent = Boolean(referral?.first_paid_at);
-
-  // Two different flags, deliberately not collapsed into one.
-  //
-  // A Stripe CUSTOMER outlives the subscription: a lapsed subscriber still has
-  // a card on file worth updating, but nothing to cancel. Cancel additionally
-  // needs a LIVE subscription, because Stripe's subscription_cancel flow takes
-  // its id. The id alone is not enough: it is never cleared, so a lapsed
-  // subscriber still carries the old one, and offering them a plan swap would
-  // send it to a subscription Stripe has already closed. They check out again.
-  const isSubscriber = Boolean(profile?.stripe_customer_id);
-  const hasSubscription = Boolean(profile?.stripe_subscription_id) && hasActivePlan(plan);
-  const trialing = profile?.subscription_status === "trialing";
-
-  // Every plan a teacher can buy, cheapest first. Derived from
-  // SELECTABLE_PLAN_IDS so a plan arriving or leaving needs no change here, and
-  // so this can never offer School, which is hidden and has no self-serve
-  // billing, or the retired "free" state. Leaving altogether is the Cancel
-  // button above, not a card.
-  const ladder = SELECTABLE_PLAN_IDS.slice().sort(
-    (a, b) => (PLANS[a].priceMonthly ?? 0) - (PLANS[b].priceMonthly ?? 0),
-  );
-
-  // A downgrade they have already scheduled, which lives on a Stripe
-  // subscription schedule rather than on the profile — nothing has changed yet,
-  // and every column here should keep saying so until it does. Null whenever
-  // there is no schedule, or if Stripe is unreachable.
-  //
-  // Read alongside it: the interval the subscription bills at, which decides
-  // whether the trial line and the plan cards quote a monthly or yearly price.
-  // Only asked of Stripe for a live subscription; anyone else is choosing.
-  // One Stripe read for both.
-  const billing = await subscriptionBilling(profile?.stripe_subscription_id);
-  const pending = billing.pending;
-  const interval = hasSubscription ? billing.interval : "month";
+  const {
+    plan,
+    planName,
+    profile,
+    isSubscriber,
+    hasSubscription,
+    trialing,
+    interval,
+    pending,
+    pendingSwitch,
+    pendingAt,
+    ending,
+    ended,
+    renews,
+    ambassadorPro,
+    ambassadorUntil,
+  } = state;
   const yearly = interval === "year";
 
-  // A waiting change on the SAME plan is a billing switch (yearly to monthly
-  // at renewal), not a plan move. The plan cards would otherwise label their
-  // own current card "Starts on…", so this one is said here instead.
-  const pendingSwitch = pending && pending.plan === plan ? pending : null;
-
-  const renews = profile?.current_period_end
-    ? new Date(profile.current_period_end).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
-  // Two distinct states, and the difference is the whole point of this block.
-  //
-  // ENDING: cancelled through the portal, which schedules rather than cancels —
-  // Stripe keeps status = "active" and only sets cancel_at_period_end, so the
-  // teacher keeps Pro until the period runs out. Testing the status alone (as
-  // this once did) never matched, so the page claimed the plan would "renew"
-  // and kept offering a Cancel button Stripe would reject.
-  //
-  // ENDED: the period elapsed and Stripe closed the subscription for good.
-  // Nothing left to renew — resubscribing means a new checkout.
-  const ended = profile?.subscription_status === "canceled";
-  const ending = Boolean(profile?.cancel_at_period_end) && !ended;
-
-  // The scheduled change's date, formatted like every other date on this page.
-  const pendingAt = pending
-    ? new Date(pending.at).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : null;
-
   return (
-    // max-w-3xl, not the max-w-xl this used to be. That 576px was sized for a
-    // single summary card stacked over a couple of buttons; the plan ladder
-    // below is three cards side by side, which left each one about 170px wide
-    // and wrapped every feature line in two. The summary card keeps its own
-    // narrower width so it does not stretch to fill this.
+    // max-w-3xl, kept from when the plan ladder lived here: the allowance
+    // meter below reads better at this width than at the old 576px.
     <div className="max-w-3xl">
       {/* The plan is granted by the Stripe webhook, which lands a moment after
           this redirect — so `plan` here is usually still the OLD one. Naming
@@ -210,26 +115,40 @@ export default async function OverviewTab({
           </div>
           <span
             className="text-xs font-semibold px-3 py-1 rounded-full"
-            style={{ backgroundColor: "var(--j-tint)", color: "var(--j-faint)" }}
+            style={
+              ambassadorPro
+                ? { backgroundColor: "var(--j-gold)", color: "#fff" }
+                : { backgroundColor: "var(--j-tint)", color: "var(--j-faint)" }
+            }
           >
-            {trialing
-              ? "free trial"
-              : hasActivePlan(plan)
-                ? (profile?.subscription_status ?? "active")
-                : "no plan"}
+            {ambassadorPro
+              ? "ambassador"
+              : trialing
+                ? "free trial"
+                : hasActivePlan(plan)
+                  ? (profile?.subscription_status ?? "active")
+                  : "no plan"}
           </span>
         </div>
 
         {!hasActivePlan(plan) && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
-            Choose a plan below to start creating.
+            Choose a plan to start creating.
             {trialDaysFor(profile) > 0 && " Every plan starts with a free trial."}
           </p>
         )}
 
         {/* During a trial current_period_end IS the trial end, which is also
             when the first charge happens. */}
-        {renews && hasActivePlan(plan) && (
+        {/* An ambassador's Pro is a comp with an end date, not a subscription
+            that renews. Said plainly so nobody expects a charge, or a renewal. */}
+        {ambassadorPro && ambassadorUntil && (
+          <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
+            Free as a Jooma Ambassador until {ambassadorUntil}. You won&apos;t be charged.
+          </p>
+        )}
+
+        {!ambassadorPro && renews && hasActivePlan(plan) && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
             {trialing && (ending || ended)
               ? `Your free trial ends on ${renews}. You won't be charged.`
@@ -247,10 +166,10 @@ export default async function OverviewTab({
 
         {isSubscriber ? (
           <div className="flex flex-col gap-3">
-            {/* Changing plan is no longer a button here — the cards below offer
-                every move in both directions, with the current one marked. This
-                row is left with what it was always for: managing the billing
-                itself. */}
+            {/* Changing plan is not a button here: /pricing offers every move in
+                both directions, with the current one marked, and the link below
+                goes there. This row is left with what it was always for:
+                managing the billing itself. */}
             <div className="flex flex-wrap items-start gap-2">
               {/* No flow — lands on the portal homepage, which is also where
                   Stripe keeps the downloadable invoice history. The History tab
@@ -263,8 +182,8 @@ export default async function OverviewTab({
               />
               {/* Cancel, with its losses panel, while there is something live
                   to cancel. Renew instead while ENDING: it undoes the cancel.
-                  Once fully ended there is nothing to renew, and the plan cards
-                  below are the way back. */}
+                  Once fully ended there is nothing to renew, and /pricing is
+                  the way back. */}
               {hasSubscription && !ending && !ended && (
                 <CancelSubscriptionButton from={plan} trialing={trialing} />
               )}
@@ -289,18 +208,23 @@ export default async function OverviewTab({
               </p>
             )}
           </div>
-        ) : (
-          /* No CTA here for a teacher with nothing to manage — the plan cards
-             below the card do that job, showing every plan with its real price
-             and allowance rather than sending them off to /pricing and back. */
-          null
-        )}
+        ) : null}
+
+        {/* Every plan move lives on /pricing. Named for where they stand: with
+            nothing yet it is a choice, with a plan it is a change. */}
+        <Link
+          href="/pricing"
+          className="inline-block mt-4 text-sm font-semibold underline transition-opacity hover:opacity-70"
+          style={{ color: "var(--j-purple)" }}
+        >
+          {hasActivePlan(plan) ? "Change plan" : "See plans"}
+        </Link>
 
         {/* Two different messages, because the two states have different exits.
             While ENDING the subscription is still live and the Renew button
-            above undoes it in place — telling them to visit /pricing would send
-            them to buy a second subscription they don't need. Once ENDED, that
-            really is the only route back. */}
+            above undoes it in place. Pointing them at the plans would send them
+            to buy a second subscription they don't need. Once ENDED, the plans
+            page really is the only route back. */}
         {ending && (
           <p className="text-sm mt-4" style={{ color: "var(--j-faint)" }}>
             Your plan is set to end. Renew to keep it — you won&apos;t be charged
@@ -310,40 +234,10 @@ export default async function OverviewTab({
 
         {ended && (
           <p className="text-sm mt-4" style={{ color: "var(--j-faint)" }}>
-            You can subscribe again any time from the plans below.
+            You can subscribe again any time from the plans page.
           </p>
         )}
       </div>
-
-      {/* Every plan, for everybody — the current one marked, and each of the
-          others carrying the action that gets there: checkout for a teacher
-          with no subscription, a swap up or down for one who has. This used to
-          render only for non-subscribers, which left a Max subscriber with no
-          visible way to move at all. */}
-      {ladder.length > 0 && (
-        <PlanPicker
-          plans={ladder}
-          current={plan}
-          hasSubscription={hasSubscription}
-          trialEligible={trialDaysFor(profile) > 0}
-          pendingPlan={pendingSwitch ? null : (pending?.plan ?? null)}
-          pendingInterval={pending?.interval ?? null}
-          pendingAt={pendingAt}
-          // While a subscription is ending, renewing comes first: swapping a
-          // plan that is about to stop would charge for something disappearing.
-          // Once it has ENDED (back to no plan) the cards are the way back in,
-          // through a fresh checkout.
-          // A billing switch is waiting too: a plan move now would release its
-          // schedule and quietly drop the switch they were promised.
-          locked={(ending && hasActivePlan(plan)) || Boolean(pendingSwitch)}
-          subscriptionInterval={interval}
-          hasUnusedCode={Boolean(referralCode) && !codeSpent}
-        />
-      )}
-
-      {/* An ambassador code, beside the plans it discounts. Hidden once the
-          discount has actually been used — see codeSpent above. */}
-      {!codeSpent && <AmbassadorCodeField claimedCode={referralCode} />}
 
       {/* The top-up button lives inside the meter, shown only above 80% used —
           see the reasoning there and the `hide_counter` pricing rule. */}

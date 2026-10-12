@@ -94,8 +94,9 @@ test.describe("Claiming an ambassador code", () => {
     await page.getByRole("button", { name: "Apply" }).click();
     await expect(page.getByText(new RegExp(`${fixture.code} applied`, "i"))).toBeVisible();
 
-    // Choosing Free still records the referral: tracked, just not payable.
-    await page.getByRole("button", { name: /start free/i }).click();
+    // Leaving without a plan (there is no Free plan to pick any more, only
+    // "Look around first") still records the referral: tracked, not payable.
+    await page.getByRole("link", { name: "Look around first" }).click();
     await page.waitForURL(/\/tools/);
 
     const referral = await referralFor(teacher);
@@ -163,16 +164,16 @@ test.describe("Claiming an ambassador code", () => {
     await page.getByLabel("Your code").fill(fixture.code);
     await page.getByRole("button", { name: "Apply" }).click();
     await expect(page.getByText(new RegExp(`${fixture.code} applied`, "i"))).toBeVisible();
-    await page.getByRole("button", { name: /start free/i }).click();
+    await page.getByRole("link", { name: "Look around first" }).click();
     await page.waitForURL(/\/tools/);
 
     expect((await referralFor(teacher))?.ambassador_id).toBe(fixture.ambassadorId);
 
-    // The profile's Subscription section does not even offer an input to
-    // somebody who already holds a code: it names the one they have. That is
-    // the honest presentation of a rule that cannot be worked around, rather
-    // than a box that would only be refused.
-    await page.goto("/profile?section=subscription");
+    // The plans page does not even offer an input to somebody who already
+    // holds a code: it names the one they have. That is the honest
+    // presentation of a rule that cannot be worked around, rather than a box
+    // that would only be refused.
+    await page.goto("/pricing");
 
     // Scoped to main, and `.first()`. Arriving here by client-side navigation
     // can leave the outgoing Suspense frame in the DOM for a beat, so an
@@ -206,14 +207,14 @@ test.describe("Claiming an ambassador code", () => {
     const teacher = await createTeacher("Noor");
     people.push(teacher);
 
-    // Day one: takes the code, picks Free.
+    // Day one: takes the code, looks around without choosing a plan.
     await signIn(page, teacher);
     await page.goto("/welcome");
     await page.getByRole("button", { name: /got a code/i }).click();
     await page.getByLabel("Your code").fill(fixture.code);
     await page.getByRole("button", { name: "Apply" }).click();
     await expect(page.getByText(new RegExp(`${fixture.code} applied`, "i"))).toBeVisible();
-    await page.getByRole("button", { name: /start free/i }).click();
+    await page.getByRole("link", { name: "Look around first" }).click();
     await page.waitForURL(/\/tools/);
 
     // Some time later, in a completely fresh browser context: no sessionStorage,
@@ -233,14 +234,14 @@ test.describe("Claiming an ambassador code", () => {
     expect(referral?.ambassador_id).toBe(fixture.ambassadorId);
     expect(referral?.first_paid_at).toBeNull();
 
-    // And their own subscription page says the code is waiting, weeks later,
-    // with nothing retyped: checkout resolves it server-side from this row.
-    await page.goto("/profile?section=subscription");
+    // And their plans page says the code is waiting, weeks later, with
+    // nothing retyped: checkout resolves it server-side from this row.
+    await page.goto("/pricing");
     await expect(page.getByRole("main").getByText("Code applied").first()).toBeVisible();
     await expect(page.getByRole("main").getByText(fixture.code).first()).toBeVisible();
   });
 
-  test("an existing teacher can claim a code from their own subscription page", async ({
+  test("an existing teacher can claim a code from the plans page", async ({
     page,
   }) => {
     fixture = await createAmbassador();
@@ -249,8 +250,9 @@ test.describe("Claiming an ambassador code", () => {
 
     // The case the move was for: somebody who signed up long ago, was handed a
     // code, and has to be able to redeem it from a page they actually visit.
+    // The sidebar's plan button goes to /pricing from every screen.
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     const input = page.getByLabel("Promo code");
     await input.fill(fixture.code);
@@ -281,7 +283,7 @@ test.describe("Claiming an ambassador code", () => {
     if (error) throw new Error(`Could not seed the referral: ${error.message}`);
 
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     // Neither an input nor a "code applied" note: the offer is spent, and
     // telling them about a discount they have already had would be noise.
@@ -291,37 +293,37 @@ test.describe("Claiming an ambassador code", () => {
 });
 
 /*
- * The /pricing redirect.
+ * The /pricing page.
  *
- * /pricing used to be the logged-out marketing page and is now a redirect,
- * because nothing links to it while Stripe's cancel_url still points at it.
- * That makes it exactly the kind of thing that breaks silently: no teacher
- * navigates there in normal use, so a regression would only ever surface as
- * somebody landing on a 404 straight after backing out of a payment.
+ * /pricing was a redirect into Profile for a while, and is a real plans page
+ * again. It is still Stripe's cancel_url, so a regression here would surface
+ * as somebody landing on a broken page straight after backing out of a
+ * payment. Old links carrying a billing tab still go to Profile.
  *
- * These run without an ambassador fixture — they are about the route, not the
- * feature that happens to have moved off it.
+ * These run without an ambassador fixture: they are about the route.
  */
-test.describe("The /pricing redirect", () => {
+test.describe("The /pricing page", () => {
   const people: TestTeacher[] = [];
 
   test.afterEach(async () => {
     for (const p of people.splice(0)) await deleteTeacher(p);
   });
 
-  test("a signed-in teacher lands in their subscription section", async ({ page }) => {
+  test("a signed-in teacher sees every plan, here rather than in Profile", async ({ page }) => {
     const teacher = await createTeacher("Otis");
     people.push(teacher);
 
     await signIn(page, teacher);
     await page.goto("/pricing");
 
-    await expect(page).toHaveURL(/\/profile\?.*section=subscription/);
-    // Really the subscription section, not just a URL that says so.
-    await expect(page.getByRole("navigation", { name: /usage and billing/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/pricing$/);
+    await expect(page.getByText("Choose your plan").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    // Billing management is one link away, in Profile.
+    await expect(page.getByRole("main").getByRole("link", { name: "Usage and billing" })).toBeVisible();
   });
 
-  test("an abandoned checkout keeps its params across the hop", async ({ page }) => {
+  test("an abandoned checkout lands here and says nothing was charged", async ({ page }) => {
     const teacher = await createTeacher("Perry");
     people.push(teacher);
 
@@ -329,27 +331,41 @@ test.describe("The /pricing redirect", () => {
 
     // THE CASE THAT MATTERS. cancel_url is `${origin}/pricing?checkout=cancelled`
     // (app/api/stripe/checkout/route.ts), so this is where a teacher lands the
-    // moment they back out of paying us. Dropping the param would turn a
-    // recoverable "changed my mind" into a blank page.
+    // moment they back out of paying us.
     await page.goto("/pricing?checkout=cancelled");
 
-    await expect(page).toHaveURL(/\/profile\?.*section=subscription/);
-    await expect(page).toHaveURL(/checkout=cancelled/);
+    await expect(page).toHaveURL(/\/pricing\?checkout=cancelled/);
+    await expect(page.getByRole("status").getByText(/nothing was charged/i)).toBeVisible();
+    // And the cards are right there to try again.
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
   });
 
-  test("several params all survive, not just the first", async ({ page }) => {
+  test("an old link with a billing tab still reaches Profile, params intact", async ({ page }) => {
     const teacher = await createTeacher("Quinn");
     people.push(teacher);
 
     await signIn(page, teacher);
     await page.goto("/pricing?checkout=cancelled&tab=history");
 
+    await expect(page).toHaveURL(/\/profile\?/);
     await expect(page).toHaveURL(/checkout=cancelled/);
     await expect(page).toHaveURL(/tab=history/);
-    // `section` is the redirect's own, and must not be duplicated by a caller
-    // sending one: the route drops any incoming `section` and sets its own.
     const url = new URL(page.url());
     expect(url.searchParams.getAll("section")).toEqual(["subscription"]);
+  });
+
+  test("Profile's subscription section links to the plans", async ({ page }) => {
+    const teacher = await createTeacher("Rosa");
+    people.push(teacher);
+
+    await signIn(page, teacher);
+    await page.goto("/profile?section=subscription");
+    await expect(page.getByRole("navigation", { name: /usage and billing/i })).toBeVisible();
+
+    // The cards are no longer here; the link to them is.
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await page.getByRole("main").getByRole("link", { name: "See plans" }).first().click();
+    await expect(page).toHaveURL(/\/pricing$/);
   });
 
   test("a signed-out visitor goes to the landing page's pricing section", async ({

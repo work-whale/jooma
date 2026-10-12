@@ -356,6 +356,67 @@ async function main() {
     "a free referral reports no first payment",
     (detail ?? []).some((r) => r.user_id === other.id && r.first_paid_at === null),
   );
+
+  /* ── 7. The ambassador's own view (20261012000000_ambassador_pro) ──────── */
+  // my_ambassador() and my_ambassador_referrals() are definer functions, so
+  // they are the one way an ambassador reads these tables. They must return
+  // the caller's own rows only, and nothing identifying about the teachers.
+  console.log("\nWhat an ambassador sees of their own");
+
+  const ambUser = await makeUser("ambassador");
+  await admin.from("ambassadors").update({ user_id: ambUser.id }).eq("id", amb1.id);
+  // `other` runs the second ambassador, which nobody has used.
+  await admin.from("ambassadors").update({ user_id: other.id }).eq("id", amb2.id);
+  const ambClient = await asUser(ambUser);
+
+  const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+  const { data: anonMe, error: anonMeError } = await anon.rpc("my_ambassador");
+  check("my_ambassador() gives the public nothing", anonMeError !== null || (anonMe ?? []).length === 0);
+  const { data: anonRefs, error: anonRefsError } = await anon.rpc("my_ambassador_referrals");
+  check(
+    "my_ambassador_referrals() gives the public nothing",
+    anonRefsError !== null || (anonRefs ?? []).length === 0,
+  );
+
+  const { data: notMe, error: notMeError } = await teacherClient.rpc("my_ambassador");
+  check("a teacher who is not an ambassador gets no row", !notMeError && (notMe ?? []).length === 0, notMeError?.message);
+  const { data: notMyRefs } = await teacherClient.rpc("my_ambassador_referrals");
+  check("and no referrals", (notMyRefs ?? []).length === 0);
+
+  const { data: me, error: meError } = await ambClient.rpc("my_ambassador");
+  check("the ambassador gets their own row", !meError && (me ?? []).length === 1, meError?.message);
+  check("with their own counts", Number(me?.[0]?.referrals) === 2 && Number(me?.[0]?.subscribers) === 1);
+  check("and their own code", (me?.[0]?.codes ?? []).includes(codeOne));
+  check("but not the admin notes or email", me?.[0] && !("notes" in me[0]) && !("email" in me[0]));
+
+  const { data: myRefs, error: myRefsError } = await ambClient.rpc("my_ambassador_referrals");
+  check("the ambassador sees their two referrals", !myRefsError && (myRefs ?? []).length === 2, myRefsError?.message);
+  check(
+    "named by first name and initial only",
+    (myRefs ?? []).every((r) => /^\S+ A\.$/.test(r.display_name)),
+    JSON.stringify((myRefs ?? []).map((r) => r.display_name)),
+  );
+  check(
+    "with no email, id or surname in the payload",
+    (myRefs ?? []).every(
+      (r) => !("user_id" in r) && !("email" in r) && !JSON.stringify(r).includes("Ambtest"),
+    ),
+  );
+
+  const { data: emptyRefs } = await otherClient.rpc("my_ambassador_referrals");
+  check("another ambassador does not see them", (emptyRefs ?? []).length === 0);
+
+  const { error: linkError } = await teacherClient.rpc("admin_link_ambassador_account", {
+    p_ambassador_id: amb1.id,
+  });
+  check("admin_link_ambassador_account() refuses a teacher", linkError !== null);
+
+  await ambClient
+    .from("ambassadors")
+    .update({ pro_until: "2099-01-01T00:00:00Z" })
+    .eq("id", amb1.id);
+  const { data: term } = await admin.from("ambassadors").select("pro_until").eq("id", amb1.id).single();
+  check("an ambassador cannot extend their own free Pro", term?.pro_until === null, term?.pro_until);
 }
 
 main()

@@ -158,11 +158,10 @@ export default function UpgradeGate() {
             </button>
           ) : (
             /* "See plans", not "Upgrade to Pro": there is more than one plan to
-               choose from, and this lands on the subscription section where all
-               of them are shown with their real prices. /pricing is the
-               logged-out marketing page and only ever sells Pro. */
+               choose from, and /pricing shows all of them with their real
+               prices and the way to each. */
             <Link
-              href="/profile?section=subscription"
+              href="/pricing"
               onClick={close}
               className="flex-1 text-center py-2.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ backgroundColor: "var(--j-purple)", color: "#fff" }}

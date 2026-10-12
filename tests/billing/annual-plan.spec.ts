@@ -50,18 +50,20 @@ test.describe("Yearly billing", () => {
     await expect(pricing.getByRole("radio", { name: /Yearly/ })).toBeChecked();
     await expect(pricing.getByText("Save up to 25%")).toBeVisible();
 
-    // Standard: the real price, the struck one, and the monthly equivalent.
-    await expect(pricing.getByText("£47.99", { exact: true })).toBeVisible();
-    await expect(pricing.locator("s", { hasText: "£59.88" })).toBeVisible();
-    await expect(pricing.getByText("Just £4.00 a month, billed yearly")).toBeVisible();
+    // Standard: the monthly price struck through, the yearly price per month
+    // beside it, and the yearly total underneath (the card layout since
+    // f93ef45, which replaced the struck yearly total).
+    await expect(pricing.locator("s", { hasText: "£4.99" })).toBeVisible();
+    await expect(pricing.getByText("£3.99", { exact: true })).toBeVisible();
+    await expect(pricing.getByText("£47.99 billed yearly")).toBeVisible();
     await expect(pricing.getByText("3 days free, then £47.99 a year")).toBeVisible();
 
     // Pro and Max, and the saving each one claims.
-    await expect(pricing.locator("s", { hasText: "£95.88" })).toBeVisible();
-    await expect(pricing.getByText("Just £6.00 a month, billed yearly")).toBeVisible();
+    await expect(pricing.locator("s", { hasText: "£7.99" })).toBeVisible();
+    await expect(pricing.getByText("£71.99 billed yearly")).toBeVisible();
     await expect(pricing.getByText("Save 25%", { exact: true })).toBeVisible();
-    await expect(pricing.locator("s", { hasText: "£179.88" })).toBeVisible();
-    await expect(pricing.getByText("Just £12.00 a month, billed yearly")).toBeVisible();
+    await expect(pricing.locator("s", { hasText: "£14.99" })).toBeVisible();
+    await expect(pricing.getByText("£143.99 billed yearly")).toBeVisible();
 
     // Monthly: the prices as they always were, and nothing struck through.
     await pricing.locator("label", { hasText: "Monthly" }).click();
@@ -76,14 +78,14 @@ test.describe("Yearly billing", () => {
     await page.goto("/welcome");
 
     await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
-    await expect(page.getByText("£71.99", { exact: true })).toBeVisible();
-    await expect(page.locator("s", { hasText: "£95.88" })).toBeVisible();
+    await expect(page.getByText("£71.99 billed yearly")).toBeVisible();
+    await expect(page.locator("s", { hasText: "£7.99" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
   });
 
-  test("the profile's plan cards open on Yearly for someone with no plan", async ({ page }) => {
+  test("the plans page opens on Yearly for someone with no plan", async ({ page }) => {
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
     await expect(page.getByText("3 days free, then £143.99 a year")).toBeVisible();
