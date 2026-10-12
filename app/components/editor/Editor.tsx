@@ -6,7 +6,7 @@ import EditorTopBar from "./EditorTopBar";
 import EditPromptModal from "./EditPromptModal";
 import { GENERATION_STORAGE_KEY } from "@/app/components/slideshow/GenerateModal";
 import ContextualToolbar, { type EditorSelection } from "./ContextualToolbar";
-import Sidebar, { type ActivityKind, type ActivityConfig } from "./Sidebar";
+import Sidebar, { type ActivityKind, type ActivityConfig, type SidebarTabId } from "./Sidebar";
 import SlideTray, { type SlideEntry } from "./SlideTray";
 import TextLayer from "./TextLayer";
 import ShapeLayer from "./ShapeLayer";
@@ -238,7 +238,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   const [zoom, setZoom] = useState(1);
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
   // Imperative open request for the Sidebar (canvas "Swap image" → Pictures).
-  const [sidebarOpenSignal, setSidebarOpenSignal] = useState<{ tab: "pictures" | "audio"; subTab?: "stock" | "upload" | "ai"; nonce: number } | undefined>(undefined);
+  const [sidebarOpenSignal, setSidebarOpenSignal] = useState<{ tab: SidebarTabId; subTab?: "stock" | "upload" | "ai"; nonce: number } | undefined>(undefined);
   // When the user clicks "Swap image" on a selected image, we record its id
   // here. The next image picked from the Pictures sidebar replaces this image's
   // src instead of adding a new element. Cleared after one use or on deselect.
@@ -3284,6 +3284,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         themeId={slides[0]?.themeId ?? DEFAULT_THEME_ID}
         onThemeChange={handleThemeChange}
         artStyle={artStyle}
+        onOpenTool={(tab) => setSidebarOpenSignal({ tab, nonce: Date.now() })}
       />
       <div className="flex flex-1 min-h-0 relative">
         {/* Sidebar is made non-interactive (no editing) while the deck streams
@@ -3409,7 +3410,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
             style={{ scrollbarWidth: "none" }}
             onMouseDown={handleViewportMouseDown}
           >
-            <div className="min-h-full min-w-full flex items-center justify-center px-8 pt-8 pb-36">
+            <div className="min-h-full min-w-full flex items-center justify-center px-4 md:px-8 pt-8 pb-48 md:pb-36">
               <div className="shrink-0" style={{ width: SLIDE_W * zoom, height: SLIDE_H * zoom }}>
                 <div
                   ref={slideWrapperRef}

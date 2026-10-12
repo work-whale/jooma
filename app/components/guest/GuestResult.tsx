@@ -74,7 +74,9 @@ export default function GuestResult({
     const t = window.setTimeout(() => {
       const el = panelRef.current;
       if (!el) return;
-      const offset = 80; // clears the sticky bar on /create
+      // Clears the sticky bar on /create, which is two rows on a phone.
+      const bar = document.querySelector<HTMLElement>("[data-landing-nav]");
+      const offset = (bar?.offsetHeight ?? 74) + 8;
       window.scrollTo({
         top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - offset),
         behavior: "smooth",

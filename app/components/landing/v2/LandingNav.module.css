@@ -4,15 +4,17 @@
   z-index: 60;
   background: rgba(247, 245, 252, 0.88);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid transparent;
+  /* The hairline is a shadow, not a border, so the bar is exactly its rows'
+     height: the hero runs up under it by that much and no more. */
+  box-shadow: 0 1px 0 transparent;
   transition:
     background 0.3s var(--j-ease),
-    border-color 0.3s,
+    box-shadow 0.3s,
     backdrop-filter 0.3s;
 }
 
 .stuck {
-  border-bottom-color: var(--j-line);
+  box-shadow: 0 1px 0 var(--j-line);
 }
 
 /* At rest the bar sits over the hero's purple band: no ground of its own,
@@ -132,14 +134,21 @@
 }
 
 /* Four short links, so they wrap to their own row rather than collapsing into
-   a hamburger that hides the entire navigation behind a tap. */
+   a hamburger that hides the entire navigation behind a tap.
+
+   A fixed height for the two rows, not auto: the hero runs up under the bar
+   by exactly this much (HeroV3.module.css .hero), and an auto height left a
+   strip of the light page showing above the band. */
 @media (max-width: 860px) {
   .inner {
     flex-wrap: wrap;
-    height: auto;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    gap: 12px 20px;
+    align-content: center;
+    height: 96px;
+    gap: 8px 20px;
+  }
+
+  .cta {
+    padding: 9px 18px;
   }
 
   .links {

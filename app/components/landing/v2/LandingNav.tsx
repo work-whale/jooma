@@ -59,7 +59,7 @@ export default function LandingNav({
   }, []);
 
   return (
-    <header className={`${styles.nav} ${stuck ? styles.stuck : styles.onBand}`}>
+    <header className={`${styles.nav} ${stuck ? styles.stuck : styles.onBand}`} data-landing-nav="">
       <div className={`${shared.shell} ${styles.inner}`}>
         <Link href="/" className={styles.brand} aria-label="Jooma">
           <Wordmark />

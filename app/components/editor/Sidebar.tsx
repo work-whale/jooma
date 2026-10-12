@@ -12,6 +12,7 @@ import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage 
 import { useEditorGuest } from "./EditorGuest";
 
 type TabId = "elements" | "text" | "activities" | "pictures" | "gif" | "audio" | "video";
+export type SidebarTabId = TabId;
 
 // Sub-tabs inside the consolidated "Pictures" tab.
 type PictureSubTab = "stock" | "web" | "upload" | "ai";
@@ -131,6 +132,10 @@ const ALL_TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 
 const TABS = ALL_TABS.filter((t) => t.id !== "gif" || GIF_ENABLED);
 
+/** The same tabs for the editor's phone menu (EditorTopBar), where the rail is
+ *  hidden and each tab opens through `openSignal`. */
+export const SIDEBAR_TABS = TABS;
+
 /*
  * What a guest on /create gets in this sidebar: Elements, Text, and stock and
  * web picture search. Everything else is behind sign up, and its button opens
@@ -139,6 +144,10 @@ const TABS = ALL_TABS.filter((t) => t.id !== "gif" || GIF_ENABLED);
  */
 const GUEST_LOCKED_TABS: readonly TabId[] = ["activities", "gif", "audio", "video"];
 const GUEST_LOCKED_PICTURES: readonly PictureSubTab[] = ["upload", "ai"];
+
+export function isGuestLockedTab(id: TabId): boolean {
+  return GUEST_LOCKED_TABS.includes(id);
+}
 
 type ElementSubTab = "shapes" | "graphics" | "frames";
 
@@ -517,10 +526,11 @@ export default function Sidebar({
     >
       {/* Vertical icon strip, on the editor's dark purple chrome. The flyout
           panel beside it stays light: it is full of forms and thumbnails that
-          need to read as the page, not the frame. */}
+          need to read as the page, not the frame. On a phone the strip gives
+          its width to the slide, and its tabs live in the top bar's menu. */}
       <div
         data-editor-chrome="rail"
-        className="flex flex-col items-center py-3 gap-1 border-r"
+        className="hidden md:flex flex-col items-center py-3 gap-1 border-r"
         style={{ borderColor: "var(--j-editor-chrome-line)", width: 72, backgroundColor: "var(--j-editor-chrome)" }}
       >
         {TABS.map((t) => {
@@ -552,11 +562,11 @@ export default function Sidebar({
           when no tab is active so stateful sub-panels (Graphics search, Pictures
           search/scroll) survive close-and-reopen. */}
       <div
-        className="absolute top-0 bottom-0 w-72 border-r shadow-lg flex flex-col"
+        data-testid="editor-sidebar-panel"
+        className="absolute top-0 bottom-0 left-0 md:left-[72px] w-72 max-w-[calc(100vw-3rem)] border-r shadow-lg flex flex-col"
         style={{
           borderColor: "#EAE6F5",
           backgroundColor: "#F7F5FC",
-          left: 72,
           display: active ? "flex" : "none",
         }}
       >

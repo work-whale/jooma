@@ -262,6 +262,30 @@
   .shell {
     padding: 22px 16px 56px;
   }
+
+  .intro p {
+    font-size: 0.92rem;
+  }
+
+  /* One row of three, as on the hero, rather than Worksheets alone on a
+     second line. Scrolls sideways if a narrow phone cannot fit them. */
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    flex: none;
+    padding: 8px 13px;
+    font-size: 0.85rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
