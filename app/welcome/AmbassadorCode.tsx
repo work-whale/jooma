@@ -42,7 +42,7 @@ import styles from "./ambassador.module.css";
 type Checked =
   | { state: "idle" }
   | { state: "checking" }
-  | { state: "good"; code: string; offer: string | null }
+  | { state: "good"; code: string; offer: string | null; claimed?: boolean }
   | { state: "bad"; message: string };
 
 /** The plans offered here, cheapest first. Every figure and line of copy comes
@@ -96,23 +96,33 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
   const open = opened || arrived !== "";
 
   const [checked, setChecked] = useState<Checked>({ state: "idle" });
+  /** An Apply in progress. Separate from checked.state === "checking" on
+   *  purpose: see the note on the Apply button. */
+  const [applying, setApplying] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [interval, setBillingInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
 
-  const check = async (value: string) => {
+  /** Look the code up. Read-only: runs on blur as well as on Apply.
+   *  `settle: false` leaves the state at "checking" on success, for Apply,
+   *  which only says "applied" once the claim has actually landed. */
+  const check = async (
+    value: string,
+    { settle = true }: { settle?: boolean } = {},
+  ): Promise<{ code: string; offer: string | null } | null> => {
     const trimmed = value.trim();
     if (!trimmed) {
       setChecked({ state: "idle" });
-      return;
+      return null;
     }
     setChecked({ state: "checking" });
     try {
       const res = await fetch(`/api/ambassadors/check?code=${encodeURIComponent(trimmed)}`);
       const json = await res.json();
       if (json?.valid) {
-        setChecked({ state: "good", code: json.code, offer: json.offer ?? null });
-        return;
+        const good = { code: json.code as string, offer: (json.offer as string | null) ?? null };
+        if (settle) setChecked({ state: "good", ...good });
+        return good;
       }
       setChecked({
         state: "bad",
@@ -125,6 +135,55 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
       });
     } catch {
       setChecked({ state: "bad", message: "Could not check that code just now." });
+    }
+    return null;
+  };
+
+  /**
+   * Apply: check, then CLAIM straight away.
+   *
+   * The claim used to wait for a plan to be chosen, back when "Start free" was
+   * one of the choices. Since Free was retired the only way off this screen
+   * without a plan is "Look around first", which never claimed, so a teacher
+   * who applied a code and looked around first was lost to their ambassador.
+   * A claim does not need a subscription (the discount is resolved from it at
+   * checkout, whenever that is), so it is made on the explicit Apply click.
+   * Not on blur: attribution is permanent, and leaving a field is not consent.
+   */
+  const apply = async () => {
+    setApplying(true);
+    try {
+      await applyCode();
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const applyCode = async () => {
+    // "Applied" appears only after the claim is saved. Shown any earlier, a
+    // teacher (or a test) could click "Look around first" while the claim
+    // request was still in flight, and the navigation would cancel it.
+    const good = await check(code, { settle: false });
+    if (!good) return;
+    try {
+      const res = await fetch("/api/ambassadors/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: good.code }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setChecked({ state: "bad", message: json.error ?? "That code could not be applied." });
+        return;
+      }
+      setChecked({ state: "good", ...good, claimed: true });
+      try {
+        sessionStorage.removeItem("jooma:ambassador-code");
+      } catch {
+        /* nothing to clear */
+      }
+    } catch {
+      setChecked({ state: "bad", message: "Could not apply that code just now." });
     }
   };
 
@@ -140,7 +199,9 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
     setError(null);
 
     try {
-      if (checked.state === "good") {
+      // Already claimed by Apply; this path is for a code that was only
+      // checked on blur and never applied.
+      if (checked.state === "good" && !checked.claimed) {
         const res = await fetch("/api/ambassadors/claim", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -211,19 +272,27 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
           <button
             type="button"
             className={styles.apply}
-            onClick={() => check(code)}
-            disabled={checked.state === "checking" || !code.trim()}
+            onClick={apply}
+            // NOT disabled by the blur check. Clicking Apply blurs the input
+            // first, and the blur's lookup used to disable this button between
+            // mousedown and click, so the click itself was silently dropped.
+            // Harmless while Apply only repeated the lookup; it now claims.
+            disabled={applying || !code.trim()}
           >
             {checked.state === "checking" ? "Checking…" : "Apply"}
           </button>
         </div>
       )}
 
+      {/* "Applied" means CLAIMED. A code that has only been looked up (on
+          blur) says so, so nobody leaves believing it is saved when it is not. */}
       {checked.state === "good" && (
         <p className={styles.good}>
-          {checked.offer
-            ? `${checked.code} applied. ${checked.offer} when you subscribe.`
-            : `${checked.code} applied.`}
+          {checked.claimed
+            ? checked.offer
+              ? `${checked.code} applied. ${checked.offer} when you subscribe.`
+              : `${checked.code} applied.`
+            : `${checked.code} is valid. Press Apply to use it.`}
         </p>
       )}
       {checked.state === "bad" && <p className={styles.bad}>{checked.message}</p>}

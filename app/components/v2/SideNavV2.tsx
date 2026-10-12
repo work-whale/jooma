@@ -13,14 +13,17 @@ import {
   Bell,
   Question,
   Medal,
+  Crown,
   X,
 } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import { TOOLS, V2_TOOLS, toolSolid } from "@/app/lib/tools";
 import { useCreditMeter } from "@/app/lib/useCreditMeter";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
+import { usePlanBadge } from "@/app/lib/usePlanBadge";
 import { usePinnedTools } from "@/app/lib/usePinnedTools";
 import Wordmark from "@/app/components/v2/Wordmark";
+import AmbassadorWordmark from "@/app/components/v2/AmbassadorWordmark";
 import TopUpModal from "@/app/components/v2/TopUpModal";
 import ToolSearch from "@/app/components/layout/ToolSearch";
 import { ToolTile } from "@/app/components/v2/Squircle";
@@ -48,6 +51,8 @@ interface NavItem {
    * without promising something that does not work yet.
    */
   soon?: boolean;
+  /** The ambassador's own page, drawn in gold. */
+  gold?: boolean;
 }
 
 /**
@@ -69,6 +74,15 @@ const NAV: NavItem[] = [
   { label: "Ask Jo", href: "/assistant", Icon: ChatTeardropDots },
 ];
 
+/** Appended for ambassadors only. Gold, because it is meant to feel like a
+ *  members' room rather than another tool. */
+const AMBASSADOR_NAV: NavItem = {
+  label: "Ambassador",
+  href: "/ambassador",
+  Icon: Crown,
+  gold: true,
+};
+
 interface SideNavV2Props {
   /** Below 900px the rail is an off-canvas drawer; this is its open state. */
   mobileOpen?: boolean;
@@ -79,6 +93,8 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
   const pathname = usePathname();
   const credits = useCreditMeter();
   const badges = useBadgeProgress();
+  const plan = usePlanBadge();
+  const nav = plan.ambassador ? [...NAV, AMBASSADOR_NAV] : NAV;
   const [topUpOpen, setTopUpOpen] = useState(false);
 
   // Pinned tools — a shared store, kept in sync with the Library page live.
@@ -149,8 +165,14 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
         aria-hidden={undefined}
       >
         <div className={styles.head}>
-          <Link href="/dashboard" className={styles.logo} aria-label="Jooma, go to Today">
-            <Wordmark height={22} />
+          {/* An ambassador's rail carries the Jooma Ambassador lockup. 27px
+              keeps "jooma" inside it the same size as the plain 22px mark. */}
+          <Link
+            href="/dashboard"
+            className={styles.logo}
+            aria-label={plan.ambassador ? "Jooma Ambassador, go to Today" : "Jooma, go to Today"}
+          >
+            {plan.ambassador ? <AmbassadorWordmark height={27} /> : <Wordmark height={22} />}
           </Link>
           {/* Drawer-only. The rail has nothing to close. */}
           <button
@@ -171,7 +193,7 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
         </div>
 
         <nav className={styles.nav} aria-label="Main">
-          {NAV.map((item) => {
+          {nav.map((item) => {
             const count = countFor(item);
 
             if (item.soon) {
@@ -203,9 +225,14 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
                 key={item.label}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`${styles.navitem} ${active ? styles.navitemOn : ""}`}
+                className={`${styles.navitem} ${
+                  item.gold ? (active ? styles.navitemGoldOn : styles.navitemGold) : ""
+                } ${active && !item.gold ? styles.navitemOn : ""}`}
               >
-                <item.Icon className={styles.navicon} weight={active ? "fill" : "regular"} />
+                <item.Icon
+                  className={styles.navicon}
+                  weight={active || item.gold ? "fill" : "regular"}
+                />
                 {item.label}
                 {count !== null && <span className={styles.count}>{count}</span>}
               </Link>
@@ -264,6 +291,30 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
             </div>
           )}
 
+
+          {/* The plan they are on, and the way to change it, for everybody.
+              Directly above credits because the two answer one question
+              between them: what do I have, and how much of it is left. The
+              button always goes to /pricing, the one place plans change. */}
+          <div
+            className={`${styles.plan} ${plan.ambassador ? styles.planGold : ""}`}
+            data-testid="sidebar-plan"
+          >
+            <div className={styles.meterTop}>
+              <span className={styles.meterName}>Your plan</span>
+              <span
+                className={`${styles.planPill} ${plan.ambassador ? styles.planPillGold : ""}`}
+              >
+                {plan.loading ? " " : plan.label}
+              </span>
+            </div>
+            {!plan.loading && plan.note && <p className={styles.meterNote}>{plan.note}</p>}
+            {!plan.loading && (
+              <Link href={plan.cta.href} className={styles.upgrade} onClick={onMobileClose}>
+                {plan.cta.label}
+              </Link>
+            )}
+          </div>
 
           {/* Credits live HERE and in the account page, nowhere else. No per
               tool costs on cards, no chips on list rows. */}

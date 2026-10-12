@@ -10,12 +10,12 @@ import { useRouter } from "next/navigation";
 // filled in at the same moment as choosing a plan: a code entered today still
 // works on a subscription started weeks later.
 //
-// It lives here rather than on /pricing, where it started. Nothing links to that
-// page — see the note in PlanPicker — so a teacher handed a code had no way to
-// reach the input. This is the page they already come to for their plan.
+// It lives on /pricing, beside the plans it discounts. That page is linked
+// from the sidebar's plan button on every screen, so a teacher handed a code
+// can always reach the input.
 //
-// Whether they have already claimed is a PROP, answered by OverviewTab's server
-// read, rather than something this discovers from a 400 on submit. Attribution
+// Whether they have already claimed is a PROP, answered by loadPlanState's
+// server read, rather than something this discovers from a 400 on submit. Attribution
 // is first-code-wins and permanent, so an input they cannot use is worse than
 // telling them plainly which code they hold.
 export default function AmbassadorCodeField({

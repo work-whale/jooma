@@ -81,6 +81,29 @@ export async function POST(req: NextRequest) {
           ?.promotion_code_id ?? null)
       : null;
 
+  // An ambassador part way through their free year of Pro.
+  //
+  // Subscribing now must not cut that year short or charge for time they were
+  // promised free, so the subscription opens with a trial that ends on the day
+  // the free Pro does, and the first charge lands then. This REPLACES the 3 day
+  // trial rather than adding to it. Stripe wants trial_end at least 48 hours
+  // out, so a term that is nearly over simply takes the ordinary path.
+  //
+  // Service role, like the referral above: the ambassadors table is admin-only.
+  // Scoped by the caller's own id. An error (no migration yet) reads as none.
+  const { data: ambassador } = await supabaseAdmin
+    .from("ambassadors")
+    .select("pro_until")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const proUntil = ambassador?.pro_until ? new Date(ambassador.pro_until) : null;
+  const ambassadorTrialEnd =
+    proUntil && proUntil.getTime() - Date.now() > 48 * 60 * 60 * 1000
+      ? Math.floor(proUntil.getTime() / 1000)
+      : null;
+
   try {
     // Resolved from plan_config (falling back to the env var), so a price
     // changed in the admin console takes effect on the next checkout without a
@@ -91,8 +114,14 @@ export async function POST(req: NextRequest) {
     // now (payment_method_collection "always"), and if it is somehow missing
     // when the trial ends the subscription cancels rather than sitting unpaid.
     const trialDays = trialDaysFor(profile);
-    const trial =
-      trialDays > 0
+    const trial = ambassadorTrialEnd
+      ? {
+          trial_end: ambassadorTrialEnd,
+          trial_settings: {
+            end_behavior: { missing_payment_method: "cancel" as const },
+          },
+        }
+      : trialDays > 0
         ? {
             trial_period_days: trialDays,
             trial_settings: {

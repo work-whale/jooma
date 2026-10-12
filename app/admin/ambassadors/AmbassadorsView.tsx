@@ -44,6 +44,9 @@ export interface AmbassadorRow {
   subscribers: number;
   owed: number;
   paid: number;
+  /** When their free Pro ends. Null when never granted. */
+  pro_until: string | null;
+  pro_granted_at: string | null;
 }
 
 /** What Stripe says about a code right now. */
@@ -90,6 +93,8 @@ export default function AmbassadorsView({
   const router = useRouter();
   const [q, setQ] = useState("");
   const [creating, setCreating] = useState(false);
+  /** The ambassador whose free Pro is being granted or revoked. */
+  const [proFor, setProFor] = useState<{ row: AmbassadorRow; revoke: boolean } | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [referrals, setReferrals] = useState<Record<string, ReferralRow[]>>({});
   const [loading, setLoading] = useState<Set<string>>(new Set());
@@ -259,6 +264,7 @@ export default function AmbassadorsView({
                   <Th align="right">Subscribed</Th>
                   <Th align="right">Owed</Th>
                   <Th align="right">Paid</Th>
+                  <Th>Free Pro</Th>
                   <Th>State</Th>
                 </tr>
               </thead>
@@ -333,6 +339,31 @@ export default function AmbassadorsView({
                           {nf.format(Number(a.paid))}
                         </Td>
                         <Td>
+                          {/* Inside a clickable row, so the buttons stop the
+                              click from also expanding it. */}
+                          <div
+                            className="flex items-center gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {proActive(a) ? (
+                              <>
+                                <Tag tone="ok">Until {fmtDate(a.pro_until!)}</Tag>
+                                <Btn size="sm" onClick={() => setProFor({ row: a, revoke: true })}>
+                                  Revoke
+                                </Btn>
+                              </>
+                            ) : (
+                              <Btn
+                                size="sm"
+                                variant="primary"
+                                onClick={() => setProFor({ row: a, revoke: false })}
+                              >
+                                {a.pro_until ? "Grant again" : "Grant 12 months"}
+                              </Btn>
+                            )}
+                          </div>
+                        </Td>
+                        <Td>
                           {a.status === "active" ? (
                             <Tag tone="ok" dot>
                               Active
@@ -354,7 +385,7 @@ export default function AmbassadorsView({
                               hard to read at this size. The rows themselves stay
                               on the card surface, so they read as rows. */}
                           <td
-                            colSpan={8}
+                            colSpan={9}
                             style={{
                               backgroundColor: C.surface,
                               padding: 0,
@@ -524,8 +555,106 @@ export default function AmbassadorsView({
           }}
         />
       )}
+      {proFor && (
+        <FreeProModal
+          row={proFor.row}
+          revoke={proFor.revoke}
+          onClose={() => setProFor(null)}
+          onDone={(msg) => {
+            fire(msg);
+            router.refresh();
+          }}
+        />
+      )}
       {toastNode}
     </>
+  );
+}
+
+/** Their free Pro has been granted and has not ended yet. */
+function proActive(a: AmbassadorRow): boolean {
+  return Boolean(a.pro_until) && new Date(a.pro_until!).getTime() > Date.now();
+}
+
+/**
+ * Grant or revoke an ambassador's twelve free months of Pro.
+ *
+ * The rules live in /api/admin/ambassadors/grant-pro: it refuses anyone paying
+ * through Stripe, links the account by email if it was not linked yet, and on
+ * revoke leaves a teacher who has since subscribed alone. This only asks why,
+ * for the audit log.
+ */
+function FreeProModal({
+  row,
+  revoke,
+  onClose,
+  onDone,
+}: {
+  row: AmbassadorRow;
+  revoke: boolean;
+  onClose: () => void;
+  onDone: (msg: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/ambassadors/grant-pro", {
+        method: revoke ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ambassadorId: row.id, reason }),
+      });
+      const json = await res.json();
+      setSaving(false);
+      if (!res.ok) {
+        setError(json.error ?? "Could not save.");
+        return;
+      }
+      onDone(json.message ?? "Saved.");
+      onClose();
+    } catch {
+      setSaving(false);
+      setError("Could not reach the server.");
+    }
+  };
+
+  return (
+    <Modal
+      title={revoke ? `End ${row.full_name}'s free Pro` : `Give ${row.full_name} free Pro`}
+      onClose={onClose}
+      footer={
+        <>
+          <Btn onClick={onClose}>Cancel</Btn>
+          <Btn variant="primary" onClick={submit} disabled={saving}>
+            {saving ? "Saving…" : revoke ? "End free Pro" : "Grant 12 months of Pro"}
+          </Btn>
+        </>
+      }
+    >
+      <p className="text-sm mb-4" style={{ color: C.ink2 }}>
+        {revoke
+          ? "Their free Pro ends now. If they have since subscribed themselves, their subscription is left alone."
+          : "Pro, free for 12 months from today, with no card on file. It ends by itself after that, and they are shown a countdown in the last 30 days. Anyone already paying through Stripe has to be cancelled first."}
+      </p>
+      <Field label="Reason" help="Goes in the audit log.">
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder={revoke ? "Stepped down as an ambassador" : "Joined the ambassador programme"}
+          className={fieldClass}
+          style={fieldStyle}
+        />
+      </Field>
+      {error && (
+        <p className="text-sm mt-2" role="alert" style={{ color: "#b3261e" }}>
+          {error}
+        </p>
+      )}
+    </Modal>
   );
 }
 

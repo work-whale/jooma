@@ -38,7 +38,7 @@ test.describe("Max plan", () => {
 
   test("a teacher with no plan is offered every paid plan, with derived credits", async ({ page }) => {
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     // .first() throughout: the section renders behind a Suspense boundary keyed
     // on the tab, so mid-transition a resolving and a resolved copy can both be
@@ -89,13 +89,11 @@ test.describe("Max plan", () => {
       .eq("id", teacher.id);
 
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
-    // .first(), because the section renders behind a Suspense boundary keyed on
-    // the tab: mid-transition the resolving and resolved copies of the plan card
-    // both exist in the DOM, one of them hidden. Asserting on a bare getByText
-    // hits strict mode and fails intermittently on timing alone.
-    await expect(page.getByText("Pro Teacher", { exact: true }).first()).toBeVisible();
+    // Their own card is marked as theirs. .first() throughout, for the same
+    // Suspense reason as above.
+    await expect(page.getByRole("button", { name: "Your plan" }).first()).toBeVisible();
 
     // Every plan move is now offered from its own card, in one consistent
     // shape: the card says where you would go, the panel below says what it
@@ -123,7 +121,7 @@ test.describe("Max plan", () => {
     await setPlan(teacher, "max", "paying");
 
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     // The card carries the short name; the confirmation panel below uses the
     // full one, which is why this is anchored rather than a loose match.
@@ -153,7 +151,7 @@ test.describe("Max plan", () => {
     await setPlan(teacher, "max", "paying");
 
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     await page.getByRole("button", { name: /^switch to pro$/i }).first().click();
     await expect(page.getByText(/what you.d miss out on/i).first()).toBeVisible();
@@ -176,7 +174,7 @@ test.describe("Max plan", () => {
     await setPlan(teacher, "pro", "paying");
 
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     // Standard is the paid plan below Pro now, and is offered as a swap.
     const toStandard = page.getByRole("button", { name: /^switch to standard$/i }).first();
@@ -185,9 +183,10 @@ test.describe("Max plan", () => {
     await expect(page.getByText(/what you.d miss out on/i).first()).toBeVisible();
     await expect(page.getByText(/watermark/i).first()).toBeVisible();
 
-    // There is no Free card to drop to. Leaving is the Cancel button, which
-    // says what it costs before handing over to Stripe.
+    // There is no Free card to drop to. Leaving is the Cancel button in
+    // Profile, which says what it costs before handing over to Stripe.
     await expect(page.getByRole("button", { name: /^switch to free$/i })).toHaveCount(0);
+    await page.goto("/profile?section=subscription");
     await page.getByRole("button", { name: /^cancel subscription$/i }).first().click();
     await expect(page.getByText(/won.t be able to create new resources/i).first()).toBeVisible();
   });
@@ -201,8 +200,12 @@ test.describe("Max plan", () => {
     // Renew comes first: swapping a plan that is scheduled to stop would charge
     // for something about to disappear.
     await expect(page.getByText(/set to end/i).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /^switch to pro$/i })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^cancel subscription$/i })).toHaveCount(0);
+
+    // And the plans page offers no swap either.
+    await page.goto("/pricing");
+    await expect(page.getByRole("button", { name: "Your plan" }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /^switch to pro$/i })).toHaveCount(0);
   });
 
   test("the sidebar offers a top up only when credits are low", async ({ page }) => {

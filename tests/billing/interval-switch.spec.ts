@@ -216,7 +216,7 @@ test.describe("Switching between monthly and yearly", () => {
   }) => {
     await subscribe({ price: PRO_MONTHLY });
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
     await expect(page.getByRole("button", { name: "Your plan" })).toBeVisible();
@@ -229,7 +229,9 @@ test.describe("Switching between monthly and yearly", () => {
     await expect(page.getByRole("button", { name: "Switch to yearly", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Switch to Max" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Switch to Standard" })).toBeVisible();
-    await expect(page.locator("s", { hasText: "£95.88" })).toBeVisible();
+    // Yearly pricing on the cards: the monthly price struck, the yearly total under it.
+    await expect(page.locator("s", { hasText: "£7.99" })).toBeVisible();
+    await expect(page.getByText("£71.99 billed yearly")).toBeVisible();
 
     await page.getByRole("button", { name: "Switch to yearly", exact: true }).click();
     await expect(page.getByText("Switch to yearly billing?")).toBeVisible();
@@ -239,7 +241,7 @@ test.describe("Switching between monthly and yearly", () => {
   test("monthly Standard to yearly Pro from the cards is charged now", async ({ page }) => {
     const sub = await subscribe({ price: STANDARD_MONTHLY, plan: "standard" });
     await signIn(page, teacher);
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
 
     await page.locator("label", { hasText: "Yearly" }).first().click();
     await page.getByRole("button", { name: "Switch to Pro" }).click();
@@ -281,7 +283,7 @@ test.describe("Switching between monthly and yearly", () => {
     expect(typeof phaseTwo === "string" ? phaseTwo : phaseTwo.id).toBe(PRO_YEARLY);
 
     // The card says so, interval included.
-    await page.goto("/profile?section=subscription");
+    await page.goto("/pricing");
     await expect(page.getByText(/Starts on .*, billed yearly\./).first()).toBeVisible();
   });
 
