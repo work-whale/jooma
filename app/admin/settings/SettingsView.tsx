@@ -42,7 +42,9 @@ const NOT_ENFORCED = new Set(["block_disposable_email"]);
 
 // Fair use lives on /admin/usage, next to the numbers that give it meaning.
 // Rendering an editable second copy here meant two controls writing one row.
-const HIDDEN_SECTIONS = new Set(["fair_use"]);
+// Image quality and prices live on /admin/tools for the same reason, and are a
+// JSON object this page has no control for.
+const HIDDEN_SECTIONS = new Set(["fair_use", "images"]);
 
 export default function SettingsView({ rows }: { rows: SettingRow[] }) {
   const router = useRouter();

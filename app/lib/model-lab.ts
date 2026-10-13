@@ -59,12 +59,24 @@ async function adminOverride(body: unknown): Promise<LabOverride | null> {
 
   // Only now is it worth the auth round-trip: this costs a request to Supabase,
   // and the overwhelming majority of generations never carry an override.
+  if (!(await callerIsAdmin("__labModel"))) return null;
+  return b ?? null;
+}
+
+/**
+ * Is the signed-in caller a verified admin? A real auth call (getUser +
+ * profiles.is_admin), never a header or a client assertion. Fails closed: on
+ * any doubt the answer is no, and the request runs as configured.
+ *
+ * `field` only names the override in the warning when a non-admin sends one.
+ */
+export async function callerIsAdmin(field: string): Promise<boolean> {
   try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) return false;
 
     const { data } = await supabase
       .from("profiles")
@@ -72,14 +84,13 @@ async function adminOverride(body: unknown): Promise<LabOverride | null> {
       .eq("id", user.id)
       .maybeSingle();
     if (!data?.is_admin) {
-      console.warn("[model-lab] non-admin sent __labModel — ignored");
-      return null;
+      console.warn(`[model-lab] non-admin sent ${field} — ignored`);
+      return false;
     }
-    return b ?? null;
+    return true;
   } catch (err) {
-    // Fail closed: on any doubt, run the tool exactly as configured.
-    console.warn("[model-lab] override check failed, using configured model:", err);
-    return null;
+    console.warn("[model-lab] override check failed, using configured settings:", err);
+    return false;
   }
 }
 

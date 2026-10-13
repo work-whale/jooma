@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAIImage, orientationForFrame, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
+import { isImageQuality, type ImageQuality } from "@/app/lib/image-quality";
+import { LAB_STEP, callerIsAdmin } from "@/app/lib/model-lab";
 import { recordAssetCost } from "@/app/lib/usage";
 
 export const maxDuration = 120;
@@ -13,6 +15,9 @@ interface RequestBody {
    *  closest orientation (square / landscape / portrait). */
   frameWidth?: number;
   frameHeight?: number;
+  /** Admin-only: force a quality, for the test generator in /admin/tools.
+   *  Ignored for everyone else, who get the configured "single" quality. */
+  __labQuality?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -35,10 +40,24 @@ export async function POST(req: NextRequest) {
       ? orientationForFrame(body.frameWidth, body.frameHeight)
       : "landscape");
 
-  const img = await generateAIImage(body.prompt.trim(), body.style ?? "photographic", orientation);
+  // The auth round-trip only happens when an override is actually sent.
+  const labQuality: ImageQuality | null =
+    isImageQuality(body.__labQuality) && (await callerIsAdmin("__labQuality"))
+      ? body.__labQuality
+      : null;
+
+  const img = await generateAIImage(
+    body.prompt.trim(),
+    body.style ?? "photographic",
+    orientation,
+    undefined,
+    labQuality ? { quality: labQuality } : { use: "single" },
+  );
   if (!img) {
     return NextResponse.json({ error: "Generation failed" }, { status: 500 });
   }
-  await recordAssetCost("generate-image", "image", 1, img.costUsd ?? 0);
+  // Test images spend real money, so they are recorded, but tagged so they stay
+  // separable from what teachers' images cost.
+  await recordAssetCost("generate-image", "image", 1, img.costUsd ?? 0, labQuality ? LAB_STEP : null);
   return NextResponse.json(img);
 }

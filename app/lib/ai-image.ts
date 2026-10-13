@@ -1,9 +1,20 @@
 // Shared OpenAI image generation. Used by /api/generate-slideshow (one image per
 // AI-illustrated slide) and /api/generate-image (single-image generation triggered
 // from the editor's AI tab or right-click "Regenerate").
+//
+// Quality is set per use in /admin/tools (see image-quality.ts): by default the
+// slideshow's title image is medium and its other images low, since most sit in
+// small frames on a classroom screen where the difference is hard to see.
 
 import { getOpenAI } from "./openai";
 import { uploadImageBytes } from "./imageStorage";
+import { imageSettings } from "./image-settings";
+import {
+  gptImageCostUsd,
+  qualityFor,
+  type ImageQuality,
+  type ImageUse,
+} from "./image-quality";
 
 export type ImageStyle =
   | "storybook"
@@ -21,27 +32,21 @@ export interface GeneratedImage {
   model?: "gpt-image-1" | "dall-e-3";
   /** The size string requested (e.g. "1024x1024"). */
   size?: string;
+  /** The quality requested ("standard" when DALL·E 3 served it). */
+  quality?: ImageQuality | "standard";
   /** Estimated USD cost of this single image. */
   costUsd?: number;
 }
 
-// USD cost per generated image, keyed by "model size quality".
-// gpt-image-1 values are CALIBRATED to a real OpenAI console measurement
-// (June: a 14-image deck of 12× 1024² + 2× 1536×1024 cost ~$0.216 of images,
-// i.e. ~$0.015 per square image). The earlier token-based estimates (~$0.042)
-// overstated cost ~3×. dall-e-3 prices are OpenAI's fixed per-image rates.
-const IMAGE_COST_USD: Record<string, number> = {
-  "gpt-image-1 1024x1024 medium": 0.015,
-  "gpt-image-1 1536x1024 medium": 0.022,
-  "gpt-image-1 1024x1536 medium": 0.022,
-  "dall-e-3 1024x1024 standard": 0.040,
-  "dall-e-3 1792x1024 standard": 0.080,
-  "dall-e-3 1024x1792 standard": 0.080,
+// gpt-image-1 prices are per size and quality, configured in /admin/tools and
+// defaulted in image-quality.ts. dall-e-3 is only the fallback for an org not
+// verified for gpt-image-1, has one quality, and is priced at OpenAI's fixed
+// per-image rates here.
+const DALLE_COST_USD: Record<string, number> = {
+  "1024x1024": 0.040,
+  "1792x1024": 0.080,
+  "1024x1792": 0.080,
 };
-
-function imageCostUsd(model: string, size: string, quality: string): number {
-  return IMAGE_COST_USD[`${model} ${size} ${quality}`] ?? 0.02; // fallback estimate
-}
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
   "storybook": "Children's storybook illustration, soft pastel colors, friendly characters",
@@ -78,9 +83,14 @@ export async function generateAIImage(
   /** Optional slide title — included in the prompt so the model stays
    *  anchored to the slide's topic, not just the bare noun query. */
   slideTitle?: string,
+  /** Where the image is going, which picks the configured quality. An explicit
+   *  `quality` wins over it (the admin test generator). */
+  opts: { use?: ImageUse; quality?: ImageQuality } = {},
 ): Promise<GeneratedImage | null> {
   if (!query.trim()) return null;
   const client = getOpenAI();
+  const settings = await imageSettings();
+  const quality = opts.quality ?? qualityFor(settings, opts.use ?? "single");
   const composition =
     orientation === "square"
       ? "Square composition, balanced framing, centred subject"
@@ -106,19 +116,19 @@ export async function generateAIImage(
       model: "gpt-image-1" | "dall-e-3";
       size: "1024x1024" | "1536x1024" | "1024x1536" | "1792x1024" | "1024x1792";
       w: number; h: number;
-      quality: "medium" | "standard";
+      quality: ImageQuality | "standard";
     }>
   > = {
     square: [
-      { model: "gpt-image-1", size: "1024x1024", w: 1024, h: 1024, quality: "medium" },
+      { model: "gpt-image-1", size: "1024x1024", w: 1024, h: 1024, quality },
       { model: "dall-e-3",    size: "1024x1024", w: 1024, h: 1024, quality: "standard" },
     ],
     landscape: [
-      { model: "gpt-image-1", size: "1536x1024", w: 1536, h: 1024, quality: "medium" },
+      { model: "gpt-image-1", size: "1536x1024", w: 1536, h: 1024, quality },
       { model: "dall-e-3",    size: "1792x1024", w: 1792, h: 1024, quality: "standard" },
     ],
     portrait: [
-      { model: "gpt-image-1", size: "1024x1536", w: 1024, h: 1536, quality: "medium" },
+      { model: "gpt-image-1", size: "1024x1536", w: 1024, h: 1536, quality },
       { model: "dall-e-3",    size: "1024x1792", w: 1024, h: 1792, quality: "standard" },
     ],
   };
@@ -159,7 +169,11 @@ export async function generateAIImage(
           height: att.h,
           model: att.model,
           size: att.size,
-          costUsd: imageCostUsd(att.model, att.size, att.quality),
+          quality: att.quality,
+          costUsd:
+            att.quality === "standard"
+              ? (DALLE_COST_USD[att.size] ?? 0.08)
+              : (gptImageCostUsd(settings, att.size, att.quality) ?? 0.02),
         };
       } catch (uploadErr) {
         console.error("AI image storage upload failed:", uploadErr);

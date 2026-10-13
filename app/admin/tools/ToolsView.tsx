@@ -16,6 +16,8 @@ import {
 } from "@/app/lib/models";
 import { fmtRelative, gbpFromUsd, nf, penceFromUsd } from "../format";
 import ModelRoutingCard, { type ModelRow } from "../ModelRoutingCard";
+import type { ImageSettings } from "@/app/lib/image-quality";
+import ImageGenerationCard from "./ImageGenerationCard";
 import {
   Btn,
   C,
@@ -108,10 +110,14 @@ export default function ToolsView({
   rows,
   models,
   listedSlugs,
+  imageSettings,
+  imageSettingsSaved,
 }: {
   rows: ToolRow[];
   models: ModelRow[];
   listedSlugs: string[];
+  imageSettings: ImageSettings;
+  imageSettingsSaved: boolean;
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -444,6 +450,8 @@ export default function ToolsView({
           read from token_usage and asset_cost, not estimated
         </CardFooter>
       </Card>
+
+      <ImageGenerationCard settings={imageSettings} saved={imageSettingsSaved} className="mt-4" />
 
       <ModelRoutingCard models={models} className="mt-4" />
 
