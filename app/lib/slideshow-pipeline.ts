@@ -13,6 +13,7 @@ import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
 import { getTheme, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
+import { imageUseForLayout, type ImageUse } from "@/app/lib/image-quality";
 import { recordUsage, recordAssetCost, recordSlideCosts, costUsd } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { forSdk } from "@/app/lib/models";
@@ -345,9 +346,11 @@ async function fetchImageForSlide(
   index: number,
   slideTitle?: string,
   preferWeb = true,
+  /** Picks the AI image quality set in /admin/tools. */
+  use: ImageUse = "slide",
 ): Promise<(FetchedImage & { provider: "ai" | "web" }) | null> {
   const tryAI = async () => {
-    const r = await generateAIImage(query, style, orientation, slideTitle);
+    const r = await generateAIImage(query, style, orientation, slideTitle, { use });
     return r ? { ...r, provider: "ai" as const } : null;
   };
   const tryWeb = async () => {
@@ -1145,11 +1148,16 @@ export function slideshowStream({
           // Wrap each fetch in its own try so one failure doesn't kill the
           // others. The slide can still render with the partial set of images
           // that did succeed.
-          const safeFetch = async (q: string, ori: AIImageOrientation, jobIdx: number) => {
+          const safeFetch = async (
+            q: string,
+            ori: AIImageOrientation,
+            jobIdx: number,
+            use: ImageUse = "slide",
+          ) => {
             // Assign this image to web or AI per the deck's ratio (auto mode).
             const preferWeb = (imgCount++ % 10) < webParts;
             try {
-              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx, spec.title, preferWeb);
+              return await fetchImageForSlide(q, imageSource, imageStyle, ori, jobIdx, spec.title, preferWeb, use);
             } catch (err) {
               console.warn(`[slideJob ${idx}] image fetch failed for "${q}":`, err);
               return null;
@@ -1163,7 +1171,12 @@ export function slideshowStream({
           // network call has already started) and always fire the final event.
           // `send()` itself silently drops when the controller is closed.
           if (spec.imageQuery) {
-            const img = await safeFetch(spec.imageQuery, orientationForLayout(spec.layout), idx);
+            const img = await safeFetch(
+              spec.imageQuery,
+              orientationForLayout(spec.layout),
+              idx,
+              imageUseForLayout(spec.layout),
+            );
             if (img) {
               filled.imageDataUrl = img.dataUrl;
               filled.imageWidth = img.width;
