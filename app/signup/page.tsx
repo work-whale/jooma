@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { LockKey } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
+import { honouredNextPath } from "@/app/lib/safe-next";
 import { usePublicSettings } from "@/app/lib/usePublicSettings";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
@@ -45,6 +46,10 @@ export default function SignupPage() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     if (code) sessionStorage.setItem("jooma:ambassador-code", code.trim().toUpperCase());
+    // Where to go once the account exists: an ambassador invite's application.
+    // Stashed for /complete-profile, the page every new account passes through.
+    const next = honouredNextPath(params.get("next"));
+    if (next) sessionStorage.setItem("jooma:next", next);
     // The sign up modal on /create asks for the address first and sends it
     // here, so the visitor does not type it twice. An invite, read below, wins.
     const prefill = params.get("email")?.trim();
@@ -112,9 +117,14 @@ export default function SignupPage() {
   const handleGoogle = async () => {
     setError(null);
     const supabase = createClient();
+    // An existing Google account skips /complete-profile, so the callback
+    // carries ?next= for them too.
+    const next = honouredNextPath(new URLSearchParams(window.location.search).get("next"));
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`,
+      },
     });
     if (error) setError("Could not start Google sign-in.");
   };

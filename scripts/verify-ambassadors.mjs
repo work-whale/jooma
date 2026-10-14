@@ -346,10 +346,16 @@ async function main() {
   const mine = (rows ?? []).find((r) => r.id === amb1.id);
   check("the ambassador lists their referrals", Number(mine?.referrals) === 2, `got ${mine?.referrals}`);
   check("only the paying one counts as a subscriber", Number(mine?.subscribers) === 1, `got ${mine?.subscribers}`);
-  check("the settled payout is counted as paid", Number(mine?.paid) === 1, `got ${mine?.paid}`);
+  // v2: money is in pence, from the commission ledger, which is empty here.
+  check(
+    "commission figures come from the ledger",
+    Number(mine?.this_month_pence) === 0 && Number(mine?.owed_pence) === 0,
+    JSON.stringify({ this_month: mine?.this_month_pence, owed: mine?.owed_pence }),
+  );
 
   const { data: detail } = await staffClient.rpc("admin_ambassador_referrals", {
     p_ambassador_id: amb1.id,
+    p_period: new Date().toISOString().slice(0, 8) + "01",
   });
   check("the referral list names the teacher", (detail ?? []).some((r) => r.teacher_email === teacher.email));
   check(
@@ -391,10 +397,11 @@ async function main() {
 
   const { data: myRefs, error: myRefsError } = await ambClient.rpc("my_ambassador_referrals");
   check("the ambassador sees their two referrals", !myRefsError && (myRefs ?? []).length === 2, myRefsError?.message);
+  // v2: the dashboard never names a referred teacher at all.
   check(
-    "named by first name and initial only",
-    (myRefs ?? []).every((r) => /^\S+ A\.$/.test(r.display_name)),
-    JSON.stringify((myRefs ?? []).map((r) => r.display_name)),
+    "never named",
+    (myRefs ?? []).every((r) => !("display_name" in r)),
+    JSON.stringify(myRefs ?? []),
   );
   check(
     "with no email, id or surname in the payload",
@@ -417,7 +424,146 @@ async function main() {
     .eq("id", amb1.id);
   const { data: term } = await admin.from("ambassadors").select("pro_until").eq("id", amb1.id).single();
   check("an ambassador cannot extend their own free Pro", term?.pro_until === null, term?.pro_until);
+
+  await verifyProgrammeV2({ teacher, teacherClient, staffClient, ambUser, ambClient, amb1, referralId: referral.id });
 }
+
+/* ── 8. Programme v2 (20261014000000_ambassador_programme_v2) ─────────────── */
+// Invites, applications and the commission ledger. An application holds a date
+// of birth, a home address and bank details, so the bar is: nothing readable
+// by anyone but an admin, and the applicant's own row only through functions
+// that mask the account number.
+async function verifyProgrammeV2({ teacher, teacherClient, staffClient, ambUser, ambClient, amb1, referralId }) {
+  console.log("\nProgramme v2: invites, applications, commission");
+
+  for (const table of ["ambassador_invites", "ambassador_applications", "ambassador_commissions"]) {
+    const { data, error } = await teacherClient.from(table).select("*");
+    check(`${table} returns nothing to a teacher`, error !== null || (data ?? []).length === 0);
+    const { error: insertError } = await teacherClient.from(table).insert({});
+    check(`${table} refuses a teacher's insert`, insertError !== null);
+  }
+
+  // An invite, made the way the admin route makes it.
+  const { createHash, randomBytes } = await import("node:crypto");
+  const token = randomBytes(32).toString("base64url");
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const { data: inviteId, error: inviteError } = await staffClient.rpc("admin_create_ambassador_invite", {
+    p_full_name: `ZZ Invitee ${tag}`,
+    p_source: "instagram",
+    p_token_hash: tokenHash,
+  });
+  check("an admin can create an invite", !inviteError && Boolean(inviteId), inviteError?.message);
+  const { error: teacherInviteError } = await teacherClient.rpc("admin_create_ambassador_invite", {
+    p_full_name: "Nope",
+    p_source: "instagram",
+    p_token_hash: "b".repeat(64),
+  });
+  check("a teacher cannot create one", teacherInviteError !== null);
+
+  const code = `ZZV2${tag}`.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 18);
+  const payload = {
+    first_name: "Vee", last_name: "Two", email: `vee-${tag}@example.com`, mobile: "07700 900000",
+    date_of_birth: "1990-01-01", address_line: "1 Test Road", town: "Leeds", postcode: "LS1 1AA",
+    instagram: "veetwo", reach: "1k_5k", payout_method: "bank", account_holder: "Vee Two",
+    sort_code: "04-00-75", account_number: "12345678", bank_name: "Test Bank",
+    tax_status: "self_assessment", requested_code: code, agreement_version: "test",
+    signature_name: "Vee Two", declarations: { read: true, tax: true, disclosure: true },
+  };
+
+  const { error: directSubmit } = await teacherClient.rpc("submit_ambassador_application", {
+    p_user_id: teacher.id, p_token_hash: tokenHash, payload,
+  });
+  check("a browser cannot call the submit function directly", directSubmit !== null);
+
+  const { data: appId, error: submitError } = await admin.rpc("submit_ambassador_application", {
+    p_user_id: teacher.id, p_token_hash: tokenHash, payload,
+  });
+  check("the apply route (service role) can submit", !submitError && Boolean(appId), submitError?.message);
+
+  const { error: reuseError } = await admin.rpc("submit_ambassador_application", {
+    p_user_id: ambUser.id, p_token_hash: tokenHash, payload: { ...payload, requested_code: `${code}X` },
+  });
+  check("an invite link works once", reuseError !== null);
+
+  const { error: unknownError } = await admin.rpc("submit_ambassador_application", {
+    p_user_id: ambUser.id, p_token_hash: "c".repeat(64), payload,
+  });
+  check("an unknown link is refused", unknownError !== null);
+
+  const { data: free } = await teacherClient.rpc("ambassador_code_available", { p_code: code });
+  check("a requested code is reserved", free === false);
+
+  const { data: mineApp } = await teacherClient.rpc("my_ambassador_application");
+  check("the applicant sees their own application as pending", mineApp?.[0]?.status === "pending");
+  const { data: someoneElses } = await ambClient.rpc("my_ambassador_application");
+  check("nobody else sees it", (someoneElses ?? []).length === 0);
+
+  const { data: details } = await teacherClient.rpc("my_ambassador_details");
+  check(
+    "their own details come back with the account number masked",
+    details?.[0]?.account_last4 === "5678" && !JSON.stringify(details).includes("12345678"),
+    JSON.stringify(details?.[0] ?? {}),
+  );
+
+  const { error: teacherRead } = await teacherClient.rpc("admin_ambassador_application", { p_id: appId });
+  check("a teacher cannot read an application through the admin function", teacherRead !== null);
+  const { data: full } = await staffClient.rpc("admin_ambassador_application", { p_id: appId });
+  check("an admin can, in full", full?.account_number === "12345678");
+
+  const { error: teacherDecline } = await teacherClient.rpc("admin_decline_ambassador_application", {
+    p_id: appId, p_reason: "no",
+  });
+  check("a teacher cannot decline an application", teacherDecline !== null);
+  const { error: declineError } = await staffClient.rpc("admin_decline_ambassador_application", {
+    p_id: appId, p_reason: "e2e",
+  });
+  check("an admin can", !declineError, declineError?.message);
+
+  // The ledger: one commission row for amb1's paying referral, this month.
+  const period = new Date().toISOString().slice(0, 8) + "01";
+  const { data: row, error: rowError } = await admin
+    .from("ambassador_commissions")
+    .insert({
+      ambassador_id: amb1.id, referral_id: referralId, stripe_invoice_id: `in_zz${tag}`,
+      period, kind: "recurring", plan: "pro", billing_interval: "month", amount_pence: 200,
+    })
+    .select()
+    .single();
+  check("the webhook can write a commission row", !rowError, rowError?.message);
+
+  const { error: dupMonth } = await admin.from("ambassador_commissions").insert({
+    ambassador_id: amb1.id, referral_id: referralId, stripe_invoice_id: `in_zz2${tag}`,
+    period, kind: "recurring", plan: "pro", billing_interval: "month", amount_pence: 200,
+  });
+  check("a teacher earns at most once a month", dupMonth?.code === "23505", dupMonth?.message);
+
+  const { error: teacherPay } = await teacherClient.rpc("admin_set_commission_status", {
+    p_id: row?.id, p_status: "paid",
+  });
+  check("a teacher cannot mark commission paid", teacherPay !== null);
+  const { error: ambPay } = await ambClient.rpc("admin_mark_commissions_paid", {
+    p_ambassador_id: amb1.id, p_period: period,
+  });
+  check("nor can the ambassador it belongs to", ambPay !== null);
+
+  const { data: ledger } = await ambClient.rpc("my_ambassador_commissions");
+  check(
+    "the ambassador sees their own ledger, with nothing about the teacher",
+    (ledger ?? []).length === 1 && !("referral_id" in (ledger?.[0] ?? {})),
+    JSON.stringify(ledger),
+  );
+  const { data: otherLedger } = await teacherClient.rpc("my_ambassador_commissions");
+  check("nobody else sees it", (otherLedger ?? []).length === 0);
+
+  const { data: moved, error: moveError } = await staffClient.rpc("admin_mark_commissions_paid", {
+    p_ambassador_id: amb1.id, p_period: period,
+  });
+  check("an admin can mark the month paid", !moveError && moved === 1, moveError?.message);
+
+  await admin.from("ambassador_applications").delete().eq("id", appId);
+  await admin.from("ambassador_invites").delete().eq("id", inviteId);
+}
+
 
 main()
   .then(async () => {

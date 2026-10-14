@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { createClient } from "@/app/lib/auth/server";
+import { supabaseAdmin } from "@/app/lib/supabase-admin";
+import { discountsForInterval, type AmbassadorCodeIds } from "@/app/lib/ambassador-discount";
 import {
   stripe,
   priceIdFor,
@@ -64,6 +66,8 @@ type Loaded =
       nextPriceId: string;
       fromPlan: PlanId;
       toPlan: PlanId;
+      /** The teacher's ambassador code, while its discount is still unspent. */
+      ambassador: AmbassadorCodeIds | null;
     };
 
 function refuse(message: string, status = 400) {
@@ -102,7 +106,7 @@ async function load(requestedInterval: unknown, requestedPlan: unknown): Promise
   }
   const toPlan = requestedPlan ?? plan;
 
-  const sub = await stripe.subscriptions.retrieve(subscriptionId);
+  const sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["discounts"] });
   const item = sub.items.data[0];
   if (!item?.price?.id) {
     console.error("[stripe/switch-interval] subscription has no items", subscriptionId);
@@ -123,6 +127,23 @@ async function load(requestedInterval: unknown, requestedPlan: unknown): Promise
   if (!decision.ok) return refuse(intervalSwitchRefusalMessage(decision.reason));
 
   const nextPriceId = await priceIdFor(toPlan, to);
+
+  // Their ambassador code, if its first-payment discount has not been spent.
+  // Service role, scoped to their own id, as checkout reads it.
+  const { data: referral } = await supabaseAdmin
+    .from("ambassador_referrals")
+    .select("ambassador_codes ( promotion_code_id, yearly_coupon_id )")
+    .eq("user_id", user.id)
+    .is("first_paid_at", null)
+    .maybeSingle();
+  const codeIds = referral?.ambassador_codes as unknown as {
+    promotion_code_id?: string;
+    yearly_coupon_id?: string | null;
+  } | null;
+  const ambassador = codeIds?.promotion_code_id
+    ? { promotionCodeId: codeIds.promotion_code_id, yearlyCouponId: codeIds.yearly_coupon_id ?? null }
+    : null;
+
   return {
     userId: user.id,
     sub,
@@ -132,6 +153,7 @@ async function load(requestedInterval: unknown, requestedPlan: unknown): Promise
     nextPriceId,
     fromPlan: plan,
     toPlan,
+    ambassador,
   };
 }
 
@@ -141,10 +163,53 @@ function periodEndIso(item: Stripe.SubscriptionItem): string | null {
   return unix ? new Date(unix * 1000).toISOString() : null;
 }
 
-/** Whether moving to yearly would drop a coupon still waiting to be used. A
- *  code is a first-month discount, so it applies to monthly billing only. */
-function losesDiscount(sub: Stripe.Subscription, to: BillingInterval): boolean {
-  return to === "year" && (sub.discounts?.length ?? 0) > 0;
+/** Whether the subscription's waiting discount is this teacher's ambassador
+ *  code: the promotion code itself (monthly) or its hidden yearly coupon. */
+function carriesAmbassadorDiscount(sub: Stripe.Subscription, ids: AmbassadorCodeIds | null): boolean {
+  if (!ids) return false;
+  return (sub.discounts ?? []).some((d) => {
+    if (typeof d !== "object" || d === null) return false;
+    const promo = typeof d.promotion_code === "string" ? d.promotion_code : d.promotion_code?.id;
+    if (promo && promo === ids.promotionCodeId) return true;
+    const raw = d as unknown as {
+      source?: { coupon?: string | { id: string } | null };
+      coupon?: string | { id: string } | null;
+    };
+    const coupon = raw.source?.coupon ?? raw.coupon;
+    const couponId = typeof coupon === "string" ? coupon : coupon?.id;
+    return Boolean(ids.yearlyCouponId && couponId === ids.yearlyCouponId);
+  });
+}
+
+/**
+ * What a mid-trial switch does to a discount still waiting to be used.
+ *
+ * An AMBASSADOR code swaps to the coupon for the new interval (monthly: the
+ * first-month code; yearly: its hidden coupon worth the same), so the teacher
+ * keeps the value they were promised and never gets a first-month offer off a
+ * whole year. Any OTHER code is a first-month discount that applies to monthly
+ * billing only, so moving to yearly clears it, as before.
+ */
+function discountChange(
+  sub: Stripe.Subscription,
+  to: BillingInterval,
+  ambassador: AmbassadorCodeIds | null,
+): { discounts: ReturnType<typeof discountsForInterval> } | null {
+  if (carriesAmbassadorDiscount(sub, ambassador)) {
+    return { discounts: discountsForInterval(to, ambassador!) };
+  }
+  if (to === "year" && (sub.discounts?.length ?? 0) > 0) return { discounts: "" };
+  return null;
+}
+
+/** Whether moving to yearly would drop a coupon still waiting to be used. */
+function losesDiscount(
+  sub: Stripe.Subscription,
+  to: BillingInterval,
+  ambassador: AmbassadorCodeIds | null,
+): boolean {
+  const change = discountChange(sub, to, ambassador);
+  return change !== null && change.discounts === "";
 }
 
 function errorMessage(err: unknown): string | null {
@@ -169,7 +234,7 @@ export async function GET(req: NextRequest) {
       req.nextUrl.searchParams.get("plan"),
     );
     if ("error" in loaded) return loaded.error;
-    const { sub, item, to, kind, nextPriceId, fromPlan, toPlan } = loaded;
+    const { sub, item, to, kind, nextPriceId, fromPlan, toPlan, ambassador } = loaded;
 
     const nextPrice = await stripe.prices.retrieve(nextPriceId);
     const base = {
@@ -178,7 +243,7 @@ export async function GET(req: NextRequest) {
       fromPlan,
       toPlan,
       recurringPence: nextPrice.unit_amount ?? 0,
-      losesDiscount: kind === "trial" && losesDiscount(sub, to),
+      losesDiscount: kind === "trial" && losesDiscount(sub, to, ambassador),
     };
 
     if (kind === "trial") {
@@ -231,7 +296,7 @@ export async function POST(req: NextRequest) {
   try {
     const loaded = await load(body?.interval, body?.plan);
     if ("error" in loaded) return loaded.error;
-    const { userId, sub, item, to, kind, nextPriceId } = loaded;
+    const { userId, sub, item, to, kind, nextPriceId, ambassador } = loaded;
     const quantity = item.quantity ?? 1;
 
     if (kind === "at_renewal") {
@@ -259,10 +324,11 @@ export async function POST(req: NextRequest) {
         proration_behavior: "none",
         ...(sub.trial_end ? { trial_end: sub.trial_end } : {}),
         // A waiting first-month coupon would otherwise discount the whole first
-        // YEAR. Codes apply to monthly billing, as checkout already treats them.
+        // YEAR. An ambassador code swaps to its coupon for the new interval;
+        // any other code is cleared on the way to yearly (discountChange).
         // An empty STRING is how Stripe clears them; an empty array is ignored
         // (caught by the sandbox test, which still found the coupon attached).
-        ...(losesDiscount(sub, to) ? { discounts: "" as const } : {}),
+        ...(discountChange(sub, to, ambassador) ?? {}),
         metadata: { ...sub.metadata, userId, billingInterval: to },
       });
       return NextResponse.json({ ok: true, kind });

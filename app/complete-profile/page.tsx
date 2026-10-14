@@ -12,6 +12,7 @@ import { CountrySelect } from "@/app/components/ui/FormFields";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
 import styles from "./complete-profile.module.css";
+import { honouredNextPath } from "@/app/lib/safe-next";
 
 /*
  * The last step of signing up.
@@ -214,6 +215,16 @@ export default function CompleteProfilePage() {
     // That page is server rendered, and a value only the client can see is
     // discarded during hydration, so the code would silently never appear.
     const ambassadorCode = sessionStorage.getItem("jooma:ambassador-code");
+
+    // Someone who arrived from an ambassador invite goes back to their
+    // application instead of the welcome screen.
+    const next = honouredNextPath(sessionStorage.getItem("jooma:next"));
+    sessionStorage.removeItem("jooma:next");
+    if (next) {
+      router.push(next);
+      router.refresh();
+      return;
+    }
 
     // Both signup paths (email and Google) end here, and signing in does not,
     // so this is the one place a brand new teacher passes through exactly once.

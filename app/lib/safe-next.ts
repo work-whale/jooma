@@ -15,3 +15,19 @@ export function safeNextPath(next: string | null | undefined, fallback = "/"): s
   if (/[@\\\u0000-\u001f\u007f]/.test(next)) return fallback;
   return next;
 }
+
+/**
+ * A `?next=` that /login, /signup and /complete-profile will honour.
+ *
+ * Deliberately narrow: only the ambassador programme's pages, which is where an
+ * invite link sends someone to sign in and come straight back. Everything else
+ * keeps landing where it always has, so adding this changed nothing for anyone
+ * outside the programme. Widen the prefix list here, nowhere else.
+ */
+const HONOURED_NEXT = ["/ambassador"];
+
+export function honouredNextPath(next: string | null | undefined): string | null {
+  const path = safeNextPath(next, "");
+  if (!path) return null;
+  return HONOURED_NEXT.some((p) => path === p || path.startsWith(`${p}/`)) ? path : null;
+}

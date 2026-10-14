@@ -7,29 +7,23 @@ import {
   signIn,
   type TestTeacher,
 } from "../support/users";
+import { addMonths, periodLabel, periodOf } from "@/app/lib/ambassador-commission";
 
 /*
- * Ambassadors: who brought a teacher in, and who is owed for it.
+ * The admin's ambassador programme page: live ambassadors, and under each one a
+ * dropdown of the teachers they brought in with a payout toggle per MONTH.
  *
  * THE RULE THESE TESTS EXIST TO PROTECT
  *
- * A referral is payable only once money has actually arrived. Two things look
- * like a paying subscriber and are not:
+ * Only a payment earns. Each commission row is one teacher's payment in one
+ * month (written by the Stripe webhook); a month with nothing billed shows N/A
+ * and offers no way to pay out. That includes a teacher who never paid, and a
+ * teacher an admin COMPED onto Pro, whose plan reads 'pro' with no money ever
+ * having moved.
  *
- *   - a teacher who used a code and stayed on FREE. Tracked deliberately, since
- *     the point of recording free redemptions is that they convert later, but
- *     never payable.
- *   - a teacher an admin COMPED onto Pro. plan reads 'pro' and
- *     subscription_status reads 'active', but no payment was ever taken.
- *     `stripe_subscription_id IS NULL` is the discriminator, exactly as
- *     teacher_mrr() uses it.
- *
- * Both must show N/A and offer no way to pay out. That is the assertion that
- * stops this feature inventing debts.
- *
- * The security half of this (RLS, the RPC guards, forged referrals) is checked
- * one layer down in scripts/verify-ambassadors.mjs, which asserts through the
- * anon key rather than a browser.
+ * Needs supabase/migrations/20261014000000_ambassador_programme_v2.sql on the
+ * target database. The security half (RLS, the RPC guards) is checked one
+ * layer down in scripts/verify-ambassadors.mjs.
  */
 
 const tag = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
@@ -41,15 +35,25 @@ interface Fixture {
   name: string;
 }
 
-/** An ambassador with one code, written the way the admin route writes them. */
+const THIS_MONTH = periodOf(new Date());
+const LAST_MONTH = addMonths(THIS_MONTH, -1);
+
+/** A live ambassador, approved two months ago, with one code. */
 async function createAmbassador(): Promise<Fixture> {
   const t = tag();
   const name = `ZZ Amb ${t}`;
   const code = `ZZAMB${t}`.toUpperCase();
+  const approved = new Date(Date.now() - 60 * 86_400_000);
 
   const { data: ambassador, error } = await admin
     .from("ambassadors")
-    .insert({ full_name: name, email: `zz-${t}@example.com` })
+    .insert({
+      full_name: name,
+      email: `zz-${t}@example.com`,
+      source: "instagram",
+      approved_at: approved.toISOString(),
+      agreement_ends_at: new Date(approved.getTime() + 365 * 86_400_000).toISOString(),
+    })
     .select()
     .single();
   if (error) throw new Error(`Could not create the ambassador: ${error.message}`);
@@ -64,30 +68,14 @@ async function createAmbassador(): Promise<Fixture> {
   return { ambassadorId: ambassador.id, codeId: codeRow.id, code, name };
 }
 
-/**
- * Attribute a teacher to an ambassador.
- *
- * `paid` simulates what the Stripe webhook writes on invoice.paid. Left false,
- * the row is exactly what a free signup looks like.
- */
-async function seedReferral(
-  fixture: Fixture,
-  teacher: TestTeacher,
-  paid: "free" | "pro" | "max" = "free",
-): Promise<string> {
+async function seedReferral(fixture: Fixture, teacher: TestTeacher, paid = false): Promise<string> {
   const { data, error } = await admin
     .from("ambassador_referrals")
     .insert({
       ambassador_id: fixture.ambassadorId,
       code_id: fixture.codeId,
       user_id: teacher.id,
-      ...(paid === "free"
-        ? {}
-        : {
-            first_paid_at: new Date().toISOString(),
-            first_paid_plan: paid,
-            payout_status: "unpaid",
-          }),
+      ...(paid ? { first_paid_at: new Date().toISOString(), first_paid_plan: "pro" } : {}),
     })
     .select()
     .single();
@@ -95,13 +83,39 @@ async function seedReferral(
   return data.id as string;
 }
 
+/** What the webhook writes when a referred teacher pays in `period`. */
+async function seedCommission(
+  fixture: Fixture,
+  referralId: string,
+  period: string,
+  amountPence = 200,
+): Promise<string> {
+  const { data, error } = await admin
+    .from("ambassador_commissions")
+    .insert({
+      ambassador_id: fixture.ambassadorId,
+      referral_id: referralId,
+      stripe_invoice_id: `in_zz${tag()}`,
+      period,
+      kind: "recurring",
+      plan: "pro",
+      billing_interval: "month",
+      amount_pence: amountPence,
+      invoice_amount_pence: 799,
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`Could not seed the commission: ${error.message}`);
+  return data.id as string;
+}
+
 async function deleteAmbassador(fixture: Fixture | null) {
   if (!fixture) return;
-  // Codes and referrals cascade from the ambassador.
+  // Codes, referrals and commission cascade from the ambassador.
   await admin.from("ambassadors").delete().eq("id", fixture.ambassadorId);
 }
 
-test.describe("Ambassadors", () => {
+test.describe("Ambassador programme (admin)", () => {
   let adminUser: TestTeacher;
   let fixture: Fixture | null = null;
   const people: TestTeacher[] = [];
@@ -123,69 +137,77 @@ test.describe("Ambassadors", () => {
 
     await signIn(page, teacher);
     await page.goto("/admin/ambassadors");
-
-    // requireAdmin() redirects rather than rendering an error, so the proof is
-    // where they end up.
     await expect(page).not.toHaveURL(/\/admin/);
   });
 
-  test("an ambassador and their referrals appear, with free tracked but unpayable", async ({
+  test("the v4 layout: KPIs, invite maker with name and source only, review and live tables", async ({
     page,
   }) => {
-    fixture = await createAmbassador();
-
-    const freeTeacher = await createTeacher("Casey");
-    const payingTeacher = await createTeacher("Devon");
-    people.push(freeTeacher, payingTeacher);
-
-    await seedReferral(fixture, freeTeacher, "free");
-    await seedReferral(fixture, payingTeacher, "pro");
-
     await signIn(page, adminUser);
     await page.goto("/admin/ambassadors");
 
-    const row = page.getByText(fixture.name);
-    await expect(row).toBeVisible();
-    await expect(page.getByText(fixture.code).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ambassador programme" })).toBeVisible();
+    await expect(page.getByTestId("programme-kpis")).toBeVisible();
 
-    // Open the dropdown of teachers underneath.
-    await row.click();
+    const box = page.getByTestId("invite-box");
+    await expect(box.getByText("Their name")).toBeVisible();
+    await expect(box.getByText("Where you found them")).toBeVisible();
+    // Asked for: no email and no "Invited by" when onboarding.
+    await expect(box.getByText(/email/i)).toHaveCount(0);
+    await expect(box.getByText(/invited by/i)).toHaveCount(0);
 
-    await expect(page.getByText(freeTeacher.email)).toBeVisible();
-    await expect(page.getByText(payingTeacher.email)).toBeVisible();
+    // Headings, since "Awaiting review" and "Active ambassadors" are KPI labels too.
+    for (const name of [
+      "Commission rates",
+      "Awaiting review",
+      "Active ambassadors",
+      "Invite links issued",
+      "What the programme costs",
+    ]) {
+      await expect(page.getByRole("heading", { name })).toBeVisible();
+    }
+  });
 
-    // The columns the feature was asked for.
-    await expect(page.getByRole("columnheader", { name: "First subscribed month" })).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Payout" })).toBeVisible();
+  test("this month's teachers: billed is payable, unbilled is N/A with no control", async ({
+    page,
+  }) => {
+    fixture = await createAmbassador();
+    const unbilled = await createTeacher("Casey");
+    const billed = await createTeacher("Devon");
+    people.push(unbilled, billed);
 
-    // THE RULE. The free teacher is present and explicitly not payable: no
-    // button anywhere on their row, only N/A.
-    //
-    // Scoped with `.last()`, because the expanded subscriber table is nested
-    // INSIDE the ambassador's own row: an unscoped getByRole("row") match on a
-    // teacher's email also matches the outer row that contains it, and would
-    // pick up the other teachers' buttons.
-    const freeRow = page.getByRole("row").filter({ hasText: freeTeacher.email }).last();
-    await expect(freeRow.getByText("N/A")).toBeVisible();
-    await expect(freeRow.getByText("Not subscribed")).toBeVisible();
-    await expect(freeRow.getByRole("button")).toHaveCount(0);
+    await seedReferral(fixture, unbilled);
+    const billedRef = await seedReferral(fixture, billed, true);
+    await seedCommission(fixture, billedRef, THIS_MONTH);
 
-    // The paying one is owed, and can be settled.
-    const payingRow = page.getByRole("row").filter({ hasText: payingTeacher.email }).last();
-    await expect(payingRow.getByText("Unpaid")).toBeVisible();
-    await expect(payingRow.getByRole("button", { name: "Mark paid" })).toBeVisible();
+    await signIn(page, adminUser);
+    await page.goto("/admin/ambassadors");
+    await page.getByText(fixture.name).click();
+
+    const panel = page.getByTestId("referrals-panel");
+    await expect(panel.getByText(unbilled.email)).toBeVisible();
+    await expect(panel.getByText(billed.email)).toBeVisible();
+
+    // The expanded table is nested inside the ambassador's own row, so scope to
+    // the LAST matching row (the teacher's), not the outer one containing it.
+    const unbilledRow = panel.getByRole("row").filter({ hasText: unbilled.email }).last();
+    await expect(unbilledRow.getByText("N/A")).toBeVisible();
+    await expect(unbilledRow.getByRole("button")).toHaveCount(0);
+
+    const billedRow = panel.getByRole("row").filter({ hasText: billed.email }).last();
+    await expect(billedRow.getByText("Unpaid")).toBeVisible();
+    await expect(billedRow.getByText("£2.00")).toBeVisible();
+    await expect(billedRow.getByRole("button", { name: "Mark paid" })).toBeVisible();
   });
 
   test("a comped teacher is never payable", async ({ page }) => {
     fixture = await createAmbassador();
-
     const comped = await createTeacher("Ellis");
     people.push(comped);
 
-    // Referred, then comped onto Pro by an admin: plan and status both say a
-    // paying subscriber, and no money ever moved. This is the case that would
-    // quietly invent a debt if the payout rule read `plan` instead of payment.
-    await seedReferral(fixture, comped, "free");
+    // Referred, then comped onto Pro by an admin: plan and status say a paying
+    // subscriber, and no money ever moved, so the webhook wrote no commission.
+    await seedReferral(fixture, comped);
     await admin
       .from("profiles")
       .update({ plan: "pro", subscription_status: "active", stripe_subscription_id: null })
@@ -195,72 +217,116 @@ test.describe("Ambassadors", () => {
     await page.goto("/admin/ambassadors");
     await page.getByText(fixture.name).click();
 
-    const row = page.getByRole("row").filter({ hasText: comped.email }).last();
-    // Shows Pro, because that is genuinely their plan...
-    await expect(row.getByText("Pro")).toBeVisible();
-    // ...but is not payable, because nothing was ever charged.
+    const row = page.getByTestId("referrals-panel").getByRole("row").filter({ hasText: comped.email }).last();
+    await expect(row.getByText("Pro", { exact: true })).toBeVisible();
     await expect(row.getByText("N/A")).toBeVisible();
     await expect(row.getByRole("button")).toHaveCount(0);
   });
 
-  test("marking a payout paid sticks", async ({ page }) => {
+  test("marking a month paid sticks, and only that month", async ({ page }) => {
     fixture = await createAmbassador();
-
     const subscriber = await createTeacher("Frankie");
     people.push(subscriber);
-    const referralId = await seedReferral(fixture, subscriber, "max");
+    const ref = await seedReferral(fixture, subscriber, true);
+    const thisMonth = await seedCommission(fixture, ref, THIS_MONTH);
+    const lastMonth = await seedCommission(fixture, ref, LAST_MONTH);
 
     await signIn(page, adminUser);
     await page.goto("/admin/ambassadors");
     await page.getByText(fixture.name).click();
 
-    const row = page.getByRole("row").filter({ hasText: subscriber.email }).last();
-    await row.getByRole("button", { name: "Mark paid" }).click();
+    const row = () =>
+      page.getByTestId("referrals-panel").getByRole("row").filter({ hasText: subscriber.email }).last();
+    await row().getByRole("button", { name: "Mark paid" }).click();
+    await expect(row().getByText(/^Paid/)).toBeVisible();
 
-    await expect(row.getByText(/^Paid/)).toBeVisible();
-
-    // Recorded, not just repainted.
     const { data } = await admin
-      .from("ambassador_referrals")
-      .select("payout_status, payout_at")
-      .eq("id", referralId)
-      .single();
-    expect(data?.payout_status).toBe("paid");
-    expect(data?.payout_at).not.toBeNull();
+      .from("ambassador_commissions")
+      .select("id, status, paid_at")
+      .in("id", [thisMonth, lastMonth]);
+    const byId = Object.fromEntries((data ?? []).map((r) => [r.id, r]));
+    expect(byId[thisMonth].status).toBe("paid");
+    expect(byId[thisMonth].paid_at).not.toBeNull();
+    // Last month's is a separate payout, still owed.
+    expect(byId[lastMonth].status).toBe("unpaid");
+
+    // Switch the dropdown to last month: still owed there.
+    await page.getByTestId("referrals-panel").getByLabel("Month").selectOption(LAST_MONTH);
+    await expect(row().getByText("Unpaid")).toBeVisible();
 
     // And it survives a reload.
     await page.reload();
     await page.getByText(fixture.name).click();
-    await expect(
-      page.getByRole("row").filter({ hasText: subscriber.email }).last().getByText(/^Paid/),
-    ).toBeVisible();
+    await expect(row().getByText(/^Paid/)).toBeVisible();
   });
 
-  test("the header counts only pay for teachers who actually paid", async ({ page }) => {
+  test("a month with nothing billed for a teacher reads N/A once switched to", async ({ page }) => {
     fixture = await createAmbassador();
+    const teacher = await createTeacher("Gray");
+    people.push(teacher);
+    const ref = await seedReferral(fixture, teacher, true);
+    await seedCommission(fixture, ref, THIS_MONTH);
 
-    const free1 = await createTeacher("Gray");
-    const free2 = await createTeacher("Harper");
-    const paying = await createTeacher("Indigo");
-    people.push(free1, free2, paying);
+    await signIn(page, adminUser);
+    await page.goto("/admin/ambassadors");
+    await page.getByText(fixture.name).click();
 
-    await seedReferral(fixture, free1, "free");
-    await seedReferral(fixture, free2, "free");
-    await seedReferral(fixture, paying, "pro");
+    const panel = page.getByTestId("referrals-panel");
+    await panel.getByLabel("Month").selectOption(LAST_MONTH);
+    const row = panel.getByRole("row").filter({ hasText: teacher.email }).last();
+    await expect(row.getByText("N/A")).toBeVisible();
+    await expect(row.getByRole("button")).toHaveCount(0);
+  });
+
+  test("mark all paid for the month settles every teacher in it", async ({ page }) => {
+    fixture = await createAmbassador();
+    const a = await createTeacher("Harper");
+    const b = await createTeacher("Indigo");
+    people.push(a, b);
+    const refA = await seedReferral(fixture, a, true);
+    const refB = await seedReferral(fixture, b, true);
+    const c1 = await seedCommission(fixture, refA, THIS_MONTH, 200);
+    const c2 = await seedCommission(fixture, refB, THIS_MONTH, 400);
+
+    await signIn(page, adminUser);
+    await page.goto("/admin/ambassadors");
+    await page.getByText(fixture.name).click();
+
+    const panel = page.getByTestId("referrals-panel");
+    await expect(panel.getByText("Below £25.00, rolls forward")).toBeVisible();
+    await panel
+      .getByRole("button", { name: `Mark all paid for ${periodLabel(THIS_MONTH, false)}` })
+      .click();
+    await expect(panel.getByRole("row").filter({ hasText: a.email }).last().getByText(/^Paid/)).toBeVisible();
+
+    const { data } = await admin.from("ambassador_commissions").select("status").in("id", [c1, c2]);
+    expect((data ?? []).every((r) => r.status === "paid")).toBe(true);
+  });
+
+  test("the header row counts current subscribers and money in pounds", async ({ page }) => {
+    fixture = await createAmbassador();
+    const paying = await createTeacher("Jules");
+    const free = await createTeacher("Kit");
+    people.push(paying, free);
+
+    const ref = await seedReferral(fixture, paying, true);
+    await seedReferral(fixture, free);
+    await admin
+      .from("profiles")
+      .update({ plan: "pro", subscription_status: "active", stripe_subscription_id: `sub_zz${tag()}` })
+      .eq("id", paying.id);
+    await seedCommission(fixture, ref, THIS_MONTH, 200);
+    await seedCommission(fixture, ref, LAST_MONTH, 200);
 
     await signIn(page, adminUser);
     await page.goto("/admin/ambassadors");
 
-    // Three referred, one subscriber, one payout owed. Asserted on the cells in
-    // order rather than by searching for loose digits, which would match any
-    // column that happened to hold the same number.
-    const cells = page.getByRole("row").filter({ hasText: fixture.name }).getByRole("cell");
-    await expect(cells.nth(3)).toHaveText("3"); // Referred
-    await expect(cells.nth(4)).toHaveText("1"); // Subscribed
-    await expect(cells.nth(5)).toHaveText("1"); // Owed
-    await expect(cells.nth(6)).toHaveText("0"); // Paid
-
-    // If "Subscribed" ever starts counting free redemptions, that middle
-    // assertion is what catches it.
+    // Chevron, Ambassador, Code, Subscribers, This month, All time, Owed, Ends, Status.
+    const cells = page.getByRole("row").filter({ hasText: fixture.name }).first().getByRole("cell");
+    await expect(cells.nth(3)).toHaveText("1"); // only the one paying through Stripe
+    await expect(cells.nth(4)).toHaveText("£2.00");
+    await expect(cells.nth(5)).toHaveText("£4.00");
+    await expect(cells.nth(6)).toHaveText("£4.00");
+    await expect(cells.nth(8)).toContainText("Live");
   });
 });

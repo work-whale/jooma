@@ -181,3 +181,54 @@
   height: 17px;
   flex: none;
 }
+
+/* ── Ambassador programme (docs/JOOMA VERSION 4/13-jooma-ambassador v2.html, screen 12) ── */
+.avatarRing {
+  position: relative;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.avatarGold {
+  background: linear-gradient(135deg, #f4d98b, #c08a1e);
+}
+.avatarPending {
+  border: 2px dashed var(--j-lilac-2);
+}
+.avatarCrown {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateX(-50%) rotate(-10deg);
+  color: #e8b944;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.menuAmbassador {
+  background: linear-gradient(135deg, #e8b944, #c08a1e);
+  color: #2b1d02;
+  font-weight: 800;
+}
+.menuAmbassador:hover {
+  background: linear-gradient(135deg, #f0c75c, #c99525);
+  color: #2b1d02;
+}
+.menuAmbassadorPending {
+  background: var(--j-tint);
+  color: var(--j-deep);
+  font-weight: 700;
+}
+.reviewBadge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--j-card);
+  color: var(--j-deep);
+  white-space: nowrap;
+}

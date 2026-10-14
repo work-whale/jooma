@@ -1,41 +1,73 @@
 import { requireSection } from "../access";
 import { stripe } from "@/app/lib/stripe";
-import AmbassadorsView, { type AmbassadorRow, type CodeLive } from "./AmbassadorsView";
+import { addMonths, periodOf } from "@/app/lib/ambassador-commission";
+import AmbassadorsView, {
+  type AmbassadorRow,
+  type ApplicationRow,
+  type CodeLive,
+  type InviteRow,
+  type ProgrammeSummary,
+} from "./AmbassadorsView";
+import { parseAmbRange, type AmbRange } from "./range";
 
 export const dynamic = "force-dynamic";
 
 /*
- * Who brought each teacher in, and who is owed for it.
+ * The ambassador programme: invite links, applications waiting for review,
+ * live ambassadors and the teachers under each one, and what it all costs.
  *
- * Two sources, deliberately. The ATTRIBUTION is ours: which teacher redeemed
- * whose code, when they first paid, and whether that payout has been settled.
- * The OFFER is Stripe's, read live for the same reason /admin/promos does it —
+ * Two sources, deliberately. The ATTRIBUTION and the MONEY are ours: who
+ * redeemed whose code, and the commission ledger the Stripe webhook writes. The
+ * OFFER is Stripe's, read live for the same reason /admin/promos does it:
  * Stripe validates the code at checkout, so a local copy of the discount would
- * be a second truth that can disagree with the one the customer meets.
- *
- * A Stripe outage costs the offer text and nothing else. The payout table, which
- * is the part with money attached, is answered entirely from our own database.
+ * be a second truth. A Stripe outage costs the offer text and nothing else.
  */
 
-export default async function AdminAmbassadorsPage() {
+/** The first month a range covers, or null for all time. */
+function fromFor(range: AmbRange): string | null {
+  const now = periodOf(new Date());
+  if (range === "month") return now;
+  if (range === "3m") return addMonths(now, -2);
+  return null;
+}
+
+export default async function AdminAmbassadorsPage(props: {
+  searchParams?: Promise<{ range?: string }>;
+}) {
   const { supabase } = await requireSection("see_money");
+  const searchParams = await props.searchParams;
+  const range = parseAmbRange(searchParams?.range);
 
-  const { data: rows, error } = await supabase.rpc("admin_ambassadors");
+  const [
+    { data: rows, error },
+    { data: summaryRows, error: summaryError },
+    { data: applications, error: applicationsError },
+    { data: invites, error: invitesError },
+  ] = await Promise.all([
+    supabase.rpc("admin_ambassadors"),
+    supabase.rpc("admin_programme_summary", { p_from: fromFor(range) }),
+    supabase.rpc("admin_ambassador_applications", { p_status: "pending" }),
+    supabase.rpc("admin_ambassador_invites"),
+  ]);
 
-  if (error) {
-    console.error("[admin/ambassadors] could not load ambassadors", error);
+  for (const [what, err] of [
+    ["ambassadors", error],
+    ["summary", summaryError],
+    ["applications", applicationsError],
+    ["invites", invitesError],
+  ] as const) {
+    if (err) console.error(`[admin/ambassadors] could not load ${what}`, err);
   }
 
   const ambassadors = (rows ?? []) as AmbassadorRow[];
+  const summary = ((summaryRows ?? [])[0] ?? null) as ProgrammeSummary | null;
 
   // Live offer and redemption count per code, keyed by the code string. Only
   // fetched when there is something to look up.
   const live: Record<string, CodeLive> = {};
   let stripeError: string | null = null;
 
-  const anyCodes = ambassadors.some((a) => (a.codes?.length ?? 0) > 0);
-
-  if (anyCodes) {
+  if (ambassadors.some((a) => (a.codes?.length ?? 0) > 0)) {
     try {
       const codes = await stripe.promotionCodes.list({
         limit: 100,
@@ -43,9 +75,8 @@ export default async function AdminAmbassadorsPage() {
       });
 
       for (const pc of codes.data) {
-        // The coupon hangs off `promotion` on this API version, not off the
-        // promotion code itself, and an unexpanded response leaves it as a bare
-        // id string. Narrowed by hand, as app/admin/promos/page.tsx has to.
+        // The coupon hangs off `promotion` on this API version, and an
+        // unexpanded response leaves it as a bare id string.
         const promotion = (pc as unknown as { promotion?: { coupon?: unknown } }).promotion;
         const coupon =
           promotion && typeof promotion.coupon === "object" && promotion.coupon !== null
@@ -58,12 +89,12 @@ export default async function AdminAmbassadorsPage() {
 
         const offer =
           coupon?.percent_off != null
-            ? `${coupon.percent_off}% off`
+            ? `${coupon.percent_off}% off the first month`
             : coupon?.amount_off != null
               ? `${(coupon.amount_off / 100).toLocaleString("en-GB", {
                   style: "currency",
                   currency: (coupon.currency ?? "gbp").toUpperCase(),
-                })} off`
+                })} off the first month`
               : "Discount";
 
         const expired = pc.expires_at ? pc.expires_at * 1000 < Date.now() : false;
@@ -73,8 +104,6 @@ export default async function AdminAmbassadorsPage() {
         live[pc.code.toUpperCase()] = {
           offer,
           redeemed: pc.times_redeemed ?? 0,
-          // What checkout will actually do with it today, which is the only
-          // thing that matters to someone about to hand the code out.
           usable: pc.active && !expired && !capped,
         };
       }
@@ -84,5 +113,15 @@ export default async function AdminAmbassadorsPage() {
     }
   }
 
-  return <AmbassadorsView rows={ambassadors} live={live} stripeError={stripeError} />;
+  return (
+    <AmbassadorsView
+      range={range}
+      rows={ambassadors}
+      summary={summary}
+      applications={(applications ?? []) as ApplicationRow[]}
+      invites={(invites ?? []) as InviteRow[]}
+      live={live}
+      stripeError={stripeError}
+    />
+  );
 }

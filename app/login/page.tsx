@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeSlash, LockKey } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
+import { honouredNextPath } from "@/app/lib/safe-next";
 import { usePublicSettings } from "@/app/lib/usePublicSettings";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
@@ -39,6 +40,14 @@ export default function LoginPage() {
   // Read from window rather than useSearchParams(): that hook sees only the
   // query string anyway, and forces a client-side bailout needing a Suspense
   // boundary around the whole form.
+  // Kept for the "Sign up" link, so someone who arrived from an ambassador
+  // invite and has no account yet still ends up back at their application.
+  const [signupHref, setSignupHref] = useState("/signup");
+  useEffect(() => {
+    const next = honouredNextPath(new URLSearchParams(window.location.search).get("next"));
+    if (next) queueMicrotask(() => setSignupHref(`/signup?next=${encodeURIComponent(next)}`));
+  }, []);
+
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const query = new URLSearchParams(window.location.search);
@@ -94,16 +103,24 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    router.push("/tools");
+    // Back to an ambassador invite's application, if that is where they came
+    // from; everyone else lands on Tools as before.
+    router.push(honouredNextPath(new URLSearchParams(window.location.search).get("next")) ?? "/tools");
     router.refresh();
   };
 
   const handleGoogle = async () => {
     setError(null);
     const supabase = createClient();
+    // /auth/callback honours ?next= for an existing account. A brand new one
+    // goes through /complete-profile instead, which reads the stashed copy.
+    const next = honouredNextPath(new URLSearchParams(window.location.search).get("next"));
+    if (next) sessionStorage.setItem("jooma:next", next);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`,
+      },
     });
     if (error) setError("Could not start Google sign-in.");
   };
@@ -114,7 +131,7 @@ export default function LoginPage() {
       lede="Sign in to pick up where you left off."
       footer={
         <>
-          Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+          Don&apos;t have an account? <Link href={signupHref}>Sign up</Link>
         </>
       }
     >

@@ -15,6 +15,7 @@ import { isToolEnabled } from "@/app/lib/tool-availability";
 import { profileGateBody } from "@/app/lib/profile-gate";
 import { publicSettings } from "@/app/lib/settings";
 import { applyAttributionCookie } from "@/app/lib/attribution-cookie";
+import { honouredNextPath } from "@/app/lib/safe-next";
 import { GUEST_COOKIE, newGuestCookie, verifyGuestCookie } from "@/app/lib/guest-cookie";
 import { TRIAL_RUN_HEADER, TRIAL_TOKEN_HEADER, verifyTrialToken } from "@/app/lib/trial-token";
 import { clientIp, guestCallAllowed, guestCookieOptions, trialSecret } from "@/app/lib/guest";
@@ -116,6 +117,11 @@ const PUBLIC_PATHS = [
   "/create",
   "/made",
   "/api/try",
+  // An ambassador invite link. The person may have no account yet; the page
+  // shows the programme and sends them to sign up. It looks the token up by
+  // its hash and reveals only the name the admin typed. The application itself
+  // (/ambassador/apply) is NOT public.
+  "/ambassador/invite",
 ];
 
 // The two internal requests a deck makes over HTTP. A teacher's deck forwards
@@ -260,13 +266,20 @@ export async function proxy(request: NextRequest) {
     }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    // Back to where they were going, for the pages /login honours (the
+    // ambassador application, reached from an invite link).
+    const back = honouredNextPath(pathname);
+    url.search = back ? `?next=${encodeURIComponent(back)}` : url.search;
     return NextResponse.redirect(url);
   }
 
-  // Already signed in but sitting on login/signup -> send into the app.
+  // Already signed in but sitting on login/signup -> send into the app, or on
+  // to an honoured ?next= (an ambassador invite's application).
   if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/tools";
+    const next = honouredNextPath(request.nextUrl.searchParams.get("next"));
+    url.pathname = next ?? "/tools";
+    if (next) url.search = "";
     return NextResponse.redirect(url);
   }
 

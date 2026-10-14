@@ -67,4 +67,28 @@ export const SAMPLE_PARAMS: Record<EmailTemplateKey, Record<string, string>> = {
   // app/api/cron/process-deletions/route.ts, once the deletion has run. Takes
   // no parameters: by this point there is no account left to say anything about.
   account_deleted: {},
+
+  // app/api/ambassadors/apply/route.ts, once the application is stored.
+  ambassador_application_received: {
+    firstName: "Priya",
+    code: "PRIYA-4K2",
+    paidBy: "PayPal (priya@example.co.uk)",
+    signedDate: "13 October 2026",
+  },
+
+  // app/api/admin/ambassadors/applications/[id]/route.ts, once approved.
+  ambassador_approved: {
+    firstName: "Priya",
+    code: "PRIYA-4K2",
+    offer: "20% off their first month",
+    agreementEnds: "13 October 2027",
+    proLine: "Your Pro account is free until then too.",
+  },
+
+  // app/api/admin/ambassadors/applications/[id]/route.ts, on decline. `reason`
+  // is what the admin typed in the review drawer, and may be empty.
+  ambassador_declined: {
+    firstName: "Priya",
+    reason: "We are keeping the programme to teachers who post weekly for now. Do apply again next term.",
+  },
 };

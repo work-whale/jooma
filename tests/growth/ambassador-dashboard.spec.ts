@@ -18,7 +18,9 @@ import {
  * admin_link_ambassador_account).
  *
  * The privacy half is the part worth guarding: an ambassador sees their OWN
- * referrals only, and those only as a first name and an initial.
+ * referrals only, and never who they are: the plan and the date, no name.
+ * (Programme v2, 20261014000000_ambassador_programme_v2.sql, dropped the first
+ * name and initial the v1 page showed.)
  */
 
 const tag = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
@@ -131,7 +133,8 @@ test.describe("Ambassador dashboard", () => {
 
     await nav.getByRole("link", { name: "Ambassador", exact: true }).click();
     await expect(mine).toHaveURL(/\/ambassador$/);
-    await expect(mine.getByRole("heading", { name: /thanks for representing jooma/i })).toBeVisible();
+    await expect(mine.getByRole("heading", { name: new RegExp(`${amb.firstName}\.$`) })).toBeVisible();
+    await expect(mine.getByText("Verified Jooma Ambassador")).toBeVisible();
     await expect(mine.getByTestId("ambassador-pro-status")).toContainText("free until");
     await expect(mine.getByText(fixture.code).first()).toBeVisible();
     await ctx.close();
@@ -158,7 +161,7 @@ test.describe("Ambassador dashboard", () => {
     expect(profile!.plan).toBe("max");
   });
 
-  test("the page lists only their own referrals, as first name and initial", async ({
+  test("the page lists only their own referrals, and never names them", async ({
     page,
   }) => {
     const amb = await createTeacher("Kofi");
@@ -182,16 +185,16 @@ test.describe("Ambassador dashboard", () => {
 
     const table = page.getByTestId("ambassador-referrals");
     await expect(table.getByRole("row")).toHaveCount(3); // header + two
-    await expect(
-      table.getByText(`${joinedFree.firstName} ${joinedFree.surname[0].toUpperCase()}.`),
-    ).toBeVisible();
-    await expect(table.getByText("Subscribed · Pro")).toBeVisible();
+    // The paid one has a first payment but no live subscription now.
+    await expect(table.getByText("Stopped")).toBeVisible();
     await expect(table.getByText("Signed up")).toBeVisible();
 
-    // Never the full surname, never an email, never someone else's referral.
-    await expect(page.getByText(joinedFree.surname)).toHaveCount(0);
-    await expect(page.getByText(joinedFree.email)).toHaveCount(0);
-    await expect(page.getByText(notMine.firstName)).toHaveCount(0);
+    // No name at all, no email, and nobody else's referral.
+    for (const t of [joinedFree, joinedPaid, notMine]) {
+      await expect(page.getByText(t.firstName)).toHaveCount(0);
+      await expect(table.getByText(t.surname)).toHaveCount(0);
+      await expect(page.getByText(t.email)).toHaveCount(0);
+    }
   });
 
   test("the RPCs return nothing to a teacher who is not an ambassador", async ({ page }) => {

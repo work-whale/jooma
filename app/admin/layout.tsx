@@ -33,6 +33,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (fresh > 0) badges["/admin/enquiries"] = fresh;
   }
 
+  if (access.can("see_money")) {
+    // Ambassador applications waiting for a decision.
+    const { data: pending } = await supabase.rpc("admin_ambassador_applications", {
+      p_status: "pending",
+    });
+    const waiting = Array.isArray(pending) ? pending.length : 0;
+    if (waiting > 0) badges["/admin/ambassadors"] = waiting;
+  }
+
   if (access.can("see_product")) {
     const { data: flags } = await supabase.rpc("admin_safeguarding_summary");
     const awaiting = Number(flags?.[0]?.awaiting_review ?? 0);

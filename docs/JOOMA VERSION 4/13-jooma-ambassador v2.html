@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jooma Ambassador Programme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F5FC; --card:#FFFFFF; --tint:#F1ECFC; --tint2:#E9E2FB;
+  --lilac:#CDBCF7; --lilac2:#B7A6EC; --mid:#8B6AE8; --purple:#5B2ED6; --deep:#3A1C8F;
+  --ink:#1D1730; --body:#3C3552; --muted:#6D6683; --faint:#9A93AD;
+  --line:#EAE6F5; --line2:#DDD6EE;
+  --orange:#C2551F; --orange-bg:#FDF1EA; --orange-ink:#8A3C12;
+  --green:#0F8A63; --green-bg:#E6F6EF; --green-ink:#0C6E4E;
+  --blue:#1D6FD0; --cyan:#0E7490; --rose:#C43D6B;
+  /* ambassador tier */
+  --gold:#C08A1E; --gold-2:#E8B944; --gold-3:#F4D98B;
+  --gold-bg:#FDF7E7; --gold-ink:#7A5610; --gold-line:#EEDCA8;
+  --r:14px; --r-lg:20px; --r-xl:28px; --pill:999px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--body);font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{color:var(--ink);font-weight:800;letter-spacing:-.032em;line-height:1.1;margin:0}
+h1{font-size:clamp(1.9rem,3.8vw,2.7rem)}
+h2{font-size:1.3rem;letter-spacing:-.028em}
+h3{font-size:1rem;letter-spacing:-.02em}
+h4{font-size:.86rem;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit;padding:0}
+svg{display:block}
+input,select,textarea{font-family:inherit}
+:focus-visible{outline:3px solid var(--mid);outline-offset:3px;border-radius:8px}
+.ic{width:17px;height:17px;fill:currentColor;flex:none}
+.ic-s{width:15px;height:15px;fill:currentColor}
+
+/* ---------- prototype chrome, delete in production ---------- */
+.proto{position:sticky;top:0;z-index:95;background:#140B2E;color:#fff;padding:9px 14px;
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:.74rem}
+.proto b{font-weight:800;letter-spacing:.1em;text-transform:uppercase;font-size:.64rem;color:var(--lilac);margin-right:3px}
+.proto i{width:1px;height:16px;background:rgba(255,255,255,.2);margin:0 4px}
+.proto button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:var(--pill);
+  padding:5px 11px;font-size:.72rem;font-weight:700;color:#DCD2FA}
+.proto button:hover{background:rgba(255,255,255,.2);color:#fff}
+.proto button.on{background:#fff;color:#140B2E;border-color:#fff}
+
+.scr{display:none}
+.scr.on{display:block;animation:rise .35s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.wrap{max-width:980px;margin:0 auto;padding:34px 22px 90px}
+.wrap.narrow{max-width:700px}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:.96rem;font-weight:800;
+  padding:14px 26px;border-radius:var(--pill);transition:transform .18s var(--ease),background .18s,border-color .18s}
+.btn svg{width:15px;height:15px;fill:currentColor}
+.btn-p{background:var(--purple);color:#fff;box-shadow:0 8px 22px -10px rgba(91,46,214,.8)}
+.btn-p:hover{background:#4d24bd;transform:translateY(-2px)}
+.btn-g{background:var(--card);color:var(--ink);border:1.5px solid var(--line2)}
+.btn-g:hover{border-color:var(--lilac2);transform:translateY(-2px)}
+.btn-w{background:#fff;color:var(--deep)}
+.btn-gold{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#2B1D02;
+  box-shadow:0 10px 24px -12px rgba(192,138,30,.9)}
+.btn-gold:hover{transform:translateY(-2px)}
+.btn-lg{padding:16px 32px;font-size:1.03rem}
+.btn:disabled{opacity:.42;pointer-events:none}
+
+/* ---------- marketing hero for the invite page ---------- */
+.band{position:relative;overflow:hidden;padding:72px 0 92px;color:#fff;
+  background:
+    radial-gradient(ellipse 900px 520px at 78% -6%, rgba(232,185,68,.3), transparent 60%),
+    radial-gradient(ellipse 760px 460px at 10% 92%, rgba(91,46,214,.55), transparent 66%),
+    linear-gradient(166deg,#4A22B5 0%,#5B2ED6 40%,#3A1C8F 100%)}
+.band-in{max-width:980px;margin:0 auto;padding:0 22px;position:relative;z-index:2;text-align:center}
+.goldtag{display:inline-flex;align-items:center;gap:9px;
+  background:linear-gradient(135deg,rgba(244,217,139,.26),rgba(192,138,30,.2));
+  border:1px solid var(--gold-3);border-radius:var(--pill);padding:8px 17px;
+  font-size:.71rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-3);margin-bottom:22px}
+.goldtag svg{width:15px;height:15px;fill:var(--gold-3)}
+.band h1{color:#fff;font-size:clamp(2.3rem,5.4vw,3.9rem);letter-spacing:-.045em}
+.band h1 .g{background:linear-gradient(100deg,var(--gold-3),var(--gold-2) 60%,#fff);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.band .sub{color:#DCD2FA;font-size:1.08rem;margin:20px auto 0;max-width:54ch}
+.band .acts{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+.band .note{color:rgba(220,210,250,.72);font-size:.86rem;margin-top:18px}
+.invited{display:flex;width:-moz-fit-content;width:fit-content;margin-left:auto;margin-right:auto;align-items:center;gap:11px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);border-radius:var(--pill);padding:7px 17px 7px 7px;
+  font-size:.86rem;color:#EDE7FB;margin-bottom:26px}
+.invited .av{width:30px;height:30px;border-radius:50%;background:var(--gold-2);color:#2B1D02;
+  display:grid;place-items:center;font-size:.72rem;font-weight:800;flex:none}
+.invited b{color:#fff;font-weight:800}
+
+/* ---------- generic cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);padding:28px 30px;
+  box-shadow:0 22px 52px -42px rgba(29,23,48,.4)}
+.card + .card{margin-top:14px}
+.card.flat{box-shadow:none}
+.sec{padding:70px 0}
+.sec-h{text-align:center;max-width:620px;margin:0 auto 38px}
+.sec-h .eye{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);display:block;margin-bottom:13px}
+.sec-h p{color:var(--muted);margin-top:14px}
+
+.perks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.perk{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px}
+.perk .pi{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;margin-bottom:16px}
+.perk .pi svg{width:21px;height:21px;fill:#fff}
+.perk h3{margin-bottom:8px}
+.perk p{font-size:.9rem;color:var(--muted);line-height:1.55}
+
+/* rate table */
+.rates{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.rates th,.rates td{padding:15px 18px;text-align:left;font-size:.92rem;border-bottom:1px solid var(--line)}
+.rates thead th{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);background:var(--bg)}
+.rates tbody tr:last-child td{border-bottom:0}
+.rates td b{color:var(--ink);font-weight:800}
+.rates .num{font-variant-numeric:tabular-nums;font-weight:800;color:var(--ink);text-align:right}
+.rates .plan{display:inline-flex;align-items:center;gap:10px;font-weight:800;color:var(--ink)}
+.rates .sw{width:11px;height:11px;border-radius:4px;flex:none}
+
+/* ---------- onboarding ---------- */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:30px}
+.stp{display:flex;align-items:center;gap:9px;flex:1}
+.stp .n{width:27px;height:27px;border-radius:50%;background:var(--card);border:2px solid var(--line2);
+  display:grid;place-items:center;font-size:.76rem;font-weight:800;color:var(--faint);flex:none}
+.stp .l{font-size:.8rem;font-weight:700;color:var(--faint);white-space:nowrap}
+.stp .bar{flex:1;height:2px;background:var(--line2);margin:0 10px;border-radius:2px}
+.stp.done .n{background:var(--purple);border-color:var(--purple);color:#fff}
+.stp.done .l{color:var(--body)}
+.stp.done .bar{background:var(--lilac2)}
+.stp.now .n{border-color:var(--purple);color:var(--purple)}
+.stp.now .l{color:var(--ink);font-weight:800}
+@media (max-width:760px){.stp .l{display:none}}
+
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f{display:flex;flex-direction:column;gap:7px}
+.f.full{grid-column:1/-1}
+.f label{font-size:.8rem;font-weight:800;color:var(--body)}
+.f label small{font-weight:600;color:var(--faint);margin-left:6px}
+.f input,.f select,.f textarea{border:1.5px solid var(--line2);border-radius:var(--r);padding:13px 15px;
+  font-size:.95rem;color:var(--ink);background:var(--card);outline:0;width:100%}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--purple)}
+.f input::placeholder{color:var(--faint)}
+.f .hint{font-size:.78rem;color:var(--faint)}
+.f-pre{display:flex;align-items:center;border:1.5px solid var(--line2);border-radius:var(--r);background:var(--card);overflow:hidden}
+.f-pre:focus-within{border-color:var(--purple)}
+.f-pre .px{display:flex;align-items:center;gap:8px;padding:0 12px;flex:none;color:var(--muted);
+  font-size:.9rem;font-weight:700;border-right:1px solid var(--line)}
+.f-pre .px svg{width:17px;height:17px;fill:currentColor}
+.f-pre input{border:0;border-radius:0}
+.f-pre input:focus{border:0}
+
+.callout{display:flex;gap:12px;background:var(--tint);border:1px solid var(--lilac);border-radius:var(--r);
+  padding:14px 16px;margin-top:18px;font-size:.87rem;color:var(--deep)}
+.callout svg{width:17px;height:17px;fill:var(--purple);flex:none;margin-top:3px}
+.callout.warn{background:var(--orange-bg);border-color:#F0D9C6;color:var(--orange-ink)}
+.callout.warn svg{fill:var(--orange)}
+.callout.gold{background:var(--gold-bg);border-color:var(--gold-line);color:var(--gold-ink)}
+.callout.gold svg{fill:var(--gold)}
+
+/* contract */
+.contract{border:1.5px solid var(--line2);border-radius:var(--r-lg);background:var(--card);
+  max-height:400px;overflow-y:auto;padding:28px 30px;font-size:.9rem;line-height:1.75;color:var(--body)}
+.contract h3{margin:26px 0 9px;font-size:.92rem}
+.contract h3:first-child{margin-top:0}
+.contract p{margin-bottom:11px}
+.contract ul{margin:0 0 11px;padding-left:20px}
+.contract li{margin-bottom:5px}
+.contract .cl{font-size:.74rem;font-weight:800;color:var(--faint);letter-spacing:.06em}
+.draftbar{background:var(--orange-bg);border:1px solid #F0D9C6;border-left:3px solid var(--orange);
+  border-radius:var(--r);padding:13px 16px;font-size:.85rem;color:var(--orange-ink);margin-bottom:16px}
+.draftbar b{font-weight:800}
+.sigbox{display:grid;grid-template-columns:1fr 240px;gap:16px;margin-top:18px}
+.sigpad{border:1.5px dashed var(--line2);border-radius:var(--r);background:var(--bg);padding:20px;
+  display:grid;place-items:center;min-height:110px;text-align:center}
+.sigpad .sg{font-family:"Newsreader",Georgia,serif;font-style:italic;font-size:2rem;color:var(--ink)}
+.sigpad small{display:block;font-size:.76rem;color:var(--faint);margin-top:6px}
+.chk{display:flex;gap:12px;align-items:flex-start;margin-top:16px;font-size:.88rem;color:var(--body);cursor:pointer}
+.chk .bx{width:21px;height:21px;border-radius:6px;border:2px solid var(--line2);flex:none;margin-top:2px;
+  display:grid;place-items:center;transition:background .15s,border-color .15s}
+.chk .bx svg{width:12px;height:12px;fill:#fff;opacity:0;transition:opacity .15s}
+.chk.on .bx{background:var(--purple);border-color:var(--purple)}
+.chk.on .bx svg{opacity:1}
+
+/* ---------- status ---------- */
+.statebox{text-align:center;padding:20px 0}
+.state-ic{width:66px;height:66px;border-radius:22px;display:grid;place-items:center;margin:0 auto 24px}
+.state-ic svg{width:32px;height:32px;fill:#fff}
+.pending{background:linear-gradient(140deg,#8B6AE8,var(--purple))}
+.live{background:linear-gradient(140deg,var(--gold-2),var(--gold))}
+.tl{position:relative;padding-left:26px;border-left:2px solid var(--line2);display:flex;flex-direction:column;gap:18px;text-align:left;margin-top:26px}
+.tl > div{position:relative}
+.tl > div::before{content:"";position:absolute;left:-33px;top:4px;width:12px;height:12px;border-radius:50%;
+  background:var(--card);border:2.5px solid var(--lilac2)}
+.tl > div.now::before{background:var(--purple);border-color:var(--purple)}
+.tl b{display:block;font-size:.93rem;color:var(--ink)}
+.tl span{font-size:.87rem;color:var(--muted)}
+
+/* ---------- ambassador app shell ---------- */
+.shell{min-height:100vh;background:var(--bg)}
+.gold-band{position:relative;overflow:hidden;color:#fff;padding:30px 0 92px;
+  background:
+    radial-gradient(ellipse 620px 320px at 88% -10%, rgba(244,217,139,.4), transparent 62%),
+    radial-gradient(ellipse 420px 300px at 4% 100%, rgba(192,138,30,.3), transparent 66%),
+    linear-gradient(162deg,#4A22B5 0%,#3F1C9E 48%,#2E1479 100%)}
+.gold-band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold-2) 22%,var(--gold-3) 50%,var(--gold-2) 78%,transparent)}
+.gb-in{max-width:1080px;margin:0 auto;padding:0 22px;position:relative;z-index:2}
+.gb-top{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.gb-top .wm{color:#fff}.gb-top .wm svg{height:20px;width:auto;fill:currentColor}
+.gb-top .sp{margin-left:auto;display:flex;align-items:center;gap:12px}
+.verif{display:inline-flex;align-items:center;gap:9px;
+  background:linear-gradient(135deg,rgba(244,217,139,.22),rgba(192,138,30,.16));
+  border:1px solid var(--gold-3);border-radius:var(--pill);padding:7px 15px 7px 11px;
+  font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-3)}
+.verif svg{width:15px;height:15px;fill:var(--gold-3)}
+/* the ambassador avatar: gold ring plus a crown */
+.av-amb{position:relative;width:38px;height:38px;flex:none}
+.av-amb .ring{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold-3),var(--gold));
+  display:grid;place-items:center}
+.av-amb .in{width:32px;height:32px;border-radius:50%;background:var(--deep);color:#fff;
+  display:grid;place-items:center;font-size:.74rem;font-weight:800}
+.av-amb .cr{position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(-10deg);
+  width:17px;height:17px;fill:var(--gold-2);filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.gb-h{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.gb-h h1{color:#fff;font-size:clamp(1.7rem,3.4vw,2.3rem)}
+.gb-h p{color:#D8CCFA;font-size:.95rem;margin-top:7px}
+.gb-h .since{margin-left:auto;text-align:right;color:#CDBCF7;font-size:.84rem}
+.gb-h .since b{display:block;color:#fff;font-size:1.02rem;font-weight:800}
+
+/* code block */
+.codebox{display:flex;align-items:center;gap:14px;margin-top:24px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(244,217,139,.4);border-radius:var(--r-lg);padding:16px 16px 16px 20px;
+  backdrop-filter:blur(8px)}
+.codebox .cl{font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-3)}
+.codebox .cv{font-size:1.5rem;font-weight:800;letter-spacing:.06em;color:#fff;font-variant-numeric:tabular-nums;margin-top:3px}
+.codebox .ca{margin-left:auto;display:flex;gap:9px;flex:none}
+.cbtn{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--deep);border-radius:var(--pill);
+  padding:11px 18px;font-size:.85rem;font-weight:800;transition:transform .18s var(--ease)}
+.cbtn:hover{transform:translateY(-2px)}
+.cbtn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff}
+.cbtn svg{width:15px;height:15px;fill:currentColor}
+
+/* body under the band */
+.under{max-width:1080px;margin:-66px auto 0;padding:0 22px 90px;position:relative;z-index:3}
+.tabsrow{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:var(--pill);
+  padding:5px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none;box-shadow:0 14px 34px -26px rgba(29,23,48,.5)}
+.tabsrow::-webkit-scrollbar{display:none}
+.atab{display:inline-flex;align-items:center;gap:8px;padding:10px 17px;border-radius:var(--pill);
+  font-size:.87rem;font-weight:700;color:var(--muted);white-space:nowrap;flex:none;transition:background .16s,color .16s}
+.atab:hover{color:var(--ink)}
+.atab.on{background:var(--purple);color:#fff}
+.atab svg{width:15px;height:15px;fill:currentColor}
+
+/* metric tiles */
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.mt{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px}
+.mt.hero{background:linear-gradient(150deg,var(--gold-bg),#fff);border-color:var(--gold-line)}
+.mt .lb{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:700;color:var(--muted)}
+.mt .lb svg{width:14px;height:14px;fill:var(--faint)}
+.mt.hero .lb svg{fill:var(--gold)}
+.mt .v{font-size:2rem;font-weight:800;color:var(--ink);letter-spacing:-.045em;line-height:1.05;margin-top:11px;font-variant-numeric:tabular-nums}
+.mt.hero .v{color:var(--gold-ink)}
+.mt .d{font-size:.8rem;color:var(--faint);margin-top:5px}
+.mt .up{color:var(--green-ink);font-weight:700}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 24px;margin-top:14px}
+.panel-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.panel-h h2{font-size:1.02rem}
+.panel-h .r{margin-left:auto;display:flex;gap:6px;align-items:center}
+.segm{display:inline-flex;gap:3px;background:var(--bg);border-radius:var(--pill);padding:3px}
+.segm button{padding:7px 13px;border-radius:var(--pill);font-size:.78rem;font-weight:700;color:var(--muted)}
+.segm button.on{background:var(--card);color:var(--ink);box-shadow:0 2px 6px -2px rgba(29,23,48,.25)}
+
+table.t{width:100%;border-collapse:separate;border-spacing:0;font-size:.9rem}
+table.t th,table.t td{padding:13px 12px;text-align:left;border-bottom:1px solid var(--line)}
+table.t th{font-size:.69rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+table.t td{color:var(--body)}
+table.t tbody tr:last-child td{border-bottom:0}
+table.t .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:800;color:var(--ink)}
+table.t .tot td{border-top:2px solid var(--line2);border-bottom:0;font-weight:800;color:var(--ink);background:var(--bg)}
+.pl-sw{display:inline-flex;align-items:center;gap:9px;font-weight:700;color:var(--ink)}
+.pl-sw i{width:10px;height:10px;border-radius:3px;flex:none}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;letter-spacing:.05em;
+  padding:4px 10px;border-radius:var(--pill);text-transform:uppercase}
+.b-paid{background:var(--green-bg);color:var(--green-ink)}
+.b-due{background:var(--gold-bg);color:var(--gold-ink)}
+.b-rev{background:var(--tint);color:var(--deep)}
+.b-live{background:var(--green-bg);color:var(--green-ink)}
+
+/* bar chart */
+.chart{display:flex;align-items:flex-end;gap:7px;height:170px;margin-top:6px}
+.chart .cb{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;height:100%}
+.chart .bar{width:100%;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--mid),var(--purple));
+  min-height:4px;position:relative;transition:filter .15s}
+.chart .cb:hover .bar{filter:brightness(1.12)}
+.chart .cb.gold .bar{background:linear-gradient(180deg,var(--gold-2),var(--gold))}
+.chart .lx{font-size:.68rem;font-weight:700;color:var(--faint)}
+.chart .vx{font-size:.68rem;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.rowline{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.rowline:last-child{border-bottom:0}
+.rowline .ri{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:none}
+.rowline .ri svg{width:17px;height:17px;fill:#fff}
+.rowline .rm{flex:1;min-width:0}
+.rowline .rm b{display:block;font-size:.93rem;color:var(--ink)}
+.rowline .rm span{font-size:.82rem;color:var(--faint)}
+.rowline .rr{flex:none;text-align:right}
+
+
+/* ---------- worked example: compounding ---------- */
+.wex{background:var(--card);border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:32px 34px;margin-top:20px;box-shadow:0 2px 14px -8px rgba(29,23,48,.1)}
+.wex-h .eye{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);display:block;margin-bottom:11px}
+.wex-h h3{font-size:1.52rem;letter-spacing:-.034em}
+.wex-h p{color:var(--muted);font-size:.9rem;margin-top:11px;max-width:640px}
+.wex hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+
+.wpair{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:13px;margin-top:24px}
+.wtile{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);padding:21px 23px}
+.wtile.gold{background:linear-gradient(150deg,var(--gold-bg),#fff);border-color:var(--gold-line)}
+.wtile .lb{display:flex;align-items:center;gap:8px;font-size:.71rem;font-weight:800;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:11px}
+.wtile .lb svg{width:14px;height:14px;fill:var(--faint);flex:none}
+.wtile.gold .lb{color:var(--gold-ink)}
+.wtile.gold .lb svg{fill:var(--gold)}
+.wtile .v{display:block;font-size:2.35rem;font-weight:800;letter-spacing:-.045em;color:var(--ink);
+  line-height:1;font-variant-numeric:tabular-nums}
+.wtile.gold .v{color:var(--gold-ink)}
+.wtile .sub{display:block;font-size:.82rem;color:var(--muted);margin-top:10px}
+.wop{align-self:center;font-size:.78rem;font-weight:800;color:var(--muted);background:var(--card);
+  border:1px solid var(--line2);border-radius:var(--pill);padding:8px 14px;white-space:nowrap}
+
+/* ---- stacked cohort chart ---- */
+.wbh{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.wbh h4{font-size:1.04rem}
+.wbh p{font-size:.85rem;color:var(--muted);margin-top:6px;max-width:540px}
+.wchart{display:flex;align-items:flex-end;gap:7px;height:252px}
+.wcol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;
+  height:100%;min-width:0}
+.wstack{width:100%;flex:none;display:flex;flex-direction:column-reverse;border-radius:7px 7px 3px 3px;
+  overflow:hidden;transition:height .55s var(--ease)}
+.wcol:hover .wstack{filter:brightness(1.07)}
+.wseg{width:100%;min-height:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);transition:height .55s var(--ease)}
+.wcol .wv{font-size:.65rem;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.wcol .wl{font-size:.65rem;font-weight:700;color:var(--faint);white-space:nowrap}
+.wkeys{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:16px;
+  font-size:.77rem;color:var(--muted)}
+.wkey{display:inline-flex;align-items:center;gap:8px}
+.wkey i{width:24px;height:10px;border-radius:3px;display:block;flex:none}
+.wkey i.ramp{background:linear-gradient(90deg,#A9761A,#F6E3B5)}
+
+/* ---- table ---- */
+.wtw{margin-top:4px}
+table.wt{width:100%;border-collapse:separate;border-spacing:0;font-size:.86rem}
+table.wt th,table.wt td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+table.wt th{font-size:.64rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  vertical-align:bottom;line-height:1.3;white-space:normal}
+table.wt td{color:var(--body);font-variant-numeric:tabular-nums}
+table.wt .num{text-align:right;font-weight:800;color:var(--ink)}
+table.wt .mn{font-weight:800;color:var(--ink);display:inline-flex;align-items:center;gap:9px}
+table.wt .mn i{width:10px;height:10px;border-radius:3px;flex:none}
+table.wt .hi{color:var(--gold-ink);font-weight:800}
+table.wt tbody tr:hover td{background:var(--gold-bg)}
+table.wt tr.tot td{border-top:2px solid var(--line2);border-bottom:0;background:var(--bg);
+  font-weight:800;color:var(--ink);padding-top:13px;padding-bottom:13px}
+table.wt tr.tot:hover td{background:var(--bg)}
+
+.wfoot{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:22px}
+.wfc{border-radius:var(--r-lg);padding:18px 20px;border:1px solid}
+.wfc.a{background:var(--gold-bg);border-color:var(--gold-line)}
+.wfc.b{background:var(--tint);border-color:var(--lilac)}
+.wfc .k{display:block;font-size:.71rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  margin-bottom:8px;opacity:.78}
+.wfc.a .k{color:var(--gold-ink)} .wfc.b .k{color:var(--purple)}
+.wfc .n{display:block;font-size:1.65rem;font-weight:800;letter-spacing:-.04em;line-height:1;
+  font-variant-numeric:tabular-nums}
+.wfc.a .n{color:var(--gold-ink)} .wfc.b .n{color:var(--deep)}
+.wfc .d{display:block;font-size:.82rem;margin-top:9px}
+.wfc.a .d{color:var(--gold-ink)} .wfc.b .d{color:var(--body)}
+
+@media(max-width:860px){
+  .wex{padding:24px 20px;border-radius:var(--r-lg)}
+  .wpair{grid-template-columns:1fr;gap:10px}
+  .wop{justify-self:start;padding:6px 12px}
+  .wtile .v{font-size:2rem}
+  .wchart{height:188px;gap:4px}
+  .wcol .wv{display:none}
+  .wcol .wl{font-size:.58rem}
+  .wtw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -20px;padding:0 20px}
+  table.wt{min-width:640px}
+  .wfoot{grid-template-columns:1fr}
+}
+
+@media (max-width:860px){
+  .perks{grid-template-columns:1fr}
+  .mgrid{grid-template-columns:repeat(2,1fr)}
+  .fgrid{grid-template-columns:1fr}
+  .sigbox{grid-template-columns:1fr}
+  .band{padding:52px 0 72px}
+  .wrap{padding:26px 16px 70px}
+  .under{padding:0 16px 70px}
+  .gb-in{padding:0 16px}
+  .card{padding:22px 18px}
+  .codebox{flex-wrap:wrap}
+  .codebox .ca{margin-left:0;width:100%}
+  .cbtn{flex:1;justify-content:center}
+}
+@media (max-width:860px){
+  /* wide tables scroll rather than stretch the page */
+  .panel{overflow-x:auto}
+  table.t{min-width:560px}
+  .mgrid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .mgrid{grid-template-columns:1fr}
+  .codebox .cv{font-size:1.25rem}
+  .gb-h .since{margin-left:0;text-align:left}
+  #statecards{grid-template-columns:1fr !important}
+}
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <b>Prototype</b>
+  <button data-go="invite">1 · Invite page</button>
+  <button data-go="onb1">2 · Personal</button>
+  <button data-go="onb2">3 · Social</button>
+  <button data-go="onb3">4 · Payout</button>
+  <button data-go="onb4">5 · Agreement</button>
+  <button data-go="review">6 · Under review</button>
+  <i></i>
+  <button data-go="dash">7 · Dashboard</button>
+  <button data-go="earn">8 · Earnings</button>
+  <button data-go="state">9 · Statements</button>
+  <button data-go="bill">10 · Payout details</button>
+  <button data-go="agree">11 · My agreement</button>
+  <i></i>
+  <button data-go="inapp">12 · In the app</button>
+</div>
+
+<!-- ============================ 1. INVITE ============================ -->
+<section class="scr on" id="s-invite">
+  <div class="band">
+    <div class="band-in">
+      <span class="invited"><span class="av">AA</span><span>Invited by <b>Ash&nbsp;Abedin</b>, Jooma</span></span>
+      <span class="goldtag"><i data-i="crown"></i> Jooma Ambassador Programme</span>
+      <h1>Teach with Jooma.<br><span class="g">Earn with Jooma.</span></h1>
+      <p class="sub">A small, invitation-only programme for UK teachers who already share what works. Twelve months of Pro, a code of your own, and a share of every teacher you bring.</p>
+      <div class="acts">
+        <button class="btn btn-gold btn-lg" data-go="onb1">Create my Ambassador account <i data-i="arrow-right"></i></button>
+      </div>
+      <p class="note">Takes about six minutes. Nothing is charged, ever.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="sec" style="padding-top:56px">
+      <div class="sec-h">
+        <span class="eye">What you get</span>
+        <h2 style="font-size:1.9rem">Three things, and all of them are yours from day one.</h2>
+      </div>
+      <div class="perks">
+        <div class="perk">
+          <span class="pi" style="background:linear-gradient(140deg,var(--gold-2),var(--gold))"><i data-i="crown"></i></span>
+          <h3>Twelve months of Pro, free</h3>
+          <p>The full £7.99 plan, on us, for the length of your agreement. 1,000 credits a month, clean exports, every one of the 35 tools.</p>
+        </div>
+        <div class="perk">
+          <span class="pi" style="background:linear-gradient(140deg,#8B6AE8,var(--purple))"><i data-i="chart-line-up"></i></span>
+          <h3>Your own dashboard</h3>
+          <p>Every sign-up, every pound, every payout. The same numbers we see, updated daily. No asking us for a figure, ever.</p>
+        </div>
+        <div class="perk">
+          <span class="pi" style="background:linear-gradient(140deg,#2FAE86,var(--green))"><i data-i="currency-gbp"></i></span>
+          <h3>Paid every month</h3>
+          <p>Into your bank, on the 15th, for the month before. A statement for each payment, downloadable whenever you want it.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" style="padding-top:0">
+      <div class="sec-h">
+        <span class="eye">The numbers</span>
+        <h2 style="font-size:1.9rem">What you earn, written down.</h2>
+        <p>No tiers to climb, no targets to hit. The rate is the rate from your first sign-up.</p>
+      </div>
+      <table class="rates">
+        <thead><tr><th>Plan</th><th>If they pay monthly</th><th>If they pay yearly</th></tr></thead>
+        <tbody>
+          <tr><td><span class="plan"><i class="sw" style="background:var(--green)"></i>Standard</span></td>
+              <td><b>£1.50</b> a month, every month they stay</td><td><b>£18.00</b> once</td></tr>
+          <tr><td><span class="plan"><i class="sw" style="background:var(--purple)"></i>Pro</span></td>
+              <td><b>£2.00</b> a month, every month they stay</td><td><b>£24.00</b> once</td></tr>
+          <tr><td><span class="plan"><i class="sw" style="background:var(--gold)"></i>Max</span></td>
+              <td><b>£4.00</b> a month, every month they stay</td><td><b>£48.00</b> once</td></tr>
+        </tbody>
+      </table>
+      <div class="wex">
+        <div class="wex-h">
+          <span class="eye">A worked example</span>
+          <h3>A thousand teachers on Pro.</h3>
+          <p>This is the rate card above with a number put through it. It is arithmetic, not a forecast — we are not
+             telling you what you will do, only what the rate pays if you do it.</p>
+        </div>
+
+        <div class="wpair">
+          <div class="wtile">
+            <span class="lb"><i data-i="users-three"></i>1,000 teachers on Pro</span>
+            <span class="v" id="wx-mo">—</span>
+            <span class="sub">Paid to you every month, for as long as they stay subscribed.</span>
+          </div>
+          <span class="wop">× 12 months</span>
+          <div class="wtile gold">
+            <span class="lb"><i data-i="calendar-blank"></i>If all of them stay the year</span>
+            <span class="v" id="wx-yr">—</span>
+            <span class="sub">Twelve payments of the figure on the left. Nothing extra to do in between.</span>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="wbh">
+          <div>
+            <h4>You will not get a thousand on day one.</h4>
+            <p>So here is the same thousand arriving over a year. Each month you keep earning on everyone
+               from the months before — that is the bit worth understanding.</p>
+          </div>
+          <div class="segm" id="wx-seg">
+            <button class="on" data-wx="stay">If they stay</button>
+            <button data-wx="churn">With real churn</button>
+          </div>
+        </div>
+
+        <div class="wchart" id="wx-chart"></div>
+        <div class="wkeys">
+          <span class="wkey"><i class="ramp"></i>Each band is one month's intake, still paying you</span>
+          <span class="wkey" id="wx-keynote"></span>
+        </div>
+
+        <hr>
+
+        <div class="wtw">
+          <table class="wt">
+            <thead><tr>
+              <th>Month</th>
+              <th class="num">Teachers<br>you sign</th>
+              <th class="num">Teachers<br>paying you</th>
+              <th class="num">You earn<br>that month</th>
+              <th class="num">Earned<br>so far</th>
+              <th class="num">That month's intake,<br>if they stay 12 months</th>
+            </tr></thead>
+            <tbody id="wx-tb"></tbody>
+          </table>
+        </div>
+
+        <div class="wfoot">
+          <div class="wfc a">
+            <span class="k">Earned across the twelve months</span>
+            <span class="n" id="wx-tot">—</span>
+            <span class="d" id="wx-totd">—</span>
+          </div>
+          <div class="wfc b">
+            <span class="k">Where you finish the year</span>
+            <span class="n" id="wx-run">—</span>
+            <span class="d" id="wx-rund">—</span>
+          </div>
+        </div>
+
+        <div class="callout" style="max-width:none;margin-top:18px"><i data-i="info"></i>
+          <span id="wx-small"></span></div>
+      </div>
+    </div>
+
+    <div class="sec" style="padding-top:0">
+      <div class="sec-h"><span class="eye">How it works</span><h2 style="font-size:1.9rem">Four steps, then you are live.</h2></div>
+      <div class="card flat">
+        <div class="rowline"><span class="ri" style="background:var(--purple)"><i data-i="identification-card"></i></span>
+          <span class="rm"><b>Tell us who you are</b><span>Name, contact, and the accounts you post from.</span></span></div>
+        <div class="rowline"><span class="ri" style="background:var(--blue)"><i data-i="bank"></i></span>
+          <span class="rm"><b>Tell us where to pay you</b><span>A UK bank account in your own name.</span></span></div>
+        <div class="rowline"><span class="ri" style="background:var(--cyan)"><i data-i="signature"></i></span>
+          <span class="rm"><b>Read and sign the agreement</b><span>Twelve months, plain English, no exclusivity.</span></span></div>
+        <div class="rowline"><span class="ri" style="background:var(--gold)"><i data-i="seal-check"></i></span>
+          <span class="rm"><b>We check it and switch you on</b><span>Usually within two working days. Your code and dashboard appear the moment we do.</span></span></div>
+      </div>
+      <div style="text-align:center;margin-top:34px">
+        <button class="btn btn-gold btn-lg" data-go="onb1">Create my Ambassador account <i data-i="arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 2. PERSONAL ============================ -->
+<section class="scr" id="s-onb1">
+  <div class="wrap narrow">
+    <div class="steps"><span class="stp now"><span class="n">1</span><span class="l">Personal</span><span class="bar"></span></span><span class="stp "><span class="n">2</span><span class="l">Social</span><span class="bar"></span></span><span class="stp "><span class="n">3</span><span class="l">Payout</span><span class="bar"></span></span><span class="stp "><span class="n">4</span><span class="l">Agreement</span></span></div>
+    <h1>Let us start with you.</h1>
+    <p style="color:var(--muted);margin-top:12px">This is what goes on your agreement, so use your legal name as it appears on your bank account.</p>
+    <div class="card" style="margin-top:26px">
+      <div class="fgrid">
+        <div class="f"><label>First name</label><input value="Priya"></div>
+        <div class="f"><label>Last name</label><input value="Raman"></div>
+        <div class="f full"><label>Email</label><input value="priya.raman@example.co.uk" type="email">
+          <span class="hint">We will send your agreement and every statement here.</span></div>
+        <div class="f"><label>Mobile</label><div class="f-pre"><span class="px"><i data-i="phone"></i>+44</span><input value="7700 900412"></div></div>
+        <div class="f"><label>Date of birth</label><input value="1992-04-18" type="date"></div>
+        <div class="f full"><label>Address</label><input value="42 Hartley Road" placeholder="Street"></div>
+        <div class="f"><label>Town or city</label><input value="Leeds"></div>
+        <div class="f"><label>Postcode</label><input value="LS6 2JT"></div>
+        <div class="f full"><label>Your school or setting <small>optional</small></label><input value="St Bede's Primary, Leeds"></div>
+        <div class="f full"><label>What do you teach? <small>optional</small></label><input value="Year 4, mostly maths and science"></div>
+      </div>
+      <div class="callout"><i data-i="shield-check"></i><span>Your address and date of birth are used only for the agreement and for the checks our payment provider requires. They never appear on your public profile.</span></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap">
+      <button class="btn btn-p" data-go="onb2">Continue <i data-i="arrow-right"></i></button>
+      <button class="btn btn-g" data-go="invite">Back</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 3. SOCIAL ============================ -->
+<section class="scr" id="s-onb2">
+  <div class="wrap narrow">
+    <div class="steps"><span class="stp done"><span class="n"><svg viewBox="0 0 256 256" style="width:13px;height:13px;fill:currentColor"><path d="M104,192a8,8,0,0,1-5.66-2.34l-56-56a8,8,0,0,1,11.32-11.32L104,172.69,210.34,66.34a8,8,0,0,1,11.32,11.32l-112,112A8,8,0,0,1,104,192Z"/></svg></span><span class="l">Personal</span><span class="bar"></span></span><span class="stp now"><span class="n">2</span><span class="l">Social</span><span class="bar"></span></span><span class="stp "><span class="n">3</span><span class="l">Payout</span><span class="bar"></span></span><span class="stp "><span class="n">4</span><span class="l">Agreement</span></span></div>
+    <h1>Where do you post?</h1>
+    <p style="color:var(--muted);margin-top:12px">Add every account you would use to share your code. At least one is needed. You can change these later from your dashboard.</p>
+    <div class="card" style="margin-top:26px">
+      <div class="fgrid">
+        <div class="f ">
+          <label>Instagram</label>
+          <div class="f-pre"><span class="px"><i data-i="instagram-logo"></i>instagram.com/</span><input value="priyateaches" placeholder="handle"></div>
+        </div>        <div class="f ">
+          <label>TikTok</label>
+          <div class="f-pre"><span class="px"><i data-i="tiktok-logo"></i>tiktok.com/@</span><input value="priyateaches" placeholder="handle"></div>
+        </div>        <div class="f ">
+          <label>X</label>
+          <div class="f-pre"><span class="px"><i data-i="x-logo"></i>x.com/</span><input value="priyateaches" placeholder="handle"></div>
+        </div>        <div class="f ">
+          <label>Facebook <small>optional</small></label>
+          <div class="f-pre"><span class="px"><i data-i="facebook-logo"></i>facebook.com/</span><input value="" placeholder="handle"></div>
+        </div>        <div class="f full">
+          <label>YouTube <small>optional</small></label>
+          <div class="f-pre"><span class="px"><i data-i="youtube-logo"></i>youtube.com/@</span><input value="" placeholder="handle"></div>
+        </div>        <div class="f full">
+          <label>LinkedIn <small>optional</small></label>
+          <div class="f-pre"><span class="px"><i data-i="linkedin-logo"></i>linkedin.com/in/</span><input value="" placeholder="handle"></div>
+        </div>
+      </div>
+      <div class="fgrid" style="margin-top:16px">
+        <div class="f full"><label>Roughly how many followers, across everything?</label>
+          <select><option>Under 1,000</option><option>1,000 to 5,000</option><option selected>5,000 to 25,000</option><option>25,000 to 100,000</option><option>Over 100,000</option></select></div>
+        <div class="f full"><label>Anything we should know? <small>optional</small></label>
+          <textarea rows="3" placeholder="A newsletter, a staffroom you run, a TeachMeet you speak at. Anything that helps us understand your reach."></textarea></div>
+      </div>
+      <div class="callout gold"><i data-i="crown"></i><span>We read every application. We are looking for teachers who already share resources, not follower counts.</span></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap">
+      <button class="btn btn-p" data-go="onb3">Continue <i data-i="arrow-right"></i></button>
+      <button class="btn btn-g" data-go="onb1">Back</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 4. PAYOUT ============================ -->
+<section class="scr" id="s-onb3">
+  <div class="wrap narrow">
+    <div class="steps"><span class="stp done"><span class="n"><svg viewBox="0 0 256 256" style="width:13px;height:13px;fill:currentColor"><path d="M104,192a8,8,0,0,1-5.66-2.34l-56-56a8,8,0,0,1,11.32-11.32L104,172.69,210.34,66.34a8,8,0,0,1,11.32,11.32l-112,112A8,8,0,0,1,104,192Z"/></svg></span><span class="l">Personal</span><span class="bar"></span></span><span class="stp done"><span class="n"><svg viewBox="0 0 256 256" style="width:13px;height:13px;fill:currentColor"><path d="M104,192a8,8,0,0,1-5.66-2.34l-56-56a8,8,0,0,1,11.32-11.32L104,172.69,210.34,66.34a8,8,0,0,1,11.32,11.32l-112,112A8,8,0,0,1,104,192Z"/></svg></span><span class="l">Social</span><span class="bar"></span></span><span class="stp now"><span class="n">3</span><span class="l">Payout</span><span class="bar"></span></span><span class="stp "><span class="n">4</span><span class="l">Agreement</span></span></div>
+    <h1>Where should we pay you?</h1>
+    <p style="color:var(--muted);margin-top:12px">Payouts land on the 15th of each month, covering the month before. The account must be in your own name.</p>
+    <div class="card" style="margin-top:26px">
+      <div class="fgrid">
+        <div class="f full"><label>Account holder name</label><input value="Priya Raman">
+          <span class="hint">Exactly as your bank has it.</span></div>
+        <div class="f"><label>Sort code</label><input value="04-00-75" placeholder="00-00-00"></div>
+        <div class="f"><label>Account number</label><input value="12345678" placeholder="8 digits"></div>
+        <div class="f full"><label>Bank name</label><input value="Monzo Bank Ltd"></div>
+      </div>
+
+      <h3 style="margin-top:28px">Tax</h3>
+      <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Commission is paid gross. You are responsible for declaring it to HMRC. We will send you a yearly summary each April to make that easier.</p>
+      <div class="fgrid" style="margin-top:14px">
+        <div class="f full"><label>How do you declare this income?</label>
+          <select><option selected>Self assessment, as an individual</option><option>Through a limited company</option><option>I am not sure yet</option></select></div>
+        <div class="f full"><label>UTR <small>optional</small></label><input placeholder="10 digits, if you have one">
+          <span class="hint">Not required to join. It helps us produce your yearly summary correctly.</span></div>
+      </div>
+      <div class="callout warn"><i data-i="warning"></i><span>If you are employed by a school, check your contract before taking paid work alongside it. Many teaching contracts require you to declare outside earnings, and a few restrict them.</span></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap">
+      <button class="btn btn-p" data-go="onb4">Continue to the agreement <i data-i="arrow-right"></i></button>
+      <button class="btn btn-g" data-go="onb2">Back</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 5. AGREEMENT ============================ -->
+<section class="scr" id="s-onb4">
+  <div class="wrap narrow">
+    <div class="steps"><span class="stp done"><span class="n"><svg viewBox="0 0 256 256" style="width:13px;height:13px;fill:currentColor"><path d="M104,192a8,8,0,0,1-5.66-2.34l-56-56a8,8,0,0,1,11.32-11.32L104,172.69,210.34,66.34a8,8,0,0,1,11.32,11.32l-112,112A8,8,0,0,1,104,192Z"/></svg></span><span class="l">Personal</span><span class='bar'></span></span><span class="stp done"><span class="n"><svg viewBox="0 0 256 256" style="width:13px;height:13px;fill:currentColor"><path d="M104,192a8,8,0,0,1-5.66-2.34l-56-56a8,8,0,0,1,11.32-11.32L104,172.69,210.34,66.34a8,8,0,0,1,11.32,11.32l-112,112A8,8,0,0,1,104,192Z"/></svg></span><span class="l">Social</span><span class='bar'></span></span><span class="stp done"><span class="n"><svg viewBox="0 0 256 256" style="width:13px;height:13px;fill:currentColor"><path d="M104,192a8,8,0,0,1-5.66-2.34l-56-56a8,8,0,0,1,11.32-11.32L104,172.69,210.34,66.34a8,8,0,0,1,11.32,11.32l-112,112A8,8,0,0,1,104,192Z"/></svg></span><span class="l">Payout</span><span class='bar'></span></span><span class="stp now"><span class="n">4</span><span class="l">Agreement</span></span></div>
+    <h1>The agreement.</h1>
+    <p style="color:var(--muted);margin-top:12px">Twelve months. Read it properly — scroll to the bottom and the signature box unlocks.</p>
+
+    <div class="draftbar" style="margin-top:22px">
+      <b>Placeholder text.</b> The clauses below set out the commercial terms correctly and are the right shape for this agreement, but they have not been drafted or reviewed by a solicitor. Replace this whole block with the real agreement before a single invite goes out.
+    </div>
+
+    <div class="contract" id="contract">
+        <p class="cl">JOOMA LTD — AMBASSADOR AGREEMENT</p>
+        <p>This agreement is between <b>Jooma Ltd</b> (company number to be inserted), registered in England and Wales, and <b>Priya Raman</b> of 42 Hartley Road, Leeds LS6 2JT ("the Ambassador").</p>
+
+        <h3>1. What this is</h3>
+        <p>You agree to promote Jooma using a unique referral code we give you. We agree to pay you commission on the subscriptions that result, and to give you a Pro account at no charge for the length of this agreement. You are not an employee, a worker, or an agent of Jooma. You are self-employed and responsible for your own tax and National Insurance.</p>
+
+        <h3>2. How long it lasts</h3>
+        <p>Twelve months from the date we activate your account. It does not renew automatically. We will write to you a month before it ends to ask whether you want to continue.</p>
+        <p>Either of us may end it earlier with 30 days' written notice. We may end it immediately if clause 6 is broken.</p>
+
+        <h3>3. What we pay you</h3>
+        <p>For each new paying subscriber who uses your code:</p>
+        <ul>
+          <li>Standard, paid monthly — <b>£1.50</b> for each month that subscriber keeps paying</li>
+          <li>Pro, paid monthly — <b>£2.00</b> for each month that subscriber keeps paying</li>
+          <li>Max, paid monthly — <b>£4.00</b> for each month that subscriber keeps paying</li>
+          <li>Standard, paid yearly — <b>£18.00</b>, once, on their first payment</li>
+          <li>Pro, paid yearly — <b>£24.00</b>, once, on their first payment</li>
+          <li>Max, paid yearly — <b>£48.00</b>, once, on their first payment</li>
+        </ul>
+        <p>Commission is earned when a payment clears, not when someone signs up. A three-day free trial earns nothing until the first real payment is taken.</p>
+        <p>Recurring commission continues for as long as that subscriber keeps paying, including after this agreement ends, up to a maximum of 24 months from their sign-up date.</p>
+
+        <h3>4. When we pay you</h3>
+        <p>On the 15th of each month, for the month before, into the account you gave us. If the 15th is a weekend or bank holiday, the next working day.</p>
+        <p>If a month comes to less than <b>£25.00</b>, it rolls into the next month until the balance passes £25.00. Any balance is paid out in full when this agreement ends, whatever the amount.</p>
+
+        <h3>5. Refunds, chargebacks and cancelled trials</h3>
+        <p>If a subscriber is refunded, charges back, or cancels within our refund window, the commission for that payment is removed from your balance. If it has already been paid to you, it is deducted from your next statement.</p>
+
+        <h3>6. What you must not do</h3>
+        <ul>
+          <li>Use your own code, or ask anyone to sign up on your behalf and reimburse them</li>
+          <li>Bid on "Jooma" or close variations in paid search</li>
+          <li>Offer cashback, rebates or incentives for using your code without asking us first</li>
+          <li>Say anything about Jooma that is not true, including about results, pricing, or data</li>
+          <li>Present yourself as an employee of Jooma, or speak on our behalf</li>
+          <li>Share pupil data, or anything that could identify a child, in any content featuring Jooma</li>
+        </ul>
+        <p>Breaking any of these ends this agreement immediately and forfeits any unpaid balance.</p>
+
+        <h3>7. Disclosure</h3>
+        <p>You must make clear that you are paid when you promote Jooma. "#ad", "paid partnership", or similar, on every post, in line with the CAP Code and ASA guidance. This is your legal obligation as well as ours.</p>
+
+        <h3>8. Your free Pro account</h3>
+        <p>Provided for the length of this agreement, for your own teaching use. It is not transferable. It reverts to a normal paid plan when this agreement ends, and we will tell you before that happens.</p>
+
+        <h3>9. Your data</h3>
+        <p>We hold your details to run this programme and to pay you, and we keep payment records for six years as HMRC requires. Our privacy notice at jooma.ai/privacy applies. You can ask for a copy of what we hold at any time.</p>
+
+        <h3>10. Changes to the rates</h3>
+        <p>We may change the commission rates with 60 days' written notice. Subscribers who signed up before the change keep the old rate for as long as they keep paying. If you do not accept a change, you may end this agreement and we will pay your balance in full.</p>
+
+        <h3>11. Law</h3>
+        <p>This agreement is governed by the law of England and Wales, and the courts of England and Wales have exclusive jurisdiction.</p>
+
+      <p style="margin-top:22px;color:var(--faint);font-size:.82rem">End of agreement. Version 0.1 draft, 13 October 2026.</p>
+    </div>
+
+    <button class="chk" id="chkRead"><span class="bx"><i data-i="check"></i></span>
+      <span>I have read the agreement and I understand that it runs for twelve months.</span></button>
+    <button class="chk" id="chkTax"><span class="bx"><i data-i="check"></i></span>
+      <span>I understand that commission is paid gross and that declaring it to HMRC is my responsibility.</span></button>
+    <button class="chk" id="chkAd"><span class="bx"><i data-i="check"></i></span>
+      <span>I will disclose that I am paid whenever I promote Jooma, on every post.</span></button>
+
+    <div class="sigbox">
+      <div>
+        <div class="f"><label>Type your full name to sign</label><input id="sigIn" value="" placeholder="Priya Raman"></div>
+        <p class="hint" style="margin-top:9px;font-size:.78rem;color:var(--faint)">Typing your name here is a legally binding electronic signature under the Electronic Communications Act 2000.</p>
+      </div>
+      <div class="sigpad"><div><span class="sg" id="sigOut">&nbsp;</span><small id="sigDate">Not yet signed</small></div></div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap">
+      <button class="btn btn-p btn-lg" id="signBtn" disabled data-go="review">Sign and send for review <i data-i="signature"></i></button>
+      <button class="btn btn-g" data-go="onb3">Back</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 6. UNDER REVIEW ============================ -->
+<section class="scr" id="s-review">
+  <div class="wrap narrow">
+    <div class="statebox">
+      <span class="state-ic pending"><i data-i="hourglass-medium"></i></span>
+      <h1>That is with us.</h1>
+      <p style="color:var(--muted);margin-top:14px;max-width:48ch;margin-left:auto;margin-right:auto">We read every application properly, so give us a couple of working days. Nothing else is needed from you.</p>
+    </div>
+
+    <div class="card" style="margin-top:26px">
+      <h2>What happens now</h2>
+      <div class="tl">
+        <div class="now"><b>Today — sent for review</b><span>A copy of your signed agreement is already in your inbox.</span></div>
+        <div><b>Within two working days — we decide</b><span>If anything is unclear we will email you rather than reject it.</span></div>
+        <div><b>The moment we approve — you go live</b><span>Your code appears, your dashboard switches on, and your Pro account becomes free for twelve months.</span></div>
+      </div>
+      <div class="callout"><i data-i="info"></i><span>In the meantime your Jooma account works exactly as it did. You will see <b>Ambassador Programme</b> under your profile picture with an <b>Under review</b> label on it.</span></div>
+    </div>
+
+    <div class="card">
+      <h2>While you wait</h2>
+      <div class="rowline"><span class="ri" style="background:var(--purple)"><i data-i="squares-four"></i></span>
+        <span class="rm"><b>Go back to Jooma</b><span>Your plan and library are untouched.</span></span>
+        <span class="rr"><button class="btn btn-g" style="padding:10px 18px;font-size:.86rem">Open Jooma</button></span></div>
+      <div class="rowline"><span class="ri" style="background:var(--cyan)"><i data-i="file-text"></i></span>
+        <span class="rm"><b>Download your signed agreement</b><span>PDF, 4 pages, signed 13 October 2026.</span></span>
+        <span class="rr"><button class="btn btn-g" style="padding:10px 18px;font-size:.86rem"><i data-i="download-simple"></i> Download</button></span></div>
+    </div>
+    <p style="text-align:center;margin-top:24px;font-size:.86rem;color:var(--faint)">Something not right? Email <a href="#" style="color:var(--purple);font-weight:700">ambassadors@jooma.ai</a> and a person will reply.</p>
+  </div>
+</section>
+
+<section class="scr" id="s-dash">
+  <div class="shell">
+    <div class="gold-band">
+      <div class="gb-in">
+        <div class="gb-top">
+          <span class="wm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+          <span class="verif"><i data-i="crown"></i> Verified Jooma Ambassador</span>
+          <span class="sp">
+            <span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg>
+              <span class="ring"><span class="in">PR</span></span></span>
+          </span>
+        </div>
+        <div class="gb-h">
+          <div><h1>Afternoon, Priya.</h1><p>51 teachers are on Jooma because of you.</p></div>
+          <div class="since"><b>£263.00</b>earned this month so far</div>
+        </div>
+        <div class="codebox">
+          <div><p class="cl">Your code</p><p class="cv" id="codeV">PRIYA-4K2</p></div>
+          <div class="ca">
+            <button class="cbtn" id="copyBtn"><i data-i="copy"></i><span>Copy code</span></button>
+            <button class="cbtn ghost"><i data-i="share-network"></i>Copy link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="under">
+      <div class="tabsrow"><button class="atab on" data-go="dash"><i data-i="chart-line-up"></i>Dashboard</button><button class="atab " data-go="earn"><i data-i="currency-gbp"></i>Earnings</button><button class="atab " data-go="state"><i data-i="receipt"></i>Statements</button><button class="atab " data-go="bill"><i data-i="bank"></i>Payout details</button><button class="atab " data-go="agree"><i data-i="file-text"></i>My agreement</button></div>
+
+      <div class="mgrid">
+        <div class="mt hero"><p class="lb"><i data-i="currency-gbp"></i>This month</p><p class="v" id="mThis">£263.00</p><p class="d">Paid on 15 November</p></div>
+        <div class="mt"><p class="lb"><i data-i="users-three"></i>Active subscribers</p><p class="v">51</p><p class="d"><span class="up">+6</span> this month</p></div>
+        <div class="mt"><p class="lb"><i data-i="trend-up"></i>Signed up all time</p><p class="v">84</p><p class="d">61% still subscribed</p></div>
+        <div class="mt"><p class="lb"><i data-i="coins"></i>Earned all time</p><p class="v">£1,547.50</p><p class="d">Since 4 March 2026</p></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>This month, by plan</h2>
+          <span class="r"><span class="segm"><button class="on">October</button><button>September</button><button>August</button></span></span></div>
+        <table class="t">
+          <thead><tr><th>Plan</th><th>How they pay</th><th>Subscribers</th><th class="num">Rate</th><th class="num">You earn</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pl-sw"><i style="background:var(--green)"></i>Standard</span></td><td>Monthly</td><td>14</td><td class="num">£1.50</td><td class="num">£21.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--purple)"></i>Pro</span></td><td>Monthly</td><td>31</td><td class="num">£2.00</td><td class="num">£62.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--gold)"></i>Max</span></td><td>Monthly</td><td>6</td><td class="num">£4.00</td><td class="num">£24.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--green)"></i>Standard</span></td><td>Yearly, new</td><td>2</td><td class="num">£18.00</td><td class="num">£36.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--purple)"></i>Pro</span></td><td>Yearly, new</td><td>3</td><td class="num">£24.00</td><td class="num">£72.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--gold)"></i>Max</span></td><td>Yearly, new</td><td>1</td><td class="num">£48.00</td><td class="num">£48.00</td></tr>
+            <tr class="tot"><td colspan="4">Total for October 2026</td><td class="num">£263.00</td></tr>
+          </tbody>
+        </table>
+        <div class="callout gold" style="margin-top:4px"><i data-i="info"></i><span>Monthly subscribers earn you the rate again every month they stay. Yearly subscribers pay once, so they appear in the month they joined and not after.</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Last twelve months</h2>
+          <span class="r"><span class="segm"><button class="on" data-ch="earn">Earnings</button><button data-ch="signups">Sign-ups</button></span></span></div>
+        <div class="chart" id="chart12"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Most recent sign-ups</h2><span class="r"><button class="btn btn-g" style="padding:9px 16px;font-size:.84rem">See all 84</button></span></div>
+        <table class="t">
+          <thead><tr><th>When</th><th>Plan</th><th>How they pay</th><th class="num">Status</th></tr></thead>
+          <tbody>
+            <tr><td>11 Oct</td><td><span class="pl-sw"><i style="background:var(--purple)"></i>Pro</span></td><td>Yearly</td><td class="num"><span class="badge b-live">Paying</span></td></tr>
+            <tr><td>9 Oct</td><td><span class="pl-sw"><i style="background:var(--gold)"></i>Max</span></td><td>Monthly</td><td class="num"><span class="badge b-live">Paying</span></td></tr>
+            <tr><td>7 Oct</td><td><span class="pl-sw"><i style="background:var(--green)"></i>Standard</span></td><td>Monthly</td><td class="num"><span class="badge b-rev">In trial</span></td></tr>
+            <tr><td>4 Oct</td><td><span class="pl-sw"><i style="background:var(--purple)"></i>Pro</span></td><td>Monthly</td><td class="num"><span class="badge b-live">Paying</span></td></tr>
+            <tr><td>2 Oct</td><td><span class="pl-sw"><i style="background:var(--purple)"></i>Pro</span></td><td>Yearly</td><td class="num"><span class="badge b-live">Paying</span></td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:.82rem;color:var(--faint);margin-top:12px">Teachers who sign up with your code are never named. You see the plan and the date, never who they are.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+<section class="scr" id="s-earn">
+  <div class="shell">
+    <div class="gold-band">
+      <div class="gb-in">
+        <div class="gb-top">
+          <span class="wm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+          <span class="verif"><i data-i="crown"></i> Verified Jooma Ambassador</span>
+          <span class="sp">
+            <span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg>
+              <span class="ring"><span class="in">PR</span></span></span>
+          </span>
+        </div>
+        <div class="gb-h">
+          <div><h1>Earnings</h1><p>Every pound, where it came from, and when it lands.</p></div>
+          <div class="since"><b>£263.00</b>earned this month so far</div>
+        </div>
+        <div class="codebox">
+          <div><p class="cl">Your code</p><p class="cv" id="codeV">PRIYA-4K2</p></div>
+          <div class="ca">
+            <button class="cbtn" id="copyBtn"><i data-i="copy"></i><span>Copy code</span></button>
+            <button class="cbtn ghost"><i data-i="share-network"></i>Copy link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="under">
+      <div class="tabsrow"><button class="atab " data-go="dash"><i data-i="chart-line-up"></i>Dashboard</button><button class="atab on" data-go="earn"><i data-i="currency-gbp"></i>Earnings</button><button class="atab " data-go="state"><i data-i="receipt"></i>Statements</button><button class="atab " data-go="bill"><i data-i="bank"></i>Payout details</button><button class="atab " data-go="agree"><i data-i="file-text"></i>My agreement</button></div>
+
+      <div class="mgrid">
+        <div class="mt hero"><p class="lb"><i data-i="currency-gbp"></i>October so far</p><p class="v">£263.00</p><p class="d">Due 15 November</p></div>
+        <div class="mt"><p class="lb"><i data-i="clock"></i>Awaiting clearance</p><p class="v">£18.00</p><p class="d">1 trial not yet paid</p></div>
+        <div class="mt"><p class="lb"><i data-i="receipt"></i>Paid out so far</p><p class="v">£1,284.50</p><p class="d">Across 7 statements</p></div>
+        <div class="mt"><p class="lb"><i data-i="trend-up"></i>Best month</p><p class="v">£312.00</p><p class="d">September 2026</p></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Twelve month view</h2>
+          <span class="r"><span class="segm"><button class="on">Last 12 months</button><button>This year</button><button>All time</button></span></span></div>
+        <table class="t">
+          <thead><tr><th>Month</th><th>Monthly subs</th><th>Yearly, new</th><th class="num">Recurring</th><th class="num">One-off</th><th class="num">Total</th></tr></thead>
+          <tbody id="m12"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>How it adds up</h2></div>
+        <table class="t">
+          <thead><tr><th>Plan</th><th class="num">Monthly, every month</th><th class="num">Yearly, once</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pl-sw"><i style="background:var(--green)"></i>Standard</span></td><td class="num">£1.50</td><td class="num">£18.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--purple)"></i>Pro</span></td><td class="num">£2.00</td><td class="num">£24.00</td></tr>
+            <tr><td><span class="pl-sw"><i style="background:var(--gold)"></i>Max</span></td><td class="num">£4.00</td><td class="num">£48.00</td></tr>
+          </tbody>
+        </table>
+        <div class="callout warn" style="margin-top:4px"><i data-i="warning"></i><span>If a teacher is refunded or charges back, that commission comes off your balance. It shows on your statement as an adjustment so you can always see why a figure moved.</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+<section class="scr" id="s-state">
+  <div class="shell">
+    <div class="gold-band">
+      <div class="gb-in">
+        <div class="gb-top">
+          <span class="wm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+          <span class="verif"><i data-i="crown"></i> Verified Jooma Ambassador</span>
+          <span class="sp">
+            <span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg>
+              <span class="ring"><span class="in">PR</span></span></span>
+          </span>
+        </div>
+        <div class="gb-h">
+          <div><h1>Statements</h1><p>What we have paid you, and what is coming.</p></div>
+          <div class="since"><b>£263.00</b>earned this month so far</div>
+        </div>
+        <div class="codebox">
+          <div><p class="cl">Your code</p><p class="cv" id="codeV">PRIYA-4K2</p></div>
+          <div class="ca">
+            <button class="cbtn" id="copyBtn"><i data-i="copy"></i><span>Copy code</span></button>
+            <button class="cbtn ghost"><i data-i="share-network"></i>Copy link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="under">
+      <div class="tabsrow"><button class="atab " data-go="dash"><i data-i="chart-line-up"></i>Dashboard</button><button class="atab " data-go="earn"><i data-i="currency-gbp"></i>Earnings</button><button class="atab on" data-go="state"><i data-i="receipt"></i>Statements</button><button class="atab " data-go="bill"><i data-i="bank"></i>Payout details</button><button class="atab " data-go="agree"><i data-i="file-text"></i>My agreement</button></div>
+
+      <div class="panel" style="margin-top:0">
+        <div class="panel-h"><h2>Next payout</h2></div>
+        <div class="rowline" style="border:0;padding-top:4px">
+          <span class="ri" style="background:linear-gradient(140deg,var(--gold-2),var(--gold))"><i data-i="currency-gbp"></i></span>
+          <span class="rm"><b>£263.00 for October 2026</b><span>Monzo Bank, account ending 5678. Leaves us on 15 November 2026.</span></span>
+          <span class="rr"><span class="badge b-due">Scheduled</span></span>
+        </div>
+        <div class="callout"><i data-i="info"></i><span>October is still running, so this figure moves until the month closes at midnight on the 31st.</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Paid statements</h2>
+          <span class="r"><button class="btn btn-g" style="padding:9px 16px;font-size:.84rem"><i data-i="download-simple"></i>Download all as CSV</button></span></div>
+        <table class="t">
+          <thead><tr><th>Paid on</th><th>For</th><th class="num">Commission</th><th class="num">Adjustments</th><th class="num">Paid</th><th class="num">Status</th><th class="num"></th></tr></thead>
+          <tbody><tr><td>15 Oct 2026</td><td>September 2026</td><td class="num">£312.00</td><td class="num" style="color:var(--faint)">£0.00</td><td class="num">£312.00</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr><tr><td>15 Sep 2026</td><td>August 2026</td><td class="num">£186.50</td><td class="num" style="color:var(--orange-ink)">-£24.00</td><td class="num">£162.50</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr><tr><td>15 Aug 2026</td><td>July 2026</td><td class="num">£144.00</td><td class="num" style="color:var(--faint)">£0.00</td><td class="num">£144.00</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr><tr><td>15 Jul 2026</td><td>June 2026</td><td class="num">£228.00</td><td class="num" style="color:var(--faint)">£0.00</td><td class="num">£228.00</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr><tr><td>15 Jun 2026</td><td>May 2026</td><td class="num">£196.00</td><td class="num" style="color:var(--orange-ink)">-£18.00</td><td class="num">£178.00</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr><tr><td>15 May 2026</td><td>April 2026</td><td class="num">£154.00</td><td class="num" style="color:var(--faint)">£0.00</td><td class="num">£154.00</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr><tr><td>15 Apr 2026</td><td>March 2026</td><td class="num">£106.00</td><td class="num" style="color:var(--faint)">£0.00</td><td class="num">£106.00</td>
+  <td class="num"><span class="badge b-paid">Paid</span></td>
+  <td class="num"><button class="btn btn-g" style="padding:7px 13px;font-size:.78rem"><i data-i="download-simple"></i>PDF</button></td></tr></tbody>
+          <tfoot><tr class="tot"><td colspan="4">Paid since March 2026</td><td class="num">£1,284.50</td><td></td><td></td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Yearly tax summary</h2></div>
+        <div class="rowline"><span class="ri" style="background:var(--cyan)"><i data-i="file-text"></i></span>
+          <span class="rm"><b>2025 to 2026</b><span>Not yet available. Sent each April, covering the tax year just ended.</span></span>
+          <span class="rr"><span class="badge b-rev">April 2027</span></span></div>
+        <p style="font-size:.82rem;color:var(--faint);margin-top:10px">Commission is paid gross. Declaring it is your responsibility. This summary is to help, not to replace your own records.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+<section class="scr" id="s-bill">
+  <div class="shell">
+    <div class="gold-band">
+      <div class="gb-in">
+        <div class="gb-top">
+          <span class="wm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+          <span class="verif"><i data-i="crown"></i> Verified Jooma Ambassador</span>
+          <span class="sp">
+            <span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg>
+              <span class="ring"><span class="in">PR</span></span></span>
+          </span>
+        </div>
+        <div class="gb-h">
+          <div><h1>Payout details</h1><p>Where the money goes and who it goes to.</p></div>
+          <div class="since"><b>£263.00</b>earned this month so far</div>
+        </div>
+        <div class="codebox">
+          <div><p class="cl">Your code</p><p class="cv" id="codeV">PRIYA-4K2</p></div>
+          <div class="ca">
+            <button class="cbtn" id="copyBtn"><i data-i="copy"></i><span>Copy code</span></button>
+            <button class="cbtn ghost"><i data-i="share-network"></i>Copy link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="under">
+      <div class="tabsrow"><button class="atab " data-go="dash"><i data-i="chart-line-up"></i>Dashboard</button><button class="atab " data-go="earn"><i data-i="currency-gbp"></i>Earnings</button><button class="atab " data-go="state"><i data-i="receipt"></i>Statements</button><button class="atab on" data-go="bill"><i data-i="bank"></i>Payout details</button><button class="atab " data-go="agree"><i data-i="file-text"></i>My agreement</button></div>
+
+      <div class="panel" style="margin-top:0">
+        <div class="panel-h"><h2>Where we pay you</h2>
+          <span class="r"><button class="btn btn-g" style="padding:9px 16px;font-size:.84rem"><i data-i="pencil-simple"></i>Edit</button></span></div>
+        <div class="fgrid">
+          <div class="f full"><label>Account holder</label><input value="Priya Raman" readonly></div>
+          <div class="f"><label>Sort code</label><input value="04-00-75" readonly></div>
+          <div class="f"><label>Account number</label><input value="•••• 5678" readonly></div>
+          <div class="f full"><label>Bank</label><input value="Monzo Bank Ltd" readonly></div>
+        </div>
+        <div class="callout"><i data-i="shield-check"></i><span>Changing these details pauses your next payout for 3 working days while we verify them. It is a fraud check, and it protects you more than us.</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Your details</h2>
+          <span class="r"><button class="btn btn-g" style="padding:9px 16px;font-size:.84rem"><i data-i="pencil-simple"></i>Edit</button></span></div>
+        <div class="fgrid">
+          <div class="f"><label>Name</label><input value="Priya Raman" readonly></div>
+          <div class="f"><label>Email</label><input value="priya.raman@example.co.uk" readonly></div>
+          <div class="f"><label>Mobile</label><input value="+44 7700 900412" readonly></div>
+          <div class="f"><label>Address</label><input value="42 Hartley Road, Leeds LS6 2JT" readonly></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Where you post</h2>
+          <span class="r"><button class="btn btn-g" style="padding:9px 16px;font-size:.84rem"><i data-i="pencil-simple"></i>Edit</button></span></div>
+        <div class="rowline"><span class="ri" style="background:#C13584"><i data-i="instagram-logo"></i></span>
+          <span class="rm"><b>@priyateaches</b><span>Instagram</span></span><span class="rr"><span class="badge b-live">Verified</span></span></div>
+        <div class="rowline"><span class="ri" style="background:#111"><i data-i="tiktok-logo"></i></span>
+          <span class="rm"><b>@priyateaches</b><span>TikTok</span></span><span class="rr"><span class="badge b-live">Verified</span></span></div>
+        <div class="rowline"><span class="ri" style="background:#1D1730"><i data-i="x-logo"></i></span>
+          <span class="rm"><b>@priyateaches</b><span>X</span></span><span class="rr"><span class="badge b-rev">Unverified</span></span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Tax</h2></div>
+        <div class="fgrid">
+          <div class="f"><label>How you declare</label><input value="Self assessment, as an individual" readonly></div>
+          <div class="f"><label>UTR</label><input value="Not provided" readonly></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+<section class="scr" id="s-agree">
+  <div class="shell">
+    <div class="gold-band">
+      <div class="gb-in">
+        <div class="gb-top">
+          <span class="wm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+          <span class="verif"><i data-i="crown"></i> Verified Jooma Ambassador</span>
+          <span class="sp">
+            <span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg>
+              <span class="ring"><span class="in">PR</span></span></span>
+          </span>
+        </div>
+        <div class="gb-h">
+          <div><h1>My agreement</h1><p>Signed 13 October 2026. Runs for twelve months.</p></div>
+          <div class="since"><b>£263.00</b>earned this month so far</div>
+        </div>
+        <div class="codebox">
+          <div><p class="cl">Your code</p><p class="cv" id="codeV">PRIYA-4K2</p></div>
+          <div class="ca">
+            <button class="cbtn" id="copyBtn"><i data-i="copy"></i><span>Copy code</span></button>
+            <button class="cbtn ghost"><i data-i="share-network"></i>Copy link</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="under">
+      <div class="tabsrow"><button class="atab " data-go="dash"><i data-i="chart-line-up"></i>Dashboard</button><button class="atab " data-go="earn"><i data-i="currency-gbp"></i>Earnings</button><button class="atab " data-go="state"><i data-i="receipt"></i>Statements</button><button class="atab " data-go="bill"><i data-i="bank"></i>Payout details</button><button class="atab on" data-go="agree"><i data-i="file-text"></i>My agreement</button></div>
+
+      <div class="panel" style="margin-top:0">
+        <div class="panel-h"><h2>Your signed agreement</h2>
+          <span class="r"><button class="btn btn-g" style="padding:9px 16px;font-size:.84rem"><i data-i="download-simple"></i>Download PDF</button></span></div>
+        <div class="mgrid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="mt"><p class="lb"><i data-i="signature"></i>Signed</p><p class="v" style="font-size:1.2rem">13 Oct 2026</p><p class="d">By Priya Raman</p></div>
+          <div class="mt"><p class="lb"><i data-i="calendar-blank"></i>Runs until</p><p class="v" style="font-size:1.2rem">13 Oct 2027</p><p class="d">346 days left</p></div>
+          <div class="mt hero"><p class="lb"><i data-i="seal-check"></i>Status</p><p class="v" style="font-size:1.2rem">Active</p><p class="d">Approved 13 Oct 2026</p></div>
+        </div>
+        <div class="callout gold" style="margin-top:14px"><i data-i="info"></i><span>This does not renew on its own. We will write to you on 13 September 2027, a month before it ends, to ask whether you want to carry on.</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>What you signed</h2>
+          <span class="r"><span class="badge b-rev">Version 0.1</span></span></div>
+        <div class="contract" style="max-height:340px">
+          <p class="cl">JOOMA LTD — AMBASSADOR AGREEMENT</p>
+          <p>Between <b>Jooma Ltd</b> and <b>Priya Raman</b>, signed 13 October 2026.</p>
+          <h3>3. What we pay you</h3>
+          <ul>
+            <li>Standard, monthly — <b>£1.50</b> each month that subscriber keeps paying</li>
+            <li>Pro, monthly — <b>£2.00</b> each month that subscriber keeps paying</li>
+            <li>Max, monthly — <b>£4.00</b> each month that subscriber keeps paying</li>
+            <li>Standard, yearly — <b>£18.00</b> once &nbsp;·&nbsp; Pro, yearly — <b>£24.00</b> once &nbsp;·&nbsp; Max, yearly — <b>£48.00</b> once</li>
+          </ul>
+          <h3>4. When we pay you</h3>
+          <p>On the 15th of each month for the month before. Balances under £25.00 roll forward.</p>
+          <h3>2. How long it lasts</h3>
+          <p>Twelve months from activation. It does not renew automatically. Either side may end it with 30 days' notice.</p>
+          <p style="margin-top:20px;color:var(--faint);font-size:.82rem">The full agreement is in the PDF above.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Ending it early</h2></div>
+        <p style="font-size:.9rem;color:var(--muted)">You can leave with 30 days' notice at any time. Your balance is paid in full at the next payout whatever the amount, and your free Pro account reverts to a paid plan at the end of the notice period.</p>
+        <div style="margin-top:16px"><button class="btn btn-g">Request to end my agreement</button></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+<!-- ============================ 12. IN THE APP ============================ -->
+<section class="scr" id="s-inapp">
+  <div class="wrap">
+    <h1>How it shows up inside Jooma.</h1>
+    <p style="color:var(--muted);margin-top:12px;max-width:62ch">Three states, from the teacher's side. The profile picture is the only thing that changes on every screen; everything else lives behind it.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px" id="statecards">
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="background:var(--bg);border-bottom:1px solid var(--line);padding:11px 16px;font-size:.73rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)">1 · Ordinary teacher</div>
+        <div style="padding:20px">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+            <span style="width:38px;height:38px;border-radius:50%;background:var(--tint);color:var(--deep);display:grid;place-items:center;font-size:.76rem;font-weight:800">PR</span>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--line2);border-radius:var(--r);box-shadow:0 14px 34px -24px rgba(29,23,48,.6);overflow:hidden">
+            <div style="padding:13px 15px;border-bottom:1px solid var(--line)"><b style="font-size:.88rem;color:var(--ink)">Priya Raman</b><br><span style="font-size:.76rem;color:var(--faint)">Pro · 640 credits</span></div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">My library</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Colleagues</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Account</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Log out</div>
+          </div>
+          <p style="font-size:.8rem;color:var(--faint);margin-top:14px">No Ambassador entry at all. The programme is invitation-only, so it never appears for someone who has not been invited.</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="background:var(--tint);border-bottom:1px solid var(--lilac);padding:11px 16px;font-size:.73rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--deep)">2 · Applied, under review</div>
+        <div style="padding:20px">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+            <span style="position:relative;width:38px;height:38px">
+              <span style="width:38px;height:38px;border-radius:50%;background:var(--tint);color:var(--deep);display:grid;place-items:center;font-size:.76rem;font-weight:800;border:2px dashed var(--lilac2)">PR</span>
+            </span>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--line2);border-radius:var(--r);box-shadow:0 14px 34px -24px rgba(29,23,48,.6);overflow:hidden">
+            <div style="padding:13px 15px;border-bottom:1px solid var(--line)"><b style="font-size:.88rem;color:var(--ink)">Priya Raman</b><br><span style="font-size:.76rem;color:var(--faint)">Pro · 640 credits</span></div>
+            <div style="padding:10px 15px;font-size:.85rem;display:flex;align-items:center;gap:9px;background:var(--tint);color:var(--deep);font-weight:700">
+              <i data-i="crown" class="ic"></i><span style="flex:1">Ambassador Programme</span><span class="badge b-rev" style="font-size:.62rem">Under review</span></div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">My library</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Account</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Log out</div>
+          </div>
+          <p style="font-size:.8rem;color:var(--faint);margin-top:14px">The entry appears but opens a status page, not a dashboard. Jooma itself is untouched — same plan, same library, same credits.</p>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;border-color:var(--gold-line)">
+        <div style="background:var(--gold-bg);border-bottom:1px solid var(--gold-line);padding:11px 16px;font-size:.73rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-ink)">3 · Verified ambassador</div>
+        <div style="padding:20px">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+            <span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg>
+              <span class="ring"><span class="in">PR</span></span></span>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--gold-line);border-radius:var(--r);box-shadow:0 14px 34px -24px rgba(122,86,16,.5);overflow:hidden">
+            <div style="padding:13px 15px;border-bottom:1px solid var(--line);background:linear-gradient(150deg,var(--gold-bg),var(--card))">
+              <b style="font-size:.88rem;color:var(--ink)">Priya Raman</b>
+              <span class="verif" style="margin-left:0;margin-top:6px;display:inline-flex;background:var(--gold-bg);border-color:var(--gold-line);color:var(--gold-ink);font-size:.6rem;padding:4px 10px 4px 8px"><i data-i="crown" class="ic"></i>Ambassador</span>
+            </div>
+            <div style="padding:10px 15px;font-size:.85rem;display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#2B1D02;font-weight:800">
+              <i data-i="crown" class="ic"></i><span style="flex:1">Ambassador Programme</span><i data-i="arrow-right" class="ic"></i></div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">My library</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Account</div>
+            <div style="padding:9px 15px;font-size:.85rem;color:var(--body)">Log out</div>
+          </div>
+          <p style="font-size:.8rem;color:var(--faint);margin-top:14px">Gold ring and crown on the avatar everywhere in Jooma. The entry opens the dashboard. Their plan shows as Pro, included.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h2>And on their Jooma dashboard</h2>
+      <p style="color:var(--muted);font-size:.92rem;margin-top:10px">The normal Today band gains a gold hairline and the verified strip. It is the same purple as everyone else's — the gold is a trim, not a different product. Overdoing it makes ordinary teachers feel second class.</p>
+      <div style="margin-top:18px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line)">
+        <div class="gold-band" style="padding:22px 0 30px">
+          <div class="gb-in" style="max-width:none">
+            <div class="gb-top" style="margin-bottom:18px">
+              <span class="wm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg></span>
+              <span class="verif"><i data-i="crown" class="ic"></i> Verified Jooma Ambassador</span>
+              <span class="sp"><span class="av-amb"><svg class="cr" viewBox="0 0 256 256"><path d="M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12.63l12.18,80.34A16,16,0,0,0,60.52,202H195.48a16,16,0,0,0,15.82-13.29l12.18-80.34A28,28,0,0,0,248,80Z"/></svg><span class="ring"><span class="in">PR</span></span></span></span>
+            </div>
+            <div class="gb-h"><div><h1 style="font-size:1.6rem">Afternoon, Priya.</h1><p>Year 4 fractions on Friday, and nothing made for it yet.</p></div></div>
+          </div>
+        </div>
+        <div style="padding:20px;background:var(--bg);font-size:.86rem;color:var(--faint);text-align:center">Everything below this band is the normal Jooma dashboard, unchanged.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+// ---------------------------------------------------------------------------
+// Jooma Ambassador programme — prototype.
+// Commission rates live in RATES and nowhere else. Every figure on screen is
+// computed from RATES x COUNTS, so the UI can never drift from the agreement.
+// ---------------------------------------------------------------------------
+var RATES = {
+  monthly: { standard:1.50, pro:2.00, max:4.00 },   // paid again every month the subscriber stays
+  annual:  { standard:18.00, pro:24.00, max:48.00 } // paid once, on their first payment
+};
+var RULES = {
+  minPayout: 25.00,          // balances under this roll into the next month
+  payoutDay: 15,             // of the following month
+  recurringCapMonths: 24,    // recurring commission stops after this many months per subscriber
+  termMonths: 12,
+  earnsOnFirstClearedPayment: true   // never on sign-up, never during the free trial
+};
+var AMB = {
+  name:'Priya Raman', code:'PRIYA-4K2', joined:'4 March 2026',
+  status:'active', signedOn:'13 October 2026', endsOn:'13 October 2027'
+};
+// this month, by plan
+var MONTH = {
+  recurring: { standard:14, pro:31, max:6 },   // active monthly subscribers
+  annualNew: { standard:2,  pro:3,  max:1 }    // yearly plans that started this month
+};
+// The worked example on the invite page. GROWTH is teachers signed per month;
+// everything on screen is computed from it x RATES, so the illustration can
+// never contradict the rate card.
+var EXAMPLE = {
+  headcount: 1000,          // the round number in the headline
+  plan: 'pro',              // which rate the example uses
+  billing: 'monthly',
+  churnMonthly: 0.04        // used only by the honest "with real churn" view
+};
+var GROWTH = [120,30,300,90,60,150,40,80,25,45,20,40];   // sums to 1,000
+
+var HISTORY = [
+  ['Nov 2025',0,0],['Dec 2025',0,0],['Jan 2026',0,0],['Feb 2026',0,0],
+  ['Mar 2026',106.00,9],['Apr 2026',154.00,12],['May 2026',196.00,14],['Jun 2026',228.00,11],
+  ['Jul 2026',144.00,7],['Aug 2026',186.50,10],['Sep 2026',312.00,15],['Oct 2026',263.00,12]
+];
+
+var I = {"arrow-right": "<path d=\"M221.66,133.66l-72,72A8,8,0,0,1,136,200V136H40a8,8,0,0,1,0-16h96V56a8,8,0,0,1,13.66-5.66l72,72A8,8,0,0,1,221.66,133.66Z\"/>", "arrow-up": "<path d=\"M207.39,115.06A8,8,0,0,1,200,120H136v96a8,8,0,0,1-16,0V120H56a8,8,0,0,1-5.66-13.66l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,207.39,115.06Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z\"/>", "blueprint": "<path d=\"M136,120h24v16H136ZM240,64V200a8,8,0,0,1-8,8H48a32,32,0,0,1-32-32V64A32,32,0,0,1,48,32H64a8,8,0,0,1,8,8V56H232A8,8,0,0,1,240,64ZM56,48H48A16,16,0,0,0,32,64v84.29A31.82,31.82,0,0,1,48,144h8Zm120,88V120h16a8,8,0,0,0,0-16H176V96a8,8,0,0,0-16,0v8H136V96a8,8,0,0,0-16,0v8H104a8,8,0,0,0,0,16h16v16H104a8,8,0,0,0,0,16h16v8a8,8,0,0,0,16,0v-8h24v8a8,8,0,0,0,16,0v-8h16a8,8,0,0,0,0-16Z\"/>", "book-open-text": "<path d=\"M232,48H168a32,32,0,0,0-32,32v87.73a8.17,8.17,0,0,1-7.47,8.25,8,8,0,0,1-8.53-8V80A32,32,0,0,0,88,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,23.94,7.9,7.9,0,0,0,5.12,7.55A8,8,0,0,0,136,232a24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM208,168H168.27a8.17,8.17,0,0,1-8.25-7.47,8,8,0,0,1,8-8.53h39.73a8.17,8.17,0,0,1,8.25,7.47A8,8,0,0,1,208,168Zm0-32H168.27a8.17,8.17,0,0,1-8.25-7.47,8,8,0,0,1,8-8.53h39.73a8.17,8.17,0,0,1,8.25,7.47A8,8,0,0,1,208,136Zm0-32H168.27A8.17,8.17,0,0,1,160,96.53,8,8,0,0,1,168,88h39.73A8.17,8.17,0,0,1,216,95.47,8,8,0,0,1,208,104Z\"/>", "calendar-blank": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,48H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24Z\"/>", "caret-left": "<path d=\"M168,48V208a8,8,0,0,1-13.66,5.66l-80-80a8,8,0,0,1,0-11.32l80-80A8,8,0,0,1,168,48Z\"/>", "caret-right": "<path d=\"M181.66,133.66l-80,80A8,8,0,0,1,88,208V48a8,8,0,0,1,13.66-5.66l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "certificate": "<path d=\"M232,86.53V56a16,16,0,0,0-16-16H40A16,16,0,0,0,24,56V184a16,16,0,0,0,16,16H160v24A8,8,0,0,0,172,231l24-13.74L220,231A8,8,0,0,0,232,224V161.47a51.88,51.88,0,0,0,0-74.94ZM128,144H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm0-32H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm88,98.21-16-9.16a8,8,0,0,0-7.94,0l-16,9.16V172a51.88,51.88,0,0,0,40,0ZM196,160a36,36,0,1,1,36-36A36,36,0,0,1,196,160Z\"/>", "chart-bar": "<path d=\"M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1,0-16h8V136a8,8,0,0,1,8-8H72a8,8,0,0,1,8,8v64H96V88a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V200h16V40a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8V200h8A8,8,0,0,1,232,208Z\"/>", "chart-line-up": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM200,192H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v76.69l34.34-34.35a8,8,0,0,1,11.32,0L128,132.69,172.69,88H144a8,8,0,0,1,0-16h48a8,8,0,0,1,8,8v48a8,8,0,0,1-16,0V99.31l-50.34,50.35a8,8,0,0,1-11.32,0L104,131.31l-40,40V176H200a8,8,0,0,1,0,16Z\"/>", "check": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z\"/>", "check-square-offset": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM80,200a8,8,0,0,1-5.66-2.34l-16-16a8,8,0,0,1,11.32-11.32L80,180.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-40,40A8,8,0,0,1,80,200Zm120-8a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16h48V72H72v64a8,8,0,0,1-16,0V64a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z\"/>", "clipboard-text": "<path d=\"M200,32H163.74a47.92,47.92,0,0,0-71.48,0H56A16,16,0,0,0,40,48V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm-72,0a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32Zm32,128H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z\"/>", "clock": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm56,112H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "coins": "<path d=\"M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM56,146.87C36.41,141.4,24,132.39,24,124V109.93c8.16,5.78,19.09,10.44,32,13.57Zm80-23.37c12.91-3.13,23.84-7.79,32-13.57V124c0,8.39-12.41,17.4-32,22.87Zm-16,71.37C100.41,189.4,88,180.39,88,172v-4.17c2.63.1,5.29.17,8,.17,3.88,0,7.67-.13,11.39-.35A121.92,121.92,0,0,0,120,171.41Zm0-44.62A163,163,0,0,1,96,152a163,163,0,0,1-24-1.75V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54Zm64,48a165.45,165.45,0,0,1-48,0V174.4a179.48,179.48,0,0,0,24,1.6,183.74,183.74,0,0,0,24-1.54ZM232,172c0,8.39-12.41,17.4-32,22.87V171.5c12.91-3.13,23.84-7.79,32-13.57Z\"/>", "download-simple": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40A8,8,0,0,0,168,96H136V32a8,8,0,0,0-16,0V96H88a8,8,0,0,0-5.66,13.66Z\"/>", "envelope-simple": "<path d=\"M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-8,144H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z\"/>", "exam": "<path d=\"M96,113.89,107.06,136H84.94ZM232,56V216a8,8,0,0,1-11.58,7.16L192,208.94l-28.42,14.22a8,8,0,0,1-7.16,0L128,208.94,99.58,223.16a8,8,0,0,1-7.16,0L64,208.94,35.58,223.16A8,8,0,0,1,24,216V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.16,156.42l-32-64a8,8,0,0,0-14.32,0l-32,64a8,8,0,0,0,14.32,7.16L76.94,152h38.12l5.78,11.58a8,8,0,1,0,14.32-7.16ZM208,128a8,8,0,0,0-8-8H184V104a8,8,0,0,0-16,0v16H152a8,8,0,0,0,0,16h16v16a8,8,0,0,0,16,0V136h16A8,8,0,0,0,208,128Z\"/>", "eye": "<path d=\"M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>", "file-text": "<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,176H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm-8-56V44l44,44Z\"/>", "folder": "<path d=\"M216,72H131.31L104,44.69A15.88,15.88,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.41,15.41,0,0,0,39.39,216h177.5A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40Z\"/>", "folder-plus": "<path d=\"M216,72H131.31L104,44.69A15.88,15.88,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.41,15.41,0,0,0,39.39,216h177.5A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40Zm112,96H136v16a8,8,0,0,1-16,0V152H104a8,8,0,0,1,0-16h16V120a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16Z\"/>", "footprints": "<path d=\"M216.06,192v12A36,36,0,0,1,144,204V192a8,8,0,0,1,8-8h56A8,8,0,0,1,216.06,192ZM104,160h-56a8,8,0,0,0-8,8v12A36,36,0,0,0,112,180V168A8,8,0,0,0,104,160ZM76,16C64.36,16,53.07,26.31,44.2,45c-13.93,29.38-18.56,73,.29,96a8,8,0,0,0,6.2,2.93h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C98.85,26.31,87.57,16,76,16Zm78.8,152h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C202.93,50.31,191.64,40,180,40s-22.89,10.31-31.77,29c-13.93,29.38-18.56,73,.29,96A8,8,0,0,0,154.76,168Z\"/>", "gavel": "<path d=\"M52.69,99.31a16,16,0,0,1,0-22.63l64-64a16,16,0,0,1,22.63,22.63l-64,64a16,16,0,0,1-22.63,0Zm190.63,17.37a16,16,0,0,0-22.63,0l-64,64a16,16,0,0,0,0,22.63h0a16,16,0,0,0,22.63,0l64-64A16,16,0,0,0,243.32,116.68Zm-35.11-15.8L155.12,47.79a4,4,0,0,0-5.66,0L87.8,109.45a4,4,0,0,0,0,5.66L103,130.34,28.69,204.69a16,16,0,0,0,22.62,22.62L125.66,153l15.23,15.23a4,4,0,0,0,5.66,0l61.66-61.66A4,4,0,0,0,208.21,100.88Z\"/>", "hand-palm": "<path d=\"M216,104v48a88,88,0,0,1-176,0V64a16,16,0,0,1,32,0v56a8,8,0,0,0,16,0V32a16,16,0,0,1,32,0v80a8,8,0,0,0,16,0V48a16,16,0,0,1,32,0v80.67A48.08,48.08,0,0,0,128,176a8,8,0,0,0,16,0,32,32,0,0,1,32-32,8,8,0,0,0,8-8V104a16,16,0,0,1,32,0Z\"/>", "house": "<path d=\"M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z\"/>", "house-line": "<path d=\"M240,208H224V136l2.34,2.34A8,8,0,0,0,237.66,127L139.31,28.68a16,16,0,0,0-22.62,0L18.34,127a8,8,0,0,0,11.32,11.31L32,136v72H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Zm-88,0H104V160a4,4,0,0,1,4-4h40a4,4,0,0,1,4,4Z\"/>", "identification-card": "<path d=\"M112,120a16,16,0,1,1-16-16A16,16,0,0,1,112,120ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.75,166a39.76,39.76,0,0,0-17.19-23.34,32,32,0,1,0-45.12,0A39.84,39.84,0,0,0,56.25,166a8,8,0,0,0,15.5,4c2.64-10.25,13.06-18,24.25-18s21.62,7.73,24.25,18a8,8,0,1,0,15.5-4ZM200,144a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,144Zm0-32a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,112Z\"/>", "lightning": "<path d=\"M213.85,125.46l-112,120a8,8,0,0,1-13.69-7l14.66-73.33L45.19,143.49a8,8,0,0,1-3-13l112-120a8,8,0,0,1,13.69,7L153.18,90.9l57.63,21.61a8,8,0,0,1,3,12.95Z\"/>", "magnifying-glass": "<path d=\"M168,112a56,56,0,1,1-56-56A56,56,0,0,1,168,112Zm61.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88,88,0,1,1,11.32-11.31l50.06,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z\"/>", "map-trifold": "<path d=\"M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM96,176a8,8,0,0,0-1.94.24L40,189.75V62.25L95.07,48.48l.93.46Zm120,17.75-55.07,13.77-.93-.46V80a8,8,0,0,0,1.94-.23L216,66.25Z\"/>", "medal": "<path d=\"M216,96A88,88,0,1,0,72,163.83V240a8,8,0,0,0,11.58,7.16L128,225l44.43,22.21A8.07,8.07,0,0,0,176,248a8,8,0,0,0,8-8V163.83A87.85,87.85,0,0,0,216,96ZM56,96a72,72,0,1,1,72,72A72.08,72.08,0,0,1,56,96Zm16,0a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z\"/>", "megaphone": "<path d=\"M200,72H160.2c-2.91-.17-53.62-3.74-101.91-44.24A16,16,0,0,0,32,40V200a16,16,0,0,0,26.29,12.25c37.77-31.68,77-40.76,93.71-43.3v31.72A16,16,0,0,0,159.12,214l11,7.33A16,16,0,0,0,194.5,212l11.77-44.36A48,48,0,0,0,200,72ZM179,207.89l0,.11-11-7.33V168h21.6ZM200,152H168V88h32a32,32,0,1,1,0,64Z\"/>", "microphone": "<path d=\"M80,128V64a48,48,0,0,1,96,0v64a48,48,0,0,1-96,0Zm128,0a8,8,0,0,0-16,0,64,64,0,0,1-128,0,8,8,0,0,0-16,0,80.11,80.11,0,0,0,72,79.6V240a8,8,0,0,0,16,0V207.6A80.11,80.11,0,0,0,208,128Z\"/>", "newspaper": "<path d=\"M216,48H56A16,16,0,0,0,40,64V184a8,8,0,0,1-16,0V88A8,8,0,0,0,8,88v96.11A24,24,0,0,0,32,208H208a24,24,0,0,0,24-24V64A16,16,0,0,0,216,48ZM176,152H96a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16Z\"/>", "notebook": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM80,208H48V48H80Zm96-56H112a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H112a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z\"/>", "pen-nib": "<path d=\"M243.31,81.36,174.63,12.68a16,16,0,0,0-22.63,0L123.56,41.12l-58,21.76A16,16,0,0,0,55.36,75.23L34.59,199.83a4,4,0,0,0,6.77,3.49l57-57a23.85,23.85,0,0,1-2.29-12.08,24,24,0,1,1,13.6,23.4l-57,57a4,4,0,0,0,3.49,6.77l124.61-20.77a16,16,0,0,0,12.35-10.16l21.77-58.07L243.31,104a16,16,0,0,0,0-22.63ZM208,116.68,139.32,48l24-24L232,92.68Z\"/>", "pencil-simple": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "play": "<path d=\"M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z\"/>", "plus": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM184,136H136v48a8,8,0,0,1-16,0V136H72a8,8,0,0,1,0-16h48V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "presentation-chart": "<path d=\"M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM104,144a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z\"/>", "projector-screen": "<path d=\"M232,64V48a16,16,0,0,0-16-16H40A16,16,0,0,0,24,48V64A16,16,0,0,0,40,80v96H32a8,8,0,0,0,0,16h88v17.38a24,24,0,1,0,16,0V192h88a8,8,0,0,0,0-16h-8V80A16,16,0,0,0,232,64ZM128,240a8,8,0,1,1,8-8A8,8,0,0,1,128,240ZM40,48H216V64H40Z\"/>", "scroll": "<path d=\"M220.8,169.6A8,8,0,0,0,216,168h-8V64a32,32,0,0,0-32-32H40A32,32,0,0,0,8,64C8,77.61,18.05,85.54,19.2,86.4h0A7.89,7.89,0,0,0,24,88a8,8,0,0,0,4.87-14.33h0C28.83,73.62,24,69.74,24,64a16,16,0,0,1,32,0V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32C232,178.39,222,170.46,220.8,169.6ZM104,96h64a8,8,0,0,1,0,16H104a8,8,0,0,1,0-16Zm-8,40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H104A8,8,0,0,1,96,136Zm104,72H107.71A31.82,31.82,0,0,0,112,192a26.92,26.92,0,0,0-1.21-8h102a12.58,12.58,0,0,1,3.23,8A16,16,0,0,1,200,208Z\"/>", "share-network": "<path d=\"M212,200a36,36,0,1,1-69.85-12.25l-53-34.05a36,36,0,1,1,0-51.4l53-34a36.09,36.09,0,1,1,8.67,13.45l-53,34.05a36,36,0,0,1,0,24.5l53,34.05A36,36,0,0,1,212,200Z\"/>", "shield-check": "<path d=\"M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "sparkle": "<path d=\"M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z\"/>", "squares-four": "<path d=\"M120,56v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40h48A16,16,0,0,1,120,56Zm80-16H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm-96,96H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm96,0H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Z\"/>", "student": "<path d=\"M226.53,56.41l-96-32a8,8,0,0,0-5.06,0l-96,32A8,8,0,0,0,24,64v80a8,8,0,0,0,16,0V75.1L73.59,86.29a64,64,0,0,0,20.65,88.05c-18,7.06-33.56,19.83-44.94,37.29a8,8,0,1,0,13.4,8.74C77.77,197.25,101.57,184,128,184s50.23,13.25,65.3,36.37a8,8,0,0,0,13.4-8.74c-11.38-17.46-27-30.23-44.94-37.29a64,64,0,0,0,20.65-88l44.12-14.7a8,8,0,0,0,0-15.18ZM176,120A48,48,0,1,1,89.35,91.55l36.12,12a8,8,0,0,0,5.06,0l36.12-12A47.89,47.89,0,0,1,176,120Z\"/>", "target": "<path d=\"M221.87,83.16A104.1,104.1,0,1,1,195.67,49l22.67-22.68a8,8,0,0,1,11.32,11.32L167.6,99.71h0l-37.71,37.71-23.95,23.95a40,40,0,0,0,62-35.67,8,8,0,1,1,16-.9,56,56,0,0,1-95.5,42.79h0a56,56,0,0,1,73.13-84.43L184.3,60.39a87.88,87.88,0,1,0,23.13,29.67,8,8,0,0,1,14.44-6.9Z\"/>", "text-aa": "<path d=\"M200,156c0,6.5-7.33,12-16,12s-16-5.5-16-12,7.33-12,16-12S200,149.5,200,156ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM143.37,172.88l-44-104a8,8,0,0,0-14.74,0l-44,104a8,8,0,0,0,14.74,6.24L66.84,152h50.32l11.47,27.12a8,8,0,0,0,14.74-6.24ZM216,124c0-15.44-14.36-28-32-28a34.86,34.86,0,0,0-20.78,6.68,8,8,0,0,0,9.56,12.83A18.84,18.84,0,0,1,184,112c8.56,0,15.8,5.36,16,11.76v8A35.24,35.24,0,0,0,184,128c-17.64,0-32,12.56-32,28s14.36,28,32,28a35.13,35.13,0,0,0,16.93-4.26A8,8,0,0,0,216,176ZM73.61,136h36.78L92,92.53Z\"/>", "user": "<path d=\"M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z\"/>", "user-switch": "<path d=\"M84,120a44,44,0,1,1,44,44A44,44,0,0,1,84,120Zm126.16,57.18a8.21,8.21,0,0,0-10.86,2.41,87.42,87.42,0,0,1-5.52,6.85A79.76,79.76,0,0,0,172,165.1a4,4,0,0,0-4.84.32,59.8,59.8,0,0,1-78.26,0A4,4,0,0,0,84,165.1a79.71,79.71,0,0,0-21.79,21.31A87.66,87.66,0,0,1,40.37,136h15.4a8.2,8.2,0,0,0,6.69-3.28,8,8,0,0,0-.8-10.38l-24-24a8,8,0,0,0-11.32,0l-24,24a8,8,0,0,0-.8,10.38A8.2,8.2,0,0,0,8.23,136H24.3a104,104,0,0,0,188.18,52.67A8,8,0,0,0,210.16,177.18Zm45.23-52.24A8,8,0,0,0,248,120H231.7A104,104,0,0,0,43.52,67.33a8,8,0,0,0,13,9.34A88,88,0,0,1,215.63,120H200a8,8,0,0,0-5.66,13.66l24,24a8,8,0,0,0,11.32,0l24-24A8,8,0,0,0,255.39,124.94Z\"/>", "users-three": "<path d=\"M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z\"/>", "warning": "<path d=\"M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z\"/>", "x": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM181.66,170.34a8,8,0,0,1-11.32,11.32L128,139.31,85.66,181.66a8,8,0,0,1-11.32-11.32L116.69,128,74.34,85.66A8,8,0,0,1,85.66,74.34L128,116.69l42.34-42.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "folder-open": "<path d=\"M245,110.64A16,16,0,0,0,232,104H216V88a16,16,0,0,0-16-16H130.67L102.94,51.2a16.14,16.14,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V208h0a8,8,0,0,0,8,8H211.1a8,8,0,0,0,7.59-5.47l28.49-85.47A16.05,16.05,0,0,0,245,110.64ZM93.34,64,123.2,86.4A8,8,0,0,0,128,88h72v16H69.77a16,16,0,0,0-15.18,10.94L40,158.7V64Z\"/>", "user-circle": "<path d=\"M172,120a44,44,0,1,1-44-44A44.05,44.05,0,0,1,172,120Zm60,8A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88.09,88.09,0,0,0-91.47-87.93C77.43,41.89,39.87,81.12,40,128.25a87.65,87.65,0,0,0,22.24,58.16A79.71,79.71,0,0,1,84,165.1a4,4,0,0,1,4.83.32,59.83,59.83,0,0,0,78.28,0,4,4,0,0,1,4.83-.32,79.71,79.71,0,0,1,21.79,21.31A87.62,87.62,0,0,0,216,128Z\"/>", "user-plus": "<path d=\"M256,136a8,8,0,0,1-8,8H232v16a8,8,0,0,1-16,0V144H200a8,8,0,0,1,0-16h16V112a8,8,0,0,1,16,0v16h16A8,8,0,0,1,256,136ZM144,157.68a68,68,0,1,0-71.9,0c-20.65,6.76-39.23,19.39-54.17,37.17A8,8,0,0,0,24,208H192a8,8,0,0,0,6.13-13.15C183.18,177.07,164.6,164.44,144,157.68Z\"/>", "caret-down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z\"/>", "calendar-plus": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM152,160H136v16a8,8,0,0,1-16,0V160H104a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16ZM48,80V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80Z\"/>", "trophy": "<path d=\"M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z\"/>", "fire": "<path d=\"M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z\"/>", "star": "<path d=\"M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.46,16.46,0,0,1,9.37,28.86Z\"/>", "seal-check": "<path d=\"M225.86,102.82c-3.77-3.94-7.67-8-9.14-11.57-1.36-3.27-1.44-8.69-1.52-13.94-.15-9.76-.31-20.82-8-28.51s-18.75-7.85-28.51-8c-5.25-.08-10.67-.16-13.94-1.52-3.56-1.47-7.63-5.37-11.57-9.14C146.28,23.51,138.44,16,128,16s-18.27,7.51-25.18,14.14c-3.94,3.77-8,7.67-11.57,9.14C88,40.64,82.56,40.72,77.31,40.8c-9.76.15-20.82.31-28.51,8S41,67.55,40.8,77.31c-.08,5.25-.16,10.67-1.52,13.94-1.47,3.56-5.37,7.63-9.14,11.57C23.51,109.72,16,117.56,16,128s7.51,18.27,14.14,25.18c3.77,3.94,7.67,8,9.14,11.57,1.36,3.27,1.44,8.69,1.52,13.94.15,9.76.31,20.82,8,28.51s18.75,7.85,28.51,8c5.25.08,10.67.16,13.94,1.52,3.56,1.47,7.63,5.37,11.57,9.14C109.72,232.49,117.56,240,128,240s18.27-7.51,25.18-14.14c3.94-3.77,8-7.67,11.57-9.14,3.27-1.36,8.69-1.44,13.94-1.52,9.76-.15,20.82-.31,28.51-8s7.85-18.75,8-28.51c.08-5.25.16-10.67,1.52-13.94,1.47-3.56,5.37-7.63,9.14-11.57C232.49,146.28,240,138.44,240,128S232.49,109.73,225.86,102.82Zm-52.2,6.84-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "lock-simple": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96Z\"/>", "upload-simple": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM88,80h32v64a8,8,0,0,0,16,0V80h32a8,8,0,0,0,5.66-13.66l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,88,80Z\"/>", "dots-three": "<path d=\"M224,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V96A16,16,0,0,0,224,80ZM60,140a12,12,0,1,1,12-12A12,12,0,0,1,60,140Zm68,0a12,12,0,1,1,12-12A12,12,0,0,1,128,140Zm68,0a12,12,0,1,1,12-12A12,12,0,0,1,196,140Z\"/>", "trash-simple": "<path d=\"M224,56a8,8,0,0,1-8,8h-8V208a16,16,0,0,1-16,16H64a16,16,0,0,1-16-16V64H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,56ZM88,32h80a8,8,0,0,0,0-16H88a8,8,0,0,0,0,16Z\"/>", "chat-circle": "<path d=\"M232,128A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Z\"/>", "chat-teardrop-dots": "<path d=\"M132,24A100.11,100.11,0,0,0,32,124v84a16,16,0,0,0,16,16h84a100,100,0,0,0,0-200ZM88,140a12,12,0,1,1,12-12A12,12,0,0,1,88,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,132,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,176,140Z\"/>", "paper-plane-tilt": "<path d=\"M231.4,44.34s0,.1,0,.15l-58.2,191.94a15.88,15.88,0,0,1-14,11.51q-.69.06-1.38.06a15.86,15.86,0,0,1-14.42-9.15L107,164.15a4,4,0,0,1,.77-4.58l57.92-57.92a8,8,0,0,0-11.31-11.31L96.43,148.26a4,4,0,0,1-4.58.77L17.08,112.64a16,16,0,0,1,2.49-29.8l191.94-58.2.15,0A16,16,0,0,1,231.4,44.34Z\"/>", "link-simple": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM144.56,173.66l-21.45,21.45a44,44,0,0,1-62.22-62.22l21.45-21.46a8,8,0,0,1,11.32,11.31L72.2,144.2a28,28,0,0,0,39.6,39.6l21.45-21.46a8,8,0,0,1,11.31,11.32Zm-34.9-16a8,8,0,0,1-11.32-11.32l48-48a8,8,0,0,1,11.32,11.32Zm85.45-34.55-21.45,21.45a8,8,0,0,1-11.32-11.31L183.8,111.8a28,28,0,0,0-39.6-39.6L122.74,93.66a8,8,0,0,1-11.31-11.32l21.46-21.45a44,44,0,0,1,62.22,62.22Z\"/>", "gear": "<path d=\"M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>", "sign-out": "<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40A8,8,0,0,0,176,88v32H112a8,8,0,0,0,0,16h64v32a8,8,0,0,0,13.66,5.66l40-40A8,8,0,0,0,229.66,122.34Z\"/>", "camera": "<path d=\"M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z\"/>", "crown-simple": "<path d=\"M239.75,90.81c0,.11,0,.21-.07.32L217,195a16,16,0,0,1-15.72,13H54.71A16,16,0,0,1,39,195L16.32,91.13c0-.11-.05-.21-.07-.32A16,16,0,0,1,44,77.39l33.67,36.29,35.8-80.29a1,1,0,0,0,0-.1,16,16,0,0,1,29.06,0,1,1,0,0,0,0,.1l35.8,80.29L212,77.39a16,16,0,0,1,27.71,13.42Z\"/>", "books": "<path d=\"M231.65,194.55,198.46,36.75a16,16,0,0,0-19-12.39L132.65,34.42a16.08,16.08,0,0,0-12.3,19l33.19,157.8A16,16,0,0,0,169.16,224a16.25,16.25,0,0,0,3.38-.36l46.81-10.06A16.09,16.09,0,0,0,231.65,194.55ZM136,50.15c0-.06,0-.09,0-.09l46.8-10,3.33,15.87L139.33,66Zm10,47.38-3.35-15.9,46.82-10.06,3.34,15.9Zm70,100.41-46.8,10-3.33-15.87L212.67,182,216,197.85C216,197.91,216,197.94,216,197.94ZM104,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V48A16,16,0,0,0,104,32ZM56,48h48V64H56Zm48,160H56V192h48v16Z\"/>", "graduation-cap": "<path d=\"M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z\"/>", "sliders-horizontal": "<path d=\"M32,80a8,8,0,0,1,8-8H77.17a28,28,0,0,1,53.66,0H216a8,8,0,0,1,0,16H130.83a28,28,0,0,1-53.66,0H40A8,8,0,0,1,32,80Zm184,88H194.83a28,28,0,0,0-53.66,0H40a8,8,0,0,0,0,16H141.17a28,28,0,0,0,53.66,0H216a8,8,0,0,0,0-16Z\"/>", "list": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM192,184H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Zm0-48H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Zm0-48H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Z\"/>", "grid-four": "<path d=\"M216,56v60a4,4,0,0,1-4,4H136V44a4,4,0,0,1,4-4h60A16,16,0,0,1,216,56ZM116,40H56A16,16,0,0,0,40,56v60a4,4,0,0,0,4,4h76V44A4,4,0,0,0,116,40Zm96,96H136v76a4,4,0,0,0,4,4h60a16,16,0,0,0,16-16V140A4,4,0,0,0,212,136ZM40,140v60a16,16,0,0,0,16,16h60a4,4,0,0,0,4-4V136H44A4,4,0,0,0,40,140Z\"/>", "arrows-out-cardinal": "<path d=\"M96,136H64v24a8,8,0,0,1-13.66,5.66l-32-32a8,8,0,0,1,0-11.32l32-32A8,8,0,0,1,64,96v24H96a8,8,0,0,1,0,16Zm0-72h24V96a8,8,0,0,0,16,0V64h24a8,8,0,0,0,5.66-13.66l-32-32a8,8,0,0,0-11.32,0l-32,32A8,8,0,0,0,96,64Zm141.66,58.34-32-32A8,8,0,0,0,192,96v24H160a8,8,0,0,0,0,16h32v24a8,8,0,0,0,13.66,5.66l32-32A8,8,0,0,0,237.66,122.34ZM160,192H136V160a8,8,0,0,0-16,0v32H96a8,8,0,0,0-5.66,13.66l32,32a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,160,192Z\"/>", "globe-hemisphere-west": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.62,87.62,0,0,1-6.4,32.94l-44.7-27.49a15.92,15.92,0,0,0-6.24-2.23l-22.82-3.08a16.11,16.11,0,0,0-16,7.86h-8.72l-3.8-7.86a15.91,15.91,0,0,0-11-8.67l-8-1.73L96.14,104h16.71a16.06,16.06,0,0,0,7.73-2l12.25-6.76a16.62,16.62,0,0,0,3-2.14l26.91-24.34A15.93,15.93,0,0,0,166,49.1l-.36-.65A88.11,88.11,0,0,1,216,128ZM40,128a87.53,87.53,0,0,1,8.54-37.8l11.34,30.27a16,16,0,0,0,11.62,10l21.43,4.61L96.74,143a16.09,16.09,0,0,0,14.4,9h1.48l-7.23,16.23a16,16,0,0,0,2.86,17.37l.14.14L128,205.94l-1.94,10A88.11,88.11,0,0,1,40,128Z\"/>", "cursor-click": "<path d=\"M220.49,190.83a12,12,0,0,1,0,17L207.8,220.49a12,12,0,0,1-17,0l-56.56-56.57L115,214.09c0,.1-.08.21-.13.32a15.83,15.83,0,0,1-14.6,9.59l-.79,0a15.83,15.83,0,0,1-14.41-11L32.8,52.92A16,16,0,0,1,52.92,32.8L213,85.07a16,16,0,0,1,1.41,29.8l-.32.13-50.17,19.27ZM96,32a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0v8A8,8,0,0,0,96,32ZM16,104h8a8,8,0,0,0,0-16H16a8,8,0,0,0,0,16ZM124.42,39.16a8,8,0,0,0,10.74-3.58l8-16a8,8,0,0,0-14.31-7.16l-8,16A8,8,0,0,0,124.42,39.16Zm-96,81.69-16,8a8,8,0,0,0,7.16,14.31l16-8a8,8,0,1,0-7.16-14.31Z\"/>", "arrow-down": "<path d=\"M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72A8,8,0,0,1,56,136h64V40a8,8,0,0,1,16,0v96h64a8,8,0,0,1,5.66,13.66Z\"/>", "hand-pointing": "<path d=\"M224,104v50.93c0,46.2-36.85,84.55-83,85.06A83.71,83.71,0,0,1,80.6,215.4C58.79,192.33,34.15,136,34.15,136a16,16,0,0,1,6.53-22.23c7.66-4,17.1-.84,21.4,6.62l21,36.44a6.09,6.09,0,0,0,6,3.09l.12,0A8.19,8.19,0,0,0,96,151.74V32a16,16,0,0,1,16.77-16c8.61.4,15.23,7.82,15.23,16.43V104a8,8,0,0,0,8.53,8,8.17,8.17,0,0,0,7.47-8.25V88a16,16,0,0,1,16.77-16c8.61.4,15.23,7.82,15.23,16.43V112a8,8,0,0,0,8.53,8,8.17,8.17,0,0,0,7.47-8.25v-7.28c0-8.61,6.62-16,15.23-16.43A16,16,0,0,1,224,104Z\"/>", "magic-wand": "<path d=\"M248,152a8,8,0,0,1-8,8H224v16a8,8,0,0,1-16,0V160H192a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16A8,8,0,0,1,248,152ZM56,72H72V88a8,8,0,0,0,16,0V72h16a8,8,0,0,0,0-16H88V40a8,8,0,0,0-16,0V56H56a8,8,0,0,0,0,16ZM184,192h-8v-8a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0v-8h8a8,8,0,0,0,0-16ZM219.31,80,80,219.31a16,16,0,0,1-22.62,0L36.68,198.63a16,16,0,0,1,0-22.63L176,36.69a16,16,0,0,1,22.63,0l20.68,20.68A16,16,0,0,1,219.31,80ZM208,68.69,187.31,48l-32,32L176,100.69Z\"/>", "paper-plane-right": "<path d=\"M240,127.89a16,16,0,0,1-8.18,14L63.9,237.9A16.15,16.15,0,0,1,56,240a16,16,0,0,1-15-21.33l27-79.95A4,4,0,0,1,71.72,136H144a8,8,0,0,0,8-8.53,8.19,8.19,0,0,0-8.26-7.47h-72a4,4,0,0,1-3.79-2.72l-27-79.94A16,16,0,0,1,63.84,18.07l168,95.89A16,16,0,0,1,240,127.89Z\"/>", "keyboard": "<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM64,168H48a8,8,0,0,1,0-16H64a8,8,0,0,1,0,16Zm96,0H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm48,0H192a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Zm0-32H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Z\"/>", "arrows-clockwise": "<path d=\"M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1-5.66-13.66L180.65,72a79.48,79.48,0,0,0-54.72-22.09h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27,96,96,0,0,1,192,60.7l18.36-18.36A8,8,0,0,1,224,48ZM186.41,183.29A80,80,0,0,1,75.35,184l18.31-18.31A8,8,0,0,0,88,152H40a8,8,0,0,0-8,8v48a8,8,0,0,0,13.66,5.66L64,195.3a95.42,95.42,0,0,0,66,26.76h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z\"/>", "arrow-up-right": "<path d=\"M200,64V168a8,8,0,0,1-13.66,5.66L140,127.31,69.66,197.66a8,8,0,0,1-11.32-11.32L128.69,116,82.34,69.66A8,8,0,0,1,88,56H192A8,8,0,0,1,200,64Z\"/>", "image": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM156,88a12,12,0,1,1-12,12A12,12,0,0,1,156,88Zm60,112H40V160.69l46.34-46.35a8,8,0,0,1,11.32,0h0L165,181.66a8,8,0,0,0,11.32-11.32l-17.66-17.65L173,138.34a8,8,0,0,1,11.31,0L216,170.07V200Z\"/>", "crown": "<path d=\"M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12L47,194.63A16,16,0,0,0,62.78,208H193.22A16,16,0,0,0,209,194.63l14.47-86.85A28,28,0,0,0,248,80ZM128,40a12,12,0,1,1-12,12A12,12,0,0,1,128,40ZM24,80A12,12,0,1,1,36,92,12,12,0,0,1,24,80ZM220,92a12,12,0,1,1,12-12A12,12,0,0,1,220,92Z\"/>", "copy": "<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-8,128H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>", "bank": "<path d=\"M248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208ZM16.3,98.18a8,8,0,0,1,3.51-9l104-64a8,8,0,0,1,8.38,0l104,64A8,8,0,0,1,232,104H208v64h16a8,8,0,0,1,0,16H32a8,8,0,0,1,0-16H48V104H24A8,8,0,0,1,16.3,98.18ZM144,160a8,8,0,0,0,16,0V112a8,8,0,0,0-16,0Zm-48,0a8,8,0,0,0,16,0V112a8,8,0,0,0-16,0Z\"/>", "instagram-logo": "<path d=\"M176,24H80A56.06,56.06,0,0,0,24,80v96a56.06,56.06,0,0,0,56,56h96a56.06,56.06,0,0,0,56-56V80A56.06,56.06,0,0,0,176,24ZM128,176a48,48,0,1,1,48-48A48.05,48.05,0,0,1,128,176Zm60-96a12,12,0,1,1,12-12A12,12,0,0,1,188,80Zm-28,48a32,32,0,1,1-32-32A32,32,0,0,1,160,128Z\"/>", "tiktok-logo": "<path d=\"M232,80v40a8,8,0,0,1-8,8,103.25,103.25,0,0,1-48-11.71V156a76,76,0,0,1-152,0c0-36.9,26.91-69.52,62.6-75.88A8,8,0,0,1,96,88v42.69a8,8,0,0,1-4.57,7.23A20,20,0,1,0,120,156V24a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8,48.05,48.05,0,0,0,48,48A8,8,0,0,1,232,80Z\"/>", "x-logo": "<path d=\"M215,219.85a8,8,0,0,1-7,4.15H160a8,8,0,0,1-6.75-3.71l-40.49-63.63L53.92,221.38a8,8,0,0,1-11.84-10.76l61.77-68L41.25,44.3A8,8,0,0,1,48,32H96a8,8,0,0,1,6.75,3.71l40.49,63.63,58.84-64.72a8,8,0,0,1,11.84,10.76l-61.77,67.95,62.6,98.38A8,8,0,0,1,215,219.85Z\"/>", "facebook-logo": "<path d=\"M232,128a104.16,104.16,0,0,1-91.55,103.26,4,4,0,0,1-4.45-4V152h24a8,8,0,0,0,8-8.53,8.17,8.17,0,0,0-8.25-7.47H136V112a16,16,0,0,1,16-16h16a8,8,0,0,0,8-8.53A8.17,8.17,0,0,0,167.73,80H152a32,32,0,0,0-32,32v24H96a8,8,0,0,0-8,8.53A8.17,8.17,0,0,0,96.27,152H120v75.28a4,4,0,0,1-4.44,4A104.15,104.15,0,0,1,24.07,124.09c2-54,45.74-97.9,99.78-100A104.12,104.12,0,0,1,232,128Z\"/>", "youtube-logo": "<path d=\"M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z\"/>", "linkedin-logo": "<path d=\"M216,24H40A16,16,0,0,0,24,40V216a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V40A16,16,0,0,0,216,24ZM96,176a8,8,0,0,1-16,0V112a8,8,0,0,1,16,0ZM88,96a12,12,0,1,1,12-12A12,12,0,0,1,88,96Zm96,80a8,8,0,0,1-16,0V140a20,20,0,0,0-40,0v36a8,8,0,0,1-16,0V112a8,8,0,0,1,15.79-1.78A36,36,0,0,1,184,140Z\"/>", "signature": "<path d=\"M80.3,120.26A58.29,58.29,0,0,1,81,97.07C83.32,87,87.89,80,92.1,80c2.57,0,2.94.67,3.12,1,.88,1.61,4,10.93-12.63,46.52A28.87,28.87,0,0,1,80.3,120.26ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM84,160c2-3.59,3.94-7.32,5.9-11.14,10.34-.32,22.21-7.57,35.47-21.68,5,9.69,11.38,15.25,18.87,16.55,8,1.38,16-2.38,23.94-11.2,6,5.53,16.15,11.47,31.8,11.47a8,8,0,0,0,0-16c-17.91,0-24.3-10.88-24.84-11.86a7.83,7.83,0,0,0-6.54-4.51,8,8,0,0,0-7.25,3.6c-6.78,10-11.87,13.16-14.39,12.73-4-.69-9.15-10-11.23-18a8,8,0,0,0-14-3c-8.88,10.94-16.3,17.79-22.13,21.66,15.8-35.65,13.27-48.59,9.6-55.3C107.35,69.84,102.59,64,92.1,64,79.66,64,69.68,75,65.41,93.46a75,75,0,0,0-.83,29.81c1.7,8.9,5.17,15.73,10.16,20.12-3,5.81-6.09,11.43-9,16.61H56a8,8,0,0,0,0,16h.44c-4.26,7.12-7.11,11.59-7.18,11.69a8,8,0,0,0,13.48,8.62c.36-.55,5.47-8.57,12.29-20.31H200a8,8,0,0,0,0-16Z\"/>", "phone": "<path d=\"M231.88,175.08A56.26,56.26,0,0,1,176,224C96.6,224,32,159.4,32,80A56.26,56.26,0,0,1,80.92,24.12a16,16,0,0,1,16.62,9.52l21.12,47.15,0,.12A16,16,0,0,1,117.39,96c-.18.27-.37.52-.57.77L96,121.45c7.49,15.22,23.41,31,38.83,38.51l24.34-20.71a8.12,8.12,0,0,1,.75-.56,16,16,0,0,1,15.17-1.4l.13.06,47.11,21.11A16,16,0,0,1,231.88,175.08Z\"/>", "trend-up": "<path d=\"M240,56v64a8,8,0,0,1-13.66,5.66L200,99.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,188.69,88,162.34,61.66A8,8,0,0,1,168,48h64A8,8,0,0,1,240,56Z\"/>", "receipt": "<path d=\"M216,40H40A16,16,0,0,0,24,56V208a8,8,0,0,0,11.58,7.15L64,200.94l28.42,14.21a8,8,0,0,0,7.16,0L128,200.94l28.42,14.21a8,8,0,0,0,7.16,0L192,200.94l28.42,14.21A8,8,0,0,0,232,208V56A16,16,0,0,0,216,40ZM176,144H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Zm0-32H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Z\"/>", "hourglass-medium": "<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.59A16.09,16.09,0,0,0,200,75.64ZM184,180.36V216H72V180l48-36v24a8,8,0,0,0,16,0V144.08Zm0-104.72L178.23,80H77.33L72,76V40H184Z\"/>", "currency-gbp": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm40,160H88a8,8,0,0,1,0-16,16,16,0,0,0,16-16V136H88a8,8,0,0,1,0-16h16V96a40,40,0,0,1,60-34.64,8,8,0,0,1-8,13.85A24,24,0,0,0,120,96v24h16a8,8,0,0,1,0,16H120v16a31.71,31.71,0,0,1-4.31,16H168a8,8,0,0,1,0,16Z\"/>", "user-circle-check": "<path d=\"M230.56,110.68a103.92,103.92,0,1,1-85.24-85.24,8,8,0,0,1-2.64,15.78A88.07,88.07,0,0,0,40,128a87.62,87.62,0,0,0,22.24,58.41A79.71,79.71,0,0,1,84,165.1a4,4,0,0,1,4.84.32,59.8,59.8,0,0,0,78.26,0,4,4,0,0,1,4.84-.32,79.86,79.86,0,0,1,21.79,21.31A87.62,87.62,0,0,0,216,128a88.85,88.85,0,0,0-1.22-14.68,8,8,0,1,1,15.78-2.64ZM84,120a44,44,0,1,0,44-44A44,44,0,0,0,84,120ZM237.66,34.34a8,8,0,0,0-11.32,0L200,60.69,189.66,50.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,237.66,34.34Z\"/>", "caret-up": "<path d=\"M215.39,163.06A8,8,0,0,1,208,168H48a8,8,0,0,1-5.66-13.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,215.39,163.06Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z\"/>", "check-circle": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "arrow-square-out": "<path d=\"M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z\"/>", "credit-card": "<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM136,176H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm64,0H168a8,8,0,0,1,0-16h32a8,8,0,0,1,0,16ZM32,88V64H224V88Z\"/>", "buildings": "<path d=\"M239.73,208H224V96a16,16,0,0,0-16-16H164a4,4,0,0,0-4,4V208H144V32.41a16.43,16.43,0,0,0-6.16-13,16,16,0,0,0-18.72-.69L39.12,72A16,16,0,0,0,32,85.34V208H16.27A8.18,8.18,0,0,0,8,215.47,8,8,0,0,0,16,224H240a8,8,0,0,0,8-8.53A8.18,8.18,0,0,0,239.73,208ZM76,184a8,8,0,0,1-8.53,8A8.18,8.18,0,0,1,60,183.72V168.27A8.19,8.19,0,0,1,67.47,160,8,8,0,0,1,76,168Zm0-56a8,8,0,0,1-8.53,8A8.19,8.19,0,0,1,60,127.72V112.27A8.19,8.19,0,0,1,67.47,104,8,8,0,0,1,76,112Zm40,56a8,8,0,0,1-8.53,8,8.18,8.18,0,0,1-7.47-8.26V168.27a8.19,8.19,0,0,1,7.47-8.26,8,8,0,0,1,8.53,8Zm0-56a8,8,0,0,1-8.53,8,8.19,8.19,0,0,1-7.47-8.26V112.27a8.19,8.19,0,0,1,7.47-8.26,8,8,0,0,1,8.53,8Z\"/>", "question": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,168a12,12,0,1,1,12-12A12,12,0,0,1,128,192Zm8-48.72V144a8,8,0,0,1-16,0v-8a8,8,0,0,1,8-8c13.23,0,24-9,24-20s-10.77-20-24-20-24,9-24,20v4a8,8,0,0,1-16,0v-4c0-19.85,17.94-36,40-36s40,16.15,40,36C168,125.38,154.24,139.93,136,143.28Z\"/>"};
+function paintIcons(root){
+  (root||document).querySelectorAll('i[data-i]').forEach(function(el){
+    var d=I[el.getAttribute('data-i')]; if(!d) return;
+    var s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    s.setAttribute('viewBox','0 0 256 256'); s.setAttribute('aria-hidden','true');
+    s.innerHTML=d;
+    if(el.className) s.setAttribute('class', el.className);
+    el.replaceWith(s);
+  });
+}
+paintIcons();
+
+function gbp(n){ return '£'+n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function monthTotal(){
+  var t=0, m=MONTH;
+  for(var k in m.recurring) t += m.recurring[k]*RATES.monthly[k];
+  for(var k2 in m.annualNew) t += m.annualNew[k2]*RATES.annual[k2];
+  return t;
+}
+
+// ---- router ----
+function go(id){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on')});
+  var el=document.getElementById('s-'+id);
+  if(!el){console.warn('no screen',id);return}
+  el.classList.add('on');
+  document.querySelectorAll('#proto button, .proto button').forEach(function(b){
+    b.classList.toggle('on', b.dataset.go===id);
+  });
+  window.scrollTo({top:0,behavior:'instant'});
+  (window.dataLayer=window.dataLayer||[]).push({event:'amb_screen',screen:id});
+}
+window.gotoScreen=go;
+
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-go]');
+  if(t){ e.preventDefault(); go(t.getAttribute('data-go')); return; }
+  var seg=e.target.closest('.segm button');
+  if(seg){ seg.parentNode.querySelectorAll('button').forEach(function(x){x.classList.remove('on')}); seg.classList.add('on');
+    if(seg.dataset.ch) drawChart(seg.dataset.ch); }
+});
+
+// ---- agreement: unlock the signature only once it has been read ----
+(function(){
+  var box=document.getElementById('contract'); if(!box) return;
+  var read=false, checks={chkRead:false,chkTax:false,chkAd:false};
+  var sigIn=document.getElementById('sigIn'), sigOut=document.getElementById('sigOut'),
+      sigDate=document.getElementById('sigDate'), btn=document.getElementById('signBtn');
+
+  function refresh(){
+    var allChecked = checks.chkRead && checks.chkTax && checks.chkAd;
+    var signed = (sigIn.value||'').trim().length >= 4;
+    btn.disabled = !(read && allChecked && signed);
+  }
+  box.addEventListener('scroll',function(){
+    if(box.scrollTop + box.clientHeight >= box.scrollHeight - 24){
+      if(!read){ read=true; box.style.borderColor='var(--lilac2)'; refresh(); }
+    }
+  });
+  ['chkRead','chkTax','chkAd'].forEach(function(id){
+    var el=document.getElementById(id);
+    el.addEventListener('click',function(){ checks[id]=!checks[id]; el.classList.toggle('on',checks[id]); refresh(); });
+  });
+  sigIn.addEventListener('input',function(){
+    var v=(sigIn.value||'').trim();
+    sigOut.textContent = v || '\u00A0';
+    sigDate.textContent = v.length>=4 ? 'Signed 13 October 2026' : 'Not yet signed';
+    refresh();
+  });
+  refresh();
+})();
+
+// ---- copy the code ----
+document.addEventListener('click',function(e){
+  var b=e.target.closest('#copyBtn'); if(!b) return;
+  var txt=b.querySelector('span');
+  if(navigator.clipboard) navigator.clipboard.writeText(AMB.code).catch(function(){});
+  var was=txt.textContent; txt.textContent='Copied';
+  setTimeout(function(){txt.textContent=was},1600);
+});
+
+// ---- twelve month chart ----
+function drawChart(mode){
+  var el=document.getElementById('chart12'); if(!el) return;
+  mode = mode||'earn';
+  var vals=HISTORY.map(function(h){return mode==='earn'?h[1]:h[2]});
+  var max=Math.max.apply(null,vals)||1;
+  el.innerHTML=HISTORY.map(function(h,i){
+    var v=vals[i], pct=Math.round((v/max)*100);
+    var label=mode==='earn' ? (v?('£'+Math.round(v)):'') : (v||'');
+    var gold = i===HISTORY.length-1 ? ' gold':'';
+    return '<div class="cb'+gold+'"><span class="vx">'+label+'</span>'+
+           '<span class="bar" style="height:'+pct+'%" title="'+h[0]+': '+(mode==='earn'?gbp(v):v+' sign-ups')+'"></span>'+
+           '<span class="lx">'+h[0].split(' ')[0]+'</span></div>';
+  }).join('');
+}
+
+// ---- twelve month table ----
+(function(){
+  var tb=document.getElementById('m12'); if(!tb) return;
+  var rows=HISTORY.slice().reverse().filter(function(h){return h[1]>0});
+  tb.innerHTML=rows.map(function(h){
+    var oneOff = Math.round(h[1]*0.42*100)/100;        // illustrative split for the prototype
+    var rec = Math.round((h[1]-oneOff)*100)/100;
+    return '<tr><td><b style="color:var(--ink)">'+h[0]+'</b></td><td>'+h[2]+'</td><td>'+Math.max(1,Math.round(h[2]*0.3))+'</td>'+
+      '<td class="num">'+gbp(rec)+'</td><td class="num">'+gbp(oneOff)+'</td><td class="num">'+gbp(h[1])+'</td></tr>';
+  }).join('') + '<tr class="tot"><td colspan="5">Last twelve months</td><td class="num">'+
+    gbp(rows.reduce(function(a,b){return a+b[1]},0))+'</td></tr>';
+})();
+
+// ---- figures that must agree with RATES ----
+(function(){
+  var t=monthTotal();
+  document.querySelectorAll('[id="mThis"]').forEach(function(el){el.textContent=gbp(t)});
+  document.querySelectorAll('.gb-h .since b').forEach(function(el){el.textContent=gbp(t)});
+  console.log('[ambassador] this month computed from RATES:', gbp(t));
+})();
+
+drawChart('earn');
+go('invite');
+
+// ---------------------------------------------------------------------------
+// Worked example: 1,000 teachers on Pro, and the same thousand arriving over a
+// year. Both views are driven by GROWTH x RATES -- no hard-coded money.
+// ---------------------------------------------------------------------------
+(function(){
+  var chart = document.getElementById('wx-chart');
+  if(!chart) return;
+
+  var rate = RATES[EXAMPLE.billing][EXAMPLE.plan];          // 2.00
+  var head = EXAMPLE.headcount;
+  var N    = GROWTH.length;
+
+  function gbp0(n){ return '£'+Math.round(n).toLocaleString('en-GB'); }
+  function num(n){ return Math.round(n).toLocaleString('en-GB'); }
+
+  // headline pair
+  document.getElementById('wx-mo').textContent = gbp0(head*rate);
+  document.getElementById('wx-yr').textContent = gbp0(head*rate*12);
+
+  // gold ramp, oldest cohort darkest
+  function ramp(i){
+    var a=[0xA9,0x76,0x1A], b=[0xF6,0xE3,0xB5], t = N>1 ? i/(N-1) : 0, o='#';
+    for(var c=0;c<3;c++){ o += ('0'+Math.round(a[c]+(b[c]-a[c])*t).toString(16)).slice(-2); }
+    return o;
+  }
+
+  // Build both views. A cohort signed in month i is paying from month i on.
+  // "stay" keeps every cohort whole; "churn" decays each cohort by
+  // EXAMPLE.churnMonthly a month, which is what actually happens.
+  function build(mode){
+    var keep = mode==='churn' ? (1-EXAMPLE.churnMonthly) : 1;
+    var rows=[], running=0;
+    for(var m=0;m<N;m++){
+      var segs=[], base=0;
+      for(var c=0;c<=m;c++){
+        var alive = GROWTH[c]*Math.pow(keep, m-c);
+        base += alive;
+        segs.push(alive*rate);
+      }
+      var month = base*rate;
+      running += month;
+      rows.push({ m:m, joined:GROWTH[m], base:base, month:month, running:running,
+                  cohortYear:GROWTH[m]*rate*12, segs:segs });
+    }
+    return rows;
+  }
+
+  // The tallest bar is whatever fits the chart box once the two label rows are
+  // allowed for, so this survives the mobile breakpoint without a magic number.
+  function maxBar(){
+    var box = chart.getBoundingClientRect().height || 252;
+    var labels = window.matchMedia('(max-width:860px)').matches ? 20 : 40;
+    return Math.max(80, box - labels);
+  }
+  var ceiling = build('stay')[N-1].month;             // both views share a scale
+
+  function paint(mode){
+    var rows = build(mode), MAXBAR = maxBar();
+
+    // chart
+    chart.innerHTML = rows.map(function(r){
+      var h = Math.max(3, r.month/ceiling*MAXBAR);
+      var bands = r.segs.map(function(v,c){
+        var sh = v/r.month*h;
+        return '<span class="wseg" style="height:'+sh.toFixed(2)+'px;background:'+ramp(c)+'"></span>';
+      }).join('');
+      return '<div class="wcol" title="Month '+(r.m+1)+' · '+num(r.base)+' teachers paying you · '+gbp0(r.month)+'">'+
+               '<span class="wv">'+gbp0(r.month)+'</span>'+
+               '<span class="wstack" style="height:'+h.toFixed(2)+'px">'+bands+'</span>'+
+               '<span class="wl">M'+(r.m+1)+'</span>'+
+             '</div>';
+    }).join('');
+
+    // table
+    document.getElementById('wx-tb').innerHTML = rows.map(function(r){
+      return '<tr>'+
+        '<td><span class="mn"><i style="background:'+ramp(r.m)+'"></i>Month '+(r.m+1)+'</span></td>'+
+        '<td class="num">'+num(r.joined)+'</td>'+
+        '<td class="num">'+num(r.base)+'</td>'+
+        '<td class="num">'+gbp0(r.month)+'</td>'+
+        '<td class="num">'+gbp0(r.running)+'</td>'+
+        '<td class="num hi">'+gbp0(r.cohortYear)+'</td>'+
+      '</tr>';
+    }).join('') +
+    '<tr class="tot">'+
+      '<td>Twelve months</td>'+
+      '<td class="num">'+num(GROWTH.reduce(function(a,b){return a+b},0))+'</td>'+
+      '<td class="num">'+num(rows[N-1].base)+'</td>'+
+      '<td class="num">—</td>'+
+      '<td class="num">'+gbp0(rows[N-1].running)+'</td>'+
+      '<td class="num hi">'+gbp0(head*rate*12)+'</td>'+
+    '</tr>';
+
+    // the two closing figures
+    var last = rows[N-1];
+    document.getElementById('wx-tot').textContent = gbp0(last.running);
+    document.getElementById('wx-run').textContent = gbp0(last.month)+' a month';
+    document.getElementById('wx-totd').textContent =
+      mode==='churn'
+        ? 'What the twelve bars above add up to, once you allow for the teachers who leave.'
+        : 'Less than ' + gbp0(head*rate*12) + ', because they joined through the year rather than on day one.';
+    document.getElementById('wx-rund').textContent =
+      num(last.base)+' teachers still paying you in month 12 — that is '+gbp0(last.month*12)+
+      ' over the next twelve months without signing anyone new.';
+    document.getElementById('wx-keynote').textContent =
+      mode==='churn' ? 'Each band shrinks a little every month as teachers leave.'
+                     : 'Bands never shrink here — switch to real churn for the honest version.';
+    document.getElementById('wx-small').innerHTML =
+      mode==='churn'
+        ? 'Churn set at '+(EXAMPLE.churnMonthly*100).toFixed(0)+'% a month, which is about what a teacher subscription '+
+          'actually does. Commission starts on the first cleared payment a teacher makes, never during the free trial, '+
+          'and runs for up to '+RULES.recurringCapMonths+' months per subscriber.'
+        : 'This view assumes nobody ever cancels, which nobody can promise you. Press '+
+          '<b>With real churn</b> for the version we would actually stand behind.';
+  }
+
+  var mode = 'stay';
+  paintIcons(document.querySelector('.wex'));
+  paint(mode);
+
+  document.querySelectorAll('#wx-seg button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#wx-seg button').forEach(function(x){ x.classList.remove('on') });
+      b.classList.add('on');
+      mode = b.dataset.wx;
+      paint(mode);
+    });
+  });
+
+  var rz;
+  window.addEventListener('resize', function(){
+    clearTimeout(rz); rz = setTimeout(function(){ paint(mode) }, 140);
+  });
+})();
+
+</script>
+</body>
+</html>
