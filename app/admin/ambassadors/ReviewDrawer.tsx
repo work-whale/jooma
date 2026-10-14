@@ -71,6 +71,8 @@ export interface ApplicationDetail {
   signed_ip: string | null;
   signed_user_agent: string | null;
   declarations: Record<string, boolean>;
+  /** Channel keys an admin has checked by hand. */
+  verified_channels: string[];
   submitted_at: string;
   reviewed_at: string | null;
   decline_reason: string | null;
@@ -109,6 +111,97 @@ const URLS: Record<string, string> = {
   youtube: "https://youtube.com/@",
   linkedin: "https://linkedin.com/in/",
 };
+
+/**
+ * Each channel they gave, with a link to open it and a Verify toggle for the
+ * admin who has checked it by hand (the account exists, is theirs, and is
+ * public). Ticking works like marking a payout paid: one click, Undo to reverse.
+ * The ambassador sees Verified or Unverified against each on Payout details.
+ */
+export function ChannelChecks({
+  app,
+  onChange,
+}: {
+  app: ApplicationDetail;
+  onChange: (verified: string[]) => void;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const verified = new Set(app.verified_channels ?? []);
+
+  const set = async (channel: string, on: boolean) => {
+    setBusy(channel);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/ambassadors", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicationId: app.id, channel, verified: on }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Could not update that channel.");
+        return;
+      }
+      onChange((json.verified ?? []) as string[]);
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div data-testid="channel-checks">
+      <DL>
+        {CHANNELS.filter((ch) => app[ch.key]).map((ch) => {
+          const on = verified.has(ch.key);
+          return (
+            <Row
+              key={ch.key}
+              label={ch.label}
+              value={
+                <span className="inline-flex items-center gap-2 flex-wrap justify-end">
+                  <a
+                    href={`${URLS[ch.key]}${app[ch.key]}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="underline"
+                    style={{ color: C.brand }}
+                  >
+                    @{app[ch.key]}
+                  </a>
+                  {on ? (
+                    <>
+                      <Tag tone="ok" dot>
+                        Verified
+                      </Tag>
+                      <Btn size="sm" disabled={busy !== null} onClick={() => set(ch.key, false)}>
+                        Undo
+                      </Btn>
+                    </>
+                  ) : (
+                    <>
+                      <Tag tone="plain">Unverified</Tag>
+                      <Btn size="sm" variant="primary" disabled={busy !== null} onClick={() => set(ch.key, true)}>
+                        {busy === ch.key ? "Saving…" : "Verify"}
+                      </Btn>
+                    </>
+                  )}
+                </span>
+              }
+            />
+          );
+        })}
+      </DL>
+      {error && (
+        <p className="text-xs mt-1" role="alert" style={{ color: C.danger }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 /** Bank or PayPal, for reviewing or for paying them by hand. */
 export function PayoutDetails({ app }: { app: ApplicationDetail }) {
@@ -282,24 +375,8 @@ export default function ReviewDrawer({
                 </Section>
 
                 <Section title="Channels">
+                  <ChannelChecks app={app} onChange={(verified) => setApp({ ...app, verified_channels: verified })} />
                   <DL>
-                    {CHANNELS.filter((ch) => app[ch.key]).map((ch) => (
-                      <Row
-                        key={ch.key}
-                        label={ch.label}
-                        value={
-                          <a
-                            href={`${URLS[ch.key]}${app[ch.key]}`}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="underline"
-                            style={{ color: C.brand }}
-                          >
-                            @{app[ch.key]}
-                          </a>
-                        }
-                      />
-                    ))}
                     <Row label="Stated reach" value={reachLabel(app.reach)} />
                     {app.note && <Row label="Note" value={app.note} />}
                   </DL>
@@ -405,6 +482,18 @@ export default function ReviewDrawer({
                           <Tag tone="ok">None found</Tag>
                         )
                       }
+                    />
+                    <Row
+                      label="Channels checked"
+                      value={(() => {
+                        const given = CHANNELS.filter((ch) => app[ch.key]).length;
+                        const done = (app.verified_channels ?? []).length;
+                        return (
+                          <Tag tone={done === given && given > 0 ? "ok" : "warn"}>
+                            {done} of {given} verified by hand
+                          </Tag>
+                        );
+                      })()}
                     />
                     <Row
                       label="Jooma account"

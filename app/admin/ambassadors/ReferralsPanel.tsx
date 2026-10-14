@@ -15,7 +15,7 @@ import {
 } from "@/app/lib/ambassador-commission";
 import { Btn, C, PLAN_TONE, Table, Tag, Td, Th, Tr } from "../ui";
 import { shortDate as fmtDateShort } from "./shared";
-import { loadApplication, PayoutDetails, type ApplicationDetail } from "./ReviewDrawer";
+import { ChannelChecks, loadApplication, PayoutDetails, type ApplicationDetail } from "./ReviewDrawer";
 import type { AmbassadorRow } from "./AmbassadorsView";
 
 export interface Commission {
@@ -238,17 +238,29 @@ export default function ReferralsPanel({
         </Btn>
         {ambassador.application_id && (
           <Btn size="sm" variant="ghost" onClick={() => setShowPayout((s) => !s)}>
-            {showPayout ? "Hide payout details" : "Payout details"}
+            {showPayout ? "Hide payout and channels" : "Payout and channels"}
           </Btn>
         )}
       </div>
 
       {showPayout && (
-        <div
-          className="rounded-xl border p-4 max-w-xl"
-          style={{ borderColor: C.border, backgroundColor: C.surface }}
-        >
-          {app ? <PayoutDetails app={app} /> : <p className="text-sm" style={{ color: C.muted }}>Loading…</p>}
+        <div className="grid gap-3 lg:grid-cols-2 max-w-4xl">
+          <div className="rounded-xl border p-4" style={{ borderColor: C.border, backgroundColor: C.surface }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>
+              Payout
+            </p>
+            {app ? <PayoutDetails app={app} /> : <p className="text-sm" style={{ color: C.muted }}>Loading…</p>}
+          </div>
+          <div className="rounded-xl border p-4" style={{ borderColor: C.border, backgroundColor: C.surface }}>
+            <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>
+              Channels
+            </p>
+            {app ? (
+              <ChannelChecks app={app} onChange={(verified) => setApp({ ...app, verified_channels: verified })} />
+            ) : (
+              <p className="text-sm" style={{ color: C.muted }}>Loading…</p>
+            )}
+          </div>
         </div>
       )}
 

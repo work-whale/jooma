@@ -293,14 +293,26 @@ export default function DetailsEditor({ details }: { details: MyDetails | null }
           </>
         ) : (
           <>
-            {CHANNELS.filter((ch) => details[ch.key]).map((ch) => (
-              <div key={ch.key} className={s.rowline}>
-                <span className={s.rowMain}>
-                  <b>@{details[ch.key]}</b>
-                  <span>{ch.label}</span>
-                </span>
-              </div>
-            ))}
+            {CHANNELS.filter((ch) => details[ch.key]).map((ch) => {
+              const verified = (details.verified_channels ?? []).includes(ch.key);
+              return (
+                <div key={ch.key} className={s.rowline} data-testid={`channel-${ch.key}`}>
+                  <span className={s.rowMain}>
+                    <b>@{details[ch.key]}</b>
+                    <span>{ch.label}</span>
+                  </span>
+                  <span className={s.rowRight}>
+                    <span className={`${s.badge} ${verified ? s.bPaid : s.bRev}`}>
+                      {verified ? "Verified" : "Unverified"}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+            <p className={s.hint} style={{ marginTop: 8 }}>
+              We check each account by hand. Changing a handle sets it back to unverified until we
+              look again.
+            </p>
             <p className={s.muted}>Stated reach: {reachLabel(details.reach)}</p>
           </>
         )}

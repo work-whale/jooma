@@ -13,6 +13,8 @@ import { accountDeletedTemplate } from "./accountDeleted";
 import { ambassadorApplicationReceivedTemplate } from "./ambassadorApplicationReceived";
 import { ambassadorApprovedTemplate } from "./ambassadorApproved";
 import { ambassadorDeclinedTemplate } from "./ambassadorDeclined";
+import { ambassadorAgreementEndingTemplate } from "./ambassadorAgreementEnding";
+import { ambassadorTaxSummaryTemplate } from "./ambassadorTaxSummary";
 
 export type EmailTemplateKey =
   | "teacher_invite"
@@ -25,7 +27,9 @@ export type EmailTemplateKey =
   | "account_deleted"
   | "ambassador_application_received"
   | "ambassador_approved"
-  | "ambassador_declined";
+  | "ambassador_declined"
+  | "ambassador_agreement_ending"
+  | "ambassador_tax_summary";
 
 export const TEMPLATES: Record<EmailTemplateKey, EmailRenderer> = {
   teacher_invite: teacherInviteTemplate,
@@ -39,4 +43,6 @@ export const TEMPLATES: Record<EmailTemplateKey, EmailRenderer> = {
   ambassador_application_received: ambassadorApplicationReceivedTemplate,
   ambassador_approved: ambassadorApprovedTemplate,
   ambassador_declined: ambassadorDeclinedTemplate,
+  ambassador_agreement_ending: ambassadorAgreementEndingTemplate,
+  ambassador_tax_summary: ambassadorTaxSummaryTemplate,
 };

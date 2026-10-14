@@ -1,6 +1,14 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
+import { sendTemplate } from "@/app/lib/email";
+import { isUndeliverable } from "@/app/lib/email-templates/broadcast";
+import {
+  gbp,
+  lastCompletedTaxYear,
+  summariseTaxYear,
+  taxYearBounds,
+} from "@/app/lib/ambassador-commission";
 
 // Ends an ambassador's free Pro once their twelve months are up. Daily.
 //
@@ -15,6 +23,21 @@ import { supabaseAdmin } from "@/app/lib/supabase-admin";
 // to tell a comp from a payer.
 //
 // Idempotent: a second run the same day finds nothing left to end.
+//
+// TWO EMAILS RIDE ON THE SAME DAILY RUN, rather than two more crons to register:
+//
+//   - A month before an agreement ends, "do you want to carry on?", which the
+//     agreement promises. Once per ambassador, stamped on
+//     ambassadors.end_reminder_sent_at.
+//   - The yearly tax summary for the UK tax year that most recently ended, to
+//     every ambassador paid in it. Once per ambassador per tax year, recorded
+//     in ambassador_tax_summaries. It goes out on the first run after 5 April,
+//     and anyone missed (a failed send, a late payment record) is caught up on
+//     a later day.
+//
+// Both CLAIM before sending (the stamp or the row is written first, guarded so
+// only one run can win it) and release the claim if the send fails, so a
+// mailer outage means "retry tomorrow", never "sent twice" or "never sent".
 //
 // SETUP, as for the other crons (see mrr-snapshot):
 //   - registered in vercel.json; crons only register from a PRODUCTION deploy.
@@ -60,38 +83,210 @@ async function run(req: NextRequest) {
     return NextResponse.json({ error: "Could not read ambassadors" }, { status: 500 });
   }
 
+  // No early return when nothing has expired, which is most days: the two
+  // emails below still have to run. (An early return here once skipped them.)
   const userIds = [...new Set((due ?? []).map((a) => a.user_id as string))];
-  if (userIds.length === 0) return NextResponse.json({ ok: true, ended: 0 });
+  let endedIds: string[] = [];
 
-  // The guard lives in the WHERE, not in a read beforehand, so a subscription
-  // that lands between the two cannot be overwritten.
-  const { data: ended, error: endError } = await supabaseAdmin
-    .from("profiles")
-    .update({
-      plan: "free",
-      subscription_status: null,
-      cancel_at_period_end: false,
-      current_period_end: null,
-      updated_at: now,
-    })
-    .in("id", userIds)
-    .eq("plan", "pro")
-    .is("stripe_subscription_id", null)
+  if (userIds.length > 0) {
+    // The guard lives in the WHERE, not in a read beforehand, so a
+    // subscription that lands between the two cannot be overwritten.
+    const { data: ended, error: endError } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        plan: "free",
+        subscription_status: null,
+        cancel_at_period_end: false,
+        current_period_end: null,
+        updated_at: now,
+      })
+      .in("id", userIds)
+      .eq("plan", "pro")
+      .is("stripe_subscription_id", null)
+      .select("id");
+    if (endError) {
+      console.error("[cron/ambassador-terms] could not end terms", endError);
+      return NextResponse.json({ error: "Could not end terms" }, { status: 500 });
+    }
+
+    // The admin audit log (admin_log) needs an admin session, which a cron
+    // does not have, so the record of what ended is the function log.
+    // pro_until on the ambassador row already says when, for the admin table.
+    endedIds = (ended ?? []).map((row) => row.id);
+    if (endedIds.length > 0) {
+      console.info("[cron/ambassador-terms] ended free Pro for", endedIds);
+    }
+  }
+
+  const reminders = await sendEndReminders(new Date());
+  const summaries = await sendTaxSummaries(new Date());
+
+  return NextResponse.json({ ok: true, ended: endedIds.length, reminders, summaries });
+}
+
+interface Contact {
+  id: string;
+  firstName: string;
+  email: string;
+  code: string;
+  agreementEndsAt: string | null;
+}
+
+/** Where to write to an ambassador: the contact email on their application,
+ *  which they can update, falling back to the one on the ambassador row. */
+async function contactsFor(ids: string[]): Promise<Map<string, Contact>> {
+  const out = new Map<string, Contact>();
+  if (ids.length === 0) return out;
+
+  const { data: ambassadors } = await supabaseAdmin
+    .from("ambassadors")
+    .select("id, full_name, email, agreement_ends_at, application_id")
+    .in("id", ids);
+  const appIds = (ambassadors ?? []).map((a) => a.application_id).filter(Boolean) as string[];
+  const [{ data: apps }, { data: codes }] = await Promise.all([
+    appIds.length
+      ? supabaseAdmin.from("ambassador_applications").select("id, first_name, email").in("id", appIds)
+      : Promise.resolve({ data: [] as { id: string; first_name: string; email: string }[] }),
+    supabaseAdmin
+      .from("ambassador_codes")
+      .select("ambassador_id, code, created_at")
+      .in("ambassador_id", ids)
+      .order("created_at", { ascending: true }),
+  ]);
+  const appById = new Map((apps ?? []).map((a) => [a.id, a]));
+
+  for (const a of ambassadors ?? []) {
+    const app = a.application_id ? appById.get(a.application_id) : undefined;
+    out.set(a.id, {
+      id: a.id,
+      firstName: app?.first_name ?? String(a.full_name).split(" ")[0],
+      email: app?.email ?? a.email,
+      code: (codes ?? []).find((c) => c.ambassador_id === a.id)?.code ?? "",
+      agreementEndsAt: a.agreement_ends_at,
+    });
+  }
+  return out;
+}
+
+const longDate = (iso: string | Date) =>
+  new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/London",
+  });
+
+/** A month before the agreement ends: ask whether they want to carry on. */
+async function sendEndReminders(now: Date): Promise<number> {
+  const horizon = new Date(now.getTime() + 30 * 86_400_000).toISOString();
+
+  // Claim first: only rows still unstamped, so a second run cannot double send.
+  const { data: claimed, error } = await supabaseAdmin
+    .from("ambassadors")
+    .update({ end_reminder_sent_at: now.toISOString() })
+    .eq("status", "active")
+    .is("end_reminder_sent_at", null)
+    .gt("agreement_ends_at", now.toISOString())
+    .lte("agreement_ends_at", horizon)
     .select("id");
-  if (endError) {
-    console.error("[cron/ambassador-terms] could not end terms", endError);
-    return NextResponse.json({ error: "Could not end terms" }, { status: 500 });
+  if (error) {
+    console.error("[cron/ambassador-terms] could not claim reminders", error);
+    return 0;
   }
 
-  // The admin audit log (admin_log) needs an admin session, which a cron does
-  // not have, so the record of what ended is the function log. pro_until on
-  // the ambassador row already says when, for the admin table.
-  const endedIds = (ended ?? []).map((row) => row.id);
-  if (endedIds.length > 0) {
-    console.info("[cron/ambassador-terms] ended free Pro for", endedIds);
+  const contacts = await contactsFor((claimed ?? []).map((r) => r.id));
+  let sent = 0;
+  for (const c of contacts.values()) {
+    // A reserved test address (@jooma.test) is never sent to, and keeps its
+    // claim so it is not retried every day.
+    if (isUndeliverable(c.email) || !c.agreementEndsAt) continue;
+    const ok = await sendTemplate("ambassador_agreement_ending", c.email, {
+      firstName: c.firstName,
+      endDate: longDate(c.agreementEndsAt),
+      code: c.code,
+    });
+    if (ok) {
+      sent += 1;
+    } else {
+      // Release the claim so tomorrow's run tries again.
+      await supabaseAdmin.from("ambassadors").update({ end_reminder_sent_at: null }).eq("id", c.id);
+      console.warn("[cron/ambassador-terms] reminder not sent, will retry", c.id);
+    }
+  }
+  return sent;
+}
+
+/** Each April: what each ambassador was paid in the tax year just ended. */
+async function sendTaxSummaries(now: Date): Promise<number> {
+  const taxYear = lastCompletedTaxYear(now);
+  const { from, to } = taxYearBounds(taxYear);
+
+  const { data: rows, error } = await supabaseAdmin
+    .from("ambassador_commissions")
+    .select("ambassador_id, amount_pence, status, paid_at")
+    .eq("status", "paid")
+    .gte("paid_at", from.toISOString())
+    .lt("paid_at", to.toISOString());
+  if (error) {
+    console.error("[cron/ambassador-terms] could not read paid commission", error);
+    return 0;
   }
 
-  return NextResponse.json({ ok: true, ended: endedIds.length });
+  const byAmbassador = new Map<string, { amount_pence: number; status: string; paid_at: string | null }[]>();
+  for (const r of rows ?? []) {
+    const list = byAmbassador.get(r.ambassador_id) ?? [];
+    list.push(r);
+    byAmbassador.set(r.ambassador_id, list);
+  }
+  if (byAmbassador.size === 0) return 0;
+
+  const { data: done } = await supabaseAdmin
+    .from("ambassador_tax_summaries")
+    .select("ambassador_id")
+    .eq("tax_year", taxYear);
+  const already = new Set((done ?? []).map((d) => d.ambassador_id));
+  const due = [...byAmbassador.keys()].filter((id) => !already.has(id));
+  const contacts = await contactsFor(due);
+
+  const lastDay = new Date(to.getTime() - 86_400_000);
+  const period = `${longDate(from)} to ${longDate(lastDay)}`;
+  let sent = 0;
+
+  for (const id of due) {
+    const c = contacts.get(id);
+    if (!c) continue;
+    const summary = summariseTaxYear(byAmbassador.get(id) ?? [], taxYear);
+    if (summary.payments === 0) continue;
+
+    // Claim: the unique (ambassador_id, tax_year) row lets one run win.
+    const { data: claim, error: claimError } = await supabaseAdmin
+      .from("ambassador_tax_summaries")
+      .insert({
+        ambassador_id: id,
+        tax_year: taxYear,
+        paid_pence: summary.paidPence,
+        payments: summary.payments,
+      })
+      .select("id")
+      .single();
+    if (claimError || !claim) continue;
+    if (isUndeliverable(c.email)) continue;
+
+    const ok = await sendTemplate("ambassador_tax_summary", c.email, {
+      firstName: c.firstName,
+      taxYear,
+      totalPaid: gbp(summary.paidPence),
+      payments: String(summary.payments),
+      period,
+    });
+    if (ok) {
+      sent += 1;
+    } else {
+      await supabaseAdmin.from("ambassador_tax_summaries").delete().eq("id", claim.id);
+      console.warn("[cron/ambassador-terms] tax summary not sent, will retry", id);
+    }
+  }
+  return sent;
 }
 
 // Vercel Cron sends GET. POST is kept for a manual run with the same secret,

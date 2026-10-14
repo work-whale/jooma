@@ -6,6 +6,7 @@ import {
   belowMinimum,
   commissionForInvoice,
   gbp,
+  lastCompletedTaxYear,
   nextPayout,
   payoutDateFor,
   periodLabel,
@@ -13,6 +14,8 @@ import {
   periodsBetween,
   rateShares,
   statementsFrom,
+  summariseTaxYear,
+  taxYearBounds,
   taxYearOf,
   taxYearTotals,
   workedExample,
@@ -225,6 +228,36 @@ test.describe("statements", () => {
       { taxYear: "2026 to 2027", paidPence: 200 },
       { taxYear: "2025 to 2026", paidPence: 200 },
     ]);
+  });
+});
+
+test.describe("the yearly tax summary", () => {
+  test("covers the tax year that has just ended", () => {
+    expect(lastCompletedTaxYear(new Date("2026-10-14T12:00:00Z"))).toBe("2025 to 2026");
+    // On 5 April the current year has not ended yet.
+    expect(lastCompletedTaxYear(new Date("2026-04-05T12:00:00Z"))).toBe("2024 to 2025");
+    expect(lastCompletedTaxYear(new Date("2026-04-06T12:00:00Z"))).toBe("2025 to 2026");
+  });
+
+  test("a tax year runs from 6 April to the next 6 April", () => {
+    const { from, to } = taxYearBounds("2025 to 2026");
+    expect(from.toISOString().slice(0, 10)).toBe("2025-04-06");
+    expect(to.toISOString().slice(0, 10)).toBe("2026-04-06");
+  });
+
+  test("totals what was paid in that year, refunds net, nothing unpaid", () => {
+    expect(
+      summariseTaxYear(
+        [
+          row({ status: "paid", paid_at: "2025-06-15T10:00:00Z", amount_pence: 2400 }),
+          row({ status: "paid", paid_at: "2026-03-15T10:00:00Z", amount_pence: 200 }),
+          row({ kind: "adjustment", status: "paid", paid_at: "2026-04-01T10:00:00Z", amount_pence: -200 }),
+          row({ status: "paid", paid_at: "2026-04-06T10:00:00Z", amount_pence: 999 }), // next year
+          row({ status: "unpaid", paid_at: null, amount_pence: 500 }),
+        ],
+        "2025 to 2026",
+      ),
+    ).toEqual({ paidPence: 2400, payments: 3 });
   });
 });
 

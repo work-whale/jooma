@@ -23,11 +23,32 @@ export async function PATCH(req: NextRequest) {
     period?: string;
     markAllPaid?: boolean;
     ambassadorStatus?: string;
+    applicationId?: string;
+    channel?: string;
+    verified?: boolean;
   };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  // A channel checked by hand, or unchecked. The RPC refuses a channel the
+  // applicant never gave.
+  if (body.applicationId && body.channel) {
+    const { data: verified, error } = await gate.supabase.rpc("admin_set_channel_verified", {
+      p_application_id: body.applicationId,
+      p_channel: body.channel,
+      p_verified: body.verified === true,
+    });
+    if (error) {
+      console.error("[admin/ambassadors] channel verification failed", error);
+      return NextResponse.json(
+        { error: error.message || "Could not update that channel." },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ ok: true, verified });
   }
 
   // One commission row paid or unpaid. The RPC refuses a refunded row.

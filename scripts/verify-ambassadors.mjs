@@ -510,6 +510,27 @@ async function verifyProgrammeV2({ teacher, teacherClient, staffClient, ambUser,
   const { data: full } = await staffClient.rpc("admin_ambassador_application", { p_id: appId });
   check("an admin can, in full", full?.account_number === "12345678");
 
+  // Follow-ups (20261014000200): channel verification and the tax summaries.
+  const { error: teacherVerify } = await teacherClient.rpc("admin_set_channel_verified", {
+    p_application_id: appId, p_channel: "instagram", p_verified: true,
+  });
+  check("a teacher cannot verify their own channel", teacherVerify !== null);
+  const { data: ticked, error: tickError } = await staffClient.rpc("admin_set_channel_verified", {
+    p_application_id: appId, p_channel: "instagram", p_verified: true,
+  });
+  check("an admin can", !tickError && JSON.stringify(ticked) === '["instagram"]', tickError?.message ?? JSON.stringify(ticked));
+  const { error: missingChannel } = await staffClient.rpc("admin_set_channel_verified", {
+    p_application_id: appId, p_channel: "youtube", p_verified: true,
+  });
+  check("but not on a channel they never gave", missingChannel !== null);
+  const { data: myVerified } = await teacherClient.rpc("my_ambassador_details");
+  check(
+    "the applicant sees which channels are verified",
+    JSON.stringify(myVerified?.[0]?.verified_channels) === '["instagram"]',
+  );
+  const { data: summaries, error: summariesError } = await teacherClient.from("ambassador_tax_summaries").select("*");
+  check("tax summaries are unreadable by a teacher", summariesError !== null || (summaries ?? []).length === 0);
+
   const { error: teacherDecline } = await teacherClient.rpc("admin_decline_ambassador_application", {
     p_id: appId, p_reason: "no",
   });

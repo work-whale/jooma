@@ -621,3 +621,45 @@
 .weekSetUp:hover {
   text-decoration: underline;
 }
+
+/* ── Ambassador trim ─────────────────────────────────────────────────────
+   A gold hairline under the greeting and the verified strip above it. The
+   same purple page as everyone else; the gold is a trim, so it stays thin. */
+.helloAmbassador {
+  position: relative;
+  padding-bottom: 18px;
+}
+.helloAmbassador::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #e8b944, #f4d98b 45%, #e8b944 70%, transparent);
+}
+.verifiedStrip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 6px 13px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #eedca8;
+  background: linear-gradient(135deg, #fdf7e7, #fff);
+  color: #7a5610;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.verifiedStrip:hover {
+  border-color: #e8b944;
+}
+.verifiedIcon {
+  width: 14px;
+  height: 14px;
+  color: #c08a1e;
+}

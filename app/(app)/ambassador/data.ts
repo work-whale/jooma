@@ -74,6 +74,8 @@ export interface MyDetails {
   agreement_version: string;
   signature_name: string;
   signed_at: string;
+  /** Channel keys an admin has checked by hand. */
+  verified_channels: string[];
 }
 
 export const loadAmbassadorContext = cache(async () => {

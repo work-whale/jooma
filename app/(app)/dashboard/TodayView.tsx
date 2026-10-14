@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CalendarBlank,
   ShareNetwork,
+  Crown,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { ToolTile } from "@/app/components/v2/Squircle";
@@ -19,6 +20,7 @@ import { minutesSavedFor, V2_TOOLS, v2ToolForSlug, toolSolid } from "@/app/lib/t
 import { createChat, saveMessage } from "@/app/lib/assistantChats";
 import { createClient } from "@/app/lib/auth/client";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
+import { usePlanBadge } from "@/app/lib/usePlanBadge";
 import { BADGE_LEVELS } from "@/app/lib/badges";
 import {
   listWeek,
@@ -112,6 +114,8 @@ export default function TodayView({
   useAppShell({ title: "Today" });
 
   const router = useRouter();
+  // Active ambassadors get the gold trim. Fails quiet: no row reads as false.
+  const { ambassador } = usePlanBadge();
   const [firstName, setFirstName] = useState<string | null>(null);
   const [ask, setAsk] = useState("");
   const [asking, setAsking] = useState(false);
@@ -325,7 +329,17 @@ export default function TodayView({
 
   return (
     <>
-      <div className={app.hello}>
+      <div className={`${app.hello} ${ambassador ? styles.helloAmbassador : ""}`}>
+        {/* An ambassador's Today gains the verified strip and a gold hairline
+            (docs/JOOMA VERSION 4/13-jooma-ambassador v2.html, screen 12). The
+            gold is a trim, not a different product: everything else on the
+            page is the same as every other teacher's. */}
+        {ambassador && (
+          <Link href="/ambassador" className={styles.verifiedStrip} data-testid="today-ambassador-strip">
+            <Crown weight="fill" className={styles.verifiedIcon} />
+            Verified Jooma Ambassador
+          </Link>
+        )}
         <p className={app.helloWhen}>
           {now
             ? now.toLocaleDateString("en-GB", { weekday: "long" }) +

@@ -306,6 +306,39 @@ export function belowMinimum(pence: number): boolean {
   return pence > 0 && pence < MIN_PAYOUT_PENCE;
 }
 
+/** The tax year that most recently ENDED on or before `now`: in October 2026,
+ *  "2025 to 2026" (6 April 2025 to 5 April 2026). The April email covers it. */
+export function lastCompletedTaxYear(now: Date): string {
+  const current = taxYearOf(now);
+  const start = Number(current.slice(0, 4));
+  return `${start - 1} to ${start}`;
+}
+
+/** When a tax year starts and ends, as UTC instants: [6 April, next 6 April). */
+export function taxYearBounds(label: string): { from: Date; to: Date } {
+  const start = Number(label.slice(0, 4));
+  return { from: new Date(Date.UTC(start, 3, 6)), to: new Date(Date.UTC(start + 1, 3, 6)) };
+}
+
+/** What the yearly summary email reports for one ambassador: the paid rows
+ *  (adjustments included, so a refund clawed back reads net) in that year. */
+export function summariseTaxYear(
+  rows: { amount_pence: number; status: string; paid_at: string | null }[],
+  label: string,
+): { paidPence: number; payments: number } {
+  const { from, to } = taxYearBounds(label);
+  let paidPence = 0;
+  let payments = 0;
+  for (const r of rows) {
+    if (r.status !== "paid" || !r.paid_at) continue;
+    const at = new Date(r.paid_at).getTime();
+    if (at < from.getTime() || at >= to.getTime()) continue;
+    paidPence += r.amount_pence;
+    payments += 1;
+  }
+  return { paidPence, payments };
+}
+
 /** Paid commission per UK tax year, newest first. */
 export function taxYearTotals(rows: LedgerRow[]): { taxYear: string; paidPence: number }[] {
   const by = new Map<string, number>();

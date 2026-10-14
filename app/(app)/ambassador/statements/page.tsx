@@ -149,8 +149,9 @@ export default async function AmbassadorStatements() {
           </div>
         ))}
         <p className={s.muted} style={{ fontSize: ".82rem" }}>
-          Commission is paid gross. Declaring it is your responsibility. This summary is to help,
-          not to replace your own records.
+          We email you a summary each April for the tax year just ended. Commission is paid gross.
+          Declaring it is your responsibility. This summary is to help, not to replace your own
+          records.
         </p>
       </Panel>
     </>
