@@ -10,6 +10,11 @@ import { enquiryReplyTemplate } from "./enquiryReply";
 import { accountDeletionScheduledTemplate } from "./accountDeletionScheduled";
 import { accountDeletionReminderTemplate } from "./accountDeletionReminder";
 import { accountDeletedTemplate } from "./accountDeleted";
+import { ambassadorApplicationReceivedTemplate } from "./ambassadorApplicationReceived";
+import { ambassadorApprovedTemplate } from "./ambassadorApproved";
+import { ambassadorDeclinedTemplate } from "./ambassadorDeclined";
+import { ambassadorAgreementEndingTemplate } from "./ambassadorAgreementEnding";
+import { ambassadorTaxSummaryTemplate } from "./ambassadorTaxSummary";
 
 export type EmailTemplateKey =
   | "teacher_invite"
@@ -19,7 +24,12 @@ export type EmailTemplateKey =
   | "enquiry_reply"
   | "account_deletion_scheduled"
   | "account_deletion_reminder"
-  | "account_deleted";
+  | "account_deleted"
+  | "ambassador_application_received"
+  | "ambassador_approved"
+  | "ambassador_declined"
+  | "ambassador_agreement_ending"
+  | "ambassador_tax_summary";
 
 export const TEMPLATES: Record<EmailTemplateKey, EmailRenderer> = {
   teacher_invite: teacherInviteTemplate,
@@ -30,4 +40,9 @@ export const TEMPLATES: Record<EmailTemplateKey, EmailRenderer> = {
   account_deletion_scheduled: accountDeletionScheduledTemplate,
   account_deletion_reminder: accountDeletionReminderTemplate,
   account_deleted: accountDeletedTemplate,
+  ambassador_application_received: ambassadorApplicationReceivedTemplate,
+  ambassador_approved: ambassadorApprovedTemplate,
+  ambassador_declined: ambassadorDeclinedTemplate,
+  ambassador_agreement_ending: ambassadorAgreementEndingTemplate,
+  ambassador_tax_summary: ambassadorTaxSummaryTemplate,
 };

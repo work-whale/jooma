@@ -1,34 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminRoute } from "@/app/lib/auth/admin-route";
-import { stripe } from "@/app/lib/stripe";
 
-// Create ambassadors and move their payouts.
+// Record ambassador payouts, and pause or resume an ambassador.
 //
-// CODE CREATION IS NOT REIMPLEMENTED HERE. The coupon and promotion code are
-// minted through the same Stripe calls /api/admin/promos already makes, so an
-// ambassador's code is an ordinary promotion code: it shows up on /admin/promos,
-// it can be deactivated there, and the immutability rules are the same. What
-// this route adds is the link between that code and a person.
+// Ambassadors are no longer created here. They arrive through an invite link
+// and an application (/api/admin/ambassadors/invites and
+// /api/admin/ambassadors/applications/[id]).
 //
-// The payout column is deliberately manual. Jooma never moves money here; an
-// admin records that they have paid someone out of band.
+// The payout state is deliberately manual. Jooma never moves money here; an
+// admin records that they have paid someone out of band. Each commission row is
+// one month of one teacher (or a yearly one-off), so payouts are recorded month
+// by month.
 
-/** Ambassador codes discount ONE month, because a payout is one and done. */
-const AMBASSADOR_DURATION = "once" as const;
-
-export async function POST(req: NextRequest) {
+export async function PATCH(req: NextRequest) {
   const gate = await requireAdminRoute("change_plan");
   if (gate.error) return gate.error;
 
   let body: {
-    fullName?: string;
-    email?: string;
-    notes?: string;
-    code?: string;
-    percentOff?: number;
-    amountOffGbp?: number;
-    maxRedemptions?: number;
-    expiresAt?: string;
+    commissionId?: string;
+    status?: string;
+    ambassadorId?: string;
+    period?: string;
+    markAllPaid?: boolean;
+    ambassadorStatus?: string;
+    applicationId?: string;
+    channel?: string;
+    verified?: boolean;
   };
   try {
     body = await req.json();
@@ -36,152 +33,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const fullName = String(body.fullName ?? "").trim();
-  const email = String(body.email ?? "").trim().toLowerCase();
-
-  if (!fullName) {
-    return NextResponse.json({ error: "Enter the ambassador's full name." }, { status: 400 });
-  }
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-  }
-
-  // Stripe uppercases codes and matches them case-insensitively at checkout.
-  const code = String(body.code ?? "").trim().toUpperCase();
-  if (!/^[A-Z0-9_-]{3,40}$/.test(code)) {
-    return NextResponse.json(
-      { error: "Use 3-40 characters: letters, numbers, hyphens or underscores." },
-      { status: 400 },
-    );
-  }
-
-  const percentOff = body.percentOff != null ? Number(body.percentOff) : null;
-  const amountOffGbp = body.amountOffGbp != null ? Number(body.amountOffGbp) : null;
-
-  if ((percentOff == null) === (amountOffGbp == null)) {
-    return NextResponse.json(
-      { error: "Give either a percentage off or an amount off, not both." },
-      { status: 400 },
-    );
-  }
-  if (percentOff != null && (!(percentOff > 0) || percentOff > 100)) {
-    return NextResponse.json(
-      { error: "A percentage discount must be between 1 and 100." },
-      { status: 400 },
-    );
-  }
-  if (amountOffGbp != null && (!(amountOffGbp > 0) || amountOffGbp > 500)) {
-    return NextResponse.json(
-      { error: "An amount off must be between £0.01 and £500." },
-      { status: 400 },
-    );
-  }
-
-  let expiresAt: number | undefined;
-  if (body.expiresAt) {
-    const parsed = Date.parse(body.expiresAt);
-    if (Number.isNaN(parsed)) {
-      return NextResponse.json({ error: "Invalid expiry date." }, { status: 400 });
-    }
-    if (parsed <= Date.now()) {
-      return NextResponse.json({ error: "That expiry date is in the past." }, { status: 400 });
-    }
-    expiresAt = Math.floor(parsed / 1000);
-  }
-
-  // The ambassador first: without a row to attach it to, a code created in
-  // Stripe would be orphaned, and Stripe coupons cannot be deleted.
-  const { data: ambassadorId, error: createError } = await gate.supabase.rpc(
-    "admin_create_ambassador",
-    { payload: { full_name: fullName, email, notes: body.notes ?? null } },
-  );
-
-  if (createError) {
-    console.error("[admin/ambassadors] create failed", createError);
-    return NextResponse.json(
-      { error: createError.message || "Could not add the ambassador." },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const coupon = await stripe.coupons.create({
-      name: code,
-      // One month only. A repeating or forever discount would keep costing on
-      // every renewal while the payout is settled once, which is not the deal.
-      duration: AMBASSADOR_DURATION,
-      ...(percentOff != null
-        ? { percent_off: percentOff }
-        : { amount_off: Math.round(Number(amountOffGbp) * 100), currency: "gbp" }),
+  // A channel checked by hand, or unchecked. The RPC refuses a channel the
+  // applicant never gave.
+  if (body.applicationId && body.channel) {
+    const { data: verified, error } = await gate.supabase.rpc("admin_set_channel_verified", {
+      p_application_id: body.applicationId,
+      p_channel: body.channel,
+      p_verified: body.verified === true,
     });
-
-    const promotionCode = await stripe.promotionCodes.create({
-      // The coupon nests under `promotion` on this API version rather than
-      // sitting on the promotion code directly.
-      promotion: { type: "coupon", coupon: coupon.id },
-      code,
-      ...(body.maxRedemptions ? { max_redemptions: Number(body.maxRedemptions) } : {}),
-      ...(expiresAt ? { expires_at: expiresAt } : {}),
-      // Tagged so /admin/promos stays honest about where the code came from
-      // without needing to know anything about ambassadors.
-      metadata: { channel: `Ambassador: ${fullName}`.slice(0, 200) },
-    });
-
-    const { error: attachError } = await gate.supabase.rpc("admin_attach_ambassador_code", {
-      p_ambassador_id: ambassadorId,
-      p_promotion_code_id: promotionCode.id,
-      p_code: code,
-    });
-
-    if (attachError) {
-      // The code exists in Stripe but is not linked here. Say so plainly rather
-      // than implying it worked: an unlinked code still discounts, it just
-      // credits nobody, and an admin needs to know to deactivate it.
-      console.error("[admin/ambassadors] attach failed", attachError);
+    if (error) {
+      console.error("[admin/ambassadors] channel verification failed", error);
       return NextResponse.json(
-        {
-          error:
-            `${code} was created in Stripe but could not be linked to ${fullName}. ` +
-            "Deactivate it on the promo codes page and try again.",
-        },
-        { status: 500 },
+        { error: error.message || "Could not update that channel." },
+        { status: 400 },
       );
     }
-
-    return NextResponse.json({ id: ambassadorId, code });
-  } catch (err) {
-    console.error("[admin/ambassadors] code creation failed", err);
-    // Stripe's own message is the useful one ("code already exists", etc.).
-    const message = err instanceof Error ? err.message : "Could not create the code.";
-    return NextResponse.json(
-      { error: `${fullName} was added, but the code failed: ${message}` },
-      { status: 400 },
-    );
-  }
-}
-
-/** Move a payout, or pause/resume an ambassador. */
-export async function PATCH(req: NextRequest) {
-  const gate = await requireAdminRoute("change_plan");
-  if (gate.error) return gate.error;
-
-  let body: { referralId?: string; status?: string; note?: string; ambassadorId?: string; ambassadorStatus?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    return NextResponse.json({ ok: true, verified });
   }
 
-  // Payout move. The RPC is the only writer of payout_status and refuses to make
-  // a referral payable before money has arrived, so the rule is enforced in the
-  // database rather than here.
-  if (body.referralId) {
-    const { error } = await gate.supabase.rpc("admin_set_referral_payout", {
-      p_referral_id: body.referralId,
+  // One commission row paid or unpaid. The RPC refuses a refunded row.
+  if (body.commissionId) {
+    const { error } = await gate.supabase.rpc("admin_set_commission_status", {
+      p_id: body.commissionId,
       p_status: String(body.status ?? ""),
-      p_note: body.note ?? null,
     });
-
     if (error) {
       console.error("[admin/ambassadors] payout update failed", error);
       return NextResponse.json(
@@ -190,6 +65,25 @@ export async function PATCH(req: NextRequest) {
       );
     }
     return NextResponse.json({ ok: true });
+  }
+
+  // Everything owed to one ambassador for one month.
+  if (body.ambassadorId && body.markAllPaid) {
+    if (!/^\d{4}-\d{2}-01$/.test(String(body.period ?? ""))) {
+      return NextResponse.json({ error: "Choose a month." }, { status: 400 });
+    }
+    const { data: moved, error } = await gate.supabase.rpc("admin_mark_commissions_paid", {
+      p_ambassador_id: body.ambassadorId,
+      p_period: body.period,
+    });
+    if (error) {
+      console.error("[admin/ambassadors] mark all paid failed", error);
+      return NextResponse.json(
+        { error: error.message || "Could not record the payout." },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ ok: true, moved });
   }
 
   // Pause or resume. Stops new claims without touching existing referrals; the

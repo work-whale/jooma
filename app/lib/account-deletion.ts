@@ -24,7 +24,8 @@
 // app/api/resources/delete/route.ts). The spend happened, and monitoring,
 // margin and the cost ceiling all depend on the history staying complete.
 //
-// invoices, safeguarding_flags, support_threads, admin_audit_log, ambassadors:
+// invoices, safeguarding_flags, support_threads, admin_audit_log, ambassadors,
+// ambassador_applications:
 // all `on delete set null`, so the row survives with its user_id nulled. Every
 // one of those exists because a financial, safeguarding or attribution record
 // has to outlive the person it describes. Do not "tidy" any of them.

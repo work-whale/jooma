@@ -1,20 +1,29 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { createClient } from "@/app/lib/auth/client";
-import { asPlanId } from "@/app/lib/plans";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronDown, ChevronRight, Download } from "lucide-react";
+import { PLANS } from "@/app/lib/plans";
+import { downloadCsv, toCsv } from "@/app/lib/csv";
+import { reachLabel, sourceLabel } from "@/app/lib/ambassador-application";
+import {
+  AMBASSADOR_RATES,
+  gbp,
+  payoutDateFor,
+  periodOf,
+  rateShares,
+} from "@/app/lib/ambassador-commission";
 import { planCardName } from "@/app/lib/plan-copy";
-import { fmtDate, nf } from "../format";
+import { nf } from "../format";
 import {
   Btn,
   C,
   Card,
-  CardFooter,
+  CardHeader,
+  CardTitle,
   EmptyState,
   Field,
-  FilterBar,
   Modal,
   Note,
   PageHead,
@@ -26,10 +35,14 @@ import {
   Tr,
   fieldClass,
   fieldStyle,
-  inputClass,
-  inputStyle,
   useToast,
 } from "../ui";
+import InviteBox from "./InviteBox";
+import ReviewDrawer from "./ReviewDrawer";
+import ReferralsPanel from "./ReferralsPanel";
+import { CodeChip, GOLD, Person, ago, shortDate } from "./shared";
+import { AMB_RANGES, AMB_RANGE_LABEL, type AmbRange } from "./range";
+import styles from "./ambassadors.module.css";
 
 export interface AmbassadorRow {
   id: string;
@@ -42,11 +55,57 @@ export interface AmbassadorRow {
   codes: string[];
   referrals: number;
   subscribers: number;
-  owed: number;
-  paid: number;
+  active_subscribers: number;
+  this_month_pence: number;
+  all_time_pence: number;
+  owed_pence: number;
   /** When their free Pro ends. Null when never granted. */
   pro_until: string | null;
   pro_granted_at: string | null;
+  source: string | null;
+  approved_at: string | null;
+  agreement_ends_at: string | null;
+  end_requested_at: string | null;
+  application_id: string | null;
+  payout_method: string | null;
+}
+
+export interface ApplicationRow {
+  id: string;
+  user_id: string | null;
+  full_name: string;
+  email: string;
+  submitted_at: string;
+  reach: string;
+  channels: string[];
+  signed_at: string;
+  requested_code: string;
+  status: string;
+  source: string | null;
+}
+
+export interface InviteRow {
+  id: string;
+  full_name: string;
+  source: string;
+  created_at: string;
+  expires_at: string;
+  opened_at: string | null;
+  used_at: string | null;
+  state: "sent" | "opened" | "applied" | "expired" | "revoked";
+}
+
+export interface ProgrammeSummary {
+  commission_pence: number;
+  referred_revenue_pence: number;
+  active_ambassadors: number;
+  invited: number;
+  awaiting_review: number;
+  oldest_submitted_at: string | null;
+  subscribers_via_codes: number;
+  all_paying: number;
+  invites_unopened: number;
+  free_pro_seats: number;
 }
 
 /** What Stripe says about a code right now. */
@@ -56,122 +115,61 @@ export interface CodeLive {
   usable: boolean;
 }
 
-interface ReferralRow {
-  id: string;
-  user_id: string;
-  teacher_name: string;
-  teacher_email: string;
-  joined_at: string;
-  first_paid_at: string | null;
-  first_paid_plan: string | null;
-  current_plan: string;
-  payout_status: string;
-  payout_at: string | null;
-  payout_note: string | null;
-  discount_failed_reason: string | null;
-  code: string;
+const INVITE_TONE: Record<InviteRow["state"], "plain" | "brand" | "ok" | "warn"> = {
+  sent: "plain",
+  opened: "brand",
+  applied: "ok",
+  expired: "warn",
+  revoked: "plain",
+};
+
+/** Live, paused, or past the end of the agreement. */
+function ambassadorState(a: AmbassadorRow): { label: string; tone: "ok" | "plain" | "warn" } {
+  if (a.status !== "active") return { label: "Paused", tone: "plain" };
+  if (a.agreement_ends_at && new Date(a.agreement_ends_at).getTime() < Date.now()) {
+    return { label: "Ended", tone: "warn" };
+  }
+  return { label: "Live", tone: "ok" };
 }
 
 /**
- * Ambassadors and the teachers they brought in.
- *
- * THE ONE RULE THIS SCREEN EXISTS TO SHOW: a referral is payable only once money
- * has actually arrived. A teacher on Free is tracked and reads "N/A"; so is a
- * teacher an admin comped onto Pro, because no payment was ever made. Both are
- * deliberate, and the payout control is absent rather than disabled-looking so
- * nobody goes hunting for a way to force it.
+ * The ambassador programme, laid out as the v4 console mockup: KPIs, the invite
+ * link maker and the rate card, applications waiting for review, live
+ * ambassadors (each with the dropdown of teachers they brought in and a
+ * month-by-month payout toggle), the links sent, and what it all costs.
  */
 export default function AmbassadorsView({
+  range,
   rows,
+  summary,
+  applications,
+  invites,
   live,
   stripeError,
 }: {
+  range: AmbRange;
   rows: AmbassadorRow[];
+  summary: ProgrammeSummary | null;
+  applications: ApplicationRow[];
+  invites: InviteRow[];
   live: Record<string, CodeLive>;
   stripeError: string | null;
 }) {
   const router = useRouter();
-  const [q, setQ] = useState("");
-  const [creating, setCreating] = useState(false);
-  /** The ambassador whose free Pro is being granted or revoked. */
-  const [proFor, setProFor] = useState<{ row: AmbassadorRow; revoke: boolean } | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [referrals, setReferrals] = useState<Record<string, ReferralRow[]>>({});
-  const [loading, setLoading] = useState<Set<string>>(new Set());
-  const [busy, setBusy] = useState<string | null>(null);
+  const pathname = usePathname();
   const [toastNode, fire] = useToast();
+  const [q, setQ] = useState("");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [reviewing, setReviewing] = useState<string | null>(null);
+  const [proFor, setProFor] = useState<{ row: AmbassadorRow; revoke: boolean } | null>(null);
 
-  // Filters for the expanded list, keyed by ambassador id so opening two rows
-  // does not make one inherit the other's filter.
-  const [planFilter, setPlanFilter] = useState<Record<string, string>>({});
-  const [payoutFilter, setPayoutFilter] = useState<Record<string, string>>({});
-
-  // Referrals are fetched per ambassador on first expand rather than all at
-  // once: most of them stay collapsed, and an admin with fifty ambassadors
-  // should not pay for every subscriber list to open one.
-  const toggleExpand = async (id: string) => {
-    const isOpen = expanded.has(id);
+  const toggle = (id: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (isOpen) next.delete(id);
+      if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-
-    if (isOpen || referrals[id]) return;
-
-    setLoading((prev) => new Set(prev).add(id));
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc("admin_ambassador_referrals", {
-        p_ambassador_id: id,
-      });
-      if (error) {
-        fire("Could not load the teachers for this ambassador.");
-        return;
-      }
-      setReferrals((prev) => ({ ...prev, [id]: (data ?? []) as ReferralRow[] }));
-    } finally {
-      setLoading((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  };
-
-  const setPayout = async (ambassadorId: string, referral: ReferralRow, status: string) => {
-    setBusy(referral.id);
-    try {
-      const res = await fetch("/api/admin/ambassadors", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ referralId: referral.id, status }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        fire(json.error ?? "Could not update the payout.");
-        return;
-      }
-
-      // Patch the open list in place so the row does not jump, then refresh the
-      // server data behind it for the header counts.
-      setReferrals((prev) => ({
-        ...prev,
-        [ambassadorId]: (prev[ambassadorId] ?? []).map((r) =>
-          r.id === referral.id
-            ? { ...r, payout_status: status, payout_at: status === "paid" ? new Date().toISOString() : null }
-            : r,
-        ),
-      }));
-      fire(status === "paid" ? "Marked as paid." : "Marked as unpaid.");
-      router.refresh();
-    } catch {
-      fire("Could not reach the server.");
-    } finally {
-      setBusy(null);
-    }
-  };
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -181,75 +179,305 @@ export default function AmbassadorsView({
     );
   }, [rows, q]);
 
-  const totals = rows.reduce(
-    (a, r) => ({
-      referrals: a.referrals + Number(r.referrals),
-      subscribers: a.subscribers + Number(r.subscribers),
-      owed: a.owed + Number(r.owed),
-    }),
-    { referrals: 0, subscribers: 0, owed: 0 },
-  );
+  const s = summary;
+  const proPence = Math.round((PLANS.pro.priceMonthly ?? 0) * 100);
+  const monthsInRange =
+    range === "month"
+      ? 1
+      : range === "3m"
+        ? 3
+        : Math.max(
+            1,
+            ...rows
+              .filter((a) => a.approved_at)
+              .map((a) => {
+                const [y, m] = periodOf(new Date(a.approved_at!)).split("-").map(Number);
+                const [cy, cm] = periodOf(new Date()).split("-").map(Number);
+                return (cy - y) * 12 + (cm - m) + 1;
+              }),
+          );
+  const seatCost = (s?.free_pro_seats ?? 0) * proPence * monthsInRange;
+  const commission = Number(s?.commission_pence ?? 0);
+  const revenue = Number(s?.referred_revenue_pence ?? 0);
+  const costShare = revenue > 0 ? (commission / revenue) * 100 : null;
+  const viaShare =
+    s && Number(s.all_paying) > 0 ? (Number(s.subscribers_via_codes) / Number(s.all_paying)) * 100 : null;
+  const rangePhrase =
+    range === "month" ? `Paid ${shortDayMonth(payoutDateFor(periodOf(new Date())))}` : AMB_RANGE_LABEL[range].toLowerCase();
+
+  const shares = rateShares();
+  const worst = Math.max(...shares.map((r) => r.sharePct));
+  const totalSubscribers = rows.reduce((a, r) => a + Number(r.active_subscribers), 0);
+  const liveCount = rows.filter((a) => ambassadorState(a).label === "Live").length;
+
+  const exportCsv = () => {
+    const csv = toCsv(
+      [
+        "Ambassador",
+        "Email",
+        "Code",
+        "Found on",
+        "Subscribers now",
+        "Teachers referred",
+        "This month (GBP)",
+        "All time (GBP)",
+        "Owed (GBP)",
+        "Agreement ends",
+        "Status",
+        "Paid by",
+      ],
+      rows.map((a) => [
+        a.full_name,
+        a.email,
+        a.codes.join(" "),
+        a.source ? sourceLabel(a.source) : "",
+        a.active_subscribers,
+        a.referrals,
+        (Number(a.this_month_pence) / 100).toFixed(2),
+        (Number(a.all_time_pence) / 100).toFixed(2),
+        (Number(a.owed_pence) / 100).toFixed(2),
+        a.agreement_ends_at ? a.agreement_ends_at.slice(0, 10) : "",
+        ambassadorState(a).label,
+        a.payout_method === "paypal" ? "PayPal" : a.payout_method === "bank" ? "Bank" : "",
+      ]),
+    );
+    downloadCsv(csv, `jooma-ambassadors-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
 
   return (
     <>
       <PageHead
-        title="Ambassadors"
-        sub="People with their own code, and the teachers who signed up on it."
+        title="Ambassador programme"
+        sub="Invite links, applications, live ambassadors and what the programme costs."
       >
-        <Btn variant="primary" onClick={() => setCreating(true)}>
-          + New ambassador
+        <div
+          className="inline-flex rounded-full p-1 border"
+          style={{ backgroundColor: C.surface, borderColor: C.border }}
+        >
+          {AMB_RANGES.map((r) => (
+            <Link
+              key={r}
+              href={`${pathname}?range=${r}`}
+              scroll={false}
+              aria-current={r === range ? "page" : undefined}
+              className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors"
+              style={r === range ? { backgroundColor: C.brand, color: "#fff" } : { color: C.muted }}
+            >
+              {AMB_RANGE_LABEL[r]}
+            </Link>
+          ))}
+        </div>
+        <Btn onClick={exportCsv} disabled={rows.length === 0}>
+          <span className="inline-flex items-center gap-1.5">
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </span>
         </Btn>
       </PageHead>
 
-      <div className="grid gap-3.5 mb-6" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-        <Stat label="Ambassadors" value={nf.format(rows.length)} />
-        <Stat label="Teachers referred" value={nf.format(totals.referrals)} />
+      {/* ── KPIs ── */}
+      <div
+        className="grid gap-3.5 mb-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+        data-testid="programme-kpis"
+      >
+        <div
+          className={`${styles.goldKpi} rounded-2xl p-5 border`}
+          data-testid="kpi-commission"
+        >
+          <p className="text-xs font-semibold mb-2" style={{ color: GOLD.ink }}>
+            Commission, {AMB_RANGE_LABEL[range].toLowerCase()}
+          </p>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: GOLD.ink }}>
+            {gbp(commission)}
+          </p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>
+            {rangePhrase}
+          </p>
+        </div>
         <Stat
-          label="Became subscribers"
-          value={nf.format(totals.subscribers)}
-          foot="Counted when a first payment actually arrived"
+          label="Active ambassadors"
+          value={nf.format(Number(s?.active_ambassadors ?? 0))}
+          foot={`of ${nf.format(Number(s?.invited ?? 0))} invited`}
         />
         <Stat
-          label="Payouts owed"
-          value={nf.format(totals.owed)}
-          foot={totals.owed > 0 ? "Waiting to be paid by hand" : "Nothing outstanding"}
+          label="Awaiting review"
+          value={nf.format(Number(s?.awaiting_review ?? 0))}
+          foot={s?.oldest_submitted_at ? `oldest ${ago(s.oldest_submitted_at)}` : "Nothing waiting"}
+        />
+        <Stat
+          label="Subscribers via codes"
+          value={nf.format(Number(s?.subscribers_via_codes ?? 0))}
+          foot={viaShare !== null ? `${viaShare.toFixed(0)}% of all paying` : "No paying teachers yet"}
+        />
+        <Stat
+          label="Programme cost"
+          value={costShare !== null ? `${costShare.toFixed(1)}%` : "None yet"}
+          foot="commission, of referred revenue"
+        />
+        <Stat
+          label="Invites unopened"
+          value={nf.format(Number(s?.invites_unopened ?? 0))}
+          foot="sent over 7 days ago"
         />
       </div>
 
-      {stripeError ? (
-        <Note tone="warn">
-          <b>Could not reach Stripe.</b> {stripeError} Referrals and payouts below are
-          unaffected, but each code&apos;s offer and whether it still works cannot be shown.
-        </Note>
-      ) : (
-        <Note>
-          Payouts are for <b>Pro and Max only</b>. A teacher who used a code and stayed on
-          Free is still tracked here, and shows as N/A. So does a teacher an admin moved onto
-          a paid plan by hand, because no payment was ever taken for them. Recording a payout
-          here does not move any money.
-        </Note>
+      {stripeError && (
+        <div className="mb-4">
+          <Note tone="warn">
+            <b>Could not reach Stripe.</b> {stripeError} Commission and payouts below are
+            unaffected, but each code&apos;s offer and whether it still works cannot be shown.
+          </Note>
+        </div>
       )}
 
-      <div className="mt-4">
+      {/* ── Invite link and rate card ── */}
+      <div className="grid gap-3 mb-4 xl:grid-cols-[1.1fr_1fr]">
+        <InviteBox />
         <Card>
-          <FilterBar>
+          <CardHeader>
+            <CardTitle>Commission rates</CardTitle>
+            <span className="text-xs" style={{ color: C.muted }}>
+              Applies to every ambassador
+            </span>
+          </CardHeader>
+          <div className="px-4 pb-4">
+            <Table>
+              <thead>
+                <tr className="text-left">
+                  <Th>Plan</Th>
+                  <Th align="right">Plan price</Th>
+                  <Th align="right">Monthly, each month</Th>
+                  <Th align="right">Yearly, once</Th>
+                  <Th align="right">Share of revenue</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {shares.map((r) => (
+                  <Tr key={r.plan}>
+                    <Td>
+                      <span className="font-semibold" style={{ color: C.ink }}>
+                        {planCardName(r.plan)}
+                      </span>
+                    </Td>
+                    <Td align="right" mono>
+                      {gbp(r.priceMonthlyPence)} / {gbp(r.priceYearlyPence)}
+                    </Td>
+                    <Td align="right" mono>
+                      {gbp(AMBASSADOR_RATES.month[r.plan])}
+                    </Td>
+                    <Td align="right" mono>
+                      {gbp(AMBASSADOR_RATES.year[r.plan])}
+                    </Td>
+                    <Td align="right" mono>
+                      <span style={{ color: C.warn }}>{r.sharePct.toFixed(1)}%</span>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+            <p className="text-xs mt-3" style={{ color: C.muted }}>
+              Share of revenue is the commission against that plan&apos;s own price, monthly and
+              yearly averaged. Worked out from the live plan prices and the rate card, so it moves
+              when either does.
+            </p>
+            <div className="mt-3">
+              <Note tone="warn">
+                The rates take up to <b>{worst.toFixed(1)}%</b> of a referred subscription. Against a
+                gross margin around 80% that is roughly <b>{(worst / 0.8).toFixed(0)}% of the margin</b>{" "}
+                on every referred teacher, for as long as the ambassador&apos;s agreement runs. A
+                change of rate applies to payments from then on, with 60 days&apos; notice.
+              </Note>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Awaiting review ── */}
+      <div className="mb-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Awaiting review</CardTitle>
+            <span className="text-xs" style={{ color: C.muted }}>
+              {applications.length === 0
+                ? "Nothing waiting"
+                : `${applications.length} application${applications.length === 1 ? "" : "s"} · oldest submitted ${ago(applications[0].submitted_at)}`}
+            </span>
+          </CardHeader>
+          {applications.length === 0 ? (
+            <EmptyState
+              title="No applications waiting"
+              body="When someone you invited applies, they appear here to review."
+            />
+          ) : (
+            <Table>
+              <thead>
+                <tr className="text-left">
+                  <Th>Applicant</Th>
+                  <Th>Submitted</Th>
+                  <Th>Reach</Th>
+                  <Th>Channels</Th>
+                  <Th>Code</Th>
+                  <Th>Signed</Th>
+                  <Th align="right">Action</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((a) => (
+                  <Tr key={a.id}>
+                    <Td>
+                      <Person name={a.full_name} sub={a.source ? `Found on ${sourceLabel(a.source)}` : "Applicant"} />
+                    </Td>
+                    <Td>
+                      <span className="text-xs">{ago(a.submitted_at)}</span>
+                    </Td>
+                    <Td>
+                      <span className="text-xs">{reachLabel(a.reach)}</span>
+                    </Td>
+                    <Td>
+                      <span className="text-xs" style={{ color: C.muted }}>
+                        {a.channels.join(", ")}
+                      </span>
+                    </Td>
+                    <Td>
+                      <CodeChip code={a.requested_code} />
+                    </Td>
+                    <Td>
+                      <span className="text-xs">{shortDate(a.signed_at)}</span>
+                    </Td>
+                    <Td align="right">
+                      <Btn size="sm" variant="primary" onClick={() => setReviewing(a.id)}>
+                        Review
+                      </Btn>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card>
+      </div>
+
+      {/* ── Live ambassadors ── */}
+      <div className="mb-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Active ambassadors</CardTitle>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Name, email or code"
-              className={inputClass}
-              style={{ ...inputStyle, minWidth: 230 }}
+              className="text-sm rounded-lg border px-3 py-1.5"
+              style={{ borderColor: C.border, minWidth: 210 }}
             />
-            <div className="flex-1" />
-            <Tag>{nf.format(filtered.length)} shown</Tag>
-          </FilterBar>
-
+            <span className="text-xs" style={{ color: C.muted }}>
+              {nf.format(liveCount)} live · {nf.format(totalSubscribers)} subscribers between them
+            </span>
+          </CardHeader>
           {filtered.length === 0 ? (
             <EmptyState
               title={rows.length === 0 ? "No ambassadors yet" : "Nothing matches that"}
               body={
                 rows.length === 0
-                  ? "Use + New ambassador to add someone and create their code. The code is made in Stripe and works at checkout straight away."
+                  ? "Create an invite link above. When you approve their application, they appear here with their code."
                   : "Try clearing the search."
               }
             />
@@ -260,40 +488,32 @@ export default function AmbassadorsView({
                   <Th width="32px"> </Th>
                   <Th>Ambassador</Th>
                   <Th>Code</Th>
-                  <Th align="right">Referred</Th>
-                  <Th align="right">Subscribed</Th>
+                  <Th align="right">Subscribers</Th>
+                  <Th align="right">This month</Th>
+                  <Th align="right">All time</Th>
                   <Th align="right">Owed</Th>
-                  <Th align="right">Paid</Th>
-                  <Th>Free Pro</Th>
-                  <Th>State</Th>
+                  <Th>Agreement ends</Th>
+                  <Th align="right">Status</Th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((a) => {
                   const open = expanded.has(a.id);
-                  const list = referrals[a.id] ?? [];
-                  const isLoading = loading.has(a.id);
-
+                  const state = ambassadorState(a);
                   return (
                     <Fragment key={a.id}>
-                      <Tr clickable onClick={() => toggleExpand(a.id)}>
+                      <Tr clickable onClick={() => toggle(a.id)}>
                         <Td>
                           <span style={{ color: C.muted }}>
-                            {open ? (
-                              <ChevronDown className="w-4 h-4" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4" />
-                            )}
+                            {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </span>
                         </Td>
                         <Td>
-                          <span className="font-semibold" style={{ color: C.ink }}>
-                            {a.full_name}
-                          </span>
-                          <div className="text-xs" style={{ color: C.muted }}>
-                            {a.email}
-                            {!a.user_id && " · no Jooma account yet"}
-                          </div>
+                          <Person
+                            name={a.full_name}
+                            sub={a.source ? `Ambassador · ${sourceLabel(a.source)}` : a.email}
+                            gold
+                          />
                         </Td>
                         <Td>
                           {a.codes.length === 0 ? (
@@ -305,17 +525,12 @@ export default function AmbassadorsView({
                               const info = live[code.toUpperCase()];
                               return (
                                 <div key={code} className="mb-0.5">
-                                  <span
-                                    className="font-mono font-semibold text-xs"
-                                    style={{ color: C.ink }}
-                                  >
-                                    {code}
-                                  </span>
+                                  <CodeChip code={code} />
                                   {info && (
-                                    <span className="text-xs ml-2" style={{ color: C.muted }}>
+                                    <div className="text-xs mt-1" style={{ color: C.muted }}>
                                       {info.offer}
                                       {!info.usable && " · not usable"}
-                                    </span>
+                                    </div>
                                   )}
                                 </div>
                               );
@@ -323,206 +538,55 @@ export default function AmbassadorsView({
                           )}
                         </Td>
                         <Td align="right" mono>
-                          {nf.format(Number(a.referrals))}
+                          {nf.format(Number(a.active_subscribers))}
                         </Td>
                         <Td align="right" mono>
-                          {nf.format(Number(a.subscribers))}
+                          {gbp(Number(a.this_month_pence))}
                         </Td>
                         <Td align="right" mono>
-                          {Number(a.owed) > 0 ? (
-                            <Tag tone="warn">{nf.format(Number(a.owed))}</Tag>
+                          {gbp(Number(a.all_time_pence))}
+                        </Td>
+                        <Td align="right" mono>
+                          {Number(a.owed_pence) > 0 ? (
+                            <Tag tone="warn">{gbp(Number(a.owed_pence))}</Tag>
                           ) : (
-                            <span style={{ color: C.muted }}>0</span>
+                            <span style={{ color: C.muted }}>{gbp(0)}</span>
                           )}
                         </Td>
-                        <Td align="right" mono>
-                          {nf.format(Number(a.paid))}
-                        </Td>
                         <Td>
-                          {/* Inside a clickable row, so the buttons stop the
-                              click from also expanding it. */}
-                          <div
-                            className="flex items-center gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {proActive(a) ? (
-                              <>
-                                <Tag tone="ok">Until {fmtDate(a.pro_until!)}</Tag>
-                                <Btn size="sm" onClick={() => setProFor({ row: a, revoke: true })}>
-                                  Revoke
-                                </Btn>
-                              </>
-                            ) : (
-                              <Btn
-                                size="sm"
-                                variant="primary"
-                                onClick={() => setProFor({ row: a, revoke: false })}
-                              >
-                                {a.pro_until ? "Grant again" : "Grant 12 months"}
-                              </Btn>
-                            )}
+                          <span className="text-xs">
+                            {a.agreement_ends_at ? shortDate(a.agreement_ends_at) : "No agreement"}
+                          </span>
+                        </Td>
+                        <Td align="right">
+                          <div className="flex flex-col items-end gap-1">
+                            <Tag tone={state.tone} dot>
+                              {state.label}
+                            </Tag>
+                            {a.end_requested_at && <Tag tone="warn">Asked to end</Tag>}
                           </div>
-                        </Td>
-                        <Td>
-                          {a.status === "active" ? (
-                            <Tag tone="ok" dot>
-                              Active
-                            </Tag>
-                          ) : (
-                            <Tag tone="plain" dot>
-                              Paused
-                            </Tag>
-                          )}
                         </Td>
                       </Tr>
 
                       {open && (
                         <tr>
-                          {/* The expanded panel is set off by a tinted GUTTER and
-                              a top border, not by a fill behind the rows. Filling
-                              it made the row separators disappear into the
-                              background and put dark text on mid purple, which is
-                              hard to read at this size. The rows themselves stay
-                              on the card surface, so they read as rows. */}
+                          {/* Set off by a tinted gutter and a top border, not a
+                              fill behind the rows, so the row separators stay
+                              visible and the text stays on the card surface. */}
                           <td
                             colSpan={9}
                             style={{
                               backgroundColor: C.surface,
                               padding: 0,
-                              borderTop: `2px solid ${C.brand}`,
-                              boxShadow: `inset 4px 0 0 ${C.brandBg}`,
+                              borderTop: `2px solid ${GOLD.main}`,
+                              boxShadow: `inset 4px 0 0 ${GOLD.bg}`,
                             }}
                           >
-                            <div className="px-6 py-4">
-                              {isLoading ? (
-                                <p className="text-sm" style={{ color: C.muted }}>
-                                  Loading teachers…
-                                </p>
-                              ) : list.length === 0 ? (
-                                <p className="text-sm" style={{ color: C.muted }}>
-                                  Nobody has used {a.full_name}&apos;s code yet.
-                                </p>
-                              ) : (
-                                <>
-                                  <p
-                                    className="text-[11px] font-semibold uppercase tracking-wider mb-2"
-                                    style={{ color: C.muted }}
-                                  >
-                                    Referred teachers{" "}
-                                    <span style={{ color: C.ink2 }}>
-                                      {nf.format(list.length)} total ·{" "}
-                                      {nf.format(
-                                        list.filter((r) => r.payout_status === "unpaid").length,
-                                      )}{" "}
-                                      unpaid ·{" "}
-                                      {nf.format(
-                                        list.filter((r) => r.payout_status === "paid").length,
-                                      )}{" "}
-                                      paid
-                                    </span>
-                                  </p>
-
-                                  <ReferralFilters
-                                    rows={list}
-                                    plan={planFilter[a.id] ?? ""}
-                                    payout={payoutFilter[a.id] ?? ""}
-                                    onPlan={(v) =>
-                                      setPlanFilter((p) => ({ ...p, [a.id]: v }))
-                                    }
-                                    onPayout={(v) =>
-                                      setPayoutFilter((p) => ({ ...p, [a.id]: v }))
-                                    }
-                                  />
-
-                                  <Table>
-                                  <thead>
-                                    <tr className="text-left">
-                                      <Th>Teacher</Th>
-                                      <Th>Joined</Th>
-                                      <Th>First subscribed month</Th>
-                                      <Th>Plan</Th>
-                                      <Th align="right">Payout</Th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {filterReferrals(
-                                      list,
-                                      planFilter[a.id] ?? "",
-                                      payoutFilter[a.id] ?? "",
-                                    ).map((r) => (
-                                      <Tr key={r.id}>
-                                        <Td>
-                                          <span style={{ color: C.ink }}>
-                                            {r.teacher_name || "Unnamed teacher"}
-                                          </span>
-                                          <div className="text-xs" style={{ color: C.muted }}>
-                                            {r.teacher_email}
-                                          </div>
-                                        </Td>
-                                        <Td>
-                                          <span className="text-xs">{fmtDate(r.joined_at)}</span>
-                                        </Td>
-                                        <Td>
-                                          {r.first_paid_at ? (
-                                            <span className="text-xs">
-                                              {new Date(r.first_paid_at).toLocaleDateString("en-GB", {
-                                                month: "long",
-                                                year: "numeric",
-                                              })}
-                                            </span>
-                                          ) : (
-                                            <span className="text-xs" style={{ color: C.muted }}>
-                                              Not subscribed
-                                            </span>
-                                          )}
-                                          {r.discount_failed_reason && (
-                                            <div className="text-xs" style={{ color: C.warn }}>
-                                              Code was refused at checkout, so they paid full price
-                                            </div>
-                                          )}
-                                        </Td>
-                                        <Td>
-                                          <Tag
-                                            tone={
-                                              r.current_plan === "max"
-                                                ? "brand"
-                                                : r.current_plan === "pro"
-                                                  ? "ok"
-                                                  : r.current_plan === "standard"
-                                                    ? "warn"
-                                                    : "plain"
-                                            }
-                                          >
-                                            {planCardName(asPlanId(r.current_plan))}
-                                          </Tag>
-                                        </Td>
-                                        <Td align="right">
-                                          <PayoutCell
-                                            row={r}
-                                            busy={busy === r.id}
-                                            onSet={(status) => setPayout(a.id, r, status)}
-                                          />
-                                        </Td>
-                                      </Tr>
-                                    ))}
-                                  </tbody>
-                                  </Table>
-
-                                  {filterReferrals(
-                                    list,
-                                    planFilter[a.id] ?? "",
-                                    payoutFilter[a.id] ?? "",
-                                  ).length === 0 && (
-                                    <p
-                                      className="text-sm py-3"
-                                      style={{ color: C.muted }}
-                                    >
-                                      No teachers match those filters.
-                                    </p>
-                                  )}
-                                </>
-                              )}
-                            </div>
+                            <ReferralsPanel
+                              ambassador={a}
+                              onToast={fire}
+                              onFreePro={(revoke) => setProFor({ row: a, revoke })}
+                            />
                           </td>
                         </tr>
                       )}
@@ -532,24 +596,97 @@ export default function AmbassadorsView({
               </tbody>
             </Table>
           )}
-
-          <CardFooter>
-            {rows.length > 0 && (
-              <>
-                {nf.format(rows.length)} ambassador{rows.length === 1 ? "" : "s"} ·{" "}
-                {nf.format(totals.referrals)} teacher
-                {totals.referrals === 1 ? "" : "s"} referred · {nf.format(totals.owed)} payout
-                {totals.owed === 1 ? "" : "s"} owed
-              </>
-            )}
-          </CardFooter>
         </Card>
       </div>
 
-      {creating && (
-        <NewAmbassadorModal
-          onClose={() => setCreating(false)}
-          onCreated={(msg) => {
+      {/* ── Links and costs ── */}
+      <div className="grid gap-3 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Invite links issued</CardTitle>
+            <span className="text-xs" style={{ color: C.muted }}>
+              Last 30 days
+            </span>
+          </CardHeader>
+          {invites.length === 0 ? (
+            <EmptyState title="No links yet" body="Links you generate above are listed here." />
+          ) : (
+            <Table>
+              <thead>
+                <tr className="text-left">
+                  <Th>Sent to</Th>
+                  <Th>Found on</Th>
+                  <Th>Sent</Th>
+                  <Th align="right">Status</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {invites.map((i) => (
+                  <InviteLine key={i.id} invite={i} onToast={fire} onChanged={() => router.refresh()} />
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>What the programme costs</CardTitle>
+            <span className="text-xs" style={{ color: C.muted }}>
+              {AMB_RANGE_LABEL[range]}
+            </span>
+          </CardHeader>
+          <div className="px-4 pb-4">
+            <Table>
+              <tbody>
+                <Tr>
+                  <Td>Commission earned by ambassadors</Td>
+                  <Td align="right" mono>
+                    {gbp(commission)}
+                  </Td>
+                </Tr>
+                <Tr>
+                  <Td>
+                    Free Pro accounts, {nf.format(Number(s?.free_pro_seats ?? 0))} × {gbp(proPence)}
+                    {monthsInRange > 1 ? ` × ${monthsInRange} months` : ""}
+                  </Td>
+                  <Td align="right" mono>
+                    {gbp(seatCost)}
+                  </Td>
+                </Tr>
+                <Tr>
+                  <Td>Revenue from referred subscribers</Td>
+                  <Td align="right" mono>
+                    {gbp(revenue)}
+                  </Td>
+                </Tr>
+                <Tr>
+                  <Td>
+                    <b style={{ color: C.ink }}>Net contribution</b>
+                  </Td>
+                  <Td align="right" mono>
+                    <b style={{ color: C.ink }}>{gbp(revenue - commission - seatCost)}</b>
+                  </Td>
+                </Tr>
+              </tbody>
+            </Table>
+            <div className="mt-3">
+              <Note tone="warn">
+                <b>Watch this.</b> Monthly commission keeps running for as long as each
+                ambassador&apos;s agreement does, so the cost line grows with every teacher they keep,
+                even in a month with no new ambassadors. Review it against referred revenue every
+                quarter.
+              </Note>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {reviewing && (
+        <ReviewDrawer
+          applicationId={reviewing}
+          onClose={() => setReviewing(null)}
+          onDone={(msg) => {
             fire(msg);
             router.refresh();
           }}
@@ -571,18 +708,77 @@ export default function AmbassadorsView({
   );
 }
 
-/** Their free Pro has been granted and has not ended yet. */
-function proActive(a: AmbassadorRow): boolean {
-  return Boolean(a.pro_until) && new Date(a.pro_until!).getTime() > Date.now();
+function shortDayMonth(d: Date): string {
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+/** One issued link, with a way to withdraw it while it is still unused. */
+function InviteLine({
+  invite,
+  onToast,
+  onChanged,
+}: {
+  invite: InviteRow;
+  onToast: (msg: string) => void;
+  onChanged: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const withdrawable = invite.state === "sent" || invite.state === "opened";
+
+  const withdraw = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/ambassadors/invites", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: invite.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        onToast(json.error ?? "Could not withdraw the link.");
+        return;
+      }
+      onToast(`Link for ${invite.full_name} withdrawn.`);
+      onChanged();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Tr>
+      <Td>
+        <span className="font-semibold" style={{ color: C.ink2 }}>
+          {invite.full_name}
+        </span>
+      </Td>
+      <Td>
+        <span className="text-xs">{sourceLabel(invite.source)}</span>
+      </Td>
+      <Td>
+        <span className="text-xs">{shortDate(invite.created_at)}</span>
+      </Td>
+      <Td align="right">
+        <div className="flex items-center justify-end gap-2">
+          <Tag tone={INVITE_TONE[invite.state]}>{invite.state}</Tag>
+          {withdrawable && (
+            <Btn size="sm" variant="ghost" onClick={withdraw} disabled={busy}>
+              Withdraw
+            </Btn>
+          )}
+        </div>
+      </Td>
+    </Tr>
+  );
 }
 
 /**
  * Grant or revoke an ambassador's twelve free months of Pro.
  *
- * The rules live in /api/admin/ambassadors/grant-pro: it refuses anyone paying
- * through Stripe, links the account by email if it was not linked yet, and on
- * revoke leaves a teacher who has since subscribed alone. This only asks why,
- * for the audit log.
+ * The rules live in app/lib/ambassador-pro.ts: it refuses anyone paying through
+ * Stripe, links the account by email if it was not linked yet, and on revoke
+ * leaves a teacher who has since subscribed alone. This only asks why, for the
+ * audit log.
  */
 function FreeProModal({
   row,
@@ -650,363 +846,7 @@ function FreeProModal({
         />
       </Field>
       {error && (
-        <p className="text-sm mt-2" role="alert" style={{ color: "#b3261e" }}>
-          {error}
-        </p>
-      )}
-    </Modal>
-  );
-}
-
-/** Apply the two filters. Kept out of the component so the row count in the
- *  header and the rows themselves cannot disagree about what is shown. */
-function filterReferrals(rows: ReferralRow[], plan: string, payout: string): ReferralRow[] {
-  return rows.filter((r) => {
-    if (plan && r.current_plan !== plan) return false;
-    if (payout && r.payout_status !== payout) return false;
-    return true;
-  });
-}
-
-/** One pill. Selected is solid brand; the rest are outlined. */
-function Pill({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string;
-  count?: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className="text-xs font-semibold rounded-full px-3 py-1 border transition-colors"
-      style={
-        active
-          ? { backgroundColor: C.brand, borderColor: C.brand, color: "#fff" }
-          : { backgroundColor: C.surface, borderColor: C.border, color: C.ink2 }
-      }
-    >
-      {label}
-      {count !== undefined && (
-        <span style={{ opacity: 0.7 }}> {nf.format(count)}</span>
-      )}
-    </button>
-  );
-}
-
-/**
- * Filters for one ambassador's referral list.
- *
- * Counts sit on the pills so an admin can see there are three unpaid payouts
- * without clicking through to find out — which is the question this table is
- * usually open to answer.
- */
-function ReferralFilters({
-  rows,
-  plan,
-  payout,
-  onPlan,
-  onPayout,
-}: {
-  rows: ReferralRow[];
-  plan: string;
-  payout: string;
-  onPlan: (v: string) => void;
-  onPayout: (v: string) => void;
-}) {
-  const count = (fn: (r: ReferralRow) => boolean) => rows.filter(fn).length;
-
-  return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-3">
-      <div className="flex items-center gap-1.5">
-        <span
-          className="text-[11px] font-semibold uppercase tracking-wider mr-1"
-          style={{ color: C.muted }}
-        >
-          Plan
-        </span>
-        <Pill label="All" count={rows.length} active={plan === ""} onClick={() => onPlan("")} />
-        <Pill
-          label="No plan"
-          count={count((r) => r.current_plan === "free")}
-          active={plan === "free"}
-          onClick={() => onPlan("free")}
-        />
-        <Pill
-          label="Standard"
-          count={count((r) => r.current_plan === "standard")}
-          active={plan === "standard"}
-          onClick={() => onPlan("standard")}
-        />
-        <Pill
-          label="Pro"
-          count={count((r) => r.current_plan === "pro")}
-          active={plan === "pro"}
-          onClick={() => onPlan("pro")}
-        />
-        <Pill
-          label="Max"
-          count={count((r) => r.current_plan === "max")}
-          active={plan === "max"}
-          onClick={() => onPlan("max")}
-        />
-      </div>
-
-      <div className="flex items-center gap-1.5">
-        <span
-          className="text-[11px] font-semibold uppercase tracking-wider mr-1"
-          style={{ color: C.muted }}
-        >
-          Payout
-        </span>
-        <Pill label="All" active={payout === ""} onClick={() => onPayout("")} />
-        {/* N/A first: it is the commonest state, since a free referral is
-            tracked and never payable. */}
-        <Pill
-          label="N/A"
-          count={count((r) => r.payout_status === "na")}
-          active={payout === "na"}
-          onClick={() => onPayout("na")}
-        />
-        <Pill
-          label="Unpaid"
-          count={count((r) => r.payout_status === "unpaid")}
-          active={payout === "unpaid"}
-          onClick={() => onPayout("unpaid")}
-        />
-        <Pill
-          label="Paid"
-          count={count((r) => r.payout_status === "paid")}
-          active={payout === "paid"}
-          onClick={() => onPayout("paid")}
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
- * The payout state of one referral.
- *
- * A teacher who has never paid gets a plain "N/A" and NO control at all. The
- * button is absent rather than disabled: there is nothing an admin can do here,
- * and a greyed-out button invites hunting for the way to enable it.
- */
-function PayoutCell({
-  row,
-  busy,
-  onSet,
-}: {
-  row: ReferralRow;
-  busy: boolean;
-  onSet: (status: string) => void;
-}) {
-  if (!row.first_paid_at) {
-    return (
-      <span title="Payouts are for Pro and Max subscribers. This teacher has not paid for a subscription.">
-        <Tag tone="plain">N/A</Tag>
-      </span>
-    );
-  }
-
-  if (row.payout_status === "paid") {
-    return (
-      <div className="flex items-center justify-end gap-2">
-        <Tag tone="ok" dot>
-          Paid{row.payout_at ? ` ${fmtDate(row.payout_at)}` : ""}
-        </Tag>
-        <Btn size="sm" disabled={busy} onClick={() => onSet("unpaid")}>
-          Undo
-        </Btn>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-end gap-2">
-      <Tag tone="warn" dot>
-        Unpaid
-      </Tag>
-      <Btn size="sm" variant="primary" disabled={busy} onClick={() => onSet("paid")}>
-        {busy ? "Saving…" : "Mark paid"}
-      </Btn>
-    </div>
-  );
-}
-
-/** Adds the person and mints their code in Stripe in one step. */
-function NewAmbassadorModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: (msg: string) => void;
-}) {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [discountType, setDiscountType] = useState<"percent" | "amount">("percent");
-  const [value, setValue] = useState("20");
-  const [maxRedemptions, setMaxRedemptions] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
-  const [notes, setNotes] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/ambassadors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          email,
-          notes: notes || undefined,
-          code,
-          ...(discountType === "percent"
-            ? { percentOff: Number(value) }
-            : { amountOffGbp: Number(value) }),
-          ...(maxRedemptions ? { maxRedemptions: Number(maxRedemptions) } : {}),
-          ...(expiresAt ? { expiresAt } : {}),
-        }),
-      });
-      const json = await res.json();
-      setSaving(false);
-      if (!res.ok) {
-        setError(json.error ?? "Could not add the ambassador.");
-        return;
-      }
-      onCreated(`${fullName} added with code ${json.code}.`);
-      onClose();
-    } catch {
-      setSaving(false);
-      setError("Could not reach the server.");
-    }
-  };
-
-  return (
-    <Modal
-      title="New ambassador"
-      onClose={onClose}
-      footer={
-        <>
-          <Btn onClick={onClose}>Cancel</Btn>
-          <Btn
-            variant="primary"
-            onClick={submit}
-            disabled={saving || !fullName.trim() || !email.trim() || !code.trim()}
-          >
-            {saving ? "Adding…" : "Add and create code"}
-          </Btn>
-        </>
-      }
-    >
-      <div className="grid gap-x-4 sm:grid-cols-2">
-        <Field label="Full name">
-          <input
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="Jamie Rivers"
-            className={fieldClass}
-            style={fieldStyle}
-          />
-        </Field>
-        <Field label="Jooma email" help="The address on their own Jooma account.">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="jamie@example.com"
-            className={fieldClass}
-            style={fieldStyle}
-          />
-        </Field>
-      </div>
-
-      <Field label="Code" help="What a teacher types. Letters, numbers, hyphens and underscores.">
-        <input
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="JAMIE20"
-          className={fieldClass}
-          style={{ ...fieldStyle, fontFamily: "ui-monospace, monospace" }}
-        />
-      </Field>
-
-      <div className="grid gap-x-4 sm:grid-cols-2">
-        <Field label="Discount">
-          <select
-            value={discountType}
-            onChange={(e) => setDiscountType(e.target.value as "percent" | "amount")}
-            className={fieldClass}
-            style={fieldStyle}
-          >
-            <option value="percent">Percentage off</option>
-            <option value="amount">Amount off (£)</option>
-          </select>
-        </Field>
-        <Field label={discountType === "percent" ? "Percent off" : "Amount off (£)"}>
-          <input
-            type="number"
-            step={discountType === "percent" ? "1" : "0.01"}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className={fieldClass}
-            style={fieldStyle}
-          />
-        </Field>
-      </div>
-
-      <div className="grid gap-x-4 sm:grid-cols-2">
-        <Field
-          label="Redemption limit"
-          help="Best left blank. A cap can refuse the code for someone who signed up earlier and subscribes later."
-        >
-          <input
-            type="number"
-            value={maxRedemptions}
-            onChange={(e) => setMaxRedemptions(e.target.value)}
-            placeholder="Unlimited"
-            className={fieldClass}
-            style={fieldStyle}
-          />
-        </Field>
-        <Field label="Expires" help="Best left blank, for the same reason.">
-          <input
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className={fieldClass}
-            style={fieldStyle}
-          />
-        </Field>
-      </div>
-
-      <Field label="Notes" help="Optional. Where they post, what was agreed.">
-        <input
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Instagram, 40k followers"
-          className={fieldClass}
-          style={fieldStyle}
-        />
-      </Field>
-
-      <Note tone="warn">
-        The discount lasts <b>one month</b>, so each subscriber is worth a single payout. A
-        discount cannot be changed once the code exists, so check the numbers before adding.
-      </Note>
-
-      {error && (
-        <p className="text-sm mt-2" style={{ color: C.danger }}>
+        <p className="text-sm mt-2" role="alert" style={{ color: C.danger }}>
           {error}
         </p>
       )}

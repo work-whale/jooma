@@ -1,0 +1,130 @@
+/* The ambassador page's two pieces of chrome the admin kit does not have: the
+   purple invite box and the gold trim. Colours are the mockup's (docs/JOOMA
+   VERSION 4/11-jooma-admin-console v4.html), kept here so the view stays in the
+   console's inline-style convention for everything else. */
+
+.genbox {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 20px 22px;
+  color: #fff;
+  background: linear-gradient(145deg, #4a22b5, #3a1c8f);
+}
+.genbox::after {
+  content: "";
+  position: absolute;
+  right: -50px;
+  top: -60px;
+  width: 220px;
+  height: 200px;
+  background: radial-gradient(ellipse at center, rgba(244, 217, 139, 0.26), transparent 68%);
+  pointer-events: none;
+}
+.genbox > * {
+  position: relative;
+  z-index: 1;
+}
+.genTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+.genSub {
+  margin-top: 5px;
+  font-size: 0.8rem;
+  color: #d8ccfa;
+}
+.genRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+@media (max-width: 640px) {
+  .genRow {
+    grid-template-columns: 1fr;
+  }
+}
+.genLabel {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #f4d98b;
+}
+.genInput {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 0.84rem;
+  color: #fff;
+  outline: 0;
+  font-family: inherit;
+}
+.genInput::placeholder {
+  color: rgba(220, 210, 250, 0.6);
+}
+.genInput:focus {
+  border-color: #f4d98b;
+}
+.genInput option {
+  color: #1d1730;
+}
+.goldBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #2b1d02;
+  background: linear-gradient(135deg, #e8b944, #c08a1e);
+}
+.goldBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.linkOut {
+  margin-top: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 11px 13px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(244, 217, 139, 0.4);
+}
+.linkOut code {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  color: #f4d98b;
+}
+.linkOut button {
+  flex: none;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #3a1c8f;
+  background: #fff;
+}
+.goldKpi {
+  background: linear-gradient(150deg, #fdf7e7, #ffffff);
+  border-color: #eedca8 !important;
+}
+.signature {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 1.05rem;
+}

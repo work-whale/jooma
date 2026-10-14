@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe, planForPriceId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { DEFAULT_PLAN, TOPUP_PENCE } from "@/app/lib/plans";
+import { DEFAULT_PLAN, TOPUP_PENCE, type BillingInterval } from "@/app/lib/plans";
+import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
+import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
 import { isTrialInvoice, startsTrial } from "@/app/lib/trial";
 
@@ -320,6 +322,235 @@ async function markReferralPaid(inv: Stripe.Invoice) {
     .is("first_paid_at", null);
 
   if (error) console.error("[stripe/webhook] referral payout mark failed", error);
+}
+
+/**
+ * Record what a paid subscription invoice earns the ambassador who referred
+ * this teacher: the monthly rate for a monthly payment, or the yearly one-off.
+ *
+ * The rules (agreement still live, no trials, no prorations, a yearly plan pays
+ * once) are decided by commissionForInvoice in app/lib/ambassador-commission.ts
+ * and pinned by its unit tests. This only gathers the facts and writes the row.
+ *
+ * IDEMPOTENT BY CONSTRUCTION, like markReferralPaid. Unique indexes on the
+ * ledger allow one row per invoice, one monthly row per teacher per month and
+ * one yearly row per teacher ever, so the second of invoice.paid and
+ * invoice.payment_succeeded (and every Stripe retry) is refused by the database
+ * and read here as "already recorded".
+ */
+async function recordAmbassadorCommission(inv: Stripe.Invoice) {
+  const parentType = (inv as unknown as { parent?: { type?: string } }).parent?.type;
+  if (parentType !== "subscription_details") return;
+  if (!inv.id) return;
+
+  const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
+  const userId = await userIdForCustomer(customerId);
+  if (!userId) return;
+
+  const { data: referral } = await supabaseAdmin
+    .from("ambassador_referrals")
+    .select("id, ambassador_id, ambassadors(approved_at, agreement_ends_at)")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!referral) return;
+
+  const ambassador = referral.ambassadors as unknown as {
+    approved_at: string | null;
+    agreement_ends_at: string | null;
+  } | null;
+
+  // The line that was actually bought. A proration invoice carries a credit
+  // line for the unused time and a charge for the new price, so take the
+  // largest charge rather than the first line.
+  const line = [...(inv.lines?.data ?? [])].sort((a, b) => (b.amount ?? 0) - (a.amount ?? 0))[0];
+  const price = line?.pricing?.price_details?.price;
+  const priceId = typeof price === "string" ? price : (price?.id ?? null);
+  const plan = priceId ? await planForPriceId(priceId) : null;
+
+  // Monthly or yearly, from the price when Stripe expanded it, otherwise from
+  // the length of the period the line covers.
+  const recurring = typeof price === "object" && price ? price.recurring?.interval : undefined;
+  const periodDays =
+    line?.period?.start && line?.period?.end ? (line.period.end - line.period.start) / 86_400 : 0;
+  const interval: BillingInterval | null =
+    recurring === "year" || recurring === "month"
+      ? recurring
+      : periodDays > 0
+        ? periodDays > 40
+          ? "year"
+          : "month"
+        : null;
+
+  const paidUnix = (inv as unknown as { status_transitions?: { paid_at?: number | null } })
+    .status_transitions?.paid_at;
+  const paidAt = paidUnix ? new Date(paidUnix * 1000) : new Date();
+
+  let hasAnnualAlready = false;
+  if (interval === "year") {
+    const { count } = await supabaseAdmin
+      .from("ambassador_commissions")
+      .select("id", { count: "exact", head: true })
+      .eq("referral_id", referral.id)
+      .eq("kind", "annual");
+    hasAnnualAlready = (count ?? 0) > 0;
+  }
+
+  const earned = commissionForInvoice(
+    {
+      plan,
+      interval,
+      billingReason: inv.billing_reason ?? null,
+      paidAt,
+      isTrial: isTrialInvoice(inv),
+    },
+    {
+      approvedAt: ambassador?.approved_at ? new Date(ambassador.approved_at) : null,
+      agreementEndsAt: ambassador?.agreement_ends_at ? new Date(ambassador.agreement_ends_at) : null,
+      hasAnnualAlready,
+    },
+  );
+  if (!earned) return;
+
+  const { error } = await supabaseAdmin.from("ambassador_commissions").insert({
+    ambassador_id: referral.ambassador_id,
+    referral_id: referral.id,
+    stripe_invoice_id: inv.id,
+    period: periodOf(paidAt),
+    kind: earned.kind,
+    plan: earned.plan,
+    billing_interval: earned.interval,
+    amount_pence: earned.amountPence,
+    invoice_amount_pence: inv.amount_paid ?? null,
+  });
+
+  // 23505: already recorded, by the other of the two paid events or a retry.
+  if (error && error.code !== "23505") {
+    console.error("[stripe/webhook] ambassador commission insert failed", error);
+  }
+}
+
+/**
+ * An ambassador code typed into STRIPE'S OWN promo box at checkout.
+ *
+ * Teachers are meant to enter a code in Jooma first (/welcome, or the billing
+ * page), which records the referral and lets checkout attach the coupon that
+ * matches the interval. Stripe's box knows nothing of that. Typed there, the
+ * code's first-month coupon lands on the subscription as it is, so:
+ *
+ *   - nobody is credited, because no referral row was written; and
+ *   - on a YEARLY plan, a first-month offer would come off the whole first year.
+ *
+ * This puts both right when the checkout completes. The referral is recorded
+ * (first code wins, as claim_ambassador_code does it), and a yearly
+ * subscription's discount is swapped for the code's yearly coupon. That swap is
+ * only possible while the trial is still running, before the first charge;
+ * ambassador promotion codes are created first-time-customers-only, and every
+ * first subscription starts with a trial, so that is the case that arrives.
+ */
+async function reconcileAmbassadorDiscount(sub: Stripe.Subscription, userId: string | null) {
+  if (!userId) return;
+
+  // The discounts on the subscription, with their promotion codes.
+  let discounts: Stripe.Discount[] = [];
+  try {
+    const full = await stripe.subscriptions.retrieve(sub.id, { expand: ["discounts"] });
+    discounts = (full.discounts ?? []).filter(
+      (d): d is Stripe.Discount => typeof d === "object" && d !== null,
+    );
+  } catch (err) {
+    console.error("[stripe/webhook] could not read subscription discounts", err);
+    return;
+  }
+
+  const promoIds = discounts
+    .map((d) => (typeof d.promotion_code === "string" ? d.promotion_code : d.promotion_code?.id))
+    .filter((id): id is string => Boolean(id));
+  if (promoIds.length === 0) return;
+
+  const { data: code } = await supabaseAdmin
+    .from("ambassador_codes")
+    .select("id, ambassador_id, promotion_code_id, yearly_coupon_id, ambassadors(status)")
+    .in("promotion_code_id", promoIds)
+    .limit(1)
+    .maybeSingle();
+  if (!code) return; // An ordinary promo code: nothing to do.
+
+  // Credit the ambassador. First code wins: an existing referral is left alone.
+  const status = (code.ambassadors as unknown as { status?: string } | null)?.status;
+  if (status === "active") {
+    const { error } = await supabaseAdmin
+      .from("ambassador_referrals")
+      .insert({ ambassador_id: code.ambassador_id, code_id: code.id, user_id: userId });
+    if (error && error.code !== "23505") {
+      console.error("[stripe/webhook] could not record a box-typed ambassador code", error);
+    }
+  }
+
+  const interval = sub.items.data[0]?.price?.recurring?.interval;
+  if (interval !== "year") return;
+
+  if (sub.status !== "trialing") {
+    console.warn(
+      "[stripe/webhook] ambassador code on a yearly plan was already charged; left as is",
+      sub.id,
+    );
+    return;
+  }
+
+  try {
+    await stripe.subscriptions.update(sub.id, {
+      discounts: discountsForInterval("year", {
+        promotionCodeId: code.promotion_code_id,
+        yearlyCouponId: code.yearly_coupon_id ?? null,
+      }),
+    });
+  } catch (err) {
+    console.error("[stripe/webhook] could not swap to the yearly ambassador coupon", err);
+  }
+}
+
+/**
+ * A refunded subscription payment takes back the commission it earned.
+ *
+ * Still unpaid: the row is marked reversed and drops out of every total. Already
+ * paid out: that money has left, so the row stands and a negative adjustment
+ * goes against the ambassador's current month instead, which is how their
+ * statement shows it ("Adjustments"). One adjustment per invoice, by index.
+ */
+async function reverseAmbassadorCommissions(stripeInvoiceIds: string[]) {
+  if (stripeInvoiceIds.length === 0) return;
+
+  const { data: rows } = await supabaseAdmin
+    .from("ambassador_commissions")
+    .select("id, ambassador_id, referral_id, stripe_invoice_id, plan, billing_interval, amount_pence, status")
+    .in("stripe_invoice_id", stripeInvoiceIds)
+    .neq("kind", "adjustment");
+
+  for (const row of rows ?? []) {
+    if (row.status === "unpaid") {
+      const { error } = await supabaseAdmin
+        .from("ambassador_commissions")
+        .update({ status: "reversed", note: "Refunded" })
+        .eq("id", row.id)
+        .eq("status", "unpaid");
+      if (error) console.error("[stripe/webhook] commission reversal failed", error);
+    } else if (row.status === "paid") {
+      const { error } = await supabaseAdmin.from("ambassador_commissions").insert({
+        ambassador_id: row.ambassador_id,
+        referral_id: row.referral_id,
+        stripe_invoice_id: row.stripe_invoice_id,
+        period: periodOf(new Date()),
+        kind: "adjustment",
+        plan: row.plan,
+        billing_interval: row.billing_interval,
+        amount_pence: -Math.abs(row.amount_pence),
+        note: "Refunded after it was paid out",
+      });
+      if (error && error.code !== "23505") {
+        console.error("[stripe/webhook] commission adjustment failed", error);
+      }
+    }
+  }
 }
 
 // ── Meta advertising ─────────────────────────────────────────────────────────
@@ -801,7 +1032,10 @@ async function syncRefund(charge: Stripe.Charge) {
 
   // Find the invoice by charge id, or by the session reference recorded against
   // the top-up purchase for the same PaymentIntent.
-  let query = supabaseAdmin.from("invoices").select("id").eq("stripe_charge_id", charge.id);
+  let query = supabaseAdmin
+    .from("invoices")
+    .select("id, stripe_invoice_id")
+    .eq("stripe_charge_id", charge.id);
   let { data: rows } = await query;
 
   if ((!rows || rows.length === 0) && paymentIntentId) {
@@ -813,7 +1047,7 @@ async function syncRefund(charge: Stripe.Charge) {
     if (purchase) {
       query = supabaseAdmin
         .from("invoices")
-        .select("id")
+        .select("id, stripe_invoice_id")
         .eq("user_id", purchase.user_id)
         .eq("type", "topup")
         .eq("amount_gbp", charge.amount / 100)
@@ -853,6 +1087,13 @@ async function syncRefund(charge: Stripe.Charge) {
   if (refundedUserId) {
     await reverseReferralPayout(refundedUserId);
   }
+
+  // And the commission that payment earned, if it was a subscription invoice.
+  await reverseAmbassadorCommissions(
+    (rows ?? [])
+      .map((r) => (r as { stripe_invoice_id?: string | null }).stripe_invoice_id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0),
+  );
 }
 
 /**
@@ -930,6 +1171,9 @@ export async function POST(req: NextRequest) {
             sub.metadata = { ...sub.metadata, userId: session.client_reference_id };
           }
           await syncSubscription(sub);
+          // An ambassador code typed into Stripe's own box: credit the
+          // ambassador, and on a yearly plan swap to the yearly coupon.
+          await reconcileAmbassadorDiscount(sub, sub.metadata?.userId ?? null);
           // Only from this event, not customer.subscription.created: Checkout
           // completing is the single moment the trial began, and hanging it
           // off one event type keeps it to one send per checkout.
@@ -966,6 +1210,9 @@ export async function POST(req: NextRequest) {
         // Money has actually arrived, which is the moment an ambassador becomes
         // owed for this teacher. Idempotent: only ever writes the FIRST payment.
         await markReferralPaid(inv);
+        // And what this payment earns them, month by month. Idempotent by the
+        // ledger's unique indexes.
+        await recordAmbassadorCommission(inv);
 
         // EXACTLY ONCE, VIA THE DATABASE RATHER THAN VIA THE EVENT TYPE.
         //

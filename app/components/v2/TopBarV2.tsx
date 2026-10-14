@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { List, SignOut, ShieldCheck, ChartBar, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import { List, SignOut, ShieldCheck, ChartBar, UserCircle, Crown, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import ToolSearch from "@/app/components/layout/ToolSearch";
 import NotificationBell from "@/app/components/layout/NotificationBell";
@@ -29,6 +29,10 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Where they stand with the ambassador programme. "none" shows nothing at
+  // all: the programme is invitation-only, so it never appears for someone
+  // who has not applied.
+  const [ambassador, setAmbassador] = useState<"none" | "pending" | "active">("none");
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -51,12 +55,21 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
     let cancelled = false;
     void (async () => {
       const supabase = createClient();
-      const [{ data: userData }, { data: admin }] = await Promise.all([
-        supabase.auth.getUser(),
-        supabase.rpc("is_admin"),
-      ]);
+      const [{ data: userData }, { data: admin }, { data: amb }, { data: application }] =
+        await Promise.all([
+          supabase.auth.getUser(),
+          supabase.rpc("is_admin"),
+          supabase.rpc("my_ambassador"),
+          supabase.rpc("my_ambassador_application"),
+        ]);
       if (cancelled) return;
       setUserEmail(userData.user?.email ?? null);
+      // Definer functions scoped to the caller; a failure reads as "none".
+      const ambRow = Array.isArray(amb) ? amb[0] : null;
+      const appRow = Array.isArray(application) ? application[0] : null;
+      setAmbassador(
+        ambRow?.status === "active" ? "active" : appRow?.status === "pending" ? "pending" : "none",
+      );
       // Starts false and stays false unless the DB says otherwise, so the item
       // is absent on first paint rather than flashing in and out.
       setIsAdmin(admin === true);
@@ -141,7 +154,17 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
             aria-expanded={profileOpen}
             className={styles.avatarBtn}
           >
-            <Avatar url={avatarUrl} name={displayName} size={37} />
+            {/* A verified ambassador wears a gold ring and a crown everywhere in
+                Jooma; an applicant under review, a dashed ring. */}
+            <span
+              className={`${styles.avatarRing} ${
+                ambassador === "active" ? styles.avatarGold : ambassador === "pending" ? styles.avatarPending : ""
+              }`}
+              data-ambassador={ambassador}
+            >
+              <Avatar url={avatarUrl} name={displayName} size={ambassador === "none" ? 37 : 31} />
+              {ambassador === "active" && <Crown weight="fill" className={styles.avatarCrown} aria-hidden />}
+            </span>
           </button>
 
           {profileOpen && (
@@ -158,6 +181,28 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
                     <p className={styles.whoEmail}>{userEmail}</p>
                   </div>
                 </div>
+              )}
+              {ambassador === "active" && (
+                <Link
+                  href="/ambassador"
+                  className={`${styles.menuItem} ${styles.menuAmbassador}`}
+                  role="menuitem"
+                >
+                  <Crown weight="fill" className={styles.menuIconSm} />
+                  <span style={{ flex: 1 }}>Ambassador Programme</span>
+                  <ArrowRight className={styles.menuIconSm} />
+                </Link>
+              )}
+              {ambassador === "pending" && (
+                <Link
+                  href="/ambassador"
+                  className={`${styles.menuItem} ${styles.menuAmbassadorPending}`}
+                  role="menuitem"
+                >
+                  <Crown weight="fill" className={styles.menuIconSm} />
+                  <span style={{ flex: 1 }}>Ambassador Programme</span>
+                  <span className={styles.reviewBadge}>Under review</span>
+                </Link>
               )}
               {isAdmin && (
                 <Link href="/admin" className={styles.menuItem} role="menuitem">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
@@ -64,22 +65,29 @@ export async function POST(req: NextRequest) {
   // authenticated user's own id, so this can only ever find their own referral.
   const { data: referral } = await supabaseAdmin
     .from("ambassador_referrals")
-    .select("id, first_paid_at, ambassador_codes ( promotion_code_id )")
+    .select("id, first_paid_at, ambassador_codes ( promotion_code_id, yearly_coupon_id )")
     .eq("user_id", user.id)
     .is("first_paid_at", null)
     .maybeSingle();
 
-  // MONTHLY ONLY. Ambassador coupons are duration "once", which discounts the
-  // first INVOICE. On a monthly plan that is the first month, as advertised; on
-  // a yearly plan it would be the whole first year, many times the offer. So a
-  // yearly checkout applies no code automatically and keeps the ordinary code
-  // box instead. The referral itself is untouched: the ambassador is still owed
-  // when the first yearly invoice is paid (markReferralPaid in the webhook).
-  const promotionCodeId =
-    interval === "month"
-      ? ((referral?.ambassador_codes as unknown as { promotion_code_id?: string } | null)
-          ?.promotion_code_id ?? null)
-      : null;
+  // THE RIGHT COUPON FOR THE INTERVAL. Ambassador coupons are duration "once",
+  // which discounts the first INVOICE. On a monthly plan that is the first
+  // month, as advertised. A yearly plan is billed once a year, so the code's
+  // own coupon would take the first-month offer off the whole year; a yearly
+  // checkout uses the code's hidden yearly coupon instead, worth the same as
+  // one discounted month (app/lib/ambassador-discount.ts). A code made before
+  // yearly coupons existed applies nothing on yearly, as before.
+  const codeIds = referral?.ambassador_codes as unknown as {
+    promotion_code_id?: string;
+    yearly_coupon_id?: string | null;
+  } | null;
+  const ambassadorDiscounts = codeIds?.promotion_code_id
+    ? discountsForInterval(interval, {
+        promotionCodeId: codeIds.promotion_code_id,
+        yearlyCouponId: codeIds.yearly_coupon_id ?? null,
+      })
+    : "";
+  const promotionCodeId = ambassadorDiscounts ? (codeIds?.promotion_code_id ?? null) : null;
 
   // An ambassador part way through their free year of Pro.
   //
@@ -169,7 +177,7 @@ export async function POST(req: NextRequest) {
     // coupon or promotion code. So a teacher with a claimed code gets it applied
     // for them (no code box, nothing to retype); everyone else keeps the box
     // exactly as before.
-    if (!promotionCodeId) {
+    if (!ambassadorDiscounts) {
       const session = await stripe.checkout.sessions.create({
         ...base,
         allow_promotion_codes: true,
@@ -180,7 +188,7 @@ export async function POST(req: NextRequest) {
     try {
       const session = await stripe.checkout.sessions.create({
         ...base,
-        discounts: [{ promotion_code: promotionCodeId }],
+        discounts: ambassadorDiscounts || undefined,
       });
       return NextResponse.json({ url: session.url });
     } catch (discountErr) {
