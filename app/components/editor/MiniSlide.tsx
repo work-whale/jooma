@@ -6,7 +6,7 @@ import { getTheme, type SlideshowTheme } from "@/app/lib/slideshowThemes";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import { getFrameStyle } from "./frames";
 import { youtubeThumbnail, youtubeEmbedUrl } from "./youtube";
-import { toThumbnailUrl } from "@/app/lib/imageStorage";
+import { toThumbnailUrl } from "@/app/lib/imageUrl";
 import { parseInlineBold } from "@/app/lib/utils";
 
 /** Splits a string into <strong>...</strong> + plain spans so `**bold**`
