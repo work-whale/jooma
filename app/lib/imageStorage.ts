@@ -7,12 +7,11 @@
 // is fine on the server for these public-bucket writes).
 
 import { supabase } from "./supabase";
+import { compressImage } from "./imageCompress";
 
-// Re-exported so existing server-side callers keep importing it from here. The
-// implementation moved to ./imageUrl because it is a pure string transform with
-// no Supabase dependency, and client components (the profile Avatar) need it
-// without dragging this module's client into the browser bundle.
-export { toThumbnailUrl } from "./imageUrl";
+// toThumbnailUrl lives in ./imageUrl: this module imports sharp, so no client
+// component may import anything from here.
+import "server-only";
 
 const BUCKET = "images";
 
@@ -41,12 +40,15 @@ function extensionForMime(mime: string): string {
   }
 }
 
-/** Upload raw bytes to the `images` bucket and return the public URL. */
+/** Upload raw bytes to the `images` bucket and return the public URL.
+ *  Compressed first (see imageCompress.ts), so the stored type and extension
+ *  can differ from `mime`: an opaque PNG is stored as a JPEG. */
 export async function uploadImageBytes(
-  bytes: Uint8Array,
-  mime: string,
+  rawBytes: Uint8Array,
+  rawMime: string,
   filenameHint?: string,
 ): Promise<string> {
+  const { bytes, mime } = await compressImage(rawBytes, rawMime);
   const ext = extensionForMime(mime);
   const safeHint = (filenameHint ?? "image")
     .toLowerCase()

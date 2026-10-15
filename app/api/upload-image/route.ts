@@ -7,6 +7,12 @@ import { uploadDataUrlToStorage } from "@/app/lib/imageStorage";
 
 export const maxDuration = 30;
 
+// Raster images only. decodeDataUrl() accepts any `data:<mime>` and the bucket
+// has no type allowlist, so without this a signed-in caller could put text/html
+// or a scripted SVG on the public bucket under a .png name. The editor only
+// ever sends a PNG cutout here.
+const ALLOWED = /^data:image\/(png|jpeg|webp|gif);base64,/i;
+
 interface RequestBody {
   dataUrl: string;
   filenameHint?: string;
@@ -19,6 +25,9 @@ export async function POST(req: NextRequest) {
 
   if (!body.dataUrl?.trim()) {
     return NextResponse.json({ error: "Missing dataUrl" }, { status: 400 });
+  }
+  if (!ALLOWED.test(body.dataUrl)) {
+    return NextResponse.json({ error: "Only PNG, JPEG, WebP or GIF images can be uploaded" }, { status: 415 });
   }
 
   try {

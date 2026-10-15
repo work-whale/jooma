@@ -3,9 +3,8 @@
 // Split out of imageStorage.ts so client components can import it. That module
 // creates a Supabase client at module scope; importing it from the browser to
 // reach one string function would pull @supabase/supabase-js and a second
-// GoTrue instance into the bundle for nothing. MiniSlide.tsx is the client
-// component that does exactly this — it still reaches toThumbnailUrl through
-// imageStorage, and should be pointed here.
+// GoTrue instance into the bundle for nothing. imageStorage now also imports
+// sharp (a native module), so client code must import from here, never there.
 //
 // No "use client" and no imports — safe from either side.
 //
