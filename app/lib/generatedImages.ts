@@ -8,7 +8,22 @@
 // supabase/migrations/20260513000000_create_generated_images.sql.
 
 import { supabase } from "./supabase";
-import { uploadDataUrlToStorage } from "./imageStorage";
+
+/** Puts a base64 data URL into Storage through /api/upload-image, which
+ *  compresses it on the server. Not imageStorage directly: this module runs in
+ *  the browser (Editor, Sidebar), and imageStorage imports sharp, a native
+ *  module that cannot be bundled for the client. */
+async function toStorageUrl(dataUrl: string, filenameHint: string): Promise<string> {
+  if (!dataUrl.startsWith("data:")) return dataUrl;
+  const res = await fetch("/api/upload-image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl, filenameHint }),
+  });
+  if (!res.ok) throw new Error(`Image upload failed (${res.status})`);
+  const { src } = (await res.json()) as { src: string };
+  return src;
+}
 
 export interface GeneratedImage {
   id: string;
@@ -84,7 +99,7 @@ export async function saveGeneratedImage(opts: {
   // bug), upload it to Storage here before inserting. Existing http(s) URLs
   // pass through unchanged. Keeps base64 out of Postgres regardless of who's
   // calling us.
-  const url = (await uploadDataUrlToStorage(opts.dataUrl, opts.prompt)) ?? opts.dataUrl;
+  const url = await toStorageUrl(opts.dataUrl, opts.prompt);
 
   const { data, error } = await supabase
     .from(TABLE)
