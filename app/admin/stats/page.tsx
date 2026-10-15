@@ -1,4 +1,5 @@
 import { adminAccess } from "../access";
+import { loadTrueMrr } from "../trueMrr";
 import {
   visitorsByCountryToday,
   visitorsByMonth,
@@ -48,6 +49,10 @@ export default async function AdminStatsPage(props: {
   const searchParams = await props.searchParams;
   const range = parseRange(searchParams?.range);
   const months = monthsFor(range);
+  // Paying subscriptions come from teacher_mrr, which is revenue and is gated
+  // on see_money. Marketing lands here without it, so the panel is left out
+  // for them rather than shown as an error.
+  const seesMoney = access.can("see_money");
 
   // Every source in parallel. The Vercel calls cannot reject (they resolve to
   // { data: null, error }) so one unreachable service degrades its own panel
@@ -58,6 +63,7 @@ export default async function AdminStatsPage(props: {
     { data: bySource },
     { data: guestTries, error: guestTriesError },
     { data: guestFunnel, error: guestFunnelError },
+    { data: mrrRows, error: mrrError },
     today,
     visitorMonths,
     countryVisitors,
@@ -67,6 +73,9 @@ export default async function AdminStatsPage(props: {
     supabase.rpc("admin_signup_stats_by_source", { p_months: months }),
     supabase.rpc("admin_guest_try_stats", { p_months: months }),
     supabase.rpc("admin_guest_try_funnel", { p_months: months }),
+    // The subscriptions the dashboard counts as paying, so the monthly and
+    // yearly split here describes the same people as its MRR.
+    seesMoney ? supabase.rpc("teacher_mrr") : Promise.resolve({ data: null, error: null }),
     visitorsToday(),
     visitorsByMonth(months),
     visitorsByCountryToday(6),
@@ -90,6 +99,19 @@ export default async function AdminStatsPage(props: {
     paid: Number(m.paid),
     visitors: visitorsByStart.get(String(m.month_start).slice(0, 7)) ?? null,
   }));
+
+  // Monthly against yearly is only known to Stripe: nothing in the database
+  // records a subscription's interval. Never rejects; on failure the panel
+  // says so and the rest of the page is unaffected.
+  const payingSubIds =
+    ((mrrRows ?? [])[0] as { paying_sub_ids?: string[] } | undefined)?.paying_sub_ids ?? [];
+  const live = !seesMoney || mrrError ? null : await loadTrueMrr(payingSubIds);
+  if (mrrError) console.warn("[stats] teacher_mrr failed:", mrrError.message);
+  const subscriptionsError = mrrError
+    ? "Paying subscriptions could not be loaded."
+    : live?.error
+      ? "Stripe could not be reached."
+      : null;
 
   if (guestTriesError) console.warn("[stats] admin_guest_try_stats failed:", guestTriesError.message);
   if (guestFunnelError) console.warn("[stats] admin_guest_try_funnel failed:", guestFunnelError.message);
@@ -132,6 +154,13 @@ export default async function AdminStatsPage(props: {
       }))}
       // Its own error again, so the funnel can be pushed after the tries.
       guestFunnelError={guestFunnelError ? "Signup figures could not be loaded." : null}
+      showSubscriptions={seesMoney}
+      subscriptions={
+        live && !subscriptionsError
+          ? { month: live.byInterval.month, year: live.byInterval.year }
+          : null
+      }
+      subscriptionsError={subscriptionsError}
       visitorsToday={today.data?.visitors ?? null}
       visitorCountries={countryVisitors.data ?? []}
       analyticsError={today.error}

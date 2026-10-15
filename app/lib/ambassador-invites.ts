@@ -3,13 +3,14 @@
 // The raw token in /ambassador/invite/<token> is a bearer credential; only its
 // hash is stored (hashInviteToken, as for teacher invites). Looked up with the
 // service role because ambassador_invites has no policies at all. The only thing
-// returned is the name the admin typed, to the person holding the link.
+// returned is the name the admin typed, if they typed one (links made since
+// 15 October 2026 have none), to the person holding the link.
 import "server-only";
 import { supabaseAdmin } from "./supabase-admin";
 import { hashInviteToken } from "./invites";
 
 export type AmbassadorInviteLookup =
-  | { ok: true; id: string; name: string }
+  | { ok: true; id: string; name: string | null }
   | { ok: false; reason: "invalid" | "expired" | "used" };
 
 export async function lookupAmbassadorInvite(
@@ -37,5 +38,5 @@ export async function lookupAmbassadorInvite(
       .is("opened_at", null);
   }
 
-  return { ok: true, id: data.id as string, name: data.full_name as string };
+  return { ok: true, id: data.id as string, name: (data.full_name as string | null) ?? null };
 }

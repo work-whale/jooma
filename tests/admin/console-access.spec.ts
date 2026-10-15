@@ -45,6 +45,28 @@ test.afterAll(async () => {
   await deleteTeacher(fallback);
 });
 
+test.describe("monthly against yearly on Stats", () => {
+  test("an owner sees paying subscriptions split by billing interval", async ({ page }) => {
+    await signIn(page, owner!);
+    await page.goto("/admin/stats");
+
+    const panel = page.getByTestId("subscription-intervals");
+    await expect(panel.getByText("Paying subscriptions today")).toBeVisible();
+    await expect(panel.getByText("Monthly", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Yearly", { exact: true })).toBeVisible();
+    await expect(panel.getByText("Share on yearly")).toBeVisible();
+    await expect(panel.getByText(/could not be/)).toHaveCount(0);
+  });
+
+  test("marketing, who cannot see money, gets the page without the panel", async ({ page }) => {
+    await signIn(page, marketing!);
+    await page.goto("/admin/stats");
+    await expect(page.getByRole("heading", { name: "Stats" })).toBeVisible();
+    await expect(page.getByText("Total signups")).toBeVisible();
+    await expect(page.getByTestId("subscription-intervals")).toHaveCount(0);
+  });
+});
+
 test.describe("marketing", () => {
   test("sees Stats and bulk email in the nav and nothing else", async ({ page }) => {
     await signIn(page, marketing!);

@@ -5,22 +5,16 @@
 // application stores the version it was signed under (agreement_version), and
 // the My agreement tab shows that version back.
 //
-// PLACEHOLDER TEXT. The commercial terms are right and the shape is right, but
-// the wording has not been drafted or reviewed by a solicitor. AGREEMENT_IS_DRAFT
-// keeps a notice above it saying so. Replace the clauses and set it to false
-// before invites go to real people, and bump AGREEMENT_VERSION whenever the text
-// changes.
+// Bump AGREEMENT_VERSION (and AGREEMENT_DATE) whenever the text changes.
 import {
   AGREEMENT_MONTHS,
   AMBASSADOR_RATES,
-  MIN_PAYOUT_PENCE,
   PAYOUT_DAY,
   gbp,
 } from './ambassador-commission';
 
-export const AGREEMENT_VERSION = '0.2';
-export const AGREEMENT_DATE = '14 October 2026';
-export const AGREEMENT_IS_DRAFT = false;
+export const AGREEMENT_VERSION = '0.3';
+export const AGREEMENT_DATE = '15 October 2026';
 
 export interface Clause {
   heading: string;
@@ -95,7 +89,7 @@ export function agreementClauses(party: AgreementParty): Clause[] {
       heading: '5. When we pay you',
       paragraphs: [
         `On the ${ordinal(PAYOUT_DAY)} of each month, for the month before, by bank transfer to a UK account in your own name or to your PayPal account, whichever you gave us. If the ${ordinal(PAYOUT_DAY)} is a weekend or bank holiday, the next working day.`,
-        `If a month comes to less than ${gbp(MIN_PAYOUT_PENCE)}, it rolls into the next month until the balance passes ${gbp(MIN_PAYOUT_PENCE)}. Any balance is paid in full when this agreement ends, whatever the amount.`,
+        'There is no minimum. Whatever your balance comes to, it is paid in full every month.',
       ],
     },
     {
@@ -153,7 +147,7 @@ export function agreementClauses(party: AgreementParty): Clause[] {
 }
 
 export function agreementFooter(): string {
-  return `End of agreement. Version ${AGREEMENT_VERSION}${AGREEMENT_IS_DRAFT ? ' draft' : ''}, ${AGREEMENT_DATE}.`;
+  return `End of agreement. Version ${AGREEMENT_VERSION}, ${AGREEMENT_DATE}.`;
 }
 
 /** The three boxes ticked before signing. */

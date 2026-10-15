@@ -86,13 +86,16 @@ export interface ApplicationRow {
 
 export interface InviteRow {
   id: string;
-  full_name: string;
+  /** Only on links made before October 2026, when the admin typed a name. */
+  full_name: string | null;
   source: string;
   created_at: string;
   expires_at: string;
   opened_at: string | null;
   used_at: string | null;
   state: "sent" | "opened" | "applied" | "expired" | "revoked";
+  /** Who applied with it, once it has been used. */
+  used_by_name: string | null;
 }
 
 export interface ProgrammeSummary {
@@ -424,7 +427,7 @@ export default function AmbassadorsView({
                 {applications.map((a) => (
                   <Tr key={a.id}>
                     <Td>
-                      <Person name={a.full_name} sub={a.source ? `Found on ${sourceLabel(a.source)}` : "Applicant"} />
+                      <Person name={a.full_name} sub={a.source && a.source !== "other" ? `Found on ${sourceLabel(a.source)}` : "Applicant"} />
                     </Td>
                     <Td>
                       <span className="text-xs">{ago(a.submitted_at)}</span>
@@ -511,7 +514,7 @@ export default function AmbassadorsView({
                         <Td>
                           <Person
                             name={a.full_name}
-                            sub={a.source ? `Ambassador · ${sourceLabel(a.source)}` : a.email}
+                            sub={a.source && a.source !== "other" ? `Ambassador · ${sourceLabel(a.source)}` : a.email}
                             gold
                           />
                         </Td>
@@ -614,9 +617,8 @@ export default function AmbassadorsView({
             <Table>
               <thead>
                 <tr className="text-left">
-                  <Th>Sent to</Th>
-                  <Th>Found on</Th>
-                  <Th>Sent</Th>
+                  <Th>Link</Th>
+                  <Th>Made</Th>
                   <Th align="right">Status</Th>
                 </tr>
               </thead>
@@ -738,7 +740,7 @@ function InviteLine({
         onToast(json.error ?? "Could not withdraw the link.");
         return;
       }
-      onToast(`Link for ${invite.full_name} withdrawn.`);
+      onToast(invite.full_name ? `Link for ${invite.full_name} withdrawn.` : "Link withdrawn.");
       onChanged();
     } finally {
       setBusy(false);
@@ -749,11 +751,8 @@ function InviteLine({
     <Tr>
       <Td>
         <span className="font-semibold" style={{ color: C.ink2 }}>
-          {invite.full_name}
+          {invite.used_by_name ?? invite.full_name ?? "Invite link"}
         </span>
-      </Td>
-      <Td>
-        <span className="text-xs">{sourceLabel(invite.source)}</span>
       </Td>
       <Td>
         <span className="text-xs">{shortDate(invite.created_at)}</span>

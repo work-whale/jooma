@@ -147,6 +147,30 @@ export function monthlyValue(
   return { pence: Math.max(0, Math.round(net)), currency };
 }
 
+export interface IntervalCounts {
+  month: number;
+  year: number;
+  /** Anything else: a weekly or daily price, or nothing readable. */
+  other: number;
+}
+
+/** How a subscription is billed, from its first item's price. */
+export function intervalOf(sub: ValuableSubscription): "month" | "year" | null {
+  const interval = sub.items?.data?.[0]?.price?.recurring?.interval;
+  return interval === "month" || interval === "year" ? interval : null;
+}
+
+/** Monthly against yearly, for the Stats page. */
+export function countByInterval(subs: ValuableSubscription[]): IntervalCounts {
+  const out: IntervalCounts = { month: 0, year: 0, other: 0 };
+  for (const sub of subs) {
+    const interval = intervalOf(sub);
+    if (interval) out[interval] += 1;
+    else out.other += 1;
+  }
+  return out;
+}
+
 /** Sum a batch, keeping the skips visible rather than folding them into 0. */
 export function totalMonthly(
   subs: ValuableSubscription[],

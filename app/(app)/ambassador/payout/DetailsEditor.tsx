@@ -6,7 +6,7 @@ import { Bank, PaypalLogo, PencilSimple, ShieldCheck } from "@phosphor-icons/rea
 import {
   CHANNELS,
   REACH_OPTIONS,
-  TAX_OPTIONS,
+  TAX_STATUS,
   maskAccount,
   reachLabel,
   taxLabel,
@@ -77,7 +77,7 @@ export default function DetailsEditor({ details }: { details: MyDetails | null }
         note: details.note ?? "",
       });
     } else {
-      setValues({ tax_status: details.tax_status, utr: "" });
+      setValues({ tax_status: TAX_STATUS, utr: "" });
     }
   };
 
@@ -328,13 +328,7 @@ export default function DetailsEditor({ details }: { details: MyDetails | null }
             <div className={s.fgrid}>
               <div className={s.f}>
                 <label htmlFor="d-tax">How you declare</label>
-                <select id="d-tax" className={s.input} value={values.tax_status} onChange={(e) => setValues({ ...values, tax_status: e.target.value })}>
-                  {TAX_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                <input id="d-tax" className={s.input} value={taxLabel(TAX_STATUS)} readOnly />
               </div>
               {field("utr", details.has_utr ? "New UTR (leave blank to keep yours)" : "UTR", { placeholder: "10 digits" })}
             </div>

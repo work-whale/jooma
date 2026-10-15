@@ -38,8 +38,6 @@ export const AMBASSADOR_RATES: Record<BillingInterval, Record<CommissionPlan, nu
 
 /** Length of an ambassador agreement, and of their free Pro. */
 export const AGREEMENT_MONTHS = 12;
-/** A month's balance under this rolls into the next month. */
-export const MIN_PAYOUT_PENCE = 2500;
 /** Payouts go out on this day of the following month. */
 export const PAYOUT_DAY = 15;
 /** How long an invite link works for. */
@@ -272,16 +270,14 @@ export interface NextPayout {
   runningPence: number;
   /** The month the next payment covers (this month). */
   period: string;
-  /** When it leaves us, if it reaches the minimum. */
+  /** When it leaves us. */
   payoutOn: Date;
-  /** closed + running is under the minimum, so it rolls into next month. */
-  rollsForward: boolean;
 }
 
 /**
- * The next payment. Anything owed from earlier months rides along with this
- * month's, and the whole balance rolls forward while it is under the £25
- * minimum (the agreement's clause on payment).
+ * The next payment. Anything still owed from earlier months rides along with
+ * this month's. There is no minimum: every month is paid, whatever it comes to
+ * (the agreement's clause on payment).
  */
 export function nextPayout(rows: LedgerRow[], now: Date): NextPayout {
   const current = periodOf(now);
@@ -297,13 +293,7 @@ export function nextPayout(rows: LedgerRow[], now: Date): NextPayout {
     runningPence: running,
     period: current,
     payoutOn: payoutDateFor(current),
-    rollsForward: closed + running < MIN_PAYOUT_PENCE,
   };
-}
-
-/** Under the minimum for one month, for the admin's "rolls forward" hint. */
-export function belowMinimum(pence: number): boolean {
-  return pence > 0 && pence < MIN_PAYOUT_PENCE;
 }
 
 /** The tax year that most recently ENDED on or before `now`: in October 2026,

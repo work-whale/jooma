@@ -6,9 +6,7 @@ import { createClient } from "@/app/lib/auth/client";
 import { asPlanId } from "@/app/lib/plans";
 import { planCardName } from "@/app/lib/plan-copy";
 import {
-  belowMinimum,
   gbp,
-  MIN_PAYOUT_PENCE,
   periodLabel,
   periodOf,
   periodsBetween,
@@ -187,11 +185,6 @@ export default function ReferralsPanel({
         <span className="text-sm" style={{ color: C.ink2 }}>
           Earned <b style={{ color: C.ink }}>{gbp(earned)}</b> · owed <b style={{ color: C.ink }}>{gbp(owed)}</b>
         </span>
-        {belowMinimum(owed) && (
-          <Tag tone="warn" title={`Balances under ${gbp(MIN_PAYOUT_PENCE)} roll into the next month.`}>
-            Below {gbp(MIN_PAYOUT_PENCE)}, rolls forward
-          </Tag>
-        )}
         <div className="flex-1" />
         <Btn
           size="sm"

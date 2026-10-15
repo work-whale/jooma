@@ -148,6 +148,9 @@ export default function StatsView({
   guestTriesError,
   guestFunnel,
   guestFunnelError,
+  showSubscriptions,
+  subscriptions,
+  subscriptionsError,
   visitorsToday,
   visitorCountries,
   analyticsError,
@@ -160,6 +163,11 @@ export default function StatsView({
   guestTriesError: string | null;
   guestFunnel: GuestFunnelRow[];
   guestFunnelError: string | null;
+  /** False for roles without see_money, who get no panel at all. */
+  showSubscriptions: boolean;
+  /** Paying subscriptions today by billing interval, live from Stripe. */
+  subscriptions: { month: number; year: number } | null;
+  subscriptionsError: string | null;
   visitorsToday: number | null;
   visitorCountries: CountryVisitors[];
   analyticsError: string | null;
@@ -356,6 +364,59 @@ export default function StatsView({
           foot={totals.visitors === null ? "not recorded" : RANGE_PHRASE[range]}
         />
       </div>
+
+      {/* ── Monthly against yearly ─────────────────────────────────────────
+          Today's paying subscriptions, the same ones the dashboard's MRR
+          counts. Not filtered by the range tabs: Stripe is the only record of
+          a subscription's interval, and it has no history to slice. Owners
+          and finance only, since it reads teacher_mrr (see_money). */}
+      {showSubscriptions && (
+        <div className="mt-6" data-testid="subscription-intervals">
+          <Card>
+            <CardHeader>
+              <CardTitle>Paying subscriptions today</CardTitle>
+              <span className="text-xs" style={{ color: C.muted }}>
+                Live from Stripe
+              </span>
+            </CardHeader>
+            <CardBody>
+              {subscriptionsError || !subscriptions ? (
+                <Note tone="warn">
+                  {subscriptionsError ?? "Paying subscriptions could not be loaded."} Everything
+                  else on this page is unaffected.
+                </Note>
+              ) : (
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+                  <Kpi
+                    label="Monthly"
+                    value={nf.format(subscriptions.month)}
+                    foot="Billed every month"
+                  />
+                  <Kpi
+                    label="Yearly"
+                    value={nf.format(subscriptions.year)}
+                    foot="Billed once a year"
+                  />
+                  <Kpi
+                    label="Share on yearly"
+                    value={`${share(
+                      subscriptions.year,
+                      subscriptions.month + subscriptions.year,
+                    ).toFixed(1)}%`}
+                    foot="Of monthly and yearly together"
+                  />
+                </div>
+              )}
+            </CardBody>
+            <CardFooter>
+              <span>
+                Teachers paying right now, as on the dashboard: trials, comped accounts, staff and
+                subscriptions set to cancel are left out. Not affected by the range above.
+              </span>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
 
       {/* ── Signups by month, and the plan mix beside it ───────────────────── */}
       <div className="grid gap-3.5 mt-6 grid-cols-1 xl:grid-cols-[1.75fr_1fr] items-start">
