@@ -76,7 +76,7 @@ export interface ApplicationDetail {
   submitted_at: string;
   reviewed_at: string | null;
   decline_reason: string | null;
-  invite: { full_name: string; source: string; created_at: string } | null;
+  invite: { full_name: string | null; source: string; created_at: string } | null;
   account: {
     email: string;
     created_at: string;
@@ -342,7 +342,7 @@ export default function ReviewDrawer({
               app && (
                 <>
                   <Tag tone="brand">Awaiting review</Tag>
-                  {app.invite && <Tag>Found on {sourceLabel(app.invite.source)}</Tag>}
+                  {app.invite && app.invite.source !== "other" && <Tag>Found on {sourceLabel(app.invite.source)}</Tag>}
                 </>
               )
             }

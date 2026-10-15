@@ -35,50 +35,11 @@
   font-size: 0.8rem;
   color: #d8ccfa;
 }
-.genRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-  margin-top: 14px;
-}
-@media (max-width: 640px) {
-  .genRow {
-    grid-template-columns: 1fr;
-  }
-}
-.genLabel {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #f4d98b;
-}
-.genInput {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
-  padding: 9px 11px;
-  font-size: 0.84rem;
-  color: #fff;
-  outline: 0;
-  font-family: inherit;
-}
-.genInput::placeholder {
-  color: rgba(220, 210, 250, 0.6);
-}
-.genInput:focus {
-  border-color: #f4d98b;
-}
-.genInput option {
-  color: #1d1730;
-}
 .goldBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 16px;
   border-radius: 999px;
   padding: 10px 20px;
   font-size: 0.85rem;

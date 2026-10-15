@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { monthlyValue, totalMonthly, type ValuableSubscription } from "@/app/lib/subscriptionValue";
+import {
+  countByInterval,
+  intervalOf,
+  monthlyValue,
+  totalMonthly,
+  type ValuableSubscription,
+} from "@/app/lib/subscriptionValue";
 
 /*
  * What a subscription is really worth per month.
@@ -115,5 +121,26 @@ test.describe("Monthly value of a subscription", () => {
     };
     expect(monthlyValue(metered).pence).toBeNull();
     expect(monthlyValue(metered).skipped).toBe("unpriced");
+  });
+});
+
+/* Monthly against yearly, for the Stats page. Read from the first item's
+ * price, the same item monthlyValue takes the interval from. */
+test.describe("countByInterval", () => {
+  test("splits subscriptions by how they are billed", () => {
+    const monthly = sub();
+    const yearly = sub({ items: { data: [{ quantity: 1, price: price(7990, "year") }] } });
+    expect(intervalOf(monthly)).toBe("month");
+    expect(intervalOf(yearly)).toBe("year");
+    expect(countByInterval([monthly, yearly, monthly])).toEqual({ month: 2, year: 1, other: 0 });
+  });
+
+  test("anything not monthly or yearly is counted apart, never as monthly", () => {
+    const weekly = sub({ items: { data: [{ quantity: 1, price: price(199, "week") }] } });
+    const empty = sub({ items: { data: [] } });
+    expect(intervalOf(weekly)).toBeNull();
+    expect(intervalOf(empty)).toBeNull();
+    expect(countByInterval([weekly, empty])).toEqual({ month: 0, year: 0, other: 2 });
+    expect(countByInterval([])).toEqual({ month: 0, year: 0, other: 0 });
   });
 });

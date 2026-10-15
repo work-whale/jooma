@@ -22,8 +22,9 @@ import {
   CHANNELS,
   CODE_EXAMPLES,
   REACH_OPTIONS,
-  TAX_OPTIONS,
+  TAX_STATUS,
   codeProblem,
+  taxLabel,
   normaliseAmbassadorCode,
   validateAgreement,
   validateChannels,
@@ -35,7 +36,7 @@ import {
   type PayoutInput,
   type PersonalInput,
 } from "@/app/lib/ambassador-application";
-import { AGREEMENT_IS_DRAFT, DECLARATIONS } from "@/app/lib/ambassador-agreement";
+import { DECLARATIONS } from "@/app/lib/ambassador-agreement";
 import AgreementText from "@/app/components/ambassador/AgreementText";
 import ApplicationStatus from "@/app/components/ambassador/ApplicationStatus";
 import s from "@/app/components/ambassador/programme.module.css";
@@ -411,14 +412,8 @@ export default function ApplyFlow({
             </p>
             <div className={s.fgrid} style={{ marginTop: 14 }}>
               <div className={`${s.f} ${s.full}`}>
-                <label htmlFor="amb-tax">How do you declare this income?</label>
-                <select id="amb-tax" className={s.input} value={payout.tax_status} onChange={(e) => setPayout({ ...payout, tax_status: e.target.value })}>
-                  {TAX_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                <label htmlFor="amb-tax">How you declare this income</label>
+                <input id="amb-tax" className={s.input} value={taxLabel(TAX_STATUS)} readOnly data-testid="tax-status" />
               </div>
               <Text full label="UTR" optional value={payout.utr} error={errors.utr} placeholder="10 digits, if you have one" hint="Not required to join. It helps us produce your yearly summary correctly." inputMode="numeric" onChange={(v) => setPayout({ ...payout, utr: v })} />
             </div>
@@ -486,12 +481,6 @@ export default function ApplyFlow({
         <>
           <h1 className={s.h1}>The agreement.</h1>
           <p className={s.lead}>Twelve months. Read it properly: scroll to the bottom and the signature box unlocks.</p>
-          {AGREEMENT_IS_DRAFT && (
-            <div className={s.draftbar}>
-              <b>Placeholder text.</b> The clauses below set out the commercial terms correctly, but
-              they have not yet been reviewed by a solicitor.
-            </div>
-          )}
           <div
             ref={contractRef}
             className={`${s.contract} ${readToEnd ? s.contractRead : ""}`}

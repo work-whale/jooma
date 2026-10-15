@@ -7,6 +7,7 @@ import {
   validateChannels,
   validatePayoutDetails,
   validateTax,
+  TAX_STATUS,
   type ChannelsInput,
   type PayoutInput,
   type PersonalInput,
@@ -76,8 +77,9 @@ export async function PATCH(req: NextRequest) {
       paypal_email: bank ? null : String(p.paypal_email ?? "").trim().toLowerCase(),
     };
   } else if (section === "tax") {
-    errors = validateTax({ tax_status: v.tax_status, utr: v.utr ?? "" });
-    payload = { tax_status: v.tax_status, utr: String(v.utr ?? "").replace(/\s/g, "") || null };
+    // One way to declare, so an older application on another is moved to it.
+    errors = validateTax({ tax_status: TAX_STATUS, utr: v.utr ?? "" });
+    payload = { tax_status: TAX_STATUS, utr: String(v.utr ?? "").replace(/\s/g, "") || null };
   } else {
     return NextResponse.json({ error: "Unknown section." }, { status: 400 });
   }

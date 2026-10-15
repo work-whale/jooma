@@ -9,6 +9,8 @@ import {
   validateChannels,
   validatePayout,
   validatePersonal,
+  validateTax,
+  TAX_STATUS,
   type ApplicationInput,
 } from "@/app/lib/ambassador-application";
 
@@ -169,5 +171,16 @@ test.describe("the whole application", () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.errors.declarations).toBeTruthy();
+  });
+});
+
+/* Commission is declared one way only. The form shows it as fixed text, and the
+ * server refuses anything else rather than storing a choice nobody was offered. */
+test.describe("tax status", () => {
+  test("self assessment is the only accepted value", () => {
+    expect(TAX_STATUS).toBe("self_assessment");
+    expect(validateTax({ tax_status: "self_assessment", utr: "" })).toEqual({});
+    expect(validateTax({ tax_status: "limited_company", utr: "" }).tax_status).toBeTruthy();
+    expect(validateTax({ tax_status: "not_sure", utr: "" }).tax_status).toBeTruthy();
   });
 });

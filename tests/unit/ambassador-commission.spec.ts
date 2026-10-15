@@ -1,9 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   AMBASSADOR_RATES,
-  MIN_PAYOUT_PENCE,
   addMonths,
-  belowMinimum,
   commissionForInvoice,
   gbp,
   lastCompletedTaxYear,
@@ -202,19 +200,19 @@ test.describe("statements", () => {
     expect(s[0].status).toBe("part_paid");
   });
 
-  test("a balance under the minimum rolls forward, and anything owed rides along", () => {
+  test("every month is paid however small, and anything still owed rides along", () => {
     const now = new Date("2026-10-20T12:00:00Z");
+    // £2.00 is paid on the 15th like any other balance: there is no minimum.
     const small = nextPayout([row({ period: "2026-10-01" })], now);
-    expect(small).toMatchObject({ runningPence: 200, closedPence: 0, rollsForward: true });
+    expect(small).toMatchObject({ runningPence: 200, closedPence: 0, period: "2026-10-01" });
+    expect(small).not.toHaveProperty("rollsForward");
+    expect(small.payoutOn.toISOString().slice(0, 10)).toBe("2026-11-16");
 
-    const enough = nextPayout(
+    const carried = nextPayout(
       [row({ period: "2026-09-01", amount_pence: 2000 }), row({ period: "2026-10-01", amount_pence: 600 })],
       now,
     );
-    expect(enough).toMatchObject({ closedPence: 2000, runningPence: 600, rollsForward: false });
-    expect(belowMinimum(MIN_PAYOUT_PENCE - 1)).toBe(true);
-    expect(belowMinimum(MIN_PAYOUT_PENCE)).toBe(false);
-    expect(belowMinimum(0)).toBe(false);
+    expect(carried).toMatchObject({ closedPence: 2000, runningPence: 600 });
   });
 
   test("tax-year totals count only what was paid", () => {

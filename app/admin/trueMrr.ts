@@ -1,6 +1,11 @@
 import "server-only";
 import { stripe } from "@/app/lib/stripe";
-import { monthlyValue, type ValuableSubscription } from "@/app/lib/subscriptionValue";
+import {
+  countByInterval,
+  monthlyValue,
+  type IntervalCounts,
+  type ValuableSubscription,
+} from "@/app/lib/subscriptionValue";
 
 /**
  * What the paying teachers are ACTUALLY billed each month, read live from
@@ -39,8 +44,13 @@ export interface TrueMrr {
   /** Named by the database but not billable: gone from Stripe, no longer
    *  active, not in GBP, or nothing readable to price. */
   skipped: number;
+  /** The counted subscriptions split by how they are billed, so the Stats
+   *  page's monthly and yearly figures cover the same people as the MRR. */
+  byInterval: IntervalCounts;
   error: string | null;
 }
+
+const NO_INTERVALS: IntervalCounts = { month: 0, year: 0, other: 0 };
 
 /** Statuses that are actually producing revenue.
  *
@@ -53,7 +63,7 @@ const BILLING_STATUSES = new Set(["active"]);
 export async function loadTrueMrr(subscriptionIds: string[]): Promise<TrueMrr> {
   // Nobody is paying. A real answer, and no reason to call Stripe for it.
   if (subscriptionIds.length === 0) {
-    return { gbp: 0, counted: 0, skipped: 0, error: null };
+    return { gbp: 0, counted: 0, skipped: 0, byInterval: NO_INTERVALS, error: null };
   }
 
   try {
@@ -84,6 +94,7 @@ export async function loadTrueMrr(subscriptionIds: string[]): Promise<TrueMrr> {
     let pence = 0;
     let counted = 0;
     let skipped = 0;
+    const billing: ValuableSubscription[] = [];
 
     for (const sub of results) {
       if (!sub || !BILLING_STATUSES.has(sub.status)) {
@@ -97,15 +108,23 @@ export async function loadTrueMrr(subscriptionIds: string[]): Promise<TrueMrr> {
       }
       pence += value.pence;
       counted += 1;
+      billing.push(sub as unknown as ValuableSubscription);
     }
 
-    return { gbp: pence / 100, counted, skipped, error: null };
+    return {
+      gbp: pence / 100,
+      counted,
+      skipped,
+      byInterval: countByInterval(billing),
+      error: null,
+    };
   } catch (err) {
     console.error("[admin] could not read true MRR from Stripe", err);
     return {
       gbp: null,
       counted: 0,
       skipped: 0,
+      byInterval: NO_INTERVALS,
       error: err instanceof Error ? err.message : "Could not reach Stripe.",
     };
   }

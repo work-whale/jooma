@@ -140,7 +140,7 @@ test.describe("Ambassador programme (admin)", () => {
     await expect(page).not.toHaveURL(/\/admin/);
   });
 
-  test("the v4 layout: KPIs, invite maker with name and source only, review and live tables", async ({
+  test("the v4 layout: KPIs, a one-click invite maker, review and live tables", async ({
     page,
   }) => {
     await signIn(page, adminUser);
@@ -150,9 +150,10 @@ test.describe("Ambassador programme (admin)", () => {
     await expect(page.getByTestId("programme-kpis")).toBeVisible();
 
     const box = page.getByTestId("invite-box");
-    await expect(box.getByText("Their name")).toBeVisible();
-    await expect(box.getByText("Where you found them")).toBeVisible();
-    // Asked for: no email and no "Invited by" when onboarding.
+    // Asked for: just a button, so a link can be made and pasted straight away.
+    await expect(box.getByRole("button", { name: "Generate link" })).toBeEnabled();
+    await expect(box.getByText("Their name")).toHaveCount(0);
+    await expect(box.getByText("Where you found them")).toHaveCount(0);
     await expect(box.getByText(/email/i)).toHaveCount(0);
     await expect(box.getByText(/invited by/i)).toHaveCount(0);
 
@@ -293,7 +294,11 @@ test.describe("Ambassador programme (admin)", () => {
     await page.getByText(fixture.name).click();
 
     const panel = page.getByTestId("referrals-panel");
-    await expect(panel.getByText("Below £25.00, rolls forward")).toBeVisible();
+    // £6.00 owed is paid like any other balance: there is no minimum to roll under.
+    await expect(
+      panel.getByRole("button", { name: `Mark all paid for ${periodLabel(THIS_MONTH, false)}` }),
+    ).toBeEnabled();
+    await expect(panel.getByText(/rolls forward/i)).toHaveCount(0);
     await panel
       .getByRole("button", { name: `Mark all paid for ${periodLabel(THIS_MONTH, false)}` })
       .click();

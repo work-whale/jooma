@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { CurrencyGbp, FileText, Info } from "@phosphor-icons/react/dist/ssr";
 import {
-  MIN_PAYOUT_PENCE,
   gbp,
   nextPayout,
   periodLabel,
@@ -62,19 +61,14 @@ export default async function AmbassadorStatements() {
             </span>
           </span>
           <span className={s.rowRight}>
-            <span className={`${s.badge} ${next.rollsForward ? s.bGrey : s.bDue}`}>
-              {next.rollsForward ? "Rolls forward" : "Scheduled"}
-            </span>
+            <span className={`${s.badge} ${s.bDue}`}>Scheduled</span>
           </span>
         </div>
         <div className={s.callout}>
           <Info size={17} weight="fill" />
           <span>
             {periodLabel(next.period, false)} is still running, so this figure moves until the month
-            closes.{" "}
-            {next.rollsForward
-              ? `Balances under ${gbp(MIN_PAYOUT_PENCE)} roll into the next month until they pass it, and anything left is paid in full when your agreement ends.`
-              : ""}
+            closes. Whatever it comes to is paid in full; there is no minimum.
           </span>
         </div>
       </Panel>

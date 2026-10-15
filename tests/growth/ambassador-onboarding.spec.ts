@@ -16,8 +16,8 @@ import {
  * they want, which is permanent), waits under review, and is approved or
  * declined.
  *
- * Needs supabase/migrations/20261014000000_ambassador_programme_v2.sql on the
- * target database. The approval test creates real coupons in Stripe and is
+ * Needs supabase/migrations/20261014000000_ambassador_programme_v2.sql and
+ * 20261015000000_ambassador_invite_no_name.sql on the target database. The approval test creates real coupons in Stripe and is
  * skipped unless the key is a TEST key.
  */
 
@@ -89,27 +89,33 @@ test.describe("Ambassador onboarding", () => {
     for (const id of invites.splice(0)) await admin.from("ambassador_invites").delete().eq("id", id);
   });
 
-  test("an admin makes a link from a name and a source, and it opens the invite page signed out", async ({
+  test("an admin makes a link with one click, and it opens the invite page signed out", async ({
     page,
     browser,
   }) => {
     const boss = await createAdmin("Ash");
     people.push(boss);
-    const name = `Priya Zz${tag()}`;
 
     await signIn(page, boss);
     await page.goto("/admin/ambassadors");
     const box = page.getByTestId("invite-box");
-    await box.getByPlaceholder("Priya Raman").fill(name);
-    await box.getByRole("combobox").selectOption("tiktok");
+    // Nothing to fill in: no name, no source.
+    await expect(box.getByRole("textbox")).toHaveCount(0);
+    await expect(box.getByRole("combobox")).toHaveCount(0);
     await box.getByRole("button", { name: "Generate link" }).click();
 
     const link = (await box.getByTestId("invite-link").textContent())!.trim();
     expect(link).toMatch(/\/ambassador\/invite\/[A-Za-z0-9_-]{20,}$/);
+    const token = new URL(link).pathname.split("/").pop()!;
 
-    const { data: row } = await admin.from("ambassador_invites").select("id, source").eq("full_name", name).single();
+    const { data: row } = await admin
+      .from("ambassador_invites")
+      .select("id, full_name, source")
+      .eq("token_hash", createHash("sha256").update(token).digest("hex"))
+      .single();
     invites.push(row!.id);
-    expect(row!.source).toBe("tiktok");
+    expect(row!.full_name).toBeNull();
+    expect(row!.source).toBe("other");
 
     // Signed out, in a fresh context.
     const ctx = await browser.newContext();
@@ -117,7 +123,7 @@ test.describe("Ambassador onboarding", () => {
     await visitor.goto(new URL(link).pathname);
     await expect(visitor.getByTestId("ambassador-invite")).toBeVisible();
     await expect(visitor.getByText("Teach with Jooma.")).toBeVisible();
-    await expect(visitor.getByText(name.split(" ")[0]).first()).toBeVisible();
+    await expect(visitor.getByText("You're invited by Jooma")).toBeVisible();
     await expect(visitor.getByTestId("invite-cta")).toHaveAttribute("href", /\/signup\?next=%2Fambassador%2Fapply%2F/);
     await ctx.close();
 
@@ -179,6 +185,10 @@ test.describe("Ambassador onboarding", () => {
     // 3. Payout: PayPal, and the code, which is permanent.
     await flow.getByRole("radio", { name: /PayPal/ }).click();
     await flow.getByLabel("PayPal email").fill(`pp-${tag()}@example.com`);
+    // Tax is declared one way only, shown as fixed text rather than a choice.
+    await expect(flow.getByTestId("tax-status")).toHaveValue("Self assessment, as an individual");
+    await expect(flow.getByTestId("tax-status")).not.toBeEditable();
+    await expect(flow.locator("select#amb-tax")).toHaveCount(0);
     await expect(flow.getByTestId("code-permanent")).toContainText("This code is permanent");
     await expect(flow.getByRole("button", { name: "MRSJONES" })).toBeVisible();
     await flow.getByLabel("The code you want").fill(code.toLowerCase());
@@ -187,6 +197,10 @@ test.describe("Ambassador onboarding", () => {
     await flow.getByRole("button", { name: "Continue to the agreement" }).click();
 
     // 4. Agreement: read to the end, three declarations, a typed signature.
+    // No placeholder notice, and every month is paid with no minimum.
+    await expect(flow.getByTestId("contract")).toContainText("There is no minimum");
+    await expect(flow.getByText("Placeholder text")).toHaveCount(0);
+    await expect(flow.getByTestId("contract")).not.toContainText("£25");
     const sign = flow.getByRole("button", { name: /Sign and send for review/ });
     await expect(sign).toBeDisabled();
     await flow.getByTestId("contract").evaluate((el) => {

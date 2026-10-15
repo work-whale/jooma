@@ -43,6 +43,10 @@ export const TAX_OPTIONS = [
   { value: "not_sure", label: "I am not sure yet" },
 ] as const;
 
+/** The one way an ambassador declares commission. Earlier applications could
+ *  pick another, so TAX_OPTIONS stays to label those rows. */
+export const TAX_STATUS = "self_assessment";
+
 export function taxLabel(value: string | null | undefined): string {
   return TAX_OPTIONS.find((o) => o.value === value)?.label ?? "Not given";
 }
@@ -220,7 +224,7 @@ export function validatePayoutDetails(p: Omit<PayoutInput, "tax_status" | "utr" 
 
 export function validateTax(t: { tax_status: string; utr: string }): FieldErrors {
   const e: FieldErrors = {};
-  if (!TAX_OPTIONS.some((o) => o.value === t.tax_status)) e.tax_status = "Choose how you declare this income.";
+  if (t.tax_status !== TAX_STATUS) e.tax_status = "Commission is declared through self assessment.";
   const utr = String(t.utr ?? "").replace(/\s/g, "");
   if (utr && !/^\d{10}$/.test(utr)) e.utr = "A UTR is 10 digits.";
   return e;
@@ -300,7 +304,7 @@ export function validateApplication(input: ApplicationInput, now = new Date()): 
       account_number: bank ? normaliseAccountNumber(pay.account_number) : null,
       bank_name: bank ? pay.bank_name.trim() : null,
       paypal_email: bank ? null : pay.paypal_email.trim().toLowerCase(),
-      tax_status: pay.tax_status,
+      tax_status: TAX_STATUS,
       utr: opt(String(pay.utr ?? "").replace(/\s/g, "")),
       requested_code: normaliseAmbassadorCode(pay.requested_code),
       signature_name: input.agreement.signature_name.trim(),

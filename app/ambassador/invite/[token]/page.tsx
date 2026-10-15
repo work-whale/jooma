@@ -23,7 +23,8 @@ import s from "@/app/components/ambassador/programme.module.css";
 //
 // The token is looked up by its hash with the service role, the same way
 // teacher invites are (app/lib/invites.ts). All this ever reveals is the first
-// name the admin typed, to the person holding the link it was made for.
+// name the admin typed on older links, to the person holding the link it was
+// made for. Newer links have no name and greet nobody in particular.
 // Opening it is recorded once, for the admin's "invites unopened" figure.
 
 export const dynamic = "force-dynamic";
@@ -82,14 +83,18 @@ export default async function AmbassadorInvitePage(props: { params: Promise<{ to
   // Signed in: straight to the application. Signed out: sign up (or in) first,
   // then on to the application, carried through by ?next=.
   const cta = user ? apply : `/signup?next=${encodeURIComponent(apply)}`;
-  const firstName = invite.name.split(/\s+/)[0];
+  // Links made since October 2026 carry no name: the admin makes one with a
+  // click and sends it on. Older ones still greet the person by first name.
+  const firstName = invite.name ? invite.name.split(/\s+/)[0] : null;
   const initials = invite.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+    ? invite.name
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : null;
   const proPrice = PLANS.pro.priceMonthly ?? 0;
 
   return (
@@ -97,9 +102,19 @@ export default async function AmbassadorInvitePage(props: { params: Promise<{ to
       <div className={s.band}>
         <div className={s.bandIn}>
           <span className={s.invited}>
-            <span className={s.invitedAv}>{initials}</span>
+            <span className={s.invitedAv}>
+              {initials ?? <Crown size={15} weight="fill" aria-hidden />}
+            </span>
             <span>
-              <b>{firstName}</b>, you&apos;re invited by <b>Jooma</b>
+              {firstName ? (
+                <>
+                  <b>{firstName}</b>, you&apos;re invited by <b>Jooma</b>
+                </>
+              ) : (
+                <>
+                  You&apos;re invited by <b>Jooma</b>
+                </>
+              )}
             </span>
           </span>
           <span className={s.goldTag}>
