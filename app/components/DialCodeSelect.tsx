@@ -6,38 +6,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-export type Country = { name: string; code: string; dial: string };
+import { COUNTRIES, DEFAULT_DIAL_CODE, type Country } from "@/app/lib/dial-codes";
 
-export const COUNTRIES: Country[] = [
-  { name: "United Kingdom", code: "GB", dial: "+44" },
-  { name: "Ireland", code: "IE", dial: "+353" },
-  { name: "France", code: "FR", dial: "+33" },
-  { name: "Germany", code: "DE", dial: "+49" },
-  { name: "Netherlands", code: "NL", dial: "+31" },
-  { name: "Spain", code: "ES", dial: "+34" },
-  { name: "Italy", code: "IT", dial: "+39" },
-  { name: "Portugal", code: "PT", dial: "+351" },
-  { name: "Belgium", code: "BE", dial: "+32" },
-  { name: "Sweden", code: "SE", dial: "+46" },
-  { name: "Norway", code: "NO", dial: "+47" },
-  { name: "Denmark", code: "DK", dial: "+45" },
-  { name: "Finland", code: "FI", dial: "+358" },
-  { name: "Poland", code: "PL", dial: "+48" },
-  { name: "Switzerland", code: "CH", dial: "+41" },
-  { name: "Austria", code: "AT", dial: "+43" },
-  { name: "United States", code: "US", dial: "+1" },
-  { name: "Canada", code: "CA", dial: "+1" },
-  { name: "Australia", code: "AU", dial: "+61" },
-  { name: "New Zealand", code: "NZ", dial: "+64" },
-  { name: "South Africa", code: "ZA", dial: "+27" },
-  { name: "India", code: "IN", dial: "+91" },
-  { name: "Singapore", code: "SG", dial: "+65" },
-  { name: "Hong Kong", code: "HK", dial: "+852" },
-  { name: "Japan", code: "JP", dial: "+81" },
-  { name: "United Arab Emirates", code: "AE", dial: "+971" },
-];
-
-export const DEFAULT_DIAL_CODE = "GB";
+export { COUNTRIES, DEFAULT_DIAL_CODE, type Country };
 
 export function useClickOutside(ref: React.RefObject<HTMLElement | null>, handler: () => void) {
   useEffect(() => {

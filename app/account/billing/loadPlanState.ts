@@ -2,10 +2,12 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { subscriptionBilling, type PendingPlanChange } from "@/app/lib/stripe";
+import { stripe, subscriptionBilling, type PendingPlanChange } from "@/app/lib/stripe";
+import { discountOfPromotion, type Discount } from "@/app/lib/ambassador-discount";
 import {
-  asPlanId,
+  effectivePlan,
   hasActivePlan,
+  reviewTrialEnd,
   PLANS,
   SELECTABLE_PLAN_IDS,
   type BillingInterval,
@@ -53,12 +55,21 @@ export interface PlanState {
   renews: string | null;
   referralCode: string | null;
   codeSpent: boolean;
+  /** What that code takes off the first monthly payment, read from Stripe.
+   *  Null once spent, for a subscriber, or when Stripe cannot be read. */
+  codeDiscount: Discount | null;
   /** The caller's ambassador row, when they are one. */
   ambassador: AmbassadorTerm | null;
   /** On Pro because they are an ambassador: a comp, not a subscription. */
   ambassadorPro: boolean;
   /** When that free Pro ends, formatted. */
   ambassadorUntil: string | null;
+  /** On Standard free while their ambassador application is reviewed (no
+   *  card, no Stripe subscription): when it ends, formatted. */
+  reviewTrialUntil: string | null;
+  /** The next charge when a discount (an ambassador code) is waiting on it:
+   *  the full price and what Stripe will actually take. */
+  nextPayment: { fullPence: number; nextPence: number } | null;
 }
 
 function longDate(value: string | Date): string {
@@ -90,7 +101,7 @@ export async function loadPlanState(
     // Scoped by their own id, so it can only ever find their own row.
     supabaseAdmin
       .from("ambassador_referrals")
-      .select("first_paid_at, ambassador_codes ( code )")
+      .select("first_paid_at, ambassador_codes ( code, promotion_code_id )")
       .eq("user_id", userId)
       .maybeSingle(),
     // Their own ambassador row, through the definer function. Errors (an
@@ -98,7 +109,10 @@ export async function loadPlanState(
     supabase.rpc("my_ambassador"),
   ]);
 
-  const plan = asPlanId(profile?.plan);
+  const plan = effectivePlan(profile);
+  const reviewEnd = reviewTrialEnd(profile);
+  const reviewTrialUntil =
+    reviewEnd && reviewEnd.getTime() > Date.now() ? longDate(reviewEnd) : null;
 
   const ambassadorRow = (Array.isArray(ambassadorRows) ? ambassadorRows[0] : null) as
     | { status: string; pro_until: string | null }
@@ -121,8 +135,10 @@ export async function loadPlanState(
   // The code field has three states, and "spent" is the one worth being explicit
   // about: once first_paid_at is set the one-month discount has been used, so
   // there is nothing to offer and nothing to tell them to do.
-  const referralCode =
-    (referral?.ambassador_codes as unknown as { code?: string } | null)?.code ?? null;
+  const codeRow = referral?.ambassador_codes as unknown as
+    | { code?: string; promotion_code_id?: string }
+    | null;
+  const referralCode = codeRow?.code ?? null;
   const codeSpent = Boolean(referral?.first_paid_at);
 
   // Two different flags, deliberately not collapsed into one.
@@ -133,7 +149,8 @@ export async function loadPlanState(
   // a lapsed subscriber still carries the old one.
   const isSubscriber = Boolean(profile?.stripe_customer_id);
   const hasSubscription = Boolean(profile?.stripe_subscription_id) && hasActivePlan(plan);
-  const trialing = profile?.subscription_status === "trialing";
+  // A review trial is not a Stripe trial: nothing will be charged when it ends.
+  const trialing = profile?.subscription_status === "trialing" && !reviewEnd;
 
   // Every plan a teacher can buy, cheapest first. Derived from
   // SELECTABLE_PLAN_IDS so this can never offer School, which is hidden and has
@@ -145,9 +162,21 @@ export async function loadPlanState(
   // A scheduled downgrade lives on a Stripe subscription schedule rather than
   // on the profile. Read with the interval the subscription bills at, in one
   // Stripe call, and only for a live subscription; anyone else is choosing.
-  const billing = await subscriptionBilling(
-    hasSubscription ? profile?.stripe_subscription_id : null,
-  );
+  // The code's value, for the first-payment price on the plan cards. Only
+  // while it can still be used at checkout; a subscriber's discount (if any)
+  // is read off the subscription itself, as nextPayment.
+  const [billing, codeDiscount] = await Promise.all([
+    subscriptionBilling(hasSubscription ? profile?.stripe_subscription_id : null),
+    codeRow?.promotion_code_id && !codeSpent && !hasSubscription
+      ? stripe.promotionCodes
+          .retrieve(codeRow.promotion_code_id, { expand: ["promotion.coupon"] })
+          .then((promo) => (promo.active ? discountOfPromotion(promo) : null))
+          .catch((err) => {
+            console.error("[loadPlanState] code discount lookup failed", err);
+            return null;
+          })
+      : Promise.resolve(null),
+  ]);
   const pending = billing.pending;
   const interval: BillingInterval = hasSubscription ? billing.interval : "month";
   const pendingSwitch = pending && pending.plan === plan ? pending : null;
@@ -186,8 +215,11 @@ export async function loadPlanState(
     renews: profile?.current_period_end ? longDate(profile.current_period_end) : null,
     referralCode,
     codeSpent,
+    codeDiscount,
     ambassador,
     ambassadorPro,
     ambassadorUntil: ambassadorPro && ambassador?.proUntil ? longDate(ambassador.proUntil) : null,
+    reviewTrialUntil,
+    nextPayment: billing.nextPayment,
   };
 }

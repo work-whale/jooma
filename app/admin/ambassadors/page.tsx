@@ -1,11 +1,11 @@
 import { requireSection } from "../access";
+import { siteUrl } from "@/app/lib/email-templates/markup";
 import { stripe } from "@/app/lib/stripe";
 import { addMonths, periodOf } from "@/app/lib/ambassador-commission";
 import AmbassadorsView, {
   type AmbassadorRow,
   type ApplicationRow,
   type CodeLive,
-  type InviteRow,
   type ProgrammeSummary,
 } from "./AmbassadorsView";
 import { parseAmbRange, type AmbRange } from "./range";
@@ -13,7 +13,7 @@ import { parseAmbRange, type AmbRange } from "./range";
 export const dynamic = "force-dynamic";
 
 /*
- * The ambassador programme: invite links, applications waiting for review,
+ * The ambassador programme: the share link, applications waiting for review,
  * live ambassadors and the teachers under each one, and what it all costs.
  *
  * Two sources, deliberately. The ATTRIBUTION and the MONEY are ours: who
@@ -42,19 +42,16 @@ export default async function AdminAmbassadorsPage(props: {
     { data: rows, error },
     { data: summaryRows, error: summaryError },
     { data: applications, error: applicationsError },
-    { data: invites, error: invitesError },
   ] = await Promise.all([
     supabase.rpc("admin_ambassadors"),
     supabase.rpc("admin_programme_summary", { p_from: fromFor(range) }),
     supabase.rpc("admin_ambassador_applications", { p_status: "pending" }),
-    supabase.rpc("admin_ambassador_invites"),
   ]);
 
   for (const [what, err] of [
     ["ambassadors", error],
     ["summary", summaryError],
     ["applications", applicationsError],
-    ["invites", invitesError],
   ] as const) {
     if (err) console.error(`[admin/ambassadors] could not load ${what}`, err);
   }
@@ -119,9 +116,16 @@ export default async function AdminAmbassadorsPage(props: {
       rows={ambassadors}
       summary={summary}
       applications={(applications ?? []) as ApplicationRow[]}
-      invites={(invites ?? []) as InviteRow[]}
+      shareLink={shareLink()}
       live={live}
       stripeError={stripeError}
     />
   );
+}
+
+/** The programme's one link. Copied in full so a chat app makes it clickable,
+ *  shown short ("jooma.ai/ambassador") so it reads well. */
+function shareLink(): { url: string; display: string } {
+  const url = `${siteUrl()}/ambassador`;
+  return { url, display: url.replace(/^https?:\/\//, "").replace(/^www\./, "") };
 }

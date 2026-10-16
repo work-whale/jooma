@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from "node:crypto";
 import { test, expect, type Page } from "@playwright/test";
 import Stripe from "stripe";
 import {
@@ -11,45 +10,28 @@ import {
 } from "../support/users";
 
 /*
- * Becoming an ambassador: the admin makes a one-person link, the person opens
- * it, signs in, applies in four steps (choosing bank or PayPal, and the code
- * they want, which is permanent), waits under review, and is approved or
- * declined.
+ * Becoming an ambassador: one short link (jooma.ai/ambassador) for everyone.
+ * The person opens it, signs in, applies in three steps (Social, Payout with
+ * the details signup does not collect, Agreement), gets Standard free while we
+ * review, and is approved or declined. Name, email and mobile come from their
+ * account, so there is no Personal step and no tax section.
  *
- * Needs supabase/migrations/20261014000000_ambassador_programme_v2.sql and
- * 20261015000000_ambassador_invite_no_name.sql on the target database. The approval test creates real coupons in Stripe and is
- * skipped unless the key is a TEST key.
+ * Needs supabase/migrations/20261016000000_ambassador_open_link.sql on the
+ * target database (no invite token, the review trial). The approval test
+ * creates real coupons in Stripe and is skipped unless the key is a TEST key.
  */
 
 const tag = () => `${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
 
-/** An invite, made the way the admin route makes it. Returns the raw token. */
-async function makeInvite(name: string): Promise<{ id: string; token: string }> {
-  const token = randomBytes(32).toString("base64url");
-  const { data, error } = await admin
-    .from("ambassador_invites")
-    .insert({
-      full_name: name,
-      source: "instagram",
-      token_hash: createHash("sha256").update(token).digest("hex"),
-      expires_at: new Date(Date.now() + 14 * 86_400_000).toISOString(),
-    })
-    .select()
-    .single();
-  if (error) throw new Error(`Could not create the invite: ${error.message}`);
-  return { id: data.id, token };
-}
-
 /** An application, as the apply route submits it (service role). */
-async function submitApplication(teacher: TestTeacher, token: string, code: string): Promise<string> {
+async function submitApplication(teacher: TestTeacher, code: string): Promise<string> {
   const { data, error } = await admin.rpc("submit_ambassador_application", {
     p_user_id: teacher.id,
-    p_token_hash: createHash("sha256").update(token).digest("hex"),
     payload: {
       first_name: teacher.firstName,
       last_name: teacher.surname,
       email: teacher.email,
-      mobile: "07700 900412",
+      mobile: "+447700900412",
       date_of_birth: "1990-04-18",
       address_line: "42 Hartley Road",
       town: "Leeds",
@@ -77,7 +59,6 @@ async function openAccountMenu(page: Page) {
 
 test.describe("Ambassador onboarding", () => {
   const people: TestTeacher[] = [];
-  const invites: string[] = [];
   const ambassadors: string[] = [];
 
   test.afterEach(async () => {
@@ -86,61 +67,30 @@ test.describe("Ambassador onboarding", () => {
       await admin.from("ambassador_applications").delete().eq("user_id", p.id);
       await deleteTeacher(p);
     }
-    for (const id of invites.splice(0)) await admin.from("ambassador_invites").delete().eq("id", id);
   });
 
-  test("an admin makes a link with one click, and it opens the invite page signed out", async ({
-    page,
-    browser,
-  }) => {
-    const boss = await createAdmin("Ash");
-    people.push(boss);
+  test("the short link shows the programme signed out, and keeps its URL", async ({ page }) => {
+    await page.goto("/ambassador");
+    await expect(page).toHaveURL(/\/ambassador$/);
+    await expect(page.getByTestId("ambassador-landing")).toBeVisible();
+    await expect(page.getByText("Teach with Jooma.")).toBeVisible();
+    await expect(page.getByTestId("invite-cta")).toHaveAttribute(
+      "href",
+      "/signup?next=%2Fambassador%2Fapply",
+    );
 
-    await signIn(page, boss);
-    await page.goto("/admin/ambassadors");
-    const box = page.getByTestId("invite-box");
-    // Nothing to fill in: no name, no source.
-    await expect(box.getByRole("textbox")).toHaveCount(0);
-    await expect(box.getByRole("combobox")).toHaveCount(0);
-    await box.getByRole("button", { name: "Generate link" }).click();
-
-    const link = (await box.getByTestId("invite-link").textContent())!.trim();
-    expect(link).toMatch(/\/ambassador\/invite\/[A-Za-z0-9_-]{20,}$/);
-    const token = new URL(link).pathname.split("/").pop()!;
-
-    const { data: row } = await admin
-      .from("ambassador_invites")
-      .select("id, full_name, source")
-      .eq("token_hash", createHash("sha256").update(token).digest("hex"))
-      .single();
-    invites.push(row!.id);
-    expect(row!.full_name).toBeNull();
-    expect(row!.source).toBe("other");
-
-    // Signed out, in a fresh context.
-    const ctx = await browser.newContext();
-    const visitor = await ctx.newPage();
-    await visitor.goto(new URL(link).pathname);
-    await expect(visitor.getByTestId("ambassador-invite")).toBeVisible();
-    await expect(visitor.getByText("Teach with Jooma.")).toBeVisible();
-    await expect(visitor.getByText("You're invited by Jooma")).toBeVisible();
-    await expect(visitor.getByTestId("invite-cta")).toHaveAttribute("href", /\/signup\?next=%2Fambassador%2Fapply%2F/);
-    await ctx.close();
-
-    // Opening it is recorded once.
-    const { data: opened } = await admin.from("ambassador_invites").select("opened_at").eq("id", row!.id).single();
-    expect(opened!.opened_at).not.toBeNull();
+    // An old single-use invite link still lands somewhere useful.
+    await page.goto("/ambassador/invite/an-old-token-from-before");
+    await expect(page).toHaveURL(/\/ambassador$/);
+    await expect(page.getByTestId("ambassador-landing")).toBeVisible();
   });
 
   test("a signed out visitor to the application signs in and comes straight back", async ({ page }) => {
     const teacher = await createTeacher("Rowan");
     people.push(teacher);
-    const invite = await makeInvite("Rowan Zz");
-    invites.push(invite.id);
-    const apply = `/ambassador/apply/${invite.token}`;
 
-    await page.goto(apply);
-    await expect(page).toHaveURL(/\/login\?next=%2Fambassador%2Fapply%2F/);
+    await page.goto("/ambassador/apply");
+    await expect(page).toHaveURL(/\/login\?next=%2Fambassador%2Fapply$/);
 
     const submit = page.getByRole("button", { name: /^sign in$/i });
     await submit.waitFor({ state: "visible" });
@@ -151,56 +101,61 @@ test.describe("Ambassador onboarding", () => {
     await expect(submit).toBeEnabled();
     await submit.click();
 
-    await page.waitForURL((u) => u.pathname === apply, { timeout: 30_000 });
+    await page.waitForURL((u) => u.pathname === "/ambassador/apply", { timeout: 30_000 });
     await expect(page.getByTestId("apply-flow")).toBeVisible();
   });
 
-  test("the four steps, with PayPal and a permanent code, end under review", async ({ page }) => {
+  test("three steps from the short link, a review trial, and Back says it is sent", async ({ page }) => {
     const teacher = await createTeacher("Sasha");
     people.push(teacher);
-    const invite = await makeInvite("Sasha Zz");
-    invites.push(invite.id);
+    // Signup stores the country, not the prefix. Once glued on as "GB 0893...",
+    // which the form then refused as not a number.
+    await admin.from("profiles").update({ dial_code: "GB", phone: "07700 900412" }).eq("id", teacher.id);
     const code = `ZZ-${tag()}`.toUpperCase().slice(0, 20);
 
     await signIn(page, teacher);
-    await page.goto(`/ambassador/apply/${invite.token}`);
+    // The way an applicant arrives: the short link, then its button.
+    await page.goto("/ambassador");
+    await expect(page.getByTestId("ambassador-landing")).toBeVisible();
+    await page.getByTestId("invite-cta").click();
+    await page.waitForURL((u) => u.pathname === "/ambassador/apply");
     const flow = page.getByTestId("apply-flow");
 
-    // 1. Personal. Name and email arrive from their account.
-    await expect(flow.getByLabel("First name")).toHaveValue(teacher.firstName);
-    await flow.getByLabel("Mobile").fill("07700 900412");
-    await flow.getByLabel("Date of birth").fill("1990-04-18");
-    await flow.getByLabel("Address", { exact: true }).fill("42 Hartley Road");
-    await flow.getByLabel("Town or city").fill("Leeds");
-    await flow.getByLabel("Postcode").fill("LS6 2JT");
-    await flow.getByRole("button", { name: "Continue" }).click();
+    // No Personal step: their details come from the account.
+    await expect(flow.getByText("Social", { exact: true })).toBeVisible();
+    await expect(flow.getByText("Personal", { exact: true })).toHaveCount(0);
+    await expect(flow.getByLabel("First name")).toHaveCount(0);
+    await expect(flow.getByTestId("applying-as")).toContainText(`${teacher.firstName} ${teacher.surname}`);
+    await expect(flow.getByTestId("applying-as")).toContainText("+447700900412");
 
-    // 2. Social. At least one account is required.
+    // 1. Social. At least one account is required.
     await flow.getByRole("button", { name: "Continue" }).click();
     await expect(flow.getByText("Add at least one account you post from.")).toBeVisible();
     await flow.getByLabel(/Instagram/).fill("@zzteaches");
     await flow.getByLabel(/how many followers/i).selectOption("5k_25k");
     await flow.getByRole("button", { name: "Continue" }).click();
 
-    // 3. Payout: PayPal, and the code, which is permanent.
+    // 2. Payout: PayPal, About you (what signup does not ask), the code. No
+    // tax section, no UTR, and no mobile field since the account has one.
+    await expect(flow.getByTestId("tax-status")).toHaveCount(0);
+    await expect(flow.getByLabel(/UTR/)).toHaveCount(0);
+    await expect(flow.getByLabel("Mobile")).toHaveCount(0);
     await flow.getByRole("radio", { name: /PayPal/ }).click();
     await flow.getByLabel("PayPal email").fill(`pp-${tag()}@example.com`);
-    // Tax is declared one way only, shown as fixed text rather than a choice.
-    await expect(flow.getByTestId("tax-status")).toHaveValue("Self assessment, as an individual");
-    await expect(flow.getByTestId("tax-status")).not.toBeEditable();
-    await expect(flow.locator("select#amb-tax")).toHaveCount(0);
+    await flow.getByRole("button", { name: "Continue to the agreement" }).click();
+    await expect(flow.getByText("Enter your date of birth.")).toBeVisible();
+    await flow.getByLabel("Date of birth").fill("1990-04-18");
+    await flow.getByLabel("Address", { exact: true }).fill("42 Hartley Road");
+    await flow.getByLabel("Town or city").fill("Leeds");
+    await flow.getByLabel("Postcode").fill("LS6 2JT");
     await expect(flow.getByTestId("code-permanent")).toContainText("This code is permanent");
-    await expect(flow.getByRole("button", { name: "MRSJONES" })).toBeVisible();
     await flow.getByLabel("The code you want").fill(code.toLowerCase());
     await expect(flow.getByLabel("The code you want")).toHaveValue(code);
     await expect(flow.getByTestId("code-free")).toBeVisible();
     await flow.getByRole("button", { name: "Continue to the agreement" }).click();
 
-    // 4. Agreement: read to the end, three declarations, a typed signature.
-    // No placeholder notice, and every month is paid with no minimum.
+    // 3. Agreement: read to the end, three declarations, a typed signature.
     await expect(flow.getByTestId("contract")).toContainText("There is no minimum");
-    await expect(flow.getByText("Placeholder text")).toHaveCount(0);
-    await expect(flow.getByTestId("contract")).not.toContainText("£25");
     const sign = flow.getByRole("button", { name: /Sign and send for review/ });
     await expect(sign).toBeDisabled();
     await flow.getByTestId("contract").evaluate((el) => {
@@ -215,18 +170,52 @@ test.describe("Ambassador onboarding", () => {
     await sign.click();
 
     await expect(page.getByTestId("application-under-review")).toBeVisible();
-    await expect(page.getByText("That is with us.")).toBeVisible();
+    await expect(page.getByText("Leave it with us.")).toBeVisible();
+    await expect(page.getByTestId("review-trial-note")).toContainText("Jooma Standard free until");
 
     const { data: app } = await admin
       .from("ambassador_applications")
-      .select("status, payout_method, paypal_email, sort_code, requested_code, signed_ip, invite_id")
+      .select("status, first_name, email, mobile, payout_method, requested_code, invite_id, utr, tax_status, trial_granted_at")
       .eq("user_id", teacher.id)
       .single();
-    expect(app).toMatchObject({ status: "pending", payout_method: "paypal", sort_code: null, requested_code: code });
-    expect(app!.invite_id).toBe(invite.id);
+    expect(app).toMatchObject({
+      status: "pending",
+      first_name: teacher.firstName,
+      email: teacher.email,
+      mobile: "+447700900412",
+      payout_method: "paypal",
+      requested_code: code,
+      invite_id: null,
+      utr: null,
+      tax_status: "self_assessment",
+    });
+    expect(app!.trial_granted_at).not.toBeNull();
 
-    const { data: used } = await admin.from("ambassador_invites").select("used_at").eq("id", invite.id).single();
-    expect(used!.used_at).not.toBeNull();
+    // Standard for three days, no card, no Stripe subscription.
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("plan, subscription_status, stripe_subscription_id, current_period_end")
+      .eq("id", teacher.id)
+      .single();
+    expect(profile).toMatchObject({ plan: "standard", subscription_status: "trialing", stripe_subscription_id: null });
+    const days = (new Date(profile!.current_period_end!).getTime() - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(2.9);
+    expect(days).toBeLessThan(3.1);
+
+    // Back (the mouse's back button, in the report) used to reopen step one.
+    await page.goBack();
+    await expect(page.getByTestId("already-applied")).toBeVisible();
+    await expect(page.getByText("You have already applied.")).toBeVisible();
+    await expect(page.getByTestId("apply-flow")).toHaveCount(0);
+    await page.waitForURL((u) => u.pathname === "/dashboard", { timeout: 15_000 });
+
+    // Opening the application again, fresh from the server, says the same.
+    await page.goto("/ambassador/apply");
+    await expect(page.getByTestId("already-applied")).toBeVisible();
+
+    // The billing page says it is a free review trial, not a card trial.
+    await page.goto("/profile?section=subscription");
+    await expect(page.getByTestId("review-trial")).toContainText("while we review your ambassador application");
 
     // In the app, the account menu says where they stand.
     await page.goto("/dashboard");
@@ -237,14 +226,28 @@ test.describe("Ambassador onboarding", () => {
     await expect(page.getByRole("main").getByTestId("application-under-review")).toBeVisible();
   });
 
+  test("an account without a mobile is asked for one in About you", async ({ page }) => {
+    const teacher = await createTeacher("Noor");
+    people.push(teacher);
+
+    await signIn(page, teacher);
+    await page.goto("/ambassador/apply");
+    const flow = page.getByTestId("apply-flow");
+    await flow.getByLabel(/Instagram/).fill("@zznoor");
+    await flow.getByLabel(/how many followers/i).selectOption("under_1k");
+    await flow.getByRole("button", { name: "Continue" }).click();
+    await expect(flow.getByLabel("Mobile")).toBeVisible();
+    await flow.getByLabel("Mobile").fill("GB 0893 123456");
+    await flow.getByRole("button", { name: "Continue to the agreement" }).click();
+    await expect(flow.getByText(/Enter a mobile number/)).toBeVisible();
+  });
+
   test("an admin reviews an application and declines it", async ({ page, browser }) => {
     const boss = await createAdmin("Bea");
     const applicant = await createTeacher("Theo");
     people.push(boss, applicant);
-    const invite = await makeInvite("Theo Zz");
-    invites.push(invite.id);
     const code = `ZZD${tag()}`.toUpperCase().slice(0, 20);
-    await submitApplication(applicant, invite.token, code);
+    await submitApplication(applicant, code);
 
     await signIn(page, boss);
     await page.goto("/admin/ambassadors");
@@ -255,6 +258,9 @@ test.describe("Ambassador onboarding", () => {
     const drawer = page.getByRole("dialog");
     await expect(drawer.getByText("PayPal", { exact: true })).toBeVisible();
     await expect(drawer.getByText(code).first()).toBeVisible();
+    // Starts on 50% off; another amount is one change away.
+    await expect(drawer.getByLabel("Discount")).toHaveValue("percent");
+    await expect(drawer.getByLabel("Percent off")).toHaveValue("50");
     await drawer.getByRole("button", { name: "Decline", exact: true }).click();
     await drawer.getByRole("textbox").fill("Keeping it small for now.");
     await drawer.getByRole("button", { name: "Decline application" }).click();
@@ -285,10 +291,8 @@ test.describe("Ambassador onboarding", () => {
     const boss = await createAdmin("Cleo");
     const applicant = await createTeacher("Umar");
     people.push(boss, applicant);
-    const invite = await makeInvite("Umar Zz");
-    invites.push(invite.id);
     const code = `ZZA${tag()}`.toUpperCase().slice(0, 20);
-    await submitApplication(applicant, invite.token, code);
+    await submitApplication(applicant, code);
 
     await signIn(page, boss);
     await page.goto("/admin/ambassadors");
@@ -298,7 +302,7 @@ test.describe("Ambassador onboarding", () => {
       .getByRole("button", { name: "Review" })
       .click();
     const drawer = page.getByRole("dialog");
-    await expect(drawer.getByText(/50% off your first month|20% off your first month/)).toBeVisible();
+    await expect(drawer.getByText(/50% off your first month/)).toBeVisible();
     await drawer.getByRole("button", { name: "Approve and issue code" }).click();
     await expect(page.getByText(new RegExp(`is live with code ${code}`))).toBeVisible({ timeout: 30_000 });
 
@@ -326,7 +330,7 @@ test.describe("Ambassador onboarding", () => {
     // The yearly coupon is a twelfth of the monthly percentage.
     const stripe = new Stripe(key);
     const yearly = await stripe.coupons.retrieve(codes[0].yearly_coupon_id!);
-    expect(yearly.percent_off).toBeCloseTo(20 / 12, 2);
+    expect(yearly.percent_off).toBeCloseTo(50 / 12, 2);
 
     // The ambassador's own view.
     const ctx = await browser.newContext();

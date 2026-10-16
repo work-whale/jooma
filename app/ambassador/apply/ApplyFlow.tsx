@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   ArrowRight,
   Bank,
@@ -22,14 +23,12 @@ import {
   CHANNELS,
   CODE_EXAMPLES,
   REACH_OPTIONS,
-  TAX_STATUS,
   codeProblem,
-  taxLabel,
   normaliseAmbassadorCode,
+  validateAboutYou,
   validateAgreement,
   validateChannels,
   validatePayout,
-  validatePersonal,
   type AgreementInput,
   type ChannelsInput,
   type FieldErrors,
@@ -39,9 +38,13 @@ import {
 import { DECLARATIONS } from "@/app/lib/ambassador-agreement";
 import AgreementText from "@/app/components/ambassador/AgreementText";
 import ApplicationStatus from "@/app/components/ambassador/ApplicationStatus";
+import { AppliedGuard, markApplied } from "@/app/components/ambassador/AlreadyApplied";
 import s from "@/app/components/ambassador/programme.module.css";
 
-const STEPS = ["Personal", "Social", "Payout", "Agreement"] as const;
+const STEPS = ["Social", "Payout", "Agreement"] as const;
+
+/** The non-sensitive fields, kept for this tab so a refresh loses nothing. */
+const DRAFT_KEY = "jooma:ambassador-application";
 
 const CHANNEL_ICON: Record<string, React.ReactNode> = {
   instagram: <InstagramLogo size={17} />,
@@ -55,8 +58,12 @@ const CHANNEL_ICON: Record<string, React.ReactNode> = {
 type CodeCheck = "idle" | "checking" | "free" | "taken" | "error";
 
 /**
- * The four-step application from the mockup, with two additions on the Payout
- * step: Bank or PayPal, and the code they want, which is permanent.
+ * The application: Social, Payout, Agreement. There is no Personal step: name,
+ * email and mobile come from their Jooma account (signup asked for them), and
+ * the details signup does not collect (date of birth and address, plus a
+ * mobile for an account without one) are an "About you" block on the Payout
+ * step, where tax used to be. The Payout step also carries Bank or PayPal, and
+ * the code they want, which is permanent.
  *
  * Each step is checked with the same rules the server applies
  * (app/lib/ambassador-application.ts) before moving on, so a mistake shows where
@@ -65,24 +72,37 @@ type CodeCheck = "idle" | "checking" | "free" | "taken" | "error";
  * not lose them. Bank details are never stored in the browser.
  */
 export default function ApplyFlow({
-  token,
-  defaults,
+  account,
 }: {
-  token: string;
-  defaults: { first_name: string; last_name: string; email: string; mobile: string };
+  /** From their profile. `mobile` is empty when the account has no usable
+   *  number, and then the About you block asks for one. */
+  account: { first_name: string; last_name: string; email: string; mobile: string };
 }) {
-  const draftKey = `jooma:ambassador-application:${token.slice(0, 16)}`;
+  return (
+    <AppliedGuard>
+      <Flow account={account} />
+    </AppliedGuard>
+  );
+}
+
+function Flow({
+  account,
+}: {
+  account: { first_name: string; last_name: string; email: string; mobile: string };
+}) {
+  const draftKey = DRAFT_KEY;
+  const askMobile = !account.mobile;
   const [step, setStep] = useState(0);
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<{ at: string; trialUntil: string | null } | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const [personal, setPersonal] = useState<PersonalInput>({
-    first_name: defaults.first_name,
-    last_name: defaults.last_name,
-    email: defaults.email,
-    mobile: defaults.mobile,
+    first_name: account.first_name,
+    last_name: account.last_name,
+    email: account.email,
+    mobile: account.mobile,
     date_of_birth: "",
     address_line: "",
     town: "",
@@ -102,7 +122,7 @@ export default function ApplyFlow({
   });
   const [payout, setPayout] = useState<PayoutInput>({
     payout_method: "bank",
-    account_holder: [defaults.first_name, defaults.last_name].filter(Boolean).join(" "),
+    account_holder: [account.first_name, account.last_name].filter(Boolean).join(" "),
     sort_code: "",
     account_number: "",
     bank_name: "",
@@ -127,24 +147,36 @@ export default function ApplyFlow({
       const raw = sessionStorage.getItem(draftKey);
       if (!raw) return;
       const d = JSON.parse(raw);
-      if (d.personal) setPersonal((p) => ({ ...p, ...d.personal }));
+      // Only what this tab typed in About you; name and email always come
+      // from the account.
+      if (d.about) setPersonal((p) => ({ ...p, ...d.about, ...(askMobile ? {} : { mobile: p.mobile }) }));
       if (d.channels) setChannels((c) => ({ ...c, ...d.channels }));
       if (d.code) setPayout((p) => ({ ...p, requested_code: d.code }));
     } catch {
       // A bad draft is ignored, not fatal.
     }
-  }, [draftKey]);
+  }, [draftKey, askMobile]);
 
   useEffect(() => {
     try {
       sessionStorage.setItem(
         draftKey,
-        JSON.stringify({ personal, channels, code: payout.requested_code }),
+        JSON.stringify({
+          about: {
+            date_of_birth: personal.date_of_birth,
+            address_line: personal.address_line,
+            town: personal.town,
+            postcode: personal.postcode,
+            ...(askMobile ? { mobile: personal.mobile } : {}),
+          },
+          channels,
+          code: payout.requested_code,
+        }),
       );
     } catch {
       // Storage can be full or blocked; the form still works.
     }
-  }, [draftKey, personal, channels, payout.requested_code]);
+  }, [draftKey, askMobile, personal, channels, payout.requested_code]);
 
   // Is the code free? Checked as they type, after a pause.
   const code = normaliseAmbassadorCode(payout.requested_code);
@@ -168,10 +200,20 @@ export default function ApplyFlow({
 
   // A short agreement on a tall screen has nothing to scroll.
   useEffect(() => {
-    if (step !== 3) return;
+    if (step !== 2) return;
     const el = contractRef.current;
     if (el && el.scrollHeight <= el.clientHeight + 24) setReadToEnd(true);
   }, [step]);
+
+  /** Editing a field clears its message, so an old "Enter your postcode" or
+   *  "Choose the code" does not sit over a field that has since been filled. */
+  const clearError = (key: string) =>
+    setErrors((e) => {
+      if (!e[key]) return e;
+      const next = { ...e };
+      delete next[key];
+      return next;
+    });
 
   const go = (next: number) => {
     setStep(next);
@@ -182,11 +224,9 @@ export default function ApplyFlow({
   const continueFrom = (current: number) => {
     const e =
       current === 0
-        ? validatePersonal(personal)
-        : current === 1
-          ? validateChannels(channels)
-          : validatePayout(payout);
-    if (current === 2 && codeCheck === "taken") e.requested_code = "That code is already taken. Try another.";
+        ? validateChannels(channels)
+        : { ...validateAboutYou(personal), ...validatePayout(payout) };
+    if (current === 1 && codeCheck === "taken") e.requested_code = "That code is already taken. Try another.";
     setErrors(e);
     if (Object.keys(e).length === 0) go(current + 1);
   };
@@ -201,7 +241,7 @@ export default function ApplyFlow({
       const res = await fetch("/api/ambassadors/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, input: { personal, channels, payout, agreement } }),
+        body: JSON.stringify({ input: { personal, channels, payout, agreement } }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -214,7 +254,10 @@ export default function ApplyFlow({
       } catch {
         // Nothing to clear.
       }
-      setDone(new Date().toISOString());
+      // Remembered for this tab, so Back to this page (or the landing page)
+      // says it is sent instead of offering an empty form.
+      markApplied();
+      setDone({ at: new Date().toISOString(), trialUntil: formatTrial(json.trialEnds) });
       window.scrollTo({ top: 0 });
     } catch {
       setServerError("Could not reach the server. Check your connection and try again.");
@@ -226,7 +269,7 @@ export default function ApplyFlow({
   if (done) {
     return (
       <div className={s.root}>
-        <ApplicationStatus status="pending" submittedAt={done} />
+        <ApplicationStatus status="pending" submittedAt={done.at} trialUntil={done.trialUntil} />
       </div>
     );
   }
@@ -245,51 +288,13 @@ export default function ApplyFlow({
 
       {step === 0 && (
         <>
-          <h1 className={s.h1}>Let us start with you.</h1>
-          <p className={s.lead}>
-            This is what goes on your agreement, so use your legal name as it appears on your bank
-            account.
+          <p className={s.muted} data-testid="applying-as" style={{ marginBottom: 14 }}>
+            Applying as <b>{fullName}</b>, {account.email}
+            {account.mobile ? `, ${account.mobile}` : ""}.{" "}
+            <Link href="/profile" style={{ color: "var(--j-purple)", fontWeight: 700 }}>
+              Change in your profile
+            </Link>
           </p>
-          <div className={s.card}>
-            <div className={s.fgrid}>
-              <Text label="First name" value={personal.first_name} error={errors.first_name} onChange={(v) => setPersonal({ ...personal, first_name: v })} autoComplete="given-name" />
-              <Text label="Last name" value={personal.last_name} error={errors.last_name} onChange={(v) => setPersonal({ ...personal, last_name: v })} autoComplete="family-name" />
-              <Text full label="Email" type="email" value={personal.email} error={errors.email} hint="We will send your agreement and every statement here." onChange={(v) => setPersonal({ ...personal, email: v })} autoComplete="email" />
-              <div className={s.f}>
-                <label htmlFor="amb-mobile">Mobile</label>
-                <div className={s.pre}>
-                  <span className={s.prefix}>
-                    <Phone size={17} />
-                  </span>
-                  <input id="amb-mobile" type="tel" inputMode="tel" className={`${s.input} ${errors.mobile ? s.inputBad : ""}`} value={personal.mobile} onChange={(e) => setPersonal({ ...personal, mobile: e.target.value })} placeholder="+44 7700 900412" autoComplete="tel" aria-invalid={errors.mobile ? true : undefined} aria-describedby={errors.mobile ? "amb-mobile-error" : undefined} />
-                </div>
-                {errors.mobile && <span id="amb-mobile-error" className={s.error}>{errors.mobile}</span>}
-              </div>
-              <Text label="Date of birth" type="date" value={personal.date_of_birth} error={errors.date_of_birth} onChange={(v) => setPersonal({ ...personal, date_of_birth: v })} autoComplete="bday" />
-              <Text full label="Address" value={personal.address_line} error={errors.address_line} placeholder="Street" onChange={(v) => setPersonal({ ...personal, address_line: v })} autoComplete="street-address" />
-              <Text label="Town or city" value={personal.town} error={errors.town} onChange={(v) => setPersonal({ ...personal, town: v })} autoComplete="address-level2" />
-              <Text label="Postcode" value={personal.postcode} error={errors.postcode} onChange={(v) => setPersonal({ ...personal, postcode: v })} autoComplete="postal-code" />
-              <Text full label="Your school or setting" optional value={personal.school} error={errors.school} onChange={(v) => setPersonal({ ...personal, school: v })} />
-              <Text full label="What do you teach?" optional value={personal.teaches} error={errors.teaches} placeholder="Year 4, mostly maths and science" onChange={(v) => setPersonal({ ...personal, teaches: v })} />
-            </div>
-            <div className={s.callout}>
-              <ShieldCheck size={17} weight="fill" />
-              <span>
-                Your address and date of birth are used only for the agreement and for the checks
-                our payment provider requires. They never appear anywhere public.
-              </span>
-            </div>
-          </div>
-          <div className={s.actions}>
-            <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => continueFrom(0)}>
-              Continue <ArrowRight size={15} weight="bold" />
-            </button>
-          </div>
-        </>
-      )}
-
-      {step === 1 && (
-        <>
           <h1 className={s.h1}>Where do you post?</h1>
           <p className={s.lead}>
             Add every account you would use to share your code. At least one is needed. You can
@@ -345,17 +350,14 @@ export default function ApplyFlow({
             </div>
           </div>
           <div className={s.actions}>
-            <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => continueFrom(1)}>
+            <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => continueFrom(0)}>
               Continue <ArrowRight size={15} weight="bold" />
-            </button>
-            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => go(0)}>
-              Back
             </button>
           </div>
         </>
       )}
 
-      {step === 2 && (
+      {step === 1 && (
         <>
           <h1 className={s.h1}>Where should we pay you?</h1>
           <p className={s.lead}>
@@ -393,29 +395,46 @@ export default function ApplyFlow({
             </div>
 
             <div className={s.fgrid}>
-              <Text full label="Account holder name" value={payout.account_holder} error={errors.account_holder} hint={payout.payout_method === "bank" ? "Exactly as your bank has it." : "The name on your PayPal account."} onChange={(v) => setPayout({ ...payout, account_holder: v })} />
+              <Text full label="Account holder name" value={payout.account_holder} error={errors.account_holder} hint={payout.payout_method === "bank" ? "Exactly as your bank has it." : "The name on your PayPal account."} onChange={(v) => { setPayout({ ...payout, account_holder: v }); clearError("account_holder"); }} />
               {payout.payout_method === "bank" ? (
                 <>
-                  <Text label="Sort code" value={payout.sort_code} error={errors.sort_code} placeholder="00-00-00" inputMode="numeric" onChange={(v) => setPayout({ ...payout, sort_code: v })} />
-                  <Text label="Account number" value={payout.account_number} error={errors.account_number} placeholder="8 digits" inputMode="numeric" onChange={(v) => setPayout({ ...payout, account_number: v })} />
-                  <Text full label="Bank name" value={payout.bank_name} error={errors.bank_name} placeholder="Monzo Bank Ltd" onChange={(v) => setPayout({ ...payout, bank_name: v })} />
+                  <Text label="Sort code" value={payout.sort_code} error={errors.sort_code} placeholder="00-00-00" inputMode="numeric" onChange={(v) => { setPayout({ ...payout, sort_code: v }); clearError("sort_code"); }} />
+                  <Text label="Account number" value={payout.account_number} error={errors.account_number} placeholder="8 digits" inputMode="numeric" onChange={(v) => { setPayout({ ...payout, account_number: v }); clearError("account_number"); }} />
+                  <Text full label="Bank name" value={payout.bank_name} error={errors.bank_name} placeholder="Monzo Bank Ltd" onChange={(v) => { setPayout({ ...payout, bank_name: v }); clearError("bank_name"); }} />
                 </>
               ) : (
-                <Text full label="PayPal email" type="email" value={payout.paypal_email} error={errors.paypal_email} hint="The address you log in to PayPal with." onChange={(v) => setPayout({ ...payout, paypal_email: v })} />
+                <Text full label="PayPal email" type="email" value={payout.paypal_email} error={errors.paypal_email} hint="The address you log in to PayPal with." onChange={(v) => { setPayout({ ...payout, paypal_email: v }); clearError("paypal_email"); }} />
               )}
             </div>
 
-            <h3 className={s.sectionTitle}>Tax</h3>
+            <h3 className={s.sectionTitle}>About you</h3>
             <p className={s.muted}>
-              Commission is paid gross. You are responsible for declaring it to HMRC. We will send
-              you a yearly summary each April to make that easier.
+              For your agreement. Your name and email come from your Jooma account.
             </p>
             <div className={s.fgrid} style={{ marginTop: 14 }}>
-              <div className={`${s.f} ${s.full}`}>
-                <label htmlFor="amb-tax">How you declare this income</label>
-                <input id="amb-tax" className={s.input} value={taxLabel(TAX_STATUS)} readOnly data-testid="tax-status" />
-              </div>
-              <Text full label="UTR" optional value={payout.utr} error={errors.utr} placeholder="10 digits, if you have one" hint="Not required to join. It helps us produce your yearly summary correctly." inputMode="numeric" onChange={(v) => setPayout({ ...payout, utr: v })} />
+              {askMobile && (
+                <div className={`${s.f} ${s.full}`}>
+                  <label htmlFor="amb-mobile">Mobile</label>
+                  <div className={s.pre}>
+                    <span className={s.prefix}>
+                      <Phone size={17} />
+                    </span>
+                    <input id="amb-mobile" type="tel" inputMode="tel" className={`${s.input} ${errors.mobile ? s.inputBad : ""}`} value={personal.mobile} onChange={(e) => { setPersonal({ ...personal, mobile: e.target.value }); clearError("mobile"); }} placeholder="+44 7700 900412" autoComplete="tel" aria-invalid={errors.mobile ? true : undefined} aria-describedby={errors.mobile ? "amb-mobile-error" : undefined} />
+                  </div>
+                  {errors.mobile && <span id="amb-mobile-error" className={s.error}>{errors.mobile}</span>}
+                </div>
+              )}
+              <Text label="Date of birth" type="date" value={personal.date_of_birth} error={errors.date_of_birth} onChange={(v) => { setPersonal({ ...personal, date_of_birth: v }); clearError("date_of_birth"); }} autoComplete="bday" />
+              <Text label="Postcode" value={personal.postcode} error={errors.postcode} onChange={(v) => { setPersonal({ ...personal, postcode: v }); clearError("postcode"); }} autoComplete="postal-code" />
+              <Text full label="Address" value={personal.address_line} error={errors.address_line} placeholder="Street" onChange={(v) => { setPersonal({ ...personal, address_line: v }); clearError("address_line"); }} autoComplete="street-address" />
+              <Text full label="Town or city" value={personal.town} error={errors.town} onChange={(v) => { setPersonal({ ...personal, town: v }); clearError("town"); }} autoComplete="address-level2" />
+            </div>
+            <div className={s.callout}>
+              <ShieldCheck size={17} weight="fill" />
+              <span>
+                Your address and date of birth are used only for the agreement and for the checks
+                our payment provider requires. They never appear anywhere public.
+              </span>
             </div>
             <div className={`${s.callout} ${s.calloutWarn}`}>
               <Warning size={17} weight="fill" />
@@ -440,7 +459,10 @@ export default function ApplyFlow({
                   id="amb-code"
                   className={`${s.input} ${s.codeInput} ${errors.requested_code ? s.inputBad : ""}`}
                   value={payout.requested_code}
-                  onChange={(e) => setPayout({ ...payout, requested_code: e.target.value.toUpperCase() })}
+                  onChange={(e) => {
+                    setPayout({ ...payout, requested_code: e.target.value.toUpperCase() });
+                    clearError("requested_code");
+                  }}
                   placeholder="PRIYA-4K2"
                   maxLength={20}
                   autoComplete="off"
@@ -449,7 +471,10 @@ export default function ApplyFlow({
                 <span className={s.hint}>4 to 20 letters, numbers or hyphens. For example:</span>
                 <div className={s.chips}>
                   {CODE_EXAMPLES.map((c) => (
-                    <button key={c} type="button" className={s.chip} onClick={() => setPayout({ ...payout, requested_code: c })}>
+                    <button key={c} type="button" className={s.chip} onClick={() => {
+                      setPayout({ ...payout, requested_code: c });
+                      clearError("requested_code");
+                    }}>
                       {c}
                     </button>
                   ))}
@@ -467,17 +492,17 @@ export default function ApplyFlow({
             </div>
           </div>
           <div className={s.actions}>
-            <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => continueFrom(2)} disabled={codeCheck === "checking"}>
+            <button type="button" className={`${s.btn} ${s.btnPrimary}`} onClick={() => continueFrom(1)} disabled={codeCheck === "checking"}>
               Continue to the agreement <ArrowRight size={15} weight="bold" />
             </button>
-            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => go(1)}>
+            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => go(0)}>
               Back
             </button>
           </div>
         </>
       )}
 
-      {step === 3 && (
+      {step === 2 && (
         <>
           <h1 className={s.h1}>The agreement.</h1>
           <p className={s.lead}>Twelve months. Read it properly: scroll to the bottom and the signature box unlocks.</p>
@@ -557,7 +582,7 @@ export default function ApplyFlow({
             <button type="button" className={`${s.btn} ${s.btnPrimary} ${s.btnLg}`} onClick={submit} disabled={!canSign || submitting}>
               {submitting ? "Sending…" : "Sign and send for review"} <Signature size={16} weight="fill" />
             </button>
-            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => go(2)} disabled={submitting}>
+            <button type="button" className={`${s.btn} ${s.btnGhost}`} onClick={() => go(1)} disabled={submitting}>
               Back
             </button>
           </div>
@@ -645,4 +670,12 @@ function Text({
       {error && <span id={`${id}-error`} className={s.error}>{error}</span>}
     </div>
   );
+}
+
+/** "16 October", from the trial end the apply route returns. */
+function formatTrial(iso: unknown): string | null {
+  if (typeof iso !== "string") return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Europe/London" });
 }

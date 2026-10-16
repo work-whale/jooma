@@ -1,5 +1,6 @@
 "use client";
 
+import { profileMobile } from "@/app/lib/dial-codes";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
@@ -324,7 +325,6 @@ export default function TeacherDrawer({ userId, onClose }: { userId: string; onC
     ceilingPence !== null &&
     aiSpend !== null &&
     Number(aiSpend.spend_pence) >= ceilingPence + Number(aiSpend.credit_pence);
-  const dial = detail?.dial_code ? `+${detail.dial_code.replace(/^\+/, "")}` : null;
 
   return (
     <div className="fixed inset-0 z-1000" role="dialog" aria-modal="true">
@@ -526,7 +526,7 @@ export default function TeacherDrawer({ userId, onClose }: { userId: string; onC
                 <dl className="text-sm">
                   <Row label="User ID" value={<span className="font-mono text-xs">{detail!.id}</span>} />
                   <Row label="Joined" value={fmtDate(detail!.created_at)} />
-                  <Row label="Phone" value={detail!.phone ? `${dial ?? ""} ${detail!.phone}`.trim() : "—"} />
+                  <Row label="Phone" value={profileMobile(detail!.dial_code, detail!.phone) || "—"} />
                   <Row label="Country" value={detail!.country ?? "—"} />
                   <Row label="Generations (all time)" value={nf.format(detail!.generations)} />
                 </dl>

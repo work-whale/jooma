@@ -69,3 +69,42 @@ export function discountsForInterval(
   if (interval === "month") return [{ promotion_code: ids.promotionCodeId }];
   return ids.yearlyCouponId ? [{ coupon: ids.yearlyCouponId }] : "";
 }
+
+/** A Stripe coupon's value as a Discount, or null for one with neither. */
+export function discountOfCoupon(
+  coupon: { percent_off?: number | null; amount_off?: number | null } | null | undefined,
+): Discount | null {
+  if (!coupon) return null;
+  if (typeof coupon.percent_off === "number" && coupon.percent_off > 0) {
+    return { percentOff: coupon.percent_off };
+  }
+  if (typeof coupon.amount_off === "number" && coupon.amount_off > 0) {
+    return { amountOffPence: coupon.amount_off };
+  }
+  return null;
+}
+
+/**
+ * What Stripe charges for `unitPence` with this discount. Stripe rounds the
+ * DISCOUNT to the nearest penny, halves up, and charges the rest: 50% off 499
+ * is 250 off, so 249 is charged (checked against a test-mode invoice preview,
+ * October 2026). Never below zero.
+ */
+export function discountedPence(unitPence: number, d: Discount): number {
+  const off = "percentOff" in d ? Math.round((unitPence * d.percentOff) / 100) : d.amountOffPence;
+  return Math.max(0, unitPence - off);
+}
+
+/**
+ * The Discount behind a retrieved promotion code. The coupon hangs off
+ * `promotion` on this API version, expanded with "promotion.coupon"; an
+ * unexpanded response leaves a bare id, which reads as null.
+ */
+export function discountOfPromotion(promo: unknown): Discount | null {
+  const promotion = (promo as { promotion?: { coupon?: unknown } } | null)?.promotion;
+  const coupon =
+    promotion && typeof promotion.coupon === "object" && promotion.coupon !== null
+      ? (promotion.coupon as { percent_off?: number | null; amount_off?: number | null })
+      : null;
+  return discountOfCoupon(coupon);
+}

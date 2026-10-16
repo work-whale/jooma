@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/app/lib/auth/server";
 import { hasActivePlan, PLANS, PLAN_CREDITS } from "@/app/lib/plans";
 import { trialDaysFor } from "@/app/lib/trial";
+import { firstPaymentCopy } from "@/app/lib/plan-copy";
 import { loadPlanState } from "./loadPlanState";
 import ManageButton from "./ManageButton";
 import CancelSubscriptionButton from "./CancelSubscriptionButton";
@@ -58,8 +59,16 @@ export default async function OverviewTab({
     renews,
     ambassadorPro,
     ambassadorUntil,
+    reviewTrialUntil,
+    nextPayment,
+    referralCode,
   } = state;
   const yearly = interval === "year";
+  // A discount waiting on the first payment (an ambassador code), mid-trial.
+  const firstPayment =
+    trialing && !ending && !ended && renews && nextPayment
+      ? firstPaymentCopy({ renews, ...nextPayment, interval, code: referralCode })
+      : null;
 
   return (
     // max-w-3xl, kept from when the plan ladder lived here: the allowance
@@ -123,7 +132,7 @@ export default async function OverviewTab({
           >
             {ambassadorPro
               ? "ambassador"
-              : trialing
+              : trialing || reviewTrialUntil
                 ? "free trial"
                 : hasActivePlan(plan)
                   ? (profile?.subscription_status ?? "active")
@@ -148,7 +157,30 @@ export default async function OverviewTab({
           </p>
         )}
 
-        {!ambassadorPro && renews && hasActivePlan(plan) && (
+        {/* Standard while their ambassador application is read: no card, no
+            Stripe subscription, so nothing is charged when it ends. */}
+        {reviewTrialUntil && (
+          <p className="text-sm mb-5" style={{ color: "var(--j-body)" }} data-testid="review-trial">
+            Your free trial ends on {reviewTrialUntil} while we review your ambassador
+            application. No card is needed, and you won&apos;t be charged. Choose a plan any time
+            to keep going after that.
+          </p>
+        )}
+
+        {firstPayment && (
+          <p className="text-sm mb-5" style={{ color: "var(--j-body)" }} data-testid="first-payment">
+            {firstPayment.lead}{" "}
+            <s style={{ color: "var(--j-faint)" }}>
+              <span className="sr-only">was </span>
+              {firstPayment.was}
+            </s>{" "}
+            <span className="sr-only">now </span>
+            <b style={{ color: "var(--j-ink)" }}>{firstPayment.now}</b>
+            {firstPayment.tail}
+          </p>
+        )}
+
+        {!ambassadorPro && !reviewTrialUntil && !firstPayment && renews && hasActivePlan(plan) && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
             {trialing && (ending || ended)
               ? `Your free trial ends on ${renews}. You won't be charged.`

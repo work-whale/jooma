@@ -296,6 +296,10 @@ export interface SubscriptionBilling {
   interval: BillingInterval;
   /** A change waiting on a schedule, or null. */
   pending: PendingPlanChange | null;
+  /** The next charge when a discount is waiting on it (an ambassador code's
+   *  first payment), from Stripe's own preview so the rounding is Stripe's.
+   *  Null when nothing is discounted. */
+  nextPayment: { fullPence: number; nextPence: number } | null;
 }
 
 /**
@@ -329,24 +333,50 @@ export async function pendingPlanChange(
 export async function subscriptionBilling(
   subscriptionId: string | null | undefined,
 ): Promise<SubscriptionBilling> {
-  const none: SubscriptionBilling = { interval: "month", pending: null };
+  const none: SubscriptionBilling = { interval: "month", pending: null, nextPayment: null };
   if (!subscriptionId) return none;
 
   let sub: Stripe.Subscription;
   try {
-    sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["schedule"] });
+    sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["schedule", "discounts"] });
   } catch (err) {
     console.error("[stripe] subscription billing lookup failed", err);
     return none;
   }
 
   const interval = intervalOfPrice(sub.items.data[0]?.price);
+  const [pending, nextPayment] = await Promise.all([
+    pendingFromSchedule(sub.schedule).catch((err) => {
+      console.error("[stripe] pendingPlanChange lookup failed", err);
+      return null;
+    }),
+    discountedNextPayment(sub),
+  ]);
+  return { interval, pending, nextPayment };
+}
 
+/**
+ * The next charge, when a discount is waiting to be used on it. A one-off
+ * coupon stays on the subscription until the invoice it discounts, so during a
+ * trial this is the first payment. One extra Stripe call, made only when there
+ * is a discount; any failure reads as "nothing discounted".
+ */
+async function discountedNextPayment(
+  sub: Stripe.Subscription,
+): Promise<SubscriptionBilling["nextPayment"]> {
+  const hasDiscount = (sub.discounts ?? []).some((d) => d !== null && d !== undefined);
+  if (!hasDiscount || sub.status === "canceled" || sub.cancel_at_period_end) return null;
+  const item = sub.items.data[0];
+  const unit = item?.price?.unit_amount;
+  if (!item || typeof unit !== "number") return null;
+  const fullPence = unit * (item.quantity ?? 1);
   try {
-    return { interval, pending: await pendingFromSchedule(sub.schedule) };
+    const preview = await stripe.invoices.createPreview({ subscription: sub.id });
+    const nextPence = preview.amount_due;
+    return nextPence < fullPence ? { fullPence, nextPence } : null;
   } catch (err) {
-    console.error("[stripe] pendingPlanChange lookup failed", err);
-    return { interval, pending: null };
+    console.error("[stripe] next payment preview failed", err);
+    return null;
   }
 }
 

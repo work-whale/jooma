@@ -118,10 +118,40 @@ async function run(req: NextRequest) {
     }
   }
 
+  // Review trials that have run out: Standard while an ambassador application
+  // was read, no Stripe subscription (grantApplicantTrial). my_generation_gate()
+  // already stopped them on time; this tidies the row so every page agrees.
+  // Same predicate as the gate, guarded in the WHERE so a subscription that
+  // lands in between is never touched.
+  const { data: trialsEnded, error: trialError } = await supabaseAdmin
+    .from("profiles")
+    .update({
+      plan: "free",
+      subscription_status: null,
+      cancel_at_period_end: false,
+      current_period_end: null,
+      updated_at: now,
+    })
+    .eq("subscription_status", "trialing")
+    .is("stripe_subscription_id", null)
+    .lt("current_period_end", now)
+    .select("id");
+  if (trialError) {
+    console.error("[cron/ambassador-terms] could not end review trials", trialError);
+  } else if ((trialsEnded ?? []).length > 0) {
+    console.info("[cron/ambassador-terms] ended review trials for", trialsEnded!.map((r) => r.id));
+  }
+
   const reminders = await sendEndReminders(new Date());
   const summaries = await sendTaxSummaries(new Date());
 
-  return NextResponse.json({ ok: true, ended: endedIds.length, reminders, summaries });
+  return NextResponse.json({
+    ok: true,
+    ended: endedIds.length,
+    trialsEnded: (trialsEnded ?? []).length,
+    reminders,
+    summaries,
+  });
 }
 
 interface Contact {

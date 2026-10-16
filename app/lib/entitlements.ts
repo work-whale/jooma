@@ -6,7 +6,7 @@
 import { createClient } from "./auth/client";
 import {
   AI_SPEND_CEILING_PENCE,
-  asPlanId,
+  effectivePlan,
   generationGate,
   limitsFor,
   type GenerationGate,
@@ -37,13 +37,16 @@ export async function getEntitlements(): Promise<Entitlements> {
 
   const [{ data: profile }, { data: month }, { data: today }, { data: spend }] =
     await Promise.all([
-      sb.from("profiles").select("plan").maybeSingle(),
+      sb
+        .from("profiles")
+        .select("plan, subscription_status, stripe_subscription_id, current_period_end")
+        .maybeSingle(),
       sb.rpc("my_generation_count_this_month"),
       sb.rpc("my_generation_count_today"),
       sb.rpc("monthly_ai_spend", { uid: (await sb.auth.getUser()).data.user?.id }),
     ]);
 
-  const plan = asPlanId(profile?.plan);
+  const plan = effectivePlan(profile);
   const used = typeof month === "number" ? month : 0;
   const usedToday = typeof today === "number" ? today : 0;
 

@@ -59,13 +59,14 @@
   font-family: ui-monospace, monospace;
   letter-spacing: 0.04em;
   color: var(--j-ink);
-  background: var(--j-bg);
-  border: 1px solid var(--j-line);
+  /* Orange, the colour of the trial buttons, so the code box stands out. */
+  background: var(--j-orange-bg);
+  border: 2px solid var(--j-orange);
   border-radius: 12px;
 }
 
 .input:focus {
-  outline: 2px solid var(--j-purple);
+  outline: 3px solid color-mix(in srgb, var(--j-orange) 30%, transparent);
   outline-offset: 1px;
 }
 

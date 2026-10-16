@@ -106,10 +106,13 @@ export default function AmbassadorCodeField({
           }}
           placeholder="Enter your code"
           aria-label="Promo code"
-          className="flex-1 min-w-0 px-4 py-2.5 rounded-xl text-sm border font-mono tracking-wider"
+          // Orange, the colour of the trial buttons, so a teacher handed a code
+          // spots where it goes.
+          data-testid="promo-code-input"
+          className="flex-1 min-w-0 px-4 py-2.5 rounded-xl text-sm border-2 font-mono tracking-wider outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--j-orange)_25%,transparent)]"
           style={{
-            backgroundColor: "var(--j-bg)",
-            borderColor: "var(--j-line)",
+            backgroundColor: "var(--j-orange-bg)",
+            borderColor: "var(--j-orange)",
             color: "var(--j-ink)",
           }}
         />

@@ -12,6 +12,7 @@ import {
   TRIAL_CTA,
 } from "@/app/lib/plan-copy";
 import { DEFAULT_INTERVAL, TRIAL_DAYS, type BillingInterval } from "@/app/lib/plans";
+import type { Discount } from "@/app/lib/ambassador-discount";
 import styles from "./ambassador.module.css";
 
 /*
@@ -42,7 +43,14 @@ import styles from "./ambassador.module.css";
 type Checked =
   | { state: "idle" }
   | { state: "checking" }
-  | { state: "good"; code: string; offer: string | null; claimed?: boolean }
+  | {
+      state: "good";
+      code: string;
+      offer: string | null;
+      /** What it takes off the first monthly payment, for the cards. */
+      discount: Discount | null;
+      claimed?: boolean;
+    }
   | { state: "bad"; message: string };
 
 /** The plans offered here, cheapest first. Every figure and line of copy comes
@@ -101,7 +109,11 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
   const [applying, setApplying] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [interval, setBillingInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
+  // A code is a first-month discount, so a teacher who arrived with one starts
+  // on Monthly, where it shows; anyone else on Yearly, the better deal.
+  const [interval, setBillingInterval] = useState<BillingInterval>(
+    arrived ? "month" : DEFAULT_INTERVAL,
+  );
 
   /** Look the code up. Read-only: runs on blur as well as on Apply.
    *  `settle: false` leaves the state at "checking" on success, for Apply,
@@ -109,7 +121,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
   const check = async (
     value: string,
     { settle = true }: { settle?: boolean } = {},
-  ): Promise<{ code: string; offer: string | null } | null> => {
+  ): Promise<{ code: string; offer: string | null; discount: Discount | null } | null> => {
     const trimmed = value.trim();
     if (!trimmed) {
       setChecked({ state: "idle" });
@@ -120,7 +132,11 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
       const res = await fetch(`/api/ambassadors/check?code=${encodeURIComponent(trimmed)}`);
       const json = await res.json();
       if (json?.valid) {
-        const good = { code: json.code as string, offer: (json.offer as string | null) ?? null };
+        const good = {
+          code: json.code as string,
+          offer: (json.offer as string | null) ?? null,
+          discount: (json.discount as Discount | null) ?? null,
+        };
         if (settle) setChecked({ state: "good", ...good });
         return good;
       }
@@ -177,6 +193,8 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
         return;
       }
       setChecked({ state: "good", ...good, claimed: true });
+      // Show what the code does: it comes off the first monthly payment.
+      setBillingInterval("month");
       try {
         sessionStorage.removeItem("jooma:ambassador-code");
       } catch {
@@ -248,6 +266,8 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
     setBusy(null);
   };
 
+  const discount = checked.state === "good" ? checked.discount : null;
+
   return (
     <section className={styles.panel} aria-label="Choose your plan">
       {/* The code box stays one quiet line unless a code is waiting, so the
@@ -267,6 +287,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
             onBlur={(e) => check(e.target.value)}
             placeholder="Enter your code"
             aria-label="Your code"
+            data-testid="promo-code-input"
             className={styles.input}
           />
           <button
@@ -316,7 +337,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
             key={id}
             compact
             name={planCardName(id)}
-            {...planCardPricing(id, interval)}
+            {...planCardPricing(id, interval, discount)}
             features={planFeatures(id)}
             featured={id === FEATURED}
             badge={id === FEATURED ? "Most popular" : undefined}
@@ -327,7 +348,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
               disabled: busy !== null,
               tone: "trial",
             }}
-            footer={planTrialLine(id, interval)}
+            footer={planTrialLine(id, interval, discount)}
           />
         ))}
       </PlanCardGrid>

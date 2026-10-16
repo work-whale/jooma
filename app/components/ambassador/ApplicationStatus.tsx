@@ -12,11 +12,15 @@ export default function ApplicationStatus({
   firstName,
   submittedAt,
   declineReason,
+  trialUntil,
 }: {
   status: "pending" | "declined";
   firstName?: string | null;
   submittedAt?: string | null;
   declineReason?: string | null;
+  /** Their free Standard while we review, when they have one: the end date,
+   *  formatted. */
+  trialUntil?: string | null;
 }) {
   if (status === "declined") {
     return (
@@ -67,7 +71,7 @@ export default function ApplicationStatus({
         <span className={s.stateIc}>
           <HourglassMedium size={32} weight="fill" />
         </span>
-        <h1 className={s.h1}>That is with us.</h1>
+        <h1 className={s.h1}>Leave it with us.</h1>
         <p>
           We read every application properly, so give us a couple of working days. Nothing else is
           needed from you.
@@ -96,10 +100,18 @@ export default function ApplicationStatus({
             </span>
           </div>
         </div>
-        <div className={s.callout}>
+        <div className={s.callout} data-testid="review-trial-note">
           <span>
-            In the meantime your Jooma account works exactly as it did. You will see{" "}
-            <b>Ambassador Programme</b> in your account menu with an <b>Under review</b> label on it.
+            {trialUntil ? (
+              <>
+                In the meantime you have <b>Jooma Standard free until {trialUntil}</b>: every tool
+                and 500 credits, no card needed.
+              </>
+            ) : (
+              <>In the meantime your Jooma account works exactly as it did.</>
+            )}{" "}
+            You will see <b>Ambassador Programme</b> in your account menu with an{" "}
+            <b>Under review</b> label on it.
           </span>
         </div>
       </div>
@@ -112,7 +124,7 @@ export default function ApplicationStatus({
           </span>
           <span className={s.rowMain}>
             <b>Go back to Jooma</b>
-            <span>Your plan and library are untouched.</span>
+            <span>{trialUntil ? "Try any tool while you wait." : "Your plan and library are untouched."}</span>
           </span>
           <span className={s.rowRight}>
             <Link href="/dashboard" className={`${s.btn} ${s.btnGhost} ${s.btnSm}`}>

@@ -14,6 +14,7 @@ import {
   TRIAL_CTA,
 } from "@/app/lib/plan-copy";
 import { DEFAULT_INTERVAL, PLANS, type BillingInterval, type PlanId } from "@/app/lib/plans";
+import type { Discount } from "@/app/lib/ambassador-discount";
 import DowngradeButton from "./DowngradeButton";
 import UpgradeButton from "./UpgradeButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
@@ -70,6 +71,9 @@ export default function PlanPicker({
   /** They have claimed an ambassador code that is still unused. It discounts
    *  monthly checkouts only, which the picker says when Yearly is chosen. */
   hasUnusedCode = false,
+  /** What that code takes off the first monthly payment. The cards that go to
+   *  checkout show the first payment with the full price struck beside it. */
+  codeDiscount = null,
 }: {
   plans: PlanId[];
   current: PlanId;
@@ -81,17 +85,20 @@ export default function PlanPicker({
   locked?: boolean;
   subscriptionInterval?: BillingInterval;
   hasUnusedCode?: boolean;
+  codeDiscount?: Discount | null;
 }) {
   const [pending, setPending] = useState<PlanId | null>(null);
   /**
    * The interval the cards show and act at.
    *
    * A subscriber opens on the interval they pay now, so the first thing they
-   * see is their own price, marked as theirs. Someone with nothing yet opens on
-   * Yearly, the better deal, as on the landing page.
+   * see is their own price, marked as theirs. Someone with a code waiting opens
+   * on Monthly, where the code takes money off the first payment. Anyone else
+   * opens on Yearly, the better deal, as on the landing page. The page keys
+   * this component on the code, so applying one remounts it on Monthly.
    */
   const [interval, setIntervalChoice] = useState<BillingInterval>(
-    hasSubscription ? subscriptionInterval : DEFAULT_INTERVAL,
+    hasSubscription ? subscriptionInterval : hasUnusedCode ? "month" : DEFAULT_INTERVAL,
   );
   /** True when the cards show the interval a subscriber is NOT billed at, so
    *  every card there, their own plan's included, is a billing change. */
@@ -106,6 +113,10 @@ export default function PlanPicker({
     setIntervalChoice(next);
     setChanging(null);
   }
+
+  /** The code's discount, on the cards a checkout would apply it to. */
+  const discountFor = (id: PlanId): Discount | null =>
+    !hasSubscription && hasUnusedCode && moveFor(id) === "buy" ? codeDiscount : null;
 
   /** The card for the plan AND interval they already have. */
   const isCurrentCard = (id: PlanId) => id === current && !otherInterval;
@@ -241,14 +252,14 @@ export default function PlanPicker({
             ) : isCurrent && pendingPlan && pendingAt ? (
               <>Yours until {pendingAt}.</>
             ) : trialEligible && moveFor(id) === "buy" ? (
-              planTrialLine(id, interval)
+              planTrialLine(id, interval, discountFor(id))
             ) : null;
 
           return (
             <PlanCard
               key={id}
               name={planCardName(id)}
-              {...planCardPricing(id, interval)}
+              {...planCardPricing(id, interval, discountFor(id))}
               features={planFeatures(id)}
               featured={id === FEATURED}
               badge={id === FEATURED ? "Most popular" : undefined}

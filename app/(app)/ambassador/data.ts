@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/app/lib/auth/server";
 import type { LedgerRow } from "@/app/lib/ambassador-commission";
+import { reviewTrialEnd } from "@/app/lib/plans";
 
 // Everything the ambassador's pages read, through definer functions scoped to
 // the caller (supabase/migrations/20261014000000_ambassador_programme_v2.sql).
@@ -83,12 +84,18 @@ export const loadAmbassadorContext = cache(async () => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { user: null, ambassador: null, application: null, firstName: null };
+  if (!user) {
+    return { user: null, ambassador: null, application: null, firstName: null, reviewTrialUntil: null };
+  }
 
   const [{ data: me }, { data: app }, { data: profile }] = await Promise.all([
     supabase.rpc("my_ambassador"),
     supabase.rpc("my_ambassador_application"),
-    supabase.from("profiles").select("first_name, plan").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("first_name, plan, subscription_status, stripe_subscription_id, current_period_end")
+      .eq("id", user.id)
+      .maybeSingle(),
   ]);
 
   const ambassador = (Array.isArray(me) ? me[0] : null) as MyAmbassador | null;
@@ -99,7 +106,21 @@ export const loadAmbassadorContext = cache(async () => {
     ambassador?.full_name.split(" ")[0] ||
     null;
 
-  return { user, ambassador, application, firstName, plan: (profile?.plan as string | null) ?? null };
+  // Standard free while the application is read (grantApplicantTrial).
+  const trialEnd = reviewTrialEnd(profile);
+  const reviewTrialUntil =
+    trialEnd && trialEnd.getTime() > Date.now()
+      ? trialEnd.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Europe/London" })
+      : null;
+
+  return {
+    user,
+    ambassador,
+    application,
+    firstName,
+    plan: (profile?.plan as string | null) ?? null,
+    reviewTrialUntil,
+  };
 });
 
 export const loadReferrals = cache(async (): Promise<MyReferral[]> => {

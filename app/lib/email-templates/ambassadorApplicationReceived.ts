@@ -17,6 +17,7 @@ export function ambassadorApplicationReceivedTemplate(
   const code = escapeHtml(params.code);
   const paidBy = escapeHtml(params.paidBy);
   const signedDate = escapeHtml(params.signedDate);
+  const trialEnds = escapeHtml(params.trialEnds ?? "");
   const agreementUrl = `${siteUrl()}/ambassador/agreement`;
 
   const intro =
@@ -37,7 +38,7 @@ export function ambassadorApplicationReceivedTemplate(
   return {
     subject: "We have your Jooma Ambassador application",
     html: `
-    <h1 ${H1}>That is with us.</h1>
+    <h1 ${H1}>Leave it with us.</h1>
     ${intro}
 
     <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 16px 0;background-color:#F1ECFC;border-radius:12px;">
@@ -58,7 +59,11 @@ export function ambassadorApplicationReceivedTemplate(
       dashboard switches on, and your Pro account becomes free for twelve months.
     </p>
     <p ${P}>
-      Until then your Jooma account works exactly as it did.
+      ${
+        trialEnds
+          ? `While we review, you have Jooma Standard free until ${trialEnds}: every tool and 500 credits, no card needed. If we approve you before then, it becomes twelve months of Pro.`
+          : "Until then your Jooma account works exactly as it did."
+      }
     </p>
 
     ${button("Read the agreement you signed", agreementUrl)}
