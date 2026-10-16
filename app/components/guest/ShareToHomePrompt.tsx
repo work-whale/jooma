@@ -73,7 +73,7 @@ export default function ShareToHomePrompt({ kind, resourceId }: { kind: Kind; re
       role="dialog"
       aria-label="Share on the Jooma homepage"
       data-testid="share-prompt"
-      className="fixed right-5 bottom-5 z-80 w-[min(360px,calc(100vw-2.5rem))] rounded-2xl border p-4 shadow-xl"
+      className="fixed right-5 bottom-[calc(1.25rem+max(var(--j-bottom-ui,0px),env(safe-area-inset-bottom)))] z-80 w-[min(360px,calc(100vw-2.5rem))] rounded-2xl border p-4 shadow-xl"
       style={{ backgroundColor: "var(--j-card)", borderColor: "var(--j-line)" }}
     >
       <button

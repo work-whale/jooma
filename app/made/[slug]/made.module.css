@@ -1,5 +1,6 @@
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--j-bg);
   color: var(--j-body);
   font-family: var(--font-jakarta), system-ui, sans-serif;

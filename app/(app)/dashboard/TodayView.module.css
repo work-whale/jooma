@@ -110,7 +110,13 @@
   flex: none;
 }
 
-.moGo:hover:not(:disabled) {
+@media (hover: hover) {
+  .moGo:hover:not(:disabled) {
+    background: var(--j-tint);
+  }
+}
+
+.moGo:active:not(:disabled) {
   background: var(--j-tint);
 }
 
@@ -264,7 +270,15 @@
     box-shadow 0.2s;
 }
 
-.qt:hover {
+@media (hover: hover) {
+  .qt:hover {
+    transform: translateY(-3px);
+    border-color: var(--j-lilac-2);
+    box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
+  }
+}
+
+.qt:active {
   transform: translateY(-3px);
   border-color: var(--j-lilac-2);
   box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
@@ -388,7 +402,13 @@
    Its own class rather than reaching for app.module.css's .rowTitle: that class
    is hashed by CSS Modules and is not addressable from this file. Matching on a
    partial attribute selector would work until the hashing changed. */
-.recentRow:hover .recentTitle {
+@media (hover: hover) {
+  .recentRow:hover .recentTitle {
+    color: var(--j-purple);
+  }
+}
+
+.recentRow:active .recentTitle {
   color: var(--j-purple);
 }
 
@@ -409,16 +429,48 @@
   transition: opacity 0.15s;
 }
 
-.recentRow:hover .recentShare,
+.recentShare {
+  position: relative;
+}
+
+/* A 48px tap target around the 30px button; it draws as before. */
+.recentShare::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+
 .recentShare:focus-visible {
   opacity: 1;
 }
 
-.recentShare:hover {
+@media (hover: hover) {
+  .recentRow:hover .recentShare {
+    opacity: 1;
+  }
+}
+
+.recentRow:active .recentShare {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .recentShare:hover {
+    background: var(--j-tint);
+  }
+}
+
+.recentShare:active {
   background: var(--j-tint);
 }
 
-.recentShare:hover .rowGo {
+@media (hover: hover) {
+  .recentShare:hover .rowGo {
+    color: var(--j-purple);
+  }
+}
+
+.recentShare:active .rowGo {
   color: var(--j-purple);
 }
 
@@ -604,7 +656,14 @@
   flex: none;
 }
 
-.gap:hover {
+@media (hover: hover) {
+  .gap:hover {
+    border-color: var(--j-lilac-2);
+    color: var(--j-deep);
+  }
+}
+
+.gap:active {
   border-color: var(--j-lilac-2);
   color: var(--j-deep);
 }
@@ -618,7 +677,13 @@
   color: var(--j-purple);
 }
 
-.weekSetUp:hover {
+@media (hover: hover) {
+  .weekSetUp:hover {
+    text-decoration: underline;
+  }
+}
+
+.weekSetUp:active {
   text-decoration: underline;
 }
 
@@ -655,7 +720,13 @@
   text-transform: uppercase;
   text-decoration: none;
 }
-.verifiedStrip:hover {
+@media (hover: hover) {
+  .verifiedStrip:hover {
+    border-color: #e8b944;
+  }
+}
+
+.verifiedStrip:active {
   border-color: #e8b944;
 }
 .verifiedIcon {

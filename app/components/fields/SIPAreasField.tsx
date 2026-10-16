@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function SIPAreasField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. attendance, reading outcomes in KS2, behaviour and attitudes",
     "e.g. maths attainment at KS4, staff retention, curriculum sequencing",
@@ -18,9 +21,9 @@ export default function SIPAreasField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Areas to improve</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Areas to improve</label>
       <div className="relative">
-        <textarea
+        <textarea id={`${fieldId}-0`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""

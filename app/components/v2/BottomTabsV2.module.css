@@ -1,0 +1,102 @@
+/* The phone tab bar. Pinned to the bottom edge below 900px; absent above it,
+   where the rail is on screen. */
+
+.bar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* Above the page and its floating buttons, below the drawer's backdrop
+       (40) so an open drawer dims it too. */
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    background: var(--j-card);
+    border-top: 1px solid var(--j-line);
+    /* Clears the home indicator. The 64px row above it is what --j-bottom-ui
+       in globals.css counts. */
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}
+
+/* While a field has focus the keyboard is up. On Android the layout viewport
+   shrinks with it (interactive-widget=resizes-content), which would float the
+   bar on top of the keyboard and squeeze the field; on iOS it would sit over
+   the field being typed in. Out of the way until typing stops. */
+@media (max-width: 900px) {
+  :global(:root):has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select, [contenteditable="true"]):focus) .bar {
+    display: none;
+  }
+}
+
+.tab {
+  /* Every tab is a full 64px tall and a fifth of the width: well past 48px on
+     the narrowest 320px phone (64px each). */
+  min-height: 64px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  color: var(--j-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--j-deep);
+  }
+}
+
+.tab:active {
+  background: var(--j-tint);
+  color: var(--j-deep);
+}
+
+/* Inside the tab, so the ring is not clipped by the bar's edge. */
+.tab:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: -4px;
+  border-radius: var(--j-r);
+}
+
+.tabOn,
+.tabOn:active {
+  color: var(--j-purple);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.label {
+  /* rem, so it follows the teacher's font setting; ellipsis rather than
+     overflow if they set it very large on a narrow phone. */
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabOn .label {
+  font-weight: 800;
+}

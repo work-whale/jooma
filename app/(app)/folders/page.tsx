@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -60,6 +61,7 @@ import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { typeLabel, formatDate } from "@/app/lib/toolRunDisplay";
 import app from "@/app/components/v2/app.module.css";
 import styles from "./folders.module.css";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 /*
  * Library.
@@ -467,6 +469,8 @@ function Library() {
         <div className={`${app.search} ${styles.drivebarSearch}`}>
           <MagnifyingGlass className={app.searchIcon} />
           <input
+            inputMode="search"
+            enterKeyHint="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search your library"
@@ -1135,20 +1139,28 @@ function Menu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
 
   useEffect(() => {
     if (!open) return;
+    // pointerdown, not mousedown: iOS Safari sends no mouse events for a tap
+    // on something that is not itself clickable.
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node))
         setOpen(false);
     };
+    // Escape hands focus back to the "..." button rather than dropping it at
+    // the top of the document.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
     };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -1169,9 +1181,11 @@ function Menu({
     <div ref={ref} className={corner ? styles.menuCorner : styles.menuInline}>
       <button
         type="button"
+        ref={triggerRef}
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
@@ -1181,7 +1195,7 @@ function Menu({
         <DotsThree weight="bold" className={styles.menuIcon} />
       </button>
       {open && (
-        <div className={styles.menuPanel} role="menu">
+        <div id={panelId} className={styles.menuPanel} role="menu">
           {children(() => setOpen(false))}
         </div>
       )}
@@ -1246,6 +1260,9 @@ function ModalShell({
   children: React.ReactNode;
 }) {
   const returnTo = useRef<HTMLElement | null>(null);
+  // Tab stays inside while it is open; it only exists while open.
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef, true);
 
   useEffect(() => {
     returnTo.current = document.activeElement as HTMLElement | null;
@@ -1268,6 +1285,7 @@ function ModalShell({
     >
       <div
         className={styles.modalCard}
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}

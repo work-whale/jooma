@@ -47,6 +47,21 @@ export default function ChatSidebar({
     if (editingId) editRef.current?.select();
   }, [editingId]);
 
+  // Escape closes the options menu and hands focus back to its button. The
+  // button is found by the id the menu was opened for, since the list renders
+  // one per chat.
+  useEffect(() => {
+    if (!menuFor) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const id = menuFor;
+      setMenuFor(null);
+      document.querySelector<HTMLElement>(`[aria-controls="chat-menu-${id}"]`)?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuFor]);
+
   const startRename = (chat: AssistantChat) => {
     setMenuFor(null);
     setEditingId(chat.id);
@@ -95,6 +110,8 @@ export default function ChatSidebar({
       >
         <Search className="w-4 h-4 shrink-0 text-muted" />
         <input
+          inputMode="search"
+          enterKeyHint="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for a chat"
@@ -155,7 +172,7 @@ export default function ChatSidebar({
                     <button
                       type="button"
                       onClick={() => onSelect(chat.id)}
-                      className="w-full rounded-xl px-4 py-3 pr-9 text-left text-[13px] transition-colors cursor-pointer"
+                      className="w-full rounded-xl px-4 py-3 pr-12 text-left text-[13px] transition-colors cursor-pointer"
                       style={{
                         backgroundColor: active ? "var(--j-purple)" : "var(--j-tint)",
                         color: active ? "#fff" : "var(--j-ink)",
@@ -169,9 +186,17 @@ export default function ChatSidebar({
                     <button
                       type="button"
                       aria-label={`Options for ${chat.title}`}
+                      aria-haspopup="menu"
+                      aria-expanded={menuFor === chat.id}
+                      aria-controls={`chat-menu-${chat.id}`}
                       onClick={() => setMenuFor(menuFor === chat.id ? null : chat.id)}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-opacity cursor-pointer ${
-                        menuFor === chat.id ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      // Hidden until hover on a mouse, but always shown on a
+                      // touch screen, which has no hover to reveal it with.
+                      // The after: layer makes the tap target 48px.
+                      className={`absolute right-1 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded transition-opacity cursor-pointer after:absolute after:-inset-1 after:content-[''] ${
+                        menuFor === chat.id
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-100"
                       }`}
                     >
                       <MoreHorizontal className={`w-4 h-4 ${active ? "text-white" : "text-muted"}`} />
@@ -185,13 +210,16 @@ export default function ChatSidebar({
                           slideshow menus are missing. */}
                       <div className="fixed inset-0 z-10" onClick={() => setMenuFor(null)} />
                       <div
-                        className="absolute right-2 top-full z-20 mt-1 w-36 overflow-hidden rounded-lg border bg-white py-1 shadow-lg"
+                        id={`chat-menu-${chat.id}`}
+                        role="menu"
+                        className="absolute right-2 top-full z-20 mt-1 w-40 overflow-hidden rounded-lg border bg-white py-1 shadow-lg"
                         style={{ borderColor: "var(--j-line)" }}
                       >
                         <button
                           type="button"
+                          role="menuitem"
                           onClick={() => startRename(chat)}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-dark hover:bg-gray-50 cursor-pointer"
+                          className="flex w-full pointer-coarse:min-h-12 items-center gap-2 px-3 py-2 text-left text-sm text-dark hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           Rename
@@ -202,7 +230,8 @@ export default function ChatSidebar({
                             setMenuFor(null);
                             onDelete(chat.id);
                           }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 cursor-pointer"
+                          role="menuitem"
+                          className="flex w-full pointer-coarse:min-h-12 items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 active:bg-red-100 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Delete

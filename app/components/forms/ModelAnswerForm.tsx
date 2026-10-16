@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { toTitleCase } from "@/app/lib/formOptions";
 import { Loader2, Sparkles, Minus, Plus } from "lucide-react";
@@ -34,6 +34,7 @@ export default function ModelAnswerForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
@@ -173,8 +174,8 @@ export default function ModelAnswerForm({
             />
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Subject</label>
-              <input
+              <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Subject</label>
+              <input id={`${fieldId}-0`}
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -184,8 +185,8 @@ export default function ModelAnswerForm({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Question to answer</label>
-              <textarea
+              <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">Question to answer</label>
+              <textarea id={`${fieldId}-1`}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="e.g. Explain how the structure of DNA allows genetic information to be stored and copied. [6 marks]"
@@ -196,10 +197,10 @@ export default function ModelAnswerForm({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
+              <label htmlFor={`${fieldId}-2`} className="block text-sm font-semibold text-gray-800">
                 Content requirements <span className="text-gray-400 font-normal">(optional)</span>
               </label>
-              <textarea
+              <textarea id={`${fieldId}-2`}
                 value={contentRequirements}
                 onChange={(e) => setContentRequirements(e.target.value)}
                 placeholder="e.g. Paste relevant mark scheme criteria, exam specification content, or subject-specific guidance here"
@@ -210,10 +211,10 @@ export default function ModelAnswerForm({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
+              <label htmlFor={`${fieldId}-3`} className="block text-sm font-semibold text-gray-800">
                 Guidelines <span className="text-gray-400 font-normal">(optional)</span>
               </label>
-              <textarea
+              <textarea id={`${fieldId}-3`}
                 value={guidelines}
                 onChange={(e) => setGuidelines(e.target.value)}
                 placeholder="e.g. Write approximately 300 words across 3 paragraphs, using subject-specific terminology throughout"

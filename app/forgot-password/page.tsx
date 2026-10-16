@@ -134,6 +134,7 @@ export default function ForgotPasswordPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@school.sch.uk"
             autoComplete="email"
+            enterKeyHint="send"
             autoFocus
             className={auth.input}
           />

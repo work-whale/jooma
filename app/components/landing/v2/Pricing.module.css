@@ -169,7 +169,14 @@
     border-color 0.18s;
 }
 
-.schoolAction:hover {
+@media (hover: hover) {
+  .schoolAction:hover {
+    border-color: var(--j-lilac-2);
+    transform: translateY(-2px);
+  }
+}
+
+.schoolAction:active {
   border-color: var(--j-lilac-2);
   transform: translateY(-2px);
 }

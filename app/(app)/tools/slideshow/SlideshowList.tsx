@@ -174,13 +174,19 @@ export default function SlideshowListPage({
         </div>
       </div>
 
+      <label htmlFor="slideshow-search" className="block -mb-4 text-sm font-semibold text-gray-800">
+        Search slideshows
+      </label>
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
+          id="slideshow-search"
           type="text"
+          inputMode="search"
+          enterKeyHint="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search slideshows..."
+          placeholder="Title"
           className="w-full rounded-xl pl-11 pr-4 py-3 text-sm bg-white border focus:outline-none transition-all"
           style={{ borderColor: "var(--j-line)" }}
         />
@@ -277,9 +283,14 @@ export default function SlideshowListPage({
                     </p>
                   </div>
                 </div>
+                {/* Shown on hover with a mouse, always on a touch screen (no
+                    hover to reveal it), and on keyboard focus. The after:
+                    layer makes it 48px to tap. */}
                 <button
+                  type="button"
                   onClick={(e) => requestDelete(p, e)}
-                  className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-opacity"
+                  aria-label={`Delete ${p.title || "slideshow"}`}
+                  className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 hover:bg-red-50 hover:text-red-600 active:bg-red-50 active:text-red-600 flex items-center justify-center transition-opacity after:absolute after:-inset-2 after:content-['']"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />

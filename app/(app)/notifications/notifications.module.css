@@ -45,7 +45,24 @@
   transition: opacity 0.15s;
 }
 
-.dismiss:hover {
+.dismiss {
+  position: relative;
+}
+
+/* A 48px tap target around the 26px button; it draws as before. */
+.dismiss::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
+
+@media (hover: hover) {
+  .dismiss:hover {
+    opacity: 0.6;
+  }
+}
+
+.dismiss:active {
   opacity: 0.6;
 }
 

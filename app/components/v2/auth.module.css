@@ -71,7 +71,21 @@
   cursor: pointer;
 }
 
-.reveal:hover {
+/* A 48px tap target around the 32px eye button. */
+.reveal::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+@media (hover: hover) {
+  .reveal:hover {
+    color: var(--j-purple);
+    background: var(--j-tint);
+  }
+}
+
+.reveal:active {
   color: var(--j-purple);
   background: var(--j-tint);
 }
@@ -98,7 +112,13 @@
   transition: background 0.15s;
 }
 
-.submit:hover:not(:disabled) {
+@media (hover: hover) {
+  .submit:hover:not(:disabled) {
+    background: var(--j-deep);
+  }
+}
+
+.submit:active:not(:disabled) {
   background: var(--j-deep);
 }
 
@@ -128,7 +148,14 @@
     color 0.15s;
 }
 
-.google:hover {
+@media (hover: hover) {
+  .google:hover {
+    border-color: var(--j-lilac-2);
+    color: var(--j-deep);
+  }
+}
+
+.google:active {
   border-color: var(--j-lilac-2);
   color: var(--j-deep);
 }
@@ -184,7 +211,13 @@
   font-weight: 800;
 }
 
-.check a:hover {
+@media (hover: hover) {
+  .check a:hover {
+    text-decoration: underline;
+  }
+}
+
+.check a:active {
   text-decoration: underline;
 }
 
@@ -200,13 +233,25 @@
   margin-bottom: 18px;
 }
 
+/* 48px tall to tap, with the extra height taken back by negative margins so
+   the row sits exactly where it did. */
 .forgotRow a {
   font-size: 0.83rem;
   font-weight: 800;
   color: var(--j-purple);
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin: -14px 0;
 }
 
-.forgotRow a:hover {
+@media (hover: hover) {
+  .forgotRow a:hover {
+    text-decoration: underline;
+  }
+}
+
+.forgotRow a:active {
   text-decoration: underline;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
@@ -45,6 +45,7 @@ interface SubjectFocusCardProps {
 }
 
 function SubjectFocusCard({ subject, index, showRemove, includeTargets, onChange, onRemove }: SubjectFocusCardProps) {
+  const fieldId = useId();
   const subjectPlaceholder = useTypingPlaceholder(["e.g. Mathematics", "e.g. English", "e.g. Science", "e.g. History"]);
   const strengthsPlaceholder = useTypingPlaceholder([
     "e.g. Demonstrates strong number sense and applies methods accurately",
@@ -74,26 +75,26 @@ function SubjectFocusCard({ subject, index, showRemove, includeTargets, onChange
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-semibold text-gray-800">Subject or Focus</label>
+        <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Subject or Focus</label>
         <div className="relative">
-          <input type="text" value={subject.subject} onChange={(e) => onChange("subject", e.target.value)} placeholder="" className={inputClass} />
+          <input id={`${fieldId}-0`} type="text" value={subject.subject} onChange={(e) => onChange("subject", e.target.value)} placeholder="" className={inputClass} />
           {!subject.subject && <PlaceholderOverlay text={subjectPlaceholder} />}
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-semibold text-gray-800">Strengths</label>
+        <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">Strengths</label>
         <div className="relative">
-          <textarea value={subject.strengths} onChange={(e) => onChange("strengths", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
+          <textarea id={`${fieldId}-1`} value={subject.strengths} onChange={(e) => onChange("strengths", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
           {!subject.strengths && <PlaceholderOverlay text={strengthsPlaceholder} area />}
         </div>
         <p className="text-xs text-gray-400">100,000 character maximum input text</p>
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-semibold text-gray-800">Areas for development</label>
+        <label htmlFor={`${fieldId}-2`} className="block text-sm font-semibold text-gray-800">Areas for development</label>
         <div className="relative">
-          <textarea value={subject.areasForDevelopment} onChange={(e) => onChange("areasForDevelopment", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
+          <textarea id={`${fieldId}-2`} value={subject.areasForDevelopment} onChange={(e) => onChange("areasForDevelopment", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
           {!subject.areasForDevelopment && <PlaceholderOverlay text={areasPlaceholder} area />}
         </div>
         <p className="text-xs text-gray-400">100,000 character maximum input text</p>
@@ -101,9 +102,9 @@ function SubjectFocusCard({ subject, index, showRemove, includeTargets, onChange
 
       {includeTargets && (
         <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-gray-800">Targets</label>
+          <label htmlFor={`${fieldId}-3`} className="block text-sm font-semibold text-gray-800">Targets</label>
           <div className="relative">
-            <textarea value={subject.targets} onChange={(e) => onChange("targets", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
+            <textarea id={`${fieldId}-3`} value={subject.targets} onChange={(e) => onChange("targets", e.target.value)} placeholder="" rows={3} className={`${inputClass} resize-none`} />
             {!subject.targets && <PlaceholderOverlay text={targetsPlaceholder} area />}
           </div>
           <p className="text-xs text-gray-400">100,000 character maximum input text</p>

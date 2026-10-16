@@ -25,6 +25,7 @@
 /* Pages outside the app shell paint their own background. */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--j-bg);
 }
 
@@ -1024,8 +1025,17 @@
   transition: opacity 0.12s;
   z-index: 5;
 }
-.col:hover .tip,
-.col:focus-visible .tip {
+/* Hover with a mouse. On a touch screen a tap focuses the column (it carries
+   tabIndex=0), so :focus shows the figure there and keeps it up until the
+   next tap elsewhere; :active covers a press-and-hold. */
+@media (hover: hover) {
+  .col:hover .tip {
+    opacity: 1;
+  }
+}
+
+.col:focus .tip,
+.col:active .tip {
   opacity: 1;
 }
 .keys {

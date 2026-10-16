@@ -116,13 +116,14 @@ export default function AuthGateModal({
         )}
 
         <form onSubmit={withEmail} className={styles.gateForm}>
-          <label htmlFor="gate-email" className={styles.srOnly}>
+          <label htmlFor="gate-email" className={styles.gateLabel}>
             Email
           </label>
           <input
             id="gate-email"
             type="email"
             autoComplete="email"
+            enterKeyHint="go"
             placeholder="you@school.sch.uk"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

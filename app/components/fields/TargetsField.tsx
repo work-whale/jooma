@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function TargetsField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Improve reading fluency, complete independent tasks without prompting",
     "e.g. Manage transitions calmly, develop self-regulation strategies",
@@ -19,9 +22,9 @@ export default function TargetsField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Targets</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Targets</label>
       <div className="relative">
-        <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder="" rows={5} className={`${inputClass} resize-none`} />
+        <textarea id={`${fieldId}-0`} value={value} onChange={(e) => onChange(e.target.value)} placeholder="" rows={5} className={`${inputClass} resize-none`} />
         {!value && <PlaceholderOverlay text={placeholder} area />}
       </div>
       <p className="text-xs text-gray-400">100,000 character maximum input text</p>

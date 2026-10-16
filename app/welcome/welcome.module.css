@@ -8,6 +8,7 @@
 
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--j-bg);
   color: var(--j-body);
   font-family: var(--font-jakarta), system-ui, sans-serif;
@@ -29,7 +30,7 @@
 }
 
 .title {
-  font-size: clamp(28px, 5vw, 40px);
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -40,7 +41,7 @@
 }
 
 .lede {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 400;
   line-height: 1.6;
   color: var(--j-muted);
@@ -80,7 +81,14 @@
     transform 0.18s var(--j-ease);
 }
 
-.card:hover {
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--j-lilac-2);
+    transform: translateY(-2px);
+  }
+}
+
+.card:active {
   border-color: var(--j-lilac-2);
   transform: translateY(-2px);
 }
@@ -93,14 +101,14 @@
 }
 
 .cardName {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 800;
   color: var(--j-ink);
   letter-spacing: -0.01em;
 }
 
 .cardDesc {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   line-height: 1.45;
   color: var(--j-muted);
@@ -111,7 +119,7 @@
   padding: 13px 30px;
   background: var(--j-purple);
   color: #fff;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 800;
   border-radius: var(--j-pill);
   text-decoration: none;
@@ -120,13 +128,20 @@
     transform 0.18s var(--j-ease);
 }
 
-.cta:hover {
+@media (hover: hover) {
+  .cta:hover {
+    background: var(--j-deep);
+    transform: translateY(-1px);
+  }
+}
+
+.cta:active {
   background: var(--j-deep);
   transform: translateY(-1px);
 }
 
 .foot {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   color: var(--j-faint);
   margin: 14px 0 0;

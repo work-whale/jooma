@@ -78,6 +78,8 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
           <MagnifyingGlass className={app.searchIcon} />
           <input
             type="text"
+            inputMode="search"
+            enterKeyHint="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`Search ${available.length} tools. Try cover lesson, or report`}

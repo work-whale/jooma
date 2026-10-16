@@ -251,6 +251,7 @@ export default function CompleteProfilePage() {
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="First name"
               autoComplete="given-name"
+              enterKeyHint="next"
               className={auth.input}
             />
           </div>
@@ -266,6 +267,7 @@ export default function CompleteProfilePage() {
               onChange={(e) => setSurname(e.target.value)}
               placeholder="Surname"
               autoComplete="family-name"
+              enterKeyHint="next"
               className={auth.input}
             />
           </div>
@@ -285,6 +287,7 @@ export default function CompleteProfilePage() {
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Phone number"
               autoComplete="tel"
+              enterKeyHint="next"
               className={auth.input}
             />
           </div>

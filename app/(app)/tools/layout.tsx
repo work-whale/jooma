@@ -89,7 +89,7 @@ function ToolPageChrome({
   return (
     <JoActivityProvider>
       <div className="pb-4 shrink-0">
-        <Link href="/tools" className="flex items-center gap-1.5 text-sm text-muted hover:text-gray-700 transition-colors w-fit">
+        <Link href="/tools" className="flex items-center gap-1.5 min-h-12 -my-3 text-sm text-muted hover:text-gray-700 active:text-gray-700 transition-colors w-fit">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to tools
         </Link>

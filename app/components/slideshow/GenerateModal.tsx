@@ -531,7 +531,7 @@ export default function GenerateModal({
         />
       )}
       {/* Wrapper: card + optional side panel share a height via items-stretch. */}
-      <div className={inline ? "relative flex items-stretch justify-center gap-3 w-full" : "relative z-10 flex items-stretch justify-center gap-3 w-full max-h-[90vh]"}>
+      <div className={inline ? "relative flex items-stretch justify-center gap-3 w-full" : "relative z-10 flex items-stretch justify-center gap-3 w-full max-h-[90dvh]"}>
       <div
         className={`relative rounded-2xl w-full border overflow-hidden flex flex-col ${inline ? "shadow-sm" : "shadow-2xl max-w-2xl"}`}
         style={{ borderColor: "var(--j-line)", backgroundColor: "var(--j-card)" }}
@@ -588,10 +588,16 @@ export default function GenerateModal({
             />
           ) : step === 1 ? (
             <>
-              {/* Topic input */}
+              {/* Topic input. The label is visible: the animated example under
+                  the field is not a label and is gone once typing starts. */}
+              <label htmlFor="gen-topic" className="block -mb-1 text-sm font-semibold text-gray-800">
+                Topic
+              </label>
               <div className="relative">
                 <input
+                  id="gen-topic"
                   type="text"
+                  enterKeyHint="next"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder=""
@@ -602,8 +608,11 @@ export default function GenerateModal({
                   data-1p-ignore
                   data-lpignore="true"
                   name="lesson-topic"
-                  className="w-full px-4 py-3 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 placeholder:text-gray-400"
-                  style={{ borderColor: "var(--j-line)", fontSize: "15px" }}
+                  className="w-full px-4 py-3 text-[15px] bg-white border rounded-xl focus:outline-none focus:ring-2 disabled:opacity-60 placeholder:text-gray-400"
+                  // 15px as a class rather than inline, so the 16px rule for
+                  // touch screens in globals.css can still reach it (iOS zooms
+                  // into anything smaller on focus).
+                  style={{ borderColor: "var(--j-line)" }}
                 />
                 {!topic && <PlaceholderOverlay text={topicPlaceholder} />}
               </div>
@@ -651,7 +660,11 @@ export default function GenerateModal({
 
               {/* Instructions textarea */}
               <div>
+                <label htmlFor="gen-instructions" className="block mb-1.5 text-sm font-semibold text-gray-800">
+                  Instructions <span className="font-normal text-gray-500">(optional)</span>
+                </label>
                 <textarea
+                  id="gen-instructions"
                   ref={instructionsRef}
                   value={additionalInstructions}
                   onChange={(e) => setAdditionalInstructions(e.target.value)}
@@ -1363,8 +1376,8 @@ function PillSelect({
       if (wrapperRef.current?.contains(t) || menuRef.current?.contains(t)) return;
       setOpen(false);
     };
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
+    window.addEventListener("pointerdown", onDown);
+    return () => window.removeEventListener("pointerdown", onDown);
   }, [open]);
 
   // Position the portaled menu directly under the button, and keep it pinned
@@ -1567,8 +1580,13 @@ function InlineUploadZone({
           </div>
           {urlOpen && (
             <div className="flex items-center gap-2">
+              <label htmlFor="gen-url" className="shrink-0 text-sm font-semibold text-gray-800">
+                Web page
+              </label>
               <input
+                id="gen-url"
                 type="url"
+                enterKeyHint="go"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -1739,8 +1757,13 @@ function ResourceAttachmentCard({
               </div>
               {urlOpen && (
                 <div className="flex items-center gap-2 pt-1">
+                  <label htmlFor="gen-url-step" className="shrink-0 text-sm font-semibold text-gray-800">
+                    Web page
+                  </label>
                   <input
+                    id="gen-url-step"
                     type="url"
+                    enterKeyHint="go"
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => {

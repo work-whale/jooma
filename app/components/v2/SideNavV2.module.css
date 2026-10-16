@@ -9,6 +9,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   /* A short viewport with pins overflows, which would put the Help link out of
      reach. */
   overflow-y: auto;
@@ -39,7 +40,14 @@
   place-items: center;
 }
 
-.close:hover {
+@media (hover: hover) {
+  .close:hover {
+    background: var(--j-tint);
+    color: var(--j-deep);
+  }
+}
+
+.close:active {
   background: var(--j-tint);
   color: var(--j-deep);
 }
@@ -77,13 +85,31 @@
     color 0.15s;
 }
 
-.navitem:hover {
+@media (hover: hover) {
+  .navitem:hover {
+    background: var(--j-tint);
+    color: var(--j-deep);
+  }
+}
+
+.navitem:active {
   background: var(--j-tint);
   color: var(--j-deep);
 }
 
-.navitemOn,
-.navitemOn:hover {
+.navitemOn {
+  background: var(--j-purple);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .navitemOn:hover {
+    background: var(--j-purple);
+    color: #fff;
+  }
+}
+
+.navitemOn:active {
   background: var(--j-purple);
   color: #fff;
 }
@@ -94,7 +120,14 @@
   cursor: default;
 }
 
-.navitemSoon:hover {
+@media (hover: hover) {
+  .navitemSoon:hover {
+    background: none;
+    color: var(--j-faint);
+  }
+}
+
+.navitemSoon:active {
   background: none;
   color: var(--j-faint);
 }
@@ -166,7 +199,13 @@
   transition: background 0.15s;
 }
 
-.pinnedItem:hover {
+@media (hover: hover) {
+  .pinnedItem:hover {
+    background: var(--j-tint);
+  }
+}
+
+.pinnedItem:active {
   background: var(--j-tint);
 }
 
@@ -199,7 +238,13 @@
   transition: background 0.2s var(--j-ease);
 }
 
-.levelBox:hover {
+@media (hover: hover) {
+  .levelBox:hover {
+    background: var(--j-tint-2);
+  }
+}
+
+.levelBox:active {
   background: var(--j-tint-2);
 }
 
@@ -223,13 +268,31 @@
   color: var(--j-gold);
 }
 
-.navitemGold:hover {
+@media (hover: hover) {
+  .navitemGold:hover {
+    background: var(--j-gold-bg);
+    color: var(--j-gold);
+  }
+}
+
+.navitemGold:active {
   background: var(--j-gold-bg);
   color: var(--j-gold);
 }
 
-.navitemGoldOn,
-.navitemGoldOn:hover {
+.navitemGoldOn {
+  background: var(--j-gold);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .navitemGoldOn:hover {
+    background: var(--j-gold);
+    color: #fff;
+  }
+}
+
+.navitemGoldOn:active {
   background: var(--j-gold);
   color: #fff;
 }
@@ -280,7 +343,13 @@
   transition: background 0.15s;
 }
 
-.upgrade:hover {
+@media (hover: hover) {
+  .upgrade:hover {
+    background: var(--j-deep);
+  }
+}
+
+.upgrade:active {
   background: var(--j-deep);
 }
 
@@ -288,7 +357,13 @@
   background: var(--j-gold);
 }
 
-.planGold .upgrade:hover {
+@media (hover: hover) {
+  .planGold .upgrade:hover {
+    background: color-mix(in srgb, var(--j-gold) 80%, #000);
+  }
+}
+
+.planGold .upgrade:active {
   background: color-mix(in srgb, var(--j-gold) 80%, #000);
 }
 
@@ -349,7 +424,13 @@
   transition: background 0.15s;
 }
 
-.topup:hover {
+@media (hover: hover) {
+  .topup:hover {
+    background: var(--j-tint-2);
+  }
+}
+
+.topup:active {
   background: var(--j-tint-2);
 }
 
@@ -378,7 +459,14 @@
     color 0.15s;
 }
 
-.footLink:hover {
+@media (hover: hover) {
+  .footLink:hover {
+    background: var(--j-tint);
+    color: var(--j-deep);
+  }
+}
+
+.footLink:active {
   background: var(--j-tint);
   color: var(--j-deep);
 }
@@ -411,24 +499,57 @@
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 50;
-    width: var(--j-nav);
     /* translate rather than animating left/width: transform is composited, so
        the drawer slides without relaying out the page behind it. */
     transform: translateX(-100%);
-    transition: transform 0.25s var(--j-ease);
+    /* Hidden as well as off-screen when closed, so its links leave the tab
+       order and the accessibility tree. The visibility flip waits for the
+       slide to finish on close, and happens at once on open. */
+    visibility: hidden;
+    transition:
+      transform 0.25s var(--j-ease),
+      visibility 0s linear 0.25s;
     box-shadow: 0 0 40px -12px rgba(29, 23, 48, 0.35);
+    /* The drawer runs the full height of the screen, so it clears the notch,
+       the home indicator and a landscape side inset. */
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-left: max(14px, env(safe-area-inset-left));
+    width: calc(var(--j-nav) + env(safe-area-inset-left));
   }
 
   .sideOpen {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.25s var(--j-ease);
   }
 
   .close {
     display: grid;
+    /* 48px to tap; the negative margin keeps the head row the height it was. */
+    width: 48px;
+    height: 48px;
+    margin: -8px -8px -8px auto;
   }
 
   .drawerSearch {
     display: block;
+  }
+
+  /* Rows a finger presses: 48px tall in the drawer. The desktop rail, used
+     with a mouse, keeps its tighter rhythm. */
+  .navitem,
+  .footLink,
+  .pinnedItem,
+  .upgrade,
+  .topup {
+    min-height: 48px;
+  }
+
+  .upgrade {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 

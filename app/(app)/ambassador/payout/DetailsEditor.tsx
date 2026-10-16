@@ -110,18 +110,39 @@ export default function DetailsEditor({ details }: { details: MyDetails | null }
     }
   };
 
-  const field = (key: string, label: string, opts: { full?: boolean; type?: string; placeholder?: string } = {}) => (
+  // autoComplete and inputMode let the phone fill the address and offer the
+  // right keyboard; the error is tied to its field so a screen reader reads it
+  // with the field rather than leaving it to be found.
+  const field = (
+    key: string,
+    label: string,
+    opts: {
+      full?: boolean;
+      type?: string;
+      placeholder?: string;
+      autoComplete?: string;
+      inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+    } = {},
+  ) => (
     <div className={`${s.f} ${opts.full ? s.full : ""}`}>
       <label htmlFor={`d-${key}`}>{label}</label>
       <input
         id={`d-${key}`}
         className={`${s.input} ${errors[key] ? s.inputBad : ""}`}
         type={opts.type ?? "text"}
+        autoComplete={opts.autoComplete}
+        inputMode={opts.inputMode}
+        aria-invalid={errors[key] ? true : undefined}
+        aria-describedby={errors[key] ? `d-${key}-error` : undefined}
         value={values[key] ?? ""}
         placeholder={opts.placeholder}
         onChange={(e) => setValues({ ...values, [key]: e.target.value })}
       />
-      {errors[key] && <span className={s.error}>{errors[key]}</span>}
+      {errors[key] && (
+        <span id={`d-${key}-error`} className={s.error}>
+          {errors[key]}
+        </span>
+      )}
     </div>
   );
 
@@ -187,15 +208,15 @@ export default function DetailsEditor({ details }: { details: MyDetails | null }
               ))}
             </div>
             <div className={s.fgrid}>
-              {field("account_holder", "Account holder", { full: true })}
+              {field("account_holder", "Account holder", { full: true, autoComplete: "name" })}
               {values.payout_method === "bank" ? (
                 <>
-                  {field("sort_code", "Sort code", { placeholder: "00-00-00" })}
-                  {field("account_number", "Account number", { placeholder: "Type all 8 digits" })}
+                  {field("sort_code", "Sort code", { placeholder: "00-00-00", inputMode: "numeric", autoComplete: "off" })}
+                  {field("account_number", "Account number", { placeholder: "Type all 8 digits", inputMode: "numeric", autoComplete: "off" })}
                   {field("bank_name", "Bank", { full: true })}
                 </>
               ) : (
-                field("paypal_email", "PayPal email", { full: true, type: "email" })
+                field("paypal_email", "PayPal email", { full: true, type: "email", autoComplete: "email" })
               )}
             </div>
             {saveRow}
@@ -232,11 +253,11 @@ export default function DetailsEditor({ details }: { details: MyDetails | null }
           <>
             <div className={s.fgrid}>
               {readonly("Name", `${details.first_name} ${details.last_name}`)}
-              {field("email", "Email", { type: "email" })}
-              {field("mobile", "Mobile")}
-              {field("address_line", "Address", { full: true })}
-              {field("town", "Town or city")}
-              {field("postcode", "Postcode")}
+              {field("email", "Email", { type: "email", autoComplete: "email" })}
+              {field("mobile", "Mobile", { type: "tel", autoComplete: "tel", inputMode: "tel" })}
+              {field("address_line", "Address", { full: true, autoComplete: "street-address" })}
+              {field("town", "Town or city", { autoComplete: "address-level2" })}
+              {field("postcode", "Postcode", { autoComplete: "postal-code" })}
               {field("school", "School or setting", { full: true })}
               {field("teaches", "What you teach", { full: true })}
             </div>

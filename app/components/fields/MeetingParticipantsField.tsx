@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function MeetingParticipantsField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Whole staff",
     "e.g. Heads of department",
@@ -20,9 +23,9 @@ export default function MeetingParticipantsField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Participants</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Participants</label>
       <div className="relative">
-        <input
+        <input id={`${fieldId}-0`}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}

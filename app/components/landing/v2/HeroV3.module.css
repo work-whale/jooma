@@ -4,7 +4,7 @@
 .hero {
   position: relative;
   /* Runs up under the transparent nav, so the band starts at the top edge. */
-  margin-top: -74px;
+  margin-top: calc(-74px - env(safe-area-inset-top));
 }
 
 .band {
@@ -75,12 +75,32 @@
   transition: color 0.2s var(--j-ease), border-color 0.2s var(--j-ease);
 }
 
+/* The tabs are short text with an underline. This transparent layer reaches up
+   into the 40px space above them and a little to each side, so each is at
+   least 48px tall to tap while drawing exactly as before. */
+.ts {
+  position: relative;
+}
+
+.ts::after {
+  content: "";
+  position: absolute;
+  inset: -22px -6px 0;
+}
+
 .ts > span:first-child {
   opacity: 0.7;
   transition: opacity 0.2s;
 }
 
-.ts:hover {
+@media (hover: hover) {
+  .ts:hover {
+    color: #fff;
+    border-bottom-color: rgba(255, 255, 255, 0.34);
+  }
+}
+
+.ts:active {
   color: #fff;
   border-bottom-color: rgba(255, 255, 255, 0.34);
 }
@@ -90,8 +110,17 @@
   border-bottom-color: #fff;
 }
 
-.tsOn > span:first-child,
-.ts:hover > span:first-child {
+.tsOn > span:first-child {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .ts:hover > span:first-child {
+    opacity: 1;
+  }
+}
+
+.ts:active > span:first-child {
   opacity: 1;
 }
 
@@ -252,13 +281,35 @@
   height: 17px;
 }
 
-.create:hover {
+@media (hover: hover) {
+  .create:hover {
+    background: #2e1375;
+    transform: translateY(-1px);
+  }
+}
+
+.create:active {
   background: #2e1375;
   transform: translateY(-1px);
 }
 
-.createOff,
-.createOff:hover {
+.createOff {
+  background: var(--j-line-2);
+  color: var(--j-muted);
+  transform: none;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .createOff:hover {
+    background: var(--j-line-2);
+    color: var(--j-muted);
+    transform: none;
+    cursor: not-allowed;
+  }
+}
+
+.createOff:active {
   background: var(--j-line-2);
   color: var(--j-muted);
   transform: none;
@@ -292,7 +343,16 @@
   transition: background 0.2s, border-color 0.2s, transform 0.2s var(--j-ease);
 }
 
-.egp:hover {
+@media (hover: hover) {
+  .egp:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+}
+
+.egp:active {
   background: rgba(255, 255, 255, 0.22);
   border-color: rgba(255, 255, 255, 0.4);
   color: #fff;
@@ -324,7 +384,13 @@
   transition: transform 0.5s var(--j-ease);
 }
 
-.moreEg:hover {
+@media (hover: hover) {
+  .moreEg:hover {
+    color: #fff;
+  }
+}
+
+.moreEg:active {
   color: #fff;
 }
 
@@ -406,7 +472,13 @@
   transition: color 0.2s;
 }
 
-.stripLab:hover {
+@media (hover: hover) {
+  .stripLab:hover {
+    color: #fff;
+  }
+}
+
+.stripLab:active {
   color: #fff;
 }
 
@@ -428,7 +500,13 @@
   animation: marq 90s linear infinite;
 }
 
-.marq:hover .marqIn {
+@media (hover: hover) {
+  .marq:hover .marqIn {
+    animation-play-state: paused;
+  }
+}
+
+.marq:active .marqIn {
   animation-play-state: paused;
 }
 
@@ -462,7 +540,15 @@
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.tp:hover {
+@media (hover: hover) {
+  .tp:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.34);
+    color: #fff;
+  }
+}
+
+.tp:active {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.34);
   color: #fff;
@@ -517,7 +603,14 @@
   transition: transform 0.22s var(--j-ease), box-shadow 0.22s;
 }
 
-.mcard:hover {
+@media (hover: hover) {
+  .mcard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 34px 64px -28px rgba(16, 6, 45, 0.6);
+  }
+}
+
+.mcard:active {
   transform: translateY(-4px);
   box-shadow: 0 34px 64px -28px rgba(16, 6, 45, 0.6);
 }
@@ -714,7 +807,7 @@
 @media (max-width: 860px) {
   /* The bar is two rows here (LandingNav.module.css). */
   .hero {
-    margin-top: -96px;
+    margin-top: calc(-96px - env(safe-area-inset-top));
   }
 
   .band {
@@ -774,7 +867,7 @@
   }
 
   .made {
-    margin-top: -96px;
+    margin-top: calc(-96px - env(safe-area-inset-top));
     padding-bottom: 70px;
   }
 

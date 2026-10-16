@@ -101,10 +101,19 @@ export const metadata: Metadata = {
  * than a mobile one. This is what makes the breakpoints real.
  *
  * No maximumScale/userScalable: pinch-zoom is an accessibility requirement,
- * not a layout bug to suppress. */
+ * not a layout bug to suppress.
+ *
+ * viewportFit "cover" lets the page run under the notch and the home indicator,
+ * which is what makes env(safe-area-inset-*) report real values; every
+ * edge-adjacent bar pads itself by those insets. interactiveWidget
+ * "resizes-content" shrinks the layout viewport when the Android keyboard opens,
+ * so a dvh-sized composer stays above it instead of behind it. iOS Safari
+ * ignores it and pans the focused field into view instead. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

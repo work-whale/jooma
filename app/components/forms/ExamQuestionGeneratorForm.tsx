@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, TopicField, LessonCountField } from "@/app/components/fields";
 import { toTitleCase } from "@/app/lib/formOptions";
@@ -37,6 +37,7 @@ export default function ExamQuestionGeneratorForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
@@ -185,8 +186,8 @@ export default function ExamQuestionGeneratorForm({
             <SubjectField value={subject} onChange={setSubject} />
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Exam type</label>
-              <input
+              <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Exam type</label>
+              <input id={`${fieldId}-0`}
                 type="text"
                 value={examType}
                 onChange={(e) => setExamType(e.target.value)}
@@ -198,11 +199,11 @@ export default function ExamQuestionGeneratorForm({
             <TopicField value={topic} onChange={setTopic} />
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
+              <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">
                 Knowledge, skills or content to cover
                 <span className="ml-2 text-xs font-normal text-gray-400">optional</span>
               </label>
-              <textarea
+              <textarea id={`${fieldId}-1`}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Paste exam specification content here, or list bullet points — the more specific, the better the output."

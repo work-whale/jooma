@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import SideNavV2 from "@/app/components/v2/SideNavV2";
 import TopBarV2 from "@/app/components/v2/TopBarV2";
+import BottomTabsV2 from "@/app/components/v2/BottomTabsV2";
 import SupportLauncher from "@/app/components/SupportLauncher";
 import AnnouncementBanner from "@/app/components/AnnouncementBanner";
 import DeletionBanner from "@/app/components/v2/DeletionBanner";
@@ -99,9 +100,9 @@ export default function AppShellV2({
     [pathname],
   );
 
-  // Focus returns to the hamburger when the drawer closes — but only if the
-  // drawer was ever opened. Without this guard every page load would steal
-  // focus to the menu button on mount.
+  // Focus returns to the tab bar's More button when the drawer closes — but
+  // only if the drawer was ever opened. Without this guard every page load
+  // would steal focus to the button on mount.
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const hasOpened = useRef(false);
 
@@ -146,7 +147,11 @@ export default function AppShellV2({
   useEffect(() => {
     if (!drawerOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeNav();
+      if (e.key !== "Escape") return;
+      // A modal opened from inside the drawer (Top up credits) is on top of
+      // it, and its own Escape closes it. The drawer stays put underneath.
+      if (document.querySelector('[role="dialog"][aria-modal="true"]:not(#app-sidenav-v2)')) return;
+      closeNav();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -198,11 +203,7 @@ export default function AppShellV2({
           scroll to a restored generation, the output outline's heading links,
           and the pin-to-bottom during streaming. */}
       <main className={fixed ? styles.mainFixed : styles.main}>
-        <TopBarV2
-          title={shellTitle}
-          onMenuClick={() => setNavOpen(true)}
-          menuButtonRef={menuButtonRef}
-        />
+        <TopBarV2 title={shellTitle} />
         {/* Not behind shellBanner: a pending deletion is the state of the
             account, not an announcement, so it shows on every screen that
             carries the chrome including the ones that opt out of banners. */}
@@ -210,6 +211,13 @@ export default function AppShellV2({
         {shellBanner && <AnnouncementBanner />}
         <div className={shellContentClassName ?? appStyles.wrap}>{children}</div>
       </main>
+
+      {/* Phones only. More opens the same drawer the rail becomes. */}
+      <BottomTabsV2
+        moreOpen={drawerOpen}
+        onMore={() => setNavOpen(!drawerOpen)}
+        moreButtonRef={menuButtonRef}
+      />
     </div>
   );
 }

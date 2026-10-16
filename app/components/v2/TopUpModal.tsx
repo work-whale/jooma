@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useTopUp } from "@/app/lib/useTopUp";
 import { useTopUpPacks } from "@/app/lib/useTopUpPacks";
 import { packCredits } from "@/app/lib/topup-packs";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 import styles from "./TopUpModal.module.css";
 
 /*
@@ -71,6 +72,17 @@ export default function TopUpModal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose, loading]);
+
+  // Tab stays inside while open, and focus goes back to whatever opened it
+  // (the sidebar's top-up button) on close.
+  useFocusTrap(dialogRef, open);
+  useEffect(() => {
+    if (!open) return;
+    const opener = document.activeElement as HTMLElement | null;
+    return () => {
+      if (opener && document.contains(opener)) opener.focus();
+    };
+  }, [open]);
 
   // Scroll lock, matching AppShellV2's drawer.
   useEffect(() => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function AssemblyThemeField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Treating people with respect",
     "e.g. Anti-bullying and kindness",
@@ -20,9 +23,9 @@ export default function AssemblyThemeField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Theme</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Theme</label>
       <div className="relative">
-        <textarea
+        <textarea id={`${fieldId}-0`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""

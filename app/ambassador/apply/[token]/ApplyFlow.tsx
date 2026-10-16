@@ -261,9 +261,9 @@ export default function ApplyFlow({
                   <span className={s.prefix}>
                     <Phone size={17} />
                   </span>
-                  <input id="amb-mobile" className={s.input} value={personal.mobile} onChange={(e) => setPersonal({ ...personal, mobile: e.target.value })} placeholder="+44 7700 900412" autoComplete="tel" />
+                  <input id="amb-mobile" type="tel" inputMode="tel" className={`${s.input} ${errors.mobile ? s.inputBad : ""}`} value={personal.mobile} onChange={(e) => setPersonal({ ...personal, mobile: e.target.value })} placeholder="+44 7700 900412" autoComplete="tel" aria-invalid={errors.mobile ? true : undefined} aria-describedby={errors.mobile ? "amb-mobile-error" : undefined} />
                 </div>
-                {errors.mobile && <span className={s.error}>{errors.mobile}</span>}
+                {errors.mobile && <span id="amb-mobile-error" className={s.error}>{errors.mobile}</span>}
               </div>
               <Text label="Date of birth" type="date" value={personal.date_of_birth} error={errors.date_of_birth} onChange={(v) => setPersonal({ ...personal, date_of_birth: v })} autoComplete="bday" />
               <Text full label="Address" value={personal.address_line} error={errors.address_line} placeholder="Street" onChange={(v) => setPersonal({ ...personal, address_line: v })} autoComplete="street-address" />
@@ -637,9 +637,12 @@ function Text({
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
+        // The hint or the error is read with the field, not left to be found.
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
       />
-      {hint && !error && <span className={s.hint}>{hint}</span>}
-      {error && <span className={s.error}>{error}</span>}
+      {hint && !error && <span id={`${id}-hint`} className={s.hint}>{hint}</span>}
+      {error && <span id={`${id}-error`} className={s.error}>{error}</span>}
     </div>
   );
 }

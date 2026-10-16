@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 const ANSWER_TYPES = [
   { label: "Single correct answer", value: "single" },
   { label: "Multiple correct answers", value: "multiple" },
@@ -14,10 +16,11 @@ interface Props {
 }
 
 export default function AnswerTypeField({ value, onChange }: Props) {
+  const fieldId = useId();
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Single or multiple choice</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Single or multiple choice</label>
+      <select id={`${fieldId}-0`} value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
         {ANSWER_TYPES.map((t) => (
           <option key={t.value} value={t.value}>{t.label}</option>
         ))}

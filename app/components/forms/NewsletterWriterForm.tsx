@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Plus, X } from "lucide-react";
 import {
   NewsletterTitleField,
@@ -39,6 +39,7 @@ export default function NewsletterWriterForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const [newsletterTitle, setNewsletterTitle] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [tone, setTone] = useState("");
@@ -171,10 +172,10 @@ export default function NewsletterWriterForm({
               {sections.map((section, index) => (
                 <div key={index} className="space-y-1.5">
                   {index === 0 && (
-                    <label className="block text-sm font-semibold text-gray-800">Sections</label>
+                    <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Sections</label>
                   )}
                   <div className="relative">
-                    <textarea
+                    <textarea id={`${fieldId}-0`}
                       value={section}
                       onChange={(e) => updateSection(index, e.target.value)}
                       placeholder={

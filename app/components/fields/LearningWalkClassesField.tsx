@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function LearningWalkClassesField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. 3L, 4B, Year 6",
     "e.g. Year 7, 8A, 10C",
@@ -19,11 +22,11 @@ export default function LearningWalkClassesField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">
         Classes visited <span className="text-gray-400 font-normal">(optional)</span>
       </label>
       <div className="relative">
-        <input
+        <input id={`${fieldId}-0`}
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}

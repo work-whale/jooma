@@ -128,8 +128,8 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
         setShowColorPicker(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, []);
 
   if (!editor) return <div className="py-8 px-4 sm:py-12 sm:px-8 lg:py-20 lg:px-24 min-h-96" />;
@@ -196,7 +196,7 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
             if (val === "p") editor.chain().focus().setParagraph().run();
             else editor.chain().focus().toggleHeading({ level: parseInt(val[1]) as 1 | 2 | 3 }).run();
           }}
-          className="h-7 bg-white border border-gray-200 rounded px-1.5 text-xs text-gray-700 focus:outline-none cursor-pointer"
+          className="min-h-7 pointer-coarse:min-h-12 bg-white border border-gray-200 rounded px-1.5 text-xs text-gray-700 focus:outline-none cursor-pointer"
         >
           <option value="p">Paragraph</option>
           <option value="h1">Heading 1</option>

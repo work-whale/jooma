@@ -385,7 +385,7 @@ export default function CurriculumAlignment({
             </button>
             {hintOpen && (
               <div
-                className="absolute z-10 left-0 mt-1 w-72 p-3 bg-white rounded-xl border shadow-lg"
+                className="absolute z-10 left-0 mt-1 w-[min(18rem,calc(100vw-2rem))] p-3 bg-white rounded-xl border shadow-lg"
                 style={{ borderColor: "var(--j-line)" }}
               >
                 <p className="text-xs font-semibold text-gray-900 mb-1">This is optional</p>

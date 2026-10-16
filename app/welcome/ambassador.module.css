@@ -12,7 +12,7 @@
   background: none;
   border: 0;
   font: inherit;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--j-purple);
   text-decoration: underline;
@@ -20,7 +20,13 @@
   cursor: pointer;
 }
 
-.prompt:hover {
+@media (hover: hover) {
+  .prompt:hover {
+    color: var(--j-deep);
+  }
+}
+
+.prompt:active {
   color: var(--j-deep);
 }
 
@@ -49,7 +55,7 @@
   min-width: 0;
   padding: 11px 14px;
   font: inherit;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-family: ui-monospace, monospace;
   letter-spacing: 0.04em;
   color: var(--j-ink);
@@ -66,7 +72,7 @@
 .apply {
   padding: 11px 20px;
   font: inherit;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 800;
   color: #fff;
   background: var(--j-purple);
@@ -83,7 +89,7 @@
 .good,
 .bad {
   margin: 10px 0 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   line-height: 1.5;
 }
@@ -106,7 +112,7 @@
 
 .note {
   margin: 14px 0 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.5;
   color: var(--j-faint);
 }

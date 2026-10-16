@@ -6,6 +6,7 @@ import { v2ToolForSlug } from "@/app/lib/tools";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import { dayName, type LessonWithResource, type TimetableDay } from "@/app/lib/timetable";
 import styles from "./timetable.module.css";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 /*
  * Add or edit one lesson.
@@ -47,6 +48,9 @@ function ModalShell({
   children: React.ReactNode;
 }) {
   const returnTo = useRef<HTMLElement | null>(null);
+  // Tab stays inside while it is open; it only exists while open.
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef, true);
 
   /*
    * Held in a ref so the effect below can run ONCE, on open and close, and
@@ -84,6 +88,7 @@ function ModalShell({
     >
       <div
         className={`${styles.modalCard} ${wide ? styles.modalCardWide : ""}`}
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}

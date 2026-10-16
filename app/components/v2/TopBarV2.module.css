@@ -1,9 +1,12 @@
+/* min-height, not height, plus the top inset: in a standalone or landscape
+   view the bar runs under the notch, and a fixed height would clip it. */
 .top {
-  height: 64px;
+  min-height: calc(64px + env(safe-area-inset-top));
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 0 28px;
+  padding: env(safe-area-inset-top) max(28px, env(safe-area-inset-right)) 0
+    max(28px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--j-line);
   /* Translucent over the page background, so content scrolling underneath
      blurs rather than showing through sharply. */
@@ -17,38 +20,9 @@
 
 @media (max-width: 640px) {
   .top {
-    padding: 0 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
     gap: 10px;
-  }
-}
-
-/* The hamburger. Only below the 900px breakpoint, where the rail is a drawer. */
-.menu {
-  display: none;
-  width: 37px;
-  height: 37px;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-  border: 1px solid var(--j-line-2);
-  background: var(--j-card);
-  color: var(--j-body);
-  cursor: pointer;
-}
-
-.menu:hover {
-  border-color: var(--j-lilac-2);
-  color: var(--j-purple);
-}
-
-.menuIcon {
-  width: 19px;
-  height: 19px;
-}
-
-@media (max-width: 900px) {
-  .menu {
-    display: grid;
   }
 }
 
@@ -69,7 +43,9 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* 12px: the bell's 48px hit area and the avatar's 48px box sit side by side
+     without overlapping. */
+  gap: 12px;
   flex: none;
 }
 
@@ -89,9 +65,12 @@
   position: relative;
 }
 
+/* A 48px box around the 37px avatar ring: the whole box is the tap target,
+   the ring is what you see. Negative margin keeps the bar's layout as it was. */
 .avatarBtn {
-  width: 37px;
-  height: 37px;
+  width: 48px;
+  height: 48px;
+  margin: -5.5px;
   border: 0;
   border-radius: 50%;
   background: none;
@@ -102,8 +81,14 @@
   transition: opacity 0.15s;
 }
 
-.avatarBtn:hover {
-  opacity: 0.85;
+@media (hover: hover) {
+  .avatarBtn:hover {
+    opacity: 0.85;
+  }
+}
+
+.avatarBtn:active {
+  opacity: 0.7;
 }
 
 .menuPanel {
@@ -171,9 +156,29 @@
     color 0.15s;
 }
 
-.menuItem:hover {
+@media (hover: hover) {
+  .menuItem:hover {
+    background: var(--j-tint);
+    color: var(--j-deep);
+  }
+}
+
+.menuItem:active {
   background: var(--j-tint);
   color: var(--j-deep);
+}
+
+/* 48px rows to tap on a touch screen; the mouse keeps the tighter list. */
+@media (pointer: coarse) {
+  .menuItem {
+    min-height: 48px;
+  }
+}
+
+/* Inside the item, so the panel's overflow:hidden does not clip the ring. */
+.menuItem:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: -2px;
 }
 
 .menuIconSm {
@@ -212,7 +217,14 @@
   color: #2b1d02;
   font-weight: 800;
 }
-.menuAmbassador:hover {
+@media (hover: hover) {
+  .menuAmbassador:hover {
+    background: linear-gradient(135deg, #f0c75c, #c99525);
+    color: #2b1d02;
+  }
+}
+
+.menuAmbassador:active {
   background: linear-gradient(135deg, #f0c75c, #c99525);
   color: #2b1d02;
 }

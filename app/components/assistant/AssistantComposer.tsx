@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Paperclip, Plus, X } from "lucide-react";
 import { ASSISTANT_TOOLS } from "@/app/lib/assistant-tools";
 import { V2_CATEGORIES, v2ToolForSlug } from "@/app/lib/tools";
@@ -61,6 +61,7 @@ export default function AssistantComposer({
   const [canDictate, setCanDictate] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
@@ -171,7 +172,7 @@ export default function AssistantComposer({
             type="button"
             onClick={() => setAttachment(null)}
             aria-label="Remove attachment"
-            className="p-0.5 rounded hover:bg-gray-100 cursor-pointer"
+            className="relative p-0.5 rounded hover:bg-gray-100 active:bg-gray-100 cursor-pointer after:absolute after:-inset-3.5 after:content-['']"
           >
             <X className="w-3.5 h-3.5 text-muted" />
           </button>
@@ -181,11 +182,18 @@ export default function AssistantComposer({
       {uploadError && <p className="mb-2 text-xs text-red-600">{uploadError}</p>}
 
       <div
-        className="rounded-2xl border bg-white px-5 py-3"
+        className="rounded-2xl border bg-white px-3 sm:px-5 py-3"
         style={{ borderColor: "var(--j-line-2)" }}
       >
+        {/* A persistent label, so what the box is for does not vanish with the
+            placeholder the moment someone starts typing. */}
+        <label htmlFor={textareaId} className="block mb-1 text-xs font-semibold text-muted">
+          Message Jo
+        </label>
         <textarea
+          id={textareaId}
           ref={textareaRef}
+          enterKeyHint="send"
           value={value}
           rows={1}
           autoFocus={autoFocus}
@@ -210,7 +218,7 @@ export default function AssistantComposer({
             disabled={blocked || uploading}
             title="Attach a PDF, Word document or text file"
             aria-label="Attach a document"
-            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl transition-colors hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl transition-colors hover:opacity-80 active:opacity-70 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             style={{ backgroundColor: "var(--j-tint)" }}
           >
             {uploading
@@ -218,7 +226,7 @@ export default function AssistantComposer({
               : <Plus className="w-4 h-4 text-dark" />}
           </button>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2 min-w-0">
             <ToolSelect value={tool} onChange={setTool} disabled={blocked} />
 
             {canDictate && (
@@ -229,7 +237,7 @@ export default function AssistantComposer({
                 title={listening ? "Stop dictating" : "Dictate"}
                 aria-label={listening ? "Stop dictating" : "Dictate"}
                 aria-pressed={listening}
-                className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl transition-colors active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ backgroundColor: listening ? "var(--j-purple)" : "var(--j-tint)" }}
               >
                 <Mic className={`w-4 h-4 ${listening ? "text-white animate-pulse" : "text-dark"}`} />
@@ -241,7 +249,7 @@ export default function AssistantComposer({
               onClick={submit}
               disabled={blocked || !value.trim()}
               aria-label="Send"
-              className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-(--j-purple) text-white transition-opacity hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl bg-(--j-purple) text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
             </button>
@@ -317,7 +325,7 @@ function ToolSelect({
       aria-label="Tool"
       title="Pick a tool, or leave it to Jo"
       onChange={(e) => onChange(e.target.value || null)}
-      className="h-9 max-w-40 rounded-xl border bg-white px-3 text-[13px] font-semibold text-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+      className="min-h-9 pointer-coarse:min-h-12 min-w-0 max-w-40 rounded-xl border bg-white px-3 text-[13px] font-semibold text-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
       style={{ borderColor: "var(--j-tint)" }}
     >
       {/* Not "None": the empty choice is an instruction to Jo, not an absence. */}

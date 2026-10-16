@@ -7,7 +7,7 @@
 // one surface where two implementations would drift into two different sets of
 // bugs, and the teacher would see both.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createClient } from "@/app/lib/auth/client";
 
 export interface MyMessage {
@@ -49,6 +49,7 @@ export default function Conversation({
   const [messages, setMessages] = useState<MyMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
+  const replyId = useId();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -179,11 +180,18 @@ export default function Conversation({
           </p>
         )}
         {error && (
-          <p className="text-xs mb-2" style={{ color: "#B3261E" }}>
+          <p id={`${replyId}-error`} role="alert" className="text-xs mb-2" style={{ color: "#B3261E" }}>
             {error}
           </p>
         )}
+        <label htmlFor={replyId} className="block mb-1.5 text-sm font-semibold" style={{ color: "var(--j-ink)" }}>
+          Your reply
+        </label>
         <textarea
+          id={replyId}
+          enterKeyHint="send"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${replyId}-error` : undefined}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -208,7 +216,7 @@ export default function Conversation({
             type="button"
             onClick={() => void send()}
             disabled={sending || !draft.trim()}
-            className="px-4 py-2 rounded-2xl text-sm font-semibold text-white transition-opacity disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="px-4 py-2 pointer-coarse:min-h-12 rounded-2xl text-sm font-semibold text-white transition-opacity active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             style={{ backgroundColor: "var(--j-purple)" }}
           >
             {sending ? "Sending…" : "Send"}

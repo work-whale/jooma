@@ -175,6 +175,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@school.sch.uk"
             autoComplete="email"
+            enterKeyHint="next"
             className={auth.input}
           />
         </div>
@@ -191,6 +192,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               autoComplete="current-password"
+              enterKeyHint="go"
               className={auth.input}
             />
             <button

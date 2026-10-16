@@ -137,7 +137,14 @@
   box-shadow: 0 8px 22px -10px rgba(91, 46, 214, 0.8);
 }
 
-.btnP:hover {
+@media (hover: hover) {
+  .btnP:hover {
+    background: #4d24bd;
+    transform: translateY(-2px);
+  }
+}
+
+.btnP:active {
   background: #4d24bd;
   transform: translateY(-2px);
 }
@@ -148,7 +155,14 @@
   border: 1px solid var(--j-line-2);
 }
 
-.btnG:hover {
+@media (hover: hover) {
+  .btnG:hover {
+    border-color: var(--j-lilac-2);
+    transform: translateY(-2px);
+  }
+}
+
+.btnG:active {
   border-color: var(--j-lilac-2);
   transform: translateY(-2px);
 }

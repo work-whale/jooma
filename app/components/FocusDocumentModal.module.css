@@ -92,7 +92,26 @@
   transition: background 0.15s ease;
 }
 
-.close:hover {
+/* A 48px tap target around the 32px close button. The visible button stays as drawn; this transparent layer is
+   what a finger hits. */
+.close {
+  position: relative;
+}
+
+.close::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+@media (hover: hover) {
+  .close:hover {
+    background: var(--j-tint);
+    color: var(--j-deep);
+  }
+}
+
+.close:active {
   background: var(--j-tint);
   color: var(--j-deep);
 }

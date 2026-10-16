@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { WordCountField, DifferentiationField } from "@/app/components/fields";
 import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
@@ -67,6 +67,7 @@ export default function ComprehensionForm({
   launch?: ToolLaunchParams;
   guest?: ComprehensionGuestMode;
 }) {
+  const fieldId = useId();
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
   const [textSource, setTextSource] = useState<"generate" | "own" | "">("");
@@ -320,8 +321,8 @@ export default function ComprehensionForm({
             {textSource === "generate" && (
               <>
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-gray-800">Topic or prompt</label>
-                  <input
+                  <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Topic or prompt</label>
+                  <input id={`${fieldId}-0`}
                     ref={topicInputRef}
                     type="text"
                     value={topic}
@@ -344,8 +345,8 @@ export default function ComprehensionForm({
 
             {textSource === "own" && (
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Your text</label>
-                <textarea
+                <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">Your text</label>
+                <textarea id={`${fieldId}-1`}
                   value={ownText}
                   onChange={(e) => setOwnText(e.target.value)}
                   placeholder="Paste your text here..."

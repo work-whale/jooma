@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { CURRICULA } from "@/app/lib/formOptions";
 
 const selectClass =
@@ -11,10 +13,11 @@ interface Props {
 }
 
 export default function CurriculumField({ value, onChange }: Props) {
+  const fieldId = useId();
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Curriculum</label>
+      <select id={`${fieldId}-0`} value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
         <option value="" disabled>Select curriculum</option>
         {CURRICULA.map((c) => (
           <option key={c.value} value={c.value}>{c.label}</option>

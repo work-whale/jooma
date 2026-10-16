@@ -88,7 +88,7 @@ export default function DifferentiationField({
           </div>
 
           {levels.length === 0 && (
-            <p className="text-xs text-red-500">Select at least one band.</p>
+            <p role="alert" className="text-xs text-red-700">Select at least one band.</p>
           )}
         </div>
       )}

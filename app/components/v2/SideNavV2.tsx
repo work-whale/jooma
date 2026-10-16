@@ -3,25 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  House,
-  SquaresFour,
-  Folder,
-  CalendarBlank,
-  UsersThree,
-  ChatTeardropDots,
-  Bell,
-  Question,
-  Medal,
-  Crown,
-  X,
-} from "@phosphor-icons/react/dist/ssr";
+import { Bell, Question, Medal, X } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import { TOOLS, V2_TOOLS, toolSolid } from "@/app/lib/tools";
 import { useCreditMeter } from "@/app/lib/useCreditMeter";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { usePlanBadge } from "@/app/lib/usePlanBadge";
 import { usePinnedTools } from "@/app/lib/usePinnedTools";
+import { isNavActive } from "@/app/lib/navActive";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
+import { NAV, AMBASSADOR_NAV, type NavItem } from "@/app/components/v2/navItems";
 import Wordmark from "@/app/components/v2/Wordmark";
 import AmbassadorWordmark from "@/app/components/v2/AmbassadorWordmark";
 import TopUpModal from "@/app/components/v2/TopUpModal";
@@ -39,49 +30,12 @@ import styles from "./SideNavV2.module.css";
  * actually exist; "Library" counts the teacher's own saved resources.
  */
 
-interface NavItem {
-  label: string;
-  href: string;
-  Icon: React.ComponentType<{ className?: string; weight?: "regular" | "fill" }>;
-  /** Which count to show, if any. */
-  count?: "tools" | "resources" | "colleagues";
-  /**
-   * Features designed but not built. Rendered as a disabled row with a
-   * "Soon" pill rather than a link, so the shape of the product is visible
-   * without promising something that does not work yet.
-   */
-  soon?: boolean;
-  /** The ambassador's own page, drawn in gold. */
-  gold?: boolean;
-}
-
 /**
  * Show the top-up button once this fraction of the month's credits or less is
  * left. The mirror of PROMINENT_AT (0.8 USED) in the billing page's
  * AllowanceMeter — same moment, counted from the other end.
  */
 const LOW_CREDIT_AT = 0.2;
-
-const NAV: NavItem[] = [
-  { label: "Today", href: "/dashboard", Icon: House },
-  { label: "Make", href: "/tools", Icon: SquaresFour, count: "tools" },
-  { label: "Library", href: "/folders", Icon: Folder, count: "resources" },
-  { label: "Timetable", href: "/timetable", Icon: CalendarBlank },
-  { label: "Colleagues", href: "/colleagues", Icon: UsersThree, count: "colleagues" },
-  // Named for what it is, not what powers it. The language rules in
-  // scripts/check-language.mjs fail the build on "AI" in teacher-facing copy,
-  // which is what the old "AI assistant" label was.
-  { label: "Ask Jo", href: "/assistant", Icon: ChatTeardropDots },
-];
-
-/** Appended for ambassadors only. Gold, because it is meant to feel like a
- *  members' room rather than another tool. */
-const AMBASSADOR_NAV: NavItem = {
-  label: "Ambassador",
-  href: "/ambassador",
-  Icon: Crown,
-  gold: true,
-};
 
 interface SideNavV2Props {
   /** Below 900px the rail is an off-canvas drawer; this is its open state. */
@@ -148,6 +102,12 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
     if (mobileOpen) closeButtonRef.current?.focus();
   }, [mobileOpen]);
 
+  // While it is a drawer it is a modal: Tab cycles inside it rather than
+  // escaping to the page dimmed behind the backdrop. Stands down while the
+  // top-up modal is open: that renders outside the drawer and runs its own.
+  const asideRef = useRef<HTMLElement>(null);
+  useFocusTrap(asideRef, mobileOpen && !topUpOpen);
+
   const countFor = (item: NavItem): number | null => {
     if (item.count === "tools") return TOOLS.length;
     if (item.count === "resources") return resourceCount;
@@ -161,8 +121,13 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
     <>
       <aside
         id="app-sidenav-v2"
+        ref={asideRef}
         className={`${styles.side} ${mobileOpen ? styles.sideOpen : ""}`}
-        aria-hidden={undefined}
+        // Dialog semantics only while it is open as the phone drawer. On
+        // desktop it is the page's plain sidebar.
+        role={mobileOpen ? "dialog" : undefined}
+        aria-modal={mobileOpen ? true : undefined}
+        aria-label={mobileOpen ? "Menu" : undefined}
       >
         <div className={styles.head}>
           {/* An ambassador's rail carries the Jooma Ambassador lockup. 27px
@@ -210,15 +175,7 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
               );
             }
 
-            // startsWith so a tool page keeps "Make" lit. Library has no child
-            // routes any more (a folder is ?folder= on /folders), but the
-            // prefix match costs nothing and is right if one is ever added.
-            // Exact match on /dashboard, which is a prefix of nothing but would
-            // otherwise stay lit on every route if it were.
-            const active =
-              item.href === "/dashboard"
-                ? pathname === item.href
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = isNavActive(item.href, pathname);
 
             return (
               <Link

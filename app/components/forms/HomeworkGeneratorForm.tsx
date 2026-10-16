@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, LearningObjectiveField, DifferentiationField, QuestionTypesField, AdditionalContextField } from "@/app/components/fields";
 import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
@@ -61,6 +61,7 @@ export default function HomeworkGeneratorForm({
   sidebar: React.ReactNode;
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
@@ -280,8 +281,8 @@ export default function HomeworkGeneratorForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Homework Type</label>
-                <select value={homeworkType} onChange={(e) => setHomeworkType(e.target.value)} className={selectClass}>
+                <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Homework Type</label>
+                <select id={`${fieldId}-0`} value={homeworkType} onChange={(e) => setHomeworkType(e.target.value)} className={selectClass}>
                   <option value="" disabled>Select type</option>
                   {HOMEWORK_TYPES.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -290,8 +291,8 @@ export default function HomeworkGeneratorForm({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Length / Effort Level</label>
-                <select value={length} onChange={(e) => setLength(e.target.value)} className={selectClass}>
+                <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">Length / Effort Level</label>
+                <select id={`${fieldId}-1`} value={length} onChange={(e) => setLength(e.target.value)} className={selectClass}>
                   <option value="" disabled>Select length</option>
                   {LENGTH_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>

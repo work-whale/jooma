@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function ResponsibilitiesField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Year 4 class teacher, science subject leader, improve pupil progress in maths",
     "e.g. Head of English, KS3 curriculum review, raise attainment at grade 5+",
@@ -19,9 +22,9 @@ export default function ResponsibilitiesField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Responsibilities and target areas</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Responsibilities and target areas</label>
       <div className="relative">
-        <textarea
+        <textarea id={`${fieldId}-0`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""

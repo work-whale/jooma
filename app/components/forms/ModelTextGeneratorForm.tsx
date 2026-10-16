@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { DifferentiationField, WriteField, FeaturesField, WordCountField } from "@/app/components/fields";
 import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
@@ -36,6 +36,7 @@ export default function ModelTextGeneratorForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
   const [write, setWrite] = useState("");
@@ -167,8 +168,8 @@ export default function ModelTextGeneratorForm({
             <FeaturesField value={features} onChange={setFeatures} />
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Keywords to include <span className="text-gray-400 font-normal">(optional)</span></label>
-              <textarea
+              <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Keywords to include <span className="text-gray-400 font-normal">(optional)</span></label>
+              <textarea id={`${fieldId}-0`}
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
                 placeholder="e.g. photosynthesis, chlorophyll, organism"
