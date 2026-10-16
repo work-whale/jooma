@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { CURRICULA } from "@/app/lib/formOptions";
 import { Minus, Plus } from "lucide-react";
 import ToolResults from "@/app/components/ToolResults";
@@ -25,6 +25,7 @@ export default function EYFSPlannerForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const [curriculum, setCurriculum] = useState("Early Years Foundation Stage (EYFS)");
   const [topic, setTopic] = useState("");
   const [numberOfWeeks, setNumberOfWeeks] = useState("2");
@@ -134,8 +135,8 @@ export default function EYFSPlannerForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-                <select value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={inputClass}>
+                <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Curriculum</label>
+                <select id={`${fieldId}-0`} value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={inputClass}>
                   {CURRICULA.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
@@ -143,8 +144,8 @@ export default function EYFSPlannerForm({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Topic</label>
-                <input
+                <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">Topic</label>
+                <input id={`${fieldId}-1`}
                   type="text"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
@@ -155,33 +156,37 @@ export default function EYFSPlannerForm({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">Number of weeks</label>
+              <label htmlFor={`${fieldId}-2`} className="block text-sm font-semibold text-gray-800">Number of weeks</label>
               <div className="flex items-center gap-0">
-                <input
-                  type="number"
-                  min={1}
-                  max={12}
+                <input id={`${fieldId}-2`}
+                  type="text"
+                  // A numeric keypad without type="number"'s spinner. Digits
+                  // only as they type; the blur below still clamps to 1-12.
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={numberOfWeeks}
-                  onChange={(e) => setNumberOfWeeks(e.target.value)}
+                  onChange={(e) => setNumberOfWeeks(e.target.value.replace(/\D/g, ""))}
                   onBlur={() => {
                     const n = parseInt(numberOfWeeks, 10);
                     setNumberOfWeeks(String(isNaN(n) ? 1 : Math.min(12, Math.max(1, n))));
                   }}
-                  className="w-24 border border-gray-200 rounded-l-md px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent text-center"
+                  className="w-24 border border-gray-200 rounded-l-md px-3 py-2 pointer-coarse:h-12 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent text-center"
                 />
                 <button
                   type="button"
+                  aria-label="Fewer weeks"
                   onClick={() => adjustWeeks(-1)}
                   disabled={weeksNum <= 1}
-                  className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="h-9 w-9 pointer-coarse:h-12 pointer-coarse:w-12 flex items-center justify-center border border-l-0 border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
+                  aria-label="More weeks"
                   onClick={() => adjustWeeks(1)}
                   disabled={weeksNum >= 12}
-                  className="h-9 w-9 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="h-9 w-9 pointer-coarse:h-12 pointer-coarse:w-12 flex items-center justify-center border border-l-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>

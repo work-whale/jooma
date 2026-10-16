@@ -208,7 +208,7 @@
 
 .hello p {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 0.84375rem;
   line-height: 1.5;
   color: var(--j-body);
 }
@@ -232,7 +232,7 @@
   border-radius: var(--j-r);
   background: var(--j-bg);
   border: 1px solid var(--j-line);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--j-deep);
   text-align: left;
@@ -257,7 +257,7 @@
   border-radius: 14px 14px 4px 14px;
   background: var(--j-purple);
   color: #fff;
-  font-size: 13.5px;
+  font-size: 0.84375rem;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -279,7 +279,7 @@
 
 .joText {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 0.84375rem;
   line-height: 1.5;
   color: var(--j-body);
   white-space: pre-wrap;
@@ -288,7 +288,7 @@
 
 .joError {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #B42318;
 }
 
@@ -564,7 +564,7 @@ button.step:hover {
   max-height: 120px;
   overflow-y: auto;
   padding: 5px 0;
-  font-size: 13.5px;
+  font-size: 0.84375rem;
   line-height: 1.45;
   color: var(--j-ink);
   white-space: pre-wrap;
@@ -740,6 +740,9 @@ button.step:hover {
     border-width: 1px;
     border-radius: var(--j-r-xl) var(--j-r-xl) 0 0;
     box-shadow: 0 -12px 40px rgba(29, 23, 48, 0.22);
+    /* The sheet runs to the bottom edge, so its content clears the home
+       indicator. */
+    padding-bottom: env(safe-area-inset-bottom);
     transform: translateY(0);
     transition: transform 0.28s var(--j-ease);
   }
@@ -753,10 +756,12 @@ button.step:hover {
     display: none;
   }
 
+  /* Above the phone tab bar when there is one (--j-bottom-ui, globals.css),
+     and clear of the home indicator when there is not. */
   .fab {
     position: fixed;
-    right: 16px;
-    bottom: 16px;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(16px + max(var(--j-bottom-ui, 0px), env(safe-area-inset-bottom)));
     z-index: 59;
     display: inline-flex;
     align-items: center;
@@ -766,7 +771,8 @@ button.step:hover {
     border-radius: var(--j-pill);
     background: var(--j-deep);
     color: #fff;
-    font: 700 14px/1 var(--font-primary);
+    font: 700 0.875rem/1 var(--font-primary);
+    min-height: 48px;
     box-shadow: 0 10px 26px rgba(58, 28, 143, 0.32);
     cursor: pointer;
   }
@@ -802,5 +808,19 @@ button.step:hover {
   }
   .canvasRing {
     transition: none;
+  }
+}
+
+/* The chat itself is body copy: 1rem on a phone, where the panel is a bottom
+   sheet held close to the face, rather than the denser desktop size. rem
+   throughout so the teacher's own font setting carries through. */
+@media (max-width: 1023px) {
+  .hello p,
+  .user,
+  .joText,
+  .joError,
+  .starter,
+  .input {
+    font-size: 1rem;
   }
 }

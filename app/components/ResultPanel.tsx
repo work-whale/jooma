@@ -483,7 +483,7 @@ export default function ResultPanel({
               disabled={isBusy}
               data-then="focus"
               aria-label="Open in focused view"
-              className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
+              className="flex items-center justify-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 pointer-coarse:min-h-12 pointer-coarse:min-w-12 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-40 cursor-pointer"
             >
               <Maximize2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Focus</span>
@@ -496,7 +496,7 @@ export default function ResultPanel({
               <DropdownMenu
                 ariaLabel="Export options"
                 disabled={isExporting !== null}
-                triggerClassName="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
+                triggerClassName="flex items-center justify-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 pointer-coarse:min-h-12 pointer-coarse:min-w-12 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-40 cursor-pointer"
                 menuClassName="w-[min(15rem,calc(100vw-2rem))]"
                 trigger={
                   <>
@@ -524,7 +524,7 @@ export default function ResultPanel({
               disabled={isBusy}
               data-then="copy"
               aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
-              className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-40 cursor-pointer"
+              className="flex items-center justify-center gap-1.5 text-sm text-gray-600 border border-gray-300 rounded-md px-3 py-1.5 pointer-coarse:min-h-12 pointer-coarse:min-w-12 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-40 cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{copied ? "Copied!" : "Copy to clipboard"}</span>

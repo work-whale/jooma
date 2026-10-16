@@ -11,7 +11,13 @@
   color: var(--j-purple);
 }
 
-.crumbLink:hover {
+@media (hover: hover) {
+  .crumbLink:hover {
+    text-decoration: underline;
+  }
+}
+
+.crumbLink:active {
   text-decoration: underline;
 }
 
@@ -199,9 +205,27 @@
     color 0.15s;
 }
 
+.del {
+  position: relative;
+}
+
+/* A 48px tap target around the 30px button; it draws as before. */
+.del::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+
 /* Always visible, not hover-revealed: a hover-only control cannot be reached
    on a touch screen at all. */
-.del:hover {
+@media (hover: hover) {
+  .del:hover {
+    background: #fbeceb;
+    color: #b3261e;
+  }
+}
+
+.del:active {
   background: #fbeceb;
   color: #b3261e;
 }

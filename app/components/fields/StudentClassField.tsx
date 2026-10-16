@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function StudentClassField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Class 4",
     "e.g. 7B",
@@ -19,11 +22,11 @@ export default function StudentClassField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">
         Student&apos;s class <span className="font-normal text-gray-400">(optional)</span>
       </label>
       <div className="relative">
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
+        <input id={`${fieldId}-0`} type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
         {!value && <PlaceholderOverlay text={placeholder} />}
       </div>
     </div>

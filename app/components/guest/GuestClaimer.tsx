@@ -88,7 +88,7 @@ export default function GuestClaimer() {
   return (
     <div
       role="status"
-      className="fixed left-1/2 bottom-6 z-90 -translate-x-1/2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl"
+      className="fixed left-1/2 bottom-[calc(1.5rem+max(var(--j-bottom-ui,0px),env(safe-area-inset-bottom)))] z-90 -translate-x-1/2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl"
       style={{ backgroundColor: "var(--j-ink, #1D1730)", color: "#fff", maxWidth: "90vw" }}
     >
       {toast}

@@ -41,8 +41,8 @@ import type { JoDocRef } from "@/app/lib/jo/threads";
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
 const btnBase =
-  "flex items-center gap-1.5 text-sm border rounded-md px-3 py-1.5 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer";
-const btn = `${btnBase} bg-white text-gray-600 border-gray-300 hover:bg-(--j-tint) hover:border-(--j-lilac) hover:text-(--j-deep)`;
+  "flex items-center justify-center gap-1.5 text-sm border rounded-md px-3 py-1.5 pointer-coarse:min-h-12 pointer-coarse:min-w-12 transition-colors disabled:opacity-40 disabled:pointer-events-none cursor-pointer";
+const btn = `${btnBase} bg-white text-gray-600 border-gray-300 hover:bg-(--j-tint) hover:border-(--j-lilac) hover:text-(--j-deep) active:bg-(--j-tint)`;
 /** Preview and Design while they are on: brand purple, back to white when off. */
 const btnOn = `${btnBase} bg-(--j-purple) text-white border-(--j-purple) hover:bg-(--j-deep) hover:border-(--j-deep)`;
 
@@ -224,13 +224,13 @@ export default function SheetWorkspace({
             </button>
           </Hint>
           <Hint text={preview ? "Back to editing" : "See the sheet as pupils will"}>
-            <button type="button" onClick={() => setPreview((p) => !p)} disabled={busy} aria-pressed={preview} className={preview ? btnOn : btn} data-testid="sheet-preview-toggle">
+            <button type="button" onClick={() => setPreview((p) => !p)} disabled={busy} aria-pressed={preview} aria-label={preview ? "Edit" : "Preview"} className={preview ? btnOn : btn} data-testid="sheet-preview-toggle">
               {preview ? <Pencil className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">{preview ? "Edit" : "Preview"}</span>
             </button>
           </Hint>
           <Hint text="Theme, text size and what shows on the page">
-            <button type="button" onClick={() => setDesignOpen((o) => !o)} disabled={busy} aria-expanded={designOpen} className={designOpen ? btnOn : btn} data-testid="sheet-design-toggle">
+            <button type="button" onClick={() => setDesignOpen((o) => !o)} disabled={busy} aria-expanded={designOpen} aria-label="Design" className={designOpen ? btnOn : btn} data-testid="sheet-design-toggle">
               <Palette className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Design</span>
             </button>

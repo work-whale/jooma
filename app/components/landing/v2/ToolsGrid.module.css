@@ -35,7 +35,15 @@
     box-shadow 0.2s;
 }
 
-.card:hover {
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--j-lilac-2);
+    box-shadow: 0 16px 30px -22px rgba(58, 28, 143, 0.5);
+  }
+}
+
+.card:active {
   transform: translateY(-3px);
   border-color: var(--j-lilac-2);
   box-shadow: 0 16px 30px -22px rgba(58, 28, 143, 0.5);

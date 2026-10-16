@@ -49,7 +49,7 @@ export default function GenerateOutlineButton({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 hover:border-gray-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+      className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg px-2.5 py-1.5 pointer-coarse:min-h-12 hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
     >
       {loading ? (
         <Loader2 className="w-3 h-3 animate-spin" />

@@ -274,8 +274,10 @@
  */
 .fab {
   position: fixed;
-  right: 1.5rem;
-  bottom: 5.5rem;
+  right: max(1.5rem, env(safe-area-inset-right));
+  /* Plus the phone tab bar's height when there is one (--j-bottom-ui,
+     globals.css), or the home indicator when there is not. */
+  bottom: calc(5.5rem + max(var(--j-bottom-ui, 0px), env(safe-area-inset-bottom)));
   z-index: 9990;
   width: 3.5rem;
   height: 3.5rem;

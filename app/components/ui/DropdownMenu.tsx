@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 // One dropdown, replacing three ad-hoc implementations (QuizGeneratorForm,
 // CpdSlideshowForm, and the since-removed LessonSlideshowForm). Only the quiz
@@ -49,6 +50,16 @@ export default function DropdownMenu({
 }: Props) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  // Focus to the first item that can be chosen, and Tab kept inside the menu.
+  useFocusTrap(menuRef, open);
+  useEffect(() => {
+    if (open) {
+      menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')?.focus();
+    }
+  }, [open]);
 
   // Escape closes and returns focus to the trigger, so keyboard users are not
   // stranded at the top of the document. The backdrop below handles pointers.
@@ -78,6 +89,7 @@ export default function DropdownMenu({
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         aria-label={ariaLabel}
         onClick={() => setOpen((v) => !v)}
         className={triggerClassName}
@@ -91,6 +103,8 @@ export default function DropdownMenu({
               over other interactive elements. z-10 sits under the menu's z-20. */}
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div
+            id={menuId}
+            ref={menuRef}
             role="menu"
             className={`absolute ${align === "right" ? "right-0" : "left-0"} mt-2 ${menuClassName} bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1 overflow-hidden`}
           >
@@ -103,10 +117,10 @@ export default function DropdownMenu({
                   disabled={item.disabled}
                   onClick={() => select(item)}
                   title={item.disabled && item.note ? item.note : undefined}
-                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors ${
+                  className={`w-full pointer-coarse:min-h-12 flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors ${
                     item.disabled
                       ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-gray-50 cursor-pointer"
+                      : "text-gray-700 hover:bg-gray-50 active:bg-gray-100 cursor-pointer"
                   }`}
                 >
                   {item.icon && <span className="shrink-0 text-gray-400">{item.icon}</span>}

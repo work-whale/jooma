@@ -15,6 +15,7 @@ import { displayName, initialsOf } from "@/app/lib/colleagueDisplay";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { typeLabel } from "@/app/lib/toolRunDisplay";
 import styles from "./ShareModal.module.css";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 /*
  * Share with colleagues.
@@ -79,6 +80,9 @@ function ShareDialog({
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
+  // Tab stays inside while it is open; it only exists while open.
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef, true);
 
   // Escape closes, focus moves in on open and returns to whatever opened it.
   useEffect(() => {
@@ -182,7 +186,7 @@ function ShareDialog({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div role="dialog" aria-modal="true" aria-labelledby="share-title" className={styles.modal}>
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="share-title" className={styles.modal}>
         <h2 id="share-title" className={styles.title} tabIndex={-1} ref={headingRef}>
           {recipient ? `Share with ${displayName(recipient)}` : "Share with colleagues"}
         </h2>
@@ -212,6 +216,8 @@ function ShareDialog({
               </span>
               <input
                 className={styles.searchInput}
+                inputMode="search"
+                enterKeyHint="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={picking === "colleagues" ? "Find a colleague" : "Find a resource"}

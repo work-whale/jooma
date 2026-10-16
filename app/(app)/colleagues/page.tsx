@@ -286,6 +286,8 @@ export default function ColleaguesPage() {
             <span className={styles.srOnly}>Find a colleague</span>
             <input
               className={app.searchInput}
+              inputMode="search"
+              enterKeyHint="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Find a colleague by username or email"

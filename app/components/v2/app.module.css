@@ -129,7 +129,13 @@
   font-family: inherit;
 }
 
-.shLink:hover {
+@media (hover: hover) {
+  .shLink:hover {
+    text-decoration: underline;
+  }
+}
+
+.shLink:active {
   text-decoration: underline;
 }
 
@@ -176,7 +182,13 @@
   border-bottom: 0;
 }
 
-.row:hover .rowTitle {
+@media (hover: hover) {
+  .row:hover .rowTitle {
+    color: var(--j-purple);
+  }
+}
+
+.row:active .rowTitle {
   color: var(--j-purple);
 }
 
@@ -238,7 +250,14 @@
     background 0.15s;
 }
 
-.btn:hover {
+@media (hover: hover) {
+  .btn:hover {
+    border-color: var(--j-lilac-2);
+    color: var(--j-deep);
+  }
+}
+
+.btn:active {
   border-color: var(--j-lilac-2);
   color: var(--j-deep);
 }
@@ -249,7 +268,15 @@
   color: #fff;
 }
 
-.btnP:hover {
+@media (hover: hover) {
+  .btnP:hover {
+    background: var(--j-deep);
+    border-color: var(--j-deep);
+    color: #fff;
+  }
+}
+
+.btnP:active {
   background: var(--j-deep);
   border-color: var(--j-deep);
   color: #fff;
@@ -260,7 +287,14 @@
   cursor: default;
 }
 
-.btn:disabled:hover {
+@media (hover: hover) {
+  .btn:disabled:hover {
+    border-color: var(--j-line-2);
+    color: var(--j-body);
+  }
+}
+
+.btn:disabled:active {
   border-color: var(--j-line-2);
   color: var(--j-body);
 }
@@ -289,6 +323,19 @@
 
 .search:focus-within {
   border-color: var(--j-lilac-2);
+}
+
+/* The input draws no outline of its own, so a keyboard user gets the ring on
+   the whole pill instead. */
+.search:has(:focus-visible) {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .search {
+    min-height: 48px;
+  }
 }
 
 .searchIcon {
@@ -337,7 +384,23 @@
     color 0.15s;
 }
 
-.chip:hover {
+/* Buttons and chips are 48px tall on a touch screen. With a mouse they keep
+   the tighter size the desktop layout is drawn around. */
+@media (pointer: coarse) {
+  .btn,
+  .chip {
+    min-height: 48px;
+  }
+}
+
+@media (hover: hover) {
+  .chip:hover {
+    border-color: var(--j-lilac-2);
+    color: var(--j-deep);
+  }
+}
+
+.chip:active {
   border-color: var(--j-lilac-2);
   color: var(--j-deep);
 }
@@ -348,7 +411,15 @@
   color: #fff;
 }
 
-.chipOn:hover {
+@media (hover: hover) {
+  .chipOn:hover {
+    background: var(--j-deep);
+    border-color: var(--j-deep);
+    color: #fff;
+  }
+}
+
+.chipOn:active {
   background: var(--j-deep);
   border-color: var(--j-deep);
   color: #fff;

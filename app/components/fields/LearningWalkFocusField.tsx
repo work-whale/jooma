@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function LearningWalkFocusField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Quality of teaching and curriculum sequencing",
     "e.g. Behaviour and attitudes to learning",
@@ -20,11 +23,11 @@ export default function LearningWalkFocusField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">
         Focus of learning walk <span className="text-gray-400 font-normal">(optional)</span>
       </label>
       <div className="relative">
-        <textarea
+        <textarea id={`${fieldId}-0`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""

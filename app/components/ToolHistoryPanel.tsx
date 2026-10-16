@@ -113,7 +113,9 @@ export default function ToolHistoryPanel({
                   onClick={(e) => handleDelete(e, run.id, run.title?.trim() || "Untitled")}
                   disabled={deletingId === run.id}
                   aria-label="Delete from history"
-                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-white transition-all cursor-pointer"
+                  // Hidden until hover with a mouse; always shown on a touch screen and
+                  // on keyboard focus. 48px to tap on a touch screen.
+                  className="shrink-0 w-7 h-7 pointer-coarse:w-12 pointer-coarse:h-12 flex items-center justify-center rounded-lg text-gray-500 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 hover:text-red-600 hover:bg-white active:text-red-600 active:bg-white transition-all cursor-pointer"
                 >
                   {deletingId === run.id ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

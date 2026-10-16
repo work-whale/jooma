@@ -207,6 +207,7 @@
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 110px);
+  max-height: calc(100dvh - 110px);
   min-height: 360px;
   background: var(--j-card);
   border: 1px solid var(--j-line);
@@ -457,6 +458,15 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Visible, not screen-reader only: the placeholder is an example address and
+   disappears as soon as typing starts. */
+.gateLabel {
+  font-size: 0.83rem;
+  font-weight: 800;
+  color: var(--j-ink);
+  margin-bottom: -4px;
 }
 
 .gateInput {

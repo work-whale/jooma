@@ -2,6 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 60;
+  /* Zero in a normal browser tab; in a standalone or landscape view it keeps
+     the bar's rows clear of the notch. */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   background: rgba(247, 245, 252, 0.88);
   backdrop-filter: blur(14px);
   /* The hairline is a shadow, not a border, so the bar is exactly its rows'
@@ -32,7 +37,13 @@
   color: rgba(255, 255, 255, 0.88);
 }
 
-.onBand .link:hover {
+@media (hover: hover) {
+  .onBand .link:hover {
+    color: #fff;
+  }
+}
+
+.onBand .link:active {
   color: #fff;
 }
 
@@ -42,8 +53,19 @@
   box-shadow: 0 8px 22px -12px rgba(16, 6, 45, 0.8);
 }
 
-.onBand .cta:hover {
+@media (hover: hover) {
+  .onBand .cta:hover {
+    background: var(--j-tint);
+  }
+}
+
+.onBand .cta:active {
   background: var(--j-tint);
+}
+
+/* The global focus ring is brand purple, which vanishes on the purple band. */
+.onBand :focus-visible {
+  outline-color: #fff;
 }
 
 /* NavAuth's button is drawn for a light bar; give it one on the band. */
@@ -117,7 +139,13 @@
   transition: color 0.15s;
 }
 
-.link:hover {
+@media (hover: hover) {
+  .link:hover {
+    color: var(--j-purple);
+  }
+}
+
+.link:active {
   color: var(--j-purple);
 }
 
@@ -140,22 +168,52 @@
    by exactly this much (HeroV3.module.css .hero), and an auto height left a
    strip of the light page showing above the band. */
 @media (max-width: 860px) {
+  /* Two 48px rows with no gap between them: exactly the 96px the hero
+     expects, and every link in them a full 48px tall to tap. */
   .inner {
     flex-wrap: wrap;
     align-content: center;
     height: 96px;
-    gap: 8px 20px;
+    gap: 0 20px;
   }
 
+  .link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 4px;
+  }
+
+  /* The pill stays the size it was; the transparent layer around it makes
+     it 48px to tap. */
   .cta {
     padding: 9px 18px;
+    position: relative;
+  }
+
+  .cta::after {
+    content: "";
+    position: absolute;
+    inset: -5px 0;
   }
 
   .links {
     order: 3;
-    width: 100%;
-    justify-content: center;
-    gap: 22px;
+    /* The links' 4px side padding reaches past the row's edge rather than
+       pushing the row wider. */
+    width: calc(100% + 8px);
+    margin: 0 -4px;
+    justify-content: safe center;
+    gap: 14px;
     font-size: 0.88rem;
+    /* A safety net, not a design: if a large font setting makes the four
+       links wider than a 320px phone, they scroll sideways in their own row
+       instead of pushing the whole page sideways. */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .links::-webkit-scrollbar {
+    display: none;
   }
 }

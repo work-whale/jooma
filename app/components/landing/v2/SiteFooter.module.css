@@ -46,7 +46,13 @@
   transition: color 0.15s;
 }
 
-.foot li a:hover {
+@media (hover: hover) {
+  .foot li a:hover {
+    color: var(--j-purple);
+  }
+}
+
+.foot li a:active {
   color: var(--j-purple);
 }
 

@@ -33,7 +33,7 @@ export default function PdfPreviewModal({ markdown, filename, onClose }: Props) 
       onClose={onClose}
       title="Print Preview"
       width="min(900px, 95vw)"
-      height="90vh"
+      height="90dvh"
       actions={
         <button
           type="button"

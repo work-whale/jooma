@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./colleagues.module.css";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 /*
  * Invite a colleague.
@@ -45,6 +46,9 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
+  // Tab stays inside while it is open; it only exists while open.
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef, true);
 
   useEffect(() => {
     returnTo.current = document.activeElement as HTMLElement | null;
@@ -101,7 +105,7 @@ function InviteDialog({ onClose }: { onClose: () => void }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div role="dialog" aria-modal="true" aria-labelledby="invite-title" className={styles.modal}>
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="invite-title" className={styles.modal}>
         <h2 id="invite-title" className={styles.modalTitle}>
           Invite a colleague
         </h2>

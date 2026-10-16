@@ -103,14 +103,16 @@ export default function QuestionTypesField({
       </div>
 
       {value.length === 0 && !optional && (
-        <p className="text-xs text-red-500">Select at least one question type.</p>
+        <p role="alert" className="text-xs text-red-700">Select at least one question type.</p>
       )}
       {value.length === 0 && optional && (
         <p className="text-xs text-gray-400">None picked: you will get a mix that suits the subject.</p>
       )}
 
       {showCounts && value.length > 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden mt-1">
+        // Scrolls sideways inside itself on a narrow phone rather than
+        // clipping the "How many" column.
+        <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-x-auto mt-1">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200">

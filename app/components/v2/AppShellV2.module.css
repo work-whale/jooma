@@ -4,10 +4,11 @@
   display: grid;
   grid-template-columns: var(--j-nav) minmax(0, 1fr);
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--j-bg);
   color: var(--j-body);
   font-family: var(--font-jakarta), system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 1rem;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
@@ -38,6 +39,19 @@
   min-width: 0;
   height: 100dvh;
   overflow: hidden;
+}
+
+/* Below the breakpoint the tab bar is pinned over the bottom of the screen.
+   --j-bottom-ui is its height including the home indicator inset (globals.css),
+   so the scrolling page ends above it and Ask Jo's composer sits on top of it. */
+@media (max-width: 900px) {
+  .main {
+    padding-bottom: var(--j-bottom-ui);
+  }
+
+  .mainFixed {
+    height: calc(100dvh - var(--j-bottom-ui));
+  }
 }
 
 .backdrop {

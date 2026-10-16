@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--j-tint)" }}>
+    <div className="min-h-dvh" style={{ backgroundColor: "var(--j-tint)" }}>
       <div className="max-w-3xl mx-auto px-6 py-16">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo/logo-v2.svg" alt="Jooma" className="mb-10" style={{ height: 30, width: "auto" }} />
+        <img src="/logo/logo-v2.svg" alt="Jooma" width={104} height={32} className="mb-10" style={{ height: 30, width: "auto" }} />
 
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Privacy Policy
@@ -147,7 +147,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Table({ rows }: { rows: [string, string][] }) {
   return (
-    <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--j-line)" }}>
+    // overflow-x-auto rather than hidden: on a narrow phone a long value
+    // scrolls inside the table instead of being clipped off its edge.
+    <div className="rounded-xl overflow-x-auto border" style={{ borderColor: "var(--j-line)" }}>
       <table className="w-full text-sm">
         <tbody>
           {rows.map(([label, value], i) => (

@@ -17,7 +17,7 @@ export default async function UnsubscribePage({
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6"
+      className="min-h-dvh flex items-center justify-center p-6"
       style={{ backgroundColor: "var(--j-tint)" }}
     >
       <div
@@ -28,6 +28,8 @@ export default async function UnsubscribePage({
         <img
           src="/logo/logo-v2.svg"
           alt="Jooma"
+          width={104}
+          height={32}
           className="mx-auto mb-7"
           style={{ height: 34, width: "auto" }}
         />

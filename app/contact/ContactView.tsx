@@ -36,7 +36,7 @@ export default function ContactView({
 
   return (
     <div
-      className="min-h-screen flex flex-col py-10 px-4"
+      className="min-h-dvh flex flex-col py-10 px-4"
       style={{ backgroundColor: "var(--j-tint)" }}
     >
       <div className="max-w-2xl mx-auto w-full">

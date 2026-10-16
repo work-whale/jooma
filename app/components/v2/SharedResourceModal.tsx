@@ -16,6 +16,7 @@ import { getToolRun, type ToolRun } from "@/app/lib/toolRuns";
 import { isStructuredOutput, typeLabel } from "@/app/lib/toolRunDisplay";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import styles from "./SharedResourceModal.module.css";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 /*
  * Read a resource without opening the tool that made it.
@@ -158,6 +159,9 @@ function SharedResourceDialog({
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
+  // Tab stays inside while it is open; it only exists while open.
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef, true);
 
   // Escape closes, focus moves in on open and returns to whatever opened it.
   useEffect(() => {
@@ -225,6 +229,7 @@ function SharedResourceDialog({
       }}
     >
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="shared-title"

@@ -197,6 +197,7 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@school.sch.uk"
             autoComplete="email"
+            enterKeyHint="go"
             // An invite is matched on the address it was sent to, so a teacher
             // who edits this here would only fail later, at acceptance, with
             // nothing to show for it.

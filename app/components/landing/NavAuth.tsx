@@ -13,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { createClient } from "@/app/lib/auth/client";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 import Avatar from "@/app/components/ui/Avatar";
 
 interface NavAuthProps {
@@ -37,14 +38,33 @@ export default function NavAuth({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // pointerdown, not mousedown: iOS Safari sends no mouse events for a tap on
+  // something that is not itself clickable, so the menu never closed on a tap.
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, []);
+
+  // Focus into the menu on open, Tab kept inside it, and Escape hands focus
+  // back to the trigger.
+  useFocusTrap(menuRef, open);
+  useEffect(() => {
+    if (!open) return;
+    menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -83,10 +103,13 @@ export default function NavAuth({
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={triggerRef}
+        type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 pl-1.5 pr-2.5 py-1.5 rounded-xl border transition-colors hover:bg-black/5"
+        aria-controls="nav-auth-menu"
+        className="flex items-center gap-2 pointer-coarse:min-h-12 pl-1.5 pr-2.5 py-1.5 rounded-xl border transition-colors hover:bg-black/5 active:bg-black/5"
         style={{ borderColor: "var(--j-line-2)" }}
       >
         <Avatar url={avatarUrl} name={avatarName} size={28} />
@@ -97,7 +120,13 @@ export default function NavAuth({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden">
+        <div
+          id="nav-auth-menu"
+          ref={menuRef}
+          role="menu"
+          aria-label="Account"
+          className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden"
+        >
           <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
             <Avatar url={avatarUrl} name={avatarName} size={36} />
             <div className="min-w-0">
@@ -111,7 +140,8 @@ export default function NavAuth({
           </div>
           <Link
             href="/tools"
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            role="menuitem"
+            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
           >
             <LayoutGrid className="w-4 h-4" />
             Go to dashboard
@@ -119,7 +149,8 @@ export default function NavAuth({
           {isAdmin && (
             <Link
               href="/admin"
-              className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              role="menuitem"
+              className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
             >
               <Shield className="w-4 h-4" />
               Admin
@@ -127,7 +158,8 @@ export default function NavAuth({
           )}
           <Link
             href="/profile"
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            role="menuitem"
+            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
           >
             <UserRound className="w-4 h-4" />
             Profile
@@ -137,7 +169,8 @@ export default function NavAuth({
               one exists for Stripe's return URLs and old bookmarks. */}
           <Link
             href="/profile?section=subscription"
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            role="menuitem"
+            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
           >
             <BarChart3 className="w-4 h-4" />
             Usage &amp; Billing
@@ -145,7 +178,8 @@ export default function NavAuth({
           <button
             type="button"
             onClick={handleSignOut}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            role="menuitem"
+            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Sign out

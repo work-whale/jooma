@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useId } from "react";
 import { CURRICULA } from "@/app/lib/formOptions";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import { Loader2, Sparkles, Minus, Plus } from "lucide-react";
@@ -40,6 +40,7 @@ export default function PhonicsForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
   const [age, setAge] = useState(5);
   const [grapheme, setGrapheme] = useState("");
@@ -161,8 +162,8 @@ export default function PhonicsForm({
             {/* Curriculum + Age row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-gray-800">Curriculum</label>
-                <select value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={selectClass}>
+                <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Curriculum</label>
+                <select id={`${fieldId}-0`} value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={selectClass}>
                   <option value="" disabled>Select curriculum</option>
                   {CURRICULA.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -200,10 +201,10 @@ export default function PhonicsForm({
 
             {/* Grapheme input */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-gray-800">
+              <label htmlFor={`${fieldId}-1`} className="block text-sm font-semibold text-gray-800">
                 Grapheme representing the target phoneme/sound
               </label>
-              <input
+              <input id={`${fieldId}-1`}
                 type="text"
                 value={grapheme}
                 onChange={(e) => setGrapheme(e.target.value)}

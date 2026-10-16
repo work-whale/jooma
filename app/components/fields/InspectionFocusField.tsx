@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function InspectionFocusField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Quality of education and curriculum intent",
     "e.g. Safeguarding and personal development",
@@ -20,11 +23,11 @@ export default function InspectionFocusField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">
         Inspection focus <span className="text-gray-400 font-normal">(optional)</span>
       </label>
       <div className="relative">
-        <textarea
+        <textarea id={`${fieldId}-0`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""

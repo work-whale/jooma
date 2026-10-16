@@ -106,6 +106,73 @@ summary {
   cursor: pointer;
 }
 
+/* ── Touch and keyboard defaults ─────────────────────────────────────────────
+ *
+ * In the base layer, so any utility or component rule that styles its own
+ * focus or tap state still wins. These are the floor, not the design. */
+@layer base {
+  /* No double-tap-to-zoom delay on anything a finger presses. Pinch-zoom is
+     unaffected. */
+  a,
+  button,
+  [role="button"],
+  summary,
+  label,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* A brand tint for the flash a tap leaves on iOS and Android, instead of
+     the platform's grey. */
+  html {
+    -webkit-tap-highlight-color: color-mix(in srgb, var(--j-purple) 15%, transparent);
+  }
+
+  /* A visible keyboard focus ring wherever a component has not drawn its own.
+     :where() keeps it at zero specificity, and the base layer lets the
+     existing focus:outline-none + ring utilities keep their own treatment. */
+  :where(a, button, [role="button"], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--j-purple);
+    outline-offset: 2px;
+  }
+}
+
+/* iOS zooms the page when a field under 16px takes focus, and the tool forms
+ * are almost all text-sm. Phones and touch screens only, so desktop forms keep
+ * their density. Unlayered on purpose: it has to beat Tailwind's text-sm and
+ * text-xs, which live in the utilities layer. Contenteditable is left out
+ * because the worksheet sheets render at print sizes. */
+@media (max-width: 900px), (pointer: coarse) {
+  :is(
+      input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="button"], [type="submit"], [type="reset"], [type="image"]),
+      textarea,
+      select
+    ) {
+    font-size: max(1rem, 16px);
+  }
+}
+
+/* The height of whatever is pinned to the bottom of the screen, so floating
+ * buttons and toasts can sit above it rather than under it. Zero unless the
+ * signed-in tab bar is on the page. */
+:root {
+  --j-bottom-ui: 0px;
+}
+
+@media (max-width: 900px) {
+  :root:has(#app-tabbar) {
+    --j-bottom-ui: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  /* The tab bar steps aside while the keyboard is up (BottomTabsV2.module.css),
+     so nothing should keep making room for it. */
+  :root:has(#app-tabbar):has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select, [contenteditable="true"]):focus) {
+    --j-bottom-ui: 0px;
+  }
+}
+
 /* `.bold-border`, `.neo-shadow`, `.neo-shadow-sm` and `.scribble-highlight`
    were removed here. They were the last of a neo-brutalist look two rebrands
    ago, carried the old #1C1B1B ink and the yellow highlight, and had zero
@@ -302,6 +369,22 @@ summary {
 @media (prefers-reduced-motion: reduce) {
   .tp-line, .tp-fade-up, .tp-correct, .tp-check, .tp-float, .hiw-grow, .hiw-rise, .hs-typing-dot, .hs-caret, .hs-pop, .hs-view-in, .panel-slide-in {
     animation: none;
+  }
+
+  /* Everything else: the drawer slide, modal fades, the marquee, the slide
+     pop-ins. Near-zero rather than none, so transitionend and animationend
+     still fire for anything that waits on them. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto !important;
   }
 }
 

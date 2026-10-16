@@ -54,7 +54,7 @@ export default function JoActivityPanel() {
       // not read a press on Stop (or anywhere else in here) as the teacher
       // taking over the form. See onIntervene in useToolLaunch.ts.
       data-jo-panel=""
-      className="panel-slide-in fixed z-30 bottom-0 left-0 right-0 lg:left-auto lg:bottom-6 lg:right-6 lg:w-[300px]"
+      className="panel-slide-in fixed z-30 bottom-(--j-bottom-ui) left-0 right-0 lg:left-auto lg:bottom-6 lg:right-6 lg:w-[300px]"
     >
       <div
         className="border-t lg:border lg:rounded-2xl p-4 shadow-lg"

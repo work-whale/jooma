@@ -1,15 +1,18 @@
 "use client";
 
+import { useId } from "react";
+
 interface Props {
   value: string;
   onChange: (v: string) => void;
 }
 
 export default function WriteField({ value, onChange }: Props) {
+  const fieldId = useId();
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Write</label>
-      <textarea
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Write</label>
+      <textarea id={`${fieldId}-0`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="e.g. Write a non-chronological report about the water cycle for Year 5 students"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CiSearch } from "react-icons/ci";
 import { TOOLS } from "@/app/lib/tools";
@@ -41,6 +41,8 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputId = useId();
+  const listId = useId();
 
   const trimmed = query.trim().toLowerCase();
   const results = trimmed
@@ -61,8 +63,8 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, [variant]);
 
   const handleSelect = (href: string) => {
@@ -90,12 +92,19 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
   const drawer = variant === "drawer";
 
   const resultRows = results.map((tool, i) => (
-    <li key={tool.href}>
+    <li key={tool.href} role="presentation">
+      {/* mousedown so a pointer pick lands before the input's blur closes the
+          panel; click as well, so a keyboard or switch user who reaches the
+          button can activate it too. The first one to fire clears the list. */}
       <button
         type="button"
+        id={`${listId}-${i}`}
+        role="option"
+        aria-selected={i === activeIndex}
         onMouseDown={() => handleSelect(tool.href)}
+        onClick={() => handleSelect(tool.href)}
         onMouseEnter={() => setActiveIndex(i)}
-        className={`w-full flex items-start gap-3 px-4 py-3 transition-colors text-left cursor-pointer ${
+        className={`w-full min-h-12 flex items-start gap-3 px-4 py-3 transition-colors text-left cursor-pointer active:bg-gray-100 ${
           i === activeIndex ? "bg-gray-100" : "hover:bg-gray-50"
         }`}
       >
@@ -117,10 +126,30 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
   ));
 
   return (
-    <div className={drawer ? "relative" : "relative"} ref={wrapperRef}>
+    <div className="relative" ref={wrapperRef}>
+      {/* A visible label in the drawer, where there is room for one and the
+          field must not rely on its placeholder. The desktop top bar is a
+          single 64px row with no room above the field, so there it is named
+          for assistive tech only. */}
+      <label
+        htmlFor={inputId}
+        className={drawer ? "block mb-1.5 text-sm font-semibold text-(--j-ink)" : "sr-only"}
+      >
+        Search tools
+      </label>
+      <div className="relative">
       <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none z-10" />
       <input
+        id={inputId}
         type="text"
+        // The search key on a phone keyboard, and "search" on its enter key.
+        inputMode="search"
+        enterKeyHint="search"
+        role="combobox"
+        aria-expanded={drawer ? results.length > 0 : open && results.length > 0}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={results.length > 0 ? `${listId}-${activeIndex}` : undefined}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -135,14 +164,15 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
         /* text-base below sm: iOS Safari auto-zooms the page on focus for any
            input under 16px, which strands the teacher at 2x with no way back. */
         className={`pl-9 pr-4 py-2 border border-line font-light rounded-2xl text-base sm:text-sm placeholder-muted focus:outline-none focus:border-gray-400 transition-all bg-white ${
-          drawer ? "w-full" : "w-48 xl:w-64"
+          drawer ? "w-full min-h-12" : "w-48 xl:w-64"
         }`}
       />
+      </div>
 
       {drawer ? (
         <>
           {trimmed && results.length > 0 && (
-            <ul className="mt-2 bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <ul id={listId} role="listbox" aria-label="Tools" className="mt-2 bg-white border border-gray-200 rounded-2xl overflow-hidden">
               {resultRows}
             </ul>
           )}
@@ -159,7 +189,7 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
               <p className="px-4 pt-3 pb-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
                 Tools
               </p>
-              <ul>{resultRows}</ul>
+              <ul id={listId} role="listbox" aria-label="Tools">{resultRows}</ul>
             </div>
           )}
           {open && trimmed && results.length === 0 && (

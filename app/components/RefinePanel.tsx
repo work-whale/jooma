@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Loader2, Wand2 } from "lucide-react";
 
 interface RefinePanelProps {
@@ -21,6 +21,7 @@ const DEFAULT_CHIPS = [
 
 export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIPS, maxWidth = true }: RefinePanelProps) {
   const [instruction, setInstruction] = useState("");
+  const inputId = useId();
 
   const handleSubmit = () => {
     const trimmed = instruction.trim();
@@ -36,15 +37,22 @@ export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIP
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-6 space-y-4">
+        {/* Visible, so the question stays on screen after typing starts; the
+            placeholder is only an example now. */}
+        <label htmlFor={inputId} className="block -mb-2 text-sm font-semibold text-gray-800">
+          What would you like to change?
+        </label>
         {/* Stacks below `sm`: the Refine button is shrink-0, so side by side it
             squeezed the input to roughly half a phone's width. */}
         <div className="flex flex-col sm:flex-row gap-2">
           <input
+            id={inputId}
             type="text"
+            enterKeyHint="send"
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
-            placeholder="What would you like to change?"
+            placeholder="For example, add a starter activity"
             disabled={isRefining}
             className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent disabled:opacity-50 bg-white"
           />
@@ -66,7 +74,7 @@ export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIP
               type="button"
               onClick={() => setInstruction(chip)}
               disabled={isRefining}
-              className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 bg-white hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="text-xs border border-gray-200 rounded-full px-3 py-1.5 pointer-coarse:min-h-12 text-gray-600 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {chip}
             </button>

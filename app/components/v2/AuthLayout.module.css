@@ -1,9 +1,10 @@
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--j-bg);
   color: var(--j-body);
   font-family: var(--font-jakarta), system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 1rem;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   padding: 20px;
@@ -150,7 +151,13 @@
   font-weight: 800;
 }
 
-.footer a:hover {
+@media (hover: hover) {
+  .footer a:hover {
+    text-decoration: underline;
+  }
+}
+
+.footer a:active {
   text-decoration: underline;
 }
 
@@ -177,6 +184,8 @@
 }
 
 @media (max-width: 420px) {
+  /* Edge to edge on a phone, so the panel pads itself clear of the notch
+     and the home indicator. */
   .page {
     padding: 0;
   }
@@ -185,5 +194,10 @@
     border: 0;
     border-radius: 0;
     min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: max(36px, env(safe-area-inset-top));
+    padding-bottom: max(36px, env(safe-area-inset-bottom));
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
   }
 }

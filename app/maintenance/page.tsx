@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default function MaintenancePage() {
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6"
+      className="min-h-dvh flex items-center justify-center p-6"
       style={{ backgroundColor: "var(--j-tint)" }}
     >
       <div
@@ -18,6 +18,8 @@ export default function MaintenancePage() {
         <img
           src="/logo/logo-v2.svg"
           alt="Jooma"
+          width={104}
+          height={32}
           className="mx-auto mb-7"
           style={{ height: 34, width: "auto" }}
         />

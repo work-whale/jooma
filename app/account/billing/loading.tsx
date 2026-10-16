@@ -8,5 +8,5 @@
 // docs/instant-navigation-guide.md §4. Painting the old three-tab skeleton here
 // would flash a page the teacher is about to be moved off.
 export default function Loading() {
-  return <div className="min-h-screen" style={{ backgroundColor: "var(--j-tint)" }} />;
+  return <div className="min-h-dvh" style={{ backgroundColor: "var(--j-tint)" }} />;
 }

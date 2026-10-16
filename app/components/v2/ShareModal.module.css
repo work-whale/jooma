@@ -25,6 +25,7 @@
   width: 100%;
   max-width: 460px;
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
   font-family: var(--font-jakarta), system-ui, sans-serif;
@@ -76,6 +77,19 @@
 
 .search:focus-within {
   border-color: var(--j-lilac-2);
+}
+
+/* The input draws no outline of its own, so a keyboard user gets the ring on
+   the whole pill instead. */
+.search:has(:focus-visible) {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .search {
+    min-height: 48px;
+  }
 }
 
 .searchIcon {
@@ -135,7 +149,13 @@
   cursor: pointer;
 }
 
-.pick:hover {
+@media (hover: hover) {
+  .pick:hover {
+    background: var(--j-bg);
+  }
+}
+
+.pick:active {
   background: var(--j-bg);
 }
 
@@ -268,7 +288,14 @@
   color: var(--j-body);
 }
 
-.cancel:hover {
+@media (hover: hover) {
+  .cancel:hover {
+    border-color: var(--j-lilac-2);
+    color: var(--j-deep);
+  }
+}
+
+.cancel:active {
   border-color: var(--j-lilac-2);
   color: var(--j-deep);
 }
@@ -278,7 +305,13 @@
   color: #fff;
 }
 
-.save:hover {
+@media (hover: hover) {
+  .save:hover {
+    background: var(--j-deep);
+  }
+}
+
+.save:active {
   background: var(--j-deep);
 }
 
@@ -287,6 +320,12 @@
   cursor: default;
 }
 
-.save:disabled:hover {
+@media (hover: hover) {
+  .save:disabled:hover {
+    background: var(--j-purple);
+  }
+}
+
+.save:disabled:active {
   background: var(--j-purple);
 }

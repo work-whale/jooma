@@ -8,6 +8,7 @@ import { OutlineRail } from "@/app/components/OutputOutline";
 import DropdownMenu from "@/app/components/ui/DropdownMenu";
 import { useDocumentActions } from "@/app/lib/useDocumentActions";
 import styles from "./FocusDocumentModal.module.css";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
 /*
  * Read a generation with the whole screen.
@@ -64,6 +65,9 @@ function FocusDialog({ markdown, filename, title, onClose }: Props) {
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
+  // Tab stays inside while it is open; it only exists while open.
+  const trapRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(trapRef, true);
 
   const { copied, isExporting, exportError, handleCopy, exportItems } = useDocumentActions(
     markdown,
@@ -106,7 +110,7 @@ function FocusDialog({ markdown, filename, title, onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div role="dialog" aria-modal="true" aria-labelledby="focus-title" className={styles.modal}>
+      <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="focus-title" className={styles.modal}>
         <header className={styles.head}>
           <span className={styles.headText}>
             <h2 id="focus-title" className={styles.title} tabIndex={-1} ref={headingRef}>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 const GENDER_OPTIONS = ["Male", "Female", "Non-Binary"] as const;
 
 const inputClass =
@@ -12,10 +14,11 @@ interface Props {
 }
 
 export default function GenderField({ value, onChange, label = "Gender" }: Props) {
+  const fieldId = useId();
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">{label}</label>
+      <select id={`${fieldId}-0`} value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>
         <option value="">Please select an option</option>
         {GENDER_OPTIONS.map((g) => (
           <option key={g} value={g}>{g}</option>

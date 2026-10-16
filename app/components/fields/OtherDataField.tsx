@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function OtherDataField({ value, onChange }: Props) {
+  const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. SEND needs, EAL status, attendance concerns, pastoral notes",
     "e.g. Recently identified dyslexia; attendance 78%; strong family support",
@@ -18,11 +21,11 @@ export default function OtherDataField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">
         Other relevant data <span className="font-normal text-gray-400">(optional)</span>
       </label>
       <div className="relative">
-        <textarea
+        <textarea id={`${fieldId}-0`}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""

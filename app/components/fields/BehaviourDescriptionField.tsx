@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -18,11 +19,15 @@ export default function BehaviourDescriptionField({ value, onChange, invalid }: 
     "e.g. Refuses tasks verbally and leaves the room when challenged",
     "e.g. Makes threatening comments towards peers in unstructured times",
   ]);
+  const id = useId();
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-semibold text-gray-800">Challenging behaviour description</label>
+      <label htmlFor={id} className="block text-sm font-semibold text-gray-800">Challenging behaviour description</label>
       <div className="relative">
         <textarea
+          id={id}
+          aria-invalid={invalid ? true : undefined}
+          aria-describedby={invalid ? `${id}-error` : undefined}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder=""
@@ -31,7 +36,7 @@ export default function BehaviourDescriptionField({ value, onChange, invalid }: 
         />
         {!value && <PlaceholderOverlay text={placeholder} area />}
       </div>
-      {invalid && <p className="text-xs text-red-500">Behaviour description is required</p>}
+      {invalid && <p id={`${id}-error`} role="alert" className="text-xs text-red-700">Behaviour description is required</p>}
       <p className="text-xs text-gray-400">100,000 character maximum input text</p>
     </div>
   );

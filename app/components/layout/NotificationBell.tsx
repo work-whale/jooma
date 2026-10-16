@@ -99,16 +99,24 @@ export default function NotificationBell() {
   // inflate the figure the admin console reports.
   const unread = acknowledged ? 0 : rows.filter((r) => !r.seen).length;
 
-  // Close on outside click.
+  // Close on outside click. pointerdown, not mousedown: iOS Safari sends no
+  // mouse events for a tap on something that is not itself clickable.
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [open]);
+
+  // Focus moves into the panel on open, so the next Tab walks its links
+  // rather than the page behind it.
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (open) panelRef.current?.focus();
   }, [open]);
 
   // Close on Escape, and put focus back where it came from — otherwise a
@@ -137,12 +145,15 @@ export default function NotificationBell() {
         }}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-controls="notification-panel"
         aria-label={
           unread > 0
             ? `${unread} new ${unread === 1 ? "notification" : "notifications"}`
             : "Notifications"
         }
-        className="relative w-9 h-9 flex items-center justify-center rounded-2xl border border-line bg-white hover:border-gray-400 transition-colors cursor-pointer"
+        // The after: layer widens the hit area to 48px without changing the
+        // 36px button anyone sees.
+        className="relative w-9 h-9 flex items-center justify-center rounded-2xl border border-line bg-white hover:border-gray-400 active:bg-gray-100 transition-colors cursor-pointer after:absolute after:-inset-1.5 after:content-['']"
       >
         <Bell className="w-4 h-4 text-muted" />
         {unread > 0 && (
@@ -165,11 +176,14 @@ export default function NotificationBell() {
 
       {open && (
         <div
+          id="notification-panel"
+          ref={panelRef}
+          tabIndex={-1}
           role="dialog"
           aria-label="Notifications"
           /* min() width so the panel survives a narrow phone; right-0 anchors it
              under the bell rather than letting it run off the edge. */
-          className="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-2rem))] bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-2rem))] bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden focus:outline-none"
         >
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-900">Notifications</p>

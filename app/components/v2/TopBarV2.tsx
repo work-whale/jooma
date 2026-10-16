@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useFocusTrap } from "@/app/lib/useFocusTrap";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { List, SignOut, ShieldCheck, ChartBar, UserCircle, Crown, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { SignOut, ShieldCheck, ChartBar, UserCircle, Crown, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import ToolSearch from "@/app/components/layout/ToolSearch";
 import NotificationBell from "@/app/components/layout/NotificationBell";
@@ -17,13 +18,11 @@ import styles from "./TopBarV2.module.css";
 
 interface TopBarV2Props {
   title: string;
-  /** Opens the mobile nav drawer. Supplied by AppShellV2. */
-  onMenuClick?: () => void;
-  /** So AppShellV2 can return focus here when the drawer closes. */
-  menuButtonRef?: React.Ref<HTMLButtonElement>;
 }
 
-export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2Props) {
+/* Below 900px the drawer is opened from More in the tab bar (BottomTabsV2),
+   within reach of a thumb, so this bar no longer carries a hamburger. */
+export default function TopBarV2({ title }: TopBarV2Props) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -35,6 +34,8 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
   const [ambassador, setAmbassador] = useState<"none" | "pending" | "active">("none");
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const avatarButtonRef = useRef<HTMLButtonElement>(null);
+  const menuPanelRef = useRef<HTMLDivElement>(null);
 
   // Name and avatar come from a shared store, not local state. The profile form
   // is a SIBLING of this component, so it cannot pass a new photo down, and
@@ -95,15 +96,34 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
     };
   }, [pathname]);
 
+  // pointerdown, not mousedown: iOS Safari does not send mouse events for a
+  // tap on something that is not itself clickable, so a tap on the page
+  // background never closed the menu.
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, []);
+
+  // Open: focus the first item, and keep Tab inside the menu. Escape closes
+  // it and hands focus back to the avatar, so a keyboard user is never left
+  // stranded where the menu used to be.
+  useFocusTrap(menuPanelRef, profileOpen);
+  useEffect(() => {
+    if (!profileOpen) return;
+    menuPanelRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setProfileOpen(false);
+      avatarButtonRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [profileOpen]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -117,19 +137,6 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
 
   return (
     <header className={styles.top}>
-      {/* Opens the nav drawer. Only exists below 900px, where the rail is
-          off-canvas. */}
-      <button
-        type="button"
-        ref={menuButtonRef}
-        onClick={onMenuClick}
-        aria-label="Open navigation"
-        aria-controls="app-sidenav-v2"
-        className={styles.menu}
-      >
-        <List className={styles.menuIcon} />
-      </button>
-
       {/* min-width: 0 and an ellipsis, not a non-shrinking title: a rigid title
           next to this many controls is what pushed the row off a phone. */}
       <h2 className={styles.title}>{title}</h2>
@@ -148,10 +155,12 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
         <div className={styles.profile} ref={profileRef}>
           <button
             type="button"
+            ref={avatarButtonRef}
             onClick={() => setProfileOpen((v) => !v)}
             aria-label="Account menu"
             aria-haspopup="menu"
             aria-expanded={profileOpen}
+            aria-controls="account-menu"
             className={styles.avatarBtn}
           >
             {/* A verified ambassador wears a gold ring and a crown everywhere in
@@ -168,7 +177,13 @@ export default function TopBarV2({ title, onMenuClick, menuButtonRef }: TopBarV2
           </button>
 
           {profileOpen && (
-            <div className={styles.menuPanel} role="menu">
+            <div
+              id="account-menu"
+              ref={menuPanelRef}
+              className={styles.menuPanel}
+              role="menu"
+              aria-label="Account"
+            >
               {userEmail && (
                 <div className={styles.who}>
                   <Avatar url={avatarUrl} name={displayName} size={36} />

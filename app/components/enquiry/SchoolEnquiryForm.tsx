@@ -167,12 +167,13 @@ export default function SchoolEnquiryForm({
       >
         <input
           id="school-licences"
-          type="number"
+          type="text"
+          // A numeric keypad without type="number"'s spinner, which a scroll
+          // or a swipe can silently change. The server validates the range.
           inputMode="numeric"
-          min={1}
-          max={100000}
+          pattern="[0-9]*"
           value={licences}
-          onChange={(e) => setLicences(e.target.value)}
+          onChange={(e) => setLicences(e.target.value.replace(/\D/g, ""))}
           placeholder="25"
           className={INPUT_CLASS}
           style={INPUT_STYLE}

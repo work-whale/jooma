@@ -118,7 +118,7 @@ export default function ResourceLibraryModal({
   return (
       <div
         className="panel-slide-in relative shrink-0 w-80 max-w-[80vw] bg-white rounded-2xl flex flex-col shadow-2xl border overflow-hidden"
-        style={{ maxHeight: "90vh", borderColor: "var(--j-line)" }}
+        style={{ maxHeight: "90dvh", borderColor: "var(--j-line)" }}
       >
         {/* Header */}
         <div className="flex items-center gap-2 px-5 py-4 border-b" style={{ borderColor: "var(--j-line)" }}>

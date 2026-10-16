@@ -35,7 +35,7 @@ import styles from "./create.module.css";
 const Editor = dynamic(() => import("@/app/components/editor/Editor"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-screen" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
+    <div className="flex items-center justify-center h-dvh" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
       <SlideshowLoadingAnimation label="Opening the editor" />
     </div>
   ),
