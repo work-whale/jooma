@@ -140,7 +140,7 @@ test.describe("Ambassador programme (admin)", () => {
     await expect(page).not.toHaveURL(/\/admin/);
   });
 
-  test("the v4 layout: KPIs, a one-click invite maker, review and live tables", async ({
+  test("the v4 layout: KPIs, the one share link, review and live tables", async ({
     page,
   }) => {
     await signIn(page, adminUser);
@@ -149,24 +149,23 @@ test.describe("Ambassador programme (admin)", () => {
     await expect(page.getByRole("heading", { name: "Ambassador programme" })).toBeVisible();
     await expect(page.getByTestId("programme-kpis")).toBeVisible();
 
-    const box = page.getByTestId("invite-box");
-    // Asked for: just a button, so a link can be made and pasted straight away.
-    await expect(box.getByRole("button", { name: "Generate link" })).toBeEnabled();
-    await expect(box.getByText("Their name")).toHaveCount(0);
-    await expect(box.getByText("Where you found them")).toHaveCount(0);
-    await expect(box.getByText(/email/i)).toHaveCount(0);
-    await expect(box.getByText(/invited by/i)).toHaveCount(0);
+    // One short link for everyone, to paste into a chat. Nothing to generate.
+    const box = page.getByTestId("share-link-box");
+    await expect(box.getByTestId("share-link")).toHaveText(/\/ambassador$/);
+    await expect(box.getByTestId("share-link")).not.toHaveText(/^https?:|www\./);
+    await expect(box.getByRole("button", { name: /Copy/ })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Generate link" })).toHaveCount(0);
 
     // Headings, since "Awaiting review" and "Active ambassadors" are KPI labels too.
     for (const name of [
       "Commission rates",
       "Awaiting review",
       "Active ambassadors",
-      "Invite links issued",
       "What the programme costs",
     ]) {
       await expect(page.getByRole("heading", { name })).toBeVisible();
     }
+    await expect(page.getByRole("heading", { name: "Invite links issued" })).toHaveCount(0);
   });
 
   test("this month's teachers: billed is payable, unbilled is N/A with no control", async ({

@@ -27,6 +27,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "./supabase-admin";
 import { stripe } from "./stripe";
 import { AGREEMENT_MONTHS } from "./ambassador-commission";
+import { TRIAL_DAYS } from "./plans";
 
 /** Subscription states that still bill, or will. */
 const LIVE = new Set(["active", "trialing", "past_due", "unpaid", "incomplete"]);
@@ -148,4 +149,72 @@ export async function grantAmbassadorPro(
       year: "numeric",
     })}.`,
   };
+}
+
+/**
+ * Standard for TRIAL_DAYS while an ambassador application is under review, no
+ * card needed. Called by app/api/ambassadors/apply once the application is in.
+ *
+ * Only for an account with no plan and no Stripe subscription id: a payer keeps
+ * what they pay for, and an id (even a dead one) means they have been a
+ * customer before. Once per person, ever: trial_granted_at on any of their
+ * applications stops a declined applicant who applies again.
+ *
+ * The trial is recognised everywhere as subscription_status 'trialing' with a
+ * null stripe_subscription_id (a Stripe trial always has an id). It ends on
+ * time because my_generation_gate() reads it as 'free' once current_period_end
+ * passes, and effectivePlan() does the same for what the pages show. The daily
+ * ambassador-terms cron then tidies the row. Approval replaces it with the free
+ * Pro year (grantAmbassadorPro); a decline leaves it to run out.
+ *
+ * Returns the end date, or null when nothing was granted. Never throws: a
+ * failed grant must not fail the application.
+ */
+export async function grantApplicantTrial(userId: string, applicationId: string): Promise<string | null> {
+  try {
+    const { data: prior } = await supabaseAdmin
+      .from("ambassador_applications")
+      .select("id")
+      .eq("user_id", userId)
+      .not("trial_granted_at", "is", null)
+      .limit(1);
+    if (prior && prior.length > 0) return null;
+
+    const now = new Date();
+    const until = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+
+    // The guard is in the WHERE, so a subscription that lands in between is
+    // never overwritten.
+    const { data: granted, error } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        plan: "standard",
+        subscription_status: "trialing",
+        cancel_at_period_end: false,
+        current_period_end: until.toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq("id", userId)
+      .eq("plan", "free")
+      .is("stripe_subscription_id", null)
+      .select("id");
+    if (error) {
+      console.error("[ambassador-pro] review trial failed", error);
+      return null;
+    }
+    if (!granted || granted.length === 0) return null;
+
+    await supabaseAdmin
+      .from("ambassador_applications")
+      .update({ trial_granted_at: now.toISOString() })
+      .eq("id", applicationId);
+
+    // admin_log_plan_change needs an admin session, which an applicant does not
+    // have, so the record is trial_granted_at plus this line.
+    console.info("[ambassador-pro] review trial granted", userId, until.toISOString());
+    return until.toISOString();
+  } catch (err) {
+    console.error("[ambassador-pro] review trial failed", err);
+    return null;
+  }
 }

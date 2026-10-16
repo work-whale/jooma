@@ -117,10 +117,12 @@ const PUBLIC_PATHS = [
   "/create",
   "/made",
   "/api/try",
-  // An ambassador invite link. The person may have no account yet; the page
-  // shows the programme and sends them to sign up. It looks the token up by
-  // its hash and reveals only the name the admin typed. The application itself
-  // (/ambassador/apply) is NOT public.
+  // The ambassador programme's landing page, which the short link
+  // jooma.ai/ambassador shows to a signed-out visitor (rewritten below). The
+  // person may have no account yet; the page sends them to sign up. Old
+  // invite links (/ambassador/invite/...) redirect to it. The application
+  // itself (/ambassador/apply) is NOT public.
+  "/ambassador/join",
   "/ambassador/invite",
 ];
 
@@ -256,6 +258,18 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // The programme's short link, jooma.ai/ambassador, shared in chat. Signed in
+  // it is the ambassador's dashboard (or the landing page for anyone else, see
+  // app/(app)/ambassador/page.tsx); signed out it shows the landing page with
+  // the URL kept short. Exact match only: /ambassador/* stays protected.
+  if (!user && pathname === "/ambassador") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/ambassador/join";
+    const rewrite = NextResponse.rewrite(url);
+    response.cookies.getAll().forEach((c) => rewrite.cookies.set(c));
+    return rewrite;
+  }
+
   // Unauthenticated request to a protected route.
   if (!user && !isPublic(pathname) && !(await guestMayPass(request, pathname))) {
     // API routes must NOT be redirected to the HTML login page — the caller
@@ -267,14 +281,14 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     // Back to where they were going, for the pages /login honours (the
-    // ambassador application, reached from an invite link).
+    // ambassador application, reached from the programme's link).
     const back = honouredNextPath(pathname);
     url.search = back ? `?next=${encodeURIComponent(back)}` : url.search;
     return NextResponse.redirect(url);
   }
 
   // Already signed in but sitting on login/signup -> send into the app, or on
-  // to an honoured ?next= (an ambassador invite's application).
+  // to an honoured ?next= (the ambassador application).
   if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone();
     const next = honouredNextPath(request.nextUrl.searchParams.get("next"));

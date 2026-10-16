@@ -1,6 +1,6 @@
 // The ambassador application: its options, and the rules every field follows.
 //
-// Shared by the four-step form (so a mistake shows on the step it was made on)
+// Shared by the three-step form (so a mistake shows on the step it was made on)
 // and by /api/ambassadors/apply and /api/ambassadors/details (so nothing reaches
 // the database that the form would have refused). The table's own checks in
 // 20261014000000_ambassador_programme_v2.sql are the backstop, not the
@@ -109,7 +109,10 @@ export function normaliseAccountNumber(raw: string): string {
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-// ── The four steps ───────────────────────────────────────────────────────────
+// ── The steps ────────────────────────────────────────────────────────────────
+// Social, Payout, Agreement. There is no Personal step: name, email and mobile
+// come from the account (signup asks for them), and the rest of Personal is an
+// "About you" block on the Payout step.
 
 export interface PersonalInput {
   first_name: string;
@@ -179,7 +182,7 @@ export function validatePersonal(p: PersonalInput, now = new Date()): FieldError
   required(p.last_name, 60, "Enter your last name.", e, "last_name");
   if (!EMAIL.test(String(p.email ?? "").trim())) e.email = "Enter a valid email address.";
   const mobile = String(p.mobile ?? "").replace(/[\s()-]/g, "");
-  if (!/^\+?\d{7,15}$/.test(mobile)) e.mobile = "Enter a mobile number.";
+  if (!/^\+?\d{7,15}$/.test(mobile)) e.mobile = "Enter a mobile number, digits only, like +44 7700 900412.";
   const age = ageOn(p.date_of_birth, now);
   if (age === null) e.date_of_birth = "Enter your date of birth.";
   else if (age < 18) e.date_of_birth = "You need to be 18 or over to join.";
@@ -191,6 +194,43 @@ export function validatePersonal(p: PersonalInput, now = new Date()): FieldError
   if ((p.school ?? "").length > 160) e.school = "Keep this under 160 characters.";
   if ((p.teaches ?? "").length > 160) e.teaches = "Keep this under 160 characters.";
   return e;
+}
+
+/** The Personal fields signup does not collect, asked on the Payout step.
+ *  Mobile is among them only for an account that has none. */
+export const ABOUT_YOU_FIELDS = ["mobile", "date_of_birth", "address_line", "town", "postcode"] as const;
+
+/** validatePersonal, narrowed to the About you block. */
+export function validateAboutYou(p: PersonalInput, now = new Date()): FieldErrors {
+  const all = validatePersonal(p, now);
+  const e: FieldErrors = {};
+  for (const k of ABOUT_YOU_FIELDS) if (all[k]) e[k] = all[k];
+  return e;
+}
+
+/** A mobile number the form would accept. */
+export function isMobile(raw: string | null | undefined): boolean {
+  return /^\+?\d{7,15}$/.test(String(raw ?? "").replace(/[\s()-]/g, ""));
+}
+
+/**
+ * The applicant's Personal details: name and email from the account, always,
+ * so the form cannot send someone else's. The mobile is the account's when it
+ * has a usable one, otherwise what they typed in About you.
+ */
+export function personalFromAccount(
+  typed: PersonalInput,
+  account: { first_name: string | null; surname: string | null; email: string | null; mobile: string },
+): PersonalInput {
+  return {
+    ...typed,
+    first_name: account.first_name ?? "",
+    last_name: account.surname ?? "",
+    email: account.email ?? "",
+    mobile: isMobile(account.mobile) ? account.mobile : typed.mobile,
+    school: "",
+    teaches: "",
+  };
 }
 
 export function validateChannels(c: ChannelsInput): FieldErrors {

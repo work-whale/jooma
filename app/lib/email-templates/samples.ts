@@ -74,6 +74,7 @@ export const SAMPLE_PARAMS: Record<EmailTemplateKey, Record<string, string>> = {
     code: "PRIYA-4K2",
     paidBy: "PayPal (priya@example.co.uk)",
     signedDate: "13 October 2026",
+    trialEnds: "16 October",
   },
 
   // app/api/admin/ambassadors/applications/[id]/route.ts, once approved.

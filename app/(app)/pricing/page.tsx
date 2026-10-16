@@ -67,6 +67,7 @@ export default async function PricingPage({
     interval,
     referralCode,
     codeSpent,
+    codeDiscount,
     ambassador,
     ambassadorPro,
     ambassadorUntil,
@@ -132,6 +133,10 @@ export default async function PricingPage({
 
         {state.ladder.length > 0 && (
           <PlanPicker
+            // Keyed on the code: applying one refreshes this page, and a new
+            // key remounts the picker so it opens on Monthly, where the code
+            // shows as money off the first payment.
+            key={referralCode ?? "no-code"}
             plans={state.ladder}
             // An ambassador's free Pro is a comp, not something they bought,
             // so every card stays buyable, Pro included: that is how they keep
@@ -149,6 +154,7 @@ export default async function PricingPage({
             locked={(ending && hasActivePlan(plan)) || Boolean(pendingSwitch)}
             subscriptionInterval={interval}
             hasUnusedCode={Boolean(referralCode) && !codeSpent}
+            codeDiscount={codeDiscount}
           />
         )}
 

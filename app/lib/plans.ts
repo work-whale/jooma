@@ -505,6 +505,39 @@ export function asPlanId(value: string | null | undefined): PlanId {
     : DEFAULT_PLAN;
 }
 
+/** The profile columns that decide which plan is in force right now. */
+export interface PlanProfile {
+  plan: string | null;
+  subscription_status?: string | null;
+  stripe_subscription_id?: string | null;
+  current_period_end?: string | null;
+}
+
+/**
+ * When the profile is on an ambassador review trial (Standard while an
+ * application is read, no card), its end date; otherwise null. That trial is
+ * the only "trialing" state without a Stripe subscription id, since a Stripe
+ * trial always has one. See grantApplicantTrial in app/lib/ambassador-pro.ts.
+ */
+export function reviewTrialEnd(p: PlanProfile | null | undefined): Date | null {
+  if (!p || p.subscription_status !== "trialing" || p.stripe_subscription_id) return null;
+  if (!p.current_period_end) return null;
+  const end = new Date(p.current_period_end);
+  return Number.isNaN(end.getTime()) ? null : end;
+}
+
+/**
+ * The plan actually in force: profiles.plan, except that a review trial past
+ * its end reads as no plan. The same rule my_generation_gate() applies when
+ * generating; this is the display side, so the sidebar and billing agree with
+ * it before the daily cron tidies the row.
+ */
+export function effectivePlan(p: PlanProfile | null | undefined, now = new Date()): PlanId {
+  const end = reviewTrialEnd(p);
+  if (end && end.getTime() <= now.getTime()) return DEFAULT_PLAN;
+  return asPlanId(p?.plan);
+}
+
 /** Read the limits object for a plan. */
 export function limitsFor(plan: PlanId): PlanLimits {
   return PLANS[plan].limits;

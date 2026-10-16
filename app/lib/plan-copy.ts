@@ -20,6 +20,7 @@ import {
   type PlanId,
   type PlanLimits,
 } from "./plans";
+import { discountedPence, type Discount } from "./ambassador-discount";
 
 /** The short name on a card. PLANS holds "Pro Teacher" / "Standard Teacher",
  *  which is right for an admin console and too long for a pricing card. "free"
@@ -103,12 +104,30 @@ export const TRIAL_CTA = "Start free trial";
 export function planTrialLine(
   plan: PlanId,
   interval: BillingInterval = "month",
+  discount?: Discount | null,
 ): string | null {
   const yearly = interval === "year" ? PLANS[plan].priceYearly : null;
   if (yearly) return `${TRIAL_DAYS} days free, then ${gbp(yearly)} a year`;
   const price = PLANS[plan].priceMonthly;
   if (!price) return null;
+  const first = discount ? firstMonthPrice(plan, discount) : null;
+  if (first !== null) {
+    return `${TRIAL_DAYS} days free, then ${gbp(first)} for your first month, then ${gbp(price)} a month`;
+  }
   return `${TRIAL_DAYS} days free, then ${gbp(price)} a month`;
+}
+
+/**
+ * The first monthly payment with an ambassador code, in pounds, rounded the
+ * way Stripe rounds it (discountedPence). Null when the code takes nothing off
+ * or the plan has no monthly price.
+ */
+export function firstMonthPrice(plan: PlanId, discount: Discount): number | null {
+  const price = PLANS[plan].priceMonthly;
+  if (!price) return null;
+  const full = Math.round(price * 100);
+  const first = discountedPence(full, discount);
+  return first < full ? first / 100 : null;
 }
 
 /**
@@ -222,8 +241,22 @@ export function planYearlyBilledLine(plan: PlanId): string | null {
 export function planCardPricing(
   plan: PlanId,
   interval: BillingInterval,
+  discount?: Discount | null,
 ): { price: string; per: string; was?: string; saving?: string; note?: string } {
   const monthly = { price: planCardPrice(plan), per: planCardPer(plan) };
+  // An ambassador code on monthly: the first payment, with the full price
+  // struck beside it and what follows underneath. Yearly is left as it is:
+  // the code's yearly value is a twelfth, and the yearly card already leads
+  // with its own saving.
+  const first = interval === "month" && discount ? firstMonthPrice(plan, discount) : null;
+  if (first !== null) {
+    return {
+      price: gbp(first),
+      per: "for your first month",
+      was: monthly.price,
+      note: `Then ${monthly.price} ${monthly.per}`,
+    };
+  }
   const perMonth = interval === "year" ? planYearlyPerMonth(plan) : null;
   if (!perMonth) return { price: planCardPrice(plan, interval), per: planCardPer(plan, interval) };
   return {
@@ -387,4 +420,28 @@ export function planLosses(from: PlanId, to: PlanId): string[] {
   }
 
   return lines;
+}
+
+/**
+ * The trial line on the billing Overview when a discount is waiting on the
+ * first payment: "Your free trial ends on 18 October 2026. First payment",
+ * then "£4.99" struck, "£2.49", and " with FAMFAMB, then £4.99 a month."
+ * Split into parts so the page can strike the full price. The amounts are
+ * Stripe's own preview (subscriptionBilling), so the rounding is Stripe's.
+ */
+export function firstPaymentCopy(input: {
+  renews: string;
+  fullPence: number;
+  nextPence: number;
+  interval: BillingInterval;
+  code?: string | null;
+}): { lead: string; was: string; now: string; tail: string } {
+  const full = gbp(input.fullPence / 100);
+  const per = input.interval === "year" ? "a year" : "a month";
+  return {
+    lead: `Your free trial ends on ${input.renews}. First payment`,
+    was: full,
+    now: gbp(input.nextPence / 100),
+    tail: `${input.code ? ` with ${input.code}` : ""}, then ${full} ${per}.`,
+  };
 }

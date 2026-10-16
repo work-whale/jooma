@@ -2,16 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe } from "@/app/lib/stripe";
-import { hashInviteToken } from "@/app/lib/invites";
-import { validateApplication, type ApplicationInput } from "@/app/lib/ambassador-application";
+import {
+  personalFromAccount,
+  validateApplication,
+  type ApplicationInput,
+} from "@/app/lib/ambassador-application";
+import { profileMobile } from "@/app/lib/dial-codes";
+import { grantApplicantTrial } from "@/app/lib/ambassador-pro";
 import { AGREEMENT_VERSION } from "@/app/lib/ambassador-agreement";
 import { sendTemplate } from "@/app/lib/email";
 import { isUndeliverable } from "@/app/lib/email-templates/broadcast";
 
 // Send an ambassador application.
 //
-// Signed in, and holding a live invite link. Neither is a public write: the
-// invite is a single-use bearer token and the session is the applicant's own.
+// Signed in only, so this is not a public write: the session is the
+// applicant's own. The programme has one open link (/ambassador) and an admin
+// approves every application, so no invite token is needed.
+//
+// Name, email and mobile come from the account, never the form: signup already
+// asked for them, and it means nobody can apply in someone else's name. The
+// form sends a mobile only for an account without a usable one.
 //
 // THE WRITE IS SERVICE-ROLE ONLY (submit_ambassador_application). This route
 // checks the session and passes the user id, and it is the only thing that
@@ -19,9 +29,11 @@ import { isUndeliverable } from "@/app/lib/email-templates/broadcast";
 // evidence. A browser calling the RPC directly could otherwise supply its own.
 //
 // The same rules as the form (validateApplication) run here, so nothing the form
-// would have refused reaches the database. The database checks again: the
-// invite is locked, single use and unexpired, one live application per person,
-// and the code reserved.
+// would have refused reaches the database. The database checks again: one live
+// application per person, and the code reserved.
+//
+// Once it is in, an account with no plan gets Standard free while we review
+// (grantApplicantTrial).
 
 /** The real peer is the LAST x-forwarded-for entry: Vercel appends it, so a
  *  spoofed header only adds hops in front of it. */
@@ -41,18 +53,26 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as {
-    token?: unknown;
-    input?: ApplicationInput;
-  } | null;
-  const token = typeof body?.token === "string" ? body.token : "";
-  if (!token || !body?.input) {
+  const body = (await req.json().catch(() => null)) as { input?: ApplicationInput } | null;
+  if (!body?.input?.personal) {
     return NextResponse.json({ error: "Something is missing from the form." }, { status: 400 });
   }
 
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("first_name, surname, dial_code, phone")
+    .eq("id", user.id)
+    .maybeSingle();
+
   let result;
   try {
-    result = validateApplication(body.input);
+    const personal = personalFromAccount(body.input.personal, {
+      first_name: profile?.first_name ?? null,
+      surname: profile?.surname ?? null,
+      email: user.email ?? null,
+      mobile: profileMobile(profile?.dial_code, profile?.phone),
+    });
+    result = validateApplication({ ...body.input, personal });
   } catch {
     return NextResponse.json({ error: "Something is missing from the form." }, { status: 400 });
   }
@@ -84,7 +104,6 @@ export async function POST(req: NextRequest) {
 
   const { data: id, error } = await supabaseAdmin.rpc("submit_ambassador_application", {
     p_user_id: user.id,
-    p_token_hash: hashInviteToken(token),
     payload: {
       ...result.payload,
       agreement_version: AGREEMENT_VERSION,
@@ -94,16 +113,17 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    // The function's own messages are written for the applicant ("This invite
-    // link has already been used.", "That code is already taken."). A constraint
+    // The function's own messages are written for the applicant ("You have
+    // already applied.", "That code is already taken."). A constraint
     // failure is not, so it gets a general one.
     const friendly = error.code === "P0001" ? error.message : "Could not send your application.";
     console.error("[ambassadors/apply] submit failed", error);
     return NextResponse.json({ error: friendly }, { status: 400 });
   }
 
-  // Their receipt and record of what they signed. Sent to the contact email on
-  // the application, which they confirmed on step one. A failed send does not
+  const trialEnds = await grantApplicantTrial(user.id, String(id));
+
+  // Their receipt and record of what they signed. Sent to their account email. A failed send does not
   // undo the application: it is stored, and the page says it is with us.
   // A reserved test address (the e2e fixtures' @jooma.test) is skipped, as bulk
   // email does, so a test run never bounces off the real SendGrid account.
@@ -121,8 +141,15 @@ export async function POST(req: NextRequest) {
       year: "numeric",
       timeZone: "Europe/London",
     }),
+    trialEnds: trialEnds
+      ? new Date(trialEnds).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "long",
+          timeZone: "Europe/London",
+        })
+      : "",
   });
   if (!emailed) console.warn("[ambassadors/apply] confirmation email not sent", id);
 
-  return NextResponse.json({ ok: true, id, emailed });
+  return NextResponse.json({ ok: true, id, emailed, trialEnds });
 }

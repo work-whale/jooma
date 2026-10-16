@@ -271,7 +271,7 @@ export default function ReviewDrawer({
   const [mode, setMode] = useState<"view" | "decline">("view");
   const [reason, setReason] = useState("");
   const [discountType, setDiscountType] = useState<"percent" | "amount">("percent");
-  const [discountValue, setDiscountValue] = useState("20");
+  const [discountValue, setDiscountValue] = useState("50");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -518,6 +518,7 @@ export default function ReviewDrawer({
                     <div className="grid gap-x-4 sm:grid-cols-2">
                       <Field label="Discount">
                         <select
+                          aria-label="Discount"
                           value={discountType}
                           onChange={(e) => setDiscountType(e.target.value as "percent" | "amount")}
                           className={fieldClass}
@@ -530,6 +531,7 @@ export default function ReviewDrawer({
                       <Field label={discountType === "percent" ? "Percent off" : "Amount off (£)"}>
                         <input
                           type="number"
+                          aria-label={discountType === "percent" ? "Percent off" : "Amount off (£)"}
                           step={discountType === "percent" ? "1" : "0.01"}
                           value={discountValue}
                           onChange={(e) => setDiscountValue(e.target.value)}

@@ -3,9 +3,9 @@ import { requireAdminRoute } from "@/app/lib/auth/admin-route";
 
 // Record ambassador payouts, and pause or resume an ambassador.
 //
-// Ambassadors are no longer created here. They arrive through an invite link
-// and an application (/api/admin/ambassadors/invites and
-// /api/admin/ambassadors/applications/[id]).
+// Ambassadors are no longer created here. They arrive through the programme's
+// link (/ambassador) and an application, approved in
+// /api/admin/ambassadors/applications/[id].
 //
 // The payout state is deliberately manual. Jooma never moves money here; an
 // admin records that they have paid someone out of band. Each commission row is

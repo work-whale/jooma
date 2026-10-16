@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { discountOfPromotion, type Discount } from "@/app/lib/ambassador-discount";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe } from "@/app/lib/stripe";
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
   // fatal here: attribution is ours to record, and the worst case is that they
   // find out at checkout rather than now.
   let offer: string | null = null;
+  let discount: Discount | null = null;
   try {
     const promo = await stripe.promotionCodes.retrieve(row.promotion_code_id, {
       expand: ["promotion.coupon"],
@@ -90,6 +92,7 @@ export async function POST(req: NextRequest) {
     }
 
     offer = describeOffer(promo);
+    discount = discountOfPromotion(promo);
   } catch (err) {
     console.error("[ambassadors/claim] could not verify with Stripe", err);
   }
@@ -117,7 +120,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ claimed: true, code: row.code, offer });
+  // The numbers as well as the sentence, so the plan cards can show the first
+  // payment straight away, before the page refreshes.
+  return NextResponse.json({ claimed: true, code: row.code, offer, discount });
 }
 
 /** The offer in a teacher-facing sentence, e.g. "20% off your first month". */

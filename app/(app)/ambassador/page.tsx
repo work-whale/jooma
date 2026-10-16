@@ -24,8 +24,10 @@ import { Bars, Metric, Panel, PlanSwatch, SegLinks, longDate, shortDate } from "
 // and the date (the definer function returns nothing more).
 //
 // Not an ambassador: an applicant sees where their application stands, anyone
-// else goes to Today. The sidebar only links here for ambassadors and the
-// account menu for applicants, so that is a typed URL, not a dead end.
+// else gets the programme's landing page. /ambassador is also the one short
+// link the programme is shared by (jooma.ai/ambassador): signed out, proxy.ts
+// rewrites it to /ambassador/join without changing the URL; signed in, a
+// teacher who has not applied lands here and is sent on to the same page.
 export const dynamic = "force-dynamic";
 
 const STATE: Record<MyReferral["state"], { label: string; cls: string }> = {
@@ -48,10 +50,11 @@ export default async function AmbassadorDashboard(props: {
           firstName={ctx.firstName}
           submittedAt={app.submitted_at}
           declineReason={app.decline_reason}
+          trialUntil={ctx.reviewTrialUntil}
         />
       );
     }
-    redirect("/dashboard");
+    redirect("/ambassador/join");
   }
 
   const a = ctx.ambassador;

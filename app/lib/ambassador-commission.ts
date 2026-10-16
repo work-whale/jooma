@@ -40,8 +40,6 @@ export const AMBASSADOR_RATES: Record<BillingInterval, Record<CommissionPlan, nu
 export const AGREEMENT_MONTHS = 12;
 /** Payouts go out on this day of the following month. */
 export const PAYOUT_DAY = 15;
-/** How long an invite link works for. */
-export const INVITE_TTL_DAYS = 14;
 
 export function isCommissionPlan(plan: unknown): plan is CommissionPlan {
   return plan === "standard" || plan === "pro" || plan === "max";

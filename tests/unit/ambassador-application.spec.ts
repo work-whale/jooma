@@ -10,6 +10,9 @@ import {
   validatePayout,
   validatePersonal,
   validateTax,
+  validateAboutYou,
+  personalFromAccount,
+  isMobile,
   TAX_STATUS,
   type ApplicationInput,
 } from "@/app/lib/ambassador-application";
@@ -182,5 +185,60 @@ test.describe("tax status", () => {
     expect(validateTax({ tax_status: "self_assessment", utr: "" })).toEqual({});
     expect(validateTax({ tax_status: "limited_company", utr: "" }).tax_status).toBeTruthy();
     expect(validateTax({ tax_status: "not_sure", utr: "" }).tax_status).toBeTruthy();
+  });
+});
+
+/* There is no Personal step any more. Name, email and mobile come from the
+ * account; the form asks only for what signup does not collect. */
+test.describe("details from the account", () => {
+  const typed = () => ({
+    ...good().personal,
+    first_name: "Someone",
+    last_name: "Else",
+    email: "someone@else.example",
+  });
+
+  test("name and email always come from the account, whatever the form sent", () => {
+    const p = personalFromAccount(typed(), {
+      first_name: "Molly",
+      surname: "Trolly",
+      email: "molly@example.co.uk",
+      mobile: "+447700900412",
+    });
+    expect(p.first_name).toBe("Molly");
+    expect(p.last_name).toBe("Trolly");
+    expect(p.email).toBe("molly@example.co.uk");
+    expect(p.mobile).toBe("+447700900412");
+  });
+
+  test("the typed mobile is used only when the account has no usable one", () => {
+    const account = { first_name: "Molly", surname: "Trolly", email: "molly@example.co.uk" };
+    expect(personalFromAccount(typed(), { ...account, mobile: "" }).mobile).toBe("07700 900412");
+    expect(personalFromAccount(typed(), { ...account, mobile: "GB0893" }).mobile).toBe("07700 900412");
+  });
+
+  test("a whole application validates with account details and About you", () => {
+    const input = good();
+    input.personal = personalFromAccount(
+      { ...input.personal, first_name: "", last_name: "", email: "" },
+      { first_name: "Priya", surname: "Raman", email: "priya@example.co.uk", mobile: "+447700900412" },
+    );
+    const r = validateApplication(input, NOW);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.payload.email).toBe("priya@example.co.uk");
+    expect(r.payload.tax_status).toBe(TAX_STATUS);
+    expect(r.payload.utr).toBeNull();
+  });
+
+  test("About you checks only its own fields", () => {
+    const p = { ...good().personal, first_name: "", email: "", date_of_birth: "", postcode: "" };
+    const e = validateAboutYou(p, NOW);
+    expect(Object.keys(e).sort()).toEqual(["date_of_birth", "postcode"]);
+  });
+
+  test("a mobile with country letters in front is not a number", () => {
+    expect(isMobile("GB 0893 123456")).toBe(false);
+    expect(isMobile("+44 7700 900412")).toBe(true);
   });
 });

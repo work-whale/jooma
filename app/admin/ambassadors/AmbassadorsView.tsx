@@ -37,7 +37,7 @@ import {
   fieldStyle,
   useToast,
 } from "../ui";
-import InviteBox from "./InviteBox";
+import ShareLinkBox from "./ShareLinkBox";
 import ReviewDrawer from "./ReviewDrawer";
 import ReferralsPanel from "./ReferralsPanel";
 import { CodeChip, GOLD, Person, ago, shortDate } from "./shared";
@@ -84,20 +84,6 @@ export interface ApplicationRow {
   source: string | null;
 }
 
-export interface InviteRow {
-  id: string;
-  /** Only on links made before October 2026, when the admin typed a name. */
-  full_name: string | null;
-  source: string;
-  created_at: string;
-  expires_at: string;
-  opened_at: string | null;
-  used_at: string | null;
-  state: "sent" | "opened" | "applied" | "expired" | "revoked";
-  /** Who applied with it, once it has been used. */
-  used_by_name: string | null;
-}
-
 export interface ProgrammeSummary {
   commission_pence: number;
   referred_revenue_pence: number;
@@ -117,14 +103,6 @@ export interface CodeLive {
   redeemed: number;
   usable: boolean;
 }
-
-const INVITE_TONE: Record<InviteRow["state"], "plain" | "brand" | "ok" | "warn"> = {
-  sent: "plain",
-  opened: "brand",
-  applied: "ok",
-  expired: "warn",
-  revoked: "plain",
-};
 
 /** Live, paused, or past the end of the agreement. */
 function ambassadorState(a: AmbassadorRow): { label: string; tone: "ok" | "plain" | "warn" } {
@@ -146,7 +124,7 @@ export default function AmbassadorsView({
   rows,
   summary,
   applications,
-  invites,
+  shareLink,
   live,
   stripeError,
 }: {
@@ -154,7 +132,8 @@ export default function AmbassadorsView({
   rows: AmbassadorRow[];
   summary: ProgrammeSummary | null;
   applications: ApplicationRow[];
-  invites: InviteRow[];
+  /** The programme's one link: the full URL to copy, and the short form shown. */
+  shareLink: { url: string; display: string };
   live: Record<string, CodeLive>;
   stripeError: string | null;
 }) {
@@ -299,7 +278,7 @@ export default function AmbassadorsView({
         <Stat
           label="Active ambassadors"
           value={nf.format(Number(s?.active_ambassadors ?? 0))}
-          foot={`of ${nf.format(Number(s?.invited ?? 0))} invited`}
+          foot="live now"
         />
         <Stat
           label="Awaiting review"
@@ -316,11 +295,6 @@ export default function AmbassadorsView({
           value={costShare !== null ? `${costShare.toFixed(1)}%` : "None yet"}
           foot="commission, of referred revenue"
         />
-        <Stat
-          label="Invites unopened"
-          value={nf.format(Number(s?.invites_unopened ?? 0))}
-          foot="sent over 7 days ago"
-        />
       </div>
 
       {stripeError && (
@@ -332,9 +306,9 @@ export default function AmbassadorsView({
         </div>
       )}
 
-      {/* ── Invite link and rate card ── */}
+      {/* ── Share link and rate card ── */}
       <div className="grid gap-3 mb-4 xl:grid-cols-[1.1fr_1fr]">
-        <InviteBox />
+        <ShareLinkBox url={shareLink.url} display={shareLink.display} />
         <Card>
           <CardHeader>
             <CardTitle>Commission rates</CardTitle>
@@ -408,7 +382,7 @@ export default function AmbassadorsView({
           {applications.length === 0 ? (
             <EmptyState
               title="No applications waiting"
-              body="When someone you invited applies, they appear here to review."
+              body="When someone applies through the link, they appear here to review."
             />
           ) : (
             <Table>
@@ -480,7 +454,7 @@ export default function AmbassadorsView({
               title={rows.length === 0 ? "No ambassadors yet" : "Nothing matches that"}
               body={
                 rows.length === 0
-                  ? "Create an invite link above. When you approve their application, they appear here with their code."
+                  ? "Share the link above. When you approve an application, they appear here with their code."
                   : "Try clearing the search."
               }
             />
@@ -602,35 +576,8 @@ export default function AmbassadorsView({
         </Card>
       </div>
 
-      {/* ── Links and costs ── */}
-      <div className="grid gap-3 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Invite links issued</CardTitle>
-            <span className="text-xs" style={{ color: C.muted }}>
-              Last 30 days
-            </span>
-          </CardHeader>
-          {invites.length === 0 ? (
-            <EmptyState title="No links yet" body="Links you generate above are listed here." />
-          ) : (
-            <Table>
-              <thead>
-                <tr className="text-left">
-                  <Th>Link</Th>
-                  <Th>Made</Th>
-                  <Th align="right">Status</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {invites.map((i) => (
-                  <InviteLine key={i.id} invite={i} onToast={fire} onChanged={() => router.refresh()} />
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </Card>
-
+      {/* ── Costs ── */}
+      <div className="grid gap-3">
         <Card>
           <CardHeader>
             <CardTitle>What the programme costs</CardTitle>
@@ -714,71 +661,6 @@ function shortDayMonth(d: Date): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-/** One issued link, with a way to withdraw it while it is still unused. */
-function InviteLine({
-  invite,
-  onToast,
-  onChanged,
-}: {
-  invite: InviteRow;
-  onToast: (msg: string) => void;
-  onChanged: () => void;
-}) {
-  const [busy, setBusy] = useState(false);
-  const withdrawable = invite.state === "sent" || invite.state === "opened";
-
-  const withdraw = async () => {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/admin/ambassadors/invites", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: invite.id }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        onToast(json.error ?? "Could not withdraw the link.");
-        return;
-      }
-      onToast(invite.full_name ? `Link for ${invite.full_name} withdrawn.` : "Link withdrawn.");
-      onChanged();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Tr>
-      <Td>
-        <span className="font-semibold" style={{ color: C.ink2 }}>
-          {invite.used_by_name ?? invite.full_name ?? "Invite link"}
-        </span>
-      </Td>
-      <Td>
-        <span className="text-xs">{shortDate(invite.created_at)}</span>
-      </Td>
-      <Td align="right">
-        <div className="flex items-center justify-end gap-2">
-          <Tag tone={INVITE_TONE[invite.state]}>{invite.state}</Tag>
-          {withdrawable && (
-            <Btn size="sm" variant="ghost" onClick={withdraw} disabled={busy}>
-              Withdraw
-            </Btn>
-          )}
-        </div>
-      </Td>
-    </Tr>
-  );
-}
-
-/**
- * Grant or revoke an ambassador's twelve free months of Pro.
- *
- * The rules live in app/lib/ambassador-pro.ts: it refuses anyone paying through
- * Stripe, links the account by email if it was not linked yet, and on revoke
- * leaves a teacher who has since subscribed alone. This only asks why, for the
- * audit log.
- */
 function FreeProModal({
   row,
   revoke,

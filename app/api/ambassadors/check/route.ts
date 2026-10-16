@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { discountOfPromotion } from "@/app/lib/ambassador-discount";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe } from "@/app/lib/stripe";
@@ -101,7 +102,7 @@ export async function GET(req: NextRequest) {
             })} off your first month`
           : null;
 
-    return NextResponse.json({ valid: true, code: row.code, offer });
+    return NextResponse.json({ valid: true, code: row.code, offer, discount: discountOfPromotion(promo) });
   } catch (err) {
     // Stripe being unreachable must not make a good code look bad. Report it as
     // valid with no offer text: the claim route re-checks anyway, and checkout

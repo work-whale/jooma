@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import Stripe from "stripe";
 import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
 
 /*
@@ -377,5 +378,91 @@ test.describe("The /pricing page", () => {
 
     await expect(page).toHaveURL(/\/(#pricing)?$/);
     await expect(page).not.toHaveURL(/\/login/);
+  });
+});
+
+/*
+ * A code should show what it does. The plans open on Monthly, where it takes
+ * money off the first payment, and each card strikes the full price beside
+ * the real first payment. Needs a REAL promotion code, so a coupon is made in
+ * the Stripe test account and switched off afterwards.
+ */
+test.describe("A code's price on the plans", () => {
+  const key = process.env.STRIPE_SECRET_KEY ?? "";
+  const people: TestTeacher[] = [];
+  let ambassadorId: string | null = null;
+  let promotionCodeId: string | null = null;
+
+  test.afterEach(async () => {
+    if (promotionCodeId) await new Stripe(key).promotionCodes.update(promotionCodeId, { active: false });
+    if (ambassadorId) await admin.from("ambassadors").delete().eq("id", ambassadorId);
+    promotionCodeId = null;
+    ambassadorId = null;
+    for (const p of people.splice(0)) await deleteTeacher(p);
+  });
+
+  async function realCode(): Promise<string> {
+    const stripe = new Stripe(key);
+    const t = tag();
+    const code = `ZZHALF${t}`.toUpperCase();
+    const coupon = await stripe.coupons.create({ percent_off: 50, duration: "once", name: `e2e ${code}` });
+    const promo = await stripe.promotionCodes.create({ promotion: { type: "coupon", coupon: coupon.id }, code });
+    promotionCodeId = promo.id;
+    const { data: amb, error } = await admin
+      .from("ambassadors")
+      .insert({ full_name: `ZZ Half ${t}`, email: `zz-half-${t}@example.com` })
+      .select()
+      .single();
+    if (error) throw new Error(`Could not create the ambassador: ${error.message}`);
+    ambassadorId = amb.id;
+    const { error: codeError } = await admin
+      .from("ambassador_codes")
+      .insert({ ambassador_id: amb.id, promotion_code_id: promo.id, code });
+    if (codeError) throw new Error(`Could not create the code: ${codeError.message}`);
+    return code;
+  }
+
+  test("on /pricing: an orange box, then Monthly with the first month struck", async ({ page }) => {
+    test.skip(!key.startsWith("sk_test_"), "Creates a coupon in Stripe; only against a test key.");
+    const code = await realCode();
+    const teacher = await createTeacher("Hana");
+    people.push(teacher);
+
+    await signIn(page, teacher);
+    await page.goto("/pricing");
+    // No code yet: Yearly first, as before.
+    await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
+
+    const input = page.getByTestId("promo-code-input");
+    await expect(input).toHaveCSS("border-top-color", "rgb(194, 85, 31)");
+    await input.fill(code);
+    await expect(input).toHaveValue(code);
+    await page.getByRole("button", { name: "Apply" }).click();
+    await expect(page.getByText(new RegExp(`${code} applied`, "i"))).toBeVisible();
+
+    await expect(page.getByRole("radio", { name: /Monthly/ })).toBeChecked({ timeout: 15_000 });
+    const main = page.getByRole("main");
+    // Pro is £7.99; Stripe takes 50% off as £4.00, so £3.99 is charged.
+    await expect(main.locator("s").filter({ hasText: "£7.99" })).toBeVisible();
+    await expect(main.getByText("£3.99", { exact: true })).toBeVisible();
+    await expect(main.getByText("3 days free, then £3.99 for your first month, then £7.99 a month")).toBeVisible();
+    await expect(main.getByText("£2.49", { exact: true })).toBeVisible();
+  });
+
+  test("on /welcome: a code that arrived with them opens on Monthly, discounted", async ({ page }) => {
+    test.skip(!key.startsWith("sk_test_"), "Creates a coupon in Stripe; only against a test key.");
+    const code = await realCode();
+    const teacher = await createTeacher("Ines");
+    people.push(teacher);
+
+    await signIn(page, teacher);
+    await page.goto(`/welcome?code=${code}`);
+    await expect(page.getByRole("radio", { name: /Monthly/ })).toBeChecked();
+    const input = page.getByTestId("promo-code-input");
+    await expect(input).toHaveCSS("border-top-color", "rgb(194, 85, 31)");
+    await page.getByRole("button", { name: "Apply" }).click();
+    await expect(page.getByText(new RegExp(`${code} applied`, "i"))).toBeVisible();
+    await expect(page.locator("s").filter({ hasText: "£7.99" })).toBeVisible();
+    await expect(page.getByText("3 days free, then £3.99 for your first month, then £7.99 a month")).toBeVisible();
   });
 });
