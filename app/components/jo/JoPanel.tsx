@@ -4,7 +4,7 @@
 // folds down to a slim strip, and a button that opens a sheet on a phone.
 // Everything the conversation does lives in useJoSession; this only draws it.
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ChatTeardropDots } from "@phosphor-icons/react/dist/ssr";
 import {
   ArrowUp,
@@ -155,6 +155,17 @@ export default function JoPanel({
 
   // ── Composer ──
   const [draft, setDraft] = useState("");
+  // Grow with the message so all of it stays readable, up to the max-height in
+  // jo.module.css, past which the box scrolls instead of pushing the
+  // conversation out of the panel. Before paint, so a new line never flickers.
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    // Folded, the panel has no layout and would measure 0.
+    if (el.scrollHeight) el.style.height = `${el.scrollHeight}px`;
+  }, [draft, open, sheet]);
   const outOfPrompts = !!guest && promptsLeft === 0;
   const locked = !!disabled || outOfPrompts || (!!blocked && !guest);
   const submit = (text: string) => {
@@ -292,8 +303,10 @@ export default function JoPanel({
               <>
                 <div className={styles.inputRow}>
                   <textarea
+                    ref={inputRef}
                     className={styles.input}
                     rows={1}
+                    enterKeyHint="send"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={onKey}

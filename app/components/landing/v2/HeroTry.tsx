@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowsClockwise } from "@phosphor-icons/react";
@@ -49,6 +49,21 @@ export default function HeroTry({
 
   const wake = () => setIdle(false);
 
+  // The topic box grows with what is typed, so a long topic on a phone is
+  // read in full rather than scrolling out of sight to the left. Once it
+  // wraps, the pill rounds off into a card (data-multi in HeroV3.module.css).
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
+  const [multi, setMulti] = useState(false);
+  useLayoutEffect(() => {
+    const el = fieldRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+    const line = parseFloat(getComputedStyle(el).lineHeight);
+    setMulti(el.scrollHeight > line * 1.6);
+    // multi is a dependency because the card's padding changes the height.
+  }, [topic, idle, tool, multi]);
+
   const go = (e?: React.MouseEvent | React.FormEvent) => {
     if (href) return; // the Link navigates
     e?.preventDefault();
@@ -79,6 +94,7 @@ export default function HeroTry({
 
       <form
         className={`${styles.box} ${idle ? styles.idle : ""} ${nudge ? styles.nudge : ""}`}
+        data-multi={multi}
         onSubmit={(e) => {
           e.preventDefault();
           if (href) router.push(href);
@@ -93,18 +109,29 @@ export default function HeroTry({
         <span className={styles.bt}>{boxTiles[tool]}</span>
         <span className={styles.field}>
           {idle && !topic && <span className={styles.caret} aria-hidden="true" />}
-          <input
+          <textarea
+            ref={fieldRef}
             id={inputId}
             aria-label="What are you teaching?"
             autoComplete="off"
+            rows={1}
+            enterKeyHint="go"
             value={topic}
             maxLength={200}
             disabled={!current.available}
             placeholder={idle ? "" : current.placeholder}
             onFocus={wake}
+            onKeyDown={(e) => {
+              // Still one line of meaning: Enter creates, as it did as an input.
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
             onChange={(e) => {
               wake();
-              setTopic(e.target.value);
+              // A pasted line break would only end up in the URL.
+              setTopic(e.target.value.replace(/\s*\n\s*/g, " "));
             }}
           />
         </span>
