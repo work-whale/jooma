@@ -17,6 +17,14 @@ export function safeNextPath(next: string | null | undefined, fallback = "/"): s
 }
 
 /**
+ * Where a signed in teacher lands when nothing more specific applies: the
+ * password form, Google's callback, and /login or /signup visited while
+ * already signed in. One constant, so the three cannot drift apart again (the
+ * callback used to send people to the landing page).
+ */
+export const SIGNED_IN_HOME = "/dashboard";
+
+/**
  * A `?next=` that /login, /signup and /complete-profile will honour.
  *
  * Deliberately narrow: only the ambassador programme's pages, which is where an
