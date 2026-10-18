@@ -237,27 +237,49 @@
   }
 }
 
-.field input {
+/* A textarea, so a long topic wraps and stays readable. HeroTry sets its
+   height from scrollHeight, which includes the padding. */
+.field textarea {
+  display: block;
+  box-sizing: border-box;
   flex: 1;
   min-width: 0;
+  /* All 200 characters (maxLength) fit at phone width before it scrolls. */
+  max-height: 12em;
   border: 0;
   outline: 0;
   background: none;
+  resize: none;
+  overflow-y: auto;
   font-family: inherit;
   font-size: 1.14rem;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--j-ink);
   letter-spacing: -0.018em;
   padding: 0 4px;
+  overflow-wrap: anywhere;
 }
 
-.field input::placeholder {
+.field textarea::placeholder {
   color: #9a93ad;
   font-weight: 500;
 }
 
-.field input:disabled {
+.field textarea:disabled {
   cursor: not-allowed;
+}
+
+/* Wrapped onto a second line: a pill that tall reads as a blob, so it becomes
+   a rounded card with the Create button resting at the bottom. */
+.box[data-multi="true"] {
+  border-radius: 28px;
+  align-items: flex-end;
+}
+
+.box[data-multi="true"] .field textarea {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .create {
@@ -831,8 +853,12 @@
     margin-top: 18px;
   }
 
-  .field input {
+  .field textarea {
     font-size: 1rem;
+  }
+
+  .box[data-multi="true"] {
+    border-radius: 24px;
   }
 
   .create {

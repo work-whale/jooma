@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/app/lib/auth/server";
-import { safeNextPath } from "@/app/lib/safe-next";
+import { SIGNED_IN_HOME, safeNextPath } from "@/app/lib/safe-next";
 
 // OAuth (Google) and email-link callbacks land here. Supabase returns a `code`
 // in the query string; we exchange it for a session, then send the user on.
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   // Only ever a path on this site. Used straight, `next=@evil.com` became
   // `https://www.jooma.ai@evil.com`, which a browser treats as evil.com.
-  const next = safeNextPath(searchParams.get("next"), "/");
+  const next = safeNextPath(searchParams.get("next"), SIGNED_IN_HOME);
 
   if (code) {
     const supabase = await createClient();

@@ -15,7 +15,7 @@ import { isToolEnabled } from "@/app/lib/tool-availability";
 import { profileGateBody } from "@/app/lib/profile-gate";
 import { publicSettings } from "@/app/lib/settings";
 import { applyAttributionCookie } from "@/app/lib/attribution-cookie";
-import { honouredNextPath } from "@/app/lib/safe-next";
+import { SIGNED_IN_HOME, honouredNextPath } from "@/app/lib/safe-next";
 import { GUEST_COOKIE, newGuestCookie, verifyGuestCookie } from "@/app/lib/guest-cookie";
 import { TRIAL_RUN_HEADER, TRIAL_TOKEN_HEADER, verifyTrialToken } from "@/app/lib/trial-token";
 import { clientIp, guestCallAllowed, guestCookieOptions, trialSecret } from "@/app/lib/guest";
@@ -292,7 +292,7 @@ export async function proxy(request: NextRequest) {
   if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone();
     const next = honouredNextPath(request.nextUrl.searchParams.get("next"));
-    url.pathname = next ?? "/tools";
+    url.pathname = next ?? SIGNED_IN_HOME;
     if (next) url.search = "";
     return NextResponse.redirect(url);
   }

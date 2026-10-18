@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeSlash, LockKey } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
-import { honouredNextPath } from "@/app/lib/safe-next";
+import { SIGNED_IN_HOME, honouredNextPath } from "@/app/lib/safe-next";
 import { usePublicSettings } from "@/app/lib/usePublicSettings";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
@@ -104,8 +104,8 @@ export default function LoginPage() {
       return;
     }
     // Back to an ambassador invite's application, if that is where they came
-    // from; everyone else lands on Tools as before.
-    router.push(honouredNextPath(new URLSearchParams(window.location.search).get("next")) ?? "/tools");
+    // from; everyone else lands on the dashboard.
+    router.push(honouredNextPath(new URLSearchParams(window.location.search).get("next")) ?? SIGNED_IN_HOME);
     router.refresh();
   };
 
