@@ -112,8 +112,9 @@ export default function WorksheetGeneratorForm({
       subject: (v) => setSubject(v as string),
       learningObjective: (v) => setLearningObjective(v as string),
       questionCount: (v) => setQuestionCount(v as number),
-      differentiate: (v) => setDifferentiate(v as Differentiate),
-      differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
+      // Never on a free try: differentiation is behind sign up there.
+      differentiate: (v) => { if (!guest) setDifferentiate(v as Differentiate); },
+      differentiationLevels: (v) => { if (!guest) setDifferentiationLevels(v as string[]); },
       outputDetail: (v) => setOutputDetail(v as OutputDetail),
     },
   });
@@ -148,8 +149,7 @@ export default function WorksheetGeneratorForm({
       });
     try {
       // Differentiated: one whole sheet per band, each in its own tab.
-      // Signed in only: on /create each band would spend one of a guest's
-      // daily tries, so a guest keeps the single sheet with its blended note.
+      // Signed in only: on /create the field is locked behind sign up.
       if (!guest && differentiate === "yes") {
         await runBands({
           bands: orderedBands(differentiationLevels),
@@ -219,6 +219,7 @@ export default function WorksheetGeneratorForm({
               onChange={setDifferentiate}
               levels={differentiationLevels}
               onLevelsChange={setDifferentiationLevels}
+              onLocked={guest?.onLocked}
             />
 
             <AdditionalContextField

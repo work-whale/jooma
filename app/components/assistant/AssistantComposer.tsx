@@ -80,6 +80,16 @@ export default function AssistantComposer({
     el.style.height = `${Math.min(el.scrollHeight, compact ? 120 : 200)}px`;
   }, [value, compact]);
 
+  // Focused once, from an effect rather than the autoFocus attribute: the
+  // caller decides from a media query, which only reads true after hydration,
+  // by when the attribute has already been and gone.
+  const focusedOnce = useRef(false);
+  useEffect(() => {
+    if (!autoFocus || disabled || focusedOnce.current) return;
+    focusedOnce.current = true;
+    textareaRef.current?.focus();
+  }, [autoFocus, disabled]);
+
   useEffect(() => {
     // Stop the microphone if this unmounts mid-dictation, or it keeps listening
     // after the component is gone.
@@ -196,7 +206,6 @@ export default function AssistantComposer({
           enterKeyHint="send"
           value={value}
           rows={1}
-          autoFocus={autoFocus}
           disabled={blocked}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={onKeyDown}

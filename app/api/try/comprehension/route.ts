@@ -47,7 +47,9 @@ export async function POST(req: Request) {
     return new Response("", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
   }
 
-  const built = comprehensionMessages(body);
+  // Differentiation is a signed in feature (the field is locked on /create),
+  // so it is dropped here too rather than trusted to the page.
+  const built = comprehensionMessages({ ...body, band: undefined, differentiate: "no", differentiationLevels: [] });
   if ("error" in built) {
     return NextResponse.json({ error: built.error }, { status: 400 });
   }

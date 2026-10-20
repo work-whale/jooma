@@ -9,6 +9,9 @@ interface Props {
   onLevelsChange: (v: string[]) => void;
   /** Radio-group name. Only needs overriding if two instances share a page. */
   name?: string;
+  /** Set on a free try: differentiation is a signed in feature, so choosing
+   *  Yes calls this (the sign up prompt) and the field stays on No. */
+  onLocked?: () => void;
 }
 
 /**
@@ -24,6 +27,7 @@ export default function DifferentiationField({
   levels,
   onLevelsChange,
   name = "differentiate",
+  onLocked,
 }: Props) {
   const toggle = (band: string) => {
     if (levels.includes(band)) onLevelsChange(levels.filter((b) => b !== band));
@@ -32,8 +36,13 @@ export default function DifferentiationField({
 
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-3">
-      <label className="block text-sm font-semibold text-gray-800">
+      <label className="flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-800">
         Include differentiation
+        {onLocked && (
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--j-tint)", color: "var(--j-deep)" }}>
+            Sign up to use
+          </span>
+        )}
       </label>
 
       <div className="flex gap-5">
@@ -45,6 +54,10 @@ export default function DifferentiationField({
               value={val}
               checked={value === val}
               onChange={() => {
+                if (onLocked && val === "yes") {
+                  onLocked();
+                  return;
+                }
                 onChange(val);
                 // EXS is the standard version, so switching on starts with it:
                 // the standard sheet is made unless the teacher unticks it.
@@ -57,7 +70,7 @@ export default function DifferentiationField({
         ))}
       </div>
 
-      {value === "yes" && (
+      {value === "yes" && !onLocked && (
         <div className="space-y-2 pt-1">
           <p className="text-xs text-gray-500">
             Select the attainment bands to adapt for, as many as apply. EXS is the standard version.

@@ -26,6 +26,25 @@ interface NavAuthProps {
   email: string | null;
   /** Show the Admin link in the dropdown. */
   isAdmin?: boolean;
+  /** "menu" is the avatar button and its dropdown. "list" lays the same
+   *  routes out flat, white on purple, for the landing header's phone menu,
+   *  where a dropdown inside a dropdown would be one tap too many. */
+  variant?: "menu" | "list";
+  /** Called when a route in the list is chosen, so the menu around it closes. */
+  onNavigate?: () => void;
+}
+
+/** The routes into the app, in one place for both variants. */
+function accountLinks(isAdmin: boolean) {
+  return [
+    { href: "/tools", label: "Go to dashboard", icon: LayoutGrid },
+    ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Shield }] : []),
+    { href: "/profile", label: "Profile", icon: UserRound },
+    // Straight to the canonical route, not the /account/billing redirect:
+    // prefetching a route that immediately redirects is wasted work. That
+    // one exists for Stripe's return URLs and old bookmarks.
+    { href: "/profile?section=subscription", label: "Usage & Billing", icon: BarChart3 },
+  ];
 }
 
 export default function NavAuth({
@@ -34,6 +53,8 @@ export default function NavAuth({
   avatarUrl,
   email,
   isAdmin = false,
+  variant = "menu",
+  onNavigate,
 }: NavAuthProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -99,6 +120,33 @@ export default function NavAuth({
   // The avatar prefers the full name for two-letter initials; the email is the
   // last resort, and gives one letter.
   const avatarName = fullName || name || email || "";
+  const links = accountLinks(isAdmin);
+
+  if (variant === "list") {
+    const row =
+      "w-full min-h-12 flex items-center gap-3 px-3 rounded-xl text-[0.95rem] font-semibold text-white/90 hover:bg-white/10 active:bg-white/10 transition-colors";
+    return (
+      <div aria-label="Account" role="group" data-testid="nav-account-list">
+        <div className="flex items-center gap-3 px-3 pb-3">
+          <Avatar url={avatarUrl} name={avatarName} size={36} />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-white truncate">{fullName || label}</p>
+            <p className="text-xs text-white/70 truncate">{email}</p>
+          </div>
+        </div>
+        {links.map(({ href, label: text, icon: Icon }) => (
+          <Link key={href} href={href} className={row} onClick={onNavigate}>
+            <Icon className="w-4 h-4" aria-hidden="true" />
+            {text}
+          </Link>
+        ))}
+        <button type="button" onClick={handleSignOut} className={`${row} cursor-pointer`}>
+          <LogOut className="w-4 h-4" aria-hidden="true" />
+          Sign out
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -138,43 +186,17 @@ export default function NavAuth({
               <p className="text-xs text-gray-400 truncate">{email}</p>
             </div>
           </div>
-          <Link
-            href="/tools"
-            role="menuitem"
-            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Go to dashboard
-          </Link>
-          {isAdmin && (
+          {links.map(({ href, label: text, icon: Icon }) => (
             <Link
-              href="/admin"
+              key={href}
+              href={href}
               role="menuitem"
               className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
             >
-              <Shield className="w-4 h-4" />
-              Admin
+              <Icon className="w-4 h-4" />
+              {text}
             </Link>
-          )}
-          <Link
-            href="/profile"
-            role="menuitem"
-            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          >
-            <UserRound className="w-4 h-4" />
-            Profile
-          </Link>
-          {/* Straight to the canonical route, not the /account/billing redirect:
-              prefetching a route that immediately redirects is wasted work. That
-              one exists for Stripe's return URLs and old bookmarks. */}
-          <Link
-            href="/profile?section=subscription"
-            role="menuitem"
-            className="w-full pointer-coarse:min-h-12 flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          >
-            <BarChart3 className="w-4 h-4" />
-            Usage &amp; Billing
-          </Link>
+          ))}
           <button
             type="button"
             onClick={handleSignOut}

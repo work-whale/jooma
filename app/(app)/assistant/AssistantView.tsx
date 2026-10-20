@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import ChatMessages, { type ChatTurn } from "@/app/components/assistant/ChatMessages";
 import AssistantComposer, { type Attachment } from "@/app/components/assistant/AssistantComposer";
 import AssistantLocked from "@/app/components/assistant/AssistantLocked";
@@ -26,6 +27,7 @@ const CLARIFY_HEADER = "x-assistant-clarify";
 const REFUSAL_HEADER = "x-assistant-refusal";
 
 export default function AssistantView({ chatId }: { chatId?: string }) {
+  const desktop = useMediaQuery("(min-width: 1024px)");
   const router = useRouter();
 
   // The chat list and the plan gate live in the layout, so they survive
@@ -488,13 +490,15 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
             />
           )}
 
-          <div className="px-4 sm:px-6 lg:px-10 pb-8 pt-2">
+          <div className="shrink-0 px-4 sm:px-6 lg:px-10 pb-4 sm:pb-8 pt-2">
             {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
             <AssistantComposer
               onSend={send}
               busy={streaming}
               disabled={allowed === null}
-              autoFocus
+              // Not on a phone: the keyboard would come up over the splash
+              // before the teacher has read it.
+              autoFocus={desktop}
               placeholder="Try: 'Create a Year 5 multiplication quiz'"
             />
           </div>
@@ -513,23 +517,29 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
  * helps someone who has not used it before.
  */
 function EmptyState() {
+  // Scrolls rather than clips: on a phone the composer and the chat list leave
+  // it little height, and centred in an overflow-hidden box its top and bottom
+  // lines were cut off. my-auto centres it when there is room and lets it
+  // start at the top when there is not.
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 lg:px-10 text-center">
-      <h2
-        className="text-[32px] font-semibold text-dark"
-        style={{ letterSpacing: "0.38px" }}
-      >
-        How can I help you?
-      </h2>
-      <p className="mt-4 max-w-md text-sm text-muted">
-        Ask about planning, assessment, behaviour, SEND, or anything else in your
-        teaching week.
-      </p>
-      <p className="mt-2 max-w-md text-sm text-muted">
-        Ask for a resource — a lesson plan, worksheet, quiz or letter — and I&apos;ll
-        open the right tool with the details filled in. Mention the year group and
-        subject and there will be less to correct.
-      </p>
+    <div className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 sm:px-6 lg:px-10 text-center" data-testid="assistant-splash">
+      <div className="my-auto flex flex-col items-center py-6">
+        <h2
+          className="text-2xl sm:text-[32px] font-semibold text-dark"
+          style={{ letterSpacing: "0.38px" }}
+        >
+          How can I help you?
+        </h2>
+        <p className="mt-3 sm:mt-4 max-w-md text-sm text-muted">
+          Ask about planning, assessment, behaviour, SEND, or anything else in your
+          teaching week.
+        </p>
+        <p className="mt-2 max-w-md text-sm text-muted">
+          Ask for a resource, such as a lesson plan, worksheet, quiz or letter, and
+          I&apos;ll open the right tool with the details filled in. Mention the year
+          group and subject and there will be less to correct.
+        </p>
+      </div>
     </div>
   );
 }

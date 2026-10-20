@@ -5,9 +5,8 @@ import { nextFocusIndex } from "@/app/lib/useFocusTrap";
 /*
  * The two pure pieces of the phone navigation.
  *
- * isNavActive decides which item is lit, and is now shared by the desktop rail
- * and the phone tab bar, so the two cannot disagree. It moved out of SideNavV2
- * unchanged; these pin the behaviour it had there.
+ * isNavActive decides which item is lit in the rail and the phone drawer. It
+ * moved out of SideNavV2 unchanged; these pin the behaviour it had there.
  *
  * nextFocusIndex is where Tab lands inside the drawer, the menus and the
  * modals: it has to wrap at both ends, or focus escapes to the page behind.

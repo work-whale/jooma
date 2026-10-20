@@ -196,7 +196,7 @@ export default function JoPanel({
         data-testid="jo-fab"
       >
         <JoOrb small busy={busy} />
-        Ask Jo
+        <span className={styles.fabLabel}>Ask Jo</span>
         {unread && <span className={styles.unread} aria-label="New reply" />}
       </button>
 

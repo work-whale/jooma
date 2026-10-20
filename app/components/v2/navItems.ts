@@ -9,9 +9,8 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 
 /*
- * The signed-in app's destinations, shared by the desktop rail (SideNavV2) and
- * the phone tab bar (BottomTabsV2), so the two are always the same list in the
- * same order.
+ * The signed-in app's destinations: the desktop rail, which on a phone is the
+ * drawer the top bar's burger opens (SideNavV2).
  */
 
 export interface NavItem {
@@ -28,21 +27,18 @@ export interface NavItem {
   soon?: boolean;
   /** The ambassador's own page, drawn in gold. */
   gold?: boolean;
-  /** One of the four destinations in the phone tab bar. The rest are reached
-   *  through More, which opens the drawer. */
-  tab?: boolean;
 }
 
 export const NAV: NavItem[] = [
-  { label: "Today", href: "/dashboard", Icon: House, tab: true },
-  { label: "Make", href: "/tools", Icon: SquaresFour, count: "tools", tab: true },
-  { label: "Library", href: "/folders", Icon: Folder, count: "resources", tab: true },
+  { label: "Today", href: "/dashboard", Icon: House },
+  { label: "Make", href: "/tools", Icon: SquaresFour, count: "tools" },
+  { label: "Library", href: "/folders", Icon: Folder, count: "resources" },
   { label: "Timetable", href: "/timetable", Icon: CalendarBlank },
   { label: "Colleagues", href: "/colleagues", Icon: UsersThree, count: "colleagues" },
   // Named for what it is, not what powers it. The language rules in
   // scripts/check-language.mjs fail the build on "AI" in teacher-facing copy,
   // which is what the old "AI assistant" label was.
-  { label: "Ask Jo", href: "/assistant", Icon: ChatTeardropDots, tab: true },
+  { label: "Ask Jo", href: "/assistant", Icon: ChatTeardropDots },
 ];
 
 /** Appended for ambassadors only. Gold, because it is meant to feel like a

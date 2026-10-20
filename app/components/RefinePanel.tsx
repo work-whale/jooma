@@ -39,7 +39,7 @@ export default function RefinePanel({ onRefine, isRefining, chips = DEFAULT_CHIP
       <div className="px-4 sm:px-6 lg:px-8 py-5 lg:py-6 space-y-4">
         {/* Visible, so the question stays on screen after typing starts; the
             placeholder is only an example now. */}
-        <label htmlFor={inputId} className="block -mb-2 text-sm font-semibold text-gray-800">
+        <label htmlFor={inputId} className="block mb-2 text-sm font-semibold text-gray-800">
           What would you like to change?
         </label>
         {/* Stacks below `sm`: the Refine button is shrink-0, so side by side it

@@ -80,6 +80,10 @@ export function guestPrefillFields(
   jo: Record<string, unknown> | null,
 ): Record<string, unknown> {
   const fields: Record<string, unknown> = { ...(jo ?? {}) };
+  // Differentiation is behind sign up on a free try, so Jo does not fill it
+  // (nor list it as filled) there.
+  delete fields.differentiate;
+  delete fields.differentiationLevels;
   if (slug === "worksheet-generator") {
     // No topic field on a worksheet: the subject matter rides in the learning
     // objective, which its schema requires (see assistant-tools.ts).

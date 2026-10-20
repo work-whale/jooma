@@ -7,6 +7,7 @@ import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { JoActivityProvider } from "@/app/lib/JoActivityContext";
 import { RestoredRunProvider } from "@/app/lib/RestoredRunContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
+import DesktopHintPill from "@/app/components/jo/DesktopHintPill";
 
 const ROUTE_LABELS: Record<string, string> = {
   "/tools/lesson-planner": "Lesson Planner",
@@ -103,6 +104,7 @@ function ToolPageChrome({
         <RestoredRunProvider>{children}</RestoredRunProvider>
       </div>
       <JoActivityPanel />
+      <DesktopHintPill />
     </JoActivityProvider>
   );
 }

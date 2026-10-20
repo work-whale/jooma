@@ -175,6 +175,25 @@ export default function GenerateModal({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const inline = variant === "page";
 
+  // Each step opens at its top. The body is one scroll box shared by all
+  // three steps (and on the page variant the window is), so without this the
+  // theme step opened where the long Refine step had been scrolled to: the
+  // bottom, by its Continue button.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const lastStep = useRef(step);
+  useEffect(() => {
+    if (lastStep.current === step) return;
+    lastStep.current = step;
+    bodyRef.current?.scrollTo({ top: 0 });
+    if (!inline || !cardRef.current) return;
+    // Clear the sticky bar above the page: the landing nav on /create.
+    const bar = document.querySelector<HTMLElement>("[data-landing-nav]");
+    const offset = (bar?.offsetHeight ?? 0) + 8;
+    const top = cardRef.current.getBoundingClientRect().top;
+    if (top < offset) window.scrollTo({ top: Math.max(0, top + window.scrollY - offset) });
+  }, [step, inline]);
+
   // Lock background scroll while the modal is open; restore on close.
   useEffect(() => {
     if (inline) return;
@@ -533,6 +552,7 @@ export default function GenerateModal({
       {/* Wrapper: card + optional side panel share a height via items-stretch. */}
       <div className={inline ? "relative flex items-stretch justify-center gap-3 w-full" : "relative z-10 flex items-stretch justify-center gap-3 w-full max-h-[90dvh]"}>
       <div
+        ref={cardRef}
         className={`relative rounded-2xl w-full border overflow-hidden flex flex-col ${inline ? "shadow-sm" : "shadow-2xl max-w-2xl"}`}
         style={{ borderColor: "var(--j-line)", backgroundColor: "var(--j-card)" }}
       >
@@ -578,7 +598,7 @@ export default function GenerateModal({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div ref={bodyRef} className="flex-1 overflow-y-auto p-6 space-y-4" data-testid="generate-body">
           {step === 3 ? (
             <ThemePicker
               value={themeId}
@@ -589,8 +609,11 @@ export default function GenerateModal({
           ) : step === 1 ? (
             <>
               {/* Topic input. The label is visible: the animated example under
-                  the field is not a label and is gone once typing starts. */}
-              <label htmlFor="gen-topic" className="block -mb-1 text-sm font-semibold text-gray-800">
+                  the field is not a label and is gone once typing starts.
+                  mb-2, never a negative margin: Tailwind 4's space-y puts the
+                  gap on the bottom of each child, so the -mb-1 this had pulled
+                  the box up over its own label. */}
+              <label htmlFor="gen-topic" className="block mb-2 text-sm font-semibold text-gray-800">
                 Topic
               </label>
               <div className="relative">
@@ -1187,7 +1210,9 @@ export default function GenerateModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-2 p-4 border-t" style={{ borderColor: "var(--j-line)" }}>
+        {/* Keyed by step, so each step's buttons are new elements: reused, the
+            focus left on step 2's Continue landed on Generate slideshow. */}
+        <div key={step} className="flex items-center justify-between gap-2 p-4 border-t" style={{ borderColor: "var(--j-line)" }}>
           {step === 1 ? (
             <>
               {inline ? (

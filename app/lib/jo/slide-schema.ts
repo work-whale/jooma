@@ -13,7 +13,9 @@ function op(name: string, properties: Record<string, unknown>) {
   return strictObject({ op: { type: "string", enum: [name] }, label: str, ...properties });
 }
 
-export function joSlidesResponseFormat() {
+/** `pictures` false (a guest) leaves setSlideImage out of the schema, so the
+ *  model cannot send it at all. */
+export function joSlidesResponseFormat({ pictures = true }: { pictures?: boolean } = {}) {
   const fields = {
     type: "array",
     items: strictObject({ key: { type: "string", enum: [...SLIDE_TEXT_KEYS] }, value: str }),
@@ -22,6 +24,7 @@ export function joSlidesResponseFormat() {
     op("rewriteSlide", { slideId: str, fields }),
     op("setSlideText", { slideId: str, textId: str, text: str }),
     op("addSlide", { afterSlideId: str, layout: { type: "string", enum: [...ADDABLE_LAYOUTS] }, fields, imageQuery: str }),
+    ...(pictures ? [op("setSlideImage", { slideId: str, imageQuery: str })] : []),
     op("deleteSlide", { slideId: str }),
     op("moveSlide", { slideId: str, afterSlideId: str }),
     op("setTheme", { themeId: { type: "string", enum: PICKER_THEMES.map((t) => t.id) } }),

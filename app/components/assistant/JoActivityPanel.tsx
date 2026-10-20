@@ -16,15 +16,19 @@
 // Generate on its own. There is no timer here that reaches the button, and no
 // path to it that a teacher did not click. Silence leaves the question standing
 // forever, which is the correct answer to "what if they walk away".
-import { Check, Circle, Loader2, X } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, Circle, Loader2, Sparkles, X } from "lucide-react";
 import { useJoActivity } from "@/app/lib/JoActivityContext";
 import { v2ToolForSlug } from "@/app/lib/tools";
 
 export default function JoActivityPanel() {
   const activity = useJoActivity();
+  // Below lg the card waits behind a floating button: laid along the bottom
+  // of a phone it covered the form's last fields and its Generate button.
+  const [open, setOpen] = useState(false);
   if (!activity || activity.status === "idle") return null;
 
-  const { status, slug, steps, stop, dismiss, accept } = activity;
+  const { status, slug, steps, stop, dismiss, accept, close } = activity;
   const toolName = slug ? (v2ToolForSlug(slug)?.name ?? null) : null;
 
   /**
@@ -54,10 +58,10 @@ export default function JoActivityPanel() {
       // not read a press on Stop (or anywhere else in here) as the teacher
       // taking over the form. See onIntervene in useToolLaunch.ts.
       data-jo-panel=""
-      className="panel-slide-in fixed z-30 bottom-(--j-bottom-ui) left-0 right-0 lg:left-auto lg:bottom-6 lg:right-6 lg:w-[300px]"
+      className="panel-slide-in fixed z-30 right-4 bottom-[calc(var(--j-bottom-ui)+1rem)] lg:bottom-6 lg:right-6 flex flex-col items-end gap-2"
     >
       <div
-        className="border-t lg:border lg:rounded-2xl p-4 shadow-lg"
+        className={`${open ? "block" : "hidden"} lg:block w-[min(20rem,calc(100vw-2rem))] lg:w-[300px] max-h-[60dvh] overflow-y-auto border rounded-2xl p-4 shadow-lg`}
         style={{
           backgroundColor: "var(--j-card)",
           borderColor: "var(--j-line)",
@@ -89,7 +93,7 @@ export default function JoActivityPanel() {
           {(status === "done" || status === "stopped") && (
             <button
               type="button"
-              onClick={dismiss}
+              onClick={close}
               aria-label="Dismiss"
               className="shrink-0 rounded-lg p-1 transition-colors hover:bg-(--j-tint)"
               style={{ color: "var(--j-faint)" }}
@@ -166,6 +170,26 @@ export default function JoActivityPanel() {
           </p>
         )}
       </div>
+
+      {/* Phones only: the button that opens and folds the card. */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="lg:hidden inline-flex items-center gap-2 min-h-12 pl-3 pr-4 rounded-full text-[13px] font-bold text-white shadow-lg bg-(--j-purple) active:bg-(--j-deep)"
+      >
+        {status === "filling" ? (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        ) : open ? (
+          <ChevronDown className="w-4 h-4" aria-hidden="true" />
+        ) : (
+          <Sparkles className="w-4 h-4" aria-hidden="true" />
+        )}
+        {status === "filling" ? "Jo is filling this in" : "Jo filled this in"}
+        {status === "asking" && !open && (
+          <span className="w-2 h-2 rounded-full bg-[#4be39b]" aria-hidden="true" />
+        )}
+      </button>
     </aside>
   );
 }

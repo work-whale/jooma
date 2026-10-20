@@ -28,7 +28,9 @@ export default function ZoomControls({ zoom, onChange, onFit, slideIndex, slideC
   const showCounter = typeof slideIndex === "number" && typeof slideCount === "number" && slideCount > 0;
   return (
     // On a phone the slide tray spans the bottom edge, so this sits in the row
-    // above it, opposite Ask Jo's button (jo.module.css .fab).
+    // above it, opposite Ask Jo's button (jo.module.css .fab). Below 480px
+    // that button shrinks to its orb to leave this room, and below 361px it
+    // moves up a row.
     <div className="absolute bottom-32 left-3 md:bottom-4 md:left-auto md:right-4 flex items-center gap-1 bg-white rounded-xl shadow-lg border border-gray-200 px-1 py-1 z-10">
       {showCounter && (
         <>

@@ -53,6 +53,8 @@ export interface JoActivity {
   dismiss: () => void;
   /** The teacher asked to generate. Clears the question; the panel does the rest. */
   accept: () => void;
+  /** The panel's close button: hides it until the next fill. */
+  close: () => void;
 }
 
 const JoActivityContext = createContext<JoActivity | null>(null);
@@ -167,6 +169,10 @@ export function JoActivityProvider({ children }: { children: React.ReactNode }) 
 
   const dismiss = useCallback(() => setStatus("done"), []);
   const accept = useCallback(() => setStatus("done"), []);
+  // Not "done", which is where the close button is shown: closing to the
+  // state it was already in left the panel up, and on a phone it sits over
+  // the form's Generate button.
+  const close = useCallback(() => setStatus("idle"), []);
 
   // Pressing the form's own Generate answers the panel's question, so the
   // panel goes. Left up, it sat over the result, where Ask Jo now lives.
@@ -185,8 +191,8 @@ export function JoActivityProvider({ children }: { children: React.ReactNode }) 
   );
 
   const activity = useMemo<JoActivity>(
-    () => ({ status, slug, steps, stop, dismiss, accept }),
-    [status, slug, steps, stop, dismiss, accept],
+    () => ({ status, slug, steps, stop, dismiss, accept, close }),
+    [status, slug, steps, stop, dismiss, accept, close],
   );
 
   return (

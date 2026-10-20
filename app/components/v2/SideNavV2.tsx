@@ -17,6 +17,7 @@ import Wordmark from "@/app/components/v2/Wordmark";
 import AmbassadorWordmark from "@/app/components/v2/AmbassadorWordmark";
 import TopUpModal from "@/app/components/v2/TopUpModal";
 import ToolSearch from "@/app/components/layout/ToolSearch";
+import { AccountLinks, type Account } from "@/app/components/v2/AccountLinks";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import styles from "./SideNavV2.module.css";
 
@@ -41,9 +42,13 @@ interface SideNavV2Props {
   /** Below 900px the rail is an off-canvas drawer; this is its open state. */
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  /** Phones: the account links at the foot of the drawer. */
+  account?: Account;
+  /** "account" when the avatar opened the drawer: it opens at those links. */
+  openAt?: "top" | "account";
 }
 
-export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNavV2Props) {
+export default function SideNavV2({ mobileOpen = false, onMobileClose, account, openAt = "top" }: SideNavV2Props) {
   const pathname = usePathname();
   const credits = useCreditMeter();
   const badges = useBadgeProgress();
@@ -96,11 +101,19 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
 
   // Focus moves into the drawer when it opens, so a keyboard or screen-reader
   // user is not left behind on the page underneath. AppShellV2 handles
-  // returning focus to the hamburger on close.
+  // returning focus to the burger on close. Opened from the avatar, it lands
+  // on the account section instead, scrolled into view.
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (mobileOpen) closeButtonRef.current?.focus();
-  }, [mobileOpen]);
+    if (!mobileOpen) return;
+    if (openAt === "account" && accountRef.current) {
+      accountRef.current.scrollIntoView({ block: "end" });
+      accountRef.current.querySelector<HTMLElement>("a, button")?.focus({ preventScroll: true });
+    } else {
+      closeButtonRef.current?.focus();
+    }
+  }, [mobileOpen, openAt]);
 
   // While it is a drawer it is a modal: Tab cycles inside it rather than
   // escaping to the page dimmed behind the backdrop. Stands down while the
@@ -335,6 +348,14 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose }: SideNav
               {supportUnread > 0 && <span className={styles.badge}>{supportUnread}</span>}
             </Link>
           </div>
+
+          {/* Drawer-only (hidden in CSS on the desktop rail, where the avatar's
+              dropdown carries them). */}
+          {account && (
+            <div ref={accountRef} className={styles.account} aria-label="Account" role="group">
+              <AccountLinks account={account} variant="drawer" onNavigate={onMobileClose} />
+            </div>
+          )}
         </div>
       </aside>
 

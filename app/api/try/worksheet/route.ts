@@ -47,9 +47,10 @@ export async function POST(req: Request) {
     return new Response("", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
   }
 
-  // One sheet per free try. A band's version is one of several requests that
-  // make a differentiated set, each a model call, so a guest never sends one.
-  const built = worksheetRequest({ ...body, band: undefined });
+  // One plain sheet per free try. Differentiation is a signed in feature (the
+  // field is locked on /create), so it is dropped here too rather than trusted
+  // to the page.
+  const built = worksheetRequest({ ...body, band: undefined, differentiate: "no", differentiationLevels: [] });
   if ("error" in built) {
     return NextResponse.json({ error: built.error }, { status: 400 });
   }

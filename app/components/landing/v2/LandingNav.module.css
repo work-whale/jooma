@@ -1,3 +1,9 @@
+/* The landing header: purple with white type at every scroll position.
+
+   At rest it has no ground of its own, so it melts into the hero's purple
+   band. Once the page moves (.stuck) it takes a solid purple ground and a soft
+   shadow, so the page reads as sliding under a bar that floats above it. */
+
 .nav {
   position: sticky;
   top: 0;
@@ -7,70 +13,95 @@
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-  background: rgba(247, 245, 252, 0.88);
-  backdrop-filter: blur(14px);
-  /* The hairline is a shadow, not a border, so the bar is exactly its rows'
-     height: the hero runs up under it by that much and no more. */
-  box-shadow: 0 1px 0 transparent;
+  background: transparent;
+  /* A shadow, not a border, so the bar is exactly its row's height: the hero
+     runs up under it by that much and no more. */
+  box-shadow: 0 0 0 transparent;
   transition:
     background 0.3s var(--j-ease),
-    box-shadow 0.3s,
-    backdrop-filter 0.3s;
+    box-shadow 0.3s;
 }
 
 .stuck {
-  box-shadow: 0 1px 0 var(--j-line);
+  /* The band's own purples (HeroV3.module.css .band), so the bar is the same
+     colour as the hero it was sitting on a moment ago. */
+  background: linear-gradient(168deg, #4a22b5 0%, #5326c4 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px -14px rgba(16, 6, 45, 0.6);
 }
 
-/* At rest the bar sits over the hero's purple band: no ground of its own,
-   white type, a white button. It turns light once the page scrolls. */
-.onBand {
-  background: transparent;
-  backdrop-filter: none;
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  height: 74px;
 }
 
-.onBand .brand {
+.brand {
   color: #fff;
+  display: inline-flex;
 }
 
-.onBand .link {
+.links {
+  display: flex;
+  gap: 28px;
+}
+
+.link {
+  font-size: 0.94rem;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.88);
+  transition: color 0.15s;
 }
 
 @media (hover: hover) {
-  .onBand .link:hover {
+  .link:hover {
     color: #fff;
   }
 }
 
-.onBand .link:active {
+.link:active {
   color: #fff;
 }
 
-.onBand .cta {
+.right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cta {
+  padding: 11px 22px;
+  font-size: 0.92rem;
   background: #fff;
   color: var(--j-deep);
   box-shadow: 0 8px 22px -12px rgba(16, 6, 45, 0.8);
 }
 
 @media (hover: hover) {
-  .onBand .cta:hover {
+  .cta:hover {
     background: var(--j-tint);
   }
 }
 
-.onBand .cta:active {
+.cta:active {
   background: var(--j-tint);
 }
 
-/* The global focus ring is brand purple, which vanishes on the purple band. */
-.onBand :focus-visible {
+/* The global focus ring is brand purple, which vanishes on purple. */
+.nav :focus-visible {
   outline-color: #fff;
 }
 
-/* NavAuth's button is drawn for a light bar; give it one on the band. */
-.onBand .auth > div > button {
+/* NavAuth's button is drawn for a light bar; give it one. */
+.auth > div > button {
   background: #fff;
+}
+
+.auth {
+  display: inline-flex;
 }
 
 /* The visitor count, which only joins the bar once the hero has scrolled away. */
@@ -80,16 +111,16 @@
   gap: 8px;
   font-size: 0.81rem;
   font-weight: 600;
-  border: 1px solid var(--j-line);
-  background: var(--j-card);
-  color: var(--j-muted);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(237, 231, 251, 0.86);
   border-radius: var(--j-pill);
   padding: 7px 14px;
 }
 
 .count b {
   font-weight: 800;
-  color: var(--j-ink);
+  color: #fff;
   font-variant-numeric: tabular-nums;
 }
 
@@ -105,115 +136,151 @@
   flex: none;
 }
 
-.auth {
-  display: inline-flex;
-}
-
 @media (max-width: 1140px) {
   .stuck .count {
     display: none;
   }
 }
 
-.inner {
-  display: flex;
-  align-items: center;
-  gap: 34px;
-  height: 74px;
+/* ── The phone menu ── */
+
+.burger {
+  display: none;
 }
 
-.brand {
-  color: var(--j-purple);
-  display: inline-flex;
+.panel {
+  display: none;
 }
 
-.links {
-  display: flex;
-  gap: 28px;
-}
-
-.link {
-  font-size: 0.94rem;
-  font-weight: 600;
-  color: var(--j-body);
-  transition: color 0.15s;
-}
-
-@media (hover: hover) {
-  .link:hover {
-    color: var(--j-purple);
-  }
-}
-
-.link:active {
-  color: var(--j-purple);
-}
-
-.right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.cta {
-  padding: 11px 22px;
-  font-size: 0.92rem;
-}
-
-/* Four short links, so they wrap to their own row rather than collapsing into
-   a hamburger that hides the entire navigation behind a tap.
-
-   A fixed height for the two rows, not auto: the hero runs up under the bar
-   by exactly this much (HeroV3.module.css .hero), and an auto height left a
-   strip of the light page showing above the band. */
+/* One 64px row: the wordmark and the menu button. The hero runs up under the
+   bar by exactly this much (HeroV3.module.css .hero). */
 @media (max-width: 860px) {
-  /* Two 48px rows with no gap between them: exactly the 96px the hero
-     expects, and every link in them a full 48px tall to tap. */
   .inner {
-    flex-wrap: wrap;
-    align-content: center;
-    height: 96px;
-    gap: 0 20px;
+    height: 64px;
+    gap: 12px;
   }
 
-  .link {
-    display: inline-flex;
+  .links,
+  .right {
+    display: none;
+  }
+
+  .burger {
+    display: inline-grid;
+    place-items: center;
+    margin-left: auto;
+    /* 48px to tap, drawn as a 42px pill. */
+    width: 48px;
+    height: 48px;
+    margin-right: -4px;
+    padding: 0;
+    border: 0;
+    border-radius: 14px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .burger svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .burger[aria-expanded="true"],
+  .burger:active {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  /* Drops down from under the bar, over the page rather than pushing it. */
+  .panel {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: calc(100svh - 64px - env(safe-area-inset-top));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 6px max(16px, env(safe-area-inset-left)) 20px;
+    background: #4a22b5;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 22px 40px -18px rgba(16, 6, 45, 0.75);
+    animation: drop 0.18s var(--j-ease);
+  }
+
+  .panelLinks {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .panelLink {
+    display: flex;
     align-items: center;
     min-height: 48px;
-    padding: 0 4px;
+    padding: 0 12px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+    text-decoration: none;
   }
 
-  /* The pill stays the size it was; the transparent layer around it makes
-     it 48px to tap. */
-  .cta {
-    padding: 9px 18px;
-    position: relative;
+  .panelLink:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
   }
 
-  .cta::after {
-    content: "";
-    position: absolute;
-    inset: -5px 0;
+  @media (hover: hover) {
+    .panelLink:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
   }
 
-  .links {
-    order: 3;
-    /* The links' 4px side padding reaches past the row's edge rather than
-       pushing the row wider. */
-    width: calc(100% + 8px);
-    margin: 0 -4px;
-    justify-content: safe center;
-    gap: 14px;
-    font-size: 0.88rem;
-    /* A safety net, not a design: if a large font setting makes the four
-       links wider than a 320px phone, they scroll sideways in their own row
-       instead of pushing the whole page sideways. */
-    overflow-x: auto;
-    scrollbar-width: none;
+  .panelAccount {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  .links::-webkit-scrollbar {
-    display: none;
+  /* NavAuth's account links. Tailwind's text-white sits in a cascade layer,
+     so landing.module.css's unlayered link colour beat it and painted them
+     dark on the purple. An unlayered rule here wins. Not the white Start
+     free button, which keeps its purple text. */
+  .panelAccount a:not(.panelCta) {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .panelAccount a:not(.panelCta):active {
+    color: #fff;
+  }
+
+  .panelCta {
+    justify-content: center;
+    min-height: 48px;
+    margin-top: 4px;
+    background: #fff;
+    color: var(--j-deep);
+  }
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
   }
 }

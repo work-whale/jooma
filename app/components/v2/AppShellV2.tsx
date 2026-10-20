@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import SideNavV2 from "@/app/components/v2/SideNavV2";
 import TopBarV2 from "@/app/components/v2/TopBarV2";
-import BottomTabsV2 from "@/app/components/v2/BottomTabsV2";
+import { useAccount } from "@/app/components/v2/AccountLinks";
 import SupportLauncher from "@/app/components/SupportLauncher";
 import AnnouncementBanner from "@/app/components/AnnouncementBanner";
 import DeletionBanner from "@/app/components/v2/DeletionBanner";
@@ -99,11 +99,19 @@ export default function AppShellV2({
     (next: boolean) => setOpenedAt(next ? pathname : null),
     [pathname],
   );
+  // Where the drawer opens: the top for the burger, the account links for the
+  // avatar.
+  const [openAt, setOpenAt] = useState<"top" | "account">("top");
 
-  // Focus returns to the tab bar's More button when the drawer closes — but
-  // only if the drawer was ever opened. Without this guard every page load
-  // would steal focus to the button on mount.
+  // Read once here and handed to both the top bar's dropdown and the drawer,
+  // so the account lookups are not made twice.
+  const account = useAccount();
+
+  // Focus returns to the top bar's burger when the drawer closes, but only if
+  // the drawer was ever opened. Without this guard every page load would
+  // steal focus to the button on mount.
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const avatarButtonRef = useRef<HTMLButtonElement>(null);
   const hasOpened = useRef(false);
 
   const closeNav = useCallback(() => setNavOpen(false), [setNavOpen]);
@@ -161,9 +169,9 @@ export default function AppShellV2({
     if (drawerOpen) {
       hasOpened.current = true;
     } else if (hasOpened.current) {
-      menuButtonRef.current?.focus();
+      (openAt === "account" ? avatarButtonRef : menuButtonRef).current?.focus();
     }
-  }, [drawerOpen]);
+  }, [drawerOpen, openAt]);
 
   const fixed = shellVariant === "fixed";
 
@@ -179,7 +187,7 @@ export default function AppShellV2({
 
       {slot}
 
-      <SideNavV2 mobileOpen={drawerOpen} onMobileClose={closeNav} />
+      <SideNavV2 mobileOpen={drawerOpen} onMobileClose={closeNav} account={account} openAt={openAt} />
 
       {/* Backdrop. Rendered here rather than inside SideNavV2 so the stacking
           order reads in one place: backdrop below the drawer. */}
@@ -203,7 +211,21 @@ export default function AppShellV2({
           scroll to a restored generation, the output outline's heading links,
           and the pin-to-bottom during streaming. */}
       <main className={fixed ? styles.mainFixed : styles.main}>
-        <TopBarV2 title={shellTitle} />
+        <TopBarV2
+          title={shellTitle}
+          account={account}
+          menuOpen={drawerOpen}
+          onMenu={() => {
+            setOpenAt("top");
+            setNavOpen(!drawerOpen);
+          }}
+          onAccount={() => {
+            setOpenAt("account");
+            setNavOpen(true);
+          }}
+          menuButtonRef={menuButtonRef}
+          avatarButtonRef={avatarButtonRef}
+        />
         {/* Not behind shellBanner: a pending deletion is the state of the
             account, not an announcement, so it shows on every screen that
             carries the chrome including the ones that opt out of banners. */}
@@ -211,13 +233,6 @@ export default function AppShellV2({
         {shellBanner && <AnnouncementBanner />}
         <div className={shellContentClassName ?? appStyles.wrap}>{children}</div>
       </main>
-
-      {/* Phones only. More opens the same drawer the rail becomes. */}
-      <BottomTabsV2
-        moreOpen={drawerOpen}
-        onMore={() => setNavOpen(!drawerOpen)}
-        moreButtonRef={menuButtonRef}
-      />
     </div>
   );
 }

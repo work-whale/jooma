@@ -89,10 +89,11 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
         </div>
       </div>
 
-      <div className={styles.cats}>
+      <div className={styles.cats} role="group" aria-label="Filter by category" data-testid="tool-filters">
         <button
           type="button"
           onClick={() => setCategory("all")}
+          aria-pressed={category === "all"}
           className={`${app.chip} ${category === "all" ? app.chipOn : ""}`}
         >
           Everything
@@ -102,6 +103,7 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
             key={c.id}
             type="button"
             onClick={() => setCategory(c.id)}
+            aria-pressed={category === c.id}
             className={`${app.chip} ${category === c.id ? app.chipOn : ""}`}
           >
             {c.name}

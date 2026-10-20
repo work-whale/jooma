@@ -1,0 +1,132 @@
+/* The account rows, shared by the top bar's dropdown and the phone drawer. */
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+/* In the drawer the identity heads its own section rather than a panel. */
+.whoDrawer {
+  padding: 14px 10px 12px;
+  border-bottom: 0;
+}
+
+.whoText {
+  min-width: 0;
+}
+
+.whoName {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--j-ink);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whoLabel,
+.whoEmail {
+  font-size: 0.74rem;
+  color: var(--j-faint);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: var(--j-body);
+  background: none;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+/* The drawer's rows match its nav items: rounded, 48px to tap. */
+.itemDrawer {
+  min-height: 48px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+@media (hover: hover) {
+  .item:hover {
+    background: var(--j-tint);
+    color: var(--j-deep);
+  }
+}
+
+.item:active {
+  background: var(--j-tint);
+  color: var(--j-deep);
+}
+
+/* 48px rows to tap on a touch screen; the mouse keeps the tighter list. */
+@media (pointer: coarse) {
+  .item {
+    min-height: 48px;
+  }
+}
+
+/* Inside the item, so the panel's overflow:hidden does not clip the ring. */
+.item:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: -2px;
+}
+
+.icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.ambassador {
+  background: linear-gradient(135deg, #e8b944, #c08a1e);
+  color: #2b1d02;
+  font-weight: 800;
+}
+
+@media (hover: hover) {
+  .ambassador:hover {
+    background: linear-gradient(135deg, #f0c75c, #c99525);
+    color: #2b1d02;
+  }
+}
+
+.ambassador:active {
+  background: linear-gradient(135deg, #f0c75c, #c99525);
+  color: #2b1d02;
+}
+
+.ambassadorPending {
+  background: var(--j-tint);
+  color: var(--j-deep);
+  font-weight: 700;
+}
+
+.reviewBadge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--j-card);
+  color: var(--j-deep);
+  white-space: nowrap;
+}

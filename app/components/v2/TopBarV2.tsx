@@ -2,99 +2,48 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { SignOut, ShieldCheck, ChartBar, UserCircle, Crown, ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { createClient } from "@/app/lib/auth/client";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
+import { Crown, List, X } from "@phosphor-icons/react/dist/ssr";
 import ToolSearch from "@/app/components/layout/ToolSearch";
 import NotificationBell from "@/app/components/layout/NotificationBell";
 import Avatar from "@/app/components/ui/Avatar";
-import {
-  useProfileIdentity,
-  setProfileIdentity,
-  clearProfileIdentity,
-} from "@/app/lib/useProfileIdentity";
+import { AccountLinks, type Account } from "@/app/components/v2/AccountLinks";
 import styles from "./TopBarV2.module.css";
 
 interface TopBarV2Props {
   title: string;
+  account: Account;
+  /** Whether the phone drawer is open; the burger shows a close icon then. */
+  menuOpen: boolean;
+  /** Opens or closes the phone drawer. */
+  onMenu: () => void;
+  /** Phones: the avatar opens the drawer at its account section. */
+  onAccount: () => void;
+  /** Where focus goes back to when the drawer closes: the burger, or the
+   *  avatar when that is what opened it. */
+  menuButtonRef: React.RefObject<HTMLButtonElement | null>;
+  avatarButtonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-/* Below 900px the drawer is opened from More in the tab bar (BottomTabsV2),
-   within reach of a thumb, so this bar no longer carries a hamburger. */
-export default function TopBarV2({ title }: TopBarV2Props) {
-  const router = useRouter();
-  const pathname = usePathname();
+/* Below 900px the drawer is opened from the burger at the right of this bar.
+   The avatar stays beside the bell, and on a phone it opens the same drawer at
+   the account links rather than a dropdown of its own. */
+export default function TopBarV2({
+  title,
+  account,
+  menuOpen,
+  onMenu,
+  onAccount,
+  menuButtonRef,
+  avatarButtonRef,
+}: TopBarV2Props) {
+  const phone = useMediaQuery("(max-width: 900px)");
+  const { avatarUrl, name: displayName, ambassador } = account;
 
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  // Where they stand with the ambassador programme. "none" shows nothing at
-  // all: the programme is invitation-only, so it never appears for someone
-  // who has not applied.
-  const [ambassador, setAmbassador] = useState<"none" | "pending" | "active">("none");
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
-  const avatarButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
-
-  // Name and avatar come from a shared store, not local state. The profile form
-  // is a SIBLING of this component, so it cannot pass a new photo down, and
-  // router.refresh() does not reach here — that re-renders server components,
-  // and this is a client one whose state survives. The effect below is keyed on
-  // pathname, which does not change when you save on the page you are already
-  // on. Before the store, the bar kept the old photo until you navigated away.
-  const identity = useProfileIdentity();
-  const displayName = identity?.name ?? "";
-  const avatarUrl = identity?.avatarUrl ?? null;
-
-  // Who is signed in, what they look like, and may they see the Admin link.
-  //
-  // THIS GATE IS UX ONLY. requireAdmin() and the is_admin() re-check inside
-  // every admin_* RPC are the real boundary. Forging this flag in devtools
-  // reveals a menu item that leads straight to a redirect.
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const supabase = createClient();
-      const [{ data: userData }, { data: admin }, { data: amb }, { data: application }] =
-        await Promise.all([
-          supabase.auth.getUser(),
-          supabase.rpc("is_admin"),
-          supabase.rpc("my_ambassador"),
-          supabase.rpc("my_ambassador_application"),
-        ]);
-      if (cancelled) return;
-      setUserEmail(userData.user?.email ?? null);
-      // Definer functions scoped to the caller; a failure reads as "none".
-      const ambRow = Array.isArray(amb) ? amb[0] : null;
-      const appRow = Array.isArray(application) ? application[0] : null;
-      setAmbassador(
-        ambRow?.status === "active" ? "active" : appRow?.status === "pending" ? "pending" : "none",
-      );
-      // Starts false and stays false unless the DB says otherwise, so the item
-      // is absent on first paint rather than flashing in and out.
-      setIsAdmin(admin === true);
-
-      const uid = userData.user?.id;
-      if (!uid) {
-        clearProfileIdentity();
-        return;
-      }
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, surname, avatar_url")
-        .eq("id", uid)
-        .maybeSingle();
-      if (cancelled) return;
-      setProfileIdentity({
-        name: [profile?.first_name, profile?.surname].filter(Boolean).join(" "),
-        avatarUrl: profile?.avatar_url ?? null,
-      });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const dropdownOpen = profileOpen && !phone;
 
   // pointerdown, not mousedown: iOS Safari does not send mouse events for a
   // tap on something that is not itself clickable, so a tap on the page
@@ -112,9 +61,9 @@ export default function TopBarV2({ title }: TopBarV2Props) {
   // Open: focus the first item, and keep Tab inside the menu. Escape closes
   // it and hands focus back to the avatar, so a keyboard user is never left
   // stranded where the menu used to be.
-  useFocusTrap(menuPanelRef, profileOpen);
+  useFocusTrap(menuPanelRef, dropdownOpen);
   useEffect(() => {
-    if (!profileOpen) return;
+    if (!dropdownOpen) return;
     menuPanelRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -123,17 +72,7 @@ export default function TopBarV2({ title }: TopBarV2Props) {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [profileOpen]);
-
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    // Drop the cached name and photo, so signing in as someone else on the same
-    // tab does not flash the previous teacher's avatar before their own loads.
-    clearProfileIdentity();
-    router.push("/login");
-    router.refresh();
-  };
+  }, [dropdownOpen]);
 
   return (
     <header className={styles.top}>
@@ -156,11 +95,11 @@ export default function TopBarV2({ title }: TopBarV2Props) {
           <button
             type="button"
             ref={avatarButtonRef}
-            onClick={() => setProfileOpen((v) => !v)}
-            aria-label="Account menu"
-            aria-haspopup="menu"
-            aria-expanded={profileOpen}
-            aria-controls="account-menu"
+            onClick={phone ? onAccount : () => setProfileOpen((v) => !v)}
+            aria-label={phone ? "Account" : "Account menu"}
+            aria-haspopup={phone ? "dialog" : "menu"}
+            aria-expanded={phone ? menuOpen : profileOpen}
+            aria-controls={phone ? "app-sidenav-v2" : "account-menu"}
             className={styles.avatarBtn}
           >
             {/* A verified ambassador wears a gold ring and a crown everywhere in
@@ -176,7 +115,7 @@ export default function TopBarV2({ title }: TopBarV2Props) {
             </span>
           </button>
 
-          {profileOpen && (
+          {dropdownOpen && (
             <div
               id="account-menu"
               ref={menuPanelRef}
@@ -184,74 +123,24 @@ export default function TopBarV2({ title }: TopBarV2Props) {
               role="menu"
               aria-label="Account"
             >
-              {userEmail && (
-                <div className={styles.who}>
-                  <Avatar url={avatarUrl} name={displayName} size={36} />
-                  <div className={styles.whoText}>
-                    {displayName ? (
-                      <p className={styles.whoName}>{displayName}</p>
-                    ) : (
-                      <p className={styles.whoLabel}>Signed in as</p>
-                    )}
-                    <p className={styles.whoEmail}>{userEmail}</p>
-                  </div>
-                </div>
-              )}
-              {ambassador === "active" && (
-                <Link
-                  href="/ambassador"
-                  className={`${styles.menuItem} ${styles.menuAmbassador}`}
-                  role="menuitem"
-                >
-                  <Crown weight="fill" className={styles.menuIconSm} />
-                  <span style={{ flex: 1 }}>Ambassador Programme</span>
-                  <ArrowRight className={styles.menuIconSm} />
-                </Link>
-              )}
-              {ambassador === "pending" && (
-                <Link
-                  href="/ambassador"
-                  className={`${styles.menuItem} ${styles.menuAmbassadorPending}`}
-                  role="menuitem"
-                >
-                  <Crown weight="fill" className={styles.menuIconSm} />
-                  <span style={{ flex: 1 }}>Ambassador Programme</span>
-                  <span className={styles.reviewBadge}>Under review</span>
-                </Link>
-              )}
-              {isAdmin && (
-                <Link href="/admin" className={styles.menuItem} role="menuitem">
-                  <ShieldCheck className={styles.menuIconSm} />
-                  Admin
-                </Link>
-              )}
-              <Link href="/profile" className={styles.menuItem} role="menuitem">
-                <UserCircle className={styles.menuIconSm} />
-                Profile
-              </Link>
-              {/* Straight to the section rather than through /account/billing's
-                  redirect, which exists for Stripe's return URLs and old
-                  bookmarks, not for links we control. */}
-              <Link
-                href="/profile?section=subscription"
-                className={styles.menuItem}
-                role="menuitem"
-              >
-                <ChartBar className={styles.menuIconSm} />
-                Usage and billing
-              </Link>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className={styles.menuItem}
-                role="menuitem"
-              >
-                <SignOut className={styles.menuIconSm} />
-                Sign out
-              </button>
+              <AccountLinks account={account} variant="menu" />
             </div>
           )}
         </div>
+
+        {/* Phones only (hidden in CSS above 900px). */}
+        <button
+          type="button"
+          ref={menuButtonRef}
+          onClick={onMenu}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          aria-controls="app-sidenav-v2"
+          className={styles.burger}
+        >
+          {menuOpen ? <X className={styles.burgerIcon} /> : <List className={styles.burgerIcon} />}
+        </button>
       </div>
     </header>
   );

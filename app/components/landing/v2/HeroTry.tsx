@@ -166,8 +166,11 @@ export default function HeroTry({
               document.getElementById(inputId)?.focus({ preventScroll: true });
             }}
           >
-            {pillTiles[id]}
-            <b>{heroTool(id).name}</b>&nbsp;{text}
+            <span className={styles.egTool}>
+              {pillTiles[id]}
+              <b>{heroTool(id).name}</b>
+            </span>
+            <span className={styles.egText}>{text}</span>
           </button>
         ))}
       </div>

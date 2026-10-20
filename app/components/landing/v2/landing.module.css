@@ -241,3 +241,10 @@
     margin-bottom: 40px;
   }
 }
+
+/* The Galaxy Fold's cover screen and other very narrow phones. */
+@media (max-width: 360px) {
+  .shell {
+    padding: 0 14px;
+  }
+}
