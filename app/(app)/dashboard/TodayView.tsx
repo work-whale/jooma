@@ -393,16 +393,21 @@ export default function TodayView({
       )}
 
       {/* Order is the handover's: day streak, resources made, badges earned,
-          time saved. The streak leads because it is the one that changes today. */}
+          time saved. The streak leads because it is the one that changes today.
+
+          On a phone they are four square tiles in a 2x2 grid: the icon and a
+          bare number. The sentence values ("Starts today") and the labels give
+          way there; the label stays for screen readers and as the tile's
+          title. */}
       <div className={styles.metrics}>
-        <div className={styles.metric}>
+        <div className={styles.metric} title="Day streak">
           <span className={styles.metricIcon} data-tone="orange">
             <Fire weight="fill" />
           </span>
           <div>
             {/* Never a zero. "Starts today" is true rather than consoling: the
                 day is not over, and one resource in the next hour begins one. */}
-            <b>
+            <b className={styles.metricFull}>
               {loading
                 ? PENDING
                 : progress.currentStreak === 0
@@ -411,11 +416,12 @@ export default function TodayView({
                     ? "1 day"
                     : `${progress.currentStreak} days`}
             </b>
+            <b className={styles.metricShort}>{loading ? PENDING : progress.currentStreak}</b>
             <span className={styles.metricLabel}>Day streak</span>
           </div>
         </div>
 
-        <div className={styles.metric}>
+        <div className={styles.metric} title="Resources made">
           <span className={styles.metricIcon} data-tone="violet">
             <FileText weight="fill" />
           </span>
@@ -425,19 +431,20 @@ export default function TodayView({
           </div>
         </div>
 
-        <div className={`${styles.metric} ${!progress.available ? styles.metricSoon : ""}`}>
+        <div className={`${styles.metric} ${!progress.available ? styles.metricSoon : ""}`} title="Badges earned">
           <span className={styles.metricIcon} data-tone="amber">
             <Medal weight="fill" />
           </span>
           <div>
-            <b className={!progress.available ? styles.metricSoonValue : undefined}>
+            <b className={`${styles.metricFull} ${!progress.available ? styles.metricSoonValue : ""}`}>
               {loading ? PENDING : !progress.available ? "Not yet" : earnedCount || "None yet"}
             </b>
+            <b className={styles.metricShort}>{loading ? PENDING : progress.available ? earnedCount : 0}</b>
             <span className={styles.metricLabel}>Badges earned</span>
           </div>
         </div>
 
-        <div className={styles.metric}>
+        <div className={styles.metric} title="Time saved">
           <span className={styles.metricIcon} data-tone="green">
             <Clock weight="fill" />
           </span>
@@ -445,7 +452,7 @@ export default function TodayView({
             {/* Never a zero headline. Before the first resource there is no
                 figure worth showing, and under an hour rounds to 0h, which
                 reads as "this saved you nothing". */}
-            <b>
+            <b className={styles.metricFull}>
               {loading
                 ? PENDING
                 : stats.resources === 0
@@ -453,6 +460,9 @@ export default function TodayView({
                   : stats.hours === 0
                     ? "Under an hour"
                     : `${stats.hours}h`}
+            </b>
+            <b className={styles.metricShort}>
+              {loading ? PENDING : stats.resources > 0 && stats.hours === 0 ? "<1h" : `${stats.hours}h`}
             </b>
             <span className={styles.metricLabel}>Time saved</span>
           </div>

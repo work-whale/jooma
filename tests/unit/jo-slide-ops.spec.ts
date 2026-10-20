@@ -126,6 +126,49 @@ test.describe("other slide ops", () => {
     expect(applySlideOp(d, op({ op: "addSlide", label: "x", afterSlideId: "", layout: "paper-quote", fields: [], imageQuery: "" }), DEFAULT_ART_STYLE)).toBeNull();
   });
 
+  test("setSlideImage swaps a slide's picture: same words and id, a new query, waiting to be filled", () => {
+    const d = deck();
+    const applied = applySlideOp(d, op({ op: "setSlideImage", label: "New picture on slide 2", slideId: d[1].id, imageQuery: "Mount Etna erupting" }), DEFAULT_ART_STYLE)!;
+    const slide = applied.slides[1];
+    expect(slide.id).toBe(d[1].id);
+    expect(applied.focus).toEqual({ slideId: d[1].id });
+    expect(texts(slide)).toContain("How volcanoes erupt");
+    expect((slide.skeleton as SlideSpec).imageQuery).toBe("Mount Etna erupting");
+    expect((slide.skeleton as SlideSpec).bullets).toEqual(["**Magma** rises", "**Gas** pushes"]);
+    // The old picture is gone and the slide waits for the new one.
+    expect(JSON.stringify(slide)).not.toContain(PHOTO);
+    expect(pendingPicture(slide)).toBe("Mount Etna erupting");
+    // The other slides are untouched.
+    expect(applied.slides[0]).toBe(d[0]);
+    expect(applied.slides[0].themeId).toBe("paper");
+
+    const filled = fillSlidePicture(applied.slides, slide.id, { src: "https://example.com/etna.jpg", width: 640, height: 480 }, DEFAULT_ART_STYLE);
+    expect(JSON.stringify(filled[1])).toContain("https://example.com/etna.jpg");
+    expect(pendingPicture(filled[1])).toBeNull();
+    expect(texts(filled[1])).toContain("How volcanoes erupt");
+  });
+
+  test("setSlideImage works on the title slide and keeps the deck's theme on it", () => {
+    const d = deck();
+    const applied = applySlideOp(d, op({ op: "setSlideImage", label: "x", slideId: d[0].id, imageQuery: "volcano at night" }), DEFAULT_ART_STYLE)!;
+    expect(applied.slides[0]).toMatchObject({ id: d[0].id, themeId: "paper", artStyleId: DEFAULT_ART_STYLE });
+    expect(pendingPicture(applied.slides[0])).toBe("volcano at night");
+  });
+
+  test("setSlideImage does nothing on an activity, a hand made slide, an unknown slide, a blank or unchanged query", () => {
+    const d = deck();
+    expect(applySlideOp(d, op({ op: "setSlideImage", label: "x", slideId: d[2].id, imageQuery: "ash cloud" }), DEFAULT_ART_STYLE)).toBeNull();
+    expect(applySlideOp(d, op({ op: "setSlideImage", label: "x", slideId: "plain1", imageQuery: "ash cloud" }), DEFAULT_ART_STYLE)).toBeNull();
+    expect(applySlideOp(d, op({ op: "setSlideImage", label: "x", slideId: "nope", imageQuery: "ash cloud" }), DEFAULT_ART_STYLE)).toBeNull();
+    expect(applySlideOp(d, op({ op: "setSlideImage", label: "x", slideId: d[1].id, imageQuery: "   " }), DEFAULT_ART_STYLE)).toBeNull();
+    expect(applySlideOp(d, op({ op: "setSlideImage", label: "x", slideId: d[1].id, imageQuery: "magma chamber diagram" }), DEFAULT_ART_STYLE)).toBeNull();
+  });
+
+  test("setSlideImage leaves the two and three picture layouts to the teacher", () => {
+    const two = aiSlide({ layout: "paper-two-images", title: "Two kinds", imageQuery: "shield volcano", secondaryImageQuery: "stratovolcano" });
+    expect(applySlideOp([two], op({ op: "setSlideImage", label: "x", slideId: two.id, imageQuery: "lava lake" }), DEFAULT_ART_STYLE)).toBeNull();
+  });
+
   test("delete and move keep the deck's theme on whichever slide is first", () => {
     const d = deck();
     const deleted = applySlideOp(d, op({ op: "deleteSlide", label: "x", slideId: d[0].id }), DEFAULT_ART_STYLE)!.slides;
@@ -188,11 +231,20 @@ test.describe("the slides answer", () => {
     expect(text).toContain('"paper-quote"');
     expect(text).not.toContain('"activity-ordering"');
     expect(text).toContain('"dark"');
+    expect(text).toContain('"setSlideImage"');
+  });
+
+  test("a guest's answer has no picture swap in it, so a free try cannot send one", () => {
+    const text = JSON.stringify(joSlidesResponseFormat({ pictures: false }));
+    expect(text).not.toContain('"setSlideImage"');
+    expect(text).toContain('"addSlide"');
   });
 
   test("only whole, known slide ops play", () => {
     expect(isSlideOp({ op: "rewriteSlide", label: "x", slideId: "s1", fields: [] })).toBe(true);
     expect(isSlideOp({ op: "rewriteSlide", label: "x", slideId: "s1" })).toBe(false);
+    expect(isSlideOp({ op: "setSlideImage", label: "x", slideId: "s1", imageQuery: "lava" })).toBe(true);
+    expect(isSlideOp({ op: "setSlideImage", label: "x", slideId: "s1" })).toBe(false);
     const answer = JSON.stringify({ reply: "On it.", clarify: null, ops: [{ op: "deleteSlide", label: "Removing slide 4", slideId: "plain1" }, { op: "setTheme", label: "Brighter theme", themeId: "light" }], summary: "Done." });
     const cut = answer.indexOf('{"op":"setTheme"') + 3;
     expect(readJoProgress(answer.slice(0, cut), isSlideOp).ops.map((o) => o.op)).toEqual(["deleteSlide"]);

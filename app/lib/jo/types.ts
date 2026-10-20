@@ -108,6 +108,18 @@ export const ADDABLE_LAYOUTS = [
 ] as const;
 export type AddableLayout = (typeof ADDABLE_LAYOUTS)[number];
 
+/** Layouts with one picture of their own, which Jo may swap (setSlideImage).
+ *  The two and three picture layouts are left to the teacher: a query names
+ *  one picture, and their others would be lost in the rebuild. */
+export const PICTURE_LAYOUTS = [
+  "title-cover",
+  "title-hero",
+  "image-left",
+  "image-right",
+  "image-full",
+  ...ADDABLE_LAYOUTS,
+] as const;
+
 export interface SlideField {
   key: SlideTextKey;
   value: string;
@@ -125,12 +137,21 @@ export interface AddSlideOp extends OpBase {
   fields: SlideField[];
   imageQuery: string;
 }
+/** A new picture for a content slide, found from imageQuery once it lands. */
+export interface SetSlideImageOp extends OpBase { op: "setSlideImage"; slideId: string; imageQuery: string }
 export interface DeleteSlideOp extends OpBase { op: "deleteSlide"; slideId: string }
 /** `afterSlideId` "" moves it to the front. */
 export interface MoveSlideOp extends OpBase { op: "moveSlide"; slideId: string; afterSlideId: string }
 export interface SetThemeOp extends OpBase { op: "setTheme"; themeId: string }
 
-export type SlideOp = SetSlideTextOp | RewriteSlideOp | AddSlideOp | DeleteSlideOp | MoveSlideOp | SetThemeOp;
+export type SlideOp =
+  | SetSlideTextOp
+  | RewriteSlideOp
+  | AddSlideOp
+  | SetSlideImageOp
+  | DeleteSlideOp
+  | MoveSlideOp
+  | SetThemeOp;
 
 // ── Markdown ops (the text tools) ──────────────────────────────────────────
 

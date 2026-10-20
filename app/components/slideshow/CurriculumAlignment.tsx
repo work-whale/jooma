@@ -373,19 +373,26 @@ export default function CurriculumAlignment({
             </>
           )}
 
-          <div className="relative inline-block">
+          {/* The answer opens in the card's own flow, under the button, so the
+              card grows to fit it. As a popover it hung below the card's
+              bottom edge, and the card's overflow-hidden cut it off. */}
+          <div>
             <button
               type="button"
               onClick={() => setHintOpen((v) => !v)}
               disabled={disabled}
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 disabled:opacity-60"
+              aria-expanded={hintOpen}
+              aria-controls="curriculum-hint"
+              className="inline-flex items-center gap-1.5 min-h-8 pointer-coarse:min-h-11 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 disabled:opacity-60"
             >
               <HelpCircle className="w-3 h-3" />
               Can&apos;t see a statement?
             </button>
             {hintOpen && (
               <div
-                className="absolute z-10 left-0 mt-1 w-[min(18rem,calc(100vw-2rem))] p-3 bg-white rounded-xl border shadow-lg"
+                id="curriculum-hint"
+                data-testid="curriculum-hint"
+                className="mt-1 max-w-[18rem] p-3 bg-white rounded-xl border"
                 style={{ borderColor: "var(--j-line)" }}
               >
                 <p className="text-xs font-semibold text-gray-900 mb-1">This is optional</p>

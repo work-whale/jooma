@@ -11,6 +11,45 @@
   margin-top: 18px;
 }
 
+/* Phones and Folds: one row that scrolls sideways, rather than eight pills
+   wrapping onto four rows of screen. The fade on the right edge says there is
+   more to swipe to. */
+@media (max-width: 900px) {
+  .cats {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 14px;
+    /* Out to the screen edge on the right, so the row runs under the fade
+       rather than stopping short of it. */
+    margin-right: -16px;
+    padding-right: 32px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+
+  .cats::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cats > button {
+    flex: none;
+    scroll-snap-align: start;
+    padding-left: 13px;
+    padding-right: 13px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .cats {
+    margin-right: -12px;
+  }
+}
+
 .section {
   margin-top: 30px;
 }

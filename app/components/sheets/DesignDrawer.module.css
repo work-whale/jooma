@@ -1,0 +1,33 @@
+/* The Design panel, as a sidebar on the right over the page. */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  width: min(22rem, calc(100vw - 2.5rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px);
+  background: var(--j-bg);
+  border-left: 1px solid var(--j-line);
+  box-shadow: -18px 0 40px -24px rgba(16, 6, 45, 0.55);
+  animation: drawerIn 0.2s var(--j-ease);
+}
+
+@keyframes drawerIn {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+}

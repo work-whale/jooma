@@ -15,7 +15,7 @@ import { renderSlide, rerenderSlideWithTheme, type SlideSpec } from "@/app/lib/s
 import { DEFAULT_ART_STYLE, DEFAULT_THEME_ID, PICKER_THEMES, getTheme, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { newId, type DeckSlide } from "@/app/lib/deck-events";
 import { rethemeDeck } from "@/app/lib/deck-theme";
-import { ADDABLE_LAYOUTS, SLIDE_TEXT_KEYS, type SlideField, type SlideOp, type SlideTextKey } from "./types";
+import { ADDABLE_LAYOUTS, PICTURE_LAYOUTS, SLIDE_TEXT_KEYS, type SlideField, type SlideOp, type SlideTextKey } from "./types";
 
 /** Where an op lands: a slide, and a text box on it when there is one. */
 export interface SlideFocus {
@@ -134,6 +134,7 @@ export function slideOpFocus(slides: DeckSlide[], op: SlideOp): SlideFocus | nul
     case "setSlideText":
       return has(op.slideId) ? { slideId: op.slideId, textId: op.textId } : null;
     case "rewriteSlide":
+    case "setSlideImage":
     case "deleteSlide":
     case "moveSlide":
       return has(op.slideId) ? { slideId: op.slideId } : null;
@@ -202,6 +203,38 @@ export function applySlideOp(slides: DeckSlide[], op: SlideOp, artStyle: ArtStyl
       const next = keepDeckHead([...slides.slice(0, at), slide, ...slides.slice(at)], slides);
       return { slides: next, focus: { slideId: slide.id } };
     }
+    case "setSlideImage": {
+      // A one picture content slide only. Rebuilt from its own skeleton with
+      // the new query and the picture waiting, as an added slide is; the
+      // picture is found once the turn lands (pendingPicture, then
+      // fillSlidePicture), and the slide's words and theme stay as they were.
+      const i = index(op.slideId);
+      if (i === -1 || slideKind(slides[i]) !== "content") return null;
+      const s = slides[i];
+      const spec = s.skeleton as SlideSpec;
+      if (!(PICTURE_LAYOUTS as readonly string[]).includes(spec.layout)) return null;
+      const query = clean(op.imageQuery ?? "");
+      if (!query || query === spec.imageQuery) return null;
+      const theme = getTheme(themeId);
+      const skeleton = { ...(s.skeleton as Record<string, unknown>), imageQuery: query };
+      const rebuilt = renderSlide(
+        { ...(skeleton as unknown as SlideSpec), accentColor: theme.palette.accent, imagePending: true },
+        theme,
+        artStyle,
+      );
+      const slide = {
+        ...rebuilt,
+        id: s.id,
+        skeleton,
+        themeId: s.themeId,
+        artStyleId: s.artStyleId,
+        backgroundArt: s.backgroundArt,
+        backgroundArtScrim: s.backgroundArtScrim,
+        audios: s.audios,
+        videos: s.videos,
+      } as DeckSlide;
+      return { slides: slides.map((x, j) => (j === i ? slide : x)), focus: { slideId: s.id } };
+    }
     case "deleteSlide": {
       const i = index(op.slideId);
       if (i === -1 || slides.length <= 1) return null;
@@ -266,7 +299,8 @@ export function fillSlidePicture(
   });
 }
 
-/** Slides an op left waiting for a picture: an added slide with a query. */
+/** Slides an op left waiting for a picture: an added slide with a query, or
+ *  one whose picture Jo swapped. */
 export function pendingPicture(s: DeckSlide): string | null {
   const spec = s.skeleton as SlideSpec | undefined;
   if (!spec?.imageQuery) return null;
@@ -284,6 +318,7 @@ export function isSlideOp(v: unknown): v is SlideOp {
     case "setSlideText": return s("slideId") && s("textId") && s("text");
     case "rewriteSlide": return s("slideId") && Array.isArray(o.fields);
     case "addSlide": return s("afterSlideId") && s("layout") && Array.isArray(o.fields) && s("imageQuery");
+    case "setSlideImage": return s("slideId") && s("imageQuery");
     case "deleteSlide": return s("slideId");
     case "moveSlide": return s("slideId") && s("afterSlideId");
     case "setTheme": return s("themeId");

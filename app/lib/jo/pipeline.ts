@@ -88,7 +88,9 @@ function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget 
       name: "slide deck",
       heading: "THE DECK NOW (JSON)",
       system: joSlidesSystem({ canAsk, guest }),
-      response_format: joSlidesResponseFormat(),
+      // A guest's schema has no picture swap, so a free try cannot send one;
+      // the prompt tells them what unlocks it instead.
+      response_format: joSlidesResponseFormat({ pictures: !guest }),
     };
   }
   if (body.kind === "markdown") {

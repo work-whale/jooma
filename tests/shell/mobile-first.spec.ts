@@ -5,13 +5,14 @@ import { admin, createTeacher, deleteTeacher, seedResource, signIn, type TestTea
  * The mobile-first pass, through the interface.
  *
  * Most teachers open Jooma on a phone. These pin what that pass promised: no
- * page scrolls sideways at 320, 375 or 425px, the four main destinations sit in
- * a tab bar within reach of a thumb, the drawer and the menus behave for a
- * keyboard and a screen reader, fields do not make iOS zoom, and anything that
- * used to appear only on hover is there on a touch screen.
+ * page scrolls sideways at 320, 375 or 425px, the drawer the top bar's burger
+ * opens and the menus behave for a keyboard and a screen reader, fields do not
+ * make iOS zoom, and anything that used to appear only on hover is there on a
+ * touch screen. (The tab bar this pass added has since given way to the burger;
+ * see mobile-app-fixes.spec.ts.)
  *
  * The desktop checks at the end are the other half of the promise: the rail,
- * the tighter form sizes and the absent tab bar are exactly as they were.
+ * the account dropdown and the tighter form sizes are exactly as they were.
  */
 
 const NAV = { timeout: 30_000 };
@@ -127,7 +128,7 @@ test.describe("signed in", () => {
           "/pricing",
         ]) {
           await page.goto(path);
-          await expect(page.locator("#app-tabbar")).toBeVisible(NAV);
+          await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible(NAV);
           await page.waitForLoadState("load");
           const result = await noSidewaysScroll(page);
           expect(result.ok, `${path} is ${result.scrollWidth}px wide on a ${result.width}px screen`).toBe(true);
@@ -139,34 +140,11 @@ test.describe("signed in", () => {
   test.describe("on a 375px phone", () => {
     test.use({ viewport: { width: 375, height: 760 }, isMobile: true, hasTouch: true });
 
-    test("the tab bar holds Today, Make, Library, Ask Jo and More, each 48px to tap", async ({ page }) => {
+    test("the burger opens the drawer as a dialog that holds focus and gives it back", async ({ page }) => {
       await signIn(page, teacher);
       await page.goto("/dashboard");
-      const bar = page.getByRole("navigation", { name: "Primary" });
-      await expect(bar).toBeVisible(NAV);
-
-      const items = bar.locator("a, button");
-      await expect(items).toHaveText(["Today", "Make", "Library", "Ask Jo", "More"]);
-      for (const box of await items.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))) {
-        expect(box.width).toBeGreaterThanOrEqual(48);
-        expect(box.height).toBeGreaterThanOrEqual(48);
-      }
-      await expect(bar.getByRole("link", { name: "Today" })).toHaveAttribute("aria-current", "page");
-
-      // Pinned to the bottom of the screen, and the hamburger it replaces is gone.
-      const barBox = (await bar.boundingBox())!;
-      expect(Math.round(barBox.y + barBox.height)).toBe(760);
-      await expect(page.getByRole("button", { name: "Open navigation" })).toHaveCount(0);
-
-      await bar.getByRole("link", { name: "Make" }).click();
-      await page.waitForURL("**/tools", NAV);
-      await expect(bar.getByRole("link", { name: "Make" })).toHaveAttribute("aria-current", "page");
-    });
-
-    test("More opens the drawer as a dialog that holds focus and gives it back", async ({ page }) => {
-      await signIn(page, teacher);
-      await page.goto("/dashboard");
-      const more = page.getByRole("button", { name: "More" });
+      // Its name turns to "Close menu" while the drawer is open.
+      const more = page.getByRole("button", { name: /^(Open|Close) menu$/ });
       await expect(more).toBeVisible(NAV);
       await expect(more).toHaveAttribute("aria-expanded", "false");
       await expect(more).toHaveAttribute("aria-controls", "app-sidenav-v2");
@@ -190,7 +168,7 @@ test.describe("signed in", () => {
         expect(await focusInside(page, "#app-sidenav-v2"), `Shift+Tab ${i + 1} left the drawer`).toBe(true);
       }
 
-      // Escape closes it and hands focus back to More.
+      // Escape closes it and hands focus back to the burger.
       await page.keyboard.press("Escape");
       await expect(drawer).toBeHidden();
       await expect(more).toHaveAttribute("aria-expanded", "false");
@@ -202,7 +180,7 @@ test.describe("signed in", () => {
       await page.goto("/dashboard");
       // By what it controls: its name changes with the unread count.
       const bell = page.locator('button[aria-controls="notification-panel"]');
-      const avatar = page.getByRole("button", { name: "Account menu" });
+      const avatar = page.getByRole("button", { name: "Account" });
       await expect(avatar).toBeVisible(NAV);
 
       const avatarBox = (await avatar.boundingBox())!;
@@ -222,25 +200,12 @@ test.describe("signed in", () => {
     test("a tool's fields are 16px on a phone", async ({ page }) => {
       await signIn(page, teacher);
       await page.goto("/tools/worksheet-generator");
-      await expect(page.locator("#app-tabbar")).toBeVisible(NAV);
+      await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible(NAV);
       const sizes = await fieldFontSizes(page);
       expect(sizes.length).toBeGreaterThan(0);
       for (const field of sizes) {
         expect(field.size, field.name).toBeGreaterThanOrEqual(16);
       }
-    });
-
-    test("the tab bar steps aside while the keyboard is up", async ({ page }) => {
-      await signIn(page, teacher);
-      await page.goto("/tools/worksheet-generator");
-      const bar = page.locator("#app-tabbar");
-      await expect(bar).toBeVisible(NAV);
-      // A field the teacher can see; the form also carries hidden inputs.
-      const field = page.locator("main textarea:visible").first();
-      await field.focus();
-      await expect(bar).toBeHidden();
-      await field.blur();
-      await expect(bar).toBeVisible();
     });
 
     test("a chat's options are there to tap, and its delete confirm is a proper dialog", async ({ page }) => {
@@ -251,6 +216,9 @@ test.describe("signed in", () => {
 
       await signIn(page, teacher);
       await page.goto("/assistant");
+      // On a phone the chat list is a side panel, opened from the bar above
+      // the conversation.
+      await page.getByRole("button", { name: "Open chats" }).click();
       const options = page.getByRole("button", { name: "Options for Rainforest plan" });
       await expect(options).toBeVisible(NAV);
 
@@ -278,23 +246,23 @@ test.describe("signed in", () => {
       await expect(options).toBeVisible();
     });
 
-    test("the account menu closes on Escape and gives focus back", async ({ page }) => {
+    test("the avatar opens the drawer at the account links, and Escape gives focus back to it", async ({ page }) => {
       await signIn(page, teacher);
       await page.goto("/dashboard");
-      const avatar = page.getByRole("button", { name: "Account menu" });
+      const avatar = page.getByRole("button", { name: "Account" });
       await expect(avatar).toBeVisible(NAV);
-      await expect(avatar).toHaveAttribute("aria-controls", "account-menu");
+      await expect(avatar).toHaveAttribute("aria-controls", "app-sidenav-v2");
 
       await avatar.click();
-      const menu = page.locator("#account-menu");
-      await expect(menu).toBeVisible();
-      expect(await focusInside(page, "#account-menu")).toBe(true);
-      for (const box of await menu.getByRole("menuitem").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
-        expect(box).toBeGreaterThanOrEqual(48);
+      const drawer = page.getByRole("dialog", { name: "Menu" });
+      await expect(drawer).toBeVisible();
+      await expect(drawer.getByRole("link", { name: "Profile" })).toBeFocused();
+      for (const h of await drawer.getByRole("group", { name: "Account" }).locator("a, button").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
+        expect(h).toBeGreaterThanOrEqual(48);
       }
 
       await page.keyboard.press("Escape");
-      await expect(menu).toBeHidden();
+      await expect(drawer).toBeHidden();
       await expect(avatar).toBeFocused();
     });
 
@@ -327,6 +295,27 @@ test.describe("signed in", () => {
       // their 14px fields.
       const sizes = await fieldFontSizes(page);
       expect(sizes.some((f) => f.size === 14)).toBe(true);
+      // No burger beside the rail.
+      await expect(page.getByRole("button", { name: "Open menu" })).toBeHidden();
+    });
+
+    test("the account menu is a dropdown that closes on Escape and gives focus back", async ({ page }) => {
+      await signIn(page, teacher);
+      await page.goto("/dashboard");
+      const avatar = page.getByRole("button", { name: "Account menu" });
+      await expect(avatar).toBeVisible(NAV);
+      await expect(avatar).toHaveAttribute("aria-controls", "account-menu");
+
+      await avatar.click();
+      const menu = page.locator("#account-menu");
+      await expect(menu).toBeVisible();
+      expect(await focusInside(page, "#account-menu")).toBe(true);
+      await expect(menu.getByRole("menuitem", { name: "Profile" })).toBeVisible();
+      await expect(menu.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+
+      await page.keyboard.press("Escape");
+      await expect(menu).toBeHidden();
+      await expect(avatar).toBeFocused();
     });
   });
 });

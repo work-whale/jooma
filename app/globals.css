@@ -155,22 +155,11 @@ summary {
 }
 
 /* The height of whatever is pinned to the bottom of the screen, so floating
- * buttons and toasts can sit above it rather than under it. Zero unless the
- * signed-in tab bar is on the page. */
+ * buttons and toasts can sit above it rather than under it. Zero since the
+ * phone tab bar gave way to the top bar's burger; kept as a variable so the
+ * floating UI that reads it still has one place to change. */
 :root {
   --j-bottom-ui: 0px;
-}
-
-@media (max-width: 900px) {
-  :root:has(#app-tabbar) {
-    --j-bottom-ui: calc(64px + env(safe-area-inset-bottom));
-  }
-
-  /* The tab bar steps aside while the keyboard is up (BottomTabsV2.module.css),
-     so nothing should keep making room for it. */
-  :root:has(#app-tabbar):has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select, [contenteditable="true"]):focus) {
-    --j-bottom-ui: 0px;
-  }
 }
 
 /* `.bold-border`, `.neo-shadow`, `.neo-shadow-sm` and `.scribble-highlight`

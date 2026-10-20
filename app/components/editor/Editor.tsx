@@ -3257,7 +3257,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
   return (
     <EditorGuestContext.Provider value={guest ?? null}>
-    <div className="relative flex flex-col h-screen overflow-hidden" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
+    <div className="relative flex flex-col h-dvh overflow-hidden" style={{ backgroundColor: "var(--j-editor-canvas)" }} data-testid="slide-editor">
       {/* Full-screen overlay shown while waiting for OpenAI to respond (pre-meta phase).
           Covers the whole editor so the user sees an engaging animation rather than
           a blank slide + spinner during the 10-20 second AI wait. */}

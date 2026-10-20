@@ -799,6 +799,35 @@ button.step:hover {
   }
 }
 
+/* A narrow phone: the zoom bar (about 220px) and the labelled button do not
+   fit side by side in that row, so in the editor the button is Jo's orb
+   alone. The button keeps its "Ask Jo" name for screen readers. */
+@media (max-width: 479px) {
+  .fab[data-variant="editor"] {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .fab[data-variant="editor"] .orb {
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
+  }
+
+  .fab[data-variant="editor"] .fabLabel {
+    display: none;
+  }
+}
+
+/* The Galaxy Fold's cover screen (280 to 344px): even the orb would touch the
+   zoom bar, so it moves up a row, above the zoom controls. */
+@media (max-width: 360px) {
+  .fab[data-variant="editor"] {
+    bottom: 184px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dock,
   .dock[data-open="false"] {

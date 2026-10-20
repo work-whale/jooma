@@ -28,6 +28,13 @@
   }
 }
 
+/* The Galaxy Fold's cover screen (280 to 344px wide). */
+@media (max-width: 360px) {
+  .wrap {
+    padding: 16px 12px 40px;
+  }
+}
+
 /* ── Typography ──────────────────────────────────────────────────────────── */
 
 /* Scoped to .wrap rather than set on bare tags, so nothing here reaches a page

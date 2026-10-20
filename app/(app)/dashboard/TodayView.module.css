@@ -233,15 +233,66 @@
   color: #b8860b;
 }
 
+/* The bare number, for the square phone tiles below. */
+.metricShort {
+  display: none !important;
+}
+
 @media (max-width: 1240px) {
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 560px) {
+/* Phones, and a Fold open or closed: four square tiles in a 2x2 grid, each the
+   icon over a number. Capped in width so an unfolded Fold does not draw them
+   as 300px squares. */
+@media (max-width: 900px) {
   .metrics {
-    grid-template-columns: minmax(0, 1fr);
+    max-width: 400px;
+    gap: 10px;
+  }
+
+  .metric {
+    aspect-ratio: 1;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .metricIcon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .metricIcon svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .metric b {
+    font-size: 1.7rem;
+  }
+
+  .metricFull {
+    display: none !important;
+  }
+
+  .metricShort {
+    display: block !important;
+  }
+
+  /* Read out, not drawn: the tile's title carries it for sighted users. */
+  .metricLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 

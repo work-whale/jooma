@@ -492,16 +492,25 @@
   place-items: center;
 }
 
+/* The account links: phones only, at the foot of the drawer. */
+.account {
+  display: none;
+}
+
 /* ── Drawer ──────────────────────────────────────────────────────────────── */
 
+/* From the right, under the burger that opens it. The desktop rail stays on
+   the left. */
 @media (max-width: 900px) {
   .side {
     position: fixed;
-    inset: 0 auto 0 0;
+    inset: 0 0 0 auto;
     z-index: 50;
+    border-right: 0;
+    border-left: 1px solid var(--j-line);
     /* translate rather than animating left/width: transform is composited, so
        the drawer slides without relaying out the page behind it. */
-    transform: translateX(-100%);
+    transform: translateX(100%);
     /* Hidden as well as off-screen when closed, so its links leave the tab
        order and the accessibility tree. The visibility flip waits for the
        slide to finish on close, and happens at once on open. */
@@ -514,8 +523,15 @@
        the home indicator and a landscape side inset. */
     padding-top: max(20px, env(safe-area-inset-top));
     padding-bottom: max(16px, env(safe-area-inset-bottom));
-    padding-left: max(14px, env(safe-area-inset-left));
-    width: calc(var(--j-nav) + env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    width: min(calc(var(--j-nav) + 30px + env(safe-area-inset-right)), calc(100vw - 40px));
+  }
+
+  .account {
+    display: block;
+    margin-top: 12px;
+    padding-top: 4px;
+    border-top: 1px solid var(--j-line);
   }
 
   .sideOpen {

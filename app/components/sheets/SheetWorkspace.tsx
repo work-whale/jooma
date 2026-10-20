@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type Ref } from "react";
+import { useCallback, useEffect, useRef, useState, type Ref } from "react";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import {
   Check,
   ChevronDown,
@@ -23,6 +24,7 @@ import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
 import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
 import SheetDocument from "./SheetDocument";
 import SheetDesignPanel from "./SheetDesignPanel";
+import DesignDrawer from "./DesignDrawer";
 import { exportSheetDocx, exportSheetPdf, printSheet } from "./sheetExport";
 import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
 import type { JoDocRef } from "@/app/lib/jo/threads";
@@ -155,6 +157,9 @@ export default function SheetWorkspace({
   // ── Actions ─────────────────────────────────────────────────────────────
   const [preview, setPreview] = useState(false);
   const [designOpen, setDesignOpen] = useState(false);
+  const closeDesign = useCallback(() => setDesignOpen(false), []);
+  // Room for the panel beside the pages (Tailwind's xl).
+  const wide = useMediaQuery("(min-width: 1280px)");
   const [exporting, setExporting] = useState<"pdf" | "docx" | "print" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -267,17 +272,24 @@ export default function SheetWorkspace({
       {exportError && <p className="px-6 py-2 text-sm text-red-600 border-b border-gray-200">{exportError}</p>}
 
       <div className="flex gap-4 bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
-        <div className="flex-1 min-w-0 flex flex-col-reverse xl:flex-row gap-4">
+        <div className="flex-1 min-w-0 flex flex-row gap-4">
           <div className="flex-1 min-w-0" ref={pagesRef}>
             <SheetDocument doc={jo.shown ?? doc} edit={!preview && !jo.joBusy} onChange={commit} streaming={generating} joFocus={jo.joFocus} />
           </div>
-          {designOpen && !busy && (
+          {designOpen && !busy && (wide ? (
             // Sticky beside the pages, and never taller than the window: the
             // panel scrolls on its own rather than running off the bottom.
-            <div className="xl:w-80 shrink-0 xl:sticky xl:top-32 xl:self-start xl:max-h-[calc(100dvh-9rem)] xl:overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
-              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={() => setDesignOpen(false)} />
+            <div className="w-80 shrink-0 sticky top-32 self-start max-h-[calc(100dvh-9rem)] overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} />
             </div>
-          )}
+          ) : (
+            // Narrower than that there is no room beside the pages, so it is a
+            // sidebar over them, as on the guest page, rather than a block
+            // above the sheet that pushed it a long scroll away.
+            <DesignDrawer onClose={closeDesign}>
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} />
+            </DesignDrawer>
+          ))}
         </div>
         {jo.panel}
       </div>

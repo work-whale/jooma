@@ -173,7 +173,8 @@ export function useSlidesJo(bridge: SlidesBridge) {
         // 3. Land it.
         workingRef.current = applied.slides;
         bridgeRef.current.show(applied.slides);
-        if (slideOp.op === "addSlide" && landed) addedRef.current.push(landed.slideId);
+        // New slides and swapped pictures both wait for a picture.
+        if ((slideOp.op === "addSlide" || slideOp.op === "setSlideImage") && landed) addedRef.current.push(landed.slideId);
         if (landed) {
           goToSlide(applied.slides, landed.slideId);
           setFocus({ ...landed, label: op.label });

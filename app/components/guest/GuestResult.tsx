@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Copy, Download, Eye, Loader2, Maximize2, Palette, Pencil, Printer, Redo2, Undo2 } from "lucide-react";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
 import SheetDesignPanel from "@/app/components/sheets/SheetDesignPanel";
+import DesignDrawer from "@/app/components/sheets/DesignDrawer";
 import { parseSheet } from "@/app/lib/sheets/normalize";
 import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
 import type { GuestAction } from "@/app/lib/guest-actions";
@@ -143,12 +143,7 @@ export default function GuestResult({
 
   const [preview, setPreview] = useState(false);
   const [designOpen, setDesignOpen] = useState(false);
-  useEffect(() => {
-    if (!designOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDesignOpen(false);
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [designOpen]);
+  const closeDesign = useCallback(() => setDesignOpen(false), []);
 
   if (result === null) return null;
   const ready = !isGenerating && result.trim().length > 0;
@@ -253,17 +248,11 @@ export default function GuestResult({
             />
           </div>
           {ask.panel}
-          {designOpen &&
-            !busy &&
-            // A sidebar on the right, over the page and its header, so the
-            // sheet keeps its place and every change shows on it at once.
-            // Portalled to the body: nothing around the result can clip it.
-            createPortal(
-              <div className={styles.designDrawer} data-testid="sheet-design-drawer">
-                <SheetDesignPanel doc={shownSheet} onDesign={onDesign} onClose={() => setDesignOpen(false)} />
-              </div>,
-              document.body,
-            )}
+          {designOpen && !busy && (
+            <DesignDrawer onClose={closeDesign}>
+              <SheetDesignPanel doc={shownSheet} onDesign={onDesign} onClose={closeDesign} />
+            </DesignDrawer>
+          )}
         </div>
       ) : (
         <div className={styles.resultBody}>
