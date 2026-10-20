@@ -31,6 +31,9 @@ export interface ComprehensionGuestMode {
   onRefused: (status: number, data: { error?: string; reason?: string }) => void;
   /** The trial row id the guest route returned in its header. */
   onStarted?: (trialId: string | null) => void;
+  /** A signed in feature was chosen (differentiation). Opens the sign up
+   *  prompt instead. */
+  onLocked?: () => void;
   /** Every change to the form, so Ask Jo knows what it currently says. */
   onSnapshot?: (state: Record<string, unknown>) => void;
   /** Rendered where the signed in form shows ToolResults. */
@@ -160,8 +163,9 @@ export default function ComprehensionForm({
       passageWordCount: (v) =>
         setPassageWordCount(String(Math.min(800, Math.max(100, Math.round(Number(v) / 50) * 50)))),
       complexity: (v) => setComplexity(v as Complexity),
-      differentiate: (v) => setDifferentiate(v as Differentiate),
-      differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
+      // Never on a free try: differentiation is behind sign up there.
+      differentiate: (v) => { if (!guest) setDifferentiate(v as Differentiate); },
+      differentiationLevels: (v) => { if (!guest) setDifferentiationLevels(v as string[]); },
     },
   });
 
@@ -359,13 +363,14 @@ export default function ComprehensionForm({
             {/* Complexity */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-800">Complexity</label>
-              <div className="flex gap-2">
+              {/* Wraps rather than running off a phone. */}
+              <div className="flex flex-wrap gap-2">
                 {COMPLEXITY_LEVELS.map((level) => (
                   <button
                     key={level}
                     type="button"
                     onClick={() => setComplexity(level)}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
+                    className={`px-3 sm:px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
                       complexity === level
                         ? "bg-stone-700 text-white border border-stone-700"
                         : "border border-gray-300 text-gray-600 hover:bg-gray-50"
@@ -471,6 +476,7 @@ export default function ComprehensionForm({
               onChange={setDifferentiate}
               levels={differentiationLevels}
               onLevelsChange={setDifferentiationLevels}
+              onLocked={guest?.onLocked}
             />
 
             <div className="flex gap-3">

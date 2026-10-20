@@ -239,6 +239,8 @@ export default function CreateView({
       extraBody: () => ({ website: honeypot.current?.value ?? "" }),
       onRefused: (_status, data) => openGate("more", data.error ?? null),
       onStarted: setSheetTrialId,
+      onLocked: () =>
+        openGate("more", "Sign up free to differentiate. You get a separate version for each band you pick."),
       renderResult: ({ result, isGenerating }) => (
         <GuestResult
           kind={sheetKind}

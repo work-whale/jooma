@@ -86,7 +86,9 @@ test.describe("signed out, on a phone", () => {
 
     test("the landing header's links are 48px tall to tap", async ({ page }) => {
       await page.goto("/");
-      const links = page.locator("[data-landing-nav] nav a");
+      // On a phone the links sit behind the menu button.
+      await page.getByRole("button", { name: "Open menu" }).click();
+      const links = page.locator("#landing-menu a");
       await expect(links.first()).toBeVisible();
       for (const box of await links.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
         expect(box).toBeGreaterThanOrEqual(48);

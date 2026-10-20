@@ -174,7 +174,7 @@ export default function SlideshowListPage({
         </div>
       </div>
 
-      <label htmlFor="slideshow-search" className="block -mb-4 text-sm font-semibold text-gray-800">
+      <label htmlFor="slideshow-search" className="block mb-2 text-sm font-semibold text-gray-800">
         Search slideshows
       </label>
       <div className="relative">

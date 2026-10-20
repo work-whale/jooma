@@ -21,7 +21,7 @@ export default function GenerateButton({ onClick, disabled, isGenerating, hasRes
       data-jo-generate=""
       onClick={onClick}
       disabled={disabled}
-      className="flex-1 bg-(--j-purple) text-white py-3 px-6 rounded-xl text-sm font-semibold hover:bg-(--j-deep) disabled:hover:bg-(--j-purple) active:bg-(--j-deep) transition-colors disabled:opacity-50 disabled:cursor-default cursor-pointer flex items-center justify-center gap-2"
+      className="flex-1 min-w-0 bg-(--j-purple) text-white py-3 px-4 sm:px-6 rounded-xl text-sm font-semibold hover:bg-(--j-deep) disabled:hover:bg-(--j-purple) active:bg-(--j-deep) transition-colors disabled:opacity-50 disabled:cursor-default cursor-pointer flex items-center justify-center gap-2"
     >
       {isGenerating
         ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</>

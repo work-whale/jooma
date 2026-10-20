@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Download, Loader2, Maximize2, Printer } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Copy, Download, Eye, Loader2, Maximize2, Palette, Pencil, Printer, Redo2, Undo2 } from "lucide-react";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
+import SheetDesignPanel from "@/app/components/sheets/SheetDesignPanel";
 import { parseSheet } from "@/app/lib/sheets/normalize";
-import type { SheetDoc } from "@/app/lib/sheets/types";
+import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
 import type { GuestAction } from "@/app/lib/guest-actions";
 import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
 import styles from "./guest.module.css";
@@ -16,9 +18,13 @@ const COPY = {
 } as const;
 
 /**
- * A guest's comprehension or worksheet, to read. The result panel's own
- * buttons, each of which opens the sign up prompt: focus, export, print and
- * copy are all there the moment the sheet is in their library.
+ * A guest's comprehension or worksheet, to read and edit for this visit: undo,
+ * redo, preview and the Design panel work here as they do in the signed in
+ * workspace (SheetWorkspace). Focus, export, print and copy each open the sign
+ * up prompt: they are all there the moment the sheet is in their library.
+ *
+ * Design opens as a sidebar over the page rather than a block in it: inline,
+ * it added a long stretch of scrolling above the sheet on a phone.
  */
 export default function GuestResult({
   kind = "comprehension",
@@ -96,7 +102,30 @@ export default function GuestResult({
   // Jo's edits land in the same visit-only state as the visitor's own, and
   // the panel opens itself once the sheet has finished.
   const pagesRef = useRef<HTMLDivElement>(null);
-  const commit = useCallback((doc: SheetDoc) => setEdited({ base: result, doc }), [result]);
+
+  // ── Undo ──
+  // Whole sheets, as in SheetWorkspace. A new result starts a fresh history.
+  const [past, setPast] = useState<SheetDoc[]>([]);
+  const [future, setFuture] = useState<SheetDoc[]>([]);
+  const [historyFor, setHistoryFor] = useState(result);
+  if (historyFor !== result) {
+    setHistoryFor(result);
+    setPast([]);
+    setFuture([]);
+  }
+  const shownRef = useRef(shownSheet);
+  useEffect(() => {
+    shownRef.current = shownSheet;
+  });
+  const commit = useCallback(
+    (doc: SheetDoc) => {
+      const before = shownRef.current;
+      if (before) setPast((p) => [...p.slice(-49), before]);
+      setFuture([]);
+      setEdited({ base: result, doc });
+    },
+    [result],
+  );
   const [openSignal, setOpenSignal] = useState(0);
   const [wasGenerating, setWasGenerating] = useState(isGenerating);
   if (isGenerating !== wasGenerating) {
@@ -112,9 +141,38 @@ export default function GuestResult({
     openSignal,
   });
 
+  const [preview, setPreview] = useState(false);
+  const [designOpen, setDesignOpen] = useState(false);
+  useEffect(() => {
+    if (!designOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDesignOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [designOpen]);
+
   if (result === null) return null;
   const ready = !isGenerating && result.trim().length > 0;
   const copy = COPY[kind];
+  const busy = !ready || ask.joBusy;
+
+  const undo = () => {
+    const prev = past[past.length - 1];
+    if (!prev || !shownSheet || busy) return;
+    setPast((p) => p.slice(0, -1));
+    setFuture((f) => [shownSheet, ...f]);
+    setEdited({ base: result, doc: prev });
+  };
+  const redo = () => {
+    const next = future[0];
+    if (!next || !shownSheet || busy) return;
+    setFuture((f) => f.slice(1));
+    setPast((p) => [...p, shownSheet]);
+    setEdited({ base: result, doc: next });
+  };
+  const onDesign = (patch: Partial<SheetDesign>) => {
+    if (shownSheet) commit({ ...shownSheet, design: { ...shownSheet.design, ...patch } });
+  };
+
 
   return (
     <section
@@ -136,6 +194,39 @@ export default function GuestResult({
           )}
         </div>
         <div className={styles.deckActions}>
+          {shownSheet && (
+            <>
+              <button type="button" className={styles.ghostBtn} onClick={undo} disabled={busy || past.length === 0} aria-label="Undo" title="Undo">
+                <Undo2 aria-hidden="true" />
+              </button>
+              <button type="button" className={styles.ghostBtn} onClick={redo} disabled={busy || future.length === 0} aria-label="Redo" title="Redo">
+                <Redo2 aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className={preview ? styles.purpleBtn : styles.ghostBtn}
+                onClick={() => setPreview((p) => !p)}
+                disabled={busy}
+                aria-pressed={preview}
+                aria-label={preview ? "Edit" : "Preview"}
+                data-testid="sheet-preview-toggle"
+              >
+                {preview ? <Pencil aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                <span>{preview ? "Edit" : "Preview"}</span>
+              </button>
+              <button
+                type="button"
+                className={designOpen ? styles.purpleBtn : styles.ghostBtn}
+                onClick={() => setDesignOpen((o) => !o)}
+                disabled={busy}
+                aria-expanded={designOpen}
+                aria-label="Design"
+                data-testid="sheet-design-toggle"
+              >
+                <Palette aria-hidden="true" /> <span>Design</span>
+              </button>
+            </>
+          )}
           <button type="button" className={styles.ghostBtn} onClick={() => onAction("focus")} disabled={!ready}>
             <Maximize2 aria-hidden="true" /> <span>Focus</span>
           </button>
@@ -155,13 +246,24 @@ export default function GuestResult({
           <div className="flex-1 min-w-0" ref={pagesRef}>
             <SheetDocument
               doc={ask.shown ?? shownSheet}
-              edit={ready && !ask.joBusy}
+              edit={ready && !ask.joBusy && !preview}
               streaming={isGenerating}
               onChange={commit}
               joFocus={ask.joFocus}
             />
           </div>
           {ask.panel}
+          {designOpen &&
+            !busy &&
+            // A sidebar on the right, over the page and its header, so the
+            // sheet keeps its place and every change shows on it at once.
+            // Portalled to the body: nothing around the result can clip it.
+            createPortal(
+              <div className={styles.designDrawer} data-testid="sheet-design-drawer">
+                <SheetDesignPanel doc={shownSheet} onDesign={onDesign} onClose={() => setDesignOpen(false)} />
+              </div>,
+              document.body,
+            )}
         </div>
       ) : (
         <div className={styles.resultBody}>

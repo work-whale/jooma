@@ -111,7 +111,10 @@ export default function ThemePicker({
               aria-selected={on}
               onClick={() => { setFamily(f.id); setFilter({ kind: "all" }); }}
               disabled={disabled}
-              className="px-2 py-2 rounded-lg text-left transition-colors disabled:opacity-60"
+              // A flex column, so the label sits at the top: a grid row
+              // stretches every tab to the tallest, and a button centres its
+              // content vertically, so tabs with shorter text sat lower.
+              className="flex flex-col items-start justify-start px-2 py-2 rounded-lg text-left transition-colors disabled:opacity-60"
               style={on ? { backgroundColor: "#fff", boxShadow: "0 1px 3px rgba(29,23,48,0.12)" } : undefined}
             >
               <span className="block text-sm font-semibold" style={{ color: on ? "var(--j-purple)" : "var(--j-body)" }}>{f.label}</span>
@@ -190,13 +193,15 @@ function ThemeCard({
       disabled={disabled}
       aria-pressed={selected}
       data-theme-id={theme.id}
-      className="rounded-xl border-2 overflow-hidden text-left transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 disabled:opacity-60 bg-white"
+      // A flex column from the top, for the same reason as the tabs: a card
+      // beside a taller one was stretched, and its text centred in the gap.
+      className="flex flex-col justify-start rounded-xl border-2 overflow-hidden text-left transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 disabled:opacity-60 bg-white"
       style={{ borderColor: selected ? "var(--j-purple)" : "var(--j-line)" }}
     >
       <div ref={frame} className="w-full overflow-hidden pointer-events-none">
         <MiniSlide slide={slide} width={w} themeId={theme.id} />
       </div>
-      <div className="px-2.5 py-2 border-t flex items-start justify-between gap-2" style={{ borderColor: selected ? "var(--j-purple)" : "var(--j-line)" }}>
+      <div className="flex-1 w-full px-2.5 py-2 border-t flex items-start justify-between gap-2" style={{ borderColor: selected ? "var(--j-purple)" : "var(--j-line)" }}>
         <div className="min-w-0">
           <p className="text-xs font-semibold truncate" style={{ color: "var(--j-purple)" }}>{theme.name}</p>
           <p className="text-[10px] text-gray-500 truncate">{theme.description}</p>

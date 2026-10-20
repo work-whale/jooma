@@ -589,8 +589,11 @@ export default function GenerateModal({
           ) : step === 1 ? (
             <>
               {/* Topic input. The label is visible: the animated example under
-                  the field is not a label and is gone once typing starts. */}
-              <label htmlFor="gen-topic" className="block -mb-1 text-sm font-semibold text-gray-800">
+                  the field is not a label and is gone once typing starts.
+                  mb-2, never a negative margin: Tailwind 4's space-y puts the
+                  gap on the bottom of each child, so the -mb-1 this had pulled
+                  the box up over its own label. */}
+              <label htmlFor="gen-topic" className="block mb-2 text-sm font-semibold text-gray-800">
                 Topic
               </label>
               <div className="relative">

@@ -246,6 +246,18 @@ test.describe("the form never opens empty (regression)", () => {
     expect(guestPrefillFields("worksheet-generator", "Fractions", { subject: "Mathematics" }).subject).toBe("Mathematics");
   });
 
+  test("Jo never switches on differentiation for a guest: it is behind sign up", () => {
+    for (const slug of ["worksheet-generator", "comprehension-generator"] as const) {
+      const f = guestPrefillFields(slug, "Fractions, Year 4", {
+        learningObjective: "To find equivalent fractions",
+        differentiate: "yes",
+        differentiationLevels: ["WTS", "GDS"],
+      });
+      expect(f.differentiate, slug).toBeUndefined();
+      expect(f.differentiationLevels, slug).toBeUndefined();
+    }
+  });
+
   test("every worksheet idea on the hero opens a valid form without Jo", () => {
     for (const [id, text] of HERO_IDEAS) {
       if (id !== "ws") continue;
