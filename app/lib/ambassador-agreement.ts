@@ -12,9 +12,10 @@ import {
   PAYOUT_DAY,
   gbp,
 } from './ambassador-commission';
+import { EXEMPT_OVER, REVIEW_DAYS } from './ambassador-activity';
 
-export const AGREEMENT_VERSION = '0.3';
-export const AGREEMENT_DATE = '15 October 2026';
+export const AGREEMENT_VERSION = '0.4';
+export const AGREEMENT_DATE = '21 October 2026';
 
 export interface Clause {
   heading: string;
@@ -66,7 +67,7 @@ export function agreementClauses(party: AgreementParty): Clause[] {
       heading: '3. How long it lasts',
       paragraphs: [
         `${capitalise(months)} from the date we approve your application. It does not renew automatically. We will write to you a month before it ends to ask whether you want to continue.`,
-        "Either of us may end it earlier with 30 days' written notice. We may end it immediately if clause 7 is broken.",
+        "Either of us may end it earlier with 30 days' written notice. We may end it immediately if clause 9 is broken.",
       ],
     },
     {
@@ -82,24 +83,50 @@ export function agreementClauses(party: AgreementParty): Clause[] {
       ],
       after: [
         'Commission is earned when a payment clears, not when someone signs up. A free trial earns nothing until the first real payment is taken.',
-        'Commission is earned only on payments made while this agreement is live. A payment made after it ends earns nothing, even if the subscriber keeps paying.',
+        'Commission is earned only on payments made while this agreement is live. A payment made after it ends earns nothing, even if the subscriber keeps paying, except as clause 6 says.',
       ],
     },
     {
-      heading: '5. When we pay you',
+      heading: '5. Keeping your place',
+      paragraphs: [
+        "Your place stays open while your code is bringing teachers in. We measure that on a subscriber's first cleared payment, not on a sign-up.",
+      ],
+      bullets: [
+        'After one full calendar month with no new subscriber, we email to let you know. Nothing else happens.',
+        'After two full calendar months, your account moves to Under review. We tell you the day it happens.',
+        `You then have ${REVIEW_DAYS} days to bring in one new subscriber. If you do, the review closes and nothing changes.`,
+        'If you do not, we may end this agreement by written notice, giving you the reason.',
+      ],
+      after: [
+        'August does not count. The clock stops over the summer holidays.',
+        `If your code already has more than ${EXEMPT_OVER} active subscribers, this section does not apply to you.`,
+      ],
+    },
+    {
+      heading: '6. If we end it for inactivity',
+      paragraphs: [],
+      bullets: [
+        'You stop being a Jooma Ambassador. The crown and verified badge come off your profile.',
+        'Your free Pro ends at the end of the month the removal takes effect, and your account moves to no plan. It stays open and nothing you have made is deleted, but you cannot create anything new until you choose a plan. We never charge you unless you choose one yourself.',
+        `Everyone already signed up on your code keeps paying you, at the same rates, for the rest of your ${months}. You keep the dashboard and statements so you can watch it.`,
+        'Your balance is paid in full at the next payout whatever the amount.',
+      ],
+    },
+    {
+      heading: '7. When we pay you',
       paragraphs: [
         `On the ${ordinal(PAYOUT_DAY)} of each month, for the month before, by bank transfer to a UK account in your own name or to your PayPal account, whichever you gave us. If the ${ordinal(PAYOUT_DAY)} is a weekend or bank holiday, the next working day.`,
         'There is no minimum. Whatever your balance comes to, it is paid in full every month.',
       ],
     },
     {
-      heading: '6. Refunds, chargebacks and cancelled trials',
+      heading: '8. Refunds, chargebacks and cancelled trials',
       paragraphs: [
         'If a subscriber is refunded, charges back, or cancels within our refund window, the commission for that payment is removed from your balance. If it has already been paid to you, it is deducted from your next statement.',
       ],
     },
     {
-      heading: '7. What you must not do',
+      heading: '9. What you must not do',
       paragraphs: [],
       bullets: [
         'Use your own code, or ask anyone to sign up on your behalf and reimburse them',
@@ -114,31 +141,31 @@ export function agreementClauses(party: AgreementParty): Clause[] {
       ],
     },
     {
-      heading: '8. Disclosure',
+      heading: '10. Disclosure',
       paragraphs: [
         'You must make clear that you are paid when you promote Jooma: "#ad", "paid partnership", or similar, on every post, in line with the CAP Code and ASA guidance. This is your legal obligation as well as ours.',
       ],
     },
     {
-      heading: '9. Your free Pro account',
+      heading: '11. Your free Pro account',
       paragraphs: [
-        'Provided for the length of this agreement, for your own teaching use. It is not transferable. It reverts to a normal paid plan when this agreement ends, and we will tell you before that happens.',
+        'Provided for the length of this agreement, for your own teaching use. It is not transferable. When this agreement ends, your account moves to no plan. It stays open and nothing you have made is deleted, but you cannot create anything new until you choose a plan. We never charge you unless you choose one yourself.',
       ],
     },
     {
-      heading: '10. Your data',
+      heading: '12. Your data',
       paragraphs: [
         'We hold your details to run this programme and to pay you, and we keep payment records for six years as HMRC requires. Our privacy notice at jooma.ai/privacy applies. You can ask for a copy of what we hold at any time.',
       ],
     },
     {
-      heading: '11. Changes to the rates',
+      heading: '13. Changes to the rates',
       paragraphs: [
         "We may change the commission rates with 60 days' written notice. Payments already earned keep the rate they were earned at. If you do not accept a change, you may end this agreement and we will pay your balance in full.",
       ],
     },
     {
-      heading: '12. Law',
+      heading: '14. Law',
       paragraphs: [
         'This agreement is governed by the law of England and Wales, and the courts of England and Wales have exclusive jurisdiction.',
       ],

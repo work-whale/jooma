@@ -39,7 +39,7 @@ import {
 } from "../ui";
 import ShareLinkBox from "./ShareLinkBox";
 import ReviewDrawer from "./ReviewDrawer";
-import ReferralsPanel from "./ReferralsPanel";
+import ReferralsPanel, { reviewExpired } from "./ReferralsPanel";
 import { CodeChip, GOLD, Person, ago, shortDate } from "./shared";
 import { AMB_RANGES, AMB_RANGE_LABEL, type AmbRange } from "./range";
 import styles from "./ambassadors.module.css";
@@ -68,6 +68,11 @@ export interface AmbassadorRow {
   end_requested_at: string | null;
   application_id: string | null;
   payout_method: string | null;
+  /** Under review for inactivity (agreement clause 5). Null when not. */
+  review_started_at: string | null;
+  review_deadline: string | null;
+  ended_at: string | null;
+  end_reason: string | null;
 }
 
 export interface ApplicationRow {
@@ -104,14 +109,20 @@ export interface CodeLive {
   usable: boolean;
 }
 
-/** Live, paused, or past the end of the agreement. */
+/** Live, under review, paused, or ended (for inactivity, or at the end of the agreement). */
 function ambassadorState(a: AmbassadorRow): { label: string; tone: "ok" | "plain" | "warn" } {
+  if (a.status === "ended") return { label: "Ended for inactivity", tone: "warn" };
   if (a.status !== "active") return { label: "Paused", tone: "plain" };
   if (a.agreement_ends_at && new Date(a.agreement_ends_at).getTime() < Date.now()) {
     return { label: "Ended", tone: "warn" };
   }
+  if (reviewExpired(a)) return { label: "Review expired", tone: "warn" };
+  if (a.review_started_at) return { label: "Under review", tone: "warn" };
   return { label: "Live", tone: "ok" };
 }
+
+/** Still running: everything ambassadorState() does not call paused or ended. */
+const isLive = (a: AmbassadorRow) => ["Live", "Under review", "Review expired"].includes(ambassadorState(a).label);
 
 /**
  * The ambassador programme, laid out as the v4 console mockup: KPIs, the invite
@@ -190,7 +201,7 @@ export default function AmbassadorsView({
   const shares = rateShares();
   const worst = Math.max(...shares.map((r) => r.sharePct));
   const totalSubscribers = rows.reduce((a, r) => a + Number(r.active_subscribers), 0);
-  const liveCount = rows.filter((a) => ambassadorState(a).label === "Live").length;
+  const liveCount = rows.filter(isLive).length;
 
   const exportCsv = () => {
     const csv = toCsv(

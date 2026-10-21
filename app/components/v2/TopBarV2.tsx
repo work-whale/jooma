@@ -110,7 +110,7 @@ export default function TopBarV2({
               }`}
               data-ambassador={ambassador}
             >
-              <Avatar url={avatarUrl} name={displayName} size={ambassador === "none" ? 37 : 31} />
+              <Avatar url={avatarUrl} name={displayName} size={ambassador === "active" || ambassador === "pending" ? 31 : 37} />
               {ambassador === "active" && <Crown weight="fill" className={styles.avatarCrown} aria-hidden />}
             </span>
           </button>

@@ -25,6 +25,12 @@ export interface MyAmbassador {
   agreement_ends_at: string | null;
   end_requested_at: string | null;
   created_at: string;
+  /** Under review for inactivity (agreement clause 5). Null when not. */
+  review_started_at: string | null;
+  review_deadline: string | null;
+  /** Ended for inactivity (clause 6): status 'ended'. */
+  ended_at: string | null;
+  end_reason: string | null;
 }
 
 export interface MyApplication {

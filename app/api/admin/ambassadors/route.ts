@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminRoute } from "@/app/lib/auth/admin-route";
+import { stripe } from "@/app/lib/stripe";
+import { supabaseAdmin } from "@/app/lib/supabase-admin";
+import { sendTemplate } from "@/app/lib/email";
+import { isUndeliverable } from "@/app/lib/email-templates/broadcast";
 
-// Record ambassador payouts, and pause or resume an ambassador.
+// Record ambassador payouts, pause or resume an ambassador, and end an
+// agreement for inactivity (agreement clauses 5 and 6).
 //
 // Ambassadors are no longer created here. They arrive through the programme's
 // link (/ambassador) and an application, approved in
@@ -23,6 +28,8 @@ export async function PATCH(req: NextRequest) {
     period?: string;
     markAllPaid?: boolean;
     ambassadorStatus?: string;
+    endForInactivity?: boolean;
+    reason?: string;
     applicationId?: string;
     channel?: string;
     verified?: boolean;
@@ -86,6 +93,42 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true, moved });
   }
 
+  // End for inactivity, once the review has run out. The RPC refuses anything
+  // earlier, ends the status and moves free Pro to the end of the month; here
+  // the code is switched off in Stripe and the written notice goes out.
+  if (body.ambassadorId && body.endForInactivity) {
+    const reason = String(body.reason ?? "").trim();
+    if (!reason) {
+      return NextResponse.json({ error: "Give the reason. It goes in the written notice." }, { status: 400 });
+    }
+    const { data: ended, error } = await gate.supabase.rpc("admin_end_ambassador_for_inactivity", {
+      p_id: body.ambassadorId,
+      p_reason: reason,
+    });
+    if (error) {
+      console.error("[admin/ambassadors] end for inactivity failed", error);
+      return NextResponse.json(
+        { error: error.message || "Could not end the agreement." },
+        { status: 400 },
+      );
+    }
+    const result = ended as { pro_until: string | null; promotion_code_ids: string[] };
+
+    // Already ended in the database, so a Stripe failure is logged, not
+    // undone: claim_ambassador_code already refuses an ended code, and the
+    // webhook credits nobody for it.
+    for (const id of result.promotion_code_ids ?? []) {
+      try {
+        await stripe.promotionCodes.update(id, { active: false });
+      } catch (err) {
+        console.error("[admin/ambassadors] could not deactivate the code in Stripe", id, err);
+      }
+    }
+
+    const emailed = await sendEndedNotice(body.ambassadorId, reason, result.pro_until);
+    return NextResponse.json({ ok: true, emailed });
+  }
+
   // Pause or resume. Stops new claims without touching existing referrals; the
   // code itself is deactivated separately in Stripe.
   if (body.ambassadorId) {
@@ -97,7 +140,9 @@ export async function PATCH(req: NextRequest) {
     const { error } = await gate.supabase
       .from("ambassadors")
       .update({ status, updated_at: new Date().toISOString() })
-      .eq("id", body.ambassadorId);
+      .eq("id", body.ambassadorId)
+      // An agreement ended for inactivity is not a pause: it stays ended.
+      .neq("status", "ended");
 
     if (error) {
       console.error("[admin/ambassadors] status update failed", error);
@@ -107,4 +152,37 @@ export async function PATCH(req: NextRequest) {
   }
 
   return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
+}
+
+const longDate = (d: Date) =>
+  d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" });
+
+/** The written notice clause 5 requires, with the reason. False when not sent. */
+async function sendEndedNotice(ambassadorId: string, reason: string, proUntil: string | null): Promise<boolean> {
+  const { data: a } = await supabaseAdmin
+    .from("ambassadors")
+    .select("full_name, email, agreement_ends_at, application_id")
+    .eq("id", ambassadorId)
+    .maybeSingle();
+  if (!a) return false;
+  const { data: app } = a.application_id
+    ? await supabaseAdmin
+        .from("ambassador_applications")
+        .select("first_name, email")
+        .eq("id", a.application_id)
+        .maybeSingle()
+    : { data: null };
+
+  const email = app?.email ?? a.email;
+  if (!email || isUndeliverable(email)) return false;
+
+  // pro_until is the first moment of next month, so the last day of Pro is
+  // the day before.
+  const proEnds = proUntil ? longDate(new Date(new Date(proUntil).getTime() - 1)) : "the end of this month";
+  return sendTemplate("ambassador_ended_inactivity", email, {
+    firstName: app?.first_name ?? String(a.full_name).split(" ")[0],
+    reason,
+    proEnds,
+    agreementEnds: a.agreement_ends_at ? longDate(new Date(a.agreement_ends_at)) : "the end of your agreement",
+  });
 }

@@ -23,11 +23,15 @@ export default async function AmbassadorAgreement() {
   const live = a ? agreementLive(a) : false;
   const status = !a
     ? "Under review"
-    : a.status !== "active"
-      ? "Paused"
-      : ends && ends.getTime() < now.getTime()
-        ? "Ended"
-        : "Active";
+    : a.status === "ended"
+      ? "Ended"
+      : a.status !== "active"
+        ? "Paused"
+        : ends && ends.getTime() < now.getTime()
+          ? "Ended"
+          : a.review_started_at
+            ? "Under review"
+            : "Active";
   const name = details ? `${details.first_name} ${details.last_name}` : a?.full_name ?? "";
   const reminder = ends ? new Date(ends.getTime() - 30 * 86_400_000) : null;
 
@@ -90,8 +94,8 @@ export default async function AmbassadorAgreement() {
         <Panel title="Ending it early">
           <p className={s.muted}>
             You can leave with 30 days&apos; notice at any time. Your balance is paid in full at the
-            next payout whatever the amount, and your free Pro account reverts to a paid plan at the
-            end of the notice period.
+            next payout whatever the amount. Your free Pro ends with the notice period and your
+            account moves to no plan. We never charge you unless you choose a plan yourself.
           </p>
           <EndAgreement requestedAt={a.end_requested_at} />
         </Panel>

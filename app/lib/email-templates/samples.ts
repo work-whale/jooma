@@ -108,4 +108,25 @@ export const SAMPLE_PARAMS: Record<EmailTemplateKey, Record<string, string>> = {
     payments: "11",
     period: "6 April 2026 to 5 April 2027",
   },
+
+  // app/api/cron/ambassador-terms/route.ts, after one quiet month.
+  ambassador_quiet_month: {
+    firstName: "Priya",
+    code: "PRIYA-4K2",
+  },
+
+  // app/api/cron/ambassador-terms/route.ts, the day a review starts.
+  ambassador_under_review: {
+    firstName: "Priya",
+    deadline: "15 January 2027",
+    code: "PRIYA-4K2",
+  },
+
+  // app/api/admin/ambassadors/route.ts, when an admin ends it for inactivity.
+  ambassador_ended_inactivity: {
+    firstName: "Priya",
+    reason: "No new subscriber joined on your code in the two months before the review, or in the 14 days of it.",
+    proEnds: "31 January 2027",
+    agreementEnds: "13 October 2027",
+  },
 };

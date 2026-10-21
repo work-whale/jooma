@@ -9,6 +9,7 @@ import {
   summariseTaxYear,
   taxYearBounds,
 } from "@/app/lib/ambassador-commission";
+import { activityStage, reviewDeadline } from "@/app/lib/ambassador-activity";
 
 // Ends an ambassador's free Pro once their twelve months are up. Daily.
 //
@@ -24,7 +25,12 @@ import {
 //
 // Idempotent: a second run the same day finds nothing left to end.
 //
-// TWO EMAILS RIDE ON THE SAME DAILY RUN, rather than two more crons to register:
+// THREE MORE JOBS RIDE ON THE SAME DAILY RUN, rather than more crons to register:
+//
+//   - Keeping your place (agreement clause 5, app/lib/ambassador-activity.ts):
+//     the one-quiet-month email, then Under review with its deadline, and
+//     clearing both the day a new subscriber arrives. Ending an agreement is
+//     left to an admin, who sees the expired review in the console.
 //
 //   - A month before an agreement ends, "do you want to carry on?", which the
 //     agreement promises. Once per ambassador, stamped on
@@ -35,7 +41,7 @@ import {
 //     and anyone missed (a failed send, a late payment record) is caught up on
 //     a later day.
 //
-// Both CLAIM before sending (the stamp or the row is written first, guarded so
+// All of them CLAIM before sending (the stamp or the row is written first, guarded so
 // only one run can win it) and release the claim if the send fails, so a
 // mailer outage means "retry tomorrow", never "sent twice" or "never sent".
 //
@@ -83,7 +89,7 @@ async function run(req: NextRequest) {
     return NextResponse.json({ error: "Could not read ambassadors" }, { status: 500 });
   }
 
-  // No early return when nothing has expired, which is most days: the two
+  // No early return when nothing has expired, which is most days: the
   // emails below still have to run. (An early return here once skipped them.)
   const userIds = [...new Set((due ?? []).map((a) => a.user_id as string))];
   let endedIds: string[] = [];
@@ -144,6 +150,7 @@ async function run(req: NextRequest) {
 
   const reminders = await sendEndReminders(new Date());
   const summaries = await sendTaxSummaries(new Date());
+  const activity = await sendActivityNotices(new Date());
 
   return NextResponse.json({
     ok: true,
@@ -151,6 +158,7 @@ async function run(req: NextRequest) {
     trialsEnded: (trialsEnded ?? []).length,
     reminders,
     summaries,
+    activity,
   });
 }
 
@@ -317,6 +325,150 @@ async function sendTaxSummaries(now: Date): Promise<number> {
     }
   }
   return sent;
+}
+
+interface ActivityRow {
+  id: string;
+  approved_at: string;
+  application_id: string;
+  quiet_notice_sent_at: string | null;
+  review_started_at: string | null;
+}
+
+/**
+ * Keeping your place (clause 5): a heads-up after one quiet month, Under review
+ * after two, and both cleared once a new subscriber arrives. Only ambassadors
+ * whose signed agreement has the clause; activityStage() reads the version.
+ */
+async function sendActivityNotices(now: Date): Promise<{ quiet: number; review: number; closed: number }> {
+  const out = { quiet: 0, review: 0, closed: 0 };
+
+  const { data: rows, error } = await supabaseAdmin
+    .from("ambassadors")
+    .select("id, approved_at, application_id, quiet_notice_sent_at, review_started_at")
+    .eq("status", "active")
+    .not("approved_at", "is", null)
+    .not("application_id", "is", null);
+  if (error) {
+    console.error("[cron/ambassador-terms] could not read ambassadors for activity", error);
+    return out;
+  }
+  const ambassadors = (rows ?? []) as ActivityRow[];
+  if (ambassadors.length === 0) return out;
+
+  const ids = ambassadors.map((a) => a.id);
+  const [{ data: apps }, { data: referrals }] = await Promise.all([
+    supabaseAdmin
+      .from("ambassador_applications")
+      .select("id, agreement_version")
+      .in("id", ambassadors.map((a) => a.application_id)),
+    supabaseAdmin
+      .from("ambassador_referrals")
+      .select("ambassador_id, user_id, first_paid_at")
+      .in("ambassador_id", ids)
+      .not("first_paid_at", "is", null),
+  ]);
+  const versionByApp = new Map((apps ?? []).map((a) => [a.id, a.agreement_version as string | null]));
+
+  // Who is paying today, by ambassador_referral_state()'s rule: a real Stripe
+  // subscription on a paid plan, never a comp.
+  const paidUserIds = [...new Set((referrals ?? []).map((r) => r.user_id as string))];
+  const paying = new Set<string>();
+  for (let i = 0; i < paidUserIds.length; i += 500) {
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, plan, subscription_status, stripe_subscription_id")
+      .in("id", paidUserIds.slice(i, i + 500));
+    for (const p of profiles ?? []) {
+      if (
+        p.stripe_subscription_id &&
+        (p.subscription_status === "active" || p.subscription_status === "past_due") &&
+        (p.plan === "standard" || p.plan === "pro" || p.plan === "max")
+      ) {
+        paying.add(p.id);
+      }
+    }
+  }
+
+  const toEmail: { id: string; template: "ambassador_quiet_month" | "ambassador_under_review"; deadline?: Date }[] = [];
+
+  for (const a of ambassadors) {
+    const mine = (referrals ?? []).filter((r) => r.ambassador_id === a.id);
+    const last = mine.reduce<number>((max, r) => Math.max(max, new Date(r.first_paid_at as string).getTime()), 0);
+    const stage = activityStage({
+      approvedAt: new Date(a.approved_at),
+      lastFirstPaidAt: last ? new Date(last) : null,
+      activeSubscribers: mine.filter((r) => paying.has(r.user_id as string)).length,
+      agreementVersion: versionByApp.get(a.application_id) ?? null,
+      now,
+    });
+
+    if (stage === "ok" || stage === "exempt") {
+      // A new subscriber: the review closes and nothing changes.
+      if (a.quiet_notice_sent_at || a.review_started_at) {
+        const { error: clearError } = await supabaseAdmin
+          .from("ambassadors")
+          .update({ quiet_notice_sent_at: null, review_started_at: null, review_deadline: null })
+          .eq("id", a.id)
+          .eq("status", "active");
+        if (!clearError) out.closed += 1;
+      }
+    } else if (stage === "quiet" && !a.quiet_notice_sent_at) {
+      const { data: claimed } = await supabaseAdmin
+        .from("ambassadors")
+        .update({ quiet_notice_sent_at: now.toISOString() })
+        .eq("id", a.id)
+        .is("quiet_notice_sent_at", null)
+        .select("id");
+      if ((claimed ?? []).length > 0) toEmail.push({ id: a.id, template: "ambassador_quiet_month" });
+    } else if (stage === "review" && !a.review_started_at) {
+      // Stamps the quiet notice too, so a first run that lands straight on
+      // review does not send the one-month email afterwards.
+      const deadline = reviewDeadline(now);
+      const { data: claimed } = await supabaseAdmin
+        .from("ambassadors")
+        .update({
+          review_started_at: now.toISOString(),
+          review_deadline: deadline.toISOString(),
+          quiet_notice_sent_at: a.quiet_notice_sent_at ?? now.toISOString(),
+        })
+        .eq("id", a.id)
+        .is("review_started_at", null)
+        .select("id");
+      if ((claimed ?? []).length > 0) toEmail.push({ id: a.id, template: "ambassador_under_review", deadline });
+    }
+    // "hold" (August) and a review already running change nothing.
+  }
+
+  const contacts = await contactsFor(toEmail.map((e) => e.id));
+  for (const e of toEmail) {
+    const c = contacts.get(e.id);
+    if (!c || isUndeliverable(c.email)) continue;
+    const ok =
+      e.template === "ambassador_quiet_month"
+        ? await sendTemplate("ambassador_quiet_month", c.email, { firstName: c.firstName, code: c.code })
+        : await sendTemplate("ambassador_under_review", c.email, {
+            firstName: c.firstName,
+            code: c.code,
+            deadline: longDate(e.deadline!),
+          });
+    if (ok) {
+      if (e.template === "ambassador_quiet_month") out.quiet += 1;
+      else out.review += 1;
+    } else {
+      // Release the claim so tomorrow's run tries again.
+      await supabaseAdmin
+        .from("ambassadors")
+        .update(
+          e.template === "ambassador_quiet_month"
+            ? { quiet_notice_sent_at: null }
+            : { review_started_at: null, review_deadline: null },
+        )
+        .eq("id", e.id);
+      console.warn("[cron/ambassador-terms] activity email not sent, will retry", e.template, e.id);
+    }
+  }
+  return out;
 }
 
 // Vercel Cron sends GET. POST is kept for a manual run with the same secret,

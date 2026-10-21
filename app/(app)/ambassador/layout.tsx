@@ -46,6 +46,9 @@ export default async function AmbassadorLayout({ children }: { children: React.R
   );
   const greeting = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
   const subscribers = Number(a.active_subscribers);
+  // Ended for inactivity (agreement clause 6): the crown and verified badge come
+  // off, the code no longer works, but the dashboard and statements stay.
+  const ended = a.status === "ended";
 
   return (
     <>
@@ -54,9 +57,15 @@ export default async function AmbassadorLayout({ children }: { children: React.R
         <div className={s.goldBand}>
           <div className={s.gbIn}>
             <div className={s.gbTop}>
-              <span className={s.verif}>
-                <Crown size={15} weight="fill" /> Verified Jooma Ambassador
-              </span>
+              {a.status === "active" ? (
+                <span className={s.verif}>
+                  <Crown size={15} weight="fill" /> Verified Jooma Ambassador
+                </span>
+              ) : ended ? (
+                <span className={s.endedPill} data-testid="ambassador-ended-pill">
+                  Ambassador agreement ended
+                </span>
+              ) : null}
             </div>
             <div className={s.gbH}>
               <div>
@@ -73,7 +82,7 @@ export default async function AmbassadorLayout({ children }: { children: React.R
                 <b>{gbp(Number(a.this_month_pence))}</b>earned this month so far
               </div>
             </div>
-            {code && (
+            {code && !ended && (
               <div className={s.codebox}>
                 <div>
                   <p className={s.codeLabel}>Your code</p>

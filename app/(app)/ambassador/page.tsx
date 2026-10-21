@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Coins, Crown, CurrencyGbp, TrendUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { Coins, Crown, CurrencyGbp, Info, TrendUp, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import {
   AMBASSADOR_RATES,
   addMonths,
@@ -131,12 +131,35 @@ export default async function AmbassadorDashboard(props: {
         />
       </div>
 
+      {/* Keeping your place (agreement clauses 5 and 6). */}
+      {a.status === "ended" ? (
+        <div className={s.callout} data-testid="ambassador-ended" style={{ marginTop: 14 }}>
+          <Info size={17} weight="fill" />
+          <span>
+            We ended your agreement on {longDate(a.ended_at ?? now)}. Everyone already on your code keeps paying you,
+            at the same rates, until {a.agreement_ends_at ? longDate(a.agreement_ends_at) : "your agreement's end date"}.
+            Your balance is paid in full at the next payout.
+          </span>
+        </div>
+      ) : (
+        a.status === "active" &&
+        a.review_started_at && (
+          <div className={`${s.callout} ${s.calloutWarn}`} data-testid="ambassador-under-review" style={{ marginTop: 14 }}>
+            <Info size={17} weight="fill" />
+            <span>
+              <b>Under review.</b> Nobody new has started paying on your code for two full months. Bring in one new
+              subscriber by <b>{longDate(a.review_deadline ?? now)}</b> and the review closes with nothing changed.
+            </span>
+          </div>
+        )
+      )}
+
       <div
-        className={`${s.callout} ${s.calloutGold}`}
+        className={`${s.callout} ${a.status === "ended" ? "" : s.calloutGold}`}
         data-testid="ambassador-pro-status"
         style={{ marginTop: 14 }}
       >
-        <Crown size={17} weight="fill" />
+        {a.status === "ended" ? <Info size={17} weight="fill" /> : <Crown size={17} weight="fill" />}
         <span>
           {proLive && daysLeft !== null && daysLeft <= AMBASSADOR_ENDING_DAYS ? (
             <>
@@ -160,7 +183,7 @@ export default async function AmbassadorDashboard(props: {
           ) : (
             <>Your free Pro is being set up. It will show here once it&apos;s active.</>
           )}
-          {a.status !== "active" && (
+          {a.status === "paused" && (
             <> Your code is paused at the moment, so new teachers can&apos;t use it. Everyone who already joined still counts.</>
           )}
         </span>
