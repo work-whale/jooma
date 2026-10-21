@@ -46,7 +46,7 @@ export function ambassadorAgreementEndingTemplate(
     <p ${P}>If you would rather stop, there is nothing to do. When it ends:</p>
     <ul style="margin:0 0 16px 0;padding-left:20px;color:#3C3552;font-size:15px;line-height:1.6;">
       <li>payments made after ${endDate} no longer earn you commission${code ? `, and ${code} stops being offered` : ""};</li>
-      <li>your free Pro account becomes a normal paid plan, and you can keep it from your plans page;</li>
+      <li>your free Pro ends and your account moves to no plan. Nothing you have made is deleted, and you can keep Pro by choosing it on your plans page. We never charge you unless you do;</li>
       <li>anything we still owe you is paid in full at the next payout, whatever the amount.</li>
     </ul>
 

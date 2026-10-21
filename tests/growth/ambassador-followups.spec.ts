@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from "node:crypto";
 import { test, expect } from "@playwright/test";
 import {
   admin,
@@ -30,21 +29,9 @@ async function makeAmbassador(
 ): Promise<{ ambassadorId: string; applicationId: string; referralCodeId: string; code: string }> {
   const t = tag();
   const code = `ZZF${t}`.toUpperCase().slice(0, 20);
-  const token = randomBytes(16).toString("hex");
-  const { data: invite } = await admin
-    .from("ambassador_invites")
-    .insert({
-      full_name: teacher.firstName,
-      source: "instagram",
-      token_hash: createHash("sha256").update(token).digest("hex"),
-      expires_at: new Date(Date.now() + 86_400_000).toISOString(),
-    })
-    .select()
-    .single();
-
+  // One open link since 20261016000000_ambassador_open_link.sql: no invite.
   const { data: applicationId, error } = await admin.rpc("submit_ambassador_application", {
     p_user_id: teacher.id,
-    p_token_hash: createHash("sha256").update(token).digest("hex"),
     payload: {
       first_name: teacher.firstName,
       last_name: teacher.surname,
@@ -87,7 +74,6 @@ async function makeAmbassador(
     .from("ambassador_applications")
     .update({ status: "approved", ambassador_id: amb!.id })
     .eq("id", applicationId);
-  await admin.from("ambassador_invites").delete().eq("id", invite!.id);
   const { data: codeRow } = await admin
     .from("ambassador_codes")
     .insert({ ambassador_id: amb!.id, promotion_code_id: `promo_zz${t}`, code })

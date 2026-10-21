@@ -26,8 +26,9 @@ export interface Account {
   avatarUrl: string | null;
   isAdmin: boolean;
   /** "none" shows nothing at all: the programme is not advertised to someone
-   *  who has not applied. */
-  ambassador: "none" | "pending" | "active";
+   *  who has not applied. "ended" was ended for inactivity: no crown, but the
+   *  dashboard and statements stay (agreement clause 6). */
+  ambassador: "none" | "pending" | "active" | "ended";
   signOut: () => Promise<void>;
 }
 
@@ -68,7 +69,13 @@ export function useAccount(): Account {
       const ambRow = Array.isArray(amb) ? amb[0] : null;
       const appRow = Array.isArray(application) ? application[0] : null;
       setAmbassador(
-        ambRow?.status === "active" ? "active" : appRow?.status === "pending" ? "pending" : "none",
+        ambRow?.status === "active"
+          ? "active"
+          : ambRow?.status === "ended"
+            ? "ended"
+            : appRow?.status === "pending"
+              ? "pending"
+              : "none",
       );
       // Starts false and stays false unless the DB says otherwise, so the item
       // is absent on first paint rather than flashing in and out.
@@ -152,6 +159,12 @@ export function AccountLinks({
           <Crown weight="fill" className={styles.icon} />
           <span style={{ flex: 1 }}>Ambassador Programme</span>
           <ArrowRight className={styles.icon} />
+        </Link>
+      )}
+      {account.ambassador === "ended" && (
+        <Link href="/ambassador" className={item} role={role} onClick={onNavigate}>
+          <ChartBar className={styles.icon} />
+          <span style={{ flex: 1 }}>Ambassador earnings</span>
         </Link>
       )}
       {account.ambassador === "pending" && (

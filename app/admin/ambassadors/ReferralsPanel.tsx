@@ -50,6 +50,11 @@ const STATE_LABEL: Record<ReferralRow["state"], { label: string; tone: "ok" | "b
 
 type PayoutFilter = "" | "none" | "unpaid" | "paid";
 
+/** True once an inactivity review (agreement clause 5) has run out with no new subscriber. */
+export function reviewExpired(a: AmbassadorRow): boolean {
+  return a.status === "active" && Boolean(a.review_deadline) && new Date(a.review_deadline!).getTime() <= Date.now();
+}
+
 /** The payout state of a teacher for the month on screen. */
 function monthState(r: ReferralRow): PayoutFilter {
   const live = r.commissions.filter((c) => c.status !== "reversed");
@@ -88,6 +93,8 @@ export default function ReferralsPanel({
   const [payout, setPayout] = useState<PayoutFilter>("");
   const [showPayout, setShowPayout] = useState(false);
   const [app, setApp] = useState<ApplicationDetail | null>(null);
+  const [ending, setEnding] = useState(false);
+  const [endReason, setEndReason] = useState("");
 
   // Which month the rows on screen belong to. A response for any other month
   // is dropped: switching months while the previous month is still loading
@@ -159,6 +166,8 @@ export default function ReferralsPanel({
   const owed = monthRows.filter((c) => c.status === "unpaid").reduce((a, c) => a + c.amount_pence, 0);
   const count = (fn: (r: ReferralRow) => boolean) => list.filter(fn).length;
   const paused = ambassador.status !== "active";
+  const endedForInactivity = ambassador.status === "ended";
+  const expired = reviewExpired(ambassador);
   const proLive = Boolean(ambassador.pro_until) && new Date(ambassador.pro_until!).getTime() > Date.now();
 
   return (
@@ -216,25 +225,87 @@ export default function ReferralsPanel({
             {ambassador.pro_until ? "Grant Pro again" : "Grant 12 months of Pro"}
           </Btn>
         )}
-        <Btn
-          size="sm"
-          disabled={busy !== null}
-          onClick={() =>
-            patch(
-              { ambassadorId: ambassador.id, ambassadorStatus: paused ? "active" : "paused" },
-              paused ? "Code resumed." : "Code paused. Nobody new can use it.",
-              "status",
-            )
-          }
-        >
-          {paused ? "Resume code" : "Pause code"}
-        </Btn>
+        {!endedForInactivity && (
+          <Btn
+            size="sm"
+            disabled={busy !== null}
+            onClick={() =>
+              patch(
+                { ambassadorId: ambassador.id, ambassadorStatus: paused ? "active" : "paused" },
+                paused ? "Code resumed." : "Code paused. Nobody new can use it.",
+                "status",
+              )
+            }
+          >
+            {paused ? "Resume code" : "Pause code"}
+          </Btn>
+        )}
+        {expired && !ending && (
+          <Btn size="sm" variant="danger" onClick={() => setEnding(true)}>
+            End for inactivity
+          </Btn>
+        )}
         {ambassador.application_id && (
           <Btn size="sm" variant="ghost" onClick={() => setShowPayout((s) => !s)}>
             {showPayout ? "Hide payout and channels" : "Payout and channels"}
           </Btn>
         )}
       </div>
+
+      {/* Keeping your place (agreement clause 5): where the review stands. */}
+      {endedForInactivity && (
+        <p className="text-sm" style={{ color: C.ink2 }} data-testid="ended-inactivity">
+          Ended for inactivity on {fmtDateShort(ambassador.ended_at)}. Their existing subscribers keep earning
+          them commission until {fmtDateShort(ambassador.agreement_ends_at)}.
+          {ambassador.end_reason && <> Reason given: {ambassador.end_reason}</>}
+        </p>
+      )}
+      {!endedForInactivity && ambassador.review_started_at && (
+        <p className="text-sm" style={{ color: C.ink2 }} data-testid="review-state">
+          Under review since {fmtDateShort(ambassador.review_started_at)}: no new subscriber in two full months.{" "}
+          {expired
+            ? `The ${fmtDateShort(ambassador.review_deadline)} deadline has passed with nobody new.`
+            : `They have until ${fmtDateShort(ambassador.review_deadline)} to bring one in.`}
+        </p>
+      )}
+      {ending && (
+        <div className="rounded-xl border p-4 max-w-2xl space-y-2" style={{ borderColor: C.border, backgroundColor: C.surface }}>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider" style={{ color: C.muted }}>
+            Reason, sent to them in the written notice
+            <textarea
+              value={endReason}
+              onChange={(e) => setEndReason(e.target.value)}
+              rows={3}
+              aria-label="Reason for ending"
+              className="mt-2 w-full text-sm rounded-lg border px-3 py-2 normal-case tracking-normal font-normal"
+              style={{ borderColor: C.border, color: C.ink, backgroundColor: C.surface }}
+            />
+          </label>
+          <p className="text-xs" style={{ color: C.muted }}>
+            Their code stops working, the crown comes off, and free Pro ends at the end of this month. Their existing
+            subscribers keep earning them commission until the agreement end date.
+          </p>
+          <div className="flex gap-2">
+            <Btn
+              size="sm"
+              variant="danger"
+              disabled={!endReason.trim() || busy !== null}
+              onClick={() =>
+                patch(
+                  { ambassadorId: ambassador.id, endForInactivity: true, reason: endReason.trim() },
+                  `Ended ${ambassador.full_name}'s agreement for inactivity.`,
+                  "end",
+                ).then(() => setEnding(false))
+              }
+            >
+              {busy === "end" ? "Ending…" : "End agreement and send notice"}
+            </Btn>
+            <Btn size="sm" variant="ghost" onClick={() => setEnding(false)}>
+              Cancel
+            </Btn>
+          </div>
+        </div>
+      )}
 
       {showPayout && (
         <div className="grid gap-3 lg:grid-cols-2 max-w-4xl">
