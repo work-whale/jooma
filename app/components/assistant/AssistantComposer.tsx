@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Paperclip, Plus, X } from "lucide-react";
 import { ASSISTANT_TOOLS } from "@/app/lib/assistant-tools";
 import { V2_CATEGORIES, v2ToolForSlug } from "@/app/lib/tools";
+import { useDictation } from "@/app/lib/useDictation";
 
 export interface Attachment {
   source: string;
@@ -20,30 +21,6 @@ interface Props {
   autoFocus?: boolean;
 }
 
-// The Web Speech API is still vendor-prefixed in Chromium and absent in Firefox,
-// and TypeScript's DOM lib does not declare it. Typed minimally rather than
-// pulling in a dependency for one optional affordance.
-interface SpeechRecognitionLike {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-}
-
-function speechRecognition(): SpeechRecognitionLike | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: new () => SpeechRecognitionLike;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-  };
-  const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-  return Ctor ? new Ctor() : null;
-}
-
 export default function AssistantComposer({
   onSend,
   busy = false,
@@ -57,19 +34,12 @@ export default function AssistantComposer({
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [listening, setListening] = useState(false);
-  const [canDictate, setCanDictate] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-
-  // Feature-detected after mount, never during render: the server has no
-  // window, so deciding this at render time would produce a hydration mismatch.
-  useEffect(() => {
-    setCanDictate(speechRecognition() !== null);
-  }, []);
+  const dictation = useDictation(setValue);
+  const listening = dictation.listening;
 
   // Grow with the content, up to a ceiling — beyond that the textarea scrolls
   // rather than pushing the conversation off screen.
@@ -90,17 +60,13 @@ export default function AssistantComposer({
     textareaRef.current?.focus();
   }, [autoFocus, disabled]);
 
-  useEffect(() => {
-    // Stop the microphone if this unmounts mid-dictation, or it keeps listening
-    // after the component is gone.
-    return () => recognitionRef.current?.stop();
-  }, []);
-
   const blocked = disabled || busy;
 
   const submit = () => {
     const message = value.trim();
     if (!message || blocked) return;
+    // Before clearing, or a result still on its way writes the message back.
+    dictation.cancel();
     onSend(message, { tool, attachment });
     setValue("");
     // The attachment is consumed by the turn it was sent with. Keeping it would
@@ -142,31 +108,9 @@ export default function AssistantComposer({
   };
 
   const toggleDictation = () => {
-    if (listening) {
-      recognitionRef.current?.stop();
-      return;
-    }
-    const recognition = speechRecognition();
-    if (!recognition) return;
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-GB";
-    recognition.onresult = (event) => {
-      const transcript = Array.from({ length: event.results.length }, (_, i) => event.results[i][0].transcript)
-        .join(" ")
-        .trim();
-      if (transcript) {
-        // Append rather than replace: dictation often supplements typing.
-        setValue((prev) => (prev ? `${prev} ${transcript}` : transcript));
-      }
-    };
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setListening(true);
+    if (listening) dictation.stop();
+    // Added after what is typed: dictation often supplements typing.
+    else dictation.start(value);
   };
 
   return (
@@ -238,7 +182,7 @@ export default function AssistantComposer({
           <div className="ml-auto flex items-center gap-2 min-w-0">
             <ToolSelect value={tool} onChange={setTool} disabled={blocked} />
 
-            {canDictate && (
+            {dictation.supported && (
               <button
                 type="button"
                 onClick={toggleDictation}

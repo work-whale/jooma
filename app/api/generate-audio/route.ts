@@ -1,20 +1,16 @@
 // Generates one audio activity for the slideshow editor:
 //   1. Ask gpt-4o for a short listening script + comprehension questions
 //      relevant to the topic.
-//   2. Convert the script to MP3 via OpenAI TTS.
+//   2. Read the script aloud as MP3 (lib/speech).
 //   3. Upload the MP3 to the `audio` Supabase Storage bucket.
 //   4. Return { src, title, description, questions, transcript } so the
 //      caller can drop an AudioObject onto a slide.
 
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAI } from "@/app/lib/openai";
 import { supabase } from "@/app/lib/supabase";
 import { recordUsage, recordAssetCost, createCompletion, costUsd, type Usage } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
-
-/** tts-1 is billed per character, not per token, so it has no entry in the
- *  shared PRICING table. https://openai.com/api/pricing */
-const TTS_USD_PER_1M_CHARS = 15.0;
+import { CLIP_VOICE, saidVerbatim, synthesize } from "@/app/lib/speech";
 
 export const maxDuration = 120;
 
@@ -45,8 +41,6 @@ const ACTIVITY_INSTRUCTIONS: Record<ActivityType, string> = {
   "gap-fills": "Write 3-4 gap-fill (cloze) sentences drawn from the listening passage. Use an underscore line (e.g. \"________\") to mark the missing word in each.",
 };
 
-type Voice = "alloy" | "nova" | "echo" | "fable" | "onyx" | "shimmer";
-
 const scriptSchema = {
   name: "audio_activity",
   strict: true,
@@ -68,12 +62,10 @@ const scriptSchema = {
   },
 } as const;
 
-// Use the British-accented voice across all year groups so listening clips
-// match the UK English script. "fable" is OpenAI tts-1's RP-style voice;
-// the others (alloy/nova/echo/onyx/shimmer) are American.
-function pickVoice(_year?: string): Voice {
-  return "fable";
-}
+// The accent is asked for in the style, since none of the realtime voices is
+// British by default, so clips match the UK English script.
+const CLIP_STYLE =
+  "A clear, natural British narrator with a Received Pronunciation accent, reading to a UK primary school class. Warm and expressive, at a steady pace with natural pauses.";
 
 export async function POST(req: NextRequest) {
   let body: RequestBody;
@@ -83,10 +75,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing topic" }, { status: 400 });
   }
 
-  const client = getOpenAI();
   // The script-writing model, resolved once and shared by all three prompt
-  // paths below and by the cost rollup. The tts-1 narration call is a separate
-  // modality and is deliberately NOT affected by this setting.
+  // paths below and by the cost rollup. The narration is a separate modality
+  // and is deliberately NOT affected by this setting.
   const scriptModel = await modelFor("generate-audio", "gpt-4o-2024-08-06");
   let title: string;
   let description: string;
@@ -223,17 +214,19 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     answers = parsed.answers;
   }
 
-  // 2) TTS the script.
+  // 2) Read the script aloud.
   let mp3Buffer: Buffer;
+  let ttsCost: number;
   try {
-    const tts = await client.audio.speech.create({
-      model: "tts-1",
-      voice: pickVoice(body.year),
-      input: script,
-      response_format: "mp3",
-    });
-    const arr = await tts.arrayBuffer();
-    mp3Buffer = Buffer.from(arr);
+    const speech = await synthesize(script, { voice: CLIP_VOICE, style: CLIP_STYLE, timeoutMs: 90_000 });
+    mp3Buffer = speech.mp3;
+    ttsCost = speech.costUsd;
+    // The questions test what pupils hear, so if the narrator strayed from the
+    // script, the transcript shown is what was actually said.
+    if (speech.transcript && !saidVerbatim(script, speech.transcript)) {
+      console.warn("[generate-audio] narration strayed from the script:", { script, said: speech.transcript });
+      script = speech.transcript;
+    }
   } catch (err) {
     const e = err as { message?: string; status?: number };
     return NextResponse.json({
@@ -257,16 +250,15 @@ The "script" must be plain spoken text only — no stage directions, sound effec
   }
   const { data: pub } = supabase.storage.from("audio").getPublicUrl(filename);
 
-  // Cost: gpt-4o script tokens + tts-1 characters. The token half is priced
-  // through the shared table in lib/usage.ts so it can't drift from what
-  // recordUsage() writes (and so cached prompt tokens get their discount);
-  // tts-1 is per-character at $15/1M and has no shared table.
+  // Cost: gpt-4o script tokens + narration. The token half is priced through
+  // the shared table in lib/usage.ts so it can't drift from what recordUsage()
+  // writes (and so cached prompt tokens get their discount); the narration's
+  // cost comes from the usage the Realtime API reports (lib/speech).
   const scriptCost = scriptUsage ? costUsd(scriptModel.model, scriptUsage) : 0;
-  const ttsCost = (script.length / 1_000_000) * TTS_USD_PER_1M_CHARS;
   const totalCostUsd = scriptCost + ttsCost;
 
   // Report telemetry: the script-writing call is token-billed (token_usage); the
-  // tts-1 narration is per-character (asset_cost). When invoked by the slideshow
+  // narration is an asset (asset_cost), with the script's length as its units. When invoked by the slideshow
   // (parentTool set), attribute the cost to its breakdown as sub-steps; otherwise
   // it's a standalone editor action recorded under its own slug.
   // Fire-and-forget (parallel) so telemetry never delays the audio response —

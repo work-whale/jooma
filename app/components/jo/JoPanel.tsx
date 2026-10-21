@@ -8,11 +8,13 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from
 import { ChatTeardropDots } from "@phosphor-icons/react/dist/ssr";
 import {
   ArrowUp,
+  AudioLines,
   Check,
   ChevronDown,
   ChevronRight,
   CircleSlash,
   Loader2,
+  Mic,
   PanelRightClose,
   Square,
   Undo2,
@@ -20,6 +22,8 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
+import { useDictation } from "@/app/lib/useDictation";
+import { nextSentences } from "@/app/lib/jo/speech-chunks";
 import type { JoAdapter, JoMessage, useJoSession } from "./useJoSession";
 import type { useJoVoice } from "./useJoVoice";
 import styles from "./jo.module.css";
@@ -137,14 +141,23 @@ export default function JoPanel({
   if (open && unread) setUnread(false);
 
   // ── Read aloud ──
-  const lastReplyRef = useRef<string | null>(null);
-  const latest = [...messages].reverse().find((m) => m.role === "assistant" && !m.pending && !m.error);
+  // A sentence at a time while the reply is still being written, so Jo starts
+  // talking as the edits begin rather than after the last one. The question
+  // and the summary arrive with the end of the turn, and follow.
+  const readRef = useRef<{ id: string; upTo: number; done: boolean } | null>(null);
+  const live = [...messages].reverse().find((m) => m.role === "assistant");
   useEffect(() => {
-    if (!voice?.auto || !latest?.fresh || lastReplyRef.current === latest.id) return;
-    lastReplyRef.current = latest.id;
-    const text = spokenText(latest);
-    if (text) void voice.speak(text);
-  }, [latest, voice]);
+    if (!voice?.auto || !live?.fresh || live.error) return;
+    if (readRef.current?.id !== live.id) readRef.current = { id: live.id, upTo: 0, done: false };
+    const read = readRef.current;
+    if (read.done) return;
+    const { sentences, upTo } = nextSentences(live.text, read.upTo, !live.pending);
+    read.upTo = upTo;
+    for (const sentence of sentences) voice.enqueue(sentence, live.id);
+    if (live.pending) return;
+    read.done = true;
+    for (const extra of [live.clarify?.question, live.summary]) if (extra) voice.enqueue(extra, live.id);
+  }, [live, voice]);
 
   // ── Scroll to the newest ──
   const listRef = useRef<HTMLDivElement>(null);
@@ -166,14 +179,68 @@ export default function JoPanel({
     // Folded, the panel has no layout and would measure 0.
     if (el.scrollHeight) el.style.height = `${el.scrollHeight}px`;
   }, [draft, open, sheet]);
+  // ── Speaking to Jo ──
+  // The mic fills the box. Talk mode goes further: what is said sends itself
+  // once the teacher stops, and the mic opens again once Jo has finished
+  // reading the reply. Jo cannot hear itself out of the speaker reliably in a
+  // browser, so the mic stays shut while Jo talks; a tap on it cuts Jo off.
+  const [talk, setTalk] = useState(false);
+  const submitRef = useRef<(text: string) => void>(() => {});
+  const dictation = useDictation(setDraft, (text, heard) => {
+    if (!talk) return;
+    // Silence ends talk mode rather than holding the microphone open.
+    if (heard && text.trim()) submitRef.current(text);
+    else setTalk(false);
+  });
+
   const outOfPrompts = !!guest && promptsLeft === 0;
   const locked = !!disabled || outOfPrompts || (!!blocked && !guest);
   const submit = (text: string) => {
     if (busy || locked || !text.trim()) return;
+    // Before clearing, or a result still on its way writes the message back.
+    dictation.cancel();
     voice?.stop();
     void send(text);
     setDraft("");
   };
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+
+  const canTalk = !!voice && dictation.supported;
+  const onMic = () => {
+    // In talk mode, stopping early is "I'm done", and sends.
+    if (dictation.listening) return dictation.stop();
+    voice?.stop();
+    dictation.start(draft);
+  };
+  const toggleTalk = () => {
+    if (!voice) return;
+    if (talk) {
+      setTalk(false);
+      dictation.cancel();
+      return;
+    }
+    voice.setAuto(true);
+    voice.stop();
+    setTalk(true);
+    dictation.start(draft);
+  };
+  // Listening again once Jo has finished the turn and finished reading it. The
+  // short wait lets the reply's last sentences reach the queue first.
+  const voicePlaying = voice?.playing ?? null;
+  const voiceIdle = voice?.idle;
+  const { listening, start: listen } = dictation;
+  useEffect(() => {
+    if (!talk || busy || locked || listening || voicePlaying) return;
+    const t = window.setTimeout(() => {
+      if (voiceIdle?.() !== false) listen(draft);
+    }, 500);
+    return () => window.clearTimeout(t);
+  }, [talk, busy, locked, listening, voicePlaying, voiceIdle, listen, draft]);
+  // Locked out mid-conversation (the sheet is being rewritten, or a guest ran
+  // out of messages): talk mode ends rather than reopening into nothing.
+  if (talk && locked) setTalk(false);
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -182,7 +249,11 @@ export default function JoPanel({
   };
 
   const lastId = messages[messages.length - 1]?.id;
-  const status = busy ? "Working on your " + docLabel : disabled ?? `Edits your ${docLabel} as you watch`;
+  const status = dictation.listening
+    ? "Listening"
+    : busy
+      ? "Working on your " + docLabel
+      : disabled ?? `Edits your ${docLabel} as you watch`;
 
   return (
     <>
@@ -214,6 +285,20 @@ export default function JoPanel({
               <b>Ask Jo</b>
               <span role="status">{status}</span>
             </div>
+            {canTalk && (
+              <button
+                type="button"
+                className={styles.iconBtn}
+                aria-pressed={talk}
+                onClick={toggleTalk}
+                disabled={locked}
+                title={talk ? "Stop talking with Jo" : "Talk with Jo, hands free. Jo reads each reply aloud, then listens for yours."}
+                aria-label="Talk with Jo"
+                data-testid="jo-talk"
+              >
+                <AudioLines />
+              </button>
+            )}
             {voice ? (
               <button
                 type="button"
@@ -315,6 +400,20 @@ export default function JoPanel({
                     aria-label="Message Jo"
                     data-testid="jo-input"
                   />
+                  {dictation.supported && (
+                    <button
+                      type="button"
+                      className={styles.mic}
+                      onClick={onMic}
+                      disabled={locked}
+                      aria-pressed={dictation.listening}
+                      aria-label={dictation.listening ? "Stop dictating" : "Dictate"}
+                      title={dictation.listening ? "Stop dictating" : "Dictate"}
+                      data-testid="jo-mic"
+                    >
+                      <Mic />
+                    </button>
+                  )}
                   {busy ? (
                     <button type="button" className={styles.send} data-stop="true" onClick={stop} aria-label="Stop Jo" data-testid="jo-stop">
                       <Square />
@@ -379,7 +478,7 @@ function JoReply({
   const [openSteps, setOpenSteps] = useState(true);
   const [picked, setPicked] = useState<string[]>([]);
   const spoken = spokenText(m);
-  const speaking = voice?.playing === spoken;
+  const speaking = voice?.playing === m.id;
 
   return (
     <div className={styles.jo} data-testid="jo-reply">
@@ -483,7 +582,7 @@ function JoReply({
             <button
               type="button"
               className={styles.iconBtn}
-              onClick={() => (speaking ? voice.stop() : void voice.speak(spoken))}
+              onClick={() => (speaking ? voice.stop() : voice.speak(spoken, m.id))}
               aria-label={speaking ? "Stop reading" : "Read aloud"}
               title={speaking ? "Stop reading" : "Read aloud"}
               data-testid="jo-speak"
