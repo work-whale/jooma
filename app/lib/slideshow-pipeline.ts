@@ -1720,7 +1720,7 @@ export function slideshowStream({
         // ── Full cost summary ─────────────────────────────────────────────
         // Logged last so it can include audio (which runs after images). Image
         // cost is an estimate (see IMAGE_COST_USD in ai-image.ts); audio cost
-        // is exact (gpt-4o tokens + tts-1 chars) and returned by the audio route.
+        // is exact (gpt-4o tokens + narration audio tokens) and returned by the audio route.
         {
           const modelBreakdown = Object.entries(imageCost.byModel)
             .map(([k, n]) => `${n}×${k}`)

@@ -606,6 +606,57 @@ button.step:hover {
   height: 16px;
 }
 
+/* Dictation: the send button's shape, quieter until it is listening. */
+.mic {
+  all: unset;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--j-tint);
+  color: var(--j-ink);
+  cursor: pointer;
+}
+
+.mic[aria-pressed="true"] {
+  background: var(--j-purple);
+  color: #fff;
+}
+
+.mic[aria-pressed="true"] svg {
+  animation: joMicPulse 1.2s ease-in-out infinite;
+}
+
+.mic:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+.mic:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mic svg {
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes joMicPulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic[aria-pressed="true"] svg {
+    animation: none;
+  }
+}
+
 .meta {
   display: flex;
   justify-content: space-between;
@@ -865,13 +916,15 @@ button.step:hover {
 
 /* A fingertip needs a bigger target than a cursor. */
 @media (pointer: coarse) {
-  .send {
+  .send,
+  .mic {
     width: 44px;
     height: 44px;
     border-radius: 13px;
   }
 
-  .send svg {
+  .send svg,
+  .mic svg {
     width: 18px;
     height: 18px;
   }
