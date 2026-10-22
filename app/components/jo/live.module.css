@@ -1,0 +1,196 @@
+/* Live mode's warning card and call bar (Live.tsx), on both the Ask Jo panel
+   and the Ask Jo page, so built from the shared brand tokens only. */
+
+.confirm {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--j-purple);
+  border-radius: 16px;
+  background: var(--j-card, #fff);
+  color: var(--j-ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.confirm b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.confirm b svg {
+  width: 16px;
+  height: 16px;
+  color: var(--j-purple);
+}
+
+.confirm p {
+  margin: 0;
+}
+
+.muted {
+  color: var(--j-faint, #6b6b80);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.primary,
+.secondary {
+  all: unset;
+  box-sizing: border-box;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--j-purple);
+  color: #fff;
+}
+
+.primary:disabled {
+  background: var(--j-line-2);
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: var(--j-tint);
+  color: var(--j-ink);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible,
+.round:focus-visible,
+.end:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 16px;
+  background: var(--j-purple);
+  color: #fff;
+  font-size: 13px;
+}
+
+.bar[data-ending="true"] {
+  background: #b45309;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-weight: 600;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+
+.round,
+.end {
+  all: unset;
+  box-sizing: border-box;
+  height: 34px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.round {
+  width: 34px;
+}
+
+.round:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.round[aria-pressed="true"] {
+  background: #fff;
+  color: var(--j-purple);
+}
+
+.end {
+  padding: 0 12px;
+  background: #fff;
+  color: var(--j-ink);
+  font-weight: 600;
+}
+
+.round svg,
+.end svg,
+.status svg {
+  width: 16px;
+  height: 16px;
+}
+
+.spin {
+  animation: liveSpin 1s linear infinite;
+}
+
+@keyframes livePulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes liveSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot,
+  .spin {
+    animation: none;
+  }
+}
+
+/* A fingertip needs a bigger target than a cursor. */
+@media (pointer: coarse) {
+  .primary,
+  .secondary,
+  .round,
+  .end {
+    min-height: 44px;
+    height: 44px;
+  }
+
+  .round {
+    width: 44px;
+  }
+}

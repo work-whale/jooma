@@ -21,8 +21,9 @@ export const SPEECH_MODEL = "gpt-realtime-2.1-mini";
 export const JO_VOICE = "marin";
 export const CLIP_VOICE = "cedar";
 
-/** Per 1M tokens. https://developers.openai.com/api/docs/pricing */
-const USD_PER_1M = { textIn: 0.6, cachedIn: 0.06, textOut: 2.4, audioOut: 20 };
+/** gpt-realtime-2.1-mini, per 1M tokens.
+ *  https://developers.openai.com/api/docs/models/gpt-realtime-2.1-mini */
+const USD_PER_1M = { textIn: 0.6, textCached: 0.06, textOut: 2.4, audioIn: 10, audioCached: 0.3, audioOut: 20 };
 
 /** The only PCM rate the Realtime API sends. */
 const RATE = 24_000;
@@ -35,15 +36,28 @@ export interface Speech {
   costUsd: number;
 }
 
-/** What one response cost, from the usage the API reports on it. */
-export function speechCostUsd(usage: RealtimeResponseUsage | undefined): number {
+/**
+ * What one realtime response cost, from the usage the API reports on it.
+ * Read aloud has no audio in; a Live conversation has both, and re-reads the
+ * conversation so far on every reply, mostly from the cache.
+ */
+export function realtimeCostUsd(usage: RealtimeResponseUsage | undefined): number {
   if (!usage) return 0;
-  const cached = usage.input_token_details?.cached_tokens ?? 0;
-  const input = (usage.input_tokens ?? 0) - cached;
+  const inDetail = usage.input_token_details;
+  const cached = inDetail?.cached_tokens ?? 0;
+  const audioCached = inDetail?.cached_tokens_details?.audio_tokens ?? 0;
+  const textCached = cached - audioCached;
+  const audioIn = (inDetail?.audio_tokens ?? 0) - audioCached;
+  const textIn = (usage.input_tokens ?? 0) - cached - audioIn;
   const audioOut = usage.output_token_details?.audio_tokens ?? 0;
   const textOut = usage.output_token_details?.text_tokens ?? (usage.output_tokens ?? 0) - audioOut;
   return (
-    (input * USD_PER_1M.textIn + cached * USD_PER_1M.cachedIn + textOut * USD_PER_1M.textOut + audioOut * USD_PER_1M.audioOut) /
+    (Math.max(0, textIn) * USD_PER_1M.textIn +
+      textCached * USD_PER_1M.textCached +
+      Math.max(0, audioIn) * USD_PER_1M.audioIn +
+      audioCached * USD_PER_1M.audioCached +
+      textOut * USD_PER_1M.textOut +
+      audioOut * USD_PER_1M.audioOut) /
     1_000_000
   );
 }
@@ -113,7 +127,7 @@ export async function synthesize(text: string, opts: { voice: string; style: str
         }
         const audio = Buffer.concat(pcm);
         settle(() =>
-          pcmToMp3(audio).then((mp3) => resolve({ mp3, transcript, costUsd: speechCostUsd(usage) }), reject),
+          pcmToMp3(audio).then((mp3) => resolve({ mp3, transcript, costUsd: realtimeCostUsd(usage) }), reject),
         );
       });
 

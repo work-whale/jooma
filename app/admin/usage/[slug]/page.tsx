@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requireSection } from "../../access";
-import { typeLabel } from "@/app/lib/toolRunDisplay";
+import { stepLabel, typeLabel } from "@/app/lib/toolRunDisplay";
 import { nf, usd } from "../../format";
 import SlideshowBreakdown, { type SlideRow } from "./SlideshowBreakdown";
 
@@ -60,7 +60,7 @@ export default async function AdminToolDetailPage({
   // returns). For other tools: the step/item breakdown.
   const slides = (slideRes?.data ?? []) as SlideRow[];
   const stepBreakdown = steps
-    .map((s) => ({ label: s.slide_label ?? s.step, cost_usd: Number(s.cost_usd) }))
+    .map((s) => ({ label: s.slide_label ?? stepLabel(slug, s.step), cost_usd: Number(s.cost_usd) }))
     .sort((a, b) => b.cost_usd - a.cost_usd);
 
   const hasData = isSlideshow ? slides.length > 0 : stepBreakdown.length > 0;

@@ -16,17 +16,23 @@ import {
   Loader2,
   Mic,
   PanelRightClose,
+  Radio,
   Square,
   Undo2,
   Volume2,
   VolumeX,
 } from "lucide-react";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
-import { useDictation } from "@/app/lib/useDictation";
+import { useTalkMode } from "@/app/lib/useTalkMode";
+import { useLiveCall } from "@/app/lib/useLiveCall";
 import { nextSentences } from "@/app/lib/jo/speech-chunks";
 import type { JoAdapter, JoMessage, useJoSession } from "./useJoSession";
 import type { useJoVoice } from "./useJoVoice";
+import { LiveBar, LiveConfirm } from "./Live";
 import styles from "./jo.module.css";
+
+/** What read_resource hands Jo: enough to answer from, never a whole book. */
+const READ_LIMIT = 12_000;
 
 const OPEN_KEY = "jooma:jo-open";
 /** Where the dock becomes a bottom sheet (jo.module.css). */
@@ -77,7 +83,7 @@ export default function JoPanel({
   /** "editor": a full height column beside the slide canvas. */
   variant?: "dock" | "editor";
 }) {
-  const { messages, busy, send, stop, undo, promptsLeft, blocked } = session;
+  const { messages, busy, send, note, stop, undo, promptsLeft, blocked } = session;
 
   // ── Open or folded ──
   // The teacher's last choice, except that a finished generation opens it:
@@ -144,20 +150,23 @@ export default function JoPanel({
   // A sentence at a time while the reply is still being written, so Jo starts
   // talking as the edits begin rather than after the last one. The question
   // and the summary arrive with the end of the turn, and follow.
+  //
+  // Not during a Live call, where Jo is already speaking for itself.
   const readRef = useRef<{ id: string; upTo: number; done: boolean } | null>(null);
-  const live = [...messages].reverse().find((m) => m.role === "assistant");
+  const latest = [...messages].reverse().find((m) => m.role === "assistant");
+  const [liveOn, setLiveOn] = useState(false);
   useEffect(() => {
-    if (!voice?.auto || !live?.fresh || live.error) return;
-    if (readRef.current?.id !== live.id) readRef.current = { id: live.id, upTo: 0, done: false };
+    if (!voice?.auto || liveOn || !latest?.fresh || latest.error) return;
+    if (readRef.current?.id !== latest.id) readRef.current = { id: latest.id, upTo: 0, done: false };
     const read = readRef.current;
     if (read.done) return;
-    const { sentences, upTo } = nextSentences(live.text, read.upTo, !live.pending);
+    const { sentences, upTo } = nextSentences(latest.text, read.upTo, !latest.pending);
     read.upTo = upTo;
-    for (const sentence of sentences) voice.enqueue(sentence, live.id);
-    if (live.pending) return;
+    for (const sentence of sentences) voice.enqueue(sentence, latest.id);
+    if (latest.pending) return;
     read.done = true;
-    for (const extra of [live.clarify?.question, live.summary]) if (extra) voice.enqueue(extra, live.id);
-  }, [live, voice]);
+    for (const extra of [latest.clarify?.question, latest.summary]) if (extra) voice.enqueue(extra, latest.id);
+  }, [latest, voice, liveOn]);
 
   // ── Scroll to the newest ──
   const listRef = useRef<HTMLDivElement>(null);
@@ -179,22 +188,60 @@ export default function JoPanel({
     // Folded, the panel has no layout and would measure 0.
     if (el.scrollHeight) el.style.height = `${el.scrollHeight}px`;
   }, [draft, open, sheet]);
-  // ── Speaking to Jo ──
-  // The mic fills the box. Talk mode goes further: what is said sends itself
-  // once the teacher stops, and the mic opens again once Jo has finished
-  // reading the reply. Jo cannot hear itself out of the speaker reliably in a
-  // browser, so the mic stays shut while Jo talks; a tap on it cuts Jo off.
-  const [talk, setTalk] = useState(false);
-  const submitRef = useRef<(text: string) => void>(() => {});
-  const dictation = useDictation(setDraft, (text, heard) => {
-    if (!talk) return;
-    // Silence ends talk mode rather than holding the microphone open.
-    if (heard && text.trim()) submitRef.current(text);
-    else setTalk(false);
-  });
-
   const outOfPrompts = !!guest && promptsLeft === 0;
   const locked = !!disabled || outOfPrompts || (!!blocked && !guest);
+
+  // ── Speaking to Jo ──
+  // Talk mode (lib/useTalkMode) for the browser's own speech, and Live mode
+  // (lib/useLiveCall) for a real conversation. Live is for paid accounts, so
+  // never a guest, and only where Jo has a voice at all.
+  const submitRef = useRef<(text: string) => void>(() => {});
+  const talkMode = useTalkMode({
+    voice,
+    draft,
+    setDraft,
+    onSend: (text) => submitRef.current(text),
+    busy,
+    locked,
+  });
+  const { talk, canTalk, dictation, onMic, toggleTalk } = talkMode;
+
+  const call = useLiveCall({
+    surface: "panel",
+    docLabel,
+    tools: {
+      edit_resource: async (args, heard) => {
+        const done = await send(heard || String(args.request ?? ""));
+        if (!done) return { error: `Jo is still working on the last change to the ${docLabel}. Ask again in a moment.` };
+        if (done.error) return { error: done.error };
+        return {
+          said: done.text,
+          changes: done.steps?.filter((s) => s.state === "done").map((s) => s.label) ?? [],
+          summary: done.summary ?? "",
+          question: done.clarify?.question ?? null,
+          options: done.clarify?.options ?? [],
+        };
+      },
+      read_resource: async () => ({ [docLabel]: JSON.stringify(adapter.snapshot()).slice(0, READ_LIMIT) }),
+    },
+    onExchange: note,
+  });
+  const [confirming, setConfirming] = useState(false);
+  const canLive = !!voice && !guest && call.supported;
+  const inCall = call.state !== "idle";
+  if (inCall !== liveOn) setLiveOn(inCall);
+  const startLive = () => {
+    setConfirming(false);
+    talkMode.off();
+    voice?.stop();
+    void call.start();
+  };
+  // A page that locks Jo (the sheet is being rewritten) ends the call too.
+  const endCall = call.end;
+  useEffect(() => {
+    if (locked && inCall) endCall();
+  }, [locked, inCall, endCall]);
+
   const submit = (text: string) => {
     if (busy || locked || !text.trim()) return;
     // Before clearing, or a result still on its way writes the message back.
@@ -207,40 +254,6 @@ export default function JoPanel({
     submitRef.current = submit;
   });
 
-  const canTalk = !!voice && dictation.supported;
-  const onMic = () => {
-    // In talk mode, stopping early is "I'm done", and sends.
-    if (dictation.listening) return dictation.stop();
-    voice?.stop();
-    dictation.start(draft);
-  };
-  const toggleTalk = () => {
-    if (!voice) return;
-    if (talk) {
-      setTalk(false);
-      dictation.cancel();
-      return;
-    }
-    voice.setAuto(true);
-    voice.stop();
-    setTalk(true);
-    dictation.start(draft);
-  };
-  // Listening again once Jo has finished the turn and finished reading it. The
-  // short wait lets the reply's last sentences reach the queue first.
-  const voicePlaying = voice?.playing ?? null;
-  const voiceIdle = voice?.idle;
-  const { listening, start: listen } = dictation;
-  useEffect(() => {
-    if (!talk || busy || locked || listening || voicePlaying) return;
-    const t = window.setTimeout(() => {
-      if (voiceIdle?.() !== false) listen(draft);
-    }, 500);
-    return () => window.clearTimeout(t);
-  }, [talk, busy, locked, listening, voicePlaying, voiceIdle, listen, draft]);
-  // Locked out mid-conversation (the sheet is being rewritten, or a guest ran
-  // out of messages): talk mode ends rather than reopening into nothing.
-  if (talk && locked) setTalk(false);
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -249,7 +262,11 @@ export default function JoPanel({
   };
 
   const lastId = messages[messages.length - 1]?.id;
-  const status = dictation.listening
+  const status = call.state === "live"
+    ? "Live: talk to Jo any time"
+    : call.state === "connecting"
+      ? "Starting Live"
+      : dictation.listening
     ? "Listening"
     : busy
       ? "Working on your " + docLabel
@@ -285,13 +302,27 @@ export default function JoPanel({
               <b>Ask Jo</b>
               <span role="status">{status}</span>
             </div>
+            {canLive && (
+              <button
+                type="button"
+                className={styles.iconBtn}
+                aria-pressed={inCall || confirming}
+                onClick={() => (inCall ? call.end() : setConfirming((c) => !c))}
+                disabled={locked}
+                title={inCall ? "End Live" : "Talk with Jo live: a real conversation. Uses more credits."}
+                aria-label="Live"
+                data-testid="jo-live"
+              >
+                <Radio />
+              </button>
+            )}
             {canTalk && (
               <button
                 type="button"
                 className={styles.iconBtn}
                 aria-pressed={talk}
                 onClick={toggleTalk}
-                disabled={locked}
+                disabled={locked || inCall}
                 title={talk ? "Stop talking with Jo" : "Talk with Jo, hands free. Jo reads each reply aloud, then listens for yours."}
                 aria-label="Talk with Jo"
                 data-testid="jo-talk"
@@ -386,6 +417,22 @@ export default function JoPanel({
               </p>
             ) : (
               <>
+                {confirming && !inCall && <LiveConfirm onStart={startLive} onCancel={() => setConfirming(false)} />}
+                {inCall && (
+                  <LiveBar
+                    state={call.state}
+                    elapsed={call.elapsed}
+                    maxSeconds={call.maxSeconds}
+                    muted={call.muted}
+                    onMute={call.toggleMute}
+                    onEnd={call.end}
+                  />
+                )}
+                {call.error && (
+                  <p className={styles.note} role="alert" data-testid="live-error">
+                    {call.error}
+                  </p>
+                )}
                 <div className={styles.inputRow}>
                   <textarea
                     ref={inputRef}
@@ -405,7 +452,7 @@ export default function JoPanel({
                       type="button"
                       className={styles.mic}
                       onClick={onMic}
-                      disabled={locked}
+                      disabled={locked || inCall}
                       aria-pressed={dictation.listening}
                       aria-label={dictation.listening ? "Stop dictating" : "Dictate"}
                       title={dictation.listening ? "Stop dictating" : "Dictate"}

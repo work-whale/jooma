@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
+import { fakeMicrophone, fakeSpeaker } from "../support/voice";
 
 /*
  * Speaking to Jo, and Jo speaking back.
@@ -40,68 +41,6 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   await deleteTeacher(teacher);
 });
-
-/**
- * A microphone that hears each phrase in `window.__heard` in turn, one per
- * start(), and reports it the way Chrome on Android does: the result list
- * holds a growing copy for every word so far, and the event fires per word.
- * Nothing left to hear is silence. `window.__starts` counts the starts.
- */
-async function fakeMicrophone(page: Page, heard: string[]) {
-  await page.addInitScript((phrases) => {
-    const w = window as unknown as { __heard: string[]; __starts: number; SpeechRecognition: unknown; webkitSpeechRecognition: unknown };
-    w.__heard = phrases;
-    w.__starts = 0;
-    class FakeRecognition {
-      continuous = false;
-      interimResults = false;
-      lang = "";
-      onresult: ((e: unknown) => void) | null = null;
-      onerror: (() => void) | null = null;
-      onend: (() => void) | null = null;
-      private stopped = false;
-      start() {
-        w.__starts++;
-        const phrase = w.__heard.shift();
-        const words = phrase ? phrase.split(" ") : [];
-        let i = 0;
-        const step = () => {
-          if (this.stopped) return;
-          if (i < words.length) {
-            i++;
-            const results = Array.from({ length: i }, (_, k) => [{ transcript: words.slice(0, k + 1).join(" ") }]);
-            this.onresult?.({ results });
-            setTimeout(step, 40);
-          } else {
-            this.onend?.();
-          }
-        };
-        setTimeout(step, 40);
-      }
-      stop() {
-        this.stopped = true;
-        this.onend?.();
-      }
-      abort() {
-        this.stopped = true;
-      }
-    }
-    // Both names: current Chromium has the unprefixed one, which wins.
-    w.SpeechRecognition = FakeRecognition;
-    w.webkitSpeechRecognition = FakeRecognition;
-  }, heard);
-}
-
-/** Audio that "plays" at once and ends a moment later, so the queue moves on. */
-async function fakeSpeaker(page: Page) {
-  await page.addInitScript(() => {
-    localStorage.setItem("jooma:jo-read-aloud", "1");
-    HTMLMediaElement.prototype.play = function () {
-      setTimeout(() => this.dispatchEvent(new Event("ended")), 30);
-      return Promise.resolve();
-    };
-  });
-}
 
 async function openPlan(page: Page) {
   const { data, error } = await admin

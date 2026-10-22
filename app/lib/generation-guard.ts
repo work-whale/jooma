@@ -145,6 +145,9 @@ const COST_BEARING_PATHS: ReadonlySet<string> = new Set([
   // assistant: real spend, not a new resource.
   "/api/jo",
   "/api/jo/speak",
+  // A Live call: refused here when the month's credit is spent. The call's own
+  // spend is metered while it runs (lib/live-watch).
+  "/api/jo/live",
   "/api/modify",
   "/api/generate",
   "/api/generate-image",
@@ -199,7 +202,7 @@ export function toolSlugFor(method: string, pathname: string): string | null {
 // before the spend gates, because a plan that cannot use the feature at all
 // should not cost a gate round-trip to refuse.
 // Jo's in-place edits and its voice are the same feature, so the same plan.
-const ASSISTANT_APIS: ReadonlySet<string> = new Set(["/api/assistant", "/api/jo", "/api/jo/speak"]);
+const ASSISTANT_APIS: ReadonlySet<string> = new Set(["/api/assistant", "/api/jo", "/api/jo/speak", "/api/jo/live"]);
 
 /** True when this request targets the assistant API. */
 export function isAssistantRequest(method: string, pathname: string): boolean {
