@@ -37,6 +37,8 @@ import {
 } from "@/app/lib/assistantChats";
 import { getEntitlements } from "@/app/lib/entitlements";
 import { can } from "@/app/lib/plans";
+import { useJoVoice } from "@/app/components/jo/useJoVoice";
+import { useLiveCall, type LiveTool } from "@/app/lib/useLiveCall";
 
 interface AssistantChatsValue {
   /** Add a chat created by the page, so the sidebar shows it immediately. */
@@ -64,6 +66,36 @@ interface AssistantChatsValue {
 }
 
 const AssistantChatsContext = createContext<AssistantChatsValue | null>(null);
+
+/** What the open conversation gives a Live call: its tool, and where a
+ *  spoken exchange is written down. Registered by the page on every render. */
+export interface AssistantLiveHandlers {
+  ask_jo?: LiveTool;
+  onExchange?: (heard: string, said: string) => void;
+}
+
+interface AssistantVoiceValue {
+  voice: ReturnType<typeof useJoVoice>;
+  talkState: readonly [boolean, (on: boolean) => void];
+  live: ReturnType<typeof useLiveCall>;
+  handlers: { current: AssistantLiveHandlers };
+}
+
+/**
+ * Jo's voice on the Ask Jo page: reading aloud, talk mode and a Live call.
+ *
+ * Held here, in the layout, for the same reason as the handover: a chat's
+ * first message replaces the url, which rebuilds the page. A call held in the
+ * page would hang up on the teacher mid-sentence, and talk mode would switch
+ * itself off after one message.
+ */
+const AssistantVoiceContext = createContext<AssistantVoiceValue | null>(null);
+
+export function useAssistantVoice(): AssistantVoiceValue {
+  const ctx = useContext(AssistantVoiceContext);
+  if (!ctx) throw new Error("useAssistantVoice must be used inside AssistantShell");
+  return ctx;
+}
 
 /**
  * The seam between the layout's chat list and the page's conversation.
@@ -100,6 +132,28 @@ export default function AssistantShell({ children }: { children: React.ReactNode
   const [chats, setChats] = useState<AssistantChat[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  const voice = useJoVoice(true);
+  const talkState = useState(false);
+  const handlers = useRef<AssistantLiveHandlers>({});
+  const live = useLiveCall({
+    surface: "assistant",
+    tools: {
+      ask_jo: (args, heard) =>
+        handlers.current.ask_jo?.(args, heard) ?? Promise.resolve({ error: "Jo isn't ready yet. Ask again in a moment." }),
+    },
+    onExchange: (heard, said) => handlers.current.onExchange?.(heard, said),
+  });
+  const voiceValue = useMemo(() => ({ voice, talkState, live, handlers }), [voice, talkState, live]);
+  // Choosing another chat, or a new one, is leaving this conversation: the
+  // call and talk mode end with it. Jo's own url change does not come here.
+  const { end: endLive } = live;
+  const setTalk = talkState[1];
+  const leaveConversation = useCallback(() => {
+    endLive();
+    setTalk(false);
+    voice.stop();
+  }, [endLive, setTalk, voice]);
 
   // null = still loading. Rendering the composer before we know the plan would
   // flash an enabled input at a Free user and then disable it.
@@ -202,15 +256,21 @@ export default function AssistantShell({ children }: { children: React.ReactNode
         loadFailed={loadFailed}
         onRetry={refreshChats}
         activeId={activeId}
-        onSelect={(id) => router.push(`/assistant/${id}`)}
-        onNew={() => router.push("/assistant")}
+        onSelect={(id) => {
+          leaveConversation();
+          router.push(`/assistant/${id}`);
+        }}
+        onNew={() => {
+          leaveConversation();
+          router.push("/assistant");
+        }}
         onRename={handleRename}
         onDelete={(id) => setDeleting(id)}
         disabled={locked}
       />
 
       <AssistantChatsContext.Provider value={value}>
-        {children}
+        <AssistantVoiceContext.Provider value={voiceValue}>{children}</AssistantVoiceContext.Provider>
       </AssistantChatsContext.Provider>
 
       <ConfirmModal

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ArrowUp, Loader2, Mic, Paperclip, Plus, X } from "lucide-react";
+import { ArrowUp, AudioLines, Loader2, Mic, Paperclip, Plus, Radio, X } from "lucide-react";
 import { ASSISTANT_TOOLS } from "@/app/lib/assistant-tools";
 import { V2_CATEGORIES, v2ToolForSlug } from "@/app/lib/tools";
-import { useDictation } from "@/app/lib/useDictation";
+import { useTalkMode, type TalkVoice } from "@/app/lib/useTalkMode";
 
 export interface Attachment {
   source: string;
@@ -19,6 +19,12 @@ interface Props {
   /** Compact single-row layout for the dashboard card. */
   compact?: boolean;
   autoFocus?: boolean;
+  /** Jo's voice, for Talk mode. Without it the mic only dictates. */
+  voice?: TalkVoice | null;
+  /** Whether talk mode is on, when the page keeps it. */
+  talkState?: readonly [boolean, (on: boolean) => void];
+  /** Live mode's button. The call itself, and its bar, belong to the page. */
+  live?: { available: boolean; on: boolean; onToggle: () => void } | null;
 }
 
 export default function AssistantComposer({
@@ -28,6 +34,9 @@ export default function AssistantComposer({
   placeholder = "Ask Jo anything…",
   compact = false,
   autoFocus = false,
+  voice = null,
+  talkState,
+  live = null,
 }: Props) {
   const [value, setValue] = useState("");
   const [tool, setTool] = useState<string | null>(null);
@@ -38,8 +47,6 @@ export default function AssistantComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
-  const dictation = useDictation(setValue);
-  const listening = dictation.listening;
 
   // Grow with the content, up to a ceiling — beyond that the textarea scrolls
   // rather than pushing the conversation off screen.
@@ -62,8 +69,22 @@ export default function AssistantComposer({
 
   const blocked = disabled || busy;
 
-  const submit = () => {
-    const message = value.trim();
+  // Talk mode sends through the same path as the button, with what was said.
+  const sendRef = useRef<(text: string) => void>(() => {});
+  const talkMode = useTalkMode({
+    voice,
+    draft: value,
+    setDraft: setValue,
+    onSend: (text) => sendRef.current(text),
+    busy,
+    locked: disabled || !!live?.on,
+    state: talkState,
+  });
+  const { dictation, talk, canTalk } = talkMode;
+  const listening = dictation.listening;
+
+  const submit = (text = value) => {
+    const message = text.trim();
     if (!message || blocked) return;
     // Before clearing, or a result still on its way writes the message back.
     dictation.cancel();
@@ -73,6 +94,9 @@ export default function AssistantComposer({
     // silently re-send the same document with every later message.
     setAttachment(null);
   };
+  useEffect(() => {
+    sendRef.current = submit;
+  });
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Enter sends, Shift+Enter breaks the line — the convention in every chat
@@ -107,11 +131,6 @@ export default function AssistantComposer({
     }
   };
 
-  const toggleDictation = () => {
-    if (listening) dictation.stop();
-    // Added after what is typed: dictation often supplements typing.
-    else dictation.start(value);
-  };
 
   return (
     // Marked so "Add more detail" on a clarifying question can put the cursor
@@ -182,11 +201,44 @@ export default function AssistantComposer({
           <div className="ml-auto flex items-center gap-2 min-w-0">
             <ToolSelect value={tool} onChange={setTool} disabled={blocked} />
 
+            {live?.available && (
+              <button
+                type="button"
+                onClick={live.onToggle}
+                disabled={disabled}
+                title={live.on ? "End Live" : "Talk with Jo live: a real conversation. Uses more credits."}
+                aria-label="Live"
+                aria-pressed={live.on}
+                data-testid="assistant-live"
+                className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl transition-colors active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                style={{ backgroundColor: live.on ? "var(--j-purple)" : "var(--j-tint)" }}
+              >
+                <Radio className={`w-4 h-4 ${live.on ? "text-white" : "text-dark"}`} />
+              </button>
+            )}
+
+            {canTalk && (
+              <button
+                type="button"
+                onClick={talkMode.toggleTalk}
+                disabled={disabled || !!live?.on}
+                title={talk ? "Stop talking with Jo" : "Talk with Jo, hands free. Jo reads each reply aloud, then listens for yours."}
+                aria-label="Talk with Jo"
+                aria-pressed={talk}
+                data-testid="assistant-talk"
+                className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl transition-colors active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                style={{ backgroundColor: talk ? "var(--j-purple)" : "var(--j-tint)" }}
+              >
+                <AudioLines className={`w-4 h-4 ${talk ? "text-white" : "text-dark"}`} />
+              </button>
+            )}
+
             {dictation.supported && (
               <button
                 type="button"
-                onClick={toggleDictation}
-                disabled={blocked}
+                // Added after what is typed: dictation often supplements typing.
+                onClick={talkMode.onMic}
+                disabled={blocked || !!live?.on}
                 title={listening ? "Stop dictating" : "Dictate"}
                 aria-label={listening ? "Stop dictating" : "Dictate"}
                 aria-pressed={listening}
@@ -199,7 +251,7 @@ export default function AssistantComposer({
 
             <button
               type="button"
-              onClick={submit}
+              onClick={() => submit()}
               disabled={blocked || !value.trim()}
               aria-label="Send"
               className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl bg-(--j-purple) text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"

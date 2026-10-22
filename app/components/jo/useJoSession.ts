@@ -170,10 +170,12 @@ export function useJoSession(adapter: JoAdapter, opts: JoSessionOptions) {
     }
   }, []);
 
+  /** Runs one turn. Resolves with Jo's finished reply, or null when nothing
+   *  was sent (an empty message, or a turn already running). */
   const send = useCallback(
-    async (text: string) => {
+    async (text: string): Promise<JoMessage | null> => {
       const message = text.trim();
-      if (!message || abortRef.current) return;
+      if (!message || abortRef.current) return null;
       const o = optsRef.current;
       const a = adapterRef.current;
 
@@ -294,6 +296,19 @@ export function useJoSession(adapter: JoAdapter, opts: JoSessionOptions) {
       show();
 
       if (!draft.error) void persist(user, draft);
+      return { ...draft, steps: draft.steps?.map((s) => ({ ...s })) };
+    },
+    [persist],
+  );
+
+  /** An exchange spoken in Live mode that changed nothing, kept in the
+   *  conversation so the next turn has it as context and the thread shows it. */
+  const note = useCallback(
+    (heard: string, said: string) => {
+      const user: JoMessage = { id: nextId(), role: "user", text: heard };
+      const reply: JoMessage = { id: nextId(), role: "assistant", text: said };
+      setMessages((all) => [...all, user, reply]);
+      void persist(user, reply);
     },
     [persist],
   );
@@ -312,5 +327,5 @@ export function useJoSession(adapter: JoAdapter, opts: JoSessionOptions) {
     [patch],
   );
 
-  return { messages, busy, send, stop, undo, promptsLeft, blocked };
+  return { messages, busy, send, note, stop, undo, promptsLeft, blocked };
 }

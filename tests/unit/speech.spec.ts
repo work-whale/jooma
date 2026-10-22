@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { pcmToMp3, saidVerbatim, speechCostUsd } from "@/app/lib/speech";
+import { pcmToMp3, saidVerbatim, realtimeCostUsd } from "@/app/lib/speech";
 
 /*
  * The pure parts of reading text aloud (lib/speech): what a response cost,
@@ -8,7 +8,7 @@ import { pcmToMp3, saidVerbatim, speechCostUsd } from "@/app/lib/speech";
 
 test("cost follows the realtime mini price list", () => {
   // 100 text tokens in, 20 text and 1,000 audio tokens out.
-  const usd = speechCostUsd({
+  const usd = realtimeCostUsd({
     input_tokens: 100,
     output_tokens: 1_020,
     output_token_details: { text_tokens: 20, audio_tokens: 1_000 },
@@ -17,12 +17,24 @@ test("cost follows the realtime mini price list", () => {
 });
 
 test("cached input is billed at the cached rate", () => {
-  const usd = speechCostUsd({ input_tokens: 100, input_token_details: { cached_tokens: 100 }, output_tokens: 0 });
+  const usd = realtimeCostUsd({ input_tokens: 100, input_token_details: { cached_tokens: 100 }, output_tokens: 0 });
   expect(usd).toBeCloseTo((100 * 0.06) / 1_000_000, 10);
 });
 
+test("a live turn bills audio in, cached audio, and the rest at their own rates", () => {
+  // 1,000 input tokens: 300 text and 700 audio, of which 400 audio and 100 text came from the cache.
+  const usd = realtimeCostUsd({
+    input_tokens: 1_000,
+    input_token_details: { audio_tokens: 700, text_tokens: 300, cached_tokens: 500, cached_tokens_details: { audio_tokens: 400, text_tokens: 100 } },
+    output_tokens: 600,
+    output_token_details: { text_tokens: 100, audio_tokens: 500 },
+  });
+  const expected = (200 * 0.6 + 100 * 0.06 + 300 * 10 + 400 * 0.3 + 100 * 2.4 + 500 * 20) / 1_000_000;
+  expect(usd).toBeCloseTo(expected, 10);
+});
+
 test("no usage is no cost", () => {
-  expect(speechCostUsd(undefined)).toBe(0);
+  expect(realtimeCostUsd(undefined)).toBe(0);
 });
 
 test("the same words count as verbatim, whatever the case and punctuation", () => {

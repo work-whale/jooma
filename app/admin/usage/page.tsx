@@ -1,6 +1,6 @@
 import { requireSection } from "../access";
 import { TOOLS } from "@/app/lib/tools";
-import { typeLabel } from "@/app/lib/toolRunDisplay";
+import { stepLabel, typeLabel } from "@/app/lib/toolRunDisplay";
 import AdminUsageTable, { type AdminUsageRow } from "./AdminUsageTable";
 import UsageView, {
   type FairUseRule,
@@ -81,7 +81,7 @@ export default async function AdminUsagePage() {
   for (const s of steps) {
     if (s.tool_slug === "generate-slideshow") continue;
     const arr = childrenBySlug.get(s.tool_slug) ?? [];
-    arr.push({ label: s.slide_label ?? s.step, cost_usd: Number(s.cost_usd) });
+    arr.push({ label: s.slide_label ?? stepLabel(s.tool_slug, s.step), cost_usd: Number(s.cost_usd) });
     childrenBySlug.set(s.tool_slug, arr);
   }
 

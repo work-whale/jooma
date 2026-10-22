@@ -6,8 +6,12 @@ import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import ChatMessages, { type ChatTurn } from "@/app/components/assistant/ChatMessages";
 import AssistantComposer, { type Attachment } from "@/app/components/assistant/AssistantComposer";
 import AssistantLocked from "@/app/components/assistant/AssistantLocked";
-import { useAssistantChats } from "@/app/components/assistant/AssistantShell";
+import { useAssistantChats, useAssistantVoice } from "@/app/components/assistant/AssistantShell";
+import { LiveBar, LiveConfirm } from "@/app/components/jo/Live";
 import { createChat, listMessages, saveMessage } from "@/app/lib/assistantChats";
+import { nextSentences } from "@/app/lib/jo/speech-chunks";
+import { ASSISTANT_TOOLS } from "@/app/lib/assistant-tools";
+import { v2ToolForSlug } from "@/app/lib/tools";
 import {
   validatePrefill,
   validateClarify,
@@ -26,6 +30,11 @@ const CLARIFY_HEADER = "x-assistant-clarify";
 
 const REFUSAL_HEADER = "x-assistant-refusal";
 
+/** A tool as the teacher knows it, for Jo to name out loud. */
+function toolName(slug: string): string {
+  return v2ToolForSlug(slug)?.name ?? ASSISTANT_TOOLS.find((t) => t.slug === slug)?.label ?? "the tool";
+}
+
 export default function AssistantView({ chatId }: { chatId?: string }) {
   const desktop = useMediaQuery("(min-width: 1024px)");
   const router = useRouter();
@@ -33,6 +42,15 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
   // The chat list and the plan gate live in the layout, so they survive
   // navigation between /assistant and /assistant/[id]. See AssistantShell.
   const { addChat, allowed, handover, setHandover } = useAssistantChats();
+  // Jo's voice, talk mode and a Live call live in the layout, so they carry
+  // on across the url change after a chat's first message.
+  const { voice, talkState, live: call, handlers } = useAssistantVoice();
+  const inCall = call.state !== "idle";
+  const [talk] = talkState;
+  // Read by maybeOpenTool at the moment it fires. In a spoken conversation the
+  // page does not change under the teacher: the card stays, and Jo says so.
+  const handsFreeRef = useRef(false);
+  handsFreeRef.current = inCall || talk;
 
   const [activeId, setActiveId] = useState<string | null>(chatId ?? null);
   // null = the conversation has not loaded yet, [] = it is genuinely empty.
@@ -200,14 +218,14 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
   const maybeOpenTool = useCallback(
     (toolCall: ToolPrefill | null, ok: boolean) => {
       if (!toolCall || !ok) return;
-      if (composerTouched.current) return;
+      if (composerTouched.current || handsFreeRef.current) return;
       if (typeof document === "undefined") return;
       if (document.visibilityState !== "visible" || !document.hasFocus()) return;
 
       // A beat before the page changes, so the reply can be read first: Jo's
       // answer usually explains why it picked this tool.
       window.setTimeout(() => {
-        if (composerTouched.current) return;
+        if (composerTouched.current || handsFreeRef.current) return;
         if (document.visibilityState !== "visible" || !document.hasFocus()) return;
         // push, not replace: Back must return to the conversation.
         router.push(prefillHref(toolCall));
@@ -326,7 +344,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
       // `clarify` rides along so the caller can count the questions asked. The
       // server cannot keep that tally: a clarify is never persisted and never
       // sent back up, so only the client knows one was shown.
-      return { toolCall, clarify, ok: !refused && !clarify };
+      return { reply, toolCall, clarify, ok: !refused && !clarify };
     },
     [],
   );
@@ -371,7 +389,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           addChat(chat);
         } catch {
           setError("Couldn't start that chat. Please try again.");
-          return;
+          return null;
         }
       }
 
@@ -409,9 +427,106 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
       // Same reason, and it must come after: navigating to the tool while the
       // stream was still running would tear down the panel mid-answer.
       maybeOpenTool(outcome?.toolCall ?? null, outcome?.ok ?? false);
+      return outcome;
     },
     [activeId, addChat, router, streamReply, maybeOpenTool, setHandover],
   );
+
+  /**
+   * An exchange spoken in a Live call that went nowhere near the pipeline: a
+   * question Jo answered in its own words. Written into the chat like any
+   * other, so it is on screen and comes back with the conversation.
+   */
+  const noteExchange = useCallback(
+    async (heard: string, said: string) => {
+      let id = activeId;
+      let isNew = false;
+      if (!id) {
+        try {
+          const chat = await createChat(heard);
+          id = chat.id;
+          isNew = true;
+          setActiveId(chat.id);
+          loadedIdRef.current = chat.id;
+          answeredHereRef.current.add(chat.id);
+          addChat(chat);
+        } catch {
+          return;
+        }
+      }
+      const now = Date.now();
+      const next: ChatTurn[] = [
+        ...turnsRef.current,
+        { id: `local-user-${now}`, role: "user", content: heard },
+        { id: `local-said-${now}`, role: "assistant", content: said },
+      ];
+      turnsRef.current = next;
+      setTurns(next);
+      // In order: the reply must not land before the message it answers.
+      await saveMessage({ chatId: id, role: "user", content: heard }).catch(() => {});
+      void saveMessage({ chatId: id, role: "assistant", content: said }).catch(() => {});
+      if (isNew) {
+        setHandover({ chatId: id, turns: next });
+        router.replace(`/assistant/${id}`);
+      }
+    },
+    [activeId, addChat, router, setHandover],
+  );
+
+  // What a Live call can ask of this conversation. Registered with the layout,
+  // which holds the call, on every render, so it always reaches the page that
+  // is showing now.
+  const streamingRef = useRef(false);
+  streamingRef.current = streaming;
+  useEffect(() => {
+    handlers.current = {
+      ask_jo: async (args, heard) => {
+        if (streamingRef.current) return { error: "Jo is still answering the last question. Ask again in a moment." };
+        const outcome = await send(heard || String(args.request ?? ""), { tool: null, attachment: null });
+        if (!outcome) return { error: "That didn't go through. Ask again in a moment." };
+        return {
+          answer: outcome.reply.slice(0, 2_000),
+          toolCard: outcome.toolCall ? toolName(outcome.toolCall.slug) : null,
+          question: outcome.clarify?.question ?? null,
+          options: outcome.clarify?.options.map((o) => o.label) ?? [],
+        };
+      },
+      onExchange: (heard, said) => void noteExchange(heard, said),
+    };
+  });
+
+  // ── Read aloud ──
+  // The reply a sentence at a time as it streams, as beside a resource. Only
+  // a reply streamed here: one loaded with the conversation, or claimed after
+  // the url change, has already been heard. Not in a Live call, where Jo
+  // speaks for itself.
+  const readRef = useRef<{ id: string; upTo: number; done: boolean } | null>(null);
+  const lastTurn = turns?.[turns.length - 1];
+  useEffect(() => {
+    if (!voice.auto || inCall || !lastTurn || lastTurn.role !== "assistant") return;
+    if (readRef.current?.id !== lastTurn.id) {
+      if (!streaming) return;
+      readRef.current = { id: lastTurn.id, upTo: 0, done: false };
+    }
+    const read = readRef.current;
+    if (read.done) return;
+    const { sentences, upTo } = nextSentences(lastTurn.content, read.upTo, !streaming);
+    read.upTo = upTo;
+    for (const sentence of sentences) voice.enqueue(sentence, lastTurn.id);
+    if (streaming) return;
+    read.done = true;
+    if (lastTurn.clarify?.question) voice.enqueue(lastTurn.clarify.question, lastTurn.id);
+    if (lastTurn.toolCall) voice.enqueue(toolName(lastTurn.toolCall.slug) + " is ready. Tap the card to open it.", lastTurn.id);
+  }, [lastTurn, streaming, voice, inCall]);
+
+  // ── Live ──
+  const [confirming, setConfirming] = useState(false);
+  const startLive = () => {
+    setConfirming(false);
+    talkState[1](false);
+    voice.stop();
+    void call.start();
+  };
 
   /**
    * Answering a clarifying question, by chip or by typing.
@@ -492,8 +607,31 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
           <div className="shrink-0 px-4 sm:px-6 lg:px-10 pb-4 sm:pb-8 pt-2">
             {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+            {confirming && !inCall && <LiveConfirm onStart={startLive} onCancel={() => setConfirming(false)} />}
+            {inCall && (
+              <LiveBar
+                state={call.state}
+                elapsed={call.elapsed}
+                maxSeconds={call.maxSeconds}
+                muted={call.muted}
+                onMute={call.toggleMute}
+                onEnd={call.end}
+              />
+            )}
+            {call.error && (
+              <p className="mb-2 text-sm text-red-600" role="alert" data-testid="live-error">
+                {call.error}
+              </p>
+            )}
             <AssistantComposer
-              onSend={send}
+              onSend={(message, opts) => void send(message, opts)}
+              voice={allowed ? voice : null}
+              talkState={talkState}
+              live={{
+                available: allowed === true && call.supported,
+                on: inCall || confirming,
+                onToggle: () => (inCall ? call.end() : setConfirming((c) => !c)),
+              }}
               busy={streaming}
               disabled={allowed === null}
               // Not on a phone: the keyboard would come up over the splash

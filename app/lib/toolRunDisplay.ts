@@ -15,7 +15,24 @@ const TYPE_LABEL: Record<string, string> = {
   "cpd-slideshow": "CPD Slideshow",
   "homework-generator": "Homework",
   "report-writer": "Report",
+  // Not tools, but they spend, so usage tables list them: Jo editing beside a
+  // resource, and the Ask Jo page.
+  "jo": "Ask Jo: editing",
+  "assistant": "Ask Jo: chat",
 };
+
+// Names for the steps a tool's spend is split into, where the stored name is
+// an internal one. Keyed by tool, because "Main" means something different
+// for each.
+const STEP_LABEL: Record<string, Record<string, string>> = {
+  jo: { Main: "Edits", speak: "Read aloud", live: "Live calls" },
+  assistant: { Main: "Answers", live: "Live calls" },
+};
+
+/** A usage step as an admin should read it. Unknown steps pass through. */
+export function stepLabel(slug: string, step: string) {
+  return STEP_LABEL[slug]?.[step] ?? step;
+}
 
 export function toolForSlug(slug: string) {
   return TOOLS.find((t) => t.href === `/tools/${slug}`);
