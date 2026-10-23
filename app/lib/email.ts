@@ -88,6 +88,12 @@ interface DeliveryExtras {
   text?: string;
   headers?: Record<string, string>;
   categories?: string[];
+  /** Echoed back on every SendGrid event, which is how the event webhook
+   *  finds the recipient row. Values must be strings. */
+  customArgs?: Record<string, string>;
+  /** Bulk email turns open and click tracking off explicitly, so an account
+   *  default can never add a pixel or rewrite a link behind our back. */
+  untracked?: boolean;
 }
 
 /**
@@ -127,6 +133,15 @@ async function deliver(
       ...(extras?.text ? { text: extras.text } : {}),
       ...(extras?.headers ? { headers: extras.headers } : {}),
       ...(extras?.categories ? { categories: extras.categories } : {}),
+      ...(extras?.customArgs ? { customArgs: extras.customArgs } : {}),
+      ...(extras?.untracked
+        ? {
+            trackingSettings: {
+              clickTracking: { enable: false, enableText: false },
+              openTracking: { enable: false },
+            },
+          }
+        : {}),
     });
     return { ok: true };
   } catch (err) {
@@ -148,7 +163,14 @@ async function deliver(
 export async function sendBroadcastEmail(
   to: string,
   rendered: { subject: string; html: string; text: string },
-  opts: { purpose: string; oneClickUrl: string | null },
+  opts: {
+    purpose: string;
+    oneClickUrl: string | null;
+    /** For the event webhook (app/api/email/sendgrid-events). Absent for a
+     *  test send, which has no recipient row for an event to land on. */
+    recipientId?: number;
+    campaignId?: string;
+  },
 ): Promise<{ status: "sent" | "skipped" | "failed"; error?: string }> {
   if (isUndeliverable(to)) return { status: "skipped", error: "Test address, not sent" };
 
@@ -165,6 +187,11 @@ export async function sendBroadcastEmail(
     text: rendered.text,
     headers,
     categories: ["broadcast", opts.purpose],
+    customArgs:
+      opts.recipientId !== undefined && opts.campaignId
+        ? { recipient_id: String(opts.recipientId), campaign_id: opts.campaignId }
+        : undefined,
+    untracked: true,
   });
   return result.ok ? { status: "sent" } : { status: "failed", error: result.error };
 }

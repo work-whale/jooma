@@ -8,6 +8,7 @@ import { LockKey } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import { honouredNextPath } from "@/app/lib/safe-next";
 import { usePublicSettings } from "@/app/lib/usePublicSettings";
+import { OPT_OUT_LABEL, saveProductEmailsChoice } from "@/app/lib/product-emails";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
 
@@ -16,6 +17,11 @@ export default function SignupPage() {
   const settings = usePublicSettings();
   const [email, setEmail] = useState("");
   const [agreed, setAgreed] = useState(false);
+  // The soft opt-in: unticked means product email is on. See
+  // app/lib/product-emails.ts.
+  const [ratherNot, setRatherNot] = useState(false);
+  // Honeypot for /api/signup/lead. A person never sees or fills it.
+  const [website, setWebsite] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<
     | { state: "none" }
@@ -111,11 +117,28 @@ export default function SignupPage() {
     if (!canSubmit) return;
     setError(null);
     sessionStorage.setItem("jooma:auth-email", email.trim());
+    saveProductEmailsChoice(ratherNot);
+    // Remember the address in case they leave before choosing a password, so a
+    // signup reminder can reach them. Never awaited: keepalive lets it finish
+    // after the page has moved on, and a failure here must not stop signup.
+    // An invited teacher is already known through their invite.
+    if (invite.state !== "valid") {
+      void fetch("/api/signup/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), optOut: ratherNot, website }),
+        keepalive: true,
+      }).catch(() => {});
+    }
     router.push("/create-password");
   };
 
   const handleGoogle = async () => {
     setError(null);
+    // Carried through the Google round trip to /complete-profile. Only a tick
+    // is saved: the box sits below this button, so an unticked box may simply
+    // never have been seen, and /complete-profile asks when nothing is saved.
+    if (ratherNot) saveProductEmailsChoice(true);
     const supabase = createClient();
     // An existing Google account skips /complete-profile, so the callback
     // carries ?next= for them too.
@@ -219,6 +242,38 @@ export default function SignupPage() {
             <Link href="/privacy">Privacy Policy</Link>.
           </span>
         </label>
+
+        {/* Applies to Continue with Google above too, which reads it when
+            pressed. Unsubscribing later is one click in any email, or the
+            Emails section of your profile. */}
+        <label className={auth.check}>
+          <input
+            type="checkbox"
+            checked={ratherNot}
+            onChange={(e) => setRatherNot(e.target.checked)}
+            className={auth.checkBox}
+            data-testid="signup-product-emails-opt-out"
+          />
+          <span>{OPT_OUT_LABEL}</span>
+        </label>
+
+        {/* Honeypot for /api/signup/lead. Off-screen rather than display:none,
+            which some bots skip; the same arrangement as /forgot-password. */}
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}
+        >
+          <label htmlFor="signup-website">Website</label>
+          <input
+            id="signup-website"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+        </div>
 
         {error && (
           <p className={auth.error} role="alert">

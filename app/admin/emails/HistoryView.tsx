@@ -63,6 +63,9 @@ export default function HistoryView({ rows }: { rows: CampaignRow[] }) {
                 <Th align="right">Sent</Th>
                 <Th align="right">Failed</Th>
                 <Th align="right">Skipped</Th>
+                <Th align="right">Delivered</Th>
+                <Th align="right">Bounced</Th>
+                <Th align="right">Spam</Th>
                 <Th>When</Th>
                 <Th>By</Th>
               </tr>
@@ -98,6 +101,15 @@ export default function HistoryView({ rows }: { rows: CampaignRow[] }) {
                   <Td align="right" mono>
                     {nf.format(c.skipped_count)}
                   </Td>
+                  <Td align="right" mono>
+                    {nf.format(c.delivered_count)}
+                  </Td>
+                  <Td align="right" mono>
+                    {nf.format(c.bounced_count)}
+                  </Td>
+                  <Td align="right" mono>
+                    {nf.format(c.spam_count)}
+                  </Td>
                   <Td>
                     <span className="text-xs whitespace-nowrap" style={{ color: C.ink2 }}>
                       {when(c)}
@@ -114,7 +126,8 @@ export default function HistoryView({ rows }: { rows: CampaignRow[] }) {
           </Table>
         )}
         <CardFooter>
-          {nf.format(rows.length)} emails · counts refresh when you reopen this tab
+          {nf.format(rows.length)} emails · counts refresh when you reopen this tab ·
+          delivery counts arrive from SendGrid over the next few minutes
         </CardFooter>
       </Card>
 
@@ -212,6 +225,13 @@ function CampaignDetail({
                 campaign.skipped_count,
               )} skipped of ${nf.format(campaign.recipient_count)}.`}
       </p>
+      {status !== "scheduled" && (
+        <p className="text-sm -mt-2 mb-4" style={{ color: C.muted }} data-testid="campaign-delivery">
+          {`SendGrid reports ${nf.format(campaign.delivered_count)} delivered, ${nf.format(
+            campaign.bounced_count,
+          )} bounced and ${nf.format(campaign.spam_count)} marked as spam. Bounces and spam reports are unsubscribed automatically.`}
+        </p>
+      )}
       {resumable && !busy && (
         <div className="mb-3">
           <Note>

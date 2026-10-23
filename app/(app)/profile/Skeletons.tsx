@@ -156,6 +156,23 @@ function BadgesSkeleton() {
   );
 }
 
+/** Heading, then the one switch row with its hint. */
+export function EmailPreferencesSkeleton() {
+  return (
+    <Panel>
+      <Bone className="h-5 w-24 mb-6" />
+      <div className="flex items-start justify-between gap-6 max-w-xl">
+        <div className="flex-1">
+          <Bone className="h-4 w-48 mb-2" />
+          <Bone className="h-3 w-full mb-1" />
+          <Bone className="h-3 w-2/3" />
+        </div>
+        <Bone className="rounded-full" style={{ width: 48, height: 28 }} />
+      </div>
+    </Panel>
+  );
+}
+
 /** Heading, two lines of explanation, one button. Matches the idle state, which
  *  is what almost every visit to this section renders. */
 export function DeleteAccountSkeleton() {
@@ -173,6 +190,7 @@ export function SectionSkeleton({ section }: { section: Section }) {
   if (section === "subscription") return <SubscriptionSkeleton />;
   if (section === "badges") return <BadgesSkeleton />;
   if (section === "password") return <ChangePasswordSkeleton />;
+  if (section === "emails") return <EmailPreferencesSkeleton />;
   if (section === "ticket") return <SubmitTicketSkeleton />;
   if (section === "delete") return <DeleteAccountSkeleton />;
   return <PersonalInfoSkeleton />;

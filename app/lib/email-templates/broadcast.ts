@@ -45,13 +45,23 @@ export function respectsOptOut(purpose: string): boolean {
 
 // ── Audiences ───────────────────────────────────────────────────────────────
 
-export const AUDIENCES = ["all_teachers", "free", "paying", "incomplete_signups", "emails"] as const;
+export const AUDIENCES = [
+  "all_teachers",
+  "free",
+  "paying",
+  "trialing",
+  "cancelled",
+  "incomplete_signups",
+  "emails",
+] as const;
 export type AudienceKind = (typeof AUDIENCES)[number];
 
 export const AUDIENCE_LABEL: Record<AudienceKind, string> = {
   all_teachers: "All teachers",
   free: "No plan",
   paying: "Paying teachers",
+  trialing: "On a free trial",
+  cancelled: "Cancelled subscription",
   incomplete_signups: "Incomplete signups",
   emails: "Chosen addresses",
 };
@@ -59,8 +69,11 @@ export const AUDIENCE_LABEL: Record<AudienceKind, string> = {
 export const AUDIENCE_HINT: Record<AudienceKind, string> = {
   all_teachers: "Everyone who finished signing up.",
   free: "Finished signing up, with no active subscription.",
-  paying: "On any paid plan.",
-  incomplete_signups: "Created an account but never finished their profile.",
+  paying: "Paying for a subscription now. Not trials, and not free upgrades we gave.",
+  trialing: "In a free trial of a paid plan.",
+  cancelled: "Had a subscription that ended and have not come back. Good for win-back.",
+  incomplete_signups:
+    "Started signing up but never finished. Signup reminders also reach people who stopped before choosing a password.",
   emails: "Specific people with a Jooma account, up to 50.",
 };
 
@@ -162,6 +175,10 @@ export function validateBroadcast(c: BroadcastContent): string | null {
 export interface BroadcastRecipient {
   email: string;
   firstName: string | null;
+  /** False for a signup lead: someone who typed their address at /signup and
+   *  left before choosing a password, so there is no account to sign in to.
+   *  Absent means an account, which is every recipient except those. */
+  hasAccount?: boolean;
 }
 
 /** Who the preview pretends to be writing to. */
@@ -188,7 +205,8 @@ export function broadcastParams(r: BroadcastRecipient): Record<string, string> {
     // /login rather than /complete-profile: the reader usually has no session
     // any more, and signing in lands a profileless account on the form anyway
     // (the profile gate in proxy.ts). Google users take the same route.
-    completeSignupUrl: `${base}/login`,
+    // A lead has no account to sign in to, so they start signing up again.
+    completeSignupUrl: r.hasAccount === false ? `${base}/signup` : `${base}/login`,
   };
 }
 

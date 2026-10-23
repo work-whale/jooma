@@ -11,6 +11,7 @@ export const SECTIONS = [
   { id: "subscription", label: "Plan and usage" },
   { id: "badges", label: "Badges" },
   { id: "password", label: "Change password" },
+  { id: "emails", label: "Emails" },
   { id: "ticket", label: "Submit ticket" },
   // Last, and deliberately so: it is the one entry nobody should reach by
   // accident on their way to something else.

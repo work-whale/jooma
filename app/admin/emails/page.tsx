@@ -5,9 +5,10 @@ import { Note, PageHead } from "../ui";
 import ComposeView from "./ComposeView";
 import EmailTabs from "./EmailTabs";
 import HistoryView from "./HistoryView";
+import OptOutsView from "./OptOutsView";
 import SystemEmails, { type EmailTemplate } from "./SystemEmails";
 import TemplatesView from "./TemplatesView";
-import type { AutomationRow, BroadcastTemplate, CampaignRow } from "./types";
+import type { AutomationRow, BroadcastTemplate, CampaignRow, OptOutRow } from "./types";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,9 @@ export const dynamic = "force-dynamic";
 //
 // Each sees only their part. The RPCs behind each part re-check the same
 // permission, so hiding a tab here is presentation, not the boundary.
+//
+// Opt-outs lists addresses, so it also needs see_teachers. The marketing role
+// sends without it and keeps seeing counts only.
 
 const SEND_TABS = [
   { key: "compose", label: "Compose" },
@@ -30,14 +34,17 @@ const SEND_TABS = [
 export default async function AdminEmailsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; template?: string }>;
+  searchParams: Promise<{ tab?: string; template?: string; q?: string }>;
 }) {
   const { supabase, access } = await requireAnySection(["see_content", "send_email_campaigns"]);
   const canSend = access.can("send_email_campaigns");
   const canSystem = access.can("see_content");
+  const canSeeOptOuts = canSend && access.can("see_teachers");
 
-  const { tab: asked, template } = await searchParams;
-  const tabs = canSend ? SEND_TABS : [{ key: "templates", label: "Templates" }];
+  const { tab: asked, template, q } = await searchParams;
+  const tabs = canSend
+    ? [...SEND_TABS, ...(canSeeOptOuts ? [{ key: "optouts", label: "Opt-outs" }] : [])]
+    : [{ key: "templates", label: "Templates" }];
   const tab = tabs.find((t) => t.key === asked)?.key ?? tabs[0].key;
   const mailerReady = mailerConfigured();
 
@@ -61,6 +68,15 @@ export default async function AdminEmailsPage({
     const { data, error } = await supabase.rpc("admin_email_campaigns", { lim: 200 });
     if (error) problems.push(error.message);
     body = <HistoryView rows={(data ?? []) as CampaignRow[]} />;
+  } else if (tab === "optouts") {
+    const search = (q ?? "").trim().slice(0, 254);
+    const { data, error } = await supabase.rpc("admin_email_opt_outs", {
+      p_search: search || null,
+      lim: 500,
+    });
+    if (error) problems.push(error.message);
+    // Keyed on the search so the add form and any inline state reset with it.
+    body = <OptOutsView key={search} rows={(data ?? []) as OptOutRow[]} search={search} />;
   } else {
     const [templates, automations, system] = await Promise.all([
       canSend ? supabase.rpc("admin_broadcast_templates") : null,

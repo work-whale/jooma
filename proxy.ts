@@ -39,6 +39,9 @@ const MAINTENANCE_ALLOWED = [
   // Leaving a mailing list is not something to put on hold for an update.
   "/unsubscribe",
   "/api/email/unsubscribe",
+  // SendGrid retries for days, but a bounce recorded late is a bounce we kept
+  // mailing in the meantime.
+  "/api/email/sendgrid-events",
 ];
 
 // Routes reachable without a session. Everything else redirects to /login.
@@ -81,6 +84,13 @@ const PUBLIC_PATHS = [
   // The route checks a per-recipient token and throttles by IP itself.
   "/unsubscribe",
   "/api/email/unsubscribe",
+  // SendGrid's delivery events, server-to-server. The route checks SendGrid's
+  // signature itself, the same arrangement as the Stripe webhook below.
+  "/api/email/sendgrid-events",
+  // /signup remembers the address typed there before a password exists, so
+  // the caller has no session by definition. Honeypot and two throttles, as
+  // /api/enquiries.
+  "/api/signup/lead",
   // Stripe calls this server-to-server with no session; it verifies its own
   // signature, so it must bypass the auth redirect.
   "/api/stripe/webhook",
@@ -216,6 +226,7 @@ const GATE_EXEMPT = [
   // must be able to opt out without first finishing the profile form.
   "/unsubscribe",
   "/api/email/unsubscribe",
+  "/api/email/sendgrid-events",
   "/sitemap.xml",
   "/robots.txt",
   "/googleeff60eae5378a4ab.html",

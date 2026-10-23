@@ -12,6 +12,7 @@ import PersonalInfoSection from "./PersonalInfoSection";
 import SubscriptionSection from "./SubscriptionSection";
 import BadgesSection from "./BadgesSection";
 import ChangePasswordSection from "./ChangePasswordSection";
+import EmailPreferencesSection from "./EmailPreferencesSection";
 import SubmitTicketSection from "./SubmitTicketSection";
 import DeleteAccountSection from "./DeleteAccountSection";
 
@@ -73,6 +74,7 @@ export default async function ProfilePage({
             )}
             {section === "badges" && <BadgesSection />}
             {section === "password" && <ChangePasswordSection />}
+            {section === "emails" && <EmailPreferencesSection />}
             {section === "ticket" && <SubmitTicketSection />}
             {section === "delete" && <DeleteAccountSection />}
           </Suspense>
