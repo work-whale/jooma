@@ -72,6 +72,8 @@ interface ClaimedRow {
   email: string;
   first_name: string | null;
   unsub_token: string;
+  /** Null for a signup lead, who has no account yet. */
+  user_id: string | null;
 }
 
 /**
@@ -104,12 +106,14 @@ export async function sendBatch(id: string, limit = BATCH_SIZE): Promise<Campaig
     try {
       const rendered = renderBroadcast(
         content,
-        { email: r.email, firstName: r.first_name },
+        { email: r.email, firstName: r.first_name, hasAccount: r.user_id !== null },
         { purpose, unsubscribeUrl: withLink ? unsubscribePageUrl(r.unsub_token) : null },
       );
       const outcome = await sendBroadcastEmail(r.email, rendered, {
         purpose,
         oneClickUrl: withLink ? oneClickUnsubscribeUrl(r.unsub_token) : null,
+        recipientId: r.id,
+        campaignId: id,
       });
       return { id: r.id, status: outcome.status, error: outcome.error ?? null };
     } catch (e) {
@@ -145,6 +149,11 @@ export interface SweepSummary {
 export async function runDue(budgetMs: number): Promise<SweepSummary> {
   const deadline = Date.now() + budgetMs;
   const summary: SweepSummary = { automations: 0, batches: 0 };
+
+  // Signup leads are kept 30 days, or until the address has an account. Runs
+  // before the mailer check: retention holds whether or not email is set up.
+  const { error: pruneError } = await supabaseAdmin.rpc("email_leads_prune");
+  if (pruneError) console.error("[email-campaigns] lead prune failed", pruneError);
 
   // Without a provider every recipient would be burned as failed. Leave the
   // work queued; it goes out on the first run after the keys are set.

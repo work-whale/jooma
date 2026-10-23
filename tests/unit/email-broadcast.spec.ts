@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
 import {
+  AUDIENCES,
+  AUDIENCE_HINT,
+  AUDIENCE_LABEL,
+  broadcastParams,
   formatBody,
   isUndeliverable,
   parseEmailList,
@@ -235,5 +239,41 @@ test.describe("helpers", () => {
     expect(validateBroadcast(content({ ctaLabel: "Go", ctaUrl: "ftp://x" }))).toMatch(/https/);
     expect(validateBroadcast(content({ ctaLabel: "Go", ctaUrl: "{{siteUrl}}" }))).toBeNull();
     expect(validateBroadcast(content())).toBeNull();
+  });
+});
+
+test.describe("audiences and signup leads", () => {
+  test("every audience has a label and a hint, including trials and cancelled", () => {
+    expect(AUDIENCES).toContain("trialing");
+    expect(AUDIENCES).toContain("cancelled");
+    for (const kind of AUDIENCES) {
+      expect(AUDIENCE_LABEL[kind], kind).toBeTruthy();
+      expect(AUDIENCE_HINT[kind], kind).toBeTruthy();
+    }
+  });
+
+  test("a lead finishes at /signup, an account at /login", () => {
+    // A lead typed an address at /signup and never chose a password, so there
+    // is no account to sign in to.
+    const lead = broadcastParams({ email: "a@b.co", firstName: null, hasAccount: false });
+    expect(lead.completeSignupUrl).toMatch(/\/signup$/);
+    expect(lead.firstName).toBe("there");
+
+    // Absent means an account: every recipient before leads existed.
+    expect(broadcastParams({ email: "a@b.co", firstName: "Sam" }).completeSignupUrl).toMatch(/\/login$/);
+    expect(
+      broadcastParams({ email: "a@b.co", firstName: "Sam", hasAccount: true }).completeSignupUrl,
+    ).toMatch(/\/login$/);
+  });
+
+  test("a lead's reminder button goes to /signup", () => {
+    const r = renderBroadcast(
+      content({ ctaLabel: "Finish", ctaUrl: "{{completeSignupUrl}}" }),
+      { email: "lead@school.org", firstName: null, hasAccount: false },
+      { purpose: "signup_reminder", unsubscribeUrl: "https://www.jooma.ai/unsubscribe?t=abc" },
+    );
+    expect(r.html).toContain("/signup");
+    expect(r.html).not.toContain("/login");
+    expect(r.html).toContain("Unsubscribe");
   });
 });

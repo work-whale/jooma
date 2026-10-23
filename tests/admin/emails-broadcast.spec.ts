@@ -6,7 +6,9 @@ import {
   createAdminWithRole,
   createProfilelessTeacher,
   createTeacher,
+  anonClient,
   deleteTeacher,
+  setPlan,
   signIn,
   type TestTeacher,
 } from "../support/users";
@@ -19,10 +21,14 @@ import {
  * the WHOLE pipeline against staging, audience, claim, render, record, and
  * nothing is ever delivered or bounced. "2 skipped" is the success signal.
  *
- * Needs supabase/migrations/20260924000000_email_campaigns.sql on staging.
+ * Needs supabase/migrations/20260924000000_email_campaigns.sql and
+ * 20261023000000_email_consent_and_delivery.sql on staging.
  */
 
 const TAG = `e2e${Date.now().toString(36)}`;
+/** A signup lead: an address typed at /signup with no account behind it. */
+const LEAD = `e2e-lead-${TAG}@jooma.test`;
+const ADDED = `e2e-added-${TAG}@jooma.test`;
 
 let owner: TestTeacher | null = null;
 let marketing: TestTeacher | null = null;
@@ -31,6 +37,7 @@ let alice: TestTeacher | null = null;
 let bob: TestTeacher | null = null;
 let optedOut: TestTeacher | null = null;
 let stranded: TestTeacher | null = null;
+let comped: TestTeacher | null = null;
 
 test.beforeAll(async () => {
   owner = await createAdmin("Postie");
@@ -40,17 +47,19 @@ test.beforeAll(async () => {
   bob = await createTeacher("Bob");
   optedOut = await createTeacher("Quiet");
   stranded = await createProfilelessTeacher("Stranded");
+  comped = await createTeacher("Comped");
 
   const { error } = await admin.from("email_opt_outs").insert({ email: optedOut.email, source: "admin" });
   if (error) throw new Error(`Could not opt the fixture out: ${error.message}`);
 });
 
 test.afterAll(async () => {
-  const fixtures = [owner, marketing, support, alice, bob, optedOut, stranded];
+  const fixtures = [owner, marketing, support, alice, bob, optedOut, stranded, comped];
   await admin
     .from("email_opt_outs")
     .delete()
-    .in("email", fixtures.filter(Boolean).map((f) => f!.email));
+    .in("email", [...fixtures.filter(Boolean).map((f) => f!.email), LEAD, ADDED]);
+  await admin.from("signup_leads").delete().eq("email", LEAD);
   await admin.from("email_campaigns").delete().like("subject", `%${TAG}%`);
   await admin.from("email_broadcast_templates").delete().like("name", `%${TAG}%`);
   for (const f of fixtures) await deleteTeacher(f);
@@ -333,5 +342,167 @@ test.describe("roles", () => {
   test("the cron refuses a caller without the secret", async ({ request }) => {
     const res = await request.get("/api/cron/email-campaigns");
     expect([401, 500]).toContain(res.status());
+  });
+});
+
+test.describe("audiences", () => {
+  test("trials and cancelled subscriptions are audiences with counts", async ({ page }) => {
+    await signIn(page, owner!);
+    await openCompose(page);
+    for (const kind of ["trialing", "cancelled"]) {
+      await expect(page.getByTestId(`count-${kind}`)).not.toHaveText("...");
+    }
+    await expect(page.getByRole("radio", { name: "On a free trial" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Cancelled subscription" })).toBeVisible();
+  });
+
+  test("paying means a real subscription: not a comp, not a trial", async () => {
+    const client = await asTeacher(owner!);
+    const paying = async () => {
+      const { data, error } = await client.rpc("admin_email_audience_counts", { p_purpose: "notice" });
+      expect(error).toBeNull();
+      return (data as { paying: number }).paying;
+    };
+    const before = await paying();
+
+    await setPlan(comped!, "pro", "comped");
+    expect(await paying()).toBe(before);
+
+    await setPlan(comped!, "pro", "trialing");
+    expect(await paying()).toBe(before);
+
+    await setPlan(comped!, "pro", "paying");
+    expect(await paying()).toBe(before + 1);
+  });
+});
+
+test.describe("signup leads", () => {
+  test("a lead is remembered, and its opt-out cannot be undone by anyone", async () => {
+    const anon = anonClient();
+    expect((await anon.rpc("record_signup_lead", { p_email: LEAD, p_opt_out: false })).error).toBeNull();
+
+    const { data: first } = await admin.from("signup_leads").select("opted_out").eq("email", LEAD).single();
+    expect(first?.opted_out).toBe(false);
+
+    await anon.rpc("record_signup_lead", { p_email: LEAD.toUpperCase(), p_opt_out: true });
+    await anon.rpc("record_signup_lead", { p_email: LEAD, p_opt_out: false });
+    const { data: after } = await admin.from("signup_leads").select("opted_out").eq("email", LEAD).single();
+    expect(after?.opted_out).toBe(true);
+
+    // Back on for the reminder test below.
+    await admin.from("signup_leads").update({ opted_out: false }).eq("email", LEAD);
+  });
+
+  test("an address with an account is never stored as a lead", async () => {
+    await anonClient().rpc("record_signup_lead", { p_email: alice!.email, p_opt_out: false });
+    const { data } = await admin.from("signup_leads").select("email").eq("email", alice!.email);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("leads get signup reminders and nothing else", async ({ page }) => {
+    const client = await asTeacher(owner!);
+    const leadsFor = async (purpose: string) => {
+      const { data } = await client.rpc("admin_email_audience_counts", { p_purpose: purpose });
+      return (data as { incomplete_leads: number }).incomplete_leads;
+    };
+    expect(await leadsFor("signup_reminder")).toBeGreaterThanOrEqual(1);
+    expect(await leadsFor("marketing")).toBe(0);
+    expect(await leadsFor("information")).toBe(0);
+
+    await signIn(page, owner!);
+    await openCompose(page);
+    await page.getByLabel("Kind of email").selectOption("signup_reminder");
+    await expect(page.getByTestId("count-incomplete-leads")).toContainText("stopped before choosing a password");
+  });
+
+  test("the public route answers 200 to everything, and a honeypot stores nothing", async ({ request }) => {
+    const bot = `e2e-bot-${TAG}@jooma.test`;
+    const res = await request.post("/api/signup/lead", {
+      data: { email: bot, optOut: false, website: "https://spam.example" },
+    });
+    expect(res.status()).toBe(200);
+    const { data } = await admin.from("signup_leads").select("email").eq("email", bot);
+    expect(data ?? []).toHaveLength(0);
+
+    expect((await request.post("/api/signup/lead", { data: { email: "not an address" } })).status()).toBe(200);
+  });
+
+  test("anon cannot read leads or reach the service-only functions", async () => {
+    const anon = anonClient();
+    const read = await anon.from("signup_leads").select("email").limit(1);
+    expect(read.data ?? []).toHaveLength(0);
+    expect((await anon.rpc("email_leads_prune")).error).not.toBeNull();
+    expect((await anon.rpc("email_record_events", { p_events: [] })).error).not.toBeNull();
+    expect((await anon.rpc("admin_email_opt_outs", {})).error).not.toBeNull();
+  });
+});
+
+test.describe("delivery and opt-outs", () => {
+  test("History shows what SendGrid reported", async ({ page }) => {
+    await signIn(page, owner!);
+    const subject = `Delivery ${TAG}`;
+    const res = await page.request.post("/api/admin/emails/campaigns", {
+      data: {
+        purpose: "information",
+        content: { subject, preheader: "", heading: "", body: "Did it land?", ctaLabel: "", ctaUrl: "" },
+        // Not Alice or Bob: the unsubscribe tests above opted them out.
+        audience: { kind: "emails", emails: [comped!.email] },
+      },
+    });
+    const { id, recipients } = await res.json();
+    expect(recipients).toBe(1);
+    // What the webhook would write for a delivered email.
+    const { data: marked } = await admin
+      .from("email_campaign_recipients")
+      .update({ delivery: "delivered" })
+      .eq("campaign_id", id)
+      .select("id");
+    expect(marked ?? []).toHaveLength(1);
+
+    await page.goto("/admin/emails?tab=history");
+    await page.getByRole("row", { name: new RegExp(subject) }).click();
+    await expect(page.getByTestId("campaign-delivery")).toContainText(
+      "1 delivered, 0 bounced and 0 marked as spam",
+    );
+  });
+
+  test("the webhook refuses an unsigned request", async ({ request }) => {
+    const res = await request.post("/api/email/sendgrid-events", {
+      data: [{ event: "spamreport", email: alice!.email }],
+    });
+    // 503 where the verification key is not configured, 401 where it is.
+    expect([401, 503]).toContain(res.status());
+    const { data } = await admin.from("email_opt_outs").select("source").eq("email", alice!.email);
+    expect((data ?? []).some((r) => r.source === "spam")).toBe(false);
+  });
+
+  test("a super admin can add and remove an opt-out, and it is logged", async ({ page }) => {
+    await signIn(page, owner!);
+    await page.goto("/admin/emails?tab=optouts");
+    await page.getByRole("textbox", { name: "Address to unsubscribe" }).fill(ADDED);
+    await page.getByRole("button", { name: "Unsubscribe address" }).click();
+
+    const row = page.getByRole("row", { name: new RegExp(ADDED) });
+    await expect(row).toContainText("Added by an admin");
+
+    await row.getByRole("button", { name: "Remove" }).click();
+    await expect(row).toHaveCount(0);
+
+    const { data: log } = await admin
+      .from("admin_audit_log")
+      .select("action")
+      .eq("object_id", ADDED)
+      .order("created_at");
+    expect((log ?? []).map((l) => l.action)).toEqual(["Added email opt-out", "Removed email opt-out"]);
+  });
+
+  test("marketing never sees the opt-out list, which is addresses", async ({ page }) => {
+    await signIn(page, marketing!);
+    await openCompose(page);
+    await expect(page.getByRole("link", { name: "Opt-outs" })).toHaveCount(0);
+
+    const client = await asTeacher(marketing!);
+    expect((await client.rpc("admin_email_opt_outs", {})).error).not.toBeNull();
+    expect((await client.rpc("admin_set_email_opt_out", { p_email: ADDED, p_out: true })).error).not.toBeNull();
   });
 });

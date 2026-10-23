@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Privacy Policy
         </h1>
-        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 3 September 2026</p>
+        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 23 October 2026</p>
 
         <div className="rounded-2xl p-8 space-y-8" style={{ backgroundColor: "var(--j-card)" }}>
 
@@ -35,6 +35,7 @@ export default function PrivacyPage() {
               ["Technical data", "IP address, browser type, device type, operating system"],
               ["Payment data", "Billing details processed by our payment provider (we do not store card numbers)"],
               ["Communications", "Any messages you send us via email or support channels"],
+              ["Unfinished signups", "If you enter your email address to sign up but do not finish, we keep that address for up to 30 days so we can remind you, then delete it"],
             ]} />
             <p>We do not knowingly collect data from anyone under 18. If you believe a minor has created an account, contact us and we will delete it.</p>
           </Section>
@@ -44,6 +45,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 space-y-1.5">
               <li><strong>Provide and improve the service</strong> — process your prompts, generate content, and save your work.</li>
               <li><strong>Manage your account</strong> — authenticate you, send important service notifications, and handle support queries.</li>
+              <li><strong>Send you product news by email</strong>, such as new features and teaching ideas. You can say no when you sign up, turn it off in the Emails section of your profile, or unsubscribe from any of these emails.</li>
               <li><strong>Process payments</strong> — handle subscription billing and send receipts.</li>
               <li><strong>Analyse usage</strong> — understand how the service is used so we can improve it (aggregated and anonymised where possible).</li>
               <li><strong>Legal compliance</strong> — meet our obligations under UK and EU law.</li>
@@ -56,7 +58,7 @@ export default function PrivacyPage() {
               ["Contract performance", "Processing necessary to provide the service you signed up for"],
               ["Legitimate interests", "Improving the service, fraud prevention, security monitoring"],
               ["Legal obligation", "Compliance with UK tax, accounting, and data protection law"],
-              ["Consent", "Marketing communications (you can withdraw consent at any time)"],
+              ["Legitimate interests (soft opt-in)", "Emailing product news to people who have an account with us, and reminding people who started signing up to finish. You can refuse at signup, turn it off in your profile, or unsubscribe from any such email at any time"],
             ]} />
           </Section>
 
@@ -67,7 +69,7 @@ export default function PrivacyPage() {
               ["OpenAI", "AI content generation — your prompts are sent to OpenAI’s API. See openai.com/privacy"],
               ["Anthropic", "AI content generation — your prompts are sent to Anthropic’s API. See anthropic.com/legal/privacy"],
               ["Stripe", "Payment processing — see stripe.com/gb/privacy"],
-              ["Twilio SendGrid", "Delivery of account and service emails — operated by Twilio Inc. See twilio.com/en-us/legal/privacy"],
+              ["Twilio SendGrid", "Delivery of account, service and product news emails. SendGrid tells us whether each email was delivered, bounced or reported as spam, and we use that only to stop emailing addresses that bounce or complain. Operated by Twilio Inc. See twilio.com/en-us/legal/privacy"],
               ["Sentry", "Error monitoring and diagnostics, which may record your IP address and account identifier when something goes wrong — operated by Functional Software, Inc. See sentry.io/privacy"],
               ["Vercel", "Hosting and edge delivery — see vercel.com/legal/privacy-policy"],
               ["Meta", "Advertising measurement. We send a one-way encrypted (hashed) form of your email address, advertising cookie identifiers, and the amount and currency of a subscription payment, so we can tell which adverts led to signups — operated by Meta Platforms Ireland Ltd. See facebook.com/privacy/policy"],

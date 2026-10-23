@@ -47,7 +47,12 @@ import BroadcastPreview from "./BroadcastPreview";
 import { drainCampaign, type Progress } from "./drain";
 import type { BroadcastTemplate } from "./types";
 
-type Counts = Record<Exclude<AudienceKind, "emails">, number> & { opted_out: number };
+type Counts = Record<Exclude<AudienceKind, "emails">, number> & {
+  opted_out: number;
+  /** How many of incomplete_signups are signup leads, who only ever get
+   *  signup reminders. Zero for every other purpose. */
+  incomplete_leads: number;
+};
 
 export default function ComposeView({
   templates,
@@ -298,6 +303,15 @@ export default function ComposeView({
                         <span className="block text-xs" style={{ color: C.muted }}>
                           {AUDIENCE_HINT[kind]}
                         </span>
+                        {kind === "incomplete_signups" && counts && counts.incomplete_leads > 0 && (
+                          <span
+                            className="block text-xs mt-0.5"
+                            style={{ color: C.muted }}
+                            data-testid="count-incomplete-leads"
+                          >
+                            Includes {nf.format(counts.incomplete_leads)} who stopped before choosing a password.
+                          </span>
+                        )}
                       </span>
                       {kind !== "emails" && (
                         <span

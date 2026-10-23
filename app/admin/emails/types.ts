@@ -32,6 +32,10 @@ export interface CampaignRow {
   sent_count: number;
   failed_count: number;
   skipped_count: number;
+  /** From SendGrid's event webhook. Bounced includes dropped. */
+  delivered_count: number;
+  bounced_count: number;
+  spam_count: number;
   created_by_email: string | null;
   created_at: string;
   started_at: string | null;
@@ -47,4 +51,11 @@ export interface AutomationRow {
   live: boolean;
   delay_hours: number;
   updated_at: string;
+}
+
+/** email_opt_outs, via admin_email_opt_outs(). */
+export interface OptOutRow {
+  email: string;
+  source: "link" | "one_click" | "admin" | "signup" | "profile" | "bounce" | "spam";
+  created_at: string;
 }

@@ -13,6 +13,11 @@ import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
 import styles from "./complete-profile.module.css";
 import { honouredNextPath } from "@/app/lib/safe-next";
+import {
+  OPT_OUT_LABEL,
+  clearProductEmailsChoice,
+  readProductEmailsChoice,
+} from "@/app/lib/product-emails";
 
 /*
  * The last step of signing up.
@@ -59,6 +64,16 @@ export default function CompleteProfilePage() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // The product email box, asked here only when /signup never recorded an
+  // answer: a new Google account started from /login, or a Google press made
+  // before the box was ticked. Decided after mount, since the answer lives in
+  // sessionStorage, which the server render cannot see.
+  const [askEmails, setAskEmails] = useState(false);
+  const [ratherNot, setRatherNot] = useState(false);
+  useEffect(() => {
+    if (readProductEmailsChoice() === null) queueMicrotask(() => setAskEmails(true));
+  }, []);
 
   // A second submit must not report a second activation.
   //
@@ -161,6 +176,20 @@ export default function CompleteProfilePage() {
       setLoading(false);
       return;
     }
+
+    // Record a "rather not" from either page, now that there is an account to
+    // record it against. Before the invite step, which can end this handler
+    // early. A failure is logged and not shown: the profile is saved, and the
+    // Emails section of /profile can always change it.
+    const optedOut = askEmails ? ratherNot : readProductEmailsChoice() === "off";
+    if (optedOut) {
+      const { error: prefError } = await supabase.rpc("set_my_product_emails", {
+        p_on: false,
+        p_source: "signup",
+      });
+      if (prefError) console.error("[complete-profile] product email choice not saved", prefError);
+    }
+    clearProductEmailsChoice();
 
     // An admin-invited teacher had their plan chosen before this row existed.
     // Applying it is the server's job: /api/invites/accept re-verifies the
@@ -299,6 +328,19 @@ export default function CompleteProfilePage() {
           </label>
           <CountrySelect value={country} onChange={setCountry} />
         </div>
+
+        {askEmails && (
+          <label className={auth.check}>
+            <input
+              type="checkbox"
+              checked={ratherNot}
+              onChange={(e) => setRatherNot(e.target.checked)}
+              className={auth.checkBox}
+              data-testid="profile-product-emails-opt-out"
+            />
+            <span>{OPT_OUT_LABEL}</span>
+          </label>
+        )}
 
         {error && (
           <p className={auth.error} role="alert">
