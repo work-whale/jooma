@@ -215,12 +215,15 @@ export default async function LandingPage({
           eyebrow="Jooma Slides"
           title="The deck is the lesson."
           lede="Most tools hand you a plan and leave you to build the slides. Jooma builds the thing you actually stand up and teach from, then lets you edit every word of it."
+          // Checked against the slideshow pipeline: 5 to 14 content slides
+          // plus two activity pairs makes 9 to 18. Google Slides export is
+          // built but switched off in the editor, hence "coming soon".
           points={[
-            "Six to eighteen slides from one line",
+            "Nine to eighteen slides from one line",
             "Activities embedded in the deck, not bolted on",
             "Pictures, video and listening clips where they help",
             "Themes from clean and plain to full illustration",
-            "Present from Jooma, or export to PowerPoint and Slides",
+            "Present from Jooma or download PowerPoint, with Google Slides coming soon",
           ]}
           cta={{ href: "/signup", label: "Build a deck" }}
         >
@@ -237,7 +240,7 @@ export default async function LandingPage({
             "Simple, standard or challenging, for any year group",
             "Questions tagged to the reading content domains",
             "Marks on every question, and an answer key with it",
-            "Print ready, or send to Google Docs",
+            "Print ready as PDF or Word, with Google Docs coming soon",
           ]}
           cta={{ href: "/signup", label: "Make a comprehension" }}
         >
@@ -269,7 +272,7 @@ export default async function LandingPage({
             their photo, with permission. Drops in between the staffroom and the
             tools grid without disturbing either. */}
 
-        <ToolsGrid />
+        <ToolsGrid signedIn={!!user} />
 
         <ValueBand />
 

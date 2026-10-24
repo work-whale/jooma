@@ -46,7 +46,7 @@ export function GET() {
 
 > ${BRAND_DEFINITION}
 
-Jooma is a web app for teachers and school leaders in the UK. A teacher picks a tool, answers a few questions (year group, subject, topic) and gets a finished resource to edit, print, present or export to PowerPoint, Word and Google Docs. It uses AI models from OpenAI and Anthropic to draft each resource; the teacher reviews and edits everything it makes. It has a built-in assistant called Jo that opens the right tool from a plain English request.
+Jooma is a web app for teachers and school leaders in the UK. A teacher picks a tool, answers a few questions (year group, subject, topic) and gets a finished resource to edit, print or present. Documents download as PDF or Word; slideshows download as PowerPoint or PDF. It uses AI models from OpenAI and Anthropic to draft each resource; the teacher reviews and edits everything it makes. It has a built-in assistant called Jo that opens the right tool from a plain English request.
 
 Made by ${LEGAL_NAME}, registered in England and Wales. Website: ${SITE_URL}
 

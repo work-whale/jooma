@@ -1,0 +1,309 @@
+/* The public tool pages and their index. Built from the landing page's shared
+   furniture (landing.module.css: shell, eyebrow, buttons, ticks) so they read
+   as the same site; only what is particular to a tool page lives here.
+
+   No Reveal wrapper anywhere on these pages. Reveal starts a section at
+   opacity 0 until JavaScript runs, and these pages exist to be read by things
+   that do not run it. */
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+
+/* The homepage's purple band, shorter. It has to be purple, not light: the
+   landing nav is white text on a transparent bar until it sticks, so on a pale
+   hero its links disappear. Runs up under the nav the same way the homepage
+   hero does (HeroV3.module.css). */
+.hero {
+  margin-top: calc(-74px - env(safe-area-inset-top));
+  padding: 156px 0 84px;
+  background:
+    radial-gradient(ellipse 1100px 620px at 50% 8%, rgba(167, 133, 255, 0.42), transparent 64%),
+    radial-gradient(ellipse 760px 460px at 14% 88%, rgba(91, 46, 214, 0.5), transparent 66%),
+    linear-gradient(168deg, #4a22b5 0%, #5b2ed6 34%, #4a22b5 68%, #3a1c8f 100%);
+  color: #fff;
+}
+
+.crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
+  font-size: 0.85rem;
+  color: #d8ccfa;
+}
+
+.crumbs li + li::before {
+  content: "/";
+  margin-right: 6px;
+  color: #b9a6f5;
+}
+
+:where(.page) .crumbs a,
+.crumbs a {
+  color: #fff;
+  font-weight: 600;
+}
+
+.heroHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* The eyebrow sits beside the tile here, not above a heading. */
+.heroHead > span {
+  margin-bottom: 0;
+  color: #d8ccfa;
+}
+
+/* An eyebrow on the purple band, where the brand purple would vanish. */
+.eyebrowLight {
+  color: #d8ccfa !important;
+}
+
+:where(.page) .h1,
+.h1 {
+  max-width: 18ch;
+  color: #fff;
+}
+
+.intro {
+  margin-top: 22px !important;
+  max-width: 62ch;
+  font-size: clamp(1.04rem, 1.5vw, 1.2rem);
+  color: #ece6fd;
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+  margin-top: 32px;
+}
+
+:where(.page) .openLink,
+.openLink {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ctaNote {
+  margin-top: 12px !important;
+  font-size: 0.88rem;
+  color: #d8ccfa;
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────── */
+
+.block {
+  padding: 80px 0;
+}
+
+.h2 {
+  font-size: clamp(1.6rem, 3vw, 2.3rem) !important;
+  margin-bottom: 32px !important;
+}
+
+.h3 {
+  font-size: 1.25rem !important;
+  margin-bottom: 12px !important;
+}
+
+.centre {
+  text-align: center;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.steps li {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: 22px;
+  padding: 26px 24px;
+}
+
+.stepNum {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--j-purple);
+  color: #fff;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+.features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.features li {
+  display: flex;
+  gap: 12px;
+}
+
+.ukCard {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: 22px;
+  padding: 28px;
+}
+
+.ukCard p {
+  color: var(--j-muted);
+}
+
+.related {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.relatedCard {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.relatedCard b {
+  display: block;
+  color: var(--j-ink);
+}
+
+.relatedCard span span {
+  font-size: 0.9rem;
+  color: var(--j-muted);
+}
+
+.allTools {
+  margin-top: 28px !important;
+  text-align: center;
+}
+
+.allTools a {
+  color: var(--j-purple);
+  font-weight: 700;
+}
+
+/* ── Closing band ───────────────────────────────────────────────────────── */
+
+.close {
+  background: var(--j-purple);
+  padding: 88px 0;
+  text-align: center;
+}
+
+:where(.page) .close h2,
+.close h2 {
+  color: #fff;
+}
+
+.close p {
+  color: #ece6fd;
+  margin: 14px auto 28px !important;
+}
+
+/* ── Index ──────────────────────────────────────────────────────────────── */
+
+.groupHeading {
+  margin: 44px 0 16px !important;
+}
+
+.indexGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.indexCard {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.indexCard b {
+  display: block;
+  color: var(--j-ink);
+}
+
+.indexCard small {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--j-muted);
+}
+
+@media (hover: hover) {
+  .relatedCard:hover,
+  a.indexCard:hover {
+    border-color: var(--j-mid);
+  }
+}
+
+@media (max-width: 1000px) {
+  .steps,
+  .related,
+  .indexGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 860px) {
+  /* The bar is one 64px row here (LandingNav.module.css). */
+  .hero {
+    margin-top: calc(-64px - env(safe-area-inset-top));
+  }
+}
+
+@media (max-width: 620px) {
+  .hero {
+    padding: 112px 0 60px;
+  }
+
+  .block {
+    padding: 60px 0;
+  }
+
+  .steps,
+  .related,
+  .indexGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

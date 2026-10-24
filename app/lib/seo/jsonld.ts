@@ -1,7 +1,8 @@
 import { PLANS, type PlanId } from "@/app/lib/plans";
 import { planCardName } from "@/app/lib/plan-copy";
-import { V2_TOOLS } from "@/app/lib/tools";
+import { V2_TOOLS, type V2Tool } from "@/app/lib/tools";
 import type { FaqItem } from "@/app/lib/landing/faq";
+import { toolPagePath, type ToolPage } from "./tool-pages";
 import {
   BRAND_DEFINITION,
   COMPANY_NUMBER,
@@ -135,6 +136,27 @@ export function softwareApplication(): Node {
     // "Reports"), which is the V1 label each tool keeps as a synonym.
     featureList: V2_TOOLS.map((t) => t.label),
     offers: offers(),
+    publisher: { "@id": ORG_ID },
+  };
+}
+
+/** One tool, on its public page: the same app and offers, narrowed to what
+ *  this tool makes, and tied back to the whole app by isPartOf. */
+export function toolApplication(page: ToolPage, tool: V2Tool): Node {
+  return {
+    "@type": "SoftwareApplication",
+    "@id": `${SITE_URL}${toolPagePath(page)}#app`,
+    name: `Jooma ${tool.label}`,
+    alternateName: tool.name,
+    url: `${SITE_URL}${toolPagePath(page)}`,
+    description: page.description,
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web",
+    inLanguage: "en-GB",
+    audience: { "@type": "EducationalAudience", educationalRole: "teacher" },
+    featureList: page.features,
+    offers: offers(),
+    isPartOf: { "@id": APP_ID },
     publisher: { "@id": ORG_ID },
   };
 }

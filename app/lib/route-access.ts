@@ -98,6 +98,9 @@ export const PUBLIC_PATHS = [
   "/create",
   "/made",
   "/api/try",
+  // The public page for each tool, and their index. Information only: the
+  // tools themselves stay under /tools, behind a session.
+  "/teacher-tools",
   // The ambassador programme's landing page, which the short link
   // jooma.ai/ambassador shows to a signed-out visitor (rewritten in proxy.ts).
   // The person may have no account yet; the page sends them to sign up. Old

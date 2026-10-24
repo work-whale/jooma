@@ -24,10 +24,13 @@ const COLUMNS = [
   {
     heading: "Product",
     links: [
-      { href: "#try", label: "Try it" },
-      { href: "#tools", label: "Tools" },
-      { href: "#pricing", label: "Pricing" },
-      { href: "#schools", label: "For schools" },
+      { href: "/#try", label: "Try it" },
+      { href: "/#tools", label: "Tools" },
+      // The public index, so every page that shows this footer (the tool
+      // pages included) links the hub they hang off.
+      { href: "/teacher-tools", label: "All teacher tools" },
+      { href: "/#pricing", label: "Pricing" },
+      { href: "/#schools", label: "For schools" },
     ],
   },
   {

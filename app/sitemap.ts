@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { TOOL_PAGES, toolPagePath } from "@/app/lib/seo/tool-pages";
 
 /**
  * The public sitemap, served at /sitemap.xml.
@@ -54,5 +55,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    // The public tool pages: the ones that can rank for a tool's name. Read
+    // from the same list the pages are built from, so a page cannot exist
+    // without being listed or be listed without existing.
+    {
+      url: `${base}/teacher-tools`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...TOOL_PAGES.map((page) => ({
+      url: `${base}${toolPagePath(page)}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
   ];
 }
