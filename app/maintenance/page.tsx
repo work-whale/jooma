@@ -1,8 +1,19 @@
 // The holding page behind maintenance_mode. Reached by a rewrite from proxy.ts,
 // so the teacher keeps the URL they asked for and a refresh puts them straight
 // back into the app the moment maintenance is switched off.
+//
+// noindex because the rewrite serves this at every URL, "/" included, to
+// crawlers as well as teachers. Without it a crawl during maintenance would
+// store "Back in a moment" as the homepage.
+
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Back in a moment",
+  robots: { index: false },
+};
 
 export default function MaintenancePage() {
   return (

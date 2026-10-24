@@ -22,13 +22,22 @@ function tiles(size: "tab" | "md" | "xs"): Record<HeroToolId, React.ReactNode> {
  * goes straight to /create to make it for free. Under the box, the real count
  * of people who have visited (the admin Stats figure, worded for the page),
  * every tool as a slow marquee, and resources teachers have chosen to share.
+ *
+ * The eyebrow and the line under the headline are there for the reader who
+ * does not know what Jooma is yet, and for search engines and assistants,
+ * which describe a page from its opening text. The headline is a slogan and
+ * says nothing about what the product does; the sub says it in a sentence.
  */
 export default function HeroV3({
+  eyebrow,
   headline,
+  sub,
   visitors,
   showcase,
 }: {
+  eyebrow: string;
   headline: string;
+  sub: string;
   visitors: number | null;
   showcase: ShowcaseCard[];
 }) {
@@ -40,7 +49,9 @@ export default function HeroV3({
     <section className={styles.hero} id="try">
       <div className={styles.band}>
         <div className={`${shared.shell} ${styles.bandIn}`}>
+          <p className={styles.eyebrow}>{eyebrow}</p>
           <h1 className={styles.h1}>{headline}</h1>
+          <p className={styles.sub} data-testid="hero-sub">{sub}</p>
 
           <HeroTry tabTiles={tiles("tab")} boxTiles={tiles("md")} pillTiles={tiles("xs")} />
 

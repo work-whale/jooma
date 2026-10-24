@@ -69,7 +69,7 @@ async function extractFromUrl(url: string): Promise<NextResponse> {
     return NextResponse.json({ error: "Only http(s) URLs are supported" }, { status: 400 });
   }
   const r = await fetch(target.toString(), {
-    headers: { "User-Agent": "JoomaResourceExtractor/1.0 (+https://jooma)" },
+    headers: { "User-Agent": "JoomaResourceExtractor/1.0 (+https://www.jooma.ai)" },
     redirect: "follow",
   });
   if (!r.ok) {

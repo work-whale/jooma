@@ -9,7 +9,7 @@ import { SquircleDefs } from "@/app/components/v2/Squircle";
 import CreateView from "./CreateView";
 
 export const metadata: Metadata = {
-  title: "Try Jooma free",
+  title: { absolute: "Try Jooma free" },
   description: "Make a slide deck, a comprehension or a worksheet from one line. Free to try, no sign up needed.",
   // A working tool page, not a page to rank. The landing page is the canonical.
   robots: { index: false, follow: true },

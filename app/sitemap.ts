@@ -18,7 +18,7 @@ import type { MetadataRoute } from "next";
  *                       cannot be crawled.
  *   /maintenance        a holding page, only meaningful while it is on.
  *   /sentry-example-page  a test fixture.
- *   /pricing            a REDIRECT, not a page (see app/pricing/page.tsx: it
+ *   /pricing            a REDIRECT, not a page (see app/(app)/pricing/page.tsx: it
  *                       forwards to /#pricing or /profile). A sitemap that
  *                       lists a redirect is asking Google to report a problem
  *                       we already know about.

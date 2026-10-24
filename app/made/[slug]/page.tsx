@@ -55,10 +55,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const item = await getItem(slug);
-  if (!item) return { title: "Not found | Jooma" };
+  if (!item) return { title: "Not found" };
   const by = item.teacher_name ? ` by ${item.teacher_name}` : "";
   return {
-    title: `${item.title} | Made with Jooma`,
+    title: { absolute: `${item.title} | Made with Jooma` },
     description: `${KIND[item.kind]}${by}${item.year_label ? `, ${item.year_label}` : ""}. Made with Jooma.`,
     alternates: { canonical: `/made/${item.slug}` },
   };

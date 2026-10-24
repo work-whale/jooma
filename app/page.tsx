@@ -4,6 +4,7 @@ import { createClient } from "@/app/lib/auth/server";
 import { getCopy } from "@/app/lib/copy";
 import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
 import { publicShowcase } from "@/app/lib/showcase";
+import { SITE_DESCRIPTION } from "@/app/lib/seo/brand";
 import {
   maxYearlySavingPercent,
   planCardCta,
@@ -42,9 +43,8 @@ import styles from "@/app/components/landing/v2/landing.module.css";
  * page-level signal then attach to. Relative on purpose: it resolves against
  * metadataBase in app/layout.tsx, so the host is stated in exactly one place. */
 export const metadata: Metadata = {
-  title: "Jooma. Teaching resources, made in about a minute.",
-  description:
-    "Type a topic and get the slides, the worksheet and the comprehension, built around the UK curriculum. Try it on this page.",
+  title: "Jooma: UK teaching resources, made in about a minute",
+  description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
 
@@ -195,7 +195,9 @@ export default async function LandingPage({
 
       <main>
         <HeroV3
+          eyebrow={copy["home.hero.eyebrow"]}
           headline={copy["home.hero.h1"]}
+          sub={copy["home.hero.sub"]}
           visitors={visitors}
           showcase={showcase}
         />

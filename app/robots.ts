@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { isIndexable } from "@/app/lib/seo/indexable";
 
 /**
  * Served at /robots.txt.
@@ -19,6 +20,11 @@ import type { MetadataRoute } from "next";
 export default function robots(): MetadataRoute.Robots {
   const base = "https://www.jooma.ai";
 
+  // Staging and previews: nothing. See app/lib/seo/indexable.ts.
+  if (!isIndexable()) {
+    return { rules: { userAgent: "*", disallow: "/" } };
+  }
+
   return {
     rules: {
       userAgent: "*",
@@ -32,18 +38,21 @@ export default function robots(): MetadataRoute.Robots {
         "/verify",
         "/create-password",
         "/complete-profile",
+        // NOT /login, /signup or /forgot-password, though they are just as
+        // empty. Each now carries a noindex, and a crawler can only see a
+        // noindex on a page it is allowed to fetch: disallowing them here would
+        // freeze /login in the index where Search Console already shows it.
         // Behind a session.
         "/admin",
         "/dashboard",
         "/profile",
         "/tools/",
         "/editor",
-        "/library",
         "/colleagues",
         "/assistant",
         "/welcome",
         "/announcements",
-        // A redirect, not a page. See app/pricing/page.tsx.
+        // A redirect, not a page. See app/(app)/pricing/page.tsx.
         "/pricing",
         // A test fixture, and the holding page.
         "/sentry-example-page",

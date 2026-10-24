@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 /* See the note in app/terms/page.tsx: same inherited-title problem, same
  * canonical reasoning. */
 export const metadata: Metadata = {
-  title: "Privacy Policy | Jooma",
+  title: "Privacy Policy",
   description: "What data Jooma collects, why, and what you can ask us to do with it.",
   alternates: { canonical: "/privacy" },
 };
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Privacy Policy
         </h1>
-        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 23 October 2026</p>
+        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 24 October 2026</p>
 
         <div className="rounded-2xl p-8 space-y-8" style={{ backgroundColor: "var(--j-card)" }}>
 
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
           <Section title="5. Sharing Your Data">
             <p>We share personal data only with trusted third parties needed to deliver the service:</p>
             <Table rows={[
-              ["Supabase", "Database, authentication, and file storage — hosted in the EU"],
+              ["Supabase", "Database, authentication, and file storage — hosted in the UK (London)"],
               ["OpenAI", "AI content generation — your prompts are sent to OpenAI’s API. See openai.com/privacy"],
               ["Anthropic", "AI content generation — your prompts are sent to Anthropic’s API. See anthropic.com/legal/privacy"],
               ["Stripe", "Payment processing — see stripe.com/gb/privacy"],

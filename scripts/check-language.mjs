@@ -45,6 +45,8 @@ const INCLUDE = [
   "app/components/landing/NavAuth.tsx",
   "app/lib/copy.ts",
   "app/lib/landing",
+  // The brand lines the homepage, its metadata and its social card share.
+  "app/lib/seo/brand.ts",
 ];
 
 /**

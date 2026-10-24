@@ -7,7 +7,7 @@ import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from ".
  * The property worth pinning is that /contact works with NO SESSION AT ALL. It
  * is the first unauthenticated write in the product, so the two ways it can
  * regress are both invisible to a typecheck: dropping /contact or
- * /api/enquiries out of PUBLIC_PATHS in proxy.ts bounces a school to /login, and
+ * /api/enquiries out of PUBLIC_PATHS in app/lib/route-access.ts bounces a school to /login, and
  * tightening the grants on `enquiries` past the point submit_enquiry() needs
  * makes the POST fail for anon only. Neither shows up signed in, which is how
  * they would reach production.

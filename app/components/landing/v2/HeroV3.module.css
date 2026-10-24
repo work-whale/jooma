@@ -50,6 +50,30 @@
   margin: 0;
 }
 
+/* Above the headline: what the page is about, small and quiet. */
+.eyebrow {
+  color: #d8ccfa;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+
+/* Under the headline: the one sentence that says what Jooma does. Wide and
+   modest on a desktop, so it sits in two lines rather than a block, and
+   stepped down with the headline at each breakpoint below so it never
+   outweighs the box it introduces. */
+.sub {
+  color: #ece6fd;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.45;
+  max-width: 46rem;
+  margin: 16px auto 0;
+  text-wrap: pretty;
+}
+
 /* ── Tool picker ── */
 .tsel {
   display: inline-flex;
@@ -820,6 +844,15 @@
     font-size: clamp(2.6rem, 6vw, 4.2rem);
   }
 
+  .eyebrow {
+    margin-bottom: 12px;
+  }
+
+  .sub {
+    font-size: 1rem;
+    margin-top: 12px;
+  }
+
   .tsel {
     margin-top: 30px;
   }
@@ -845,6 +878,11 @@
 
   .h1 {
     font-size: clamp(2.5rem, 10vw, 3.6rem);
+  }
+
+  .sub {
+    font-size: 0.95rem;
+    max-width: 34rem;
   }
 
   .tsel {
@@ -933,6 +971,19 @@
 @media (max-width: 620px) {
   .madeRow {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* On a phone the box is the point; the eyebrow and the sentence above it
+     are small print. */
+  .eyebrow {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+
+  .sub {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-top: 10px;
   }
 
   /* A smaller box and Create button on a phone. The text stays 16px (the
@@ -1053,6 +1104,10 @@
   .h1 {
     font-size: clamp(1.6rem, 9.6vw, 2.6rem);
     text-wrap: balance;
+  }
+
+  .sub {
+    font-size: 0.8rem;
   }
 
   .tsel {

@@ -19,6 +19,8 @@ import { SIGNED_IN_HOME, honouredNextPath } from "@/app/lib/safe-next";
 import { GUEST_COOKIE, newGuestCookie, verifyGuestCookie } from "@/app/lib/guest-cookie";
 import { TRIAL_RUN_HEADER, TRIAL_TOKEN_HEADER, verifyTrialToken } from "@/app/lib/trial-token";
 import { clientIp, guestCallAllowed, guestCookieOptions, trialSecret } from "@/app/lib/guest";
+import { needsSession } from "@/app/lib/route-access";
+import { isIndexable } from "@/app/lib/seo/indexable";
 
 // Reachable while maintenance mode is on. /maintenance itself, obviously, plus
 // the auth routes — an admin has to be able to sign in to turn it back off,
@@ -42,98 +44,6 @@ const MAINTENANCE_ALLOWED = [
   // SendGrid retries for days, but a bounce recorded late is a bounce we kept
   // mailing in the meantime.
   "/api/email/sendgrid-events",
-];
-
-// Routes reachable without a session. Everything else redirects to /login.
-const PUBLIC_PATHS = [
-  "/login",
-  "/signup",
-  // The maintenance holding page is shown to signed-out visitors too, so it
-  // must not bounce to /login — which is itself behind the holding page.
-  "/maintenance",
-  "/verify",
-  "/create-password",
-  "/complete-profile",
-  // Someone who cannot sign in obviously cannot be asked for a session first.
-  // The route behind it carries its own honeypot and two throttles rather than
-  // relying on the session it does not have, exactly as /api/enquiries does.
-  //
-  // Note it is NOT in the signed-in bounce below, unlike /login and /signup: a
-  // Google teacher adding a password reaches the same endpoint from /profile
-  // while very much signed in.
-  "/forgot-password",
-  "/api/auth/password-link",
-  "/auth",
-  "/terms",
-  "/privacy",
-  "/pricing",
-  // A school asking about licences has no account yet, and making them sign up
-  // to ask about pricing loses the enquiry. The form posts to /api/enquiries,
-  // which must be public for the same reason; it carries its own honeypot and
-  // IP throttle rather than relying on the session it does not have.
-  "/contact",
-  "/api/enquiries",
-  // An invited teacher has no account yet, so the invite lookup behind the
-  // /signup banner has to work while signed out. It only ever reveals the
-  // address a valid token was already emailed to, and grants nothing —
-  // /api/invites/accept does the granting, and that one requires a session
-  // and checks the address itself.
-  "/api/invites/check",
-  // The footer link of every bulk email, and the one-click target mail clients
-  // POST to from the List-Unsubscribe header. The reader is usually signed out.
-  // The route checks a per-recipient token and throttles by IP itself.
-  "/unsubscribe",
-  "/api/email/unsubscribe",
-  // SendGrid's delivery events, server-to-server. The route checks SendGrid's
-  // signature itself, the same arrangement as the Stripe webhook below.
-  "/api/email/sendgrid-events",
-  // /signup remembers the address typed there before a password exists, so
-  // the caller has no session by definition. Honeypot and two throttles, as
-  // /api/enquiries.
-  "/api/signup/lead",
-  // Stripe calls this server-to-server with no session; it verifies its own
-  // signature, so it must bypass the auth redirect.
-  "/api/stripe/webhook",
-  // Vercel Cron calls these server-to-server with no session cookie. Without
-  // this entry the request 307s to /login and the cron log records a redirect
-  // that looks like a successful run, so scheduled account deletions would
-  // silently never happen. Each cron route checks CRON_SECRET itself, which is
-  // the actual boundary -- the same arrangement as the Stripe webhook above.
-  "/api/cron",
-  // Google Search Console's ownership proof. Googlebot fetches this signed
-  // out, and the matcher below excludes images and _next but NOT .html, so
-  // without this entry the file 307s to /login and verification fails.
-  //
-  // Named exactly rather than exempting .html wholesale: a blanket rule would
-  // silently unprotect any HTML asset added later. It must stay reachable for
-  // as long as the property is verified, not just until it succeeds.
-  "/googleeff60eae5378a4ab.html",
-  // Same trap as the verification file, and confirmed the same way: both of
-  // these 307'd to /login in production. The matcher below excludes image
-  // extensions and _next, but not .xml or .txt, so every crawler asking for
-  // them got the login page instead.
-  //
-  // This is what Search Console's "Temporary processing error" under Sitemaps
-  // actually was. Not a malformed sitemap, and not a stale one: a redirect.
-  "/sitemap.xml",
-  "/robots.txt",
-  // The free tries from the landing hero. /create is the page a signed out
-  // visitor makes their deck on, /made/<slug> is a resource a teacher chose to
-  // share on the homepage, and /api/try/* are the guest routes. Each of those
-  // routes checks the signed guest cookie, the per IP limits and the admin
-  // switch itself. /api/try/claim is the exception: it is public here only so
-  // a signed out call gets its own clean 401 from the route, which checks for
-  // a session before anything else.
-  "/create",
-  "/made",
-  "/api/try",
-  // The ambassador programme's landing page, which the short link
-  // jooma.ai/ambassador shows to a signed-out visitor (rewritten below). The
-  // person may have no account yet; the page sends them to sign up. Old
-  // invite links (/ambassador/invite/...) redirect to it. The application
-  // itself (/ambassador/apply) is NOT public.
-  "/ambassador/join",
-  "/ambassador/invite",
 ];
 
 // The two internal requests a deck makes over HTTP. A teacher's deck forwards
@@ -184,15 +94,6 @@ async function guestMayPass(request: NextRequest, pathname: string): Promise<boo
   return false;
 }
 
-function isPublic(pathname: string) {
-  // The marketing landing page at "/" is public (exact match only — we don't
-  // want "/" to prefix-match every other route).
-  if (pathname === "/") return true;
-  return PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
-}
-
 // Reachable by a signed-in teacher who has not finished onboarding (see the
 // profile gate below). Three kinds of thing are here, and each would break in a
 // different way without it:
@@ -237,6 +138,15 @@ function isGateExempt(pathname: string) {
 }
 
 export async function proxy(request: NextRequest) {
+  const response = await route(request);
+  // Every response from a deployment that is not production, so staging stays
+  // out of search results whatever the page's own metadata says. See
+  // app/lib/seo/indexable.ts.
+  if (!isIndexable()) response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
+}
+
+async function route(request: NextRequest) {
   // Start with a passthrough response we can attach refreshed cookies to.
   let response = NextResponse.next({ request });
 
@@ -281,8 +191,10 @@ export async function proxy(request: NextRequest) {
     return rewrite;
   }
 
-  // Unauthenticated request to a protected route.
-  if (!user && !isPublic(pathname) && !(await guestMayPass(request, pathname))) {
+  // Unauthenticated request to a protected route. Which routes those are lives
+  // in app/lib/route-access.ts; a URL in neither of its lists falls through to
+  // the 404 page rather than to /login.
+  if (!user && needsSession(pathname) && !(await guestMayPass(request, pathname))) {
     // API routes must NOT be redirected to the HTML login page — the caller
     // does res.json() and would choke on "<!DOCTYPE html>". Return a clean
     // 401 JSON instead so the error is legible.

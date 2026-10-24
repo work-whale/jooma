@@ -48,7 +48,7 @@ import { activityStage, reviewDeadline } from "@/app/lib/ambassador-activity";
 // SETUP, as for the other crons (see mrr-snapshot):
 //   - registered in vercel.json; crons only register from a PRODUCTION deploy.
 //   - CRON_SECRET set in Vercel, production scope.
-//   - /api/cron is in PUBLIC_PATHS in proxy.ts.
+//   - /api/cron is in PUBLIC_PATHS in app/lib/route-access.ts.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

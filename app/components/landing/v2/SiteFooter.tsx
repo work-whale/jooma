@@ -8,16 +8,17 @@ import styles from "./SiteFooter.module.css";
  *
  * The old footer carried eleven dead `href="#"` links across Company and
  * Resources columns. A footer full of links that do nothing is worse than a
- * short one, so this lists only pages that exist, plus /refunds.
+ * short one, so this lists only pages that exist.
  *
  * Contact and School enquiries point at /contact rather than a mailto: those
  * addresses (support@, schools@) never existed, and a mailto collects none of
  * the fields needed to qualify a school lead. /contact is in PUBLIC_PATHS.
  *
- * /refunds does NOT exist yet and Stripe will ask for it. The link stays so the
- * gap is visible rather than forgotten. When that page is built it must also be
- * added to PUBLIC_PATHS in proxy.ts, or it will bounce a signed-out visitor to
- * the login page.
+ * Refunds and cancellation points at the terms section that covers both,
+ * because /refunds does not exist yet (and now answers with a 404 rather than
+ * the login page, so a broken link there would be a broken link). Stripe will
+ * ask for a refund policy page. When it is built, point this at it and add it
+ * to PUBLIC_PATHS in app/lib/route-access.ts and to the sitemap.
  */
 const COLUMNS = [
   {
@@ -41,7 +42,7 @@ const COLUMNS = [
     links: [
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
-      { href: "/refunds", label: "Refunds and cancellation" },
+      { href: "/terms#payment", label: "Refunds and cancellation" },
     ],
   },
 ];

@@ -50,7 +50,7 @@ export function accountSuspendedTemplate(
     <p ${SMALL}>
       If you think this is a mistake, reply to this email and our team will take
       another look. You can also reach us from
-      <a href="${base}" style="color:#1D1730;font-weight:500;">jooma.app</a>.
+      <a href="${base}" style="color:#1D1730;font-weight:500;">jooma.ai</a>.
     </p>
   `,
   };
