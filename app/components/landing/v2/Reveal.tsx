@@ -9,8 +9,9 @@ import styles from "./Reveal.module.css";
  * Unobserves after firing: this runs on every section of a long marketing page,
  * and an observer left attached keeps calling back for the rest of the visit
  * for no benefit. Content is in the DOM from the first render either way, so
- * nothing here is hidden from search engines or from a reader with JavaScript
- * disabled.
+ * nothing here is hidden from search engines, and a browser with JavaScript
+ * disabled shows it straight away (the `scripting: none` rule in
+ * Reveal.module.css).
  */
 export default function Reveal({
   children,

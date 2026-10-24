@@ -24,6 +24,7 @@ const bricolage = Bricolage_Grotesque({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 // The Jooma V2 brand face, used by the marketing landing page. Three weights
@@ -42,27 +43,37 @@ const jakarta = Plus_Jakarta_Sans({
 // font-family). Without these `next/font` imports the browser silently
 // falls back to the same system serif/sans for every theme and theme
 // switching has no visible font effect.
+//
+// preload: false on these, Inter and Geist Mono. They stay available (the
+// @font-face rules still ship and the browser fetches a file the moment a
+// slide or app screen uses it), but they no longer compete with the two faces
+// every marketing page renders first, Plus Jakarta and Bricolage, which keep
+// their preload. Before this the homepage preloaded nine font files.
 const lora = Lora({
   variable: "--font-lora",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
+  preload: false,
 });
 const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   style: ["normal", "italic"],
+  preload: false,
 });
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+  preload: false,
 });
 const archivoBlack = Archivo_Black({
   variable: "--font-archivo-black",
   subsets: ["latin"],
   weight: ["400"],
+  preload: false,
 });
 
 /* metadataBase is what makes every relative URL below resolve absolutely, which

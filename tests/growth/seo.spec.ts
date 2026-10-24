@@ -112,6 +112,25 @@ test.describe("SEO basics, signed out", () => {
     expect(await res.text()).toMatch(/^# Jooma/);
   });
 
+  test("the homepage loads small theme backgrounds, not the full PNGs", async ({ page }) => {
+    const scenes: string[] = [];
+    page.on("request", (r) => {
+      const path = new URL(r.url()).pathname;
+      if (path.startsWith("/scenes/")) scenes.push(path);
+    });
+    await page.goto("/");
+    await page.waitForTimeout(1500);
+    // Only thumbnails, if the showcase has any themed decks at all.
+    for (const path of scenes) expect(path).toMatch(/^\/scenes\/thumbs\/.+\.webp$/);
+  });
+
+  test("only the faces the marketing page renders first are preloaded", async ({ page }) => {
+    await page.goto("/");
+    // Plus Jakarta and Bricolage. It was nine files when every slide theme
+    // font was preloaded too.
+    expect(await page.locator('link[rel="preload"][as="font"]').count()).toBeLessThanOrEqual(4);
+  });
+
   test("the manifest is served, not bounced to /login", async ({ request }) => {
     const res = await request.get("/manifest.webmanifest", { maxRedirects: 0 });
     expect(res.status()).toBe(200);

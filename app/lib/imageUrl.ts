@@ -50,3 +50,18 @@ export function toThumbnailUrl(src: string | undefined, targetWidth: number): st
   const sep = transformed.includes("?") ? "&" : "?";
   return `${transformed}${sep}width=${w}&resize=contain&quality=75`;
 }
+
+/** The small copy of a theme background, for thumbnails.
+ *
+ *  Theme backgrounds are full-size PNGs in public/scenes (about 2 MB each),
+ *  which the Supabase rewrite above cannot shrink because they are not in
+ *  Storage. scripts/make-scene-thumbs.mjs writes a 768px WebP of each to
+ *  public/scenes/thumbs, and this maps one path to the other. Anything else
+ *  passes through unchanged.
+ *
+ *    /scenes/paper.png  ->  /scenes/thumbs/paper.webp */
+export function sceneThumbUrl(src: string | undefined): string | undefined {
+  if (!src) return src;
+  const m = /^\/scenes\/([^/]+)\.png$/.exec(src);
+  return m ? `/scenes/thumbs/${m[1]}.webp` : src;
+}
