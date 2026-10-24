@@ -36,6 +36,7 @@ const COLUMNS = [
   {
     heading: "Company",
     links: [
+      { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
       { href: "/contact?type=school", label: "School enquiries" },
     ],
@@ -43,6 +44,7 @@ const COLUMNS = [
   {
     heading: "Legal",
     links: [
+      { href: "/trust", label: "Trust and data" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
       { href: "/terms#payment", label: "Refunds and cancellation" },
@@ -60,7 +62,7 @@ export default function SiteFooter() {
               <Wordmark />
             </Link>
             <p className={styles.blurb}>
-              Teaching resources built around the UK curriculum, by people who have taught.
+              Teaching resources built around the UK curriculum.
             </p>
           </div>
 

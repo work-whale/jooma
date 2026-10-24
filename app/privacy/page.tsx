@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SUB_PROCESSORS } from "@/app/lib/legal/sub-processors";
 
 /* See the note in app/terms/page.tsx: same inherited-title problem, same
  * canonical reasoning. */
@@ -64,16 +65,9 @@ export default function PrivacyPage() {
 
           <Section title="5. Sharing Your Data">
             <p>We share personal data only with trusted third parties needed to deliver the service:</p>
-            <Table rows={[
-              ["Supabase", "Database, authentication, and file storage — hosted in the UK (London)"],
-              ["OpenAI", "AI content generation — your prompts are sent to OpenAI’s API. See openai.com/privacy"],
-              ["Anthropic", "AI content generation — your prompts are sent to Anthropic’s API. See anthropic.com/legal/privacy"],
-              ["Stripe", "Payment processing — see stripe.com/gb/privacy"],
-              ["Twilio SendGrid", "Delivery of account, service and product news emails. SendGrid tells us whether each email was delivered, bounced or reported as spam, and we use that only to stop emailing addresses that bounce or complain. Operated by Twilio Inc. See twilio.com/en-us/legal/privacy"],
-              ["Sentry", "Error monitoring and diagnostics, which may record your IP address and account identifier when something goes wrong — operated by Functional Software, Inc. See sentry.io/privacy"],
-              ["Vercel", "Hosting and edge delivery — see vercel.com/legal/privacy-policy"],
-              ["Meta", "Advertising measurement. We send a one-way encrypted (hashed) form of your email address, advertising cookie identifiers, and the amount and currency of a subscription payment, so we can tell which adverts led to signups — operated by Meta Platforms Ireland Ltd. See facebook.com/privacy/policy"],
-            ]} />
+            {/* From app/lib/legal/sub-processors.ts, which the schools trust page
+                reads too, so the two can never name different providers. */}
+            <Table rows={SUB_PROCESSORS.map((p): [string, string] => [p.name, p.purpose])} />
             <p>We do not sell your personal data. We do not share it with third parties for their own marketing purposes.</p>
           </Section>
 

@@ -41,6 +41,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+      url: `${base}/about`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${base}/trust`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
     // The dates these two carry in their own copy ("Last updated: ...") are the
     // honest lastModified, but they are prose rather than data, so they are not
     // read here. Left off entirely rather than stamped with a build time, which

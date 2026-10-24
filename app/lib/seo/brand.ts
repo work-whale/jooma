@@ -14,7 +14,14 @@
 /** The canonical host. The apex redirects here, and metadataBase says the same. */
 export const SITE_URL = "https://www.jooma.ai";
 
-export const LEGAL_NAME = "Jooma Ltd";
+/** The registered legal entity behind Jooma, exactly as Companies House (or
+ *  the equivalent register) has it. Null until it is confirmed: Stripe shows
+ *  the account as an individual, and "Jooma Ltd", which the site used to say,
+ *  is not on the register. While null it is left out of the structured data,
+ *  llms.txt and the About page rather than stated without a source. The terms
+ *  and privacy policy still name "Jooma Ltd" and need the same correction,
+ *  which is a legal wording decision for the business, not this file. */
+export const LEGAL_NAME: string | null = null;
 export const CONTACT_EMAIL = "info@jooma.ai";
 
 /** Jooma's own profiles elsewhere (LinkedIn, X, and so on): the structured

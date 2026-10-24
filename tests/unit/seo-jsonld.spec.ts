@@ -12,7 +12,7 @@ import {
 import { faqQuestions } from "@/app/lib/landing/faq";
 import { PLANS } from "@/app/lib/plans";
 import { V2_TOOLS } from "@/app/lib/tools";
-import { BRAND_DEFINITION, SAME_AS } from "@/app/lib/seo/brand";
+import { BRAND_DEFINITION, LEGAL_NAME, SAME_AS } from "@/app/lib/seo/brand";
 import robots from "@/app/robots";
 import { GET as llmsTxt } from "@/app/llms.txt/route";
 
@@ -30,7 +30,9 @@ test.describe("structured data", () => {
     const org = organization();
     expect(org["@id"]).toBe(ORG_ID);
     expect(org.description).toBe(BRAND_DEFINITION);
-    expect(org.legalName).toBe("Jooma Ltd");
+    // Only a registered name, and only once it is confirmed.
+    if (LEGAL_NAME) expect(org.legalName).toBe(LEGAL_NAME);
+    else expect(org).not.toHaveProperty("legalName");
     expect(org.sameAs).toEqual(SAME_AS);
     // No company number yet, so no identifier at all rather than a blank one.
     expect(org).not.toHaveProperty("identifier");
@@ -122,6 +124,13 @@ test.describe("/llms.txt", () => {
     expect(body).toContain(`£${PLANS.pro.priceMonthly!.toFixed(2)} a month`);
     expect(body).not.toMatch(/five free/i);
     expect(body).toContain("stored in the UK (London)");
+  });
+
+  test("names no legal entity until one is confirmed", async () => {
+    const body = await llmsTxt().text();
+    // "Jooma Ltd" is not on the register; the site must not claim it.
+    expect(body).not.toContain("Jooma Ltd");
+    if (LEGAL_NAME) expect(body).toContain(LEGAL_NAME);
   });
 
   test("is served as plain text", () => {

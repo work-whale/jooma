@@ -214,6 +214,122 @@
   font-weight: 700;
 }
 
+/* ── Prose pages (About, Trust) ─────────────────────────────────────────── */
+
+.prose {
+  max-width: 68ch;
+  color: var(--j-body);
+}
+
+.prose + .prose {
+  margin-top: 16px !important;
+}
+
+:where(.page) .inlineLink,
+.inlineLink {
+  color: var(--j-purple);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.rightsLine {
+  margin: 32px auto 0 !important;
+}
+
+.legalLine {
+  margin-top: 14px !important;
+  font-size: 0.88rem;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  list-style: none;
+  margin: 36px 0 0;
+  padding: 0;
+}
+
+.statRow li {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: 22px;
+  padding: 24px;
+  display: grid;
+  gap: 6px;
+}
+
+.statRow b {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--j-purple);
+  letter-spacing: -0.03em;
+}
+
+.statRow small {
+  color: var(--j-faint);
+  font-size: 0.8rem;
+}
+
+.beliefs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.beliefs li {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: 22px;
+  padding: 26px;
+}
+
+.beliefs p {
+  color: var(--j-muted);
+}
+
+/* A two column fact table on the Trust page. Scrolls inside itself on a
+   phone rather than pushing the page wider. */
+.factTable {
+  overflow-x: auto;
+  border: 1px solid var(--j-line);
+  border-radius: 18px;
+  background: var(--j-card);
+}
+
+.factTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.factTable th,
+.factTable td {
+  text-align: left;
+  vertical-align: top;
+  padding: 14px 18px;
+  border-top: 1px solid var(--j-line);
+}
+
+.factTable tr:first-child th,
+.factTable tr:first-child td {
+  border-top: 0;
+}
+
+.factTable th {
+  width: 30%;
+  color: var(--j-purple);
+  font-weight: 700;
+}
+
+.factTable td {
+  color: var(--j-body);
+}
+
 /* ── Closing band ───────────────────────────────────────────────────────── */
 
 .close {
@@ -275,7 +391,8 @@
 @media (max-width: 1000px) {
   .steps,
   .related,
-  .indexGrid {
+  .indexGrid,
+  .statRow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -303,7 +420,9 @@
 
   .steps,
   .related,
-  .indexGrid {
+  .indexGrid,
+  .statRow,
+  .beliefs {
     grid-template-columns: minmax(0, 1fr);
   }
 }

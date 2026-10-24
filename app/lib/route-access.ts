@@ -34,6 +34,9 @@ export const PUBLIC_PATHS = [
   "/auth",
   "/terms",
   "/privacy",
+  // What Jooma is, and the plain English data protection page for schools.
+  "/about",
+  "/trust",
   "/pricing",
   // A school asking about licences has no account yet, and making them sign up
   // to ask about pricing loses the enquiry. The form posts to /api/enquiries,

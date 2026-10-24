@@ -51,6 +51,11 @@ const INCLUDE = [
   // anywhere else on the marketing surface; "AI" is allowed (see AI_ALLOWED).
   "app/teacher-tools",
   "app/lib/seo/tool-pages.ts",
+  // About is marketing like the homepage; Trust is a procurement page, so
+  // dashes are checked but "AI" is allowed (see AI_ALLOWED).
+  "app/about",
+  "app/trust",
+  "app/lib/legal",
 ];
 
 /**
@@ -68,6 +73,10 @@ const AI_ALLOWED = [
   // that, which a line-based check here cannot.
   "app/teacher-tools",
   "app/lib/seo/tool-pages.ts",
+  // The schools trust page and the sub-processor list it shares with the
+  // privacy policy: procurement documents, exempt for the same reason.
+  "app/trust",
+  "app/lib/legal",
 ];
 
 const DASHES = /[\u2014\u2013]/;

@@ -48,7 +48,7 @@ export function organization(): Node {
     // "Jooma" alone is shared with an unrelated business in search results;
     // this is the name with what it is attached.
     alternateName: "Jooma teaching resources",
-    legalName: LEGAL_NAME,
+    ...(LEGAL_NAME ? { legalName: LEGAL_NAME } : {}),
     url: SITE_URL,
     logo: `${SITE_URL}/logo/Jooma-logo-v2-round-light-1024.png`,
     description: BRAND_DEFINITION,
