@@ -6,6 +6,15 @@ import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
 import { publicShowcase } from "@/app/lib/showcase";
 import { SITE_DESCRIPTION } from "@/app/lib/seo/brand";
 import {
+  faqPage,
+  graph,
+  organization,
+  softwareApplication,
+  toScript,
+  website,
+} from "@/app/lib/seo/jsonld";
+import { faqQuestions } from "@/app/lib/landing/faq";
+import {
   maxYearlySavingPercent,
   planCardCta,
   planCardName,
@@ -160,23 +169,20 @@ export default async function LandingPage({
   // page renders with unresolved variables and no styling at all.
   return (
     <div className={`jooma-v2 ${styles.page}`}>
-      {/* The logo Google shows beside a search result. Without this block there
-          is no machine-readable statement of what our mark is, and a crawler is
-          left inferring one from the favicon, which is how a long-replaced logo
-          survives in the results for months.
-          Square and on a solid ground on purpose: favicon.ico and apple-icon
-          are circular with transparent corners, which renders badly on a white
-          card, so this points at the round-light export instead. */}
+      {/* What the page is, for search engines and assistants: the
+          organisation, the site, the app with its prices, and the FAQ. Built in
+          app/lib/seo/jsonld.ts from the same sources the visible page uses.
+          The Organization logo is the one Google shows beside a search result.
+          Without it a crawler infers one from the favicon, which is how a
+          long-replaced logo survives in the results for months. It is the
+          round-light export on purpose: favicon.ico and apple-icon are circular
+          with transparent corners, which renders badly on a white card. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: "Jooma",
-            url: "https://www.jooma.ai",
-            logo: "https://www.jooma.ai/logo/Jooma-logo-v2-round-light-1024.png",
-          }),
+          __html: toScript(
+            graph([organization(), website(), softwareApplication(), faqPage(faqQuestions())]),
+          ),
         }}
       />
 

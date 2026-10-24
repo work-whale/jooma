@@ -96,6 +96,22 @@ test.describe("SEO basics, signed out", () => {
     expect(res.headers()["x-robots-tag"]).toContain("noindex");
   });
 
+  test("the homepage publishes one graph: organisation, site, app and FAQ", async ({ page }) => {
+    await page.goto("/");
+    const scripts = page.locator('script[type="application/ld+json"]');
+    await expect(scripts).toHaveCount(1);
+    const data = JSON.parse((await scripts.textContent()) ?? "{}");
+    const types = (data["@graph"] as { "@type": string }[]).map((n) => n["@type"]);
+    expect(types).toEqual(["Organization", "WebSite", "SoftwareApplication", "FAQPage"]);
+  });
+
+  test("/llms.txt reaches a signed-out crawler as plain text", async ({ request }) => {
+    const res = await request.get("/llms.txt", { maxRedirects: 0 });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("text/plain");
+    expect(await res.text()).toMatch(/^# Jooma/);
+  });
+
   test("the manifest is served, not bounced to /login", async ({ request }) => {
     const res = await request.get("/manifest.webmanifest", { maxRedirects: 0 });
     expect(res.status()).toBe(200);

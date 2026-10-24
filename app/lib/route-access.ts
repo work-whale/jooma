@@ -85,6 +85,9 @@ export const PUBLIC_PATHS = [
   // actually was. Not a malformed sitemap, and not a stale one: a redirect.
   "/sitemap.xml",
   "/robots.txt",
+  // The plain summary for language models (app/llms.txt/route.ts). Same trap
+  // again, avoided in advance.
+  "/llms.txt",
   // The free tries from the landing hero. /create is the page a signed out
   // visitor makes their deck on, /made/<slug> is a resource a teacher chose to
   // share on the homepage, and /api/try/* are the guest routes. Each of those

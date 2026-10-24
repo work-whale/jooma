@@ -130,6 +130,7 @@ const GATE_EXEMPT = [
   "/api/email/sendgrid-events",
   "/sitemap.xml",
   "/robots.txt",
+  "/llms.txt",
   "/googleeff60eae5378a4ab.html",
 ];
 

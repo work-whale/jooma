@@ -181,6 +181,15 @@ test.describe("labelForSource", () => {
     expect(labelForSource("ref:google.com")).toBe("Google search");
   });
 
+  test("an assistant's campaign tag is named for the assistant", () => {
+    // ChatGPT tags every cited link utm_source=chatgpt.com, and the tag wins
+    // over the referrer, so this is the row most ChatGPT visitors land in.
+    expect(labelForSource("utm:chatgpt.com")).toBe("ChatGPT");
+    expect(labelForSource("utm:perplexity")).toBe("Perplexity");
+    expect(labelForSource("utm:copilot")).toBe("Copilot");
+    expect(labelForSource("ref:copilot.microsoft.com")).toBe("Assistant referral");
+  });
+
   test("an unmapped host passes through as itself", () => {
     expect(labelForSource("ref:some-blog.example")).toBe("some-blog.example");
   });

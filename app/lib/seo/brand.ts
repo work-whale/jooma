@@ -11,6 +11,24 @@
  * and no standalone "AI": these strings reach the homepage.
  */
 
+/** The canonical host. The apex redirects here, and metadataBase says the same. */
+export const SITE_URL = "https://www.jooma.ai";
+
+export const LEGAL_NAME = "Jooma Ltd";
+export const CONTACT_EMAIL = "info@jooma.ai";
+
+/** Jooma's own profiles elsewhere (LinkedIn, X, and so on): the structured
+ *  data's sameAs, which is how a search engine ties those accounts to this
+ *  site. Clean URLs only, no tracking or language parameters. An empty list
+ *  is left out of the markup rather than published as []. */
+export const SAME_AS: string[] = [
+  "https://www.facebook.com/profile.php?id=61594030149333",
+  "https://www.instagram.com/jooma.ai/",
+];
+
+/** The Companies House number, once supplied. Null leaves it out. */
+export const COMPANY_NUMBER: string | null = null;
+
 /** The meta and social card description. Kept under 160 characters, which is
  *  roughly where Google cuts a description off. */
 export const SITE_DESCRIPTION =
