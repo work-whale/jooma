@@ -23,7 +23,7 @@ import styles from "./welcome.module.css";
  * every tool tile renders as an unclipped square.
  */
 
-export const metadata = { title: "Welcome to Jooma" };
+export const metadata = { title: { absolute: "Welcome to Jooma" } };
 
 /** Four tools worth opening first, one from each of four categories so the
  *  tiles read as different kinds of job rather than a row of one colour. */

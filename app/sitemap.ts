@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { TOOL_PAGES, toolPagePath } from "@/app/lib/seo/tool-pages";
 
 /**
  * The public sitemap, served at /sitemap.xml.
@@ -18,7 +19,7 @@ import type { MetadataRoute } from "next";
  *                       cannot be crawled.
  *   /maintenance        a holding page, only meaningful while it is on.
  *   /sentry-example-page  a test fixture.
- *   /pricing            a REDIRECT, not a page (see app/pricing/page.tsx: it
+ *   /pricing            a REDIRECT, not a page (see app/(app)/pricing/page.tsx: it
  *                       forwards to /#pricing or /profile). A sitemap that
  *                       lists a redirect is asking Google to report a problem
  *                       we already know about.
@@ -40,6 +41,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+      url: `${base}/about`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${base}/trust`,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
     // The dates these two carry in their own copy ("Last updated: ...") are the
     // honest lastModified, but they are prose rather than data, so they are not
     // read here. Left off entirely rather than stamped with a build time, which
@@ -54,5 +65,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    // The public tool pages: the ones that can rank for a tool's name. Read
+    // from the same list the pages are built from, so a page cannot exist
+    // without being listed or be listed without existing.
+    {
+      url: `${base}/teacher-tools`,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...TOOL_PAGES.map((page) => ({
+      url: `${base}${toolPagePath(page)}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
   ];
 }

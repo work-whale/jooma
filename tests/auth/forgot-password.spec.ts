@@ -139,7 +139,7 @@ test.describe("Forgot password", () => {
     await expect(page).toHaveURL(/\/forgot-password/);
 
     // Reachable with NO SESSION, which is the other way this regresses:
-    // dropping /forgot-password out of PUBLIC_PATHS in proxy.ts bounces a
+    // dropping /forgot-password out of PUBLIC_PATHS in app/lib/route-access.ts bounces a
     // locked-out teacher to the login page they cannot use.
     await expect(page.getByRole("heading", { name: /forgot your password/i })).toBeVisible();
   });

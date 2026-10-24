@@ -224,7 +224,10 @@ export const PLANS: Record<PlanId, Plan> = {
     priceYearlyPerMonth: 11.99,
     priceYearly: 143.99,
     audience: "teacher",
-    description: "Adds leadership, inspection and CPD tools",
+    // Every plan has every tool (nothing in limits restricts one); what Max
+    // adds is credits and priority. This line once said it added leadership,
+    // inspection and CPD tools, which was never true.
+    description: "2,500 credits a month and priority building",
     interval: "month",
     limits: {
       dailyGenerations: null,

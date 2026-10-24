@@ -216,6 +216,10 @@ const REFERRER_LABEL: Record<string, string> = {
   "perplexity.ai": "Assistant referral",
   "claude.ai": "Assistant referral",
   "gemini.google.com": "Assistant referral",
+  // Copilot's own host. Copilot inside Bing arrives as bing.com and cannot be
+  // told apart from a search, since only the hostname is kept.
+  "copilot.microsoft.com": "Assistant referral",
+  "copilot.com": "Assistant referral",
 };
 
 /** Sources worth naming properly when they arrive as a UTM tag. */
@@ -231,6 +235,18 @@ const UTM_LABEL: Record<string, string> = {
   youtube: "YouTube",
   newsletter: "Newsletter",
   email: "Email",
+  // Assistants that tag the links they cite. ChatGPT adds
+  // utm_source=chatgpt.com to every link in an answer, and the tag outranks the
+  // referrer in the bucketing (see bucketFor), so without these the rows read
+  // "Chatgpt.com". Named per assistant rather than "Assistant referral": the
+  // referrer rows already use that label, and two rows of one name would read
+  // as a duplicate.
+  "chatgpt.com": "ChatGPT",
+  chatgpt: "ChatGPT",
+  "perplexity.ai": "Perplexity",
+  perplexity: "Perplexity",
+  copilot: "Copilot",
+  "copilot.com": "Copilot",
 };
 
 /** Title case for a label we have no mapping for, so an unknown source reads as

@@ -45,6 +45,17 @@ const INCLUDE = [
   "app/components/landing/NavAuth.tsx",
   "app/lib/copy.ts",
   "app/lib/landing",
+  // The brand lines the homepage, its metadata and its social card share.
+  "app/lib/seo/brand.ts",
+  // The public tool pages and their copy. Dashes are checked here like
+  // anywhere else on the marketing surface; "AI" is allowed (see AI_ALLOWED).
+  "app/teacher-tools",
+  "app/lib/seo/tool-pages.ts",
+  // About is marketing like the homepage; Trust is a procurement page, so
+  // dashes are checked but "AI" is allowed (see AI_ALLOWED).
+  "app/about",
+  "app/trust",
+  "app/lib/legal",
 ];
 
 /**
@@ -52,7 +63,21 @@ const INCLUDE = [
  * brand bible exempts, plus this file, which has to name the rule to explain
  * it.
  */
-const AI_ALLOWED = ["app/terms", "app/privacy", "scripts/check-language.mjs"];
+const AI_ALLOWED = [
+  "app/terms",
+  "app/privacy",
+  "scripts/check-language.mjs",
+  // The public tool pages, by decision: teachers search "AI report writer",
+  // and a page that never says it does not rank for it. Allowed in a page's
+  // title, H1 and intro only; tests/unit/tool-pages.spec.ts holds the copy to
+  // that, which a line-based check here cannot.
+  "app/teacher-tools",
+  "app/lib/seo/tool-pages.ts",
+  // The schools trust page and the sub-processor list it shares with the
+  // privacy policy: procurement documents, exempt for the same reason.
+  "app/trust",
+  "app/lib/legal",
+];
 
 const DASHES = /[\u2014\u2013]/;
 

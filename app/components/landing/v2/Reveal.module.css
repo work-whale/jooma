@@ -12,8 +12,10 @@
 }
 
 /* Reduced motion still reveals the content, it just arrives already in place.
-   Without the opacity reset the section would stay invisible. */
-@media (prefers-reduced-motion: reduce) {
+   Without the opacity reset the section would stay invisible. Same for a
+   browser with JavaScript off, where the observer that adds .in never runs:
+   the text was in the markup but painted at opacity 0. */
+@media (prefers-reduced-motion: reduce), (scripting: none) {
   .rv {
     opacity: 1;
     transform: none;

@@ -11,7 +11,7 @@ import { runDue } from "@/app/lib/email-campaigns";
 //   - vercel.json registers it. Crons only register from a PRODUCTION deploy.
 //     Daily is within the Hobby plan's limit.
 //   - CRON_SECRET set in Vercel, production scope.
-//   - /api/cron is in PUBLIC_PATHS in proxy.ts.
+//   - /api/cron is in PUBLIC_PATHS in app/lib/route-access.ts.
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;

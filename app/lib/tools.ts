@@ -57,7 +57,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/cpd-slideshow": {
     name: "Staff Slides",
-    description: "A training deck for staff, with speaker notes.",
+    description: "A training deck for staff, with activities and next steps.",
     category: "slides",
     icon: "projector-screen",
   },

@@ -11,6 +11,8 @@ import {
 import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/next";
 import MetaPixel from "@/app/components/MetaPixel";
+import { SITE_DESCRIPTION } from "@/app/lib/seo/brand";
+import { isIndexable } from "@/app/lib/seo/indexable";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -22,6 +24,7 @@ const bricolage = Bricolage_Grotesque({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 // The Jooma V2 brand face, used by the marketing landing page. Three weights
@@ -40,27 +43,37 @@ const jakarta = Plus_Jakarta_Sans({
 // font-family). Without these `next/font` imports the browser silently
 // falls back to the same system serif/sans for every theme and theme
 // switching has no visible font effect.
+//
+// preload: false on these, Inter and Geist Mono. They stay available (the
+// @font-face rules still ship and the browser fetches a file the moment a
+// slide or app screen uses it), but they no longer compete with the two faces
+// every marketing page renders first, Plus Jakarta and Bricolage, which keep
+// their preload. Before this the homepage preloaded nine font files.
 const lora = Lora({
   variable: "--font-lora",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
+  preload: false,
 });
 const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   style: ["normal", "italic"],
+  preload: false,
 });
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+  preload: false,
 });
 const archivoBlack = Archivo_Black({
   variable: "--font-archivo-black",
   subsets: ["latin"],
   weight: ["400"],
+  preload: false,
 });
 
 /* metadataBase is what makes every relative URL below resolve absolutely, which
@@ -75,11 +88,32 @@ const archivoBlack = Archivo_Black({
  * The site icon Google shows in a search result comes from its own crawl and
  * cache, not from this file, so a stale icon there outlives a deploy. The
  * Organization block on the landing page is the signal that actually names our
- * logo; see app/page.tsx. */
+ * logo; see app/page.tsx.
+ *
+ * The title template gives every page "Its title | Jooma" without each page
+ * typing the brand. It does not reach app/page.tsx (same segment), which sets
+ * its own. A page whose title already names Jooma uses `absolute`.
+ *
+ * "Jooma" alone is shared with an unrelated business in search results (Search
+ * Console shows "jooma shop" and "jooma subscription" queries that are not us),
+ * so the default title says which Jooma this is.
+ *
+ * No openGraph.url here: it was "/", which every page inherited, so /contact
+ * and every /made page told social cards they were the homepage. Without it the
+ * card uses the page's own address. The social image is app/opengraph-image.tsx,
+ * found by convention.
+ *
+ * robots is noindex everywhere but production; see app/lib/seo/indexable.ts.
+ * A page that sets its own robots replaces this rather than merging with it,
+ * which is fine: every page that does so is noindexing itself. */
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.jooma.ai"),
-  title: "Jooma",
-  description: "Teaching resources, made in about a minute",
+  title: {
+    default: "Jooma: teaching resources for UK teachers",
+    template: "%s | Jooma",
+  },
+  description: SITE_DESCRIPTION,
+  ...(isIndexable() ? {} : { robots: { index: false, follow: false } }),
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
@@ -88,10 +122,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Jooma",
-    url: "/",
-    title: "Jooma",
-    description: "Teaching resources, made in about a minute",
-    images: [{ url: "/logo/Jooma-logo-v2-round-light-1024.png", width: 1024, height: 1024, alt: "Jooma" }],
+    locale: "en_GB",
+    title: "Jooma: teaching resources for UK teachers",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jooma: teaching resources for UK teachers",
+    description: SITE_DESCRIPTION,
   },
 };
 
@@ -123,7 +161,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="en-GB"
       data-scroll-behavior="smooth"
       className={`${bricolage.variable} ${geistMono.variable} ${lora.variable} ${playfair.variable} ${inter.variable} ${archivoBlack.variable} ${jakarta.variable} h-full antialiased scroll-smooth`}
     >

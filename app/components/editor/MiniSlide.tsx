@@ -6,7 +6,7 @@ import { getTheme, type SlideshowTheme } from "@/app/lib/slideshowThemes";
 import { SLIDE_W, SLIDE_H } from "./constants";
 import { getFrameStyle } from "./frames";
 import { youtubeThumbnail, youtubeEmbedUrl } from "./youtube";
-import { toThumbnailUrl } from "@/app/lib/imageUrl";
+import { sceneThumbUrl, toThumbnailUrl } from "@/app/lib/imageUrl";
 import { parseInlineBold } from "@/app/lib/utils";
 
 /** Splits a string into <strong>...</strong> + plain spans so `**bold**`
@@ -872,6 +872,9 @@ function MiniSlideBase({ slide, width, thumbnailMode, themeId, live }: Props) {
   // taking the full-bleed slot. Scrim veil composited over the art via CSS.
   const useArt = !bgImgSrc && !!slide.backgroundArt;
   const artScrim = slide.backgroundArtScrim ?? "rgba(255,255,255,0.45)";
+  // A thumbnail draws the theme art from its small copy: the full PNG is about
+  // 2 MB, and the homepage's showcase cards alone used to pull 8 MB of it.
+  const artSrc = thumbnailMode ? sceneThumbUrl(slide.backgroundArt) : slide.backgroundArt;
 
   return (
     <div
@@ -882,7 +885,7 @@ function MiniSlideBase({ slide, width, thumbnailMode, themeId, live }: Props) {
         position: "relative",
         backgroundColor: slide.background ?? "#ffffff",
         backgroundImage: useArt
-          ? `linear-gradient(${artScrim}, ${artScrim}), url(${slide.backgroundArt})`
+          ? `linear-gradient(${artScrim}, ${artScrim}), url(${artSrc})`
           : bgImgSrc ? `url(${bgImgSrc})` : undefined,
         backgroundSize: useArt ? "cover" : useCssCover ? "cover" : backgroundSize,
         backgroundRepeat: "no-repeat",

@@ -20,7 +20,7 @@ import { loadTrueMrr } from "@/app/admin/trueMrr";
 //   - vercel.json registers it. Crons only register from a PRODUCTION deploy.
 //   - CRON_SECRET set in Vercel, production scope. Vercel then sends it as a
 //     bearer token automatically.
-//   - /api/cron is in PUBLIC_PATHS in proxy.ts. Without that the request 307s to
+//   - /api/cron is in PUBLIC_PATHS in app/lib/route-access.ts. Without that the request 307s to
 //     /login and the cron log records a redirect that LOOKS like success.
 
 export const dynamic = "force-dynamic";

@@ -5,12 +5,12 @@ import ContactView from "./ContactView";
 
 // Public: a school asking about licences has no account yet, and requiring one
 // to ask about pricing loses the lead. /contact and /api/enquiries are both in
-// PUBLIC_PATHS in proxy.ts, without which a signed-out visitor bounces to
+// PUBLIC_PATHS in app/lib/route-access.ts, without which a signed-out visitor bounces to
 // /login.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Contact Jooma",
+  title: "Contact us",
   description:
     "Get in touch about Jooma, or ask about pricing for your whole school.",
   // Same apex/www duplicate as the landing page. Every public page needs its

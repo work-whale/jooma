@@ -65,7 +65,7 @@ export const DEFAULTS: CopyMap = {
   "home.hero.eyebrow": "Built for the UK curriculum",
   "home.hero.h1": "Think it, Teach it.",
   "home.hero.sub":
-    "Jooma turns one line into the slides, the worksheet and the comprehension, matched to your year group. Try it on this page. No sign up, no card.",
+    "Teaching resources for UK teachers. Type a topic and year group and Jooma makes the slides, worksheet, lesson plan or report. Try it free here, no sign up.",
   "home.hero.cta": "Start free trial",
   "home.hero.reassure": "Three days free on every plan. Cancel any time before it ends.",
   "dash.empty.title": "Nothing here yet",

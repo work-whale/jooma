@@ -4,6 +4,16 @@ import { createClient } from "@/app/lib/auth/server";
 import { getCopy } from "@/app/lib/copy";
 import { visitorsAllTime } from "@/app/lib/vercelAnalytics";
 import { publicShowcase } from "@/app/lib/showcase";
+import { SITE_DESCRIPTION } from "@/app/lib/seo/brand";
+import {
+  faqPage,
+  graph,
+  organization,
+  softwareApplication,
+  toScript,
+  website,
+} from "@/app/lib/seo/jsonld";
+import { faqQuestions } from "@/app/lib/landing/faq";
 import {
   maxYearlySavingPercent,
   planCardCta,
@@ -42,9 +52,8 @@ import styles from "@/app/components/landing/v2/landing.module.css";
  * page-level signal then attach to. Relative on purpose: it resolves against
  * metadataBase in app/layout.tsx, so the host is stated in exactly one place. */
 export const metadata: Metadata = {
-  title: "Jooma. Teaching resources, made in about a minute.",
-  description:
-    "Type a topic and get the slides, the worksheet and the comprehension, built around the UK curriculum. Try it on this page.",
+  title: "Jooma: UK teaching resources, made in about a minute",
+  description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
 
@@ -160,23 +169,20 @@ export default async function LandingPage({
   // page renders with unresolved variables and no styling at all.
   return (
     <div className={`jooma-v2 ${styles.page}`}>
-      {/* The logo Google shows beside a search result. Without this block there
-          is no machine-readable statement of what our mark is, and a crawler is
-          left inferring one from the favicon, which is how a long-replaced logo
-          survives in the results for months.
-          Square and on a solid ground on purpose: favicon.ico and apple-icon
-          are circular with transparent corners, which renders badly on a white
-          card, so this points at the round-light export instead. */}
+      {/* What the page is, for search engines and assistants: the
+          organisation, the site, the app with its prices, and the FAQ. Built in
+          app/lib/seo/jsonld.ts from the same sources the visible page uses.
+          The Organization logo is the one Google shows beside a search result.
+          Without it a crawler infers one from the favicon, which is how a
+          long-replaced logo survives in the results for months. It is the
+          round-light export on purpose: favicon.ico and apple-icon are circular
+          with transparent corners, which renders badly on a white card. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: "Jooma",
-            url: "https://www.jooma.ai",
-            logo: "https://www.jooma.ai/logo/Jooma-logo-v2-round-light-1024.png",
-          }),
+          __html: toScript(
+            graph([organization(), website(), softwareApplication(), faqPage(faqQuestions())]),
+          ),
         }}
       />
 
@@ -195,7 +201,9 @@ export default async function LandingPage({
 
       <main>
         <HeroV3
+          eyebrow={copy["home.hero.eyebrow"]}
           headline={copy["home.hero.h1"]}
+          sub={copy["home.hero.sub"]}
           visitors={visitors}
           showcase={showcase}
         />
@@ -207,12 +215,15 @@ export default async function LandingPage({
           eyebrow="Jooma Slides"
           title="The deck is the lesson."
           lede="Most tools hand you a plan and leave you to build the slides. Jooma builds the thing you actually stand up and teach from, then lets you edit every word of it."
+          // Checked against the slideshow pipeline: 5 to 14 content slides
+          // plus two activity pairs makes 9 to 18. Google Slides export is
+          // built but switched off in the editor, hence "coming soon".
           points={[
-            "Six to eighteen slides from one line",
+            "Nine to eighteen slides from one line",
             "Activities embedded in the deck, not bolted on",
             "Pictures, video and listening clips where they help",
             "Themes from clean and plain to full illustration",
-            "Present from Jooma, or export to PowerPoint and Slides",
+            "Present from Jooma or download PowerPoint, with Google Slides coming soon",
           ]}
           cta={{ href: "/signup", label: "Build a deck" }}
         >
@@ -229,7 +240,7 @@ export default async function LandingPage({
             "Simple, standard or challenging, for any year group",
             "Questions tagged to the reading content domains",
             "Marks on every question, and an answer key with it",
-            "Print ready, or send to Google Docs",
+            "Print ready as PDF or Word, with Google Docs coming soon",
           ]}
           cta={{ href: "/signup", label: "Make a comprehension" }}
         >
@@ -261,7 +272,7 @@ export default async function LandingPage({
             their photo, with permission. Drops in between the staffroom and the
             tools grid without disturbing either. */}
 
-        <ToolsGrid />
+        <ToolsGrid signedIn={!!user} />
 
         <ValueBand />
 

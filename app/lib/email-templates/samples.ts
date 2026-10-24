@@ -15,7 +15,7 @@ import type { EmailTemplateKey } from "./index";
 export const SAMPLE_PARAMS: Record<EmailTemplateKey, Record<string, string>> = {
   // app/api/admin/teachers/invite/route.ts
   teacher_invite: {
-    inviteUrl: "https://jooma.app/signup?invite=sample-token",
+    inviteUrl: "https://www.jooma.ai/signup?invite=sample-token",
     inviterName: "Sam Okafor",
   },
 
@@ -24,7 +24,7 @@ export const SAMPLE_PARAMS: Record<EmailTemplateKey, Record<string, string>> = {
   // (/forgot-password, and adding a password to a Google account). All three
   // pass the same two parameters, so one sample covers them.
   password_reset: {
-    resetUrl: "https://jooma.app/create-password?token_hash=sample&type=recovery",
+    resetUrl: "https://www.jooma.ai/create-password?token_hash=sample&type=recovery",
     firstName: "Priya",
   },
 

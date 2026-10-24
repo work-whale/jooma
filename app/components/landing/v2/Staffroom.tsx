@@ -52,6 +52,10 @@ export default function Staffroom() {
               get their own copy to edit. Yours stays untouched.
             </p>
             <div className={styles.visual}>
+              {/* Said on the page, not just in the code: these read like
+                  named users, and an assistant summarising the page would
+                  otherwise quote them as real ones. */}
+              <span className={styles.example}>Example</span>
               {COLLEAGUES.map((c) => (
                 <div key={c.initials} className={styles.colleague}>
                   <span className={styles.avatar} aria-hidden="true">

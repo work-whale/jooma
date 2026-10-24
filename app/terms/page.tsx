@@ -4,7 +4,7 @@ import type { Metadata } from "next";
  * it announced itself as the home page. The canonical is the same apex/www
  * point as everywhere else: relative, resolved against metadataBase. */
 export const metadata: Metadata = {
-  title: "Terms of Service | Jooma",
+  title: "Terms of Service",
   description: "The terms you agree to when you use Jooma.",
   alternates: { canonical: "/terms" },
 };
@@ -19,7 +19,7 @@ export default function TermsPage() {
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Terms of Service
         </h1>
-        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 1 June 2026</p>
+        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 24 October 2026</p>
 
         <div className="rounded-2xl p-8 space-y-8" style={{ backgroundColor: "var(--j-card)" }}>
 
@@ -49,7 +49,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="5. AI-Generated Content">
-            <p>Jooma uses third-party AI providers (including OpenAI) to generate content. You acknowledge that:</p>
+            <p>Jooma uses third-party AI providers (including OpenAI and Anthropic) to generate content. You acknowledge that:</p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>AI-generated content may be inaccurate, incomplete, or inappropriate for some audiences. You are responsible for reviewing all content before using it with pupils.</li>
               <li>We do not guarantee that outputs are factually correct, curriculum-aligned, or free from bias.</li>
@@ -63,8 +63,8 @@ export default function TermsPage() {
             <p>You grant us a limited, non-exclusive licence to process your inputs solely to provide the service to you.</p>
           </Section>
 
-          <Section title="7. Subscription and Payment">
-            <p>Jooma is offered through paid monthly subscription plans, at the pricing displayed on our website at the time of purchase. Creating resources requires an active subscription.</p>
+          <Section id="payment" title="7. Subscription and Payment">
+            <p>Jooma is offered through paid monthly subscription plans, at the pricing displayed on our website at the time of purchase. Creating resources requires an active subscription, except for a small number of free tries on our website, which need no account.</p>
             <p>Your first subscription starts with a 3 day free trial. We take your payment details when the trial starts, and nothing is charged during the trial. When the trial ends, the plan&apos;s monthly fee is charged to that payment method unless you cancelled before then. The free trial is available once per account.</p>
             <p>Subscriptions renew automatically each month unless cancelled before the renewal date. You can cancel at any time from your account, and you keep your plan until the end of the period already paid for, or until the end of the trial.</p>
             <p>All fees are quoted in GBP and are inclusive of VAT where applicable. Refunds are provided at our discretion, except where required by law.</p>
@@ -107,9 +107,9 @@ export default function TermsPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section id={id}>
       <h2 className="text-lg font-semibold mb-3" style={{ color: "var(--j-purple)" }}>{title}</h2>
       <div className="space-y-3 text-sm leading-relaxed" style={{ color: "#3a2814" }}>
         {children}

@@ -6,7 +6,7 @@ import UnsubscribeForm from "./UnsubscribeForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Unsubscribe | Jooma" };
+export const metadata = { title: "Unsubscribe" };
 
 export default async function UnsubscribePage({
   searchParams,

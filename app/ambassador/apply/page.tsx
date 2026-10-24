@@ -20,7 +20,7 @@ import ApplyFlow from "./ApplyFlow";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Apply | Jooma Ambassador Programme",
+  title: { absolute: "Apply | Jooma Ambassador Programme" },
   robots: { index: false, follow: false },
 };
 

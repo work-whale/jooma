@@ -14,7 +14,7 @@ import AlreadyApplied, { AppliedGuard } from "@/app/components/ambassador/Alread
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Jooma Ambassador Programme",
+  title: { absolute: "Jooma Ambassador Programme" },
   robots: { index: false, follow: false },
 };
 

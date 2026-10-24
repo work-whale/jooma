@@ -29,6 +29,17 @@
 
 /* ── Colleagues ──────────────────────────────────────────────────────────── */
 
+/* Marks the colleagues as illustrative, quietly. */
+.example {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--j-faint);
+  margin-bottom: 4px;
+}
+
 .colleague {
   display: flex;
   align-items: center;
