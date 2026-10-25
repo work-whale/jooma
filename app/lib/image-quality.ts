@@ -13,7 +13,21 @@ export const IMAGE_SETTINGS_KEY = "image_generation";
 export const IMAGE_QUALITIES = ["low", "medium", "high"] as const;
 export type ImageQuality = (typeof IMAGE_QUALITIES)[number];
 
-/** gpt-image-1's three sizes. Portrait and landscape bill the same tokens. */
+/**
+ * The image models tried, in order. The next is tried only when one refuses.
+ *
+ * gpt-image-1 shut down on 23 Oct 2026, and with dall-e-3 (shut down 12 May)
+ * as its only fallback, every AI image failed silently from then on. Avoid
+ * gpt-image-1-mini, gpt-image-1.5 and chatgpt-image-latest too: they shut
+ * down on 1 Dec 2026. Flare first because it is the faster of the two at the
+ * same price, which matters for a deck of a dozen images. Check
+ * https://developers.openai.com/api/docs/deprecations before adding one.
+ */
+export const IMAGE_MODELS = ["gpt-image-2.5-flare", "gpt-image-2.5-sunburst"] as const;
+export type ImageModel = (typeof IMAGE_MODELS)[number];
+
+/** The three sizes the image models are asked for. Portrait and landscape bill
+ *  the same tokens. */
 export const IMAGE_SIZES = ["1024x1024", "1536x1024", "1024x1536"] as const;
 export type ImageSize = (typeof IMAGE_SIZES)[number];
 
@@ -41,6 +55,10 @@ export interface ImageSettings {
 // 4160 tokens; 1536x1024: 400 / 1568 / 6208; 1024x1536: 408 / 1584 / 6240),
 // rounded up. They are estimates until checked against the console, which is
 // what the editable grid in /admin/tools is for.
+//
+// Measured for gpt-image-2.5 in Oct 2026, a 1024² image is 196 output tokens at
+// low and 439 at medium, at $30 per 1M: about $0.006 and $0.013. Close enough
+// to keep these until the grid is recalibrated.
 export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
   title: "medium",
   slide: "low",
@@ -106,7 +124,7 @@ export function imageUseForLayout(layout: string): ImageUse {
   return layout === "title-hero" || layout === "title-cover" ? "title" : "slide";
 }
 
-/** USD for one gpt-image-1 image. Null for a size this table does not know. */
+/** USD for one generated image. Null for a size this table does not know. */
 export function gptImageCostUsd(
   settings: ImageSettings,
   size: string,

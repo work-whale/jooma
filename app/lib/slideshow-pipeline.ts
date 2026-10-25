@@ -13,7 +13,7 @@ import { getOpenAI } from "@/app/lib/openai";
 import { renderSlide, type SlideSpec, type SlideLayout } from "@/app/lib/slideshow-layouts";
 import { getTheme, DEFAULT_ART_STYLE, type ArtStyleId } from "@/app/lib/slideshowThemes";
 import { generateAIImage, type ImageStyle, type AIImageOrientation } from "@/app/lib/ai-image";
-import { imageUseForLayout, type ImageUse } from "@/app/lib/image-quality";
+import { imageUseForLayout, type ImageModel, type ImageUse } from "@/app/lib/image-quality";
 import { recordUsage, recordAssetCost, recordSlideCosts, costUsd } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { forSdk } from "@/app/lib/models";
@@ -255,7 +255,7 @@ interface FetchedImage {
   width: number;
   height: number;
   // Present only on AI-generated images (web/Pixabay images are free).
-  model?: "gpt-image-1" | "dall-e-3";
+  model?: ImageModel;
   size?: string;
   costUsd?: number;
 }

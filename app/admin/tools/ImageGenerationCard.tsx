@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/auth/client";
 import {
+  IMAGE_MODELS,
   IMAGE_QUALITIES,
   IMAGE_SETTINGS_KEY,
   IMAGE_SIZES,
@@ -170,7 +171,7 @@ export default function ImageGenerationCard({
     <Card className={className}>
       <CardHeader>
         <CardTitle>Image generation</CardTitle>
-        <Tag>gpt-image-1</Tag>
+        <Tag>{IMAGE_MODELS[0]}</Tag>
       </CardHeader>
       <CardBody>
         {!saved && (
