@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   DEFAULT_IMAGE_SETTINGS,
+  IMAGE_MODELS,
   deckImageCostUsd,
   gptImageCostUsd,
   imageUseForLayout,
@@ -82,4 +83,17 @@ test("an all-AI deck costs less at the new defaults than all at medium", () => {
   const allMedium = normalizeImageSettings({ title: "medium", slide: "medium" });
   expect(deckImageCostUsd(allMedium)).toBeCloseTo(0.165, 5);
   expect(deckImageCostUsd(DEFAULT_IMAGE_SETTINGS)).toBeCloseTo(0.055, 5);
+});
+
+// Regression: gpt-image-1 shut down on 23 Oct 2026 and its only fallback was
+// dall-e-3, gone since May, so every AI image failed and each slide showed an
+// empty frame. An Auto deck hid it by filling every slot from web search.
+test("no retired image model is tried", () => {
+  const retired = [
+    "gpt-image-1", // shut down 23 Oct 2026
+    "dall-e-2", "dall-e-3", // 12 May 2026
+    "gpt-image-1-mini", "gpt-image-1.5", "chatgpt-image-latest", // 1 Dec 2026
+  ];
+  expect(IMAGE_MODELS.length).toBeGreaterThan(1);
+  for (const m of IMAGE_MODELS) expect(retired).not.toContain(m);
 });

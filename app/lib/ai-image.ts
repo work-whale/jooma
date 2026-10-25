@@ -10,9 +10,12 @@ import { getOpenAI } from "./openai";
 import { uploadImageBytes } from "./imageStorage";
 import { imageSettings } from "./image-settings";
 import {
+  IMAGE_MODELS,
   gptImageCostUsd,
   qualityFor,
+  type ImageModel,
   type ImageQuality,
+  type ImageSize,
   type ImageUse,
 } from "./image-quality";
 
@@ -29,24 +32,14 @@ export interface GeneratedImage {
   width: number;
   height: number;
   /** Which model actually served the image (for cost tracking). */
-  model?: "gpt-image-1" | "dall-e-3";
+  model?: ImageModel;
   /** The size string requested (e.g. "1024x1024"). */
   size?: string;
-  /** The quality requested ("standard" when DALL·E 3 served it). */
-  quality?: ImageQuality | "standard";
+  /** The quality requested. */
+  quality?: ImageQuality;
   /** Estimated USD cost of this single image. */
   costUsd?: number;
 }
-
-// gpt-image-1 prices are per size and quality, configured in /admin/tools and
-// defaulted in image-quality.ts. dall-e-3 is only the fallback for an org not
-// verified for gpt-image-1, has one quality, and is priced at OpenAI's fixed
-// per-image rates here.
-const DALLE_COST_USD: Record<string, number> = {
-  "1024x1024": 0.040,
-  "1792x1024": 0.080,
-  "1024x1792": 0.080,
-};
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
   "storybook": "Children's storybook illustration, soft pastel colors, friendly characters",
@@ -57,7 +50,7 @@ const STYLE_PROMPTS: Record<ImageStyle, string> = {
   "comic-book": "Comic book illustration, bold outlines, halftone shading, vibrant colors",
 };
 
-// AI image orientations supported by both gpt-image-1 and dall-e-3.
+// AI image orientations, one per size the image models support.
 //   square    — slide image-left/right frames (~0.93 ratio) and any frame that
 //               sits between 0.77 and 1.30 (mostly square).
 //   landscape — image-full slides and the title-cover hero (1.78 ratio).
@@ -72,10 +65,10 @@ export function orientationForFrame(width: number, height: number): AIImageOrien
   return "square";
 }
 
-// Tries gpt-image-1 first (better quality). Falls back to DALL·E 3 if the org
-// isn't verified for gpt-image-1. Picks the size for each model that matches
-// the requested orientation so the AI doesn't generate a landscape image for
-// a roughly-square slide frame and vice versa.
+// Tries each of IMAGE_MODELS in turn (see image-quality.ts for why these), at
+// the size that matches the requested orientation, so the AI doesn't generate
+// a landscape image for a roughly-square slide frame and vice versa. Prices are
+// per size and quality, configured in /admin/tools.
 export async function generateAIImage(
   query: string,
   style: ImageStyle = "photographic",
@@ -107,36 +100,18 @@ export async function generateAIImage(
     : `Subject: ${query}`;
   const prompt = `${STYLE_PROMPTS[style]}. ${subjectLine}. ${composition}, suitable for a presentation slide. ${noText}`;
 
-  // Supported sizes per model:
-  //   gpt-image-1 → 1024x1024 (sq), 1024x1536 (port), 1536x1024 (land)
-  //   dall-e-3   → 1024x1024 (sq), 1024x1792 (port), 1792x1024 (land)
-  const sizes: Record<
-    AIImageOrientation,
-    Array<{
-      model: "gpt-image-1" | "dall-e-3";
-      size: "1024x1024" | "1536x1024" | "1024x1536" | "1792x1024" | "1024x1792";
-      w: number; h: number;
-      quality: ImageQuality | "standard";
-    }>
-  > = {
-    square: [
-      { model: "gpt-image-1", size: "1024x1024", w: 1024, h: 1024, quality },
-      { model: "dall-e-3",    size: "1024x1024", w: 1024, h: 1024, quality: "standard" },
-    ],
-    landscape: [
-      { model: "gpt-image-1", size: "1536x1024", w: 1536, h: 1024, quality },
-      { model: "dall-e-3",    size: "1792x1024", w: 1792, h: 1024, quality: "standard" },
-    ],
-    portrait: [
-      { model: "gpt-image-1", size: "1024x1536", w: 1024, h: 1536, quality },
-      { model: "dall-e-3",    size: "1024x1792", w: 1024, h: 1792, quality: "standard" },
-    ],
+  const sizes: Record<AIImageOrientation, { size: ImageSize; w: number; h: number }> = {
+    square:    { size: "1024x1024", w: 1024, h: 1024 },
+    landscape: { size: "1536x1024", w: 1536, h: 1024 },
+    portrait:  { size: "1024x1536", w: 1024, h: 1536 },
   };
+  const { size, w, h } = sizes[orientation];
+  const attempts = IMAGE_MODELS.map((model) => ({ model, size, w, h, quality }));
 
-  for (const att of sizes[orientation]) {
+  for (const att of attempts) {
     try {
-      // Newer OpenAI SDKs reject `response_format` for both gpt-image-1 and
-      // dall-e-3, so we don't pass it — we fall back to fetching the returned
+      // Newer OpenAI SDKs reject `response_format` for the image models, so we
+      // don't pass it — we fall back to fetching the returned
       // URL ourselves below when needed.
       const r = await client.images.generate({
         model: att.model,
@@ -170,10 +145,7 @@ export async function generateAIImage(
           model: att.model,
           size: att.size,
           quality: att.quality,
-          costUsd:
-            att.quality === "standard"
-              ? (DALLE_COST_USD[att.size] ?? 0.08)
-              : (gptImageCostUsd(settings, att.size, att.quality) ?? 0.02),
+          costUsd: gptImageCostUsd(settings, att.size, att.quality) ?? 0.02,
         };
       } catch (uploadErr) {
         console.error("AI image storage upload failed:", uploadErr);
@@ -187,5 +159,8 @@ export async function generateAIImage(
       console.warn(`AI image gen failed (${att.model}):`, e.status, e.message);
     }
   }
+  // An error, not a warning: the slide quietly shows an empty frame, so this
+  // line is the only sign that AI images are down.
+  console.error(`AI image gen failed on every model (${IMAGE_MODELS.join(", ")})`);
   return null;
 }
