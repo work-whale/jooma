@@ -65,6 +65,7 @@ export default async function OverviewTab({
     reviewTrialUntil,
     nextPayment,
     referralCode,
+    retention,
   } = state;
   const yearly = interval === "year";
   // A discount waiting on the first payment (an ambassador code), mid-trial.
@@ -170,6 +171,16 @@ export default async function OverviewTab({
           </p>
         )}
 
+        {/* The cancel flow's discount, once taken. Said here so the teacher
+            can see it is on without waiting for the next invoice. */}
+        {retention && !ending && !ended && (
+          <p className="text-sm mb-5" style={{ color: "var(--j-body)" }} data-testid="retention-discount">
+            {retention.endsAt
+              ? `Half price until ${retention.endsAt}, from the offer you accepted.`
+              : "12.5% off your next renewal, from the offer you accepted."}
+          </p>
+        )}
+
         {firstPayment && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }} data-testid="first-payment">
             {firstPayment.lead}{" "}
@@ -220,7 +231,7 @@ export default async function OverviewTab({
                   Once fully ended there is nothing to renew, and /pricing is
                   the way back. */}
               {hasSubscription && !ending && !ended && (
-                <CancelSubscriptionButton from={plan} trialing={trialing} />
+                <CancelSubscriptionButton />
               )}
               {hasSubscription && ending && <ResumeButton />}
             </div>

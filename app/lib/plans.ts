@@ -298,9 +298,10 @@ export const DEFAULT_PLAN: PlanId = "free";
 /** How often a self-serve plan bills. Matches Stripe's recurring.interval. */
 export type BillingInterval = "month" | "year";
 
-/** The interval the plan choosers open on. Yearly is the better deal, so it is
- *  what a teacher sees first; Monthly is one click away. */
-export const DEFAULT_INTERVAL: BillingInterval = "year";
+/** The interval the plan choosers open on. Monthly, so the first price a teacher
+ *  sees is the one they will be charged; Yearly is one click away. Opening on
+ *  Yearly (October 2026) led to annual trials failing their first charge. */
+export const DEFAULT_INTERVAL: BillingInterval = "month";
 
 export function isBillingInterval(value: unknown): value is BillingInterval {
   return value === "month" || value === "year";

@@ -27,6 +27,7 @@ export default function DowngradeButton({
   to,
   interval = "month",
   onClose,
+  onDone,
 }: {
   /** The interval their subscription bills at. The downgrade keeps it. */
   interval?: BillingInterval;
@@ -38,6 +39,9 @@ export default function DowngradeButton({
    *  the panel can render full width below the grid rather than squeezed into
    *  a ~200px card column. */
   onClose: () => void;
+  /** Called once the downgrade is scheduled, before the refresh. The cancel
+   *  flow uses it to record the save. */
+  onDone?: () => void;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -65,6 +69,7 @@ export default function DowngradeButton({
         // Nothing has changed on the profile yet, by design — the schedule
         // lands at renewal. Refresh so the card picks up the pending change
         // that OverviewTab reads back from Stripe.
+        onDone?.();
         onClose();
         router.refresh();
         return;

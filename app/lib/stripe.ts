@@ -19,6 +19,7 @@ import Stripe from "stripe";
 import type { BillingInterval, PlanId } from "./plans";
 import { supabaseAdmin } from "./supabase-admin";
 import { isTrialCheckout } from "./trial";
+import { isRetentionCouponId } from "./cancel-flow";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   // Fail loud at import time in any server context that needs Stripe, rather
@@ -300,6 +301,22 @@ export interface SubscriptionBilling {
    *  first payment), from Stripe's own preview so the rounding is Stripe's.
    *  Null when nothing is discounted. */
   nextPayment: { fullPence: number; nextPence: number } | null;
+  /** The cancel flow's retention discount, when one is on the subscription,
+   *  with the date a repeating one stops (null for the once-off yearly one). */
+  retention: { endsAt: string | null } | null;
+}
+
+/** The retention discount among a subscription's discounts, if any. */
+export function retentionOf(sub: Stripe.Subscription | null): SubscriptionBilling["retention"] {
+  for (const d of sub?.discounts ?? []) {
+    if (!d || typeof d === "string") continue;
+    const coupon = d.source?.coupon;
+    const id = typeof coupon === "string" ? coupon : coupon?.id;
+    if (isRetentionCouponId(id)) {
+      return { endsAt: d.end ? new Date(d.end * 1000).toISOString() : null };
+    }
+  }
+  return null;
 }
 
 /**
@@ -333,7 +350,12 @@ export async function pendingPlanChange(
 export async function subscriptionBilling(
   subscriptionId: string | null | undefined,
 ): Promise<SubscriptionBilling> {
-  const none: SubscriptionBilling = { interval: "month", pending: null, nextPayment: null };
+  const none: SubscriptionBilling = {
+    interval: "month",
+    pending: null,
+    nextPayment: null,
+    retention: null,
+  };
   if (!subscriptionId) return none;
 
   let sub: Stripe.Subscription;
@@ -352,7 +374,7 @@ export async function subscriptionBilling(
     }),
     discountedNextPayment(sub),
   ]);
-  return { interval, pending, nextPayment };
+  return { interval, pending, nextPayment, retention: retentionOf(sub) };
 }
 
 /**

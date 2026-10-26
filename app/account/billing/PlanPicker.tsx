@@ -94,7 +94,7 @@ export default function PlanPicker({
    * A subscriber opens on the interval they pay now, so the first thing they
    * see is their own price, marked as theirs. Someone with a code waiting opens
    * on Monthly, where the code takes money off the first payment. Anyone else
-   * opens on Yearly, the better deal, as on the landing page. The page keys
+   * opens on DEFAULT_INTERVAL (Monthly), as on the landing page. The page keys
    * this component on the code, so applying one remounts it on Monthly.
    */
   const [interval, setIntervalChoice] = useState<BillingInterval>(

@@ -100,7 +100,8 @@ test.describe("pricing", () => {
   });
 
   test("a yearly card leads with its monthly figure, the yearly total under it", async ({ page }) => {
-    // The table opens on yearly.
+    // The table opens on monthly; the radio itself is visually hidden.
+    await page.locator('#pricing label[data-option="year"]').click();
     const standard = card(page, "Standard");
     await expect(standard.getByText("£3.99", { exact: true })).toBeVisible();
     await expect(standard.getByText("a month", { exact: true })).toBeVisible();
@@ -113,16 +114,15 @@ test.describe("pricing", () => {
   });
 
   test("monthly shows the monthly price, with no yearly line", async ({ page }) => {
-    // The radio itself is visually hidden; a visitor clicks its label.
-    await page.locator('#pricing label[data-option="month"]').click();
+    // The table opens on monthly, so no click is needed.
     const standard = card(page, "Standard");
     await expect(standard.getByText("£4.99", { exact: true })).toBeVisible();
     await expect(standard.getByText(/billed yearly/)).toHaveCount(0);
   });
 
   test("every trial button is burnt orange", async ({ page }) => {
-    // The table opens on yearly, so the buttons name the annual trial.
-    const buttons = page.locator("#pricing").getByRole("button", { name: "Start annual trial" });
+    // The table opens on monthly, so the buttons name the plain trial.
+    const buttons = page.locator("#pricing").getByRole("button", { name: "Start free trial" });
     await expect(buttons).toHaveCount(3);
     for (let i = 0; i < 3; i++) {
       // --j-orange, #C2551F: the accent on the landing page's workload figures.
@@ -132,12 +132,16 @@ test.describe("pricing", () => {
 
   test("the trial button names the interval it starts", async ({ page }) => {
     const pricing = page.locator("#pricing");
+    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(0);
+
+    await page.locator('#pricing label[data-option="year"]').click();
     await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
     await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
 
+    // And back again.
     await page.locator('#pricing label[data-option="month"]').click();
     await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-    await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(0);
   });
 
   test("each card's button sits under its price, above its features", async ({ page }) => {

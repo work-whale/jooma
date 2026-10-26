@@ -9,8 +9,8 @@ import styles from "./PlanCard.module.css";
  * /welcome and the profile, for a teacher choosing their first plan.
  *
  * Controlled: the caller owns the interval, because the same value also picks
- * the card prices and goes to checkout. Yearly comes first, and the callers
- * open on it (DEFAULT_INTERVAL), since it is the better deal.
+ * the card prices and goes to checkout. Monthly comes first, and the callers
+ * open on it (DEFAULT_INTERVAL); Yearly carries its saving pill.
  *
  * THE MOTION
  * A purple thumb slides between the two options with a slight spring, rather
@@ -83,8 +83,8 @@ export default function BillingToggle({
   }, [value]);
 
   const options: { id: BillingInterval; label: string }[] = [
-    { id: "year", label: "Yearly" },
     { id: "month", label: "Monthly" },
+    { id: "year", label: "Yearly" },
   ];
 
   return (
