@@ -18,10 +18,12 @@ export default async function SubscriptionSection({
   tab: rawTab,
   checkout,
   topup,
+  switchTo,
 }: {
   tab?: string;
   checkout?: string;
   topup?: string;
+  switchTo?: string;
 }) {
   const tab = asTab(rawTab);
 
@@ -36,7 +38,7 @@ export default async function SubscriptionSection({
           the resolved boundary and leaves the previous tab on screen until the
           new data lands. See docs/instant-navigation-guide.md §11. */}
       <Suspense key={tab} fallback={<TabSkeleton tab={tab} />}>
-        {tab === "overview" && <OverviewTab checkout={checkout} topup={topup} />}
+        {tab === "overview" && <OverviewTab checkout={checkout} topup={topup} switchTo={switchTo} />}
         {tab === "usage" && <UsageTab />}
         {tab === "history" && <HistoryTab />}
       </Suspense>

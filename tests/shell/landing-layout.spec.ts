@@ -120,12 +120,65 @@ test.describe("pricing", () => {
     await expect(standard.getByText(/billed yearly/)).toHaveCount(0);
   });
 
-  test("every Start free trial button is burnt orange", async ({ page }) => {
-    const buttons = page.locator("#pricing").getByRole("button", { name: "Start free trial" });
+  test("every trial button is burnt orange", async ({ page }) => {
+    // The table opens on yearly, so the buttons name the annual trial.
+    const buttons = page.locator("#pricing").getByRole("button", { name: "Start annual trial" });
     await expect(buttons).toHaveCount(3);
     for (let i = 0; i < 3; i++) {
       // --j-orange, #C2551F: the accent on the landing page's workload figures.
       await expect(buttons.nth(i)).toHaveCSS("background-color", "rgb(194, 85, 31)");
     }
+  });
+
+  test("the trial button names the interval it starts", async ({ page }) => {
+    const pricing = page.locator("#pricing");
+    await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
+    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+
+    await page.locator('#pricing label[data-option="month"]').click();
+    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(0);
+  });
+
+  test("each card's button sits under its price, above its features", async ({ page }) => {
+    await expect(page.locator("#pricing").getByRole("button")).toHaveCount(3);
+    // Measured in one pass, in page coordinates: the page is still smooth
+    // scrolling to #pricing, so separate boundingBox() calls would each catch
+    // the viewport at a different point.
+    const cards = await page.locator("#pricing").evaluate((section) => {
+      const top = (el: Element | null) => (el ? el.getBoundingClientRect().top + window.scrollY : NaN);
+      return [...section.querySelectorAll("h3")]
+        .map((h) => h.parentElement!)
+        .filter((c) => c.querySelector("button"))
+        .map((c) => ({
+          price: top(c.querySelector("h3 + p")),
+          button: top(c.querySelector("button")),
+          firstFeature: top(c.querySelector("li")),
+        }));
+    });
+
+    expect(cards).toHaveLength(3);
+    for (const c of cards) {
+      expect(c.button).toBeGreaterThan(c.price);
+      expect(c.firstFeature).toBeGreaterThan(c.button);
+    }
+
+    // The buttons still line up across the row, whatever each list's length.
+    const tops = cards.map((c) => Math.round(c.button));
+    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
+  });
+
+  test("on monthly the buttons line up too, though only Pro has a badge", async ({ page }) => {
+    await page.locator('#pricing label[data-option="month"]').click();
+    await expect(page.locator("#pricing").getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    // Let the note row collapse before measuring.
+    await page.waitForTimeout(600);
+    const tops = await page.locator("#pricing").evaluate((section) =>
+      [...section.querySelectorAll("button")]
+        .filter((b) => /trial/.test(b.textContent ?? ""))
+        .map((b) => Math.round(b.getBoundingClientRect().top + window.scrollY)),
+    );
+    expect(tops).toHaveLength(3);
+    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
   });
 });

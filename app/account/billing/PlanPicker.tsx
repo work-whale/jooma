@@ -11,7 +11,7 @@ import {
   planCardPricing,
   planFeatures,
   planTrialLine,
-  TRIAL_CTA,
+  trialCta,
 } from "@/app/lib/plan-copy";
 import { DEFAULT_INTERVAL, PLANS, type BillingInterval, type PlanId } from "@/app/lib/plans";
 import type { Discount } from "@/app/lib/ambassador-discount";
@@ -190,7 +190,7 @@ export default function PlanPicker({
     if (move === "buy") {
       return {
         kind: "button",
-        label: pending === id ? "Starting checkout…" : trialEligible ? TRIAL_CTA : planCardCta(id),
+        label: pending === id ? "Starting checkout…" : trialEligible ? trialCta(interval) : planCardCta(id),
         onClick: () => subscribe(id),
         disabled: pending !== null,
         tone: trialEligible ? "trial" : undefined,

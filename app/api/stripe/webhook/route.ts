@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { stripe, planForPriceId } from "@/app/lib/stripe";
+import { stripe, planForPriceId, isPaidPlanId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { DEFAULT_PLAN, TOPUP_PENCE, type BillingInterval } from "@/app/lib/plans";
 import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
-import { isTrialInvoice, startsTrial } from "@/app/lib/trial";
+import { annualTrialEmailParams, isTrialInvoice, startsAnnualTrial, startsTrial } from "@/app/lib/trial";
+import { sendTemplate } from "@/app/lib/email";
 
 // Stripe → app sync. This is the ONLY place a user's plan is upgraded/downgraded
 // from payment state. It runs with the service-role key (no user session) and
@@ -620,6 +621,89 @@ async function reportTrialStart(userId: string | null) {
 }
 
 /**
+ * Email a teacher who has just started a free trial on a yearly plan: the first
+ * charge, its date, and a one-click switch to monthly (free during the trial).
+ *
+ * Every annual trial up to 2026-10-26 ended in a declined first charge, and the
+ * three day trial is too short for Stripe's own reminder. See
+ * app/lib/email-templates/annualTrialStarted.ts.
+ *
+ * ONCE PER TEACHER, claimed atomically. checkout.session.completed can be
+ * delivered more than once, so profiles.annual_trial_email_sent_at is stamped
+ * with a conditional update (only where still null) and only the delivery that
+ * changed a row sends. Same discipline as reportPurchaseToMeta's claim. If the
+ * claim itself errors it sends anyway: a second copy of this email is a mild
+ * annoyance, while a missing one is the surprise £71.99 it exists to prevent.
+ * If the send fails the claim is released, so the record never says "sent"
+ * about an email that did not go.
+ *
+ * Never throws: a failure here must not fail the webhook and make Stripe replay
+ * the whole event.
+ */
+async function sendAnnualTrialEmail(sub: Stripe.Subscription, userId: string | null) {
+  if (!userId || typeof sub.trial_end !== "number") return;
+  try {
+    const plan = await planForPriceId(sub.items.data[0]?.price?.id);
+    if (!plan || !isPaidPlanId(plan)) return;
+
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("profiles")
+      .update({ annual_trial_email_sent_at: new Date().toISOString() })
+      .eq("id", userId)
+      .is("annual_trial_email_sent_at", null)
+      .select("first_name");
+
+    if (claimError) {
+      console.warn("[stripe/webhook] could not claim the annual trial email, sending anyway", userId, claimError.message);
+    } else if (!claimed || claimed.length === 0) {
+      // Already sent, by an earlier delivery of this event.
+      return;
+    }
+
+    let firstName: string | null = claimed?.[0]?.first_name ?? null;
+    if (claimError) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("first_name")
+        .eq("id", userId)
+        .maybeSingle();
+      firstName = profile?.first_name ?? null;
+    }
+
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const email = authUser?.user?.email;
+
+    // Stripe's own preview of the first invoice, so an ambassador code's yearly
+    // discount (applied just before this, in reconcileAmbassadorDiscount) is in
+    // the figure. Falls back to the list price if the preview fails.
+    let chargePence = sub.items.data[0]?.price?.unit_amount ?? 0;
+    try {
+      const preview = await stripe.invoices.createPreview({ subscription: sub.id });
+      chargePence = preview.amount_due;
+    } catch (err) {
+      console.warn("[stripe/webhook] annual trial preview failed, quoting list price", sub.id, err);
+    }
+
+    const sent =
+      Boolean(email) &&
+      (await sendTemplate(
+        "annual_trial_started",
+        email!,
+        annualTrialEmailParams({ firstName, plan, chargePence, trialEnd: sub.trial_end }),
+      ));
+
+    if (!sent && !claimError) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ annual_trial_email_sent_at: null })
+        .eq("id", userId);
+    }
+  } catch (err) {
+    console.error("[stripe/webhook] annual trial email failed", userId, err);
+  }
+}
+
+/**
  * Undo the claim taken at the top of reportPurchaseToMeta.
  *
  * Called on every path that claims the invoice and then does NOT report it, so
@@ -1179,6 +1263,11 @@ export async function POST(req: NextRequest) {
           // off one event type keeps it to one send per checkout.
           if (startsTrial(sub)) {
             await reportTrialStart(sub.metadata?.userId ?? null);
+          }
+          // Same moment, same one-per-checkout reasoning: an annual trial is
+          // told what it will be charged, when, and the way to monthly.
+          if (startsAnnualTrial(sub)) {
+            await sendAnnualTrialEmail(sub, sub.metadata?.userId ?? null);
           }
         } else if (session.mode === "payment" && session.metadata?.kind === "credit_topup") {
           // One-off £1.50 AI credit. No subscription is involved, so this grants

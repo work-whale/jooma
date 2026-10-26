@@ -39,6 +39,8 @@ export interface PricingPlan {
     was?: string;
     saving?: string;
     note?: string;
+    /** The button, naming the interval: "Start annual trial". */
+    cta?: string;
     trial?: string | null;
   };
 }
@@ -102,9 +104,10 @@ export default function Pricing({
   function actionFor(plan: PricingPlan): PlanCardAction {
     if (plan.checkout) {
       const checkout = plan.checkout;
+      const cta = (interval === "year" && plan.yearly?.cta) || plan.cta;
       return {
         kind: "button",
-        label: pending === checkout ? "Starting..." : plan.cta,
+        label: pending === checkout ? "Starting..." : cta,
         onClick: () => startCheckout(checkout),
         disabled: pending !== null,
         tone: "trial",

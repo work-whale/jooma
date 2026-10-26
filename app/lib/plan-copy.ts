@@ -96,6 +96,15 @@ export function planCardCta(plan: PlanId): string {
  *  plan. The plan name is on the card already. */
 export const TRIAL_CTA = "Start free trial";
 
+/** The same button with Yearly selected. Naming the interval on the button
+ *  itself matters: every annual trial so far ended in a declined £71.99 charge
+ *  from someone who appears to have expected a monthly one. */
+export const TRIAL_CTA_YEARLY = "Start annual trial";
+
+export function trialCta(interval: BillingInterval): string {
+  return interval === "year" ? TRIAL_CTA_YEARLY : TRIAL_CTA;
+}
+
 /**
  * The line that explains the trial on a plan's card, e.g. "3 days free, then
  * £4.99 a month". Derived from PLANS and TRIAL_DAYS so it can never quote a

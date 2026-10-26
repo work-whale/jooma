@@ -319,7 +319,7 @@ test.describe("The /pricing page", () => {
 
     await expect(page).toHaveURL(/\/pricing$/);
     await expect(page.getByText("Choose your plan").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
     // Billing management is one link away, in Profile.
     await expect(page.getByRole("main").getByRole("link", { name: "Usage and billing" })).toBeVisible();
   });
@@ -338,7 +338,7 @@ test.describe("The /pricing page", () => {
     await expect(page).toHaveURL(/\/pricing\?checkout=cancelled/);
     await expect(page.getByRole("status").getByText(/nothing was charged/i)).toBeVisible();
     // And the cards are right there to try again.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
   });
 
   test("an old link with a billing tab still reaches Profile, params intact", async ({ page }) => {
@@ -364,7 +364,7 @@ test.describe("The /pricing page", () => {
     await expect(page.getByRole("navigation", { name: /usage and billing/i })).toBeVisible();
 
     // The cards are no longer here; the link to them is.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Start (free|annual) trial$/ })).toHaveCount(0);
     await page.getByRole("main").getByRole("link", { name: "See plans" }).first().click();
     await expect(page).toHaveURL(/\/pricing$/);
   });

@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { TRIAL_DAYS } from "@/app/lib/plans";
-import { isTrialCheckout, isTrialInvoice, startsTrial, trialDaysFor } from "@/app/lib/trial";
+import {
+  annualTrialEmailParams,
+  isTrialCheckout,
+  isTrialInvoice,
+  startsAnnualTrial,
+  startsTrial,
+  trialDaysFor,
+} from "@/app/lib/trial";
 
 /*
  * The free trial every self-serve plan starts with.
@@ -90,5 +97,63 @@ test.describe("isTrialInvoice", () => {
 
   test("not a mid-cycle plan change", () => {
     expect(isTrialInvoice({ billing_reason: "subscription_update", subtotal: 0 })).toBe(false);
+  });
+});
+
+test.describe("startsAnnualTrial (when the annual trial email goes)", () => {
+  const sub = (status: string, trialEnd: number | null, interval: string | null) => ({
+    status: status as "trialing",
+    trial_end: trialEnd,
+    items: { data: [{ price: { recurring: interval ? { interval } : null } }] },
+  });
+
+  test("a trial on a yearly price", () => {
+    expect(startsAnnualTrial(sub("trialing", 1793000000, "year"))).toBe(true);
+  });
+
+  test("not a trial on a monthly price: its first charge is the price on the button", () => {
+    expect(startsAnnualTrial(sub("trialing", 1793000000, "month"))).toBe(false);
+  });
+
+  test("not a yearly subscription that started without a trial", () => {
+    expect(startsAnnualTrial(sub("active", null, "year"))).toBe(false);
+  });
+
+  test("not a price with no recurring interval", () => {
+    expect(startsAnnualTrial(sub("trialing", 1793000000, null))).toBe(false);
+  });
+});
+
+test.describe("annualTrialEmailParams", () => {
+  // 2026-10-29 08:21 UTC, a real annual trial's trial_end.
+  const trialEnd = Date.UTC(2026, 9, 29, 8, 21) / 1000;
+
+  test("says the amount, the date and the monthly alternative", () => {
+    expect(annualTrialEmailParams({ firstName: "Kev", plan: "pro", chargePence: 7199, trialEnd })).toEqual({
+      firstName: "Kev",
+      plan: "Pro",
+      amount: "£71.99",
+      chargeDate: "29 October 2026",
+      monthlyPrice: "£7.99",
+    });
+  });
+
+  test("quotes the previewed charge, so a discount shows", () => {
+    expect(annualTrialEmailParams({ firstName: null, plan: "standard", chargePence: 4319, trialEnd }).amount).toBe(
+      "£43.19",
+    );
+  });
+
+  test("the date is London's, not UTC's", () => {
+    // 23:30 UTC on 31 March 2027 is already 1 April in London (BST).
+    const lateUtc = Date.UTC(2027, 2, 31, 23, 30) / 1000;
+    expect(annualTrialEmailParams({ firstName: "", plan: "max", chargePence: 14399, trialEnd: lateUtc }).chargeDate).toBe(
+      "1 April 2027",
+    );
+  });
+
+  test("a missing name is empty, so the email says Hi there", () => {
+    expect(annualTrialEmailParams({ firstName: undefined, plan: "pro", chargePence: 7199, trialEnd }).firstName).toBe("");
+    expect(annualTrialEmailParams({ firstName: "  ", plan: "pro", chargePence: 7199, trialEnd }).firstName).toBe("");
   });
 });

@@ -167,6 +167,39 @@ test.describe("Switching between monthly and yearly", () => {
     expect(after.discounts ?? []).toHaveLength(0);
   });
 
+  test("the annual trial email's link opens the switch to monthly, free during the trial", async ({
+    page,
+  }) => {
+    const sub = await subscribe({ price: PRO_YEARLY, trialDays: 3 });
+
+    await signIn(page, teacher);
+    // The "Switch to monthly" button in the annual_trial_started email.
+    await page.goto("/profile?section=subscription&switch=month");
+
+    // Open on arrival, with no click: the confirmation and its £0 today.
+    await expect(page.getByText(/Nothing to pay now/)).toBeVisible();
+    await expect(page.getByText(/you.ll pay £7\.99 a month/)).toBeVisible();
+
+    await page.getByRole("button", { name: "Confirm and switch" }).click();
+    await expect(page.getByText(/Then £7\.99 a month/)).toBeVisible();
+
+    const after = await stripe.subscriptions.retrieve(sub.id);
+    expect(priceOf(after)).toBe(PRO_MONTHLY);
+    expect(after.status).toBe("trialing");
+    expect(after.trial_end).toBe(sub.trial_end);
+  });
+
+  test("a switch link for the interval they already pay opens nothing", async ({ page }) => {
+    await subscribe({ price: PRO_MONTHLY });
+
+    await signIn(page, teacher);
+    await page.goto("/profile?section=subscription&switch=month");
+
+    // The ordinary Overview: the yearly offer as a button, no panel open.
+    await expect(page.getByRole("button", { name: "Switch to yearly and save £23.89" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Confirm and switch" })).toHaveCount(0);
+  });
+
   test("yearly to monthly waits for renewal, and can be undone", async ({ page }) => {
     const sub = await subscribe({ price: PRO_YEARLY });
     await signIn(page, teacher);

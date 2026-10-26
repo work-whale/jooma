@@ -40,9 +40,12 @@ export default async function ProfilePage({
     tab?: string;
     checkout?: string;
     topup?: string;
+    /** "month" or "year": opens the billing switch to that interval, for the
+     *  link in the annual trial email. */
+    switch?: string;
   }>;
 }) {
-  const { section: rawSection, tab, checkout, topup } = await searchParams;
+  const { section: rawSection, tab, checkout, topup, switch: switchTo } = await searchParams;
   const section = asSection(rawSection);
 
   return (
@@ -70,7 +73,7 @@ export default async function ProfilePage({
           <Suspense key={section} fallback={<SectionSkeleton section={section} />}>
             {section === "personal" && <PersonalInfoSection />}
             {section === "subscription" && (
-              <SubscriptionSection tab={tab} checkout={checkout} topup={topup} />
+              <SubscriptionSection tab={tab} checkout={checkout} topup={topup} switchTo={switchTo} />
             )}
             {section === "badges" && <BadgesSection />}
             {section === "password" && <ChangePasswordSection />}

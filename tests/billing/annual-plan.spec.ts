@@ -80,7 +80,7 @@ test.describe("Yearly billing", () => {
     await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
     await expect(page.getByText("£71.99 billed yearly")).toBeVisible();
     await expect(page.locator("s", { hasText: "£7.99" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
   });
 
   test("the plans page opens on Yearly for someone with no plan", async ({ page }) => {

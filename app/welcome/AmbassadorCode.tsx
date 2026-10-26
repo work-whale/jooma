@@ -9,7 +9,7 @@ import {
   planCardPricing,
   planFeatures,
   planTrialLine,
-  TRIAL_CTA,
+  trialCta,
 } from "@/app/lib/plan-copy";
 import { DEFAULT_INTERVAL, TRIAL_DAYS, type BillingInterval } from "@/app/lib/plans";
 import type { Discount } from "@/app/lib/ambassador-discount";
@@ -343,7 +343,7 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
             badge={id === FEATURED ? "Most popular" : undefined}
             action={{
               kind: "button",
-              label: busy === id ? "Just a moment…" : TRIAL_CTA,
+              label: busy === id ? "Just a moment…" : trialCta(interval),
               onClick: () => choose(id),
               disabled: busy !== null,
               tone: "trial",
