@@ -1,4 +1,5 @@
 import UnsubscribeForm from "./UnsubscribeForm";
+import Wordmark from "@/app/components/v2/Wordmark";
 
 // Where the footer link of a Jooma bulk email lands. Asks before acting: mail
 // security scanners open every link in an email, and a page that unsubscribed
@@ -24,15 +25,9 @@ export default async function UnsubscribePage({
         className="w-full max-w-md rounded-3xl px-10 py-12 text-center"
         style={{ backgroundColor: "var(--j-card)" }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo/logo-v2.svg"
-          alt="Jooma"
-          width={104}
-          height={32}
-          className="mx-auto mb-7"
-          style={{ height: 34, width: "auto" }}
-        />
+        <div className="flex justify-center mb-7" style={{ color: "var(--j-purple)" }}>
+          <Wordmark height={30} />
+        </div>
         <UnsubscribeForm token={t ?? ""} />
       </div>
     </div>

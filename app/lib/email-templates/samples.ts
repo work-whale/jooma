@@ -129,4 +129,13 @@ export const SAMPLE_PARAMS: Record<EmailTemplateKey, Record<string, string>> = {
     proEnds: "31 January 2027",
     agreementEnds: "13 October 2027",
   },
+
+  // app/api/stripe/webhook/route.ts, when Checkout completes an annual trial.
+  annual_trial_started: {
+    firstName: "Priya",
+    plan: "Pro",
+    amount: "£71.99",
+    chargeDate: "29 October 2026",
+    monthlyPrice: "£7.99",
+  },
 };

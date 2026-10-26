@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/app/lib/auth/server";
-import { hasActivePlan, PLANS, PLAN_CREDITS } from "@/app/lib/plans";
+import { hasActivePlan, isBillingInterval, PLANS, PLAN_CREDITS } from "@/app/lib/plans";
 import { trialDaysFor } from "@/app/lib/trial";
 import { firstPaymentCopy } from "@/app/lib/plan-copy";
 import { loadPlanState } from "./loadPlanState";
@@ -18,11 +18,14 @@ import AllowanceMeter from "./AllowanceMeter";
 export default async function OverviewTab({
   checkout,
   topup,
+  switchTo,
 }: {
   // Passed down from the page shell, which owns searchParams, rather than read
   // again here — one source, so the banner and the tab strip can't disagree.
   checkout?: string;
   topup?: string;
+  /** ?switch=month from the annual trial email: open the switch on arrival. */
+  switchTo?: string;
 }) {
   const supabase = await createClient();
 
@@ -226,7 +229,13 @@ export default async function OverviewTab({
                 nothing else is waiting: Stripe holds one schedule per
                 subscription, and a second change would replace the first. */}
             {hasSubscription && !ending && !ended && !pending && (
-              <SwitchIntervalButton plan={plan} current={interval} />
+              <SwitchIntervalButton
+                plan={plan}
+                current={interval}
+                // Only when the link asks for the interval this button offers:
+                // a stale ?switch=month on a monthly plan opens nothing.
+                openOnLoad={isBillingInterval(switchTo) && switchTo !== interval}
+              />
             )}
 
             {pendingSwitch && pendingAt && (

@@ -158,17 +158,9 @@ export default function PlanCard({
         </div>
       </div>
 
-      <ul className={styles.features}>
-        {features.map((feature) => (
-          <li key={feature}>
-            <span className={styles.tick} aria-hidden="true">
-              &#10003;
-            </span>
-            {feature}
-          </li>
-        ))}
-      </ul>
-
+      {/* The action sits under the price, above the feature list: the button
+          and the trial line beneath it are read together with the figure they
+          commit to, rather than after a list that pushes them out of view. */}
       {action.kind === "button" && (
         <button
           type="button"
@@ -196,11 +188,20 @@ export default function PlanCard({
         </button>
       )}
 
-      {/* Pinned to the bottom the same way a button would be, so a card with a
-          custom action still lines up with its neighbours. */}
       {action.kind === "custom" && <div className={styles.custom}>{action.node}</div>}
 
       {footer && <div className={styles.foot}>{footer}</div>}
+
+      <ul className={styles.features}>
+        {features.map((feature) => (
+          <li key={feature}>
+            <span className={styles.tick} aria-hidden="true">
+              &#10003;
+            </span>
+            {feature}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

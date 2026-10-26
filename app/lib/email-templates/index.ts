@@ -18,6 +18,7 @@ import { ambassadorTaxSummaryTemplate } from "./ambassadorTaxSummary";
 import { ambassadorQuietMonthTemplate } from "./ambassadorQuietMonth";
 import { ambassadorUnderReviewTemplate } from "./ambassadorUnderReview";
 import { ambassadorEndedInactivityTemplate } from "./ambassadorEndedInactivity";
+import { annualTrialStartedTemplate } from "./annualTrialStarted";
 
 export type EmailTemplateKey =
   | "teacher_invite"
@@ -35,7 +36,8 @@ export type EmailTemplateKey =
   | "ambassador_tax_summary"
   | "ambassador_quiet_month"
   | "ambassador_under_review"
-  | "ambassador_ended_inactivity";
+  | "ambassador_ended_inactivity"
+  | "annual_trial_started";
 
 export const TEMPLATES: Record<EmailTemplateKey, EmailRenderer> = {
   teacher_invite: teacherInviteTemplate,
@@ -54,4 +56,5 @@ export const TEMPLATES: Record<EmailTemplateKey, EmailRenderer> = {
   ambassador_quiet_month: ambassadorQuietMonthTemplate,
   ambassador_under_review: ambassadorUnderReviewTemplate,
   ambassador_ended_inactivity: ambassadorEndedInactivityTemplate,
+  annual_trial_started: annualTrialStartedTemplate,
 };

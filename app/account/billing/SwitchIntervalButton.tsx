@@ -16,13 +16,17 @@ import BillingChangePanel from "./BillingChangePanel";
 export default function SwitchIntervalButton({
   plan,
   current,
+  openOnLoad = false,
 }: {
   plan: PlanId;
   /** The interval they are billed at now. The button offers the other one. */
   current: BillingInterval;
+  /** Start with the confirmation open, for the annual trial email's
+   *  "Switch to monthly" link. Nothing changes until they confirm. */
+  openOnLoad?: boolean;
 }) {
   const to: BillingInterval = current === "month" ? "year" : "month";
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openOnLoad);
   const saving = planYearlySavingAmount(plan);
 
   if (open) {

@@ -155,7 +155,8 @@ test.describe("Standard plan and the free trial", () => {
     await page.goto("/welcome");
 
     await expect(page.getByText(/choose a plan to start your free trial/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    // /welcome opens on yearly, so the buttons name the annual trial.
+    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
     await expect(page.getByText(/won.t be charged until your 3 day/i)).toBeVisible();
     await expect(page.getByRole("link", { name: "Look around first" })).toBeVisible();
   });
@@ -166,7 +167,7 @@ test.describe("Standard plan and the free trial", () => {
     await signIn(page, teacher);
     await page.goto("/welcome");
 
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Start (free|annual) trial$/ })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Go to my tools" })).toBeVisible();
   });
 
@@ -186,7 +187,7 @@ test.describe("Standard plan and the free trial", () => {
     // Already subscribed, so the plan cards offer swaps and never a second trial.
     await page.goto("/pricing");
     await expect(page.getByRole("button", { name: "Your plan" }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Start (free|annual) trial$/ })).toHaveCount(0);
   });
 
   test("a lapsed subscriber can come back, but without a second trial", async ({ page }) => {
@@ -206,6 +207,6 @@ test.describe("Standard plan and the free trial", () => {
     await page.goto("/pricing");
 
     await expect(page.getByRole("button", { name: "Choose Standard" }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Start (free|annual) trial$/ })).toHaveCount(0);
   });
 });

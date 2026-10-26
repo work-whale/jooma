@@ -225,6 +225,6 @@ test.describe("Ambassador dashboard", () => {
     // that is how they keep it, billed from the day the free year ends.
     await expect(page.getByTestId("ambassador-plan-banner")).toContainText("Pro is on us until");
     await expect(page.getByRole("button", { name: "Your plan" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Start (free|annual) trial$/ })).toHaveCount(0);
   });
 });

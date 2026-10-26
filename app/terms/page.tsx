@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Wordmark from "@/app/components/v2/Wordmark";
 
 /* Without this the page inherited the root layout's title and description, so
  * it announced itself as the home page. The canonical is the same apex/www
@@ -13,8 +14,9 @@ export default function TermsPage() {
   return (
     <div className="min-h-dvh" style={{ backgroundColor: "var(--j-tint)" }}>
       <div className="max-w-3xl mx-auto px-6 py-16">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo/logo-v2.svg" alt="Jooma" width={104} height={32} className="mb-10" style={{ height: 30, width: "auto" }} />
+        <div className="mb-10" style={{ color: "var(--j-purple)" }}>
+          <Wordmark height={26} />
+        </div>
 
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Terms of Service

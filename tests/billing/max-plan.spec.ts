@@ -113,7 +113,7 @@ test.describe("Max plan", () => {
     // A subscriber sees every plan card, but NOT the buy-from-scratch buttons:
     // those run Checkout, which would start a second subscription alongside the
     // one they have. The swap buttons take their place.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Start (free|annual) trial$/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Choose Max" })).toHaveCount(0);
   });
 

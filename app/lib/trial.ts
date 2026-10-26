@@ -10,7 +10,8 @@
 // ends Stripe charges the card; if they cancelled first, the subscription ends
 // and the webhook writes them back to "free" (no plan).
 import type Stripe from "stripe";
-import { TRIAL_DAYS } from "./plans";
+import { TRIAL_DAYS, type PlanId } from "./plans";
+import { planCardName, planCardPrice } from "./plan-copy";
 
 /**
  * How many trial days a checkout should carry for this account: TRIAL_DAYS for
@@ -78,4 +79,49 @@ export function isTrialInvoice(
   inv: Pick<Stripe.Invoice, "billing_reason" | "subtotal">,
 ): boolean {
   return inv.billing_reason === "subscription_create" && (inv.subtotal ?? 0) === 0;
+}
+
+/**
+ * Did this subscription just start a free trial on a YEARLY price?
+ *
+ * Decides whether the webhook sends the annual trial email. Every annual trial
+ * up to 2026-10-26 ended in a declined first charge from someone who appears to
+ * have expected a monthly one, so these get told the amount, the date and the
+ * way to monthly the moment Checkout completes. A monthly trial gets nothing:
+ * its first charge is the price on the button.
+ */
+export function startsAnnualTrial(
+  sub: Pick<Stripe.Subscription, "status" | "trial_end"> & {
+    items: { data: { price?: { recurring?: { interval?: string | null } | null } | null }[] };
+  },
+): boolean {
+  return startsTrial(sub) && sub.items.data[0]?.price?.recurring?.interval === "year";
+}
+
+/**
+ * The parameters the annual_trial_started email renders with.
+ *
+ * `chargePence` is Stripe's own preview of the first invoice, so an ambassador
+ * code's yearly discount is already in it; `trialEnd` is the subscription's
+ * trial_end, in Unix seconds. The date is a London calendar date, which is what
+ * a teacher reading "on 29 October" means.
+ */
+export function annualTrialEmailParams(input: {
+  firstName: string | null | undefined;
+  plan: PlanId;
+  chargePence: number;
+  trialEnd: number;
+}): Record<string, string> {
+  return {
+    firstName: input.firstName?.trim() ?? "",
+    plan: planCardName(input.plan),
+    amount: `£${(input.chargePence / 100).toFixed(2)}`,
+    chargeDate: new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/London",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(input.trialEnd * 1000)),
+    monthlyPrice: planCardPrice(input.plan),
+  };
 }
