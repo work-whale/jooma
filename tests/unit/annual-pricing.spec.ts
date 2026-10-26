@@ -97,8 +97,8 @@ test.describe("the card at each interval", () => {
 });
 
 test.describe("the interval itself", () => {
-  test("choosers open on yearly", () => {
-    expect(DEFAULT_INTERVAL).toBe("year");
+  test("choosers open on monthly, the price a teacher is charged", () => {
+    expect(DEFAULT_INTERVAL).toBe("month");
   });
 
   test("only month and year are accepted from a request body", () => {

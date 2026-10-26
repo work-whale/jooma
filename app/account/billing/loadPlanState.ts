@@ -70,6 +70,9 @@ export interface PlanState {
   /** The next charge when a discount (an ambassador code) is waiting on it:
    *  the full price and what Stripe will actually take. */
   nextPayment: { fullPence: number; nextPence: number } | null;
+  /** The cancel flow's retention discount on the subscription: when a
+   *  repeating one stops, formatted, or null for the once-off yearly one. */
+  retention: { endsAt: string | null } | null;
 }
 
 function longDate(value: string | Date): string {
@@ -221,5 +224,8 @@ export async function loadPlanState(
     ambassadorUntil: ambassadorPro && ambassador?.proUntil ? longDate(ambassador.proUntil) : null,
     reviewTrialUntil,
     nextPayment: billing.nextPayment,
+    retention: billing.retention
+      ? { endsAt: billing.retention.endsAt ? longDate(billing.retention.endsAt) : null }
+      : null,
   };
 }

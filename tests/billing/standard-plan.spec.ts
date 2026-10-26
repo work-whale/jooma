@@ -43,9 +43,9 @@ test.describe("Standard plan and the free trial", () => {
     await page.goto("/#pricing");
     const pricing = page.locator("#pricing");
 
-    // The table opens on Yearly (see annual-plan.spec.ts). The figures below
-    // are the monthly ones.
-    await pricing.locator("label", { hasText: "Monthly" }).click();
+    // The table opens on Monthly (see annual-plan.spec.ts), so the figures
+    // below are there without a click.
+    await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
 
     await expect(pricing.getByText("Standard", { exact: true })).toBeVisible();
     // Exact, because the trial line under the button quotes the price too.
@@ -155,8 +155,8 @@ test.describe("Standard plan and the free trial", () => {
     await page.goto("/welcome");
 
     await expect(page.getByText(/choose a plan to start your free trial/i)).toBeVisible();
-    // /welcome opens on yearly, so the buttons name the annual trial.
-    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
+    // /welcome opens on monthly, so the buttons name the plain trial.
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
     await expect(page.getByText(/won.t be charged until your 3 day/i)).toBeVisible();
     await expect(page.getByRole("link", { name: "Look around first" })).toBeVisible();
   });

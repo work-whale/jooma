@@ -6,9 +6,10 @@ import { createTeacher, deleteTeacher, signIn, type TestTeacher } from "../suppo
  * Yearly billing.
  *
  * What this pins:
- *   1. Every plan chooser opens on Yearly, showing the real yearly price with
- *      twelve monthly payments struck through beside it and what it works out
- *      at each month. Monthly is one click away and unchanged.
+ *   1. Every plan chooser opens on Monthly, the price a teacher is charged.
+ *      Yearly is one click away and shows the real yearly price with the
+ *      monthly price struck through beside it and what it works out at each
+ *      month. Switching back restores the monthly prices.
  *   2. Checkout charges the yearly Stripe price when asked for it, and the
  *      monthly one when not. A caller that sends no interval (every caller
  *      written before yearly existed) must keep buying monthly.
@@ -41,14 +42,24 @@ test.describe("Yearly billing", () => {
     await deleteTeacher(teacher);
   });
 
-  test("the landing page opens on Yearly, with the monthly total struck through", async ({
+  test("the landing page opens on Monthly; Yearly strikes the monthly price through", async ({
     page,
   }) => {
     await page.goto("/#pricing");
     const pricing = page.locator("#pricing");
 
-    await expect(pricing.getByRole("radio", { name: /Yearly/ })).toBeChecked();
+    // Monthly first: the price they will be charged, nothing struck through.
+    await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
+    await expect(pricing.getByRole("radio", { name: /Yearly/ })).not.toBeChecked();
+    await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();
+    await expect(pricing.getByText("3 days free, then £4.99 a month")).toBeVisible();
+    await expect(pricing.locator("s")).toHaveCount(0);
+    await expect(pricing.getByText(/billed yearly/)).toHaveCount(0);
+    // The saving still advertises Yearly from the toggle.
     await expect(pricing.getByText("Save up to 25%")).toBeVisible();
+
+    await pricing.locator("label", { hasText: "Yearly" }).click();
+    await expect(pricing.getByRole("radio", { name: /Yearly/ })).toBeChecked();
 
     // Standard: the monthly price struck through, the yearly price per month
     // beside it, and the yearly total underneath (the card layout since
@@ -65,7 +76,7 @@ test.describe("Yearly billing", () => {
     await expect(pricing.locator("s", { hasText: "£14.99" })).toBeVisible();
     await expect(pricing.getByText("£143.99 billed yearly")).toBeVisible();
 
-    // Monthly: the prices as they always were, and nothing struck through.
+    // Back to Monthly: the prices as they always were, nothing struck through.
     await pricing.locator("label", { hasText: "Monthly" }).click();
     await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
     await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();
@@ -73,22 +84,58 @@ test.describe("Yearly billing", () => {
     await expect(pricing.locator("s")).toHaveCount(0);
   });
 
-  test("/welcome opens on Yearly too", async ({ page }) => {
+  test("/welcome opens on Monthly too, with Yearly one click away", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/welcome");
 
-    await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
+    await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(0);
+    await expect(page.getByText(/billed yearly/)).toHaveCount(0);
+
+    await page.locator("label", { hasText: "Yearly" }).click();
     await expect(page.getByText("£71.99 billed yearly")).toBeVisible();
     await expect(page.locator("s", { hasText: "£7.99" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
   });
 
-  test("the plans page opens on Yearly for someone with no plan", async ({ page }) => {
+  test("the plans page opens on Monthly for someone with no plan", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/pricing");
 
-    await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
-    await expect(page.getByText("3 days free, then £143.99 a year")).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
+    await expect(page.getByText("3 days free, then £14.99 a month")).toBeVisible();
+    await expect(page.getByText("3 days free, then £143.99 a year")).toHaveCount(0);
+  });
+
+  test("before JavaScript runs, Monthly is the option painted checked", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    try {
+      await page.goto("/#pricing");
+      const pricing = page.locator("#pricing");
+      await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
+      await expect(pricing.getByRole("radio", { name: /Yearly/ })).not.toBeChecked();
+      await expect(pricing.getByText("3 days free, then £4.99 a month")).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("starting a trial from the default sends the monthly price to checkout", async ({ page }) => {
+    await signIn(page, teacher);
+    await page.goto("/pricing");
+    await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
+
+    // Catch the request the card makes rather than following it to Stripe.
+    const sent = page.waitForRequest(
+      (r) => r.url().endsWith("/api/stripe/checkout") && r.method() === "POST",
+    );
+    await page.getByRole("button", { name: "Start free trial" }).first().click();
+    const body = (await sent).postDataJSON() as { interval?: string };
+    // Strictly "month": a missing interval would also bill monthly, but would
+    // mean the card stopped saying what it was choosing.
+    expect(body.interval).toBe("month");
   });
 
   test("checkout charges the yearly price when yearly is chosen", async ({ page }) => {

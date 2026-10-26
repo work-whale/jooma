@@ -57,6 +57,7 @@ export default function BillingChangePanel({
   toPlan,
   to,
   onClose,
+  onDone,
 }: {
   /** The plan they are on. */
   fromPlan: PlanId;
@@ -65,6 +66,9 @@ export default function BillingChangePanel({
   /** The interval they would be billed at. Always the other one. */
   to: BillingInterval;
   onClose: () => void;
+  /** Called once the switch has gone through, before the refresh. The cancel
+   *  flow uses it to record the save. */
+  onDone?: () => void;
 }) {
   const router = useRouter();
   const samePlan = fromPlan === toPlan;
@@ -117,6 +121,7 @@ export default function BillingChangePanel({
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (data.ok) {
+        onDone?.();
         onClose();
         router.refresh();
         return;

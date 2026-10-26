@@ -319,7 +319,7 @@ test.describe("The /pricing page", () => {
 
     await expect(page).toHaveURL(/\/pricing$/);
     await expect(page.getByText("Choose your plan").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
     // Billing management is one link away, in Profile.
     await expect(page.getByRole("main").getByRole("link", { name: "Usage and billing" })).toBeVisible();
   });
@@ -338,7 +338,7 @@ test.describe("The /pricing page", () => {
     await expect(page).toHaveURL(/\/pricing\?checkout=cancelled/);
     await expect(page.getByRole("status").getByText(/nothing was charged/i)).toBeVisible();
     // And the cards are right there to try again.
-    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
   });
 
   test("an old link with a billing tab still reaches Profile, params intact", async ({ page }) => {
@@ -430,7 +430,10 @@ test.describe("A code's price on the plans", () => {
 
     await signIn(page, teacher);
     await page.goto("/pricing");
-    // No code yet: Yearly first, as before.
+    // No code yet: Monthly is the default. Move to Yearly first, so the test
+    // still proves that applying a code brings the cards back to Monthly.
+    await expect(page.getByRole("radio", { name: /Monthly/ })).toBeChecked();
+    await page.locator("label", { hasText: "Yearly" }).click();
     await expect(page.getByRole("radio", { name: /Yearly/ })).toBeChecked();
 
     const input = page.getByTestId("promo-code-input");
