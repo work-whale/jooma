@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Wordmark from "@/app/components/v2/Wordmark";
 
 // Every URL nothing serves lands here, signed in or out. Before it existed a
 // signed-out visitor was sent to /login instead (see app/lib/route-access.ts),
@@ -25,15 +26,9 @@ export default function NotFound() {
         style={{ backgroundColor: "var(--j-card)" }}
       >
         <Link href="/" aria-label="Jooma home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo/logo-v2.svg"
-            alt="Jooma"
-            width={104}
-            height={32}
-            className="mx-auto mb-7"
-            style={{ height: 34, width: "auto" }}
-          />
+          <div className="flex justify-center mb-7" style={{ color: "var(--j-purple)" }}>
+            <Wordmark height={30} />
+          </div>
         </Link>
         <h1 className="text-xl font-bold mb-2.5" style={{ color: "var(--j-purple)" }}>
           We can&apos;t find that page

@@ -13,11 +13,9 @@ and the same wordmark as a round badge, to sit alongside the J icon:
     public/logo/Jooma-logo-v2-round-{n}.png        white on a purple disc
     public/logo/Jooma-logo-v2-round-light-{n}.png  purple on a white disc
 
-The source is app/components/v2/Wordmark.tsx, NOT public/logo/logo-v2.svg.
-Those two marks differ: the SVG sets "ooma" in ink and only the j in purple,
-whereas the component inherits `currentColor` and the nav paints it entirely
---j-purple. The all-purple lockup in the nav is the one people mean by "the
-Jooma logo", so that is what this renders.
+The source is app/components/v2/Wordmark.tsx, the all-purple lockup in the
+nav. It inherits `currentColor`, so it is rendered here in each colour.
+make-favicon.py reads the same file for the j in the app icon.
 
 Notes for anyone editing this:
 

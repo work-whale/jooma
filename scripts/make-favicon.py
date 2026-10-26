@@ -3,8 +3,7 @@
 
 Run:  python scripts/make-favicon.py
 
-Reads the four "J" stroke paths out of public/logo/icon.svg and renders them
-onto a solid purple disc, writing:
+The mark is the j from the wordmark, solid white on a purple disc. Writes:
 
     app/favicon.ico       multi-resolution, 16 -> 256
     app/apple-icon.png    180x180, for iOS home screens
@@ -12,171 +11,106 @@ onto a solid purple disc, writing:
     public/logo/jooma-v2-{n}.png  512/1024/2048 flat exports of the same mark,
                                   for slide decks, app stores and print
 
-Why a script rather than a checked-in binary someone hand-exported: the mark is
-derived from the real path data, so if the logo changes the icons can be
-regenerated rather than redrawn.
+The source is the first glyph in app/components/v2/Wordmark.tsx, read through
+make-wordmark.py's own parser, so the icon's j is the wordmark's j and cannot
+drift from it. If the wordmark changes, rerun both scripts.
 
-Two things worth knowing before editing this:
+Notes for anyone editing this:
 
-  1. The mark is four concentric strokes. At 16px they blur into a single
-     illegible blob. So the small sizes render ONLY the outermost stroke,
-     dilated slightly, which reads as one clean bold J. 48px and up get the
-     full four-stroke mark. Same geometry, size-appropriate detail. This is
-     the standard trick for a detailed mark in a browser tab.
+  1. The j is about 3.6 times taller than it is wide, so it is sized by its
+     height (J_HEIGHT) rather than fitted to the disc. Its corners stay well
+     inside the circle at any value up to about 0.9.
 
-  2. Everything is rendered at SS times the target size and downsampled with
-     LANCZOS. Pillow has no antialiased polygon fill, so supersampling is
-     what keeps the curves smooth.
+  2. It is centred optically, not by its bounding box. The tail sweeps left of
+     the stem, so a box-centred j looks pushed right. OPTICAL_SHIFT moves it
+     back by a fraction of the gap between the box centre and the stem centre.
 
-Dependencies: Pillow only (already present). No cairosvg, no sharp, no
-ImageMagick, so this runs anywhere the repo does.
+  3. Small sizes get a slightly taller and bolder j (J_HEIGHT_SMALL, BOLDEN).
+     At 16px the stem is under two pixels wide otherwise and blurs to a grey
+     smear once downsampled.
+
+  4. Same supersample-and-downsample approach as make-wordmark.py, since
+     Pillow has no antialiased polygon fill.
+
+Dependencies: Pillow only, as with make-wordmark.py.
 """
 
+import importlib.util
 import io
 import os
-import re
 
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "public", "logo", "icon.svg")
 
-PURPLE = (91, 46, 214, 255)  # --j-purple #5B2ED6
-WHITE = (255, 255, 255, 255)
+# make-wordmark.py has a hyphen in its name, so it cannot be imported plainly.
+_spec = importlib.util.spec_from_file_location(
+    "make_wordmark", os.path.join(ROOT, "scripts", "make-wordmark.py"))
+wordmark = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(wordmark)
 
-VB = 87   # the source viewBox is 87x87
-SS = 8    # supersample factor
-INSET = 0.10  # padding around the mark, as a fraction of the canvas
+PURPLE = wordmark.PURPLE + (255,)
+WHITE = wordmark.WHITE + (255,)
 
-# Sizes that go into the .ico. 16/32 get the simplified mark.
+SS = 8   # supersample factor
+
+J_HEIGHT = 0.66        # the j's height, as a fraction of the disc's diameter
+J_HEIGHT_SMALL = 0.74  # the same, at or below SIMPLIFY_AT_OR_BELOW
+BOLDEN = 0.009         # dilation at small sizes, as a fraction of the canvas.
+                       # Much past 0.01 closes the gap under the dot at 32px.
+OPTICAL_SHIFT = 0.5    # 0 centres the bounding box, 1 centres the stem
+
+# The j's stem, in the glyph's own units (see the first path in Wordmark.tsx).
+STEM_X = (55, 205)
+
+# Sizes that go into the .ico. 16/32 get the taller j.
 ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
 SIMPLIFY_AT_OR_BELOW = 32
 
-# Standalone PNGs of the full mark, for anywhere the favicon is too small to
-# use: decks, store listings, press, print. Always the four-stroke version.
+# Standalone PNGs of the mark, for anywhere the favicon is too small to use:
+# decks, store listings, press, print.
 PNG_SIZES = [512, 1024, 2048]
 
-TOKEN = re.compile(r"([MmLlHhVvCcSsZz])|(-?\d*\.?\d+(?:e-?\d+)?)")
+
+def read_j():
+    """The j's path data and its subpaths, upright, in wordmark viewBox space."""
+    paths = wordmark.read_paths(wordmark.SRC)
+    d, dx = paths[0]
+    if dx:
+        raise SystemExit("expected the j to be the first, untranslated glyph in %s"
+                         % wordmark.SRC)
+    return d, wordmark.glyph_polygons([(d, dx)])[0]
 
 
-def read_paths(svg_path):
-    """Pull the `d` attribute of every <path> out of the SVG, in order."""
-    with io.open(svg_path, encoding="utf-8") as fh:
-        svg = fh.read()
-    paths = re.findall(r'\sd="([^"]+)"', svg)
-    if len(paths) != 4:
-        raise SystemExit(
-            "expected 4 stroke paths in %s, found %d. If the logo changed, "
-            "check the simplified-mark assumption below still holds."
-            % (svg_path, len(paths))
-        )
-    return paths
+def layout(size, subs, small=False):
+    """Scale and offset that place the j in a disc `size` across.
 
-
-def flatten(d, steps=24):
-    """Turn one path's `d` into a list of polygons (lists of points).
-
-    Only the commands the brand mark actually uses are handled: M/L/H/V/C/Z in
-    both absolute and relative form. Cubics are flattened to `steps` segments,
-    which is far finer than a 256px render can show.
+    Returns (scale, ox, oy) such that a point (x, y) in viewBox space lands at
+    (ox + x * scale, oy + y * scale) on the canvas.
     """
-    toks = []
-    for m in TOKEN.finditer(d):
-        toks.append(m.group(1) if m.group(1) else float(m.group(2)))
+    x0, y0, x1, y1 = wordmark.bounds([subs])
+    scale = size * (J_HEIGHT_SMALL if small else J_HEIGHT) / (y1 - y0)
 
-    def cubic(p0, p1, p2, p3):
-        out = []
-        for k in range(1, steps + 1):
-            t = k / steps
-            mt = 1 - t
-            out.append((
-                mt ** 3 * p0[0] + 3 * mt * mt * t * p1[0] + 3 * mt * t * t * p2[0] + t ** 3 * p3[0],
-                mt ** 3 * p0[1] + 3 * mt * mt * t * p1[1] + 3 * mt * t * t * p2[1] + t ** 3 * p3[1],
-            ))
-        return out
-
-    polys, pts = [], []
-    cur = start = (0.0, 0.0)
-    cmd = None
-    i = 0
-    while i < len(toks):
-        if isinstance(toks[i], str):
-            cmd = toks[i]
-            i += 1
-        if cmd in ("M", "m"):
-            x, y = toks[i], toks[i + 1]
-            i += 2
-            if cmd == "m":
-                x, y = cur[0] + x, cur[1] + y
-            if pts:
-                polys.append(pts)
-            pts = [(x, y)]
-            cur = start = (x, y)
-            cmd = "L" if cmd == "M" else "l"  # implicit lineto after moveto
-        elif cmd in ("L", "l"):
-            x, y = toks[i], toks[i + 1]
-            i += 2
-            if cmd == "l":
-                x, y = cur[0] + x, cur[1] + y
-            pts.append((x, y))
-            cur = (x, y)
-        elif cmd in ("H", "h"):
-            x = toks[i]
-            i += 1
-            if cmd == "h":
-                x = cur[0] + x
-            pts.append((x, cur[1]))
-            cur = (x, cur[1])
-        elif cmd in ("V", "v"):
-            y = toks[i]
-            i += 1
-            if cmd == "v":
-                y = cur[1] + y
-            pts.append((cur[0], y))
-            cur = (cur[0], y)
-        elif cmd in ("C", "c"):
-            x1, y1, x2, y2, x, y = toks[i:i + 6]
-            i += 6
-            if cmd == "c":
-                x1, y1 = cur[0] + x1, cur[1] + y1
-                x2, y2 = cur[0] + x2, cur[1] + y2
-                x, y = cur[0] + x, cur[1] + y
-            pts.extend(cubic(cur, (x1, y1), (x2, y2), (x, y)))
-            cur = (x, y)
-        elif cmd in ("Z", "z"):
-            if pts:
-                pts.append(start)
-                polys.append(pts)
-                pts = []
-            cur = start
-        else:
-            i += 1  # command we don't use; skip the number
-    if pts:
-        polys.append(pts)
-    return polys
+    box_cx = (x0 + x1) / 2
+    stem_cx = wordmark.BASE[0] + sum(STEM_X) / 2
+    cx = box_cx + (stem_cx - box_cx) * OPTICAL_SHIFT
+    cy = (y0 + y1) / 2
+    return scale, size / 2 - cx * scale, size / 2 - cy * scale
 
 
-def render(size, paths, simplified=False):
-    """One square icon: white J knocked out of a purple disc."""
+def render(size, subs, small=False):
+    """One square icon: white j on a purple disc, transparent corners."""
     # Supersampling past ~2000px buys nothing visible and costs a lot of
     # memory, so taper the factor on the large PNG exports.
     ss = max(2, min(SS, 2048 // size)) if size > 256 else SS
     s = size * ss
-    mask = Image.new("L", (s, s), 0)
-    md = ImageDraw.Draw(mask)
 
-    inset = s * INSET
-    scale = (s - 2 * inset) / VB
-    use = [paths[-1]] if simplified else paths
-    for d in use:
-        for poly in flatten(d):
-            if len(poly) > 2:
-                md.polygon([(inset + x * scale, inset + y * scale) for x, y in poly], fill=255)
-
-    if simplified:
-        # Fatten the single stroke so it holds up once downsampled. Tuned so
-        # the 16px render reads as a J rather than a stripe.
-        r = max(3, int(s * 0.012))
+    scale, ox, oy = layout(s, subs, small)
+    mask = wordmark.fill_nonzero((s, s), [
+        [(ox + x * scale, oy + y * scale) for x, y in poly] for poly in subs
+    ])
+    if small:
+        r = max(1, int(s * BOLDEN))
         mask = mask.filter(ImageFilter.MaxFilter(r * 2 + 1))
 
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
@@ -185,20 +119,31 @@ def render(size, paths, simplified=False):
     return img.resize((size, size), Image.LANCZOS)
 
 
-SVG_TEMPLATE = """<svg width="87" height="87" viewBox="0 0 87 87" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="87" height="87" rx="43.5" fill="#5B2ED6"/>
-{paths}
+SVG_TEMPLATE = """<svg width="{n}" height="{n}" viewBox="0 0 {n} {n}" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="{r}" cy="{r}" r="{r}" fill="#5B2ED6"/>
+<path transform="translate({tx:.2f},{ty:.2f}) scale({k:.5f},{nk:.5f})" d="{d}" fill="#FFFFFF"/>
 </svg>
 """
 
 
-def main():
-    paths = read_paths(SRC)
+def write_svg(path, d, subs, n=512):
+    """The mark as vector, reusing the glyph's own path data untouched.
 
-    frames = [
-        render(n, paths, simplified=n <= SIMPLIFY_AT_OR_BELOW)
-        for n in ICO_SIZES
-    ]
+    The path is stored upside down in the wordmark's glyph space, so the
+    wordmark's translate(BASE) scale(1,-1) is folded into this transform.
+    """
+    scale, ox, oy = layout(n, subs)
+    bx, by = wordmark.BASE
+    with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(SVG_TEMPLATE.format(
+            n=n, r=n // 2, d=d,
+            tx=ox + bx * scale, ty=oy + by * scale, k=scale, nk=-scale))
+
+
+def main():
+    d, subs = read_j()
+
+    frames = [render(n, subs, small=n <= SIMPLIFY_AT_OR_BELOW) for n in ICO_SIZES]
     ico = os.path.join(ROOT, "app", "favicon.ico")
     # Pillow's ICO writer drops any requested size larger than the image it is
     # called on, so save from the LARGEST frame and hand it the rest through
@@ -209,18 +154,16 @@ def main():
     print("wrote %s (%s)" % (ico, ", ".join("%dx%d" % (n, n) for n in ICO_SIZES)))
 
     apple = os.path.join(ROOT, "app", "apple-icon.png")
-    render(180, paths).save(apple, format="PNG")
+    render(180, subs).save(apple, format="PNG")
     print("wrote %s (180x180)" % apple)
 
     for n in PNG_SIZES:
         png = os.path.join(ROOT, "public", "logo", "jooma-v2-%d.png" % n)
-        render(n, paths).save(png, format="PNG")
+        render(n, subs).save(png, format="PNG")
         print("wrote %s (%dx%d)" % (png, n, n))
 
     out_svg = os.path.join(ROOT, "public", "logo", "icon-v2.svg")
-    body = "\n".join('<path d="%s" fill="#FFFFFF"/>' % d for d in paths)
-    with io.open(out_svg, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(SVG_TEMPLATE.format(paths=body))
+    write_svg(out_svg, d, subs)
     print("wrote %s" % out_svg)
 
 

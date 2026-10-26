@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SUB_PROCESSORS } from "@/app/lib/legal/sub-processors";
+import Wordmark from "@/app/components/v2/Wordmark";
 
 /* See the note in app/terms/page.tsx: same inherited-title problem, same
  * canonical reasoning. */
@@ -13,8 +14,9 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-dvh" style={{ backgroundColor: "var(--j-tint)" }}>
       <div className="max-w-3xl mx-auto px-6 py-16">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo/logo-v2.svg" alt="Jooma" width={104} height={32} className="mb-10" style={{ height: 30, width: "auto" }} />
+        <div className="mb-10" style={{ color: "var(--j-purple)" }}>
+          <Wordmark height={26} />
+        </div>
 
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Privacy Policy
