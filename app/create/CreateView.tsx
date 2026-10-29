@@ -70,6 +70,10 @@ interface Restored {
   input: Record<string, unknown> | null;
 }
 
+/** The sign up prompt for a picture tool a free try has locked. Searching for
+ *  a photo stays free, so the prompt says so. */
+const PICTURES_LOCKED = "Sign up to have pictures made for your topic, or to upload your own. Searching for a photo is free here.";
+
 function slidePrefillFrom(p: ToolPrefill | null, topic: string): SlideshowPrefill {
   const f = (p?.fields ?? {}) as Record<string, unknown>;
   return {
@@ -241,6 +245,7 @@ export default function CreateView({
       onStarted: setSheetTrialId,
       onLocked: () =>
         openGate("more", "Sign up free to differentiate. You get a separate version for each band you pick."),
+      onPicturesLocked: () => openGate("generate", PICTURES_LOCKED),
       renderResult: ({ result, isGenerating }) => (
         <GuestResult
           kind={sheetKind}
@@ -248,6 +253,7 @@ export default function CreateView({
           isGenerating={isGenerating}
           onAction={(a) => openGate(a)}
           jo={guestJo}
+          onPicturesLocked={() => openGate("generate", PICTURES_LOCKED)}
         />
       ),
     }),

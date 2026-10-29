@@ -301,7 +301,7 @@ function scoreHit(hit: PixabayHit, queryWords: string[]): number {
   return score;
 }
 
-async function searchPixabay(
+export async function searchPixabay(
   query: string,
   orientation: AIImageOrientation = "landscape",
 ): Promise<FetchedImage | null> {

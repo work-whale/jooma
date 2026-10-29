@@ -103,12 +103,20 @@ function questionVariant(kind: QuestionType, tool: SheetTool): Json {
   }
 }
 
+export interface SheetSchemaOptions {
+  tool: SheetTool;
+  kinds: QuestionType[];
+  passage: boolean;
+  /** Offer a picture block: only when the teacher asked for pictures. */
+  images?: boolean;
+}
+
 /**
  * One schema variant per block a sheet may hold, for an `anyOf`. Shared by the
  * generators and by Jo's edits (app/lib/jo/sheet-schema.ts), so a block Jo
  * writes has exactly the shape a generated one does.
  */
-export function sheetBlockVariants(opts: { tool: SheetTool; kinds: QuestionType[]; passage: boolean }): Json[] {
+export function sheetBlockVariants(opts: SheetSchemaOptions): Json[] {
   const content: Json[] = [
     variant("text", { text: str }),
     variant("callout", { variant: { type: "string", enum: ["fact", "remember", "tip", "challenge"] }, label: str, text: str, emoji: str }),
@@ -116,6 +124,9 @@ export function sheetBlockVariants(opts: { tool: SheetTool; kinds: QuestionType[
   ];
   if (opts.passage) content.push(variant("passage", { title: str, paragraphs: strList }));
   if (opts.tool === "worksheet") content.push(variant("table", { headers: strList, rows: { type: "array", items: strList } }));
+  // A picture is what to search for and a line describing it; where it comes
+  // from is found afterwards (app/lib/sheets/pictures.ts).
+  if (opts.images) content.push(variant("image", { query: str, alt: str }));
   return [...content, ...opts.kinds.map((k) => questionVariant(k, opts.tool))];
 }
 
@@ -131,7 +142,7 @@ export function strictObject(properties: Json): Json {
  * a teacher's own text is placed by the server, word for word, and never sent
  * back through the model.
  */
-export function sheetResponseFormat(opts: { tool: SheetTool; kinds: QuestionType[]; passage: boolean }) {
+export function sheetResponseFormat(opts: SheetSchemaOptions) {
   const blocks = sheetBlockVariants(opts);
 
   const schema = obj({

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
-import { WordCountField, DifferentiationField } from "@/app/components/fields";
+import { WordCountField, DifferentiationField, PicturesField } from "@/app/components/fields";
 import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { runBands } from "@/app/lib/runBands";
 import { Wand2, Upload, Check } from "lucide-react";
@@ -17,6 +17,8 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import { defaultDomainCodes, domainsFor, keyStageFor } from "@/app/lib/comprehension-domains";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-options";
+import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
 
 /**
  * How the form runs on /create for a signed out visitor. Same fields, same
@@ -34,6 +36,9 @@ export interface ComprehensionGuestMode {
   /** A signed in feature was chosen (differentiation). Opens the sign up
    *  prompt instead. */
   onLocked?: () => void;
+  /** A picture source that comes with a subscription was chosen. Opens the
+   *  sign up prompt instead; web pictures still work. */
+  onPicturesLocked?: () => void;
   /** Every change to the form, so Ask Jo knows what it currently says. */
   onSnapshot?: (state: Record<string, unknown>) => void;
   /** Rendered where the signed in form shows ToolResults. */
@@ -85,6 +90,7 @@ export default function ComprehensionForm({
   const [passageWordCount, setPassageWordCount] = useState("300");
   const topicInputRef = useRef<HTMLInputElement>(null);
   const [ownText, setOwnText] = useState("");
+  const [pictures, setPictures] = useState<SheetPictures | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +117,7 @@ export default function ComprehensionForm({
   const toggleQuestionType = (type: string) =>
     setQuestionTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
 
-  const formState = { curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey, differentiate, differentiationLevels };
+  const formState = { curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey, differentiate, differentiationLevels, pictures };
   const formSnapshot = JSON.stringify(formState);
 
   // Tell the guest page what the form says, for Ask Jo. A callback into a ref
@@ -139,6 +145,7 @@ export default function ComprehensionForm({
     const d = restoreDifferentiation(i);
     setDifferentiate(d.differentiate);
     setDifferentiationLevels(d.levels);
+    setPictures(parsePictures(i.pictures));
     setResult(run.output);
     setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
@@ -213,6 +220,7 @@ export default function ComprehensionForm({
           includeAnswerKey,
           differentiate,
           differentiationLevels,
+          pictures,
           ...extra,
         }),
       });
@@ -221,12 +229,15 @@ export default function ComprehensionForm({
       // Signed in only: on /create each band would spend one of a guest's
       // daily tries, so a guest keeps the single sheet with its blended note.
       if (!guest && differentiate === "yes") {
+        let set = "";
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
           read: (res, onOutput) => readSheetStream(res, "comprehension", info, onOutput),
-          onUpdate: setResult,
+          onUpdate: (s) => { set = s; setResult(s); },
         });
+        // Still busy, so the run is saved with its pictures in.
+        await fillGeneratedPictures({ tool: "comprehension", pictures, output: set, onUpdate: setResult });
         return;
       }
       const res = await send();
@@ -240,12 +251,14 @@ export default function ComprehensionForm({
         }
         throw new Error(data.error || "Generation failed");
       }
-      guest?.onStarted?.(res.headers.get("x-trial-id"));
+      const trialId = res.headers.get("x-trial-id");
+      guest?.onStarted?.(trialId);
       // The route streams the sheet as JSON; each update arrives here as a
       // whole, valid sheet. The teacher's own text is placed back in here,
       // exactly as they wrote it: it is never sent back through the model.
       const finished = await readSheetStream(res, "comprehension", info, setResult);
       if (!finished) throw new Error("The comprehension came back empty. Please try again.");
+      await fillGeneratedPictures({ tool: "comprehension", pictures, output: finished, guest: guest ? { trialId } : undefined, onUpdate: setResult });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -478,6 +491,7 @@ export default function ComprehensionForm({
               onLevelsChange={setDifferentiationLevels}
               onLocked={guest?.onLocked}
             />
+            <PicturesField value={pictures} onChange={setPictures} onLocked={guest?.onPicturesLocked} />
 
             <div className="flex gap-3">
               <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
@@ -492,7 +506,7 @@ export default function ComprehensionForm({
                   setContentDomains([]); setQuestionTypes([]);
                   setNumQuestions(5); setIncludeAnswerKey(true);
                   setDifferentiate("no"); setDifferentiationLevels([]);
-                  setTopic(""); setPassageWordCount("300"); setOwnText("");
+                  setTopic(""); setPassageWordCount("300"); setOwnText(""); setPictures(null);
                   setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}

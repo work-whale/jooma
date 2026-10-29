@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  ImageBlock,
   SheetBlock,
   SheetDesign,
   SheetQuestion,
@@ -33,6 +34,8 @@ export interface BlockProps {
   edit: boolean;
   design: SheetDesign;
   onPatch: (patch: Partial<SheetBlock>) => void;
+  /** Opens the picture chooser for this block: pictures only. */
+  onPicture?: () => void;
 }
 
 export function BlockView(props: BlockProps) {
@@ -59,6 +62,8 @@ export function BlockView(props: BlockProps) {
           <WordTiles words={block.words} edit={edit} onChange={(words) => onPatch({ words })} />
         </div>
       );
+    case "image":
+      return <ImageView block={block} edit={edit} onPicture={props.onPicture} />;
     case "passage":
       return <PassageView title={block.title} paragraphs={block.paragraphs} numbered={design.lineNumbers} edit={edit} onPatch={onPatch} />;
     case "table":
@@ -93,6 +98,34 @@ export function BlockView(props: BlockProps) {
         </table>
       );
   }
+}
+
+/**
+ * A picture in a frame of fixed size, centred on its own row. While editing,
+ * the whole frame is a button that opens the picture chooser; an empty frame
+ * says what is happening (a search still running, or nothing found yet).
+ */
+export function ImageView({ block, edit, onPicture }: { block: ImageBlock; edit: boolean; onPicture?: () => void }) {
+  return (
+    <figure className="js-photo" data-size={block.size} {...(block.finding ? { "data-finding": "" } : {})}>
+      <div className="js-photo-frame">
+        {block.src ? (
+          // A Storage URL, not a static asset: next/image would only add a
+          // proxy hop, and the exports need the plain element. crossOrigin so
+          // the PDF capture can read its pixels.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={block.src} alt={block.alt} crossOrigin="anonymous" draggable={false} />
+        ) : (
+          <span className="js-photo-empty">{block.finding ? "Finding a picture..." : ""}</span>
+        )}
+        {edit && onPicture && !block.finding && (
+          <button type="button" className="js-photo-change" onClick={onPicture} aria-label={block.src ? "Change picture" : "Find a picture"}>
+            <span>{block.src ? "Change picture" : "Find a picture"}</span>
+          </button>
+        )}
+      </div>
+    </figure>
+  );
 }
 
 /** A passage panel. Also drawn in pieces when a long passage runs over a page

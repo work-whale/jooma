@@ -8,6 +8,8 @@ interface Props {
   /** Restrict the panel to a single provider (e.g. "giphy" for a dedicated GIF
    *  tab). Hides the AI-images section and scopes the empty-state hint. */
   onlyProvider?: Provider;
+  /** What the search box starts with, e.g. a sheet picture's own query. */
+  initialQuery?: string;
 }
 
 interface Photo {
@@ -245,7 +247,7 @@ async function trackUnsplashDownload(downloadLocation: string) {
   }
 }
 
-export default function PicturesPanel({ onAdd, onlyProvider }: Props) {
+export default function PicturesPanel({ onAdd, onlyProvider, initialQuery = "" }: Props) {
   const availableProviders = useMemo<Provider[]>(
     // GIFs (giphy) are intentionally excluded from the default mix — they live in
     // the dedicated GIF tab (onlyProvider="giphy"), not mixed into stock photos.
@@ -255,7 +257,7 @@ export default function PicturesPanel({ onAdd, onlyProvider }: Props) {
   const isGif = onlyProvider === "giphy";
   const isWeb = onlyProvider === "web";
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);

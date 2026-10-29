@@ -8,6 +8,7 @@
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { bandName, bandPitch, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
+import { parsePictures, picturesPromptLine } from "@/app/lib/sheets/picture-options";
 
 export interface WorksheetRequest {
   curriculum: string;
@@ -23,6 +24,8 @@ export interface WorksheetRequest {
   band?: string;
   outputDetail?: "condensed" | "standard" | "detailed";
   additionalInfo?: string | null;
+  /** "Add pictures": where they come from. Null or missing for none. */
+  pictures?: unknown;
 }
 
 const SYSTEM =
@@ -61,6 +64,7 @@ export function worksheetRequest(body: WorksheetRequest):
     return { error: "Missing required fields" };
   }
 
+  const pictures = parsePictures(body.pictures);
   const count = Math.min(40, Math.max(1, Math.round(questionCount)));
   const kinds = kindsForTypes("worksheet", questionTypes);
   const typesLine = questionTypes.length
@@ -116,6 +120,7 @@ HOW TO BUILD IT
 - table: only for data a question needs.
 - ${notesLine}
 - Do not use emoji anywhere except the emoji fields. Number nothing yourself: questions are numbered on the page.
+${picturesPromptLine(pictures, learningObjective)}
 
 MATHS NOTATION: write every calculation in plain text with × ÷ + − = < > ≤ ≥ ² ³ √, and fractions as 3/4. Never use LaTeX or TeX: no backslashes, no \\( \\) or \\[ \\] delimiters, no dollar-sign maths, no \\frac, \\times or ^. Only include a division sign or a fraction where the question genuinely involves one.`;
 
@@ -124,6 +129,6 @@ MATHS NOTATION: write every calculation in plain text with × ÷ + − = < > ≤
       { role: "system", content: buildSystem(SYSTEM) },
       { role: "user", content: prompt },
     ],
-    response_format: sheetResponseFormat({ tool: "worksheet", kinds, passage: false }),
+    response_format: sheetResponseFormat({ tool: "worksheet", kinds, passage: false, images: !!pictures }),
   };
 }

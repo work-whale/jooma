@@ -26,6 +26,10 @@ export function showsIntro(doc: SheetDoc): boolean {
   return doc.design.intro !== false;
 }
 
+export function showsPictures(doc: SheetDoc): boolean {
+  return doc.design.pictures !== false;
+}
+
 /** The teacher notes printed on the answers page, each with its index in
  *  doc.teacherNotes so an edit still lands on the right one. */
 export function visibleNotes(doc: SheetDoc): { note: SheetNote; index: number }[] {

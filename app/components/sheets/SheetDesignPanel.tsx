@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { ImageIcon, X } from "lucide-react";
 import { THEME_FAMILIES, THEME_TAG_LABEL, type ThemeFamily } from "@/app/lib/slideshowThemes";
 import { getSheetTheme, SHEET_THEMES, type SheetTheme } from "@/app/lib/sheets/themes";
 import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
-import { hasDifferentiationNote } from "@/app/lib/sheets/visibility";
+import { sheetImages } from "@/app/lib/sheets/normalize";
+import { hasDifferentiationNote, showsPictures } from "@/app/lib/sheets/visibility";
 
 /*
  * The Design panel: a sheet's theme, text size and page setup. Every change is
@@ -26,16 +27,20 @@ export default function SheetDesignPanel({
   doc,
   onDesign,
   onClose,
+  onPicture,
 }: {
   doc: SheetDoc;
   onDesign: (patch: Partial<SheetDesign>) => void;
   onClose: () => void;
+  /** Opens the picture chooser for a picture block, by id. */
+  onPicture?: (blockId: string) => void;
 }) {
   const design = doc.design;
   const current = getSheetTheme(design.themeId);
   const [family, setFamily] = useState<ThemeFamily>(current.family);
   const hasPassage = doc.sections.some((s) => s.blocks.some((b) => b.type === "passage"));
   const hasDiffNote = hasDifferentiationNote(doc);
+  const images = sheetImages(doc);
 
   return (
     <aside className="flex flex-col gap-5 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm" aria-label="Design" data-testid="sheet-design-panel">
@@ -118,6 +123,38 @@ export default function SheetDesignPanel({
         )}
         {hasPassage && <Toggle label="Paragraph numbers" checked={design.lineNumbers} onChange={(lineNumbers) => onDesign({ lineNumbers })} />}
       </section>
+
+      {images.length > 0 && (
+        <section className="flex flex-col gap-2" aria-label="Pictures" data-testid="sheet-design-pictures">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Pictures</p>
+          <Toggle label="Show pictures" checked={showsPictures(doc)} onChange={(pictures) => onDesign({ pictures })} />
+          {onPicture && showsPictures(doc) && (
+            <ul className="flex flex-col gap-2">
+              {images.map((img, i) => (
+                <li key={img.id} className="flex items-center gap-3">
+                  <span className="shrink-0 w-14 h-10 rounded-md overflow-hidden border border-gray-200 bg-gray-100 grid place-items-center">
+                    {img.src ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={img.src} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                    )}
+                  </span>
+                  <span className="flex-1 min-w-0 text-xs text-gray-700 truncate" title={img.alt}>{img.alt || `Picture ${i + 1}`}</span>
+                  <button
+                    type="button"
+                    onClick={() => onPicture(img.id)}
+                    className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-300 text-gray-700 hover:border-(--j-lilac) hover:text-(--j-deep) cursor-pointer"
+                    aria-label={`Change picture ${i + 1}`}
+                  >
+                    {img.src ? "Change" : "Choose"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </aside>
   );
 }

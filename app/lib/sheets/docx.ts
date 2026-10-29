@@ -13,6 +13,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  ImageRun,
   Packer,
   PageBreak,
   Paragraph,
@@ -26,8 +27,9 @@ import {
 } from "docx";
 import { answerText, hasAnswersPage, questionNumbers } from "./markdown";
 import { getSheetTheme } from "./themes";
-import { showsIntro, showsObjective, visibleNotes } from "./visibility";
-import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
+import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
+import { sheetImages } from "./normalize";
+import { isQuestion, type ImageBlock, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 const FONT = "Arial";
@@ -49,6 +51,63 @@ function runs(text: string, opts: { size: number; color?: string; bold?: boolean
     });
 }
 
+/** Each picture size's frame on the page (sheet-css .js-photo-frame), in
+ *  pixels. Word cannot crop to a frame, so a picture fits inside it instead. */
+const PICTURE_FRAME: Record<ImageBlock["size"], { w: number; h: number }> = {
+  s: { w: 195, h: 130 },
+  m: { w: 300, h: 200 },
+  l: { w: 480, h: 320 },
+};
+
+interface WordPicture {
+  type: "jpg" | "png" | "gif";
+  data: ArrayBuffer;
+  width: number;
+  height: number;
+}
+
+/**
+ * One picture's bytes in a type Word takes, with its natural size. Storage
+ * may hold WebP, which Word cannot show, so anything else is redrawn as a
+ * JPEG. Null when it cannot be fetched or decoded: the document is built
+ * without it rather than not at all.
+ */
+async function wordPicture(src: string): Promise<WordPicture | null> {
+  try {
+    const res = await fetch(src);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob);
+    const { width, height } = bitmap;
+    const native = ({ "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif" } as const)[blob.type as "image/jpeg"];
+    if (native) {
+      bitmap.close();
+      return { type: native, data: await blob.arrayBuffer(), width, height };
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const jpeg = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
+    return jpeg ? { type: "jpg", data: await jpeg.arrayBuffer(), width, height } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Fits a picture inside its frame, keeping its shape. */
+export function fitPicture(size: ImageBlock["size"], width: number, height: number): { width: number; height: number } {
+  const frame = PICTURE_FRAME[size] ?? PICTURE_FRAME.m;
+  if (!(width > 0 && height > 0)) return { width: frame.w, height: frame.h };
+  const scale = Math.min(frame.w / width, frame.h / height);
+  return { width: Math.round(width * scale), height: Math.round(height * scale) };
+}
+
 const NONE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
 const noBorders = { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE };
 
@@ -57,6 +116,12 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
   const c = theme.colors;
   const size = SIZE[doc.design.fontScale] ?? SIZE.m;
   const numbers = questionNumbers(doc);
+  // Fetched before the document is built: Word embeds the bytes.
+  const pictures = new Map<string, WordPicture>();
+  if (showsPictures(doc)) {
+    const found = await Promise.all(sheetImages(doc).filter((b) => b.src).map(async (b) => [b.id, await wordPicture(b.src)] as const));
+    for (const [id, pic] of found) if (pic) pictures.set(id, pic);
+  }
 
   const para = (text: string, o: { bold?: boolean; italics?: boolean; color?: string; size?: number; after?: number; align?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {}) =>
     new Paragraph({
@@ -212,6 +277,24 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
     switch (b.type) {
       case "text":
         return [para(b.text)];
+      case "image": {
+        const pic = pictures.get(b.id);
+        if (!pic) return [];
+        return [
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 160 },
+            children: [
+              new ImageRun({
+                type: pic.type,
+                data: pic.data,
+                transformation: fitPicture(b.size, pic.width, pic.height),
+                altText: { name: b.alt || "Picture", description: b.alt, title: b.alt },
+              }),
+            ],
+          }),
+        ];
+      }
       case "callout":
         return [box([new Paragraph({ children: [tr(`${b.emoji}  ${b.label}  `, { bold: true, color: hex(c.heading) }), ...runs(b.text, { size })] })], hex(c.panel), hex(c.accent)), spacer()];
       case "wordbank":

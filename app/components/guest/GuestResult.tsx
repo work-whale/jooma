@@ -10,6 +10,7 @@ import { parseSheet } from "@/app/lib/sheets/normalize";
 import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
 import type { GuestAction } from "@/app/lib/guest-actions";
 import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
+import { useSheetPictureDialog } from "@/app/components/sheets/useSheetPictureDialog";
 import styles from "./guest.module.css";
 
 const COPY = {
@@ -32,6 +33,7 @@ export default function GuestResult({
   isGenerating,
   onAction,
   jo,
+  onPicturesLocked,
 }: {
   kind?: "comprehension" | "worksheet";
   result: string | null;
@@ -40,6 +42,9 @@ export default function GuestResult({
   /** Ask Jo on this free try: the trial row it edits, the page's honeypot,
    *  and the sign up prompt for when the free messages run out. */
   jo: { trialId: string | null; honeypot: () => string; onSignUp: () => void };
+  /** A picture tool that comes with a subscription (making one, uploading):
+   *  the sign up prompt. Searching for a photo works on a free try. */
+  onPicturesLocked?: () => void;
 }) {
   // Scrolling, the same as the signed in result panel (ResultPanel.tsx): follow
   // the passage down the page while it streams, unless the visitor has
@@ -144,6 +149,12 @@ export default function GuestResult({
   const [preview, setPreview] = useState(false);
   const [designOpen, setDesignOpen] = useState(false);
   const closeDesign = useCallback(() => setDesignOpen(false), []);
+  const pictures = useSheetPictureDialog({
+    doc: shownSheet,
+    commit,
+    locked: ["ai", "upload"],
+    onLocked: onPicturesLocked ?? (() => onAction("generate")),
+  });
 
   if (result === null) return null;
   const ready = !isGenerating && result.trim().length > 0;
@@ -245,14 +256,16 @@ export default function GuestResult({
               streaming={isGenerating}
               onChange={commit}
               joFocus={ask.joFocus}
+              onPicture={pictures.onPicture}
             />
           </div>
           {ask.panel}
           {designOpen && !busy && (
             <DesignDrawer onClose={closeDesign}>
-              <SheetDesignPanel doc={shownSheet} onDesign={onDesign} onClose={closeDesign} />
+              <SheetDesignPanel doc={shownSheet} onDesign={onDesign} onClose={closeDesign} onPicture={pictures.onPicture} />
             </DesignDrawer>
           )}
+          {pictures.dialog}
         </div>
       ) : (
         <div className={styles.resultBody}>

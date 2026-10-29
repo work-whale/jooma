@@ -151,6 +151,8 @@ const COST_BEARING_PATHS: ReadonlySet<string> = new Set([
   "/api/modify",
   "/api/generate",
   "/api/generate-image",
+  // The pictures on a worksheet or comprehension, found after its text.
+  "/api/sheet-picture",
   "/api/generate-audio",
   "/api/generate-activity",
   "/api/generate-lesson-outline",
