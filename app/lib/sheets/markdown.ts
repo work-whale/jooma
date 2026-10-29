@@ -7,7 +7,7 @@ import { isSheetOutput } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
-import { showsIntro, showsObjective, visibleNotes } from "./visibility";
+import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
@@ -29,6 +29,8 @@ function blockMarkdown(b: SheetBlock, number: number | undefined): string {
   switch (b.type) {
     case "text":
       return b.text;
+    case "image":
+      return b.src ? `![${b.alt.replace(/[[\]]/g, "")}](${b.src})` : "";
     case "callout":
       return `> **${b.label}** ${b.text}`;
     case "passage":
@@ -154,7 +156,11 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
   for (const s of doc.sections) {
     out.push(`## ${s.title}`);
     if (s.instructions) out.push(`*${s.instructions}*`);
-    for (const b of s.blocks) out.push(blockMarkdown(b, numbers.get(b.id)));
+    for (const b of s.blocks) {
+      if (b.type === "image" && !showsPictures(doc)) continue;
+      const md = blockMarkdown(b, numbers.get(b.id));
+      if (md) out.push(md);
+    }
   }
   const withAnswers = opts.answers ?? doc.design.answers;
   if (withAnswers) {

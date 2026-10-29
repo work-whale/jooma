@@ -16,6 +16,17 @@ export function updateBlock(doc: SheetDoc, si: number, bi: number, patch: Partia
   }));
 }
 
+/** The same, for the block with `id` wherever it is: the picture chooser
+ *  holds a block's id while it is open, not its place. */
+export function updateBlockById(doc: SheetDoc, id: string, patch: Partial<SheetBlock>): SheetDoc {
+  return {
+    ...doc,
+    sections: doc.sections.map((s) =>
+      s.blocks.some((b) => b.id === id) ? { ...s, blocks: s.blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as SheetBlock) : b)) } : s,
+    ),
+  };
+}
+
 export function moveBlock(doc: SheetDoc, si: number, bi: number, dir: -1 | 1): SheetDoc {
   const section = doc.sections[si];
   const target = bi + dir;
@@ -106,5 +117,6 @@ export function newBlock(type: BlockType): SheetBlock {
     case "wordorder": return { ...q, prompt: "Put the words in order to make a sentence.", type: "wordorder", words: ["words", "the", "Order"], answer: "Order the words" };
     case "picture": return { ...q, prompt: "Circle the right picture.", type: "picture", options: [{ emoji: "🍎", label: "Apple" }, { emoji: "🍌", label: "Banana" }, { emoji: "🍇", label: "Grapes" }], answer: 0 };
     case "label": return { ...q, prompt: "Label the parts.", type: "label", items: [{ clue: "A clue", answer: "part" }], wordBank: ["part"] };
+    case "image": return { id, type: "image", query: "", alt: "", src: "", size: "m" };
   }
 }

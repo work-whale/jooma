@@ -116,6 +116,23 @@ export const SHEET_CSS = `
 .js-table tr:last-child td { border-bottom: 0; }
 .js-text { }
 
+/* Pictures: a fixed frame per size, on its own row, so a page's height is
+   known before the picture loads and text is never covered. */
+.js-photo { display: flex; justify-content: center; margin: 0; }
+.js-photo-frame { position: relative; width: 300px; height: 200px; max-width: 100%; border-radius: var(--js-radius); overflow: hidden; background: var(--js-soft); border: 1.5px solid var(--js-line); }
+.js-photo[data-size="s"] .js-photo-frame { width: 195px; height: 130px; }
+.js-photo[data-size="l"] .js-photo-frame { width: 480px; height: 320px; }
+.js-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.js-photo-empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 10px; font: 600 12px/1.3 system-ui, sans-serif; color: var(--js-muted); }
+.js-photo[data-finding] .js-photo-empty { animation: js-photo-pulse 1.4s ease-in-out infinite; }
+@keyframes js-photo-pulse { 50% { opacity: .45; } }
+.js-photo-change { all: unset; position: absolute; inset: 0; cursor: pointer; border-radius: inherit; }
+.js-photo-change span { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 6px 12px; border-radius: 999px; background: #1D1730; color: #fff; font: 600 11.5px/1 system-ui, sans-serif; white-space: nowrap; opacity: 0; transition: opacity .15s ease; }
+.js-photo-change:hover span, .js-photo-change:focus-visible span { opacity: 1; }
+.js-photo-change:focus-visible { outline: 2px solid var(--js-accent); outline-offset: 2px; }
+.js-photo-empty + .js-photo-change span { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .js-photo[data-finding] .js-photo-empty { animation: none; } }
+
 /* Maths */
 .js-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: .9em; line-height: 1; margin: 0 1px; }
 .js-frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 2px 1px; }
@@ -162,7 +179,7 @@ export const SHEET_CSS = `
 @media print {
   .js-pages { gap: 0; }
   .js-page { box-shadow: none; border-radius: 0; break-after: page; }
-  .js-tools, .js-add-row, .js-mini, .js-jo-label { display: none !important; }
+  .js-tools, .js-add-row, .js-mini, .js-jo-label, .js-photo-change { display: none !important; }
   .js-sheet [data-jo-active] { box-shadow: none; background: none; }
 }
 `;

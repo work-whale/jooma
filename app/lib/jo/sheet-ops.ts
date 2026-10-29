@@ -50,13 +50,16 @@ export function sheetSnapshot(doc: SheetDoc) {
       objective: doc.design.objective !== false,
       intro: doc.design.intro !== false,
       diffNote: doc.design.diffNote !== false,
+      pictures: doc.design.pictures !== false,
     },
     sections: doc.sections.map((s) => ({
       id: s.id,
       title: s.title,
       emoji: s.emoji,
       instructions: s.instructions,
-      blocks: s.blocks,
+      // A picture as what it shows, not where it is stored: Jo can move or
+      // delete one, but choosing pictures is the teacher's.
+      blocks: s.blocks.map((b) => (b.type === "image" ? { id: b.id, type: b.type, alt: b.alt, size: b.size } : b)),
     })),
   };
 }
@@ -110,7 +113,11 @@ export function sheetTextAt(doc: SheetDoc, target: string): string | null {
   }
   const at = findBlock(doc, head);
   if (!at) return null;
-  const value = (doc.sections[at.si].blocks[at.bi] as unknown as Record<string, unknown>)[field];
+  const found = doc.sections[at.si].blocks[at.bi];
+  // A picture's only words are its description. Where it is stored, and what
+  // it was searched for, are not Jo's to write.
+  if (found.type === "image" && field !== "alt") return null;
+  const value = (found as unknown as Record<string, unknown>)[field];
   if (parts.length === 2) return typeof value === "string" ? value : null;
   if (parts.length !== 3 || !Array.isArray(value)) return null;
   const n = Number(index);
@@ -174,6 +181,7 @@ function design(doc: SheetDoc, key: string, value: string): SheetDoc | null {
     case "objective":
     case "intro":
     case "diffNote":
+    case "pictures":
       if (v !== "true" && v !== "false") return null;
       patch[key] = v === "true";
       break;

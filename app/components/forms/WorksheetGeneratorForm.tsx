@@ -7,6 +7,7 @@ import {
   LearningObjectiveField,
   OutputDetailField,
   DifferentiationField,
+  PicturesField,
   QuestionTypesField,
   QuestionCountField,
   AdditionalContextField,
@@ -25,6 +26,8 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-options";
+import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
 import type { ComprehensionGuestMode } from "@/app/components/forms/ComprehensionForm";
 
 const TOOL_SLUG = "worksheet-generator";
@@ -55,6 +58,7 @@ export default function WorksheetGeneratorForm({
   const [differentiationLevels, setDifferentiationLevels] = useState<string[]>([]);
   const [outputDetail, setOutputDetail] = useState<OutputDetail>("detailed");
   const [additionalInfo, setAdditionalInfo] = useState("");
+  const [pictures, setPictures] = useState<SheetPictures | null>(null);
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -70,7 +74,7 @@ export default function WorksheetGeneratorForm({
     (differentiate === "no" || differentiationLevels.length > 0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { curriculum, yearGroup, mixed, subject, learningObjective, questionTypes, questionCount, differentiate, differentiationLevels, outputDetail, additionalInfo };
+  const formState = { curriculum, yearGroup, mixed, subject, learningObjective, questionTypes, questionCount, differentiate, differentiationLevels, outputDetail, additionalInfo, pictures };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -95,6 +99,7 @@ export default function WorksheetGeneratorForm({
     setDifferentiationLevels(d.levels);
     setOutputDetail((i.outputDetail as OutputDetail) ?? "detailed");
     setAdditionalInfo((i.additionalInfo as string) ?? "");
+    setPictures(parsePictures(i.pictures));
     setResult(run.output);
     setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
@@ -144,6 +149,7 @@ export default function WorksheetGeneratorForm({
           differentiationLevels,
           outputDetail,
           additionalInfo: additionalInfo.trim() || null,
+          pictures,
           ...extra,
         }),
       });
@@ -151,12 +157,15 @@ export default function WorksheetGeneratorForm({
       // Differentiated: one whole sheet per band, each in its own tab.
       // Signed in only: on /create the field is locked behind sign up.
       if (!guest && differentiate === "yes") {
+        let set = "";
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
           read: (res, onOutput) => readSheetStream(res, "worksheet", info, onOutput),
-          onUpdate: setResult,
+          onUpdate: (s) => { set = s; setResult(s); },
         });
+        // Still busy, so the run is saved with its pictures in.
+        await fillGeneratedPictures({ tool: "worksheet", pictures, output: set, onUpdate: setResult });
         return;
       }
       const res = await send();
@@ -170,11 +179,13 @@ export default function WorksheetGeneratorForm({
         }
         throw new Error(data.error || "Generation failed");
       }
-      guest?.onStarted?.(res.headers.get("x-trial-id"));
+      const trialId = res.headers.get("x-trial-id");
+      guest?.onStarted?.(trialId);
       // The route streams the sheet as JSON; each update arrives here as a
       // whole, valid sheet, so the page fills in block by block.
       const finished = await readSheetStream(res, "worksheet", info, setResult);
       if (!finished) throw new Error("The worksheet came back empty. Please try again.");
+      await fillGeneratedPictures({ tool: "worksheet", pictures, output: finished, guest: guest ? { trialId } : undefined, onUpdate: setResult });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -221,6 +232,7 @@ export default function WorksheetGeneratorForm({
               onLevelsChange={setDifferentiationLevels}
               onLocked={guest?.onLocked}
             />
+            <PicturesField value={pictures} onChange={setPictures} onLocked={guest?.onPicturesLocked} />
 
             <AdditionalContextField
               value={additionalInfo}
@@ -244,7 +256,7 @@ export default function WorksheetGeneratorForm({
                   setSubject(""); setLearningObjective("");
                   setQuestionTypes([]); setQuestionCount(10);
                   setDifferentiate("no"); setDifferentiationLevels([]); setOutputDetail("detailed");
-                  setAdditionalInfo("");
+                  setAdditionalInfo(""); setPictures(null);
                   setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}

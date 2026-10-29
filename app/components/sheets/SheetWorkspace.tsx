@@ -27,6 +27,7 @@ import SheetDesignPanel from "./SheetDesignPanel";
 import DesignDrawer from "./DesignDrawer";
 import { exportSheetDocx, exportSheetPdf, printSheet } from "./sheetExport";
 import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
+import { useSheetPictureDialog } from "./useSheetPictureDialog";
 import type { JoDocRef } from "@/app/lib/jo/threads";
 
 /*
@@ -189,6 +190,7 @@ export default function SheetWorkspace({
   };
 
   const onDesign = (patch: Partial<SheetDesign>) => commit({ ...doc, design: { ...doc.design, ...patch } });
+  const pictures = useSheetPictureDialog({ doc, commit });
 
   const status = isGenerating
     ? "Generating…"
@@ -274,25 +276,26 @@ export default function SheetWorkspace({
       <div className="flex gap-4 bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
         <div className="flex-1 min-w-0 flex flex-row gap-4">
           <div className="flex-1 min-w-0" ref={pagesRef}>
-            <SheetDocument doc={jo.shown ?? doc} edit={!preview && !jo.joBusy} onChange={commit} streaming={generating} joFocus={jo.joFocus} />
+            <SheetDocument doc={jo.shown ?? doc} edit={!preview && !jo.joBusy} onChange={commit} streaming={generating} joFocus={jo.joFocus} onPicture={pictures.onPicture} />
           </div>
           {designOpen && !busy && (wide ? (
             // Sticky beside the pages, and never taller than the window: the
             // panel scrolls on its own rather than running off the bottom.
             <div className="w-80 shrink-0 sticky top-32 self-start max-h-[calc(100dvh-9rem)] overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
-              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} />
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} onPicture={pictures.onPicture} />
             </div>
           ) : (
             // Narrower than that there is no room beside the pages, so it is a
             // sidebar over them, as on the guest page, rather than a block
             // above the sheet that pushed it a long scroll away.
             <DesignDrawer onClose={closeDesign}>
-              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} />
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} onPicture={pictures.onPicture} />
             </DesignDrawer>
           ))}
         </div>
         {jo.panel}
       </div>
+      {pictures.dialog}
     </div>
   );
 }

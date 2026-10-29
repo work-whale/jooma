@@ -7,7 +7,7 @@ import { paginate, type PageUnit } from "@/app/lib/sheets/paginate";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
 import { answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
-import { showsIntro, showsObjective, visibleNotes } from "@/app/lib/sheets/visibility";
+import { showsIntro, showsObjective, showsPictures, visibleNotes } from "@/app/lib/sheets/visibility";
 import {
   addSection,
   deleteBlock,
@@ -25,6 +25,7 @@ import {
   QUESTION_TYPES,
   QUESTION_TYPE_LABEL,
   type BlockType,
+  type ImageSize,
   type SheetBlock,
   type SheetDoc,
   type SheetQuestion,
@@ -57,12 +58,19 @@ const SAFETY = 6;
 
 const CONTENT_TYPES: BlockType[] = ["text", "callout", "wordbank", "passage", "table"];
 const CONTENT_LABEL: Partial<Record<BlockType, string>> = {
+  image: "Picture",
   text: "Text",
   callout: "Callout box",
   wordbank: "Word bank",
   passage: "Reading passage",
   table: "Table",
 };
+
+const PICTURE_SIZES: { size: ImageSize; text: string; label: string }[] = [
+  { size: "s", text: "S", label: "Small picture" },
+  { size: "m", text: "M", label: "Medium picture" },
+  { size: "l", text: "L", label: "Large picture" },
+];
 
 interface Unit extends PageUnit {
   key: string;
@@ -106,9 +114,12 @@ export interface SheetDocumentProps {
   /** The piece Jo is working on, ringed and labelled. Its key is the piece's
    *  `data-jo`: "head", "intro", "sh:<sectionId>" or a block id. */
   joFocus?: { key: string; label: string } | null;
+  /** Opens the picture chooser for the picture block with this id. Without
+   *  it pictures can still be sized, moved and deleted, but not changed. */
+  onPicture?: (blockId: string) => void;
 }
 
-export default function SheetDocument({ doc, edit = false, onChange, streaming = false, anchors = true, fit = true, exporting = false, joFocus = null }: SheetDocumentProps) {
+export default function SheetDocument({ doc, edit = false, onChange, streaming = false, anchors = true, fit = true, exporting = false, joFocus = null, onPicture }: SheetDocumentProps) {
   const editing = edit && !streaming && !!onChange;
   const theme = getSheetTheme(doc.design.themeId);
   const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
@@ -226,11 +237,22 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     });
 
     s.blocks.forEach((b, bi) => {
+      // A picture switched off in Design is gone from the page, and one with
+      // nothing in it is left off the pupil's copy rather than printed empty.
+      if (b.type === "image" && (!showsPictures(doc) || (!editing && !b.src && !b.finding))) return;
       const patch = (p: Partial<SheetBlock>) => commit(updateBlock(doc, si, bi, p));
       const tools = (
         <Tools>
           <ToolButton label="Move up" text="↑" onClick={() => commit(moveBlock(doc, si, bi, -1))} />
           <ToolButton label="Move down" text="↓" onClick={() => commit(moveBlock(doc, si, bi, 1))} />
+          {b.type === "image" && (
+            <>
+              {PICTURE_SIZES.filter((p) => p.size !== b.size).map((p) => (
+                <ToolButton key={p.size} label={p.label} text={p.text} onClick={() => patch({ size: p.size })} />
+              ))}
+              {onPicture && <ToolButton label="Change picture" text="Change" onClick={() => onPicture(b.id)} />}
+            </>
+          )}
           {(b.type === "short" || b.type === "long") && (
             <>
               <ToolButton label="Fewer lines" text="− line" onClick={() => patch({ lines: Math.max(b.type === "long" ? 3 : 1, b.lines - 1) })} />
@@ -259,7 +281,14 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         render: (live) => (
           <div className="js-block" data-block={b.type}>
             {live && editing && tools}
-            <BlockView block={b} number={numbers.get(b.id)} edit={editing} design={doc.design} onPatch={patch} />
+            <BlockView
+              block={b}
+              number={numbers.get(b.id)}
+              edit={editing}
+              design={doc.design}
+              onPatch={patch}
+              onPicture={live && onPicture ? () => onPicture(b.id) : undefined}
+            />
           </div>
         ),
       });
@@ -276,9 +305,13 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
             {live && menu?.si === si && (
               <AddMenu
                 kind={menu.kind}
+                pictures={!!onPicture}
                 onPick={(type) => {
-                  commit(insertBlock(doc, si, newBlock(type)));
+                  const block = newBlock(type);
+                  commit(insertBlock(doc, si, block));
                   setMenu(null);
+                  // A new picture is an empty frame: go straight to choosing one.
+                  if (type === "image") onPicture?.(block.id);
                 }}
                 onClose={() => setMenu(null)}
               />
@@ -591,7 +624,7 @@ function ToolButton({ label, text, onClick }: { label: string; text?: string; on
   );
 }
 
-function AddMenu({ kind, onPick, onClose }: { kind: "question" | "content"; onPick: (t: BlockType) => void; onClose: () => void }) {
+function AddMenu({ kind, pictures, onPick, onClose }: { kind: "question" | "content"; pictures: boolean; onPick: (t: BlockType) => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -605,7 +638,7 @@ function AddMenu({ kind, onPick, onClose }: { kind: "question" | "content"; onPi
       document.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
-  const types = kind === "question" ? QUESTION_TYPES : CONTENT_TYPES;
+  const types = kind === "question" ? QUESTION_TYPES : pictures ? [...CONTENT_TYPES, "image" as const] : CONTENT_TYPES;
   return (
     <div ref={ref} className="js-menu" role="menu" style={{ top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)" }}>
       <span className="js-menu-head">{kind === "question" ? "Add a question" : "Add text or a box"}</span>

@@ -11,6 +11,7 @@ import { cleanMathText } from "@/app/lib/math-text";
 import {
   SHEET_KIND,
   SHEET_VERSION,
+  type ImageBlock,
   type SheetBlock,
   type SheetCallout,
   type SheetDesign,
@@ -101,6 +102,12 @@ export function normalizeBlock(raw: unknown, id: string): SheetBlock | null {
         : [];
       return headers.length || rows.length ? { id, type: "table", headers, rows } : null;
     }
+    case "image": {
+      // The model writes what to look for, never where a picture is: `src` is
+      // filled by the picture search after the text has streamed.
+      const query = text(r.query);
+      return query ? { id, type: "image", query, alt: text(r.alt) || query, src: "", size: "m" } : null;
+    }
     case "mcq": {
       const options = list(r.options).slice(0, 6);
       return { ...q, type: "mcq", options, answers: indices(r.answers, options.length) };
@@ -164,6 +171,24 @@ export interface NormalizeContext {
   leadingSections?: SheetSection[];
 }
 
+/** The most pictures a generated sheet holds: one near the top and up to two
+ *  more where they help. More would crowd the questions and cost more. */
+export const MAX_SHEET_PICTURES = 3;
+
+/** Drops pictures past the cap, in reading order. */
+function capPictures(sections: SheetSection[]): SheetSection[] {
+  let seen = 0;
+  return sections.map((s) => ({
+    ...s,
+    blocks: s.blocks.filter((b) => b.type !== "image" || ++seen <= MAX_SHEET_PICTURES),
+  }));
+}
+
+/** Every picture on a sheet, in reading order. */
+export function sheetImages(doc: SheetDoc): ImageBlock[] {
+  return doc.sections.flatMap((s) => s.blocks.filter((b): b is ImageBlock => b.type === "image"));
+}
+
 /**
  * A draft from the model, complete or partial, as a SheetDoc.
  *
@@ -198,7 +223,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     subtitle: ctx.subtitle,
     objective: text(r.objective),
     intro: callout(r.intro),
-    sections: [...(ctx.leadingSections ?? []), ...sections],
+    sections: [...(ctx.leadingSections ?? []), ...capPictures(sections)],
     teacherNotes,
     design: ctx.design,
   };

@@ -315,3 +315,16 @@ export async function getGuestRun(
   if (error || !data) return null;
   return data as GuestRunSummary & { output: Record<string, unknown> | null; input: Record<string, unknown> | null };
 }
+
+/** Replace the output of one of this guest's finished runs: the pictures found
+ *  for a free worksheet or comprehension after its text was stored. */
+export async function updateGuestRunOutput(guestId: string, id: string, output: Record<string, unknown>): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from("trial_generations")
+    .update({ output })
+    .eq("id", id)
+    .eq("guest_id", guestId)
+    .eq("status", "done");
+  if (error) console.error("[guest] could not update trial output:", error);
+  return !error;
+}

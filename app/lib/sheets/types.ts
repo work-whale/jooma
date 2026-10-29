@@ -32,6 +32,8 @@ export interface SheetDesign {
   /** The note on the answers page saying who this version is pitched at.
    *  Missing means on. */
   diffNote?: boolean;
+  /** The pictures on the sheet. Missing means on. */
+  pictures?: boolean;
 }
 
 export interface SheetDoc {
@@ -85,6 +87,29 @@ export interface PassageBlock extends BlockBase { type: "passage"; title: string
 export interface WordBankBlock extends BlockBase { type: "wordbank"; title: string; words: string[] }
 export interface TableBlock extends BlockBase { type: "table"; headers: string[]; rows: string[][] }
 
+export type ImageSize = "s" | "m" | "l";
+export type ImageSource = "web" | "ai" | "upload";
+
+/**
+ * A picture on its own row. It supports the sheet and no question depends on
+ * it, so it can be swapped or deleted freely. The model writes only `query`
+ * and `alt`; `src` is a Storage URL found after the text has streamed, and
+ * empty until then (or when no picture was found).
+ */
+export interface ImageBlock extends BlockBase {
+  type: "image";
+  query: string;
+  alt: string;
+  src: string;
+  width?: number;
+  height?: number;
+  size: ImageSize;
+  source?: ImageSource;
+  /** Being searched for right now. Transient: cleared once the search ends,
+   *  found or not, and before the sheet is first saved. */
+  finding?: boolean;
+}
+
 interface QuestionBase extends BlockBase {
   prompt: string;
   marks: number;
@@ -114,7 +139,7 @@ export type SheetQuestion =
   | ChoiceQuestion | TrueFalseQuestion | MatchingQuestion | FillBlanksQuestion | ShortQuestion
   | LongQuestion | CalcQuestion | OrderQuestion | WordOrderQuestion | PictureQuestion | LabelQuestion;
 
-export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | SheetQuestion;
+export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ImageBlock | SheetQuestion;
 
 export type QuestionType = SheetQuestion["type"];
 export type BlockType = SheetBlock["type"];

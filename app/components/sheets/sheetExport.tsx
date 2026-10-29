@@ -30,7 +30,10 @@ async function renderOffscreen(doc: SheetDoc): Promise<{ root: HTMLElement; disp
   const started = Date.now();
   while (Date.now() - started < 10000) {
     const el = host.querySelector<HTMLElement>('.js-sheet[data-ready="true"]');
-    if (el) return { root: el, dispose };
+    if (el) {
+      await picturesLoaded(el);
+      return { root: el, dispose };
+    }
     await new Promise((r) => requestAnimationFrame(() => r(null)));
   }
   const el = host.querySelector<HTMLElement>(".js-sheet");
@@ -40,6 +43,21 @@ async function renderOffscreen(doc: SheetDoc): Promise<{ root: HTMLElement; disp
   }
   // Fonts never settled (offline?): export with what there is.
   return { root: el, dispose };
+}
+
+/** Resolves once every picture under `root` has loaded or failed, or after a
+ *  few seconds: a picture still loading would be captured as an empty frame.
+ *  Pagination does not wait for them, since each frame's size is fixed. */
+function picturesLoaded(root: ParentNode, ms = 8000): Promise<void> {
+  const pending = [...root.querySelectorAll<HTMLImageElement>(".js-pages img")].filter((img) => !img.complete);
+  if (pending.length === 0) return Promise.resolve();
+  const all = Promise.all(
+    pending.map((img) => new Promise<void>((resolve) => {
+      img.addEventListener("load", () => resolve(), { once: true });
+      img.addEventListener("error", () => resolve(), { once: true });
+    })),
+  ).then(() => undefined);
+  return Promise.race([all, new Promise<void>((r) => setTimeout(r, ms))]);
 }
 
 export async function exportSheetPdf(doc: SheetDoc, filename: string): Promise<void> {
@@ -99,8 +117,11 @@ html, body { margin: 0; padding: 0; background: #fff; }
       setTimeout(() => iframe.remove(), 1000);
     };
     const fontsReady = win?.document.fonts?.ready;
-    if (fontsReady) Promise.race([fontsReady, new Promise((r) => setTimeout(r, 3000))]).then(go);
-    else go();
+    const ready = Promise.all([
+      fontsReady ? Promise.race([fontsReady, new Promise((r) => setTimeout(r, 3000))]) : null,
+      win ? picturesLoaded(win.document) : null,
+    ]);
+    ready.then(go);
   };
 }
 

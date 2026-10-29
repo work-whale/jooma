@@ -7,6 +7,7 @@
 // small frames on a classroom screen where the difference is hard to see.
 
 import { getOpenAI } from "./openai";
+import { aiImagePrompt, type ImagePurpose } from "./ai-image-prompt";
 import { uploadImageBytes } from "./imageStorage";
 import { imageSettings } from "./image-settings";
 import {
@@ -19,13 +20,8 @@ import {
   type ImageUse,
 } from "./image-quality";
 
-export type ImageStyle =
-  | "storybook"
-  | "illustration"
-  | "photographic"
-  | "painted"
-  | "line-drawing"
-  | "comic-book";
+export type { AIImageOrientation, ImageStyle, ImagePurpose } from "./ai-image-prompt";
+import type { AIImageOrientation, ImageStyle } from "./ai-image-prompt";
 
 export interface GeneratedImage {
   dataUrl: string;
@@ -40,22 +36,6 @@ export interface GeneratedImage {
   /** Estimated USD cost of this single image. */
   costUsd?: number;
 }
-
-const STYLE_PROMPTS: Record<ImageStyle, string> = {
-  "storybook": "Children's storybook illustration, soft pastel colors, friendly characters",
-  "illustration": "Flat vector illustration, modern, clean lines, vibrant colors",
-  "photographic": "Photographic, realistic, high quality, natural lighting",
-  "painted": "Oil painting style, rich textures, painterly brushstrokes",
-  "line-drawing": "Black and white line drawing, minimal, hand-drawn lines, no shading",
-  "comic-book": "Comic book illustration, bold outlines, halftone shading, vibrant colors",
-};
-
-// AI image orientations, one per size the image models support.
-//   square    — slide image-left/right frames (~0.93 ratio) and any frame that
-//               sits between 0.77 and 1.30 (mostly square).
-//   landscape — image-full slides and the title-cover hero (1.78 ratio).
-//   portrait  — for tall frames if we ever introduce them; mapped from <0.77.
-export type AIImageOrientation = "square" | "landscape" | "portrait";
 
 /** Pick the orientation that best matches a frame's width / height ratio. */
 export function orientationForFrame(width: number, height: number): AIImageOrientation {
@@ -78,27 +58,13 @@ export async function generateAIImage(
   slideTitle?: string,
   /** Where the image is going, which picks the configured quality. An explicit
    *  `quality` wins over it (the admin test generator). */
-  opts: { use?: ImageUse; quality?: ImageQuality } = {},
+  opts: { use?: ImageUse; quality?: ImageQuality; purpose?: ImagePurpose } = {},
 ): Promise<GeneratedImage | null> {
   if (!query.trim()) return null;
   const client = getOpenAI();
   const settings = await imageSettings();
   const quality = opts.quality ?? qualityFor(settings, opts.use ?? "single");
-  const composition =
-    orientation === "square"
-      ? "Square composition, balanced framing, centred subject"
-      : orientation === "portrait"
-      ? "Vertical / portrait composition, tall framing"
-      : "Horizontal / landscape composition, wide framing";
-  // Explicit no-text directive — image generators love baking labels into
-  // illustrations (e.g. a multi-planet activity image with "MARS" / "EUROPA"
-  // written across the planets). We want clean photos / illustrations only;
-  // any labelling lives in the slide's text layer.
-  const noText = "Absolutely no text, no letters, no labels, no captions, no watermarks, no logos, no typography of any kind anywhere in the image. Pure visual only.";
-  const subjectLine = slideTitle
-    ? `Subject: ${slideTitle} — ${query}`
-    : `Subject: ${query}`;
-  const prompt = `${STYLE_PROMPTS[style]}. ${subjectLine}. ${composition}, suitable for a presentation slide. ${noText}`;
+  const prompt = aiImagePrompt(query, style, orientation, slideTitle, opts.purpose);
 
   const sizes: Record<AIImageOrientation, { size: ImageSize; w: number; h: number }> = {
     square:    { size: "1024x1024", w: 1024, h: 1024 },

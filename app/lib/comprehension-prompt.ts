@@ -10,6 +10,7 @@
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { bandName, bandPitch, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
+import { parsePictures, picturesPromptLine } from "@/app/lib/sheets/picture-options";
 
 export interface GenerateRequest {
   curriculum: string;
@@ -28,6 +29,8 @@ export interface GenerateRequest {
   /** Set when this request is one band's version of a differentiated set
    *  (app/lib/bands.ts). The passage and questions are then pitched at it. */
   band?: string;
+  /** "Add pictures": where they come from. Null or missing for none. */
+  pictures?: unknown;
 }
 
 const SYSTEM =
@@ -83,6 +86,7 @@ export function comprehensionMessages(body: GenerateRequest):
   }
 
   const band = isBand(body.band) ? body.band : null;
+  const pictures = parsePictures(body.pictures);
   const perDomain = Math.min(10, Math.max(1, Math.round(numQuestions || 1)));
   // The supported versions read a shorter passage on the same topic, so the
   // reading load matches the questions.
@@ -146,7 +150,8 @@ ${passageLines}
 - ${typesLine}${pitchLine}
 - ${answersLine}
 - ${notesLine}
-- No emoji anywhere except the emoji fields. Do not number anything: questions are numbered on the page.${
+- No emoji anywhere except the emoji fields. Do not number anything: questions are numbered on the page.
+${picturesPromptLine(pictures, textSource === "generate" ? topic ?? "" : "the text's subject")}${
     textSource === "own" ? `\n\nPASSAGE:\n${ownText}` : ""
   }`;
 
@@ -155,6 +160,6 @@ ${passageLines}
       { role: "system", content: buildSystem(SYSTEM) },
       { role: "user", content: prompt },
     ],
-    response_format: sheetResponseFormat({ tool: "comprehension", kinds, passage: textSource === "generate" }),
+    response_format: sheetResponseFormat({ tool: "comprehension", kinds, passage: textSource === "generate", images: !!pictures }),
   };
 }
