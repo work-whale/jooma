@@ -127,7 +127,7 @@ export default function ResultPanel({
   // A differentiated version exports under its band, so the files can sit
   // side by side: "worksheet-maths-WBS".
   const filename = band ? `${exportFilename}-${band.band}` : exportFilename;
-  const { copied, isExporting, exportError, handleCopy, exportItems } = useDocumentActions(
+  const { copied, isExporting, exportError, handleCopy, exportItems, lockModal } = useDocumentActions(
     shown ?? "",
     filename,
     {
@@ -535,6 +535,7 @@ export default function ResultPanel({
         {exportError && (
           <p className="px-6 py-2 text-sm text-red-600 border-b border-gray-200">{exportError}</p>
         )}
+        {lockModal}
 
         {isBusy ? (
           <div className="py-8 px-4 sm:py-12 sm:px-8 lg:py-20 lg:px-24 min-h-48">

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/auth/server";
-import { asPlanId, hasActivePlan } from "@/app/lib/plans";
+import { accountAccess, type AccessRow } from "@/app/lib/account-access";
+import StartTrialButton from "@/app/components/billing/StartTrialButton";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { SquircleDefs, ToolTile } from "@/app/components/v2/Squircle";
 import Wordmark from "@/app/components/v2/Wordmark";
@@ -51,17 +52,26 @@ export default async function WelcomePage({
   // who arrives here without the query string.
   const { code, checkout } = await searchParams;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("first_name, plan")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: rows }] = await Promise.all([
+    supabase.from("profiles").select("first_name").eq("id", user.id).maybeSingle(),
+    supabase.rpc("my_account_access"),
+  ]);
 
   const firstName = (profile?.first_name ?? "").trim();
 
-  // An invited teacher an admin already put on a plan has nothing to choose,
-  // and should not be shown a checkout for something they already have.
-  const needsPlan = !hasActivePlan(asPlanId(profile?.plan));
+  // Read as an error like the rest of the account state: no prompt, and the tools.
+  const row = (Array.isArray(rows) ? rows[0] : rows) as AccessRow | undefined;
+  const access = row ? accountAccess(row) : null;
+  const onTrial = access?.state === "trial";
+  // Nothing in force: /complete-profile could not start the trial, or this
+  // account has already had one. An invited teacher an admin already put on a
+  // plan has nothing to choose, and should not be shown a checkout.
+  const needsPlan = access?.state === "locked";
+  const trialEnds = access?.trialEndsAt?.toLocaleDateString("en-GB", {
+    timeZone: "Europe/London",
+    day: "numeric",
+    month: "long",
+  });
 
   // A tool that has been renamed out of the catalogue is dropped rather than
   // rendered as a blank tile, matching how the rest of the app treats a miss.
@@ -79,20 +89,28 @@ export default async function WelcomePage({
           {firstName ? `Welcome to Jooma, ${firstName}` : "Welcome to Jooma"}
         </h1>
         <p className={styles.lede}>
-          {needsPlan
-            ? "Choose a plan to start your free trial. Every plan has all thirty five tools, and most of them take about a minute."
-            : "Everything you need for tomorrow is here, and most of it takes about a minute. Pick something to make first."}
+          {onTrial
+            ? `Your 3 day free trial has started, with all thirty five tools and no card needed. It ends on ${trialEnds}. Pick something to make first.`
+            : needsPlan
+              ? "Choose a plan to use all thirty five tools. Most of them take about a minute."
+              : "Everything you need for tomorrow is here, and most of it takes about a minute. Pick something to make first."}
         </p>
 
-        {/* The plan choice, the last step of signing up: there is no free plan,
-            so nothing can be generated until a trial starts. A code from an
-            ambassador sits above the cards as a single line unless one is
-            waiting in the URL or sessionStorage. */}
-        {needsPlan && <AmbassadorCode initialCode={code} />}
+        {needsPlan && access?.canStartTrial && (
+          <p className={styles.foot}>
+            <StartTrialButton className={styles.cta} next="/welcome" />
+          </p>
+        )}
+
+        {/* A code from an ambassador is a single line unless one is waiting in the
+            URL or sessionStorage. It is claimed here on the trial too, since the
+            referral has to be recorded before they ever reach a checkout. The
+            plans show only when there is no trial running. */}
+        {(needsPlan || onTrial) && <AmbassadorCode initialCode={code} showPlans={needsPlan} />}
 
         {needsPlan && checkout === "cancelled" && (
           <p className={styles.foot} role="status">
-            No card was taken. Choose a plan whenever you are ready.
+            Nothing was charged. Choose a plan whenever you are ready.
           </p>
         )}
 
@@ -115,7 +133,7 @@ export default async function WelcomePage({
         </Link>
         <p className={styles.foot}>
           {needsPlan
-            ? "You can browse every tool, and start creating once your trial begins."
+            ? "You can browse every tool, and make slides, comprehensions and worksheets for free."
             : "All thirty five tools are waiting there."}
         </p>
       </div>

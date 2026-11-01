@@ -1,38 +1,23 @@
-// The free trial every self-serve plan starts with.
+// Stripe trials, which new checkouts no longer start.
 //
-// Pure, with no Stripe client and no database, so both rules here are pinned by
+// Pure, with no Stripe client and no database, so the rules here are pinned by
 // tests/unit/trial.spec.ts rather than by a live checkout.
 //
-// HOW THE TRIAL WORKS
-// The card is taken at checkout and nothing is charged for TRIAL_DAYS. Stripe
-// creates the subscription in `trialing`, which the webhook already treats as
-// active, so the teacher has their plan from the first minute. When the trial
-// ends Stripe charges the card; if they cancelled first, the subscription ends
-// and the webhook writes them back to "free" (no plan).
+// HOW THE TRIAL WORKS NOW
+// A teacher gets the trial when they sign up, with no card and nothing in Stripe
+// (/api/trial/start). Checkout charges straight away. A subscription can still be
+// `trialing` in two cases, which is what the rest of this file is for: one started
+// before the card was dropped, which runs out in days, and an ambassador's early
+// checkout, which bills from the day their free year ends (api/stripe/checkout).
 import type Stripe from "stripe";
-import { TRIAL_DAYS, type PlanId } from "./plans";
+import type { PlanId } from "./plans";
 import { planCardName, planCardPrice } from "./plan-copy";
-
-/**
- * How many trial days a checkout should carry for this account: TRIAL_DAYS for
- * someone who has never subscribed, 0 for anyone who has.
- *
- * ONE TRIAL PER ACCOUNT. stripe_subscription_id is written by the webhook on
- * the first subscription and never cleared, not even when that subscription is
- * cancelled, so it is a durable "has subscribed before" marker. Without this a
- * teacher could cancel on day 2 and start a fresh trial every three days.
- */
-export function trialDaysFor(profile: { stripe_subscription_id?: string | null } | null): number {
-  return profile?.stripe_subscription_id ? 0 : TRIAL_DAYS;
-}
 
 /**
  * Did this subscription just start a free trial?
  *
- * The moment Meta's StartTrial means: the card is on file and the trial clock is
- * running. Checked on the subscription a completed Checkout produced, so a
- * returning subscriber (no trial, see trialDaysFor) and an admin-created
- * subscription (never trialing) report nothing.
+ * Checked on the subscription a completed Checkout produced, so a returning
+ * subscriber and an admin-created subscription (never trialing) report nothing.
  */
 export function startsTrial(sub: Pick<Stripe.Subscription, "status" | "trial_end">): boolean {
   return sub.status === "trialing" && typeof sub.trial_end === "number";

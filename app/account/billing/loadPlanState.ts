@@ -13,7 +13,6 @@ import {
   type BillingInterval,
   type PlanId,
 } from "@/app/lib/plans";
-import { trialDaysFor } from "@/app/lib/trial";
 import { onAmbassadorPro, type AmbassadorTerm } from "@/app/lib/plan-badge";
 
 /*
@@ -40,8 +39,8 @@ export interface PlanState {
   /** A LIVE Stripe subscription to change, as opposed to needing checkout. */
   hasSubscription: boolean;
   trialing: boolean;
-  /** Would a checkout start with the 3 day trial. */
-  trialEligible: boolean;
+  /** Does a checkout take the first payment today. */
+  chargesToday: boolean;
   /** Every plan a teacher can buy, cheapest first. */
   ladder: PlanId[];
   interval: BillingInterval;
@@ -67,6 +66,8 @@ export interface PlanState {
   /** On Standard free while their ambassador application is reviewed (no
    *  card, no Stripe subscription): when it ends, formatted. */
   reviewTrialUntil: string | null;
+  /** That trial is the one everyone gets at signup, not an ambassador review. */
+  noCardTrial: boolean;
   /** The next charge when a discount (an ambassador code) is waiting on it:
    *  the full price and what Stripe will actually take. */
   nextPayment: { fullPence: number; nextPence: number } | null;
@@ -91,7 +92,7 @@ export async function loadPlanState(
     supabase
       .from("profiles")
       .select(
-        "plan, subscription_status, cancel_at_period_end, current_period_end, stripe_customer_id, stripe_subscription_id",
+        "plan, subscription_status, cancel_at_period_end, current_period_end, stripe_customer_id, stripe_subscription_id, free_trial_started_at",
       )
       .eq("id", userId)
       .maybeSingle(),
@@ -152,7 +153,7 @@ export async function loadPlanState(
   // a lapsed subscriber still carries the old one.
   const isSubscriber = Boolean(profile?.stripe_customer_id);
   const hasSubscription = Boolean(profile?.stripe_subscription_id) && hasActivePlan(plan);
-  // A review trial is not a Stripe trial: nothing will be charged when it ends.
+  // A trial with no card is not a Stripe trial: nothing is charged when it ends.
   const trialing = profile?.subscription_status === "trialing" && !reviewEnd;
 
   // Every plan a teacher can buy, cheapest first. Derived from
@@ -205,9 +206,9 @@ export async function loadPlanState(
     isSubscriber,
     hasSubscription,
     trialing,
-    // The free year is the trial for an ambassador: checkout bills from the
-    // day it ends instead (see the checkout route), so no 3 day trial copy.
-    trialEligible: !ambassadorPro && trialDaysFor(profile) > 0,
+    // An ambassador on their free year is billed from the day it ends instead
+    // (see the checkout route). Everyone else pays on the day they choose.
+    chargesToday: !ambassadorPro,
     ladder,
     interval,
     pending,
@@ -222,7 +223,9 @@ export async function loadPlanState(
     ambassador,
     ambassadorPro,
     ambassadorUntil: ambassadorPro && ambassador?.proUntil ? longDate(ambassador.proUntil) : null,
+    // Both trials with no card share reviewTrialUntil; this says which it is.
     reviewTrialUntil,
+    noCardTrial: Boolean(reviewTrialUntil && profile?.free_trial_started_at),
     nextPayment: billing.nextPayment,
     retention: billing.retention
       ? { endsAt: billing.retention.endsAt ? longDate(billing.retention.endsAt) : null }

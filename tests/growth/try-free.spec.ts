@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { test, expect, type Page } from "@playwright/test";
-import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { admin, createTeacher, setPlan, deleteTeacher, signIn, type TestTeacher } from "../support/users";
 import { GUEST_COOKIE, guestCookieValue } from "@/app/lib/guest-cookie";
 
 /*
@@ -569,9 +569,10 @@ test.describe("signed out", () => {
     );
   });
 
-  test("a signed in teacher is sent to the real tool instead", async ({ page }) => {
+  test("a signed in teacher with a plan is sent to the real tool instead", async ({ page }) => {
     const teacher = await createTeacher("Tryredirect");
     try {
+      await setPlan(teacher, "pro", "paying");
       await signIn(page, teacher);
       await page.goto("/create?tool=slides&topic=Volcanoes");
       await page.waitForURL(/\/tools\/slideshow\?prefill=/, NAV);

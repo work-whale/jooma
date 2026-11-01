@@ -59,7 +59,8 @@ export default async function PricingPage({
   const {
     plan,
     hasSubscription,
-    trialEligible,
+    chargesToday,
+    reviewTrialUntil,
     pending,
     pendingSwitch,
     pendingAt,
@@ -140,10 +141,13 @@ export default async function PricingPage({
             plans={state.ladder}
             // An ambassador's free Pro is a comp, not something they bought,
             // so every card stays buyable, Pro included: that is how they keep
-            // Pro after the free year, billed from the day it ends.
-            current={ambassadorPro ? "free" : plan}
+            // Pro after the free year, billed from the day it ends. A trial with
+            // no card is the same: Standard is what they are trying, not what
+            // they bought, and they must be able to buy it.
+            current={ambassadorPro || reviewTrialUntil ? "free" : plan}
             hasSubscription={hasSubscription}
-            trialEligible={trialEligible}
+            chargesToday={chargesToday}
+            onFreeTrial={Boolean(reviewTrialUntil)}
             pendingPlan={pendingSwitch ? null : (pending?.plan ?? null)}
             pendingInterval={pending?.interval ?? null}
             pendingAt={pendingAt}

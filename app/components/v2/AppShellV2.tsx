@@ -7,6 +7,7 @@ import TopBarV2 from "@/app/components/v2/TopBarV2";
 import { useAccount } from "@/app/components/v2/AccountLinks";
 import SupportLauncher from "@/app/components/SupportLauncher";
 import AnnouncementBanner from "@/app/components/AnnouncementBanner";
+import TrialBanner from "./TrialBanner";
 import DeletionBanner from "@/app/components/v2/DeletionBanner";
 import { SquircleDefs } from "@/app/components/v2/Squircle";
 import { useAppShellSettings } from "@/app/components/v2/AppShellContext";
@@ -230,6 +231,7 @@ export default function AppShellV2({
             account, not an announcement, so it shows on every screen that
             carries the chrome including the ones that opt out of banners. */}
         <DeletionBanner />
+        <TrialBanner />
         {shellBanner && <AnnouncementBanner />}
         <div className={shellContentClassName ?? appStyles.wrap}>{children}</div>
       </main>

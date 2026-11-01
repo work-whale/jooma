@@ -1,37 +1,19 @@
 import { test, expect } from "@playwright/test";
-import { TRIAL_DAYS } from "@/app/lib/plans";
 import {
   annualTrialEmailParams,
   isTrialCheckout,
   isTrialInvoice,
   startsAnnualTrial,
   startsTrial,
-  trialDaysFor,
 } from "@/app/lib/trial";
 
 /*
- * The free trial every self-serve plan starts with.
+ * Stripe trials, which only an ambassador's early checkout still starts.
  *
- * Two rules, both pure. trialDaysFor decides whether a checkout carries the
- * trial at all (once per account). isTrialInvoice decides which invoice is the
- * GBP 0 one a trial opens with, so it neither owes an ambassador nor reports a
- * Purchase to Meta before anybody has paid.
+ * isTrialInvoice decides which invoice is the GBP 0 one a trial opens with, so it
+ * neither owes an ambassador nor reports a Purchase to Meta before anybody has
+ * paid. The no-card trial is in account-access.spec.ts.
  */
-
-test.describe("trialDaysFor", () => {
-  test("a first subscription gets the trial", () => {
-    expect(TRIAL_DAYS).toBe(3);
-    expect(trialDaysFor({ stripe_subscription_id: null })).toBe(3);
-    expect(trialDaysFor({})).toBe(3);
-    expect(trialDaysFor(null)).toBe(3);
-  });
-
-  test("anyone who has subscribed before does not get another", () => {
-    // stripe_subscription_id is never cleared, so a teacher who cancelled on
-    // day 2 still carries it. Without this they could trial forever.
-    expect(trialDaysFor({ stripe_subscription_id: "sub_123" })).toBe(0);
-  });
-});
 
 test.describe("startsTrial (when Meta's StartTrial fires)", () => {
   test("a checkout that produced a trialing subscription", () => {

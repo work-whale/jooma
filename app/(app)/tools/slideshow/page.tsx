@@ -1,5 +1,6 @@
 import SlideshowList from "./SlideshowList";
 import { decodePrefill } from "@/app/lib/toolPrefill";
+import { redirectIfLocked } from "@/app/lib/free-tools";
 import type { SlideshowPrefill } from "@/app/components/slideshow/GenerateModal";
 
 /*
@@ -27,6 +28,7 @@ export default async function SlideshowPage({
   searchParams: Promise<{ prefill?: string }>;
 }) {
   const { prefill } = await searchParams;
+  await redirectIfLocked("slideshow", { prefill });
 
   // Validated against the registry schema before it reaches the client: the
   // payload arrives in a URL, so it is hostile input. An invalid one decodes to

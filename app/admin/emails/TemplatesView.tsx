@@ -239,13 +239,21 @@ function Automations({
                     </select>
                   </Td>
                   <Td>
-                    <DelayInput
-                      // Remounts after a save lands, so the box shows the stored value.
-                      key={a.delay_hours}
-                      hours={a.delay_hours}
-                      label={a.name}
-                      onSave={(h) => update(a, { delay_hours: h }, `${a.name} delay saved.`)}
-                    />
+                    {a.key === "trial_ending" ? (
+                      // Decided by when the trial ends. email_automation_enqueue
+                      // does not read delay_hours for this one.
+                      <span className="text-xs" style={{ color: C.muted }}>
+                        Last 24 hours of the trial
+                      </span>
+                    ) : (
+                      <DelayInput
+                        // Remounts after a save lands, so the box shows the stored value.
+                        key={a.delay_hours}
+                        hours={a.delay_hours}
+                        label={a.name}
+                        onSave={(h) => update(a, { delay_hours: h }, `${a.name} delay saved.`)}
+                      />
+                    )}
                   </Td>
                   <Td align="center">
                     <div className="flex justify-center">

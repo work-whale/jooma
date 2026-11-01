@@ -126,6 +126,20 @@ export default function CompleteProfilePage() {
     }).catch(() => {});
   };
 
+  /**
+   * The no-card trial, the moment a new teacher finishes signing up. Awaited, so
+   * /welcome shows it running. A failure is logged and not shown: the account is
+   * fine, and /welcome offers the same thing as a button.
+   */
+  const startTrial = async () => {
+    try {
+      const res = await fetch("/api/trial/start", { method: "POST" });
+      if (!res.ok) console.warn("[complete-profile] trial not started", res.status);
+    } catch (err) {
+      console.warn("[complete-profile] trial not started", err);
+    }
+  };
+
   const canSubmit =
     firstName.trim() !== "" &&
     surname.trim() !== "" &&
@@ -221,6 +235,8 @@ export default function CompleteProfilePage() {
         // so. A real activation, and the one case that never reaches /welcome,
         // which is why this event cannot hang off that page.
         reportActivation(user.id, { kind: "invite-failed" });
+        // On no plan, so they get the same trial as any other new teacher.
+        await startTrial();
         setLoading(false);
         return;
       }
@@ -233,6 +249,7 @@ export default function CompleteProfilePage() {
       });
     } else {
       reportActivation(user.id, { kind: "self-signup" });
+      await startTrial();
     }
 
     sessionStorage.removeItem("jooma:auth-email");

@@ -21,6 +21,8 @@ import { createChat, saveMessage } from "@/app/lib/assistantChats";
 import { createClient } from "@/app/lib/auth/client";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { usePlanBadge } from "@/app/lib/usePlanBadge";
+import { useAccountAccess } from "@/app/lib/useAccountAccess";
+import StartTrialButton from "@/app/components/billing/StartTrialButton";
 import { BADGE_LEVELS } from "@/app/lib/badges";
 import {
   listWeek,
@@ -106,6 +108,13 @@ function greetingFor(hour: number): string {
   return "Evening";
 }
 
+/** The three tools a locked account can still use, as the hero names them. */
+const FREE_TOOLS = [
+  { hero: "slides", label: "Slides", slug: "slideshow" },
+  { hero: "comp", label: "Comprehension", slug: "comprehension-generator" },
+  { hero: "ws", label: "Worksheet", slug: "worksheet-generator" },
+] as const;
+
 export default function TodayView({
   copy,
 }: {
@@ -117,6 +126,8 @@ export default function TodayView({
   // Active ambassadors get the gold trim. Fails quiet: no row reads as false.
   const { ambassador } = usePlanBadge();
   const [firstName, setFirstName] = useState<string | null>(null);
+  const access = useAccountAccess();
+  const locked = access?.state === "locked";
   const [ask, setAsk] = useState("");
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState<string | null>(null);
@@ -354,9 +365,53 @@ export default function TodayView({
         <p className={app.helloSub}>{subline}</p>
       </div>
 
+      {/* In place of Ask Jo, which cannot run without a plan: what can still be
+          made here, and the way back to everything else. */}
+      {locked && access && (
+        <section className={styles.lockedCard} data-testid="locked-card">
+          <div className={styles.lockedHead}>
+            <div>
+              <h2>{access.canStartTrial ? "Try everything free for 3 days" : "Choose a plan to carry on"}</h2>
+              <p>
+                {access.canStartTrial
+                  ? "No card needed. All 35 tools, exports and credits."
+                  : "All 35 tools, your exports and your credits, from £4.99 a month."}
+              </p>
+            </div>
+            {access.canStartTrial ? (
+              <StartTrialButton className={styles.lockedCta} />
+            ) : (
+              <Link href="/pricing" className={styles.lockedCta}>
+                Choose a plan
+              </Link>
+            )}
+          </div>
+          <p className={styles.lockedTries} data-testid="free-tries-left">
+            You can still make these for free, but not export them.{" "}
+            <b>
+              {access.freeTriesLeft} of 3 free tries left today.
+            </b>
+          </p>
+          <ul className={styles.lockedTools}>
+            {FREE_TOOLS.map(({ hero, label, slug }) => {
+              const tool = v2ToolForSlug(slug);
+              return (
+                <li key={slug}>
+                  <Link href={`/free-tools?tool=${hero}`}>
+                    {tool && <ToolTile icon={tool.icon} solid={toolSolid(tool)} />}
+                    <span>{label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {/* Namespaced `moAsk`, never `mo`: in the prototype a bare `.mo` also
           matched `.msg.mo` in the chat and painted every message as a purple
           card. */}
+      {!locked && (
       <div className={styles.moAsk}>
         <span className={styles.moFace}>
           <ChatTeardropDots weight="fill" className={styles.moFaceIcon} />
@@ -385,6 +440,7 @@ export default function TodayView({
           </button>
         </form>
       </div>
+      )}
 
       {askError && (
         <p className={styles.moError} role="alert">

@@ -86,6 +86,33 @@ export function gateTitle(kind: GuestKind, action: GuestAction | null): string {
   }
 }
 
+/** The same heading for an account that is locked: they have already signed up,
+ *  so what they need is a plan. */
+export function planGateTitle(kind: GuestKind, action: GuestAction | null): string {
+  const what = guestNoun(kind);
+  switch (action) {
+    case "present":
+      return "Choose a plan to present your deck";
+    case "export":
+    case "print":
+      return `Choose a plan to export your ${what}`;
+    case "copy":
+      return `Choose a plan to copy your ${what}`;
+    case "edit":
+    case "theme":
+    case "regenerate":
+      return `Choose a plan to edit your ${what}`;
+    case "share":
+      return `Choose a plan to share your ${what}`;
+    case "generate":
+      return "Choose a plan to unlock every editor tool";
+    case "more":
+      return "Choose a plan to keep making";
+    default:
+      return `Choose a plan to keep your ${what}`;
+  }
+}
+
 export interface ClaimedLike {
   kind: GuestKind;
   id: string;

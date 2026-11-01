@@ -66,9 +66,9 @@ export default function TermsPage() {
           </Section>
 
           <Section id="payment" title="7. Subscription and Payment">
-            <p>Jooma is offered through paid monthly subscription plans, at the pricing displayed on our website at the time of purchase. Creating resources requires an active subscription, except for a small number of free tries on our website, which need no account.</p>
-            <p>Your first subscription starts with a 3 day free trial. We take your payment details when the trial starts, and nothing is charged during the trial. When the trial ends, the plan&apos;s monthly fee is charged to that payment method unless you cancelled before then. The free trial is available once per account.</p>
-            <p>Subscriptions renew automatically each month unless cancelled before the renewal date. You can cancel at any time from your account, and you keep your plan until the end of the period already paid for, or until the end of the trial.</p>
+            <p>Jooma is offered through paid monthly subscription plans, at the pricing displayed on our website at the time of purchase. Creating resources requires an active subscription or free trial, except for a small number of free tries on our website, which need no account, and the free tries offered to an account with no subscription, whose results cannot be exported.</p>
+            <p>A new account gets a 3 day free trial. We do not ask for payment details to start it, and nothing is charged during or after it unless you choose a plan. If you choose a plan, your subscription starts and the plan&apos;s fee is charged on that day, and any time left on your free trial ends. The free trial is available once per account.</p>
+            <p>Subscriptions renew automatically each month unless cancelled before the renewal date. You can cancel at any time from your account, and you keep your plan until the end of the period already paid for.</p>
             <p>All fees are quoted in GBP and are inclusive of VAT where applicable. Refunds are provided at our discretion, except where required by law.</p>
           </Section>
 

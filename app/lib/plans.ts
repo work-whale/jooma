@@ -109,11 +109,12 @@ export const PLANS: Record<PlanId, Plan> = {
   free: {
     id: "free",
     // NOT A PLAN. The locked state of an account with no active subscription:
-    // a new signup who has not checked out yet, a cancelled subscriber, and
-    // every account that was on the old Free tier. They can sign in and look
-    // around, but generate nothing. checkAllGates refuses every cost-bearing
-    // request for this id before any other gate runs, so the zero caps below
-    // are a second line of defence rather than the mechanism.
+    // a trial that ran out, a cancelled subscriber, and every account that was
+    // on the old Free tier. They can sign in and look around, and make things
+    // with the three free tools under the guest rules (/free-tools). The rest
+    // generate nothing: checkAllGates refuses every cost-bearing request for
+    // this id before any other gate runs, so the zero caps below are a second
+    // line of defence rather than the mechanism.
     //
     // `retired` keeps it out of SELECTABLE_PLANS, PRICEABLE_PLAN_IDS and every
     // plan picker, while existing accounts still resolve real limits.
@@ -131,7 +132,8 @@ export const PLANS: Record<PlanId, Plan> = {
       aiImageSlideshows: 0,
       watermark: true,
       // Same formats as every paid plan, see the note on exportFormats above.
-      // What they made while subscribed is still theirs to export.
+      // What they made while subscribed is still theirs to export; an account
+      // that never paid cannot export at all (lib/account-access.ts).
       exportFormats: ["pdf", "docx", "pptx", "gdocs"],
       curriculumAlignment: "limited",
       editableOutputs: false,
@@ -307,8 +309,8 @@ export function isBillingInterval(value: unknown): value is BillingInterval {
   return value === "month" || value === "year";
 }
 
-/** Every self-serve plan starts with this many days free. The card is taken at
- *  checkout and first charged when the trial ends. See app/lib/trial.ts. */
+/** Every new account gets this many days free, with no card: see
+ *  app/api/trial/start. Checkout charges straight away. */
 export const TRIAL_DAYS = 3;
 
 /** True when the account is on a plan that can generate at all. */
@@ -518,10 +520,11 @@ export interface PlanProfile {
 }
 
 /**
- * When the profile is on an ambassador review trial (Standard while an
- * application is read, no card), its end date; otherwise null. That trial is
- * the only "trialing" state without a Stripe subscription id, since a Stripe
- * trial always has one. See grantApplicantTrial in app/lib/ambassador-pro.ts.
+ * When the profile is on a trial with no card, its end date; otherwise null. Two
+ * things have that shape: the trial every new account gets (/api/trial/start) and
+ * the ambassador review trial (grantApplicantTrial in app/lib/ambassador-pro.ts).
+ * They are the only "trialing" states without a Stripe subscription id, since a
+ * Stripe trial always has one. free_trial_started_at tells them apart.
  */
 export function reviewTrialEnd(p: PlanProfile | null | undefined): Date | null {
   if (!p || p.subscription_status !== "trialing" || p.stripe_subscription_id) return null;
@@ -531,7 +534,7 @@ export function reviewTrialEnd(p: PlanProfile | null | undefined): Date | null {
 }
 
 /**
- * The plan actually in force: profiles.plan, except that a review trial past
+ * The plan actually in force: profiles.plan, except that a no-card trial past
  * its end reads as no plan. The same rule my_generation_gate() applies when
  * generating; this is the display side, so the sidebar and billing agree with
  * it before the daily cron tidies the row.

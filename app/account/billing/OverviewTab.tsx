@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/app/lib/auth/server";
 import { hasActivePlan, isBillingInterval, PLANS, PLAN_CREDITS } from "@/app/lib/plans";
-import { trialDaysFor } from "@/app/lib/trial";
 import { firstPaymentCopy } from "@/app/lib/plan-copy";
 import { loadPlanState } from "./loadPlanState";
 import ManageButton from "./ManageButton";
@@ -63,6 +62,7 @@ export default async function OverviewTab({
     ambassadorPro,
     ambassadorUntil,
     reviewTrialUntil,
+    noCardTrial,
     nextPayment,
     referralCode,
     retention,
@@ -146,8 +146,8 @@ export default async function OverviewTab({
 
         {!hasActivePlan(plan) && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }}>
-            Choose a plan to start creating.
-            {trialDaysFor(profile) > 0 && " Every plan starts with a free trial."}
+            Choose a plan to use all thirty five tools and export your work. You can still make
+            slides, comprehensions and worksheets for free.
           </p>
         )}
 
@@ -165,9 +165,11 @@ export default async function OverviewTab({
             Stripe subscription, so nothing is charged when it ends. */}
         {reviewTrialUntil && (
           <p className="text-sm mb-5" style={{ color: "var(--j-body)" }} data-testid="review-trial">
-            Your free trial ends on {reviewTrialUntil} while we review your ambassador
-            application. No card is needed, and you won&apos;t be charged. Choose a plan any time
-            to keep going after that.
+            {noCardTrial
+              ? `Your free trial ends on ${reviewTrialUntil}.`
+              : `Your free trial ends on ${reviewTrialUntil} while we review your ambassador application.`}{" "}
+            No card is needed, and you won&apos;t be charged. Choose a plan any time to keep going
+            after that.
           </p>
         )}
 

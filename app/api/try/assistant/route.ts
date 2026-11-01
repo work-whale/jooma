@@ -8,7 +8,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { runAssistantTurn, type AssistantBody } from "@/app/lib/assistant-pipeline";
-import { clientIp, guestCallAllowed, readGuestId } from "@/app/lib/guest";
+import { clientIp, guestCallAllowed, readTrialOwner } from "@/app/lib/guest";
 import {
   cleanFormContext,
   guestSlugFor,
@@ -20,7 +20,7 @@ import {
 const PER_HOUR = 40;
 
 export async function POST(req: Request) {
-  const guestId = await readGuestId();
+  const guestId = await readTrialOwner();
   if (!guestId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let body: AssistantBody & { guestTool?: string; context?: unknown };

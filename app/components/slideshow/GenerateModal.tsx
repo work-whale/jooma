@@ -1064,6 +1064,9 @@ export default function GenerateModal({
                 </div>
               </div>
 
+              {/* A free try uses web pictures whatever is asked for (see
+                  /api/try/slideshow), so there is no choice to offer. */}
+              {!guest && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Images</p>
                 <div className="bg-white border rounded-xl p-4" style={{ borderColor: "var(--j-line)" }}>
@@ -1201,6 +1204,7 @@ export default function GenerateModal({
                   )}
                 </div>
               </div>
+              )}
             </>
           )}
 

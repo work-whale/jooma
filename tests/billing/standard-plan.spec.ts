@@ -10,7 +10,7 @@ import {
 } from "../support/users";
 
 /*
- * Standard replaces Free, and every plan starts with a 3 day free trial.
+ * Standard replaces Free, and a new account gets a 3 day free trial with no card.
  *
  * What this pins:
  *   1. The landing page sells Standard, Pro and Max, each with the trial, and
@@ -53,12 +53,11 @@ test.describe("Standard plan and the free trial", () => {
     // Not preceded by a digit or comma, or it also matches Max's "2,500 credits
     // a month". Not `exact` either: the list item's text includes the ✓ tick.
     await expect(pricing.getByText(/(?<![\d,])500 credits a month/)).toBeVisible();
-    await expect(pricing.getByText("3 days free, then £4.99 a month")).toBeVisible();
+    await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
     await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
 
     // No free plan anywhere on the table.
     await expect(pricing.getByText("£0", { exact: true })).toHaveCount(0);
-    await expect(pricing.getByText(/no card needed/i)).toHaveCount(0);
   });
 
   test("an account with no plan cannot generate", async ({ page }) => {
@@ -71,7 +70,7 @@ test.describe("Standard plan and the free trial", () => {
     const body = await res.json();
     expect(body.code).toBe("plan_required");
     expect(body.action).toBe("upgrade");
-    expect(body.error).toMatch(/3 day free trial/);
+    expect(body.error).toMatch(/choose a plan/i);
   });
 
   test("refinements are refused too, not only generations", async ({ page }) => {
@@ -150,14 +149,12 @@ test.describe("Standard plan and the free trial", () => {
     await expect(page).toHaveURL(/checkout=success/);
   });
 
-  test("/welcome asks a new teacher to choose a plan", async ({ page }) => {
+  test("/welcome offers a trial to an account that has not had one, and the plans", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/welcome");
 
-    await expect(page.getByText(/choose a plan to start your free trial/i)).toBeVisible();
-    // /welcome opens on monthly, so the buttons name the plain trial.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-    await expect(page.getByText(/won.t be charged until your 3 day/i)).toBeVisible();
+    await expect(page.getByTestId("start-trial")).toBeVisible();
+    await expect(page.getByText(/You will be charged .* today/)).toHaveCount(3);
     await expect(page.getByRole("link", { name: "Look around first" })).toBeVisible();
   });
 

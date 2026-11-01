@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { stripe, topUpPriceId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { asPlanId } from "@/app/lib/plans";
+import { effectivePlan } from "@/app/lib/plans";
 import { packAllowsPlan, toPack } from "@/app/lib/topup-packs";
 
 // Creates a one-off Stripe Checkout Session for a credit pack and returns its
@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("plan, stripe_customer_id")
+    .select("plan, stripe_customer_id, subscription_status, stripe_subscription_id, current_period_end")
     .eq("id", user.id)
     .maybeSingle();
 
-  const plan = asPlanId(profile?.plan);
+  const plan = effectivePlan(profile);
 
   // AUTHORISATION, not presentation. `available_to` is invisible to RLS: the
   // read policy on topup_packs is `active or is_admin()` and never looks at the

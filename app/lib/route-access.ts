@@ -132,6 +132,7 @@ export const PRIVATE_PREFIXES = [
   "/dashboard",
   "/editor",
   "/folders",
+  "/free-tools",
   "/help",
   "/notifications",
   "/profile",

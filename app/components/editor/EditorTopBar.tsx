@@ -29,7 +29,7 @@ interface Props {
   artStyle?: ArtStyleId;
   /** A signed out visitor on /create: the way back is the landing page, not
    *  the teacher's slideshow list, and signing up is one click away. */
-  guest?: { onSignUp: () => void };
+  guest?: { onSignUp: () => void; account?: boolean };
   /** Opens one of the sidebar's tabs. On a phone the sidebar's rail is hidden
    *  and its tabs are listed in this bar's menu instead. */
   onOpenTool?: (tab: SidebarTabId) => void;
@@ -250,7 +250,7 @@ export default function EditorTopBar({
               className="ml-1 text-sm font-bold px-4 py-2 rounded-lg transition-colors hover:brightness-90"
               style={{ backgroundColor: "var(--j-orange)", color: "#fff" }}
             >
-              Start free trial
+              {guest.account ? "Choose a plan" : "Start free trial"}
             </button>
           )}
         </div>
@@ -300,7 +300,7 @@ export default function EditorTopBar({
                         key={t.id}
                         type="button"
                         onClick={pick(() => onOpenTool(t.id))}
-                        title={locked ? `${t.label}: sign up to use` : undefined}
+                        title={locked ? `${t.label}: ${guest?.account ? "choose a plan" : "sign up"} to use` : undefined}
                         data-locked={locked ? "" : undefined}
                         className="relative flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors hover:bg-(--j-tint)"
                         style={{ borderColor: "var(--j-line)", color: locked ? "var(--j-faint)" : "var(--j-deep)" }}
@@ -354,7 +354,7 @@ export default function EditorTopBar({
                 className="mt-3 w-full text-sm font-bold px-4 py-3 rounded-xl transition-colors hover:brightness-90"
                 style={{ backgroundColor: "var(--j-orange)", color: "#fff" }}
               >
-                Start free trial
+                {guest.account ? "Choose a plan" : "Start free trial"}
               </button>
             )}
           </div>

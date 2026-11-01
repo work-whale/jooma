@@ -1,5 +1,6 @@
 "use client";
 
+import { useExportLock } from "@/app/components/guest/useExportLock";
 import { useRef, useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, TopicField, LessonCountField, AnswerTypeField } from "@/app/components/fields";
@@ -342,6 +343,7 @@ function DownloadDropdown({ questions, subject, topic }: { questions: QuizQuesti
 
   // PDF is async and can take a moment on a long quiz, so the trigger reports
   // progress rather than appearing to do nothing.
+  const exportLock = useExportLock();
   const withProgress = (fn: () => Promise<void>) => async () => {
     setExporting(true);
     try {
@@ -394,6 +396,8 @@ function DownloadDropdown({ questions, subject, topic }: { questions: QuizQuesti
   ];
 
   return (
+    <>
+    {exportLock.modal}
     <DropdownMenu
       ariaLabel="Download options"
       disabled={exporting}
@@ -406,8 +410,9 @@ function DownloadDropdown({ questions, subject, topic }: { questions: QuizQuesti
           <ChevronDown className="w-4 h-4" />
         </>
       }
-      items={items}
+      items={exportLock.guardItems(items)}
     />
+    </>
   );
 }
 

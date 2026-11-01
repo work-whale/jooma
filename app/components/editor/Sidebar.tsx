@@ -540,7 +540,7 @@ export default function Sidebar({
             <button
               key={t.id}
               onClick={() => handleClick(t.id)}
-              title={locked ? `${t.label}: sign up to use` : undefined}
+              title={locked ? `${t.label}: ${guest?.account ? "choose a plan" : "sign up"} to use` : undefined}
               data-locked={locked ? "" : undefined}
               className={`relative w-14 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-medium transition-colors ${
                 isActive
@@ -753,7 +753,7 @@ export default function Sidebar({
                     <button
                       key={id}
                       onClick={() => handlePictureSubTab(id)}
-                      title={guest && GUEST_LOCKED_PICTURES.includes(id) ? "Sign up to use" : undefined}
+                      title={guest && GUEST_LOCKED_PICTURES.includes(id) ? (guest.account ? "Choose a plan to use" : "Sign up to use") : undefined}
                       className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                         pictureSubTab === id
                           ? "bg-violet-100 text-violet-700"

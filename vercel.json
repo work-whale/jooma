@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/email-campaigns",
-      "schedule": "0 0 * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/ambassador-terms",

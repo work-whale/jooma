@@ -69,7 +69,7 @@ ${plans}
 
 ## Free use
 
-Anyone can try Jooma on the homepage with no account and no card: slides, a worksheet or a comprehension, ${FREE_TRIES_PER_DAY} times a day. Every paid plan starts with a ${TRIAL_DAYS} day free trial; the card is taken at the start and nothing is charged until the trial ends.
+Anyone can try Jooma on the homepage with no account and no card: slides, a worksheet or a comprehension, ${FREE_TRIES_PER_DAY} times a day. Every new account gets a ${TRIAL_DAYS} day free trial with no card; nothing is charged unless the teacher chooses a plan. After the trial the account stays open with those three tools, without exports.
 
 ## Data
 

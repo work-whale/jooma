@@ -319,7 +319,7 @@ test.describe("The /pricing page", () => {
 
     await expect(page).toHaveURL(/\/pricing$/);
     await expect(page.getByText("Choose your plan").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByText(/You will be charged .* today/)).toHaveCount(3);
     // Billing management is one link away, in Profile.
     await expect(page.getByRole("main").getByRole("link", { name: "Usage and billing" })).toBeVisible();
   });
@@ -338,7 +338,7 @@ test.describe("The /pricing page", () => {
     await expect(page).toHaveURL(/\/pricing\?checkout=cancelled/);
     await expect(page.getByRole("status").getByText(/nothing was charged/i)).toBeVisible();
     // And the cards are right there to try again.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    await expect(page.getByText(/You will be charged .* today/)).toHaveCount(3);
   });
 
   test("an old link with a billing tab still reaches Profile, params intact", async ({ page }) => {
@@ -448,7 +448,7 @@ test.describe("A code's price on the plans", () => {
     // Pro is £7.99; Stripe takes 50% off as £4.00, so £3.99 is charged.
     await expect(main.locator("s").filter({ hasText: "£7.99" })).toBeVisible();
     await expect(main.getByText("£3.99", { exact: true })).toBeVisible();
-    await expect(main.getByText("3 days free, then £3.99 for your first month, then £7.99 a month")).toBeVisible();
+    await expect(main.getByText("You will be charged £3.99 today, then £7.99 a month")).toBeVisible();
     await expect(main.getByText("£2.49", { exact: true })).toBeVisible();
   });
 
@@ -466,6 +466,6 @@ test.describe("A code's price on the plans", () => {
     await page.getByRole("button", { name: "Apply" }).click();
     await expect(page.getByText(new RegExp(`${code} applied`, "i"))).toBeVisible();
     await expect(page.locator("s").filter({ hasText: "£7.99" })).toBeVisible();
-    await expect(page.getByText("3 days free, then £3.99 for your first month, then £7.99 a month")).toBeVisible();
+    await expect(page.getByText("You will be charged £3.99 today, then £7.99 a month")).toBeVisible();
   });
 });

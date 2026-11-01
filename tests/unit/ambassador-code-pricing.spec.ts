@@ -8,6 +8,7 @@ import {
   firstMonthPrice,
   firstPaymentCopy,
   planCardPricing,
+  planChargeLine,
   planTrialLine,
 } from "@/app/lib/plan-copy";
 
@@ -53,16 +54,16 @@ test.describe("plan cards with a code", () => {
     expect(firstMonthPrice("standard", HALF)).toBe(2.49);
   });
 
-  test("the trial line names the first payment, then the price after", () => {
-    expect(planTrialLine("pro", "month", HALF)).toBe(
-      "3 days free, then £3.99 for your first month, then £7.99 a month",
+  test("the charge line names the first payment, then the price after", () => {
+    expect(planChargeLine("pro", "month", HALF)).toBe(
+      "You will be charged £3.99 today, then £7.99 a month",
     );
   });
 
   test("yearly and no code are unchanged", () => {
     expect(planCardPricing("pro", "year", HALF)).toEqual(planCardPricing("pro", "year"));
     expect(planCardPricing("pro", "month", null)).toEqual({ price: "£7.99", per: "a month" });
-    expect(planTrialLine("pro", "month")).toBe("3 days free, then £7.99 a month");
+    expect(planTrialLine("pro", "month")).toBe("3 days free, no card needed. £7.99 a month if you subscribe");
   });
 });
 

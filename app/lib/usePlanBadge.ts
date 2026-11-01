@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "./auth/client";
-import { asPlanId } from "./plans";
+import { effectivePlan } from "./plans";
 import { planBadgeFor, type AmbassadorTerm, type PlanBadge } from "./plan-badge";
 
 /*
@@ -39,7 +39,10 @@ export function usePlanBadge(): PlanBadgeState {
     void (async () => {
       const supabase = createClient();
       const [{ data: profile }, ambassador] = await Promise.all([
-        supabase.from("profiles").select("plan").maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("plan, subscription_status, stripe_subscription_id, current_period_end")
+          .maybeSingle(),
         supabase.rpc("my_ambassador"),
       ]);
       if (cancelled) return;
@@ -51,7 +54,7 @@ export function usePlanBadge(): PlanBadgeState {
         ? { status: row.status, proUntil: row.pro_until ? new Date(row.pro_until) : null }
         : null;
 
-      setState({ ...planBadgeFor(asPlanId(profile?.plan), term), loading: false });
+      setState({ ...planBadgeFor(effectivePlan(profile), term), loading: false });
     })();
     return () => {
       cancelled = true;

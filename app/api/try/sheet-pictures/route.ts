@@ -12,7 +12,7 @@
 // the rest.
 
 import { NextResponse } from "next/server";
-import { clientIp, getGuestRun, guestCallAllowed, readGuestId, updateGuestRunOutput } from "@/app/lib/guest";
+import { clientIp, getGuestRun, guestCallAllowed, readTrialOwner, updateGuestRunOutput } from "@/app/lib/guest";
 import { searchPixabay } from "@/app/lib/slideshow-pipeline";
 import { parseSheet, serializeSheet, sheetImages } from "@/app/lib/sheets/normalize";
 import { needsPicture, placePicture } from "@/app/lib/sheets/picture-fill";
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Expected a JSON body." }, { status: 400 });
   }
-  const guestId = await readGuestId();
+  const guestId = await readTrialOwner();
   if (!guestId || typeof body.trialId !== "string") {
     return NextResponse.json({ error: "Nothing to add pictures to." }, { status: 404 });
   }

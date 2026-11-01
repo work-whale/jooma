@@ -19,11 +19,9 @@ import { isToolEnabled } from "@/app/lib/tool-availability";
 import { slideshowStream, SSE_HEADERS, type RequestBody } from "@/app/lib/slideshow-pipeline";
 import {
   checkTrial,
-  clientIp,
-  ensureGuestId,
+  ensureTrialCaller,
   finishTrialRun,
   flagGuestWork,
-  hashIp,
   startTrialRun,
   trialSecret,
 } from "@/app/lib/guest";
@@ -61,18 +59,25 @@ export async function POST(req: NextRequest) {
     return refuse(403, "Slides are unavailable for the moment.", "disabled");
   }
 
-  const guestId = await ensureGuestId();
-  if (!guestId) return refuse(403, "Free tries are not available right now.", "disabled");
-  const ipHash = hashIp(clientIp(req), secret);
+  const caller = await ensureTrialCaller(req, secret);
+  if (!caller) return refuse(403, "Free tries are not available right now.", "disabled");
+  const { guestId, ipHash, account } = caller;
 
-  const decision = await checkTrial(guestId, ipHash);
+  const decision = await checkTrial(guestId, ipHash, account);
   if (!decision.ok) {
     return refuse(
       decision.reason === "disabled" ? 403 : 429,
-      trialRefusalMessage(decision.reason),
+      trialRefusalMessage(decision.reason, account),
       decision.reason,
     );
   }
+
+  // Web pictures only, whatever the page asks for: generated pictures cost real
+  // money per image and come with a subscription, like the sheets' (see
+  // /api/try/sheet-pictures). These runs have no spend ceiling behind them.
+  body.imageSource = "web";
+  delete body.imageMixWeb;
+  delete body.imageStyle;
 
   // Minted here, never accepted from the client: a guest cannot choose which
   // run their spend is filed under.
@@ -87,7 +92,7 @@ export async function POST(req: NextRequest) {
     params,
   });
   if (!trialId) return refuse(500, "Something went wrong. Please try again.");
-  await flagGuestWork();
+  if (!account) await flagGuestWork();
 
   // The run's outcome, written once. Kept as a promise so the stream below
   // can wait for it before it closes: once the response ends the instance may

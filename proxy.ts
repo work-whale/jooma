@@ -373,7 +373,14 @@ async function route(request: NextRequest) {
     const quota = await checkAllGates(supabase, {
       countsAsGeneration: isGenerationRequest(request.method, pathname),
     });
-    if (quota) {
+    // A locked account on /free-tools needs the slideshow wizard's helper
+    // buttons, the same as a guest does, under the same per hour brake. Keyed on
+    // the account rather than the IP, which a whole school may share.
+    const lockedHelper =
+      quota?.reason === "plan_required" &&
+      GUEST_HELPER_PATHS.includes(pathname) &&
+      (await guestCallAllowed(user.id, "guest_helper_ip", GUEST_HELPER_PER_HOUR));
+    if (quota && !lockedHelper) {
       // Status and headers depend on WHY: 402 + x-upgrade-required for a quota
       // that money fixes, 429 + Retry-After for a rate limit that time fixes.
       return NextResponse.json(quotaBlockBody(quota), {
