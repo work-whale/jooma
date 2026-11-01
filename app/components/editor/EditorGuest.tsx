@@ -18,6 +18,9 @@ import type { GuestAction } from "@/app/lib/guest-actions";
  * teacher, so every check is `if (guest)` and a teacher's editor is untouched.
  */
 export interface EditorGuest {
+  /** A signed in account with no plan, on /free-tools: the same limits, but what
+   *  lifts them is a plan rather than an account. */
+  account?: boolean;
   /** Opens the sign up prompt in place of something a guest cannot do. Null
    *  for a plain "sign up", with no action to carry out afterwards. */
   gate: (action: GuestAction | null, message?: string | null) => void;

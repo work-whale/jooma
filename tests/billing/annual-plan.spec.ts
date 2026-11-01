@@ -52,7 +52,7 @@ test.describe("Yearly billing", () => {
     await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
     await expect(pricing.getByRole("radio", { name: /Yearly/ })).not.toBeChecked();
     await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();
-    await expect(pricing.getByText("3 days free, then £4.99 a month")).toBeVisible();
+    await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
     await expect(pricing.locator("s")).toHaveCount(0);
     await expect(pricing.getByText(/billed yearly/)).toHaveCount(0);
     // The saving still advertises Yearly from the toggle.
@@ -67,7 +67,7 @@ test.describe("Yearly billing", () => {
     await expect(pricing.locator("s", { hasText: "£4.99" })).toBeVisible();
     await expect(pricing.getByText("£3.99", { exact: true })).toBeVisible();
     await expect(pricing.getByText("£47.99 billed yearly")).toBeVisible();
-    await expect(pricing.getByText("3 days free, then £47.99 a year")).toBeVisible();
+    await expect(pricing.getByText("3 days free, no card needed. £47.99 a year if you subscribe")).toBeVisible();
 
     // Pro and Max, and the saving each one claims.
     await expect(pricing.locator("s", { hasText: "£7.99" })).toBeVisible();
@@ -80,7 +80,7 @@ test.describe("Yearly billing", () => {
     await pricing.locator("label", { hasText: "Monthly" }).click();
     await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
     await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();
-    await expect(pricing.getByText("3 days free, then £4.99 a month")).toBeVisible();
+    await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
     await expect(pricing.locator("s")).toHaveCount(0);
   });
 
@@ -89,14 +89,11 @@ test.describe("Yearly billing", () => {
     await page.goto("/welcome");
 
     await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(0);
     await expect(page.getByText(/billed yearly/)).toHaveCount(0);
 
     await page.locator("label", { hasText: "Yearly" }).click();
     await expect(page.getByText("£71.99 billed yearly")).toBeVisible();
     await expect(page.locator("s", { hasText: "£7.99" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
   });
 
   test("the plans page opens on Monthly for someone with no plan", async ({ page }) => {
@@ -104,8 +101,8 @@ test.describe("Yearly billing", () => {
     await page.goto("/pricing");
 
     await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
-    await expect(page.getByText("3 days free, then £14.99 a month")).toBeVisible();
-    await expect(page.getByText("3 days free, then £143.99 a year")).toHaveCount(0);
+    await expect(page.getByText("You will be charged £14.99 today, then £14.99 a month")).toBeVisible();
+    await expect(page.getByText("You will be charged £143.99 today, then £143.99 a year")).toHaveCount(0);
   });
 
   test("before JavaScript runs, Monthly is the option painted checked", async ({ browser }) => {
@@ -116,13 +113,13 @@ test.describe("Yearly billing", () => {
       const pricing = page.locator("#pricing");
       await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
       await expect(pricing.getByRole("radio", { name: /Yearly/ })).not.toBeChecked();
-      await expect(pricing.getByText("3 days free, then £4.99 a month")).toBeVisible();
+      await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
     } finally {
       await context.close();
     }
   });
 
-  test("starting a trial from the default sends the monthly price to checkout", async ({ page }) => {
+  test("choosing a plan from the default sends the monthly price to checkout", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/pricing");
     await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
@@ -131,7 +128,7 @@ test.describe("Yearly billing", () => {
     const sent = page.waitForRequest(
       (r) => r.url().endsWith("/api/stripe/checkout") && r.method() === "POST",
     );
-    await page.getByRole("button", { name: "Start free trial" }).first().click();
+    await page.getByRole("button", { name: /^(Choose|Get|Start) / }).first().click();
     const body = (await sent).postDataJSON() as { interval?: string };
     // Strictly "month": a missing interval would also bill monthly, but would
     // mean the card stopped saying what it was choosing.

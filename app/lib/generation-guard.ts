@@ -20,7 +20,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   AI_SPEND_CEILING_PENCE,
   PLAN_CREDITS,
-  TRIAL_DAYS,
   asPlanId,
   can,
   hasActivePlan,
@@ -132,6 +131,9 @@ export function isGenerationRequest(method: string, pathname: string): boolean {
 // a free user's five — but they must still be blocked once a paid user has
 // exhausted their spend ceiling, or the ceiling leaks.
 const COST_BEARING_PATHS: ReadonlySet<string> = new Set([
+  // Calls a model and has no check of its own. Older than the wizard's outline
+  // button, which uses /api/generate-lesson-outline.
+  "/api/generate-outline",
   // The AI assistant. Deliberately here rather than in GENERATION_PATHS: a chat
   // turn spends real money and must stop at the spend ceiling, but it is not a
   // saved generation and must not count against the hourly rate limit: a
@@ -254,9 +256,7 @@ export function noPlanBlock(): QuotaResult {
     blocked: true,
     reason: "plan_required",
     action: "upgrade",
-    message:
-      `Choose a plan to start creating. Every plan starts with a ${TRIAL_DAYS} day ` +
-      "free trial, and you can cancel before it ends.",
+    message: "Choose a plan to use this. You can still make slides, comprehensions and worksheets for free.",
   };
 }
 

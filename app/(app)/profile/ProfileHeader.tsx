@@ -7,7 +7,7 @@ import { createClient } from "@/app/lib/auth/client";
 import { useProfileIdentity } from "@/app/lib/useProfileIdentity";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { minutesSavedFor } from "@/app/lib/tools";
-import { asPlanId, PLANS } from "@/app/lib/plans";
+import { effectivePlan, PLANS } from "@/app/lib/plans";
 import styles from "./ProfileHeader.module.css";
 
 /*
@@ -41,12 +41,12 @@ export default function ProfileHeader() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("plan")
+        .select("plan, subscription_status, stripe_subscription_id, current_period_end")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled) return;
 
-      setPlan(PLANS[asPlanId(profile?.plan)].name);
+      setPlan(PLANS[effectivePlan(profile)].name);
       // created_at is on the auth user, not the profile row.
       if (user.created_at) setJoined(user.created_at);
     })();

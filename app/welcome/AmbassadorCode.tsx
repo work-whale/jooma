@@ -6,22 +6,19 @@ import BillingToggle from "@/app/components/plans/BillingToggle";
 import {
   maxYearlySavingPercent,
   planCardName,
+  planCardCta,
   planCardPricing,
+  planChargeLine,
   planFeatures,
-  planTrialLine,
-  trialCta,
 } from "@/app/lib/plan-copy";
-import { DEFAULT_INTERVAL, TRIAL_DAYS, type BillingInterval } from "@/app/lib/plans";
+import { DEFAULT_INTERVAL, type BillingInterval } from "@/app/lib/plans";
 import type { Discount } from "@/app/lib/ambassador-discount";
 import styles from "./ambassador.module.css";
 
 /*
- * The plan choice on the first screen a new teacher sees, with "Got a code?"
- * above it.
- *
- * There is no free plan, so choosing one is the signup's last step: every card
- * starts a Stripe checkout with the free trial, where the card is taken and
- * nothing is charged until the trial ends.
+ * "Got a code?" on the first screen a new teacher sees, with the plans below it
+ * for someone whose trial has not started. A new signup is already on their free
+ * trial, so they see the code alone, and every card here charges today.
  *
  * Two separate things happen around a code, and keeping them apart is the
  * point:
@@ -74,7 +71,14 @@ function readStash(): string {
   }
 }
 
-export default function AmbassadorCode({ initialCode }: { initialCode?: string }) {
+export default function AmbassadorCode({
+  initialCode,
+  showPlans = true,
+}: {
+  initialCode?: string;
+  /** False on the free trial, when there is nothing to choose yet. */
+  showPlans?: boolean;
+}) {
   /*
    * A code stashed three navigations ago, read in a lazy state initializer.
    *
@@ -318,6 +322,8 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
       )}
       {checked.state === "bad" && <p className={styles.bad}>{checked.message}</p>}
 
+      {showPlans && (
+      <>
       <BillingToggle
         value={interval}
         onChange={setBillingInterval}
@@ -343,20 +349,17 @@ export default function AmbassadorCode({ initialCode }: { initialCode?: string }
             badge={id === FEATURED ? "Most popular" : undefined}
             action={{
               kind: "button",
-              label: busy === id ? "Just a moment…" : trialCta(interval),
+              label: busy === id ? "Just a moment…" : planCardCta(id),
               onClick: () => choose(id),
               disabled: busy !== null,
-              tone: "trial",
             }}
-            footer={planTrialLine(id, interval, discount)}
+            footer={planChargeLine(id, interval, discount)}
           />
         ))}
       </PlanCardGrid>
 
-      <p className={styles.note}>
-        Your card is needed to start. You won&apos;t be charged until your {TRIAL_DAYS} day
-        trial ends, and you can cancel any time before then.
-      </p>
+      </>
+      )}
 
       {error && (
         <p className={styles.bad} role="alert">

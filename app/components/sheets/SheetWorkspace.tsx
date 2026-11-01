@@ -1,5 +1,6 @@
 "use client";
 
+import { useExportLock } from "@/app/components/guest/useExportLock";
 import { useCallback, useEffect, useRef, useState, type Ref } from "react";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import {
@@ -177,17 +178,18 @@ export default function SheetWorkspace({
     }
   };
 
-  const exportItems: DropdownItem[] = [
+  const exportLock = useExportLock();
+  const exportItems: DropdownItem[] = exportLock.guardItems([
     { label: "Download PDF", icon: <FileDown className="w-3.5 h-3.5" />, onSelect: () => run("pdf", () => exportSheetPdf(doc, filename), "Couldn't build that PDF. Try Print instead, and save as PDF.") },
     { label: "Download Word (DOCX)", icon: <FileText className="w-3.5 h-3.5" />, onSelect: () => run("docx", () => exportSheetDocx(doc, filename), "Couldn't build that Word document. Please try again.") },
     { label: "Print", icon: <Printer className="w-3.5 h-3.5" />, onSelect: () => run("print", () => printSheet(doc, doc.title || filename), "Couldn't open the print view. Please try again."), separated: true },
-  ];
+  ]);
 
-  const handleCopy = async () => {
+  const handleCopy = exportLock.guard(async () => {
     await navigator.clipboard.writeText(sheetToMarkdown(doc));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  });
 
   const onDesign = (patch: Partial<SheetDesign>) => commit({ ...doc, design: { ...doc.design, ...patch } });
   const pictures = useSheetPictureDialog({ doc, commit });
@@ -296,6 +298,7 @@ export default function SheetWorkspace({
         {jo.panel}
       </div>
       {pictures.dialog}
+      {exportLock.modal}
     </div>
   );
 }

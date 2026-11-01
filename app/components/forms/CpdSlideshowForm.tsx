@@ -1,5 +1,6 @@
 "use client";
 
+import { useExportLock } from "@/app/components/guest/useExportLock";
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Copy, Check, ChevronDown } from "lucide-react";
 import { TopicField, LessonCountField, AdditionalContextField } from "@/app/components/fields";
@@ -1112,12 +1113,13 @@ export default function CpdSlideshowForm({
     }
   };
 
-  const handleCopy = async () => {
+  const exportLock = useExportLock();
+  const handleCopy = exportLock.guard(async () => {
     if (!slides) return;
     await navigator.clipboard.writeText(slidesToMarkdown(slides));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  });
 
   const showResults = slides !== null && (slides.length > 0 || isGenerating);
   const expectedCount = slideCount;
@@ -1249,6 +1251,7 @@ export default function CpdSlideshowForm({
             </div>
             {slides && slides.length > 0 && !isGenerating && (
               <div className="flex items-center gap-2">
+                {exportLock.modal}
                 <button onClick={handleCopy}
                   className="flex items-center gap-2 px-4 py-2 bg-(--j-purple) text-white rounded-xl text-sm font-medium hover:bg-(--j-deep) transition-colors">
                   {copied ? <><Check className="w-4 h-4" />Copied</> : <><Copy className="w-4 h-4" />Copy to clipboard</>}

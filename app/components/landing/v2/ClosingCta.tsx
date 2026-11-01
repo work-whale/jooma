@@ -12,13 +12,13 @@ export default function ClosingCta() {
       <Reveal className={styles.close} as="section">
         <h2>Let&apos;s give teachers their evenings back.</h2>
         {/* The real free offer, the same one the FAQ states: free tries on
-            this page with no account, then a trial on every plan. It used to
+            this page with no account, then a trial with no card. It used to
             say "five free resources a month", which no account has had since
             the free plan was retired, and before that the prototype's
             "hundred credits", which no signup ever got. */}
         <p>
-          Try it free on this page, {inWords(FREE_TRIES_PER_DAY)} times a day. Every plan then
-          starts with {inWords(TRIAL_DAYS)} days free.
+          Try it free on this page, {inWords(FREE_TRIES_PER_DAY)} times a day. Sign up for{" "}
+          {inWords(TRIAL_DAYS)} days free, no card needed.
         </p>
         <div className={styles.row}>
           <Link href="/signup" className={`${shared.btn} ${shared.btnW}`}>

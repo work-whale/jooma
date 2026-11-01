@@ -73,7 +73,7 @@ test.describe("the card at each interval", () => {
   test("yearly leads with the monthly figure, the yearly total under it", () => {
     expect(planCardPrice("standard", "year")).toBe("£47.99");
     expect(planCardPer("standard", "year")).toBe("a year");
-    expect(planTrialLine("standard", "year")).toBe("3 days free, then £47.99 a year");
+    expect(planTrialLine("standard", "year")).toBe("3 days free, no card needed. £47.99 a year if you subscribe");
     expect(planCardPricing("standard", "year")).toEqual({
       price: "£3.99",
       per: "a month",
@@ -86,7 +86,7 @@ test.describe("the card at each interval", () => {
   test("monthly is exactly what it was before yearly existed", () => {
     expect(planCardPrice("pro")).toBe("£7.99");
     expect(planCardPer("pro")).toBe("a month");
-    expect(planTrialLine("pro")).toBe("3 days free, then £7.99 a month");
+    expect(planTrialLine("pro")).toBe("3 days free, no card needed. £7.99 a month if you subscribe");
     expect(planCardPricing("pro", "month")).toEqual({ price: "£7.99", per: "a month" });
   });
 

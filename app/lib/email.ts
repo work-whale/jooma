@@ -170,6 +170,8 @@ export async function sendBroadcastEmail(
      *  test send, which has no recipient row for an event to land on. */
     recipientId?: number;
     campaignId?: string;
+    /** Overrides the default sender, for mail worth replying to. */
+    sender?: EmailSender;
   },
 ): Promise<{ status: "sent" | "skipped" | "failed"; error?: string }> {
   if (isUndeliverable(to)) return { status: "skipped", error: "Test address, not sent" };
@@ -183,7 +185,7 @@ export async function sendBroadcastEmail(
       }
     : undefined;
 
-  const result = await deliver(to, rendered.subject, rendered.html, undefined, {
+  const result = await deliver(to, rendered.subject, rendered.html, opts.sender, {
     text: rendered.text,
     headers,
     categories: ["broadcast", opts.purpose],

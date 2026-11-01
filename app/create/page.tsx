@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/auth/server";
-import { getGuestRun, listGuestRuns, readGuestId } from "@/app/lib/guest";
+import { getGuestRun, listGuestRuns, readGuestId, trialAccount } from "@/app/lib/guest";
+import { freeToolPath } from "@/app/lib/free-tools";
 import { guestSlugFor, appToolPath } from "@/app/lib/guest-tools";
 import { encodePrefill, validatePrefill } from "@/app/lib/toolPrefill";
 import { publicSettings } from "@/app/lib/settings";
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
  * their library when they sign up.
  *
  * A signed in teacher has no reason to be here and is sent to the real tool,
- * with the topic carried over.
+ * with the topic carried over, or to its free version if they have no plan.
  */
 export default async function CreatePage({
   searchParams,
@@ -42,6 +43,7 @@ export default async function CreatePage({
     data: { user },
   } = await supabase.auth.getUser();
   if (user) {
+    if ((await trialAccount())?.locked) redirect(freeToolPath(slug, cleanTopic));
     const prefill = cleanTopic ? validatePrefill({ slug, fields: { topic: cleanTopic } }) : null;
     redirect(prefill ? `${appToolPath(slug)}?prefill=${encodePrefill(prefill)}` : appToolPath(slug));
   }

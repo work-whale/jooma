@@ -91,7 +91,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
   const tryLabel = page.guest ? "Try it free, no sign up" : "Start free trial";
   const tryNote = page.guest
     ? `${capitalise(inWords(FREE_TRIES_PER_DAY))} free goes a day without an account.`
-    : `${capitalise(inWords(TRIAL_DAYS))} days free on every plan. Cancel any time before it ends.`;
+    : `${capitalise(inWords(TRIAL_DAYS))} days free, no card needed.`;
 
   return (
     <div className={`jooma-v2 ${shared.page}`}>

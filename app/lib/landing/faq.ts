@@ -38,7 +38,7 @@ export function faqQuestions(): FaqItem[] {
     },
     {
       q: "Is Jooma free to try?",
-      a: `Yes. You can make slides, a worksheet or a comprehension on this page with no account and no card, ${tries} times a day. Every plan then starts with ${trialDays} days free. Your card is taken when you start, nothing is charged until the trial ends, and you can cancel before then.`,
+      a: `Yes. You can make slides, a worksheet or a comprehension on this page with no account and no card, ${tries} times a day. Signing up then gives you ${trialDays} days free with every tool, and no card is needed. Nothing is charged unless you choose a plan.`,
     },
     {
       q: "How much does Jooma cost?",

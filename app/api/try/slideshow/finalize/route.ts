@@ -17,7 +17,7 @@
 // whatever the client's debounce says.
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { readGuestId } from "@/app/lib/guest";
+import { readTrialOwner } from "@/app/lib/guest";
 import { GUEST_MAX_AGE_S } from "@/app/lib/guest-cookie";
 import type { SlideJSON } from "@/app/lib/presentations";
 
@@ -27,7 +27,7 @@ const WINDOW_MS = GUEST_MAX_AGE_S * 1000;
 const SAVE_GAP_MS = 2000;
 
 export async function POST(req: Request) {
-  const guestId = await readGuestId();
+  const guestId = await readTrialOwner();
   if (!guestId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const raw = await req.text();

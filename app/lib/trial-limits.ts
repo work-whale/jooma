@@ -11,6 +11,9 @@
 // A failed run does not count. The visitor got nothing, and burning one of
 // their tries on our error would be the worst first impression we could make.
 import { createHash } from "node:crypto";
+import { FREE_TRIES_PER_DAY } from "./free-tries";
+
+export { FREE_TRIES_PER_DAY };
 
 export type TrialTool = "slideshow" | "comprehension-generator" | "worksheet-generator";
 
@@ -19,9 +22,6 @@ export const TRIAL_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Statuses that used up a try. `failed` deliberately absent. */
 export const COUNTED_STATUSES = ["running", "done", "claimed"] as const;
 export const DEFAULT_DAILY_CAP = 300;
-/** Free generations per visitor per 24 hours, every tool together. */
-export const FREE_TRIES_PER_DAY = 3;
-
 /** Messages a visitor may send Jo about one free generation before signing up.
  *  Every message counts, typed or tapped. */
 export const GUEST_JO_PROMPTS = 3;
@@ -54,8 +54,20 @@ export function decideTrial(input: {
   return { ok: true };
 }
 
-/** The visitor facing line for each refusal. No dashes, no "AI". */
-export function trialRefusalMessage(reason: "disabled" | "daily_cap" | "used"): string {
+/** The visitor facing line for each refusal. No dashes, no "AI". An account has
+ *  already signed up, so what gets it past the limit is a plan. */
+export function trialRefusalMessage(reason: "disabled" | "daily_cap" | "used", account = false): string {
+  if (account) {
+    switch (reason) {
+      case "used":
+        return "You have used today's three free tries. Choose a plan to keep going, or come back tomorrow.";
+      case "daily_cap":
+        return "Free tries are busy right now. Choose a plan and you can make it straight away.";
+      case "disabled":
+      default:
+        return "Free tries are paused for the moment. Choose a plan and you can make it straight away.";
+    }
+  }
   switch (reason) {
     case "used":
       return "You have used today's three free tries. Sign up to keep going, it is free to start.";

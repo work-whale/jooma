@@ -23,7 +23,6 @@ import {
   planCardPricing,
   planTrialLine,
   TRIAL_CTA,
-  trialCta,
   planFeatures,
 } from "@/app/lib/plan-copy";
 
@@ -89,7 +88,7 @@ function pricingPlans(): PricingPlan[] {
     // struck through beside it, and what it works out at each month.
     yearly: {
       ...planCardPricing(id, "year"),
-      cta: trialCta("year"),
+      cta: TRIAL_CTA,
       trial: planTrialLine(id, "year"),
     },
   });

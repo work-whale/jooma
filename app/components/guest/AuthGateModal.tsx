@@ -19,7 +19,7 @@ import styles from "./guest.module.css";
  * The sign up prompt behind every action on a guest's output.
  *
  * Chalkie's shape: Google first, then an email that carries on into our own
- * sign up pages (password, profile, a plan with its three day trial), then a
+ * sign up pages (password, profile, then a three day trial with no card), then a
  * way in for someone who already has an account. Whatever they make here is
  * kept and lands in their library once they are signed in, which the copy
  * says plainly because it is the reason to sign up rather than leave.
@@ -98,7 +98,7 @@ export default function AuthGateModal({
         <h2 className={styles.gateTitle}>{gateTitle(kind, action)}</h2>
         <p className={styles.gateLede}>
           {message ??
-            `Your ${what} is saved to your account the moment you sign up, along with anything else you made here. Every plan starts with a free three day trial.`}
+            `Your ${what} is saved to your account the moment you sign up, along with anything else you made here. You also get a free three day trial, no card needed.`}
         </p>
 
         {googleSignin && (

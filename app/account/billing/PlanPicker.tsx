@@ -9,9 +9,8 @@ import {
   planCardCta,
   planCardName,
   planCardPricing,
+  planChargeLine,
   planFeatures,
-  planTrialLine,
-  trialCta,
 } from "@/app/lib/plan-copy";
 import { DEFAULT_INTERVAL, PLANS, type BillingInterval, type PlanId } from "@/app/lib/plans";
 import type { Discount } from "@/app/lib/ambassador-discount";
@@ -51,9 +50,13 @@ export default function PlanPicker({
    *  needing a fresh checkout. A lapsed subscriber has a customer and an old
    *  subscription id but nothing live, and must go through checkout. */
   hasSubscription = false,
-  /** Whether a checkout would start with the free trial (first subscription
-   *  only, see lib/trial.ts). Changes the label and adds the trial line. */
-  trialEligible = false,
+  /** Whether a checkout takes the first payment today, which every one does
+   *  except an ambassador's during their free year. Adds the amount to each card,
+   *  so nobody reaches Stripe not knowing. */
+  chargesToday = false,
+  /** On a free trial with no card. Choosing a plan ends it, which they are told
+   *  above the cards. */
+  onFreeTrial = false,
   /** A scheduled downgrade, read back from Stripe by the server. */
   pendingPlan = null,
   /** The interval that scheduled change bills at, when it moves interval too. */
@@ -78,7 +81,8 @@ export default function PlanPicker({
   plans: PlanId[];
   current: PlanId;
   hasSubscription?: boolean;
-  trialEligible?: boolean;
+  chargesToday?: boolean;
+  onFreeTrial?: boolean;
   pendingPlan?: PlanId | null;
   pendingInterval?: BillingInterval | null;
   pendingAt?: string | null;
@@ -190,10 +194,9 @@ export default function PlanPicker({
     if (move === "buy") {
       return {
         kind: "button",
-        label: pending === id ? "Starting checkout…" : trialEligible ? trialCta(interval) : planCardCta(id),
+        label: pending === id ? "Starting checkout…" : planCardCta(id),
         onClick: () => subscribe(id),
         disabled: pending !== null,
-        tone: trialEligible ? "trial" : undefined,
       };
     }
 
@@ -226,6 +229,17 @@ export default function PlanPicker({
         savePercent={maxYearlySavingPercent(plans)}
       />
 
+      {onFreeTrial && (
+        <p
+          role="status"
+          data-testid="charge-notice"
+          className="rounded-xl px-4 py-3 mb-3 text-sm font-medium"
+          style={{ backgroundColor: "var(--j-tint)", color: "var(--j-deep)" }}
+        >
+          Your subscription starts today and you will be charged now. This ends your free trial.
+        </p>
+      )}
+
       {!hasSubscription && hasUnusedCode && interval === "year" && (
         <p className="text-sm mb-3 text-center" style={{ color: "var(--j-faint)" }}>
           Your code applies to monthly plans.
@@ -251,8 +265,8 @@ export default function PlanPicker({
               </>
             ) : isCurrent && pendingPlan && pendingAt ? (
               <>Yours until {pendingAt}.</>
-            ) : trialEligible && moveFor(id) === "buy" ? (
-              planTrialLine(id, interval, discountFor(id))
+            ) : chargesToday && moveFor(id) === "buy" ? (
+              planChargeLine(id, interval, discountFor(id))
             ) : null;
 
           return (

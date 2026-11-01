@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { JO_REFUSAL_HEADER, runJoTurn } from "@/app/lib/jo/pipeline";
 import type { JoTurnBody } from "@/app/lib/jo/types";
-import { clientIp, guestCallAllowed, readGuestId, spendTrialJoPrompt, trialJoPromptsUsed } from "@/app/lib/guest";
+import { clientIp, guestCallAllowed, readTrialOwner, spendTrialJoPrompt, trialAccount, trialJoPromptsUsed } from "@/app/lib/guest";
 import { GUEST_JO_PROMPTS, joPromptsLeft } from "@/app/lib/trial-limits";
 
 export const maxDuration = 120;
@@ -18,16 +18,17 @@ const PER_HOUR = 40;
 const LEFT_HEADER = "x-jo-prompts-left";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function limitReached() {
+function limitReached(account: boolean) {
+  const next = account ? "Choose a plan to keep editing." : "Sign up free to keep editing.";
   return NextResponse.json(
-    { error: "That's your free messages with Jo for this one. Sign up free to keep editing.", code: "jo_trial_limit", left: 0 },
+    { error: `That's your free messages with Jo for this one. ${next}`, code: "jo_trial_limit", left: 0 },
     { status: 403, headers: { [LEFT_HEADER]: "0" } },
   );
 }
 
 /** How many prompts are left on one free try, for the panel's counter. */
 export async function GET(req: Request) {
-  const guestId = await readGuestId();
+  const guestId = await readTrialOwner();
   const trialId = new URL(req.url).searchParams.get("trialId") ?? "";
   if (!guestId || !UUID.test(trialId)) return NextResponse.json({ left: GUEST_JO_PROMPTS });
   const used = await trialJoPromptsUsed(trialId, guestId);
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const guestId = await readGuestId();
+  const guestId = await readTrialOwner();
   if (!guestId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   let body: JoTurnBody;
@@ -57,13 +58,13 @@ export async function POST(req: Request) {
 
   if (!(await guestCallAllowed(clientIp(req), "guest_chat_ip", PER_HOUR))) {
     return NextResponse.json(
-      { error: "Jo needs a short break. Try again in a few minutes, or sign up to keep going." },
+      { error: "Jo needs a short break. Try again in a few minutes." },
       { status: 429 },
     );
   }
 
   const spent = await spendTrialJoPrompt(trialId, guestId, GUEST_JO_PROMPTS);
-  if (!spent) return limitReached();
+  if (!spent) return limitReached(Boolean(await trialAccount()));
 
   const giveBack = () => spendTrialJoPrompt(trialId, guestId, GUEST_JO_PROMPTS, true);
 

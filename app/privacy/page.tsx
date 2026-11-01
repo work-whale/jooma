@@ -61,7 +61,7 @@ export default function PrivacyPage() {
               ["Contract performance", "Processing necessary to provide the service you signed up for"],
               ["Legitimate interests", "Improving the service, fraud prevention, security monitoring"],
               ["Legal obligation", "Compliance with UK tax, accounting, and data protection law"],
-              ["Legitimate interests (soft opt-in)", "Emailing product news to people who have an account with us, and reminding people who started signing up to finish. You can refuse at signup, turn it off in your profile, or unsubscribe from any such email at any time"],
+              ["Legitimate interests (soft opt-in)", "Emailing product news to people who have an account with us, reminding people who started signing up to finish, and telling people on a free trial when it is about to end. You can refuse at signup, turn it off in your profile, or unsubscribe from any such email at any time"],
             ]} />
           </Section>
 

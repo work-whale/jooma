@@ -13,13 +13,14 @@ import WorksheetGeneratorForm from "@/app/components/forms/WorksheetGeneratorFor
 import { JoActivityProvider } from "@/app/lib/JoActivityContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 import AuthGateModal from "@/app/components/guest/AuthGateModal";
+import ChoosePlanModal from "@/app/components/guest/ChoosePlanModal";
 import GuestResult from "@/app/components/guest/GuestResult";
 import LandingNav from "@/app/components/landing/v2/LandingNav";
 import SlideshowLoadingAnimation from "@/app/components/editor/SlideshowLoadingAnimation";
 import type { EditorGuest } from "@/app/components/editor/EditorGuest";
 import { decodePrefill, encodePrefill, validatePrefill, type ToolPrefill } from "@/app/lib/toolPrefill";
 import type { Presentation, SlideJSON } from "@/app/lib/presentations";
-import { guestNoun, type GuestAction, type GuestKind } from "@/app/lib/guest-actions";
+import { guestNoun, planGateTitle, type GuestAction, type GuestKind } from "@/app/lib/guest-actions";
 import {
   guestPrefillFields,
   guestSlugFor,
@@ -73,6 +74,7 @@ interface Restored {
 /** The sign up prompt for a picture tool a free try has locked. Searching for
  *  a photo stays free, so the prompt says so. */
 const PICTURES_LOCKED = "Sign up to have pictures made for your topic, or to upload your own. Searching for a photo is free here.";
+const PICTURES_LOCKED_ACCOUNT = "Choose a plan to have pictures made for your topic, or to upload your own. Searching for a photo is free here.";
 
 function slidePrefillFrom(p: ToolPrefill | null, topic: string): SlideshowPrefill {
   const f = (p?.fields ?? {}) as Record<string, unknown>;
@@ -91,12 +93,16 @@ export default function CreateView({
   recent,
   restored,
   googleSignin,
+  account = false,
 }: {
   tool: GuestToolSlug;
   topic: string;
   recent: RecentRun[];
   restored: Restored | null;
   googleSignin: boolean;
+  /** A signed in account with no plan, on /free-tools. The same page inside the
+   *  shell: no landing header, and the prompts ask for a plan, not a sign up. */
+  account?: boolean;
 }) {
   const router = useRouter();
   const kind = KIND[tool];
@@ -204,6 +210,7 @@ export default function CreateView({
 
   const editorGuest = useMemo<EditorGuest>(
     () => ({
+      account,
       gate: (action, message) => openGate(action, message ?? null),
       honeypot: () => honeypot.current?.value ?? "",
       onRefused: (message) => {
@@ -214,7 +221,7 @@ export default function CreateView({
         else setFormError("Something went wrong. Please try again.");
       },
     }),
-    [openGate],
+    [openGate, account],
   );
 
   // ── Comprehension and Worksheet ──────────────────────────────────────────
@@ -232,11 +239,17 @@ export default function CreateView({
       trialId: sheetTrialId,
       honeypot: () => honeypot.current?.value ?? "",
       onSignUp: () =>
-        openGate("more", `Sign up free to keep editing with Jo. Your ${guestNoun(kind)} comes with you.`),
+        openGate(
+          "more",
+          account
+            ? `Choose a plan to keep editing with Jo. Your ${guestNoun(kind)} comes with you.`
+            : `Sign up free to keep editing with Jo. Your ${guestNoun(kind)} comes with you.`,
+        ),
     }),
-    [sheetTrialId, openGate, kind],
+    [sheetTrialId, openGate, kind, account],
   );
   const sheetKind = kind === "worksheet" ? "worksheet" : "comprehension";
+  const picturesLocked = account ? PICTURES_LOCKED_ACCOUNT : PICTURES_LOCKED;
   const sheetGuest = useMemo<ComprehensionGuestMode>(
     () => ({
       endpoint: tool === "worksheet-generator" ? "/api/try/worksheet" : "/api/try/comprehension",
@@ -244,8 +257,11 @@ export default function CreateView({
       onRefused: (_status, data) => openGate("more", data.error ?? null),
       onStarted: setSheetTrialId,
       onLocked: () =>
-        openGate("more", "Sign up free to differentiate. You get a separate version for each band you pick."),
-      onPicturesLocked: () => openGate("generate", PICTURES_LOCKED),
+        openGate(
+          "more",
+          `${account ? "Choose a plan" : "Sign up free"} to differentiate. You get a separate version for each band you pick.`,
+        ),
+      onPicturesLocked: () => openGate("generate", picturesLocked),
       renderResult: ({ result, isGenerating }) => (
         <GuestResult
           kind={sheetKind}
@@ -253,42 +269,63 @@ export default function CreateView({
           isGenerating={isGenerating}
           onAction={(a) => openGate(a)}
           jo={guestJo}
-          onPicturesLocked={() => openGate("generate", PICTURES_LOCKED)}
+          onPicturesLocked={() => openGate("generate", picturesLocked)}
         />
       ),
     }),
-    [tool, sheetKind, openGate, guestJo],
+    [tool, sheetKind, openGate, guestJo, account, picturesLocked],
   );
 
+  const base = account ? "/free-tools" : "/create";
   const toolHref = (slug: GuestToolSlug) =>
-    `/create?tool=${heroIdFor(slug)}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`;
+    `${base}?tool=${heroIdFor(slug)}${topic ? `&topic=${encodeURIComponent(topic)}` : ""}`;
   const others = TOOLS.filter((t) => t !== tool);
 
   return (
     <>
     {/* The editor, once there is a deck. The page stays mounted underneath,
         hidden, so a refused run lands back on the form as they left it. */}
-    {deck && (
-      <Editor
-        key={deck.key}
-        presentation={deck.presentation}
-        generationParams={deck.params ?? undefined}
-        guest={editorGuest}
-      />
-    )}
+    {deck &&
+      (account ? (
+        // Over the shell: the editor is built for the whole window, as on /editor.
+        <div className="fixed inset-0 z-50 bg-white" data-testid="free-tools-editor">
+          <Editor
+            key={deck.key}
+            presentation={deck.presentation}
+            generationParams={deck.params ?? undefined}
+            guest={editorGuest}
+          />
+        </div>
+      ) : (
+        <Editor
+          key={deck.key}
+          presentation={deck.presentation}
+          generationParams={deck.params ?? undefined}
+          guest={editorGuest}
+        />
+      ))}
 
     {/* The landing page's own colours and header, so going from the hero to
         here reads as one page rather than a jump into the app. */}
     <div className={styles.page} hidden={!!deck}>
-      <LandingNav email={null} name={null} fullName={null} avatarUrl={null} isAdmin={false} linkBase="/" />
+      {!account && (
+        <LandingNav email={null} name={null} fullName={null} avatarUrl={null} isAdmin={false} linkBase="/" />
+      )}
 
       <div className={styles.shell}>
         <div className={styles.intro}>
           <h1>{restoredText ? `Your ${name}` : `Make ${MAKE[tool]}, free`}</h1>
-          <p>
-            Three free tries a day, no account needed. Sign up to present, export and keep everything
-            you make here.
-          </p>
+          {account ? (
+            <p>
+              Three free tries a day. Choose a plan to present, export and keep everything you make
+              here. It is kept for thirty days, and moves into your library when you do.
+            </p>
+          ) : (
+            <p>
+              Three free tries a day, no account needed. Sign up to present, export and keep everything
+              you make here.
+            </p>
+          )}
         </div>
 
         <nav className={styles.tabs} aria-label="Choose a tool">
@@ -335,7 +372,7 @@ export default function CreateView({
                     variant="page"
                     guest
                     prefill={slidePrefill}
-                    onClose={() => router.push("/")}
+                    onClose={() => router.push(account ? "/dashboard" : "/")}
                     onSubmit={startDeck}
                   />
                 </>
@@ -375,13 +412,13 @@ export default function CreateView({
         {recent.length > 0 && (
           <section className={styles.recent} aria-label="Your creations">
             <h2>Your creations</h2>
-            <p>Saved to your account when you sign up.</p>
+            <p>{account ? "Saved to your library when you choose a plan." : "Saved to your account when you sign up."}</p>
             <ul>
               {recent.map((r) => {
                 const slug = guestSlugFor(r.tool) ?? "comprehension-generator";
                 return (
                   <li key={r.id}>
-                    <Link href={`/create?tool=${heroIdFor(slug)}&run=${r.id}`}>
+                    <Link href={`${base}?tool=${heroIdFor(slug)}&run=${r.id}`}>
                       <b>{guestToolName(slug)}</b>
                       <span>{r.title || "Untitled"}</span>
                     </Link>
@@ -401,14 +438,23 @@ export default function CreateView({
     </div>
 
     {/* Outside the page, which is hidden while the editor is open. */}
-    <AuthGateModal
-      open={gate !== null}
-      kind={kind}
-      action={gate?.action ?? null}
-      message={gate?.message ?? null}
-      googleSignin={googleSignin}
-      onClose={() => setGate(null)}
-    />
+    {account ? (
+      <ChoosePlanModal
+        open={gate !== null}
+        title={planGateTitle(kind, gate?.action ?? null)}
+        message={gate?.message ?? null}
+        onClose={() => setGate(null)}
+      />
+    ) : (
+      <AuthGateModal
+        open={gate !== null}
+        kind={kind}
+        action={gate?.action ?? null}
+        message={gate?.message ?? null}
+        googleSignin={googleSignin}
+        onClose={() => setGate(null)}
+      />
+    )}
     </>
   );
 }

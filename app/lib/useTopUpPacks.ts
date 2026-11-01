@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "./auth/client";
-import { asPlanId, DEFAULT_PLAN, type PlanId } from "./plans";
+import { DEFAULT_PLAN, effectivePlan, type PlanId } from "./plans";
 import { buyablePacks, PACK_COLUMNS, type TopUpPack } from "./topup-packs";
 
 /*
@@ -45,7 +45,11 @@ export function useTopUpPacks(enabled = true): TopUpPacks {
         // key. Both are small and indexed.
         const [{ data: profile }, { data: rows }] = await Promise.all([
           user
-            ? supabase.from("profiles").select("plan").eq("id", user.id).maybeSingle()
+            ? supabase
+                .from("profiles")
+                .select("plan, subscription_status, stripe_subscription_id, current_period_end")
+                .eq("id", user.id)
+                .maybeSingle()
             : Promise.resolve({ data: null }),
           supabase
             .from("topup_packs")
@@ -57,7 +61,7 @@ export function useTopUpPacks(enabled = true): TopUpPacks {
 
         if (cancelled) return;
 
-        const plan: PlanId = profile?.plan ? asPlanId(profile.plan) : DEFAULT_PLAN;
+        const plan: PlanId = profile ? effectivePlan(profile) : DEFAULT_PLAN;
         setPacks(buyablePacks(rows ?? [], plan));
       } catch {
         // An empty list renders as "no top ups available" rather than an error

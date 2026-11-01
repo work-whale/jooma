@@ -69,10 +69,9 @@ test.describe("Max plan", () => {
     await expect(page.getByText("1,000 credits a month").first()).toBeVisible();
     await expect(page.getByText("2,500 credits a month").first()).toBeVisible();
 
-    // All three are buyable from here, each starting the free trial because
-    // this account has never subscribed.
-    await expect(page.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-    await expect(page.getByText("3 days free, then £4.99 a month").first()).toBeVisible();
+    // All three are buyable from here, each saying what it charges today.
+    await expect(page.getByText(/You will be charged .* today/)).toHaveCount(3);
+    await expect(page.getByText("You will be charged £4.99 today, then £4.99 a month").first()).toBeVisible();
   });
 
   test("a Pro subscriber is offered Max, and told what the switch costs", async ({ page }) => {

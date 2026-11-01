@@ -1,5 +1,6 @@
 "use client";
 
+import { useExportLock } from "@/app/components/guest/useExportLock";
 import {
   Suspense,
   useCallback,
@@ -934,7 +935,8 @@ function ResourceItem({
    * module load, keeping it out of the Library's bundle.
    */
   const [downloading, setDownloading] = useState(false);
-  const download = async () => {
+  const exportLock = useExportLock();
+  const download = exportLock.guard(async () => {
     setDownloading(true);
     try {
       // A designed Worksheet or Comprehension builds its own, styled document.
@@ -961,7 +963,7 @@ function ResourceItem({
     } finally {
       setDownloading(false);
     }
-  };
+  });
   // The prototype's second line is "<tool>, <folder>". A card has no date
   // column, so the date joins the meta line there rather than being dropped.
   const where = sharedFrom ? `from ${sharedFrom}` : folderLabel;
@@ -988,6 +990,10 @@ function ResourceItem({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const menu = (
+    <>
+    {/* Outside the menu, which closes as the prompt opens. The wrapper keeps a
+        click in the prompt from reaching the card behind it. */}
+    <span onClick={(e) => e.stopPropagation()}>{exportLock.modal}</span>
     <Menu label={`${title} menu`} onOpenChange={setMenuOpen}>
       {(close) => (
         <>
@@ -1071,6 +1077,7 @@ function ResourceItem({
         </>
       )}
     </Menu>
+    </>
   );
 
   if (view === "grid") {

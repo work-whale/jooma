@@ -1,5 +1,6 @@
 "use client";
 
+import { useExportLock } from "@/app/components/guest/useExportLock";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Check, Loader2 } from "lucide-react";
 import EditorTopBar from "./EditorTopBar";
@@ -130,6 +131,7 @@ interface Props {
 const HISTORY_MAX = 50;
 
 export default function Editor({ presentation, generationParams, guest }: Props) {
+  const exportLock = useExportLock();
   // The free try this guest deck saves to, and whether the server has recorded
   // its run as finished (saves before then are refused). A restored try is both.
   const guestTrialIdRef = useRef<string | null>(guest ? presentation.id || null : null);
@@ -3223,7 +3225,11 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       ? {
           trialId: guestTrialId,
           honeypot: guest.honeypot,
-          onSignUp: () => guest.gate("more", "Sign up free to keep editing with Jo. Your deck comes with you."),
+          onSignUp: () =>
+            guest.gate(
+              "more",
+              `${guest.account ? "Choose a plan" : "Sign up free"} to keep editing with Jo. Your deck comes with you.`,
+            ),
         }
       : null,
     disabled: generating ? "Jo can help as soon as your deck is ready" : null,
@@ -3274,9 +3280,9 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         onTitleChange={handleTitleChange}
         onUndo={undo}
         onRedo={redo}
-        onExport={guest ? () => guest.gate("export") : handleExport}
-        onPresent={guest ? () => guest.gate("present") : () => setPresenting(true)}
-        guest={guest ? { onSignUp: () => guest.gate(null) } : undefined}
+        onExport={guest ? () => guest.gate("export") : exportLock.guard(handleExport)}
+        onPresent={guest ? () => guest.gate("present") : exportLock.guard(() => setPresenting(true))}
+        guest={guest ? { onSignUp: () => guest.gate(null), account: guest.account } : undefined}
         isExporting={isExporting}
         saveStatus={saveStatus}
         onEditPrompt={savedGenParams && !guest ? () => setEditPromptOpen(true) : undefined}
@@ -4129,6 +4135,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         );
       })()}
 
+      {exportLock.modal}
       {presenting && slides.length > 0 && (
         <PresentationViewer
           slides={slides}

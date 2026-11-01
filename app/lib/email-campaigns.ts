@@ -85,7 +85,7 @@ interface ClaimedRow {
 export async function sendBatch(id: string, limit = BATCH_SIZE): Promise<CampaignProgress> {
   const { data: campaign, error } = await supabaseAdmin
     .from("email_campaigns")
-    .select("id, purpose, subject, preheader, heading, body, cta_label, cta_url")
+    .select("id, purpose, subject, preheader, heading, body, cta_label, cta_url, automation")
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -114,6 +114,12 @@ export async function sendBatch(id: string, limit = BATCH_SIZE): Promise<Campaig
         oneClickUrl: withLink ? oneClickUnsubscribeUrl(r.unsub_token) : null,
         recipientId: r.id,
         campaignId: id,
+        // A teacher deciding whether to subscribe may well reply, and the default
+        // sender is noreply@. Falls back to it if this is not set.
+        sender:
+          campaign.automation === "trial_ending"
+            ? { from: process.env.ENQUIRY_FROM_EMAIL, replyTo: process.env.ENQUIRY_FROM_EMAIL }
+            : undefined,
       });
       return { id: r.id, status: outcome.status, error: outcome.error ?? null };
     } catch (e) {

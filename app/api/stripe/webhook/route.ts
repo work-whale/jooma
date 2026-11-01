@@ -8,14 +8,16 @@ import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
 import { annualTrialEmailParams, isTrialInvoice, startsAnnualTrial, startsTrial } from "@/app/lib/trial";
 import { sendTemplate } from "@/app/lib/email";
+import { claimGuestWork } from "@/app/lib/claimGuestWork";
 
 // Stripe → app sync. This is the ONLY place a user's plan is upgraded/downgraded
 // from payment state. It runs with the service-role key (no user session) and
 // must verify the signature on the raw body, so the request is never trusted
 // blindly. This route is exempted from auth in proxy.ts.
 
-// Statuses that should grant the paid plan. `trialing` is the free trial every
-// plan starts with: the card is on file and the teacher has the plan in full.
+// Statuses that should grant the paid plan. `trialing` is a Stripe trial, which
+// new checkouts only start for an ambassador's free year: the card is on file and
+// the teacher has the plan in full.
 // Anything else (canceled, unpaid, incomplete_expired, past_due…) falls back to
 // DEFAULT_PLAN, the locked "no plan" state.
 const ACTIVE_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
@@ -444,9 +446,10 @@ async function recordAmbassadorCommission(inv: Stripe.Invoice) {
  * This puts both right when the checkout completes. The referral is recorded
  * (first code wins, as claim_ambassador_code does it), and a yearly
  * subscription's discount is swapped for the code's yearly coupon. That swap is
- * only possible while the trial is still running, before the first charge;
- * ambassador promotion codes are created first-time-customers-only, and every
- * first subscription starts with a trial, so that is the case that arrives.
+ * only possible while a trial is still running, before the first charge. New
+ * checkouts charge at once and have no trial to swap in, so Checkout no longer
+ * offers its code box on yearly at all (api/stripe/checkout); what can still
+ * reach the swap is a Stripe trial started before the card was dropped.
  */
 async function reconcileAmbassadorDiscount(sub: Stripe.Subscription, userId: string | null) {
   if (!userId) return;
@@ -1258,6 +1261,11 @@ export async function POST(req: NextRequest) {
           // An ambassador code typed into Stripe's own box: credit the
           // ambassador, and on a yearly plan swap to the yearly coupon.
           await reconcileAmbassadorDiscount(sub, sub.metadata?.userId ?? null);
+          // What they made on the free tools while locked was waiting for this.
+          // Idempotent, and never throws, so a Stripe retry costs nothing.
+          if (sub.metadata?.userId) {
+            await claimGuestWork(sub.metadata.userId, sub.metadata.userId);
+          }
           // Only from this event, not customer.subscription.created: Checkout
           // completing is the single moment the trial began, and hanging it
           // off one event type keeps it to one send per checkout.

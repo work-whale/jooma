@@ -9,6 +9,7 @@ import PlanCard, {
 } from "@/app/components/plans/PlanCard";
 import BillingToggle from "@/app/components/plans/BillingToggle";
 import { DEFAULT_INTERVAL, type BillingInterval } from "@/app/lib/plans";
+import { createClient } from "@/app/lib/auth/client";
 import Reveal from "./Reveal";
 import shared from "./landing.module.css";
 import styles from "./Pricing.module.css";
@@ -39,7 +40,7 @@ export interface PricingPlan {
     was?: string;
     saving?: string;
     note?: string;
-    /** The button, naming the interval: "Start annual trial". */
+    /** The button with Yearly selected. */
     cta?: string;
     trial?: string | null;
   };
@@ -71,32 +72,22 @@ export default function Pricing({
   const [error, setError] = useState<string | null>(null);
   const [interval, setBillingInterval] = useState<BillingInterval>(DEFAULT_INTERVAL);
 
-  async function startCheckout(plan: "standard" | "pro" | "max") {
+  /**
+   * The trial needs no plan choice and no card, so a visitor just signs up. A
+   * teacher who is already signed in goes to /pricing instead of straight to
+   * Stripe: paying charges today, which a button saying "free trial" must not
+   * spring on them, and that page says so on every card.
+   */
+  async function start(plan: "standard" | "pro" | "max") {
     setPending(plan);
     setError(null);
     try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, interval }),
-      });
-
-      // Nobody can subscribe without an account, so send them to sign up and
-      // bring them back here afterwards rather than failing silently.
-      if (res.status === 401) {
-        router.push(`/signup?plan=${plan}`);
-        return;
-      }
-
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setError(data.error ?? "Something went wrong. Please try again.");
+      const {
+        data: { session },
+      } = await createClient().auth.getSession();
+      router.push(session ? "/pricing" : "/signup");
     } catch {
       setError("Network error. Please try again.");
-    } finally {
       setPending(null);
     }
   }
@@ -108,7 +99,7 @@ export default function Pricing({
       return {
         kind: "button",
         label: pending === checkout ? "Starting..." : cta,
-        onClick: () => startCheckout(checkout),
+        onClick: () => start(checkout),
         disabled: pending !== null,
         tone: "trial",
       };
@@ -181,8 +172,8 @@ export default function Pricing({
         )}
 
         <p className={styles.note}>
-          Prices include VAT. Your card is taken when you start, and nothing is charged until
-          the trial ends. Cancel any time before then and you pay nothing.
+          Prices include VAT. Your free trial needs no card, and nothing is charged unless you
+          choose to subscribe. If you do not, your account stays open with three free tools.
         </p>
       </div>
     </section>

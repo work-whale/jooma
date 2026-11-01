@@ -92,38 +92,44 @@ export function planCardCta(plan: PlanId): string {
   return CARD_CTA[plan];
 }
 
-/** The button label for someone who would get the free trial by choosing this
- *  plan. The plan name is on the card already. */
+/** The button label for a visitor, who signs up to get the free trial. The plan
+ *  name is on the card already. */
 export const TRIAL_CTA = "Start free trial";
 
-/** The same button with Yearly selected. Naming the interval on the button
- *  itself matters: every annual trial so far ended in a declined £71.99 charge
- *  from someone who appears to have expected a monthly one. */
-export const TRIAL_CTA_YEARLY = "Start annual trial";
-
-export function trialCta(interval: BillingInterval): string {
-  return interval === "year" ? TRIAL_CTA_YEARLY : TRIAL_CTA;
+/**
+ * The line that explains the trial on a plan's card for someone who has not
+ * signed up: "3 days free, no card needed. £4.99 a month if you subscribe".
+ * Derived from PLANS and TRIAL_DAYS so it can never quote a price Checkout will
+ * not charge. Null for a plan with no self-serve price.
+ */
+export function planTrialLine(
+  plan: PlanId,
+  interval: BillingInterval = "month",
+): string | null {
+  const yearly = interval === "year" ? PLANS[plan].priceYearly : null;
+  const price = yearly ?? PLANS[plan].priceMonthly;
+  if (!price) return null;
+  const per = yearly ? "a year" : "a month";
+  return `${TRIAL_DAYS} days free, no card needed. ${gbp(price)} ${per} if you subscribe`;
 }
 
 /**
- * The line that explains the trial on a plan's card, e.g. "3 days free, then
- * £4.99 a month". Derived from PLANS and TRIAL_DAYS so it can never quote a
- * price Checkout will not charge. Null for a plan with no self-serve price.
+ * What choosing this card costs today, for someone signed in: "You will be
+ * charged £4.99 today, then £4.99 a month". Every checkout charges at once, and
+ * someone on the free trial may not be expecting that, so the card says so
+ * before they reach Stripe. Null for a plan with no self-serve price.
  */
-export function planTrialLine(
+export function planChargeLine(
   plan: PlanId,
   interval: BillingInterval = "month",
   discount?: Discount | null,
 ): string | null {
   const yearly = interval === "year" ? PLANS[plan].priceYearly : null;
-  if (yearly) return `${TRIAL_DAYS} days free, then ${gbp(yearly)} a year`;
+  if (yearly) return `You will be charged ${gbp(yearly)} today, then ${gbp(yearly)} a year`;
   const price = PLANS[plan].priceMonthly;
   if (!price) return null;
   const first = discount ? firstMonthPrice(plan, discount) : null;
-  if (first !== null) {
-    return `${TRIAL_DAYS} days free, then ${gbp(first)} for your first month, then ${gbp(price)} a month`;
-  }
-  return `${TRIAL_DAYS} days free, then ${gbp(price)} a month`;
+  return `You will be charged ${gbp(first ?? price)} today, then ${gbp(price)} a month`;
 }
 
 /**

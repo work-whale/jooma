@@ -158,9 +158,9 @@ test.describe("planFeatures", () => {
 });
 
 test.describe("planTrialLine", () => {
-  test("quotes the trial and the price it becomes", () => {
-    expect(planTrialLine("standard")).toBe("3 days free, then £4.99 a month");
-    expect(planTrialLine("pro")).toBe("3 days free, then £7.99 a month");
+  test("quotes the trial and what subscribing costs", () => {
+    expect(planTrialLine("standard")).toBe("3 days free, no card needed. £4.99 a month if you subscribe");
+    expect(planTrialLine("pro")).toBe("3 days free, no card needed. £7.99 a month if you subscribe");
   });
 
   test("is null for anything without a self-serve price", () => {

@@ -11,6 +11,8 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "./supabase-admin";
+import { createClient } from "./auth/server";
+import { accountAccess, type AccessRow } from "./account-access";
 import {
   GUEST_COOKIE,
   GUEST_MAX_AGE_S,
@@ -93,6 +95,65 @@ export async function ensureGuestId(): Promise<string | null> {
   return guestId;
 }
 
+/**
+ * ACCOUNTS ON THE FREE TOOLS.
+ *
+ * An account with nothing in force (a trial that ran out, a lapsed subscriber)
+ * makes things through these same routes, under the same limits. Its user id
+ * takes the place of the cookie as guest_id, which is why every read and write
+ * keyed on guest_id works unchanged.
+ */
+
+/** Stored instead of a hashed IP on an account's run. Accounts are limited per
+ *  account, since a school's staff share one address, and no real hash can equal
+ *  this, so an account's run never counts against a guest on the same network. */
+export const ACCOUNT_IP_HASH = "account";
+
+/** The signed in caller and whether they are locked, or null when signed out. */
+export async function trialAccount(): Promise<{ userId: string; locked: boolean } | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase.rpc("my_account_access");
+  if (error) {
+    // Not locked, so the route refuses it. Unlike the plan gate this one fails
+    // closed: an unreadable account must not become free generations.
+    console.warn("[guest] could not read account state:", error.message);
+    return { userId: user.id, locked: false };
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as AccessRow | undefined;
+  return { userId: user.id, locked: row ? accountAccess(row).state === "locked" : false };
+}
+
+/**
+ * Whose free tries this request is about, for a route that reads them: a locked
+ * account's own, or the cookie's. Null for anyone else, including an account with
+ * a plan, who has the real tools and no business spending here.
+ */
+export async function readTrialOwner(): Promise<string | null> {
+  const account = await trialAccount();
+  if (account) return account.locked ? account.userId : null;
+  return readGuestId();
+}
+
+/** The same for a route that starts a run, minting a cookie for a new visitor. */
+export async function ensureTrialCaller(
+  req: Request,
+  secret: string,
+): Promise<{ guestId: string; ipHash: string; account: boolean } | null> {
+  const account = await trialAccount();
+  if (account) {
+    return account.locked
+      ? { guestId: account.userId, ipHash: ACCOUNT_IP_HASH, account: true }
+      : null;
+  }
+  const guestId = await ensureGuestId();
+  return guestId ? { guestId, ipHash: hashIp(clientIp(req), secret), account: false } : null;
+}
+
 /** Tell the signed in shell there is guest work to claim. Readable by the
  *  page on purpose, and carries nothing but a 1. */
 export async function flagGuestWork(): Promise<void> {
@@ -130,7 +191,7 @@ export async function trialSettings(): Promise<{ enabled: boolean; dailyCap: num
 }
 
 /** Whether this guest may start another free run now, of any tool. */
-export async function checkTrial(guestId: string, ipHash: string): Promise<TrialDecision> {
+export async function checkTrial(guestId: string, ipHash: string, account = false): Promise<TrialDecision> {
   const settings = await trialSettings();
   if (!settings.enabled) return { ok: false, reason: "disabled" };
 
@@ -143,10 +204,11 @@ export async function checkTrial(guestId: string, ipHash: string): Promise<Trial
       .gt("created_at", since)
       .in("status", counted);
 
+  // An account is counted by its own id alone. See ACCOUNT_IP_HASH.
   const [all, byGuest, byIp] = await Promise.all([
     base(),
     base().eq("guest_id", guestId),
-    base().eq("ip_hash", ipHash),
+    account ? Promise.resolve({ count: 0, error: null }) : base().eq("ip_hash", ipHash),
   ]);
   if (all.error || byGuest.error || byIp.error) {
     console.warn("[guest] trial count failed:", all.error ?? byGuest.error ?? byIp.error);

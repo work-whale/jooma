@@ -130,14 +130,12 @@ test.describe("pricing", () => {
     }
   });
 
-  test("the trial button names the interval it starts", async ({ page }) => {
+  test("the trial button is the same at either interval: the trial has no price", async ({ page }) => {
     const pricing = page.locator("#pricing");
     await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-    await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(0);
 
     await page.locator('#pricing label[data-option="year"]').click();
-    await expect(pricing.getByRole("button", { name: "Start annual trial" })).toHaveCount(3);
-    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(0);
+    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
 
     // And back again.
     await page.locator('#pricing label[data-option="month"]').click();

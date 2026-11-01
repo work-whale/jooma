@@ -157,8 +157,10 @@ export async function grantAmbassadorPro(
  *
  * Only for an account with no plan and no Stripe subscription id: a payer keeps
  * what they pay for, and an id (even a dead one) means they have been a
- * customer before. Once per person, ever: trial_granted_at on any of their
- * applications stops a declined applicant who applies again.
+ * customer before. Someone on the no-card signup trial qualifies too, and just
+ * gets the later end date: an application can outlast the days they have left.
+ * Once per person, ever: trial_granted_at on any of their applications stops a
+ * declined applicant who applies again.
  *
  * The trial is recognised everywhere as subscription_status 'trialing' with a
  * null stripe_subscription_id (a Stripe trial always has an id). It ends on
@@ -184,7 +186,8 @@ export async function grantApplicantTrial(userId: string, applicationId: string)
     const until = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
 
     // The guard is in the WHERE, so a subscription that lands in between is
-    // never overwritten.
+    // never overwritten. No plan, or a card-free trial of Standard: an admin's
+    // comp is neither, and a Stripe trial has a subscription id.
     const { data: granted, error } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -195,7 +198,7 @@ export async function grantApplicantTrial(userId: string, applicationId: string)
         updated_at: now.toISOString(),
       })
       .eq("id", userId)
-      .eq("plan", "free")
+      .or("plan.eq.free,and(plan.eq.standard,subscription_status.eq.trialing)")
       .is("stripe_subscription_id", null)
       .select("id");
     if (error) {

@@ -13,11 +13,9 @@ import { worksheetRequest, type WorksheetRequest } from "@/app/lib/worksheet-pro
 import { finishSheet } from "@/app/lib/sheets/context";
 import {
   checkTrial,
-  clientIp,
-  ensureGuestId,
+  ensureTrialCaller,
   finishTrialRun,
   flagGuestWork,
-  hashIp,
   startTrialRun,
   trialSecret,
 } from "@/app/lib/guest";
@@ -55,16 +53,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: built.error }, { status: 400 });
   }
 
-  const guestId = await ensureGuestId();
-  if (!guestId) {
+  const caller = await ensureTrialCaller(req, secret);
+  if (!caller) {
     return NextResponse.json({ error: "Free tries are not available right now.", reason: "disabled" }, { status: 403 });
   }
-  const ipHash = hashIp(clientIp(req), secret);
+  const { guestId, ipHash, account } = caller;
 
-  const decision = await checkTrial(guestId, ipHash);
+  const decision = await checkTrial(guestId, ipHash, account);
   if (!decision.ok) {
     return NextResponse.json(
-      { error: trialRefusalMessage(decision.reason), reason: decision.reason },
+      { error: trialRefusalMessage(decision.reason, account), reason: decision.reason },
       { status: decision.reason === "disabled" ? 403 : 429 },
     );
   }
@@ -86,7 +84,9 @@ export async function POST(req: Request) {
   }
   // Set now, while the response can still carry headers. A failed run leaves
   // nothing to claim, and the claim route simply finds no finished rows.
-  await flagGuestWork();
+  // An account's run stays against the account until it has a plan. See the
+  // claim route.
+  if (!account) await flagGuestWork();
 
   let streamed: Response;
   try {

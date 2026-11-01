@@ -69,7 +69,7 @@ function FocusDialog({ markdown, filename, title, onClose }: Props) {
   const trapRef = useRef<HTMLDivElement>(null);
   useFocusTrap(trapRef, true);
 
-  const { copied, isExporting, exportError, handleCopy, exportItems } = useDocumentActions(
+  const { copied, isExporting, exportError, handleCopy, exportItems, lockModal } = useDocumentActions(
     markdown,
     filename,
     {
@@ -134,6 +134,7 @@ function FocusDialog({ markdown, filename, title, onClose }: Props) {
         </div>
 
         <div className={styles.foot}>
+          {lockModal}
           {exportError ? (
             <p className={styles.error} role="status">
               {exportError}

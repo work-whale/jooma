@@ -1,6 +1,7 @@
 import { BookOpen } from "lucide-react";
 import ComprehensionForm from "@/app/components/forms/ComprehensionForm";
 import ToolInfoPanel from "@/app/components/ToolInfoPanel";
+import { redirectIfLocked } from "@/app/lib/free-tools";
 
 // searchParams are read here rather than with useSearchParams() in the form:
 // that hook forces a client-side bailout needing a Suspense boundary around the
@@ -11,6 +12,7 @@ export default async function ComprehensionGeneratorPage({
   searchParams: Promise<{ run?: string; prefill?: string }>;
 }) {
   const launch = await searchParams;
+  await redirectIfLocked("comprehension-generator", launch);
   return (
     <ComprehensionForm
       launch={launch}

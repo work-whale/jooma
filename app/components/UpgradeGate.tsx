@@ -79,7 +79,7 @@ export default function UpgradeGate() {
       ? "You've hit the fair-use limit for this hour. Try again shortly."
       : isTopUp
         ? "Top up to keep going. Extra credits last until the end of the month."
-        : "Every plan starts with a free trial, and you can cancel before it ends.");
+        : "You can still make slides, comprehensions and worksheets for free.");
 
   return (
     <div

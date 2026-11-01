@@ -3,16 +3,15 @@ import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
-import { trialDaysFor } from "@/app/lib/trial";
 import { isBillingInterval } from "@/app/lib/plans";
 
 // Creates a Stripe Checkout Session for a paid plan and returns its URL. The
 // browser redirects to it; payment success is confirmed asynchronously by the
 // webhook, not here — never grant access from this route.
 //
-// There are three things to buy: Standard, Pro and Max, each monthly or yearly,
-// and each starts with a free trial for a teacher who has never subscribed (see
-// lib/trial.ts). The requested plan is checked against that allowlist rather
+// There are three things to buy: Standard, Pro and Max, each monthly or yearly.
+// Paying starts the subscription today: the free trial is what they had before
+// this (app/api/trial/start), and it carries no card. The requested plan is checked against that allowlist rather
 // than trusted, so a crafted body cannot name an arbitrary plan (or a price)
 // and cannot reach `school`, which has no working billing. An absent or
 // unrecognised plan falls back to Pro, keeping every existing caller, which
@@ -93,9 +92,9 @@ export async function POST(req: NextRequest) {
   //
   // Subscribing now must not cut that year short or charge for time they were
   // promised free, so the subscription opens with a trial that ends on the day
-  // the free Pro does, and the first charge lands then. This REPLACES the 3 day
-  // trial rather than adding to it. Stripe wants trial_end at least 48 hours
-  // out, so a term that is nearly over simply takes the ordinary path.
+  // the free Pro does, and the first charge lands then. This is the only checkout
+  // that does not charge today. Stripe wants trial_end at least 48 hours out, so
+  // a term that is nearly over simply takes the ordinary path.
   //
   // Service role, like the referral above: the ambassadors table is admin-only.
   // Scoped by the caller's own id. An error (no migration yet) reads as none.
@@ -118,10 +117,9 @@ export async function POST(req: NextRequest) {
     // redeploy.
     const priceId = await priceIdFor(plan, interval);
 
-    // The free trial, for a first subscription only. The card is still taken
-    // now (payment_method_collection "always"), and if it is somehow missing
-    // when the trial ends the subscription cancels rather than sitting unpaid.
-    const trialDays = trialDaysFor(profile);
+    // Only an ambassador's free year delays the first charge. If the card is
+    // somehow missing when it ends, the subscription cancels rather than
+    // sitting unpaid.
     const trial = ambassadorTrialEnd
       ? {
           trial_end: ambassadorTrialEnd,
@@ -129,14 +127,7 @@ export async function POST(req: NextRequest) {
             end_behavior: { missing_payment_method: "cancel" as const },
           },
         }
-      : trialDays > 0
-        ? {
-            trial_period_days: trialDays,
-            trial_settings: {
-              end_behavior: { missing_payment_method: "cancel" as const },
-            },
-          }
-        : {};
+      : {};
 
     // Everything except how the discount is handled, which is the one thing
     // that differs between the two attempts below.
@@ -146,6 +137,18 @@ export async function POST(req: NextRequest) {
       // Lets the webhook tie the resulting subscription back to our user.
       client_reference_id: user.id,
       payment_method_collection: "always" as const,
+      // Said on the page they pay on, since someone arriving from a free trial
+      // may still be expecting more free days.
+      ...(ambassadorTrialEnd
+        ? {}
+        : {
+            custom_text: {
+              submit: {
+                message:
+                  "Your subscription starts today and you will be charged now. If you are on a free trial, this ends it.",
+              },
+            },
+          }),
       subscription_data: {
         ...trial,
         metadata: {
@@ -177,10 +180,17 @@ export async function POST(req: NextRequest) {
     // coupon or promotion code. So a teacher with a claimed code gets it applied
     // for them (no code box, nothing to retype); everyone else keeps the box
     // exactly as before.
+    //
+    // EXCEPT ON YEARLY. An ambassador code typed into Stripe's box brings its
+    // first-month coupon, which would come off the whole first year, and with
+    // the charge taken at once the webhook has no trial in which to swap it (see
+    // reconcileAmbassadorDiscount). Codes claimed in Jooma get the right coupon.
+    const promoBox = interval === "month";
+
     if (!ambassadorDiscounts) {
       const session = await stripe.checkout.sessions.create({
         ...base,
-        allow_promotion_codes: true,
+        allow_promotion_codes: promoBox,
       });
       return NextResponse.json({ url: session.url });
     }
@@ -218,7 +228,7 @@ export async function POST(req: NextRequest) {
 
       const session = await stripe.checkout.sessions.create({
         ...base,
-        allow_promotion_codes: true,
+        allow_promotion_codes: promoBox,
       });
       return NextResponse.json({ url: session.url });
     }

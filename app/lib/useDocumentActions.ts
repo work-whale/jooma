@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DropdownItem } from "@/app/components/ui/DropdownMenu";
 import { exportToDocx, exportToPdf, buildPdfHtml } from "@/app/lib/exportUtils";
+import { useExportLock } from "@/app/components/guest/useExportLock";
 
 /*
  * What you can do with a finished document, independent of where it is shown.
@@ -30,6 +31,9 @@ export interface DocumentActions {
   handleCopy: () => Promise<void>;
   /** Ready to hand to DropdownMenu: PDF, Word, Google Docs, then Print. */
   exportItems: DropdownItem[];
+  /** The plan prompt for an account that may not export. Render it beside the
+   *  actions; null until it is needed. */
+  lockModal: React.ReactNode;
 }
 
 export function useDocumentActions(
@@ -47,12 +51,13 @@ export function useDocumentActions(
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState<"docx" | "pdf" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const lock = useExportLock();
 
-  const handleCopy = async () => {
+  const handleCopy = lock.guard(async () => {
     await navigator.clipboard.writeText(markdown);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }) as () => Promise<void>;
 
   const handleExportDocx = async () => {
     setIsExporting("docx");
@@ -126,5 +131,12 @@ export function useDocumentActions(
     },
   ];
 
-  return { copied, isExporting, exportError, handleCopy, exportItems };
+  return {
+    copied,
+    isExporting,
+    exportError,
+    handleCopy,
+    exportItems: lock.guardItems(exportItems),
+    lockModal: lock.modal,
+  };
 }
