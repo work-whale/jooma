@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import MiniSlide from "@/app/components/editor/MiniSlide";
+import SheetDocument from "@/app/components/sheets/SheetDocument";
+import MarkdownResult from "@/app/components/MarkdownResult";
 import type { SlideJSON } from "@/app/lib/presentations";
+import type { ShowcasePreview } from "@/app/lib/landing/showcase-preview";
 import shared from "./landing.module.css";
 import styles from "./HeroV3.module.css";
 
@@ -14,6 +17,8 @@ export interface ShowcaseCard {
   region: string | null;
   teacher_name: string | null;
   first_slide: SlideJSON | null;
+  /** The top of a Worksheet or Comprehension, read from its output. */
+  preview?: ShowcasePreview | null;
 }
 
 const KIND = {
@@ -31,7 +36,46 @@ function initials(name: string): string {
     .join("");
 }
 
-/** The drawn thumbnail for a resource with no slide to show. */
+/**
+ * The real resource, small. Decorative: the card's link is named by its
+ * heading, and a whole page of text would drown it.
+ *
+ * A sheet paginates and zooms to the card only once it has measured itself in
+ * the browser, so it waits invisible over the drawn placeholder until then
+ * (see .thumbSheet), rather than flash a full size page.
+ */
+function Thumb({ item }: { item: ShowcaseCard }) {
+  if (item.kind === "slides" && item.first_slide) {
+    return (
+      <div className={styles.thumbSlide} aria-hidden="true" inert>
+        <MiniSlide slide={item.first_slide} width={384} themeId={item.first_slide.themeId} thumbnailMode />
+      </div>
+    );
+  }
+  const preview = item.preview;
+  if (preview && "sheet" in preview) {
+    return (
+      <>
+        <Placeholder kind={item.kind} />
+        <div className={styles.thumbSheet} aria-hidden="true" inert data-testid="made-preview">
+          <SheetDocument doc={preview.sheet} anchors={false} />
+        </div>
+      </>
+    );
+  }
+  if (preview && "markdown" in preview) {
+    return (
+      <div className={styles.thumbDoc} aria-hidden="true" inert data-testid="made-preview">
+        <div className={styles.thumbDocIn}>
+          <MarkdownResult text={preview.markdown} />
+        </div>
+      </div>
+    );
+  }
+  return <Placeholder kind={item.kind} />;
+}
+
+/** The drawn thumbnail for a resource with nothing of its own to show. */
 function Placeholder({ kind }: { kind: ShowcaseCard["kind"] }) {
   if (kind === "worksheet") {
     return (
@@ -90,18 +134,7 @@ export default function MadeWithJooma({ items }: { items: ShowcaseCard[] }) {
             return (
               <Link key={item.slug} className={styles.mcard} href={`/made/${item.slug}`}>
                 <div className={styles.thumb}>
-                  {item.kind === "slides" && item.first_slide ? (
-                    <div className={styles.thumbSlide}>
-                      <MiniSlide
-                        slide={item.first_slide}
-                        width={384}
-                        themeId={item.first_slide.themeId}
-                        thumbnailMode
-                      />
-                    </div>
-                  ) : (
-                    <Placeholder kind={item.kind} />
-                  )}
+                  <Thumb item={item} />
                   <span className={styles.tag}>
                     <ToolTile icon={k.icon} solid={k.solid} size="xs" />
                     {k.label}

@@ -684,6 +684,42 @@
   pointer-events: none;
 }
 
+/* A Worksheet or Comprehension: its first page, zoomed to the card by
+   SheetDocument and cropped by .thumb. Below the tag, so the title shows.
+   Hidden over the drawn placeholder until the sheet has measured and zoomed
+   itself, which happens only in the browser. */
+.thumbSheet {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 38px 16px 0;
+  background: var(--j-bg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s var(--j-ease);
+}
+
+.thumbSheet:has([data-ready="true"]) {
+  opacity: 1;
+}
+
+/* An older resource saved as text: the opening lines, at half size. */
+.thumbDoc {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 40px 14px 0;
+  background: #fff;
+  pointer-events: none;
+}
+
+.thumbDocIn {
+  width: 200%;
+  transform: scale(0.5);
+  transform-origin: top left;
+  color: var(--j-ink);
+}
+
 .tag {
   position: absolute;
   left: 11px;
@@ -1152,6 +1188,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .thumbSheet {
+    transition: none;
+  }
+
   .idle,
   .nudge,
   .caret,
