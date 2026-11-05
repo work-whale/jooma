@@ -79,6 +79,9 @@ test.describe("signed in", () => {
   let teacher: TestTeacher;
   test.beforeAll(async () => {
     teacher = await createTeacher("Pictures");
+    // On a plan: since the no-card trial, a teacher with none is locked and sent
+    // to /free-tools, where the signed in form never appears.
+    await setPlan(teacher, "pro", "comped");
   });
   test.afterAll(async () => {
     await deleteTeacher(teacher);

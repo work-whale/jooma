@@ -10,6 +10,7 @@ import { defaultFamilyForYear } from "@/app/lib/slideshowThemes";
 import { defaultDesign, normalizeDraft, ownPassageSection, serializeSheet, type NormalizeContext } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { DEFAULT_SHEET_THEME } from "./themes";
+import { templateById } from "./worksheet-templates";
 import type { SheetTool } from "./types";
 
 export interface SheetRequestInfo {
@@ -19,6 +20,9 @@ export interface SheetRequestInfo {
   includeAnswerKey?: boolean;
   textSource?: "generate" | "own" | "";
   ownText?: string;
+  /** Worksheet: the worksheet type, whose starting design goes over the
+   *  year's default (an exam paper drops the objective line). */
+  template?: string;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -27,7 +31,10 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     info.yearGroup === "Mixed" ? "Mixed years" : year,
     tool === "comprehension" ? "Reading comprehension" : info.subject?.trim(),
   ].filter(Boolean).join(" · ");
-  const design = defaultDesign(tool, DEFAULT_SHEET_THEME[defaultFamilyForYear(year)]);
+  const design = {
+    ...defaultDesign(tool, DEFAULT_SHEET_THEME[defaultFamilyForYear(year)]),
+    ...(tool === "worksheet" ? templateById(info.template).design : undefined),
+  };
   if (tool === "comprehension" && info.includeAnswerKey === false) design.answers = false;
   return {
     tool,

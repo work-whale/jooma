@@ -9,6 +9,8 @@ import { buildSystem } from "@/app/lib/systemPrompt";
 import { bandName, bandPitch, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
 import { parsePictures, picturesPromptLine } from "@/app/lib/sheets/picture-options";
+import { DEFAULT_TEMPLATE_ID, templateById } from "@/app/lib/sheets/worksheet-templates";
+import { curriculumPromptBlock, worksheetCurriculumRules, type CurriculumAlign } from "@/app/lib/national-curriculum/prompt";
 
 export interface WorksheetRequest {
   curriculum: string;
@@ -26,6 +28,11 @@ export interface WorksheetRequest {
   additionalInfo?: string | null;
   /** "Add pictures": where they come from. Null or missing for none. */
   pictures?: unknown;
+  /** The worksheet type (app/lib/sheets/worksheet-templates.ts). Missing or
+   *  unknown is Classic, the shape every sheet had before types. */
+  template?: string;
+  /** "Align to curriculum": the statements the teacher ticked, verbatim. */
+  curriculumAlign?: CurriculumAlign | null;
 }
 
 const SYSTEM =
@@ -67,6 +74,21 @@ export function worksheetRequest(body: WorksheetRequest):
   const pictures = parsePictures(body.pictures);
   const count = Math.min(40, Math.max(1, Math.round(questionCount)));
   const kinds = kindsForTypes("worksheet", questionTypes);
+
+  // The worksheet type sets out the sections and marks. Classic is the plan
+  // every sheet followed before types, and adds nothing else to the prompt.
+  const template = templateById(body.template);
+  const classic = template.id === DEFAULT_TEMPLATE_ID;
+  const typeLine = classic
+    ? ""
+    : `\n- Worksheet type: ${template.name}. Follow its plan under HOW TO BUILD IT; where it names a question format that the formats above leave out, use the closest one they allow.`;
+  const introLine =
+    template.intro ??
+    `- intro: one short hook that makes the topic interesting. Usually variant "fact" with label "Did you know?" and a surprising, true fact; or "remember" with the one fact pupils need. One or two sentences, with a fitting emoji.`;
+
+  // "Align to curriculum": the ticked statements, quoted, and how to follow
+  // them. Empty when the card was off or nothing was ticked.
+  const curriculumBlock = curriculumPromptBlock(body.curriculumAlign, yearGroup, "worksheet", worksheetCurriculumRules(yearGroup));
   const typesLine = questionTypes.length
     ? `Use ONLY these question formats: ${questionTypes.join(", ")}. ${questionTypes.map((t) => TYPE_NOTES[t]).filter(Boolean).join(" ")}`
     : `Use a varied mix of question formats that suits ${subject} for ${yearGroup}: for example multiple choice, matching, fill in the blanks, short answers and one extended answer. Vary the format within each section.`;
@@ -99,14 +121,13 @@ export function worksheetRequest(body: WorksheetRequest):
 - Learning objective: ${learningObjective}
 - Questions: about ${count} in total.
 - ${detailLine}
-- ${typesLine}${pitchLine}${additionalInfo ?`\n- Teacher's additional instructions (follow them): ${additionalInfo}` : ""}
+- ${typesLine}${typeLine}${pitchLine}${additionalInfo ?`\n- Teacher's additional instructions (follow them): ${additionalInfo}` : ""}${curriculumBlock ? `\n\n${curriculumBlock}` : ""}
 
 HOW TO BUILD IT
 - title: specific and engaging, about the topic. Never just "Worksheet".
 - objective: the learning objective restated for pupils, starting "I am learning to".
-- intro: one short hook that makes the topic interesting. Usually variant "fact" with label "Did you know?" and a surprising, true fact; or "remember" with the one fact pupils need. One or two sentences, with a fitting emoji.
-- sections: 3 or 4 that build from recall, to understanding, to applying, to a challenge. Give each a short pupil-friendly title (for example "Warm up", "Show what you know", "Put it to work", "Challenge"), one fitting emoji, and a one-line instruction.
-- Spread the questions so later sections are harder and worth more marks: 1 mark for recall, 2 for understanding, 3 to 4 for application, up to 6 for the challenge.
+${introLine}
+${template.structure.join("\n")}
 - Give the page some life with blocks: a wordbank when pupils need vocabulary, a short text block or a table when a question needs a stimulus (a scenario, some data), and at most one "tip" or "remember" callout in a section where a reminder helps.
 - Every question must be answerable on paper, with no picture other than an emoji.
 - Fill every answer field correctly: they become the answer page. For an extended answer, put a model answer or mark scheme in answer and 2 to 4 success criteria in criteria.

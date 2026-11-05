@@ -18,7 +18,8 @@ import {
 } from "@/app/lib/national-curriculum";
 
 /**
- * "Align to curriculum" on the slideshow wizard's second step.
+ * "Align to curriculum" on the slideshow wizard's second step, and on the
+ * Worksheet form.
  *
  * Replaces a picker that offered GCSE strands for every year and no
  * statements at all. This one lists the real statements for the year (see
@@ -52,6 +53,8 @@ interface Props {
    *  their text without loading the data itself. */
   onChange: (next: CurriculumSelection, selected: NcStatement[]) => void;
   disabled?: boolean;
+  /** What is being made, for the card's wording. */
+  noun?: "deck" | "worksheet";
 }
 
 const selectCls =
@@ -65,6 +68,7 @@ export default function CurriculumAlignment({
   value,
   onChange,
   disabled,
+  noun = "deck",
 }: Props) {
   const year = value.year || stepYear;
   const covered = isCurriculumYear(year);
@@ -93,16 +97,31 @@ export default function CurriculumAlignment({
   }, [checked, covered, year]);
 
   // A new year invalidates the subject and ticks, which belong to the old one.
+  // Unless the selection was replaced in the same render: that is a saved run
+  // being restored, whose ticks belong to the year arriving with them.
   const lastYear = useRef(year);
+  const lastValue = useRef(value);
   useEffect(() => {
+    const replaced = lastValue.current !== value;
+    lastValue.current = value;
     if (lastYear.current === year) return;
     lastYear.current = year;
+    if (replaced) return;
     if (value.subject || value.statementIds.length) {
       onChange({ ...value, subject: "", strand: "", statementIds: [] }, []);
     }
     // onChange is a prop callback; the reset is about the year alone.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year]);
+  }, [year, value]);
+
+  // Ticks that arrive as ids alone (a restored run) get their text once the
+  // year's statements are loaded, so the parent has something to send.
+  useEffect(() => {
+    if (!statements?.length || !value.statementIds.length) return;
+    onChange(value, statements.filter((s) => value.statementIds.includes(s.id)));
+    // Only when a list loads; every other change already goes through set().
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statements]);
 
   // Pre-tick the best match for the topic, once per topic and year, and only
   // while the teacher has not chosen anything themselves.
@@ -181,7 +200,7 @@ export default function CurriculumAlignment({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold" style={{ color: "var(--j-purple)" }}>Align to curriculum</p>
-          <p className="text-xs text-gray-500 truncate">Pick the exact curriculum statements this deck should teach</p>
+          <p className="text-xs text-gray-500 truncate">Pick the exact curriculum statements this {noun} should teach</p>
         </div>
         <div
           className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
@@ -235,7 +254,7 @@ export default function CurriculumAlignment({
               style={{ backgroundColor: "var(--j-tint)", color: "var(--j-body)" }}
             >
               {year
-                ? `Curriculum alignment covers Nursery to Year 6. ${year} is not covered yet, so this deck will follow the topic and year you chose.`
+                ? `Curriculum alignment covers Nursery to Year 6. ${year} is not covered yet, so this ${noun} will follow the topic and year you chose.`
                 : "Pick a year from Nursery to Year 6 to see its curriculum statements."}
             </p>
           ) : loading || !statements ? (
@@ -398,7 +417,7 @@ export default function CurriculumAlignment({
                 <p className="text-xs font-semibold text-gray-900 mb-1">This is optional</p>
                 <p className="text-[11px] text-gray-600 leading-snug">
                   The statements come straight from the National Curriculum in England and the EYFS. If none fits
-                  your topic, untick Align to curriculum and Jooma still builds an accurate deck for your year group.
+                  your topic, untick Align to curriculum and Jooma still builds an accurate {noun} for your year group.
                 </p>
               </div>
             )}
