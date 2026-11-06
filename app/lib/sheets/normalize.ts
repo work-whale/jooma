@@ -8,6 +8,8 @@
 // as a fraction.
 
 import { cleanMathText } from "@/app/lib/math-text";
+import { seedFrom } from "@/app/lib/seeded-random";
+import { gridLetters, refreshPuzzle, type PuzzleDefaults } from "./puzzles";
 import {
   SHEET_KIND,
   SHEET_VERSION,
@@ -18,6 +20,10 @@ import {
   type SheetDoc,
   type SheetSection,
   type SheetTool,
+  PUZZLE_LEVELS,
+  type CrosswordEntry,
+  type PuzzleLevel,
+  type WordPlacement,
 } from "./types";
 
 type Raw = Record<string, unknown>;
@@ -70,8 +76,20 @@ function callout(raw: unknown): SheetCallout | null {
   };
 }
 
-/** One block, or null when it is empty or (mid-stream) not yet typed. */
-export function normalizeBlock(raw: unknown, id: string): SheetBlock | null {
+/** A stored seed, or one taken from the block's id: positional while a sheet
+ *  streams in ("s0b1"), so the grid stays put as more of the sheet arrives. */
+function seedOf(v: unknown, id: string): number {
+  return typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : seedFrom(id);
+}
+
+/**
+ * One block, or null when it is empty or (mid-stream) not yet typed.
+ *
+ * `puzzle` gives a word search its level and a crossword its word bank when
+ * the block does not carry them: the model never writes those, they follow
+ * the year group and band (app/lib/sheets/puzzles/level.ts).
+ */
+export function normalizeBlock(raw: unknown, id: string, puzzle?: Partial<PuzzleDefaults>): SheetBlock | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Raw;
   const q = { id, prompt: text(r.prompt), marks: intOf(r.marks, 0, 20, 1), domain: text(r.domain) };
@@ -157,6 +175,82 @@ export function normalizeBlock(raw: unknown, id: string): SheetBlock | null {
         : [];
       return { ...q, type: "label", items, wordBank: list(r.wordBank) };
     }
+    case "sort": {
+      // Each item once, in one group only: the first group to list it.
+      const seen = new Set<string>();
+      let room = 16;
+      const categories = (Array.isArray(r.categories) ? r.categories : [])
+        .map((c) => {
+          const cr = (c && typeof c === "object" ? c : {}) as Raw;
+          const items = list(cr.items)
+            .filter((it) => {
+              const k = it.toLowerCase();
+              if (seen.has(k)) return false;
+              seen.add(k);
+              return true;
+            })
+            .slice(0, 8);
+          return { name: text(cr.name), items };
+        })
+        .filter((c) => c.name || c.items.length)
+        .slice(0, 4)
+        .map((c) => {
+          const items = c.items.slice(0, Math.max(0, room));
+          room -= items.length;
+          return { ...c, items };
+        });
+      return { ...q, type: "sort", categories, seed: seedOf(r.seed, id) };
+    }
+    case "wordsearch": {
+      const seen = new Set<string>();
+      const words = list(r.words)
+        .filter((w) => {
+          const k = gridLetters(w);
+          if (!k || seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        })
+        .slice(0, 15);
+      const level: PuzzleLevel = PUZZLE_LEVELS.find((l) => l === r.level) ?? puzzle?.level ?? "medium";
+      const stored = r.key === undefined ? null : r;
+      return refreshPuzzle({
+        ...q,
+        type: "wordsearch",
+        words,
+        level,
+        seed: seedOf(r.seed ?? puzzle?.seed, id),
+        key: typeof stored?.key === "string" ? stored.key : "",
+        grid: Array.isArray(stored?.grid) ? (stored.grid as unknown[]).filter((g): g is string => typeof g === "string") : [],
+        placements: Array.isArray(stored?.placements) ? (stored.placements as WordPlacement[]) : [],
+        skipped: Array.isArray(stored?.skipped) ? list(stored.skipped) : [],
+      });
+    }
+    case "crossword": {
+      const seen = new Set<string>();
+      const entries = (Array.isArray(r.entries) ? r.entries : [])
+        .map((e) => (e && typeof e === "object" ? { clue: text((e as Raw).clue), answer: text((e as Raw).answer) } : null))
+        .filter((e): e is { clue: string; answer: string } => {
+          if (!e || !e.clue || !e.answer) return false;
+          const k = gridLetters(e.answer);
+          if (!k || seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        })
+        .slice(0, 12);
+      const stored = r.key === undefined ? null : r;
+      return refreshPuzzle({
+        ...q,
+        type: "crossword",
+        entries,
+        seed: seedOf(r.seed ?? puzzle?.seed, id),
+        wordBank: typeof r.wordBank === "boolean" ? r.wordBank : puzzle?.wordBank ?? false,
+        key: typeof stored?.key === "string" ? stored.key : "",
+        width: typeof stored?.width === "number" ? stored.width : 0,
+        height: typeof stored?.height === "number" ? stored.height : 0,
+        placed: Array.isArray(stored?.placed) ? (stored.placed as CrosswordEntry[]) : [],
+        unplaced: Array.isArray(stored?.unplaced) ? list(stored.unplaced) : [],
+      });
+    }
     default:
       return null;
   }
@@ -166,6 +260,8 @@ export interface NormalizeContext {
   tool: SheetTool;
   subtitle: string;
   design: SheetDesign;
+  /** A puzzle's level and word bank, from the year group and band. */
+  puzzle?: PuzzleDefaults;
   /** Placed by the server ahead of the model's sections, e.g. the teacher's
    *  own passage. Never sent through the model. */
   leadingSections?: SheetSection[];
@@ -203,7 +299,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
       if (!s || typeof s !== "object") return null;
       const sr = s as Raw;
       const blocks = (Array.isArray(sr.blocks) ? sr.blocks : [])
-        .map((b, bi) => normalizeBlock(b, `s${si}b${bi}`))
+        .map((b, bi) => normalizeBlock(b, `s${si}b${bi}`, ctx.puzzle))
         .filter((b): b is SheetBlock => !!b);
       const title = text(sr.title);
       if (!title && blocks.length === 0) return null;

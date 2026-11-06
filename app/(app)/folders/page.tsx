@@ -443,7 +443,8 @@ function Library() {
           : "Unfiled";
 
   return (
-    <>
+    // Marks the well wide: see .wrap:has() in app.module.css.
+    <div data-well="wide">
       <div className={app.hello}>
         <p className={app.helloWhen}>
           {loading ? " " : `${total} ${total === 1 ? "resource" : "resources"}`}
@@ -731,7 +732,7 @@ function Library() {
         runId={sharing?.id}
         runTitle={sharing?.title?.trim() || "Untitled"}
       />
-    </>
+    </div>
   );
 }
 

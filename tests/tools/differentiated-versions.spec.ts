@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
  * Differentiated versions: picking WBS, WTS, EXS or GDS makes one whole
@@ -57,6 +57,9 @@ let teacher: TestTeacher;
 
 test.beforeAll(async () => {
   teacher = await createTeacher("Bands");
+  // On a plan: since the no-card trial, a teacher with none is locked and sent
+  // to /free-tools, where the signed in form never appears.
+  await setPlan(teacher, "pro", "comped");
 });
 
 test.afterAll(async () => {

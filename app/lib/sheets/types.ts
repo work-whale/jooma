@@ -135,9 +135,56 @@ export interface WordOrderQuestion extends QuestionBase { type: "wordorder"; wor
 export interface PictureQuestion extends QuestionBase { type: "picture"; options: { emoji: string; label: string }[]; answer: number }
 export interface LabelQuestion extends QuestionBase { type: "label"; items: { clue: string; answer: string }[]; wordBank: string[] }
 
+// ── Puzzles ──
+// The model writes the words, clues and groups; the grids are built from them
+// by app/lib/sheets/puzzles and stored, with a `key` saying what they were
+// built from, so a saved sheet never changes unless its words do.
+
+/** How hard a word search is: its size and the directions words run in. */
+export type PuzzleLevel = "easy" | "medium" | "hard";
+export const PUZZLE_LEVELS: PuzzleLevel[] = ["easy", "medium", "hard"];
+
+/** Sort into groups: every item belongs to exactly one category. Pupils see
+ *  all the items in one shuffled bank (shuffled by `seed`). */
+export interface SortQuestion extends QuestionBase { type: "sort"; categories: { name: string; items: string[] }[]; seed: number }
+
+/** A word hidden in a word search: its first letter's cell and its direction. */
+export interface WordPlacement { word: string; row: number; col: number; dr: -1 | 0 | 1; dc: -1 | 0 | 1 }
+export interface WordSearchQuestion extends QuestionBase {
+  type: "wordsearch";
+  words: string[];
+  level: PuzzleLevel;
+  seed: number;
+  /** What `grid` was built from. A mismatch means rebuild. */
+  key: string;
+  /** Rows of capital letters. */
+  grid: string[];
+  placements: WordPlacement[];
+  /** Words that could not go in the grid. Shown while editing only. */
+  skipped: string[];
+}
+
+/** One answer in a crossword grid. `letters` is what fills the squares;
+ *  `answer` is the word as written, for the word bank and the answers. */
+export interface CrosswordEntry { number: number; dir: "across" | "down"; row: number; col: number; letters: string; answer: string; clue: string }
+export interface CrosswordQuestion extends QuestionBase {
+  type: "crossword";
+  entries: { clue: string; answer: string }[];
+  seed: number;
+  /** The answers listed under the grid, for younger pupils. */
+  wordBank: boolean;
+  key: string;
+  width: number;
+  height: number;
+  placed: CrosswordEntry[];
+  /** Answers that would not cross any other. Shown while editing only. */
+  unplaced: string[];
+}
+
 export type SheetQuestion =
   | ChoiceQuestion | TrueFalseQuestion | MatchingQuestion | FillBlanksQuestion | ShortQuestion
-  | LongQuestion | CalcQuestion | OrderQuestion | WordOrderQuestion | PictureQuestion | LabelQuestion;
+  | LongQuestion | CalcQuestion | OrderQuestion | WordOrderQuestion | PictureQuestion | LabelQuestion
+  | SortQuestion | WordSearchQuestion | CrosswordQuestion;
 
 export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ImageBlock | SheetQuestion;
 
@@ -146,6 +193,7 @@ export type BlockType = SheetBlock["type"];
 
 export const QUESTION_TYPES: QuestionType[] = [
   "mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order", "wordorder", "picture", "label",
+  "sort", "wordsearch", "crossword",
 ];
 
 export function isQuestion(block: SheetBlock): block is SheetQuestion {
@@ -165,4 +213,7 @@ export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {
   wordorder: "Word order",
   picture: "Picture choice",
   label: "Labelling",
+  sort: "Sort into groups",
+  wordsearch: "Word search",
+  crossword: "Crossword",
 };

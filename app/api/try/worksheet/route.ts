@@ -45,10 +45,16 @@ export async function POST(req: Request) {
     return new Response("", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
   }
 
-  // One plain sheet per free try. Differentiation is a signed in feature (the
-  // field is locked on /create), so it is dropped here too rather than trusted
-  // to the page.
-  const built = worksheetRequest({ ...body, band: undefined, differentiate: "no", differentiationLevels: [] });
+  // One plain sheet per free try. Differentiation and curriculum alignment are
+  // signed in features (neither is offered on /create), so they are dropped
+  // here too rather than trusted to the page.
+  const built = worksheetRequest({
+    ...body,
+    band: undefined,
+    differentiate: "no",
+    differentiationLevels: [],
+    curriculumAlign: undefined,
+  });
   if ("error" in built) {
     return NextResponse.json({ error: built.error }, { status: 400 });
   }
@@ -103,7 +109,7 @@ export async function POST(req: Request) {
         // Stored as the finished sheet, exactly as the browser normalises it,
         // so a claimed run opens in the tool as a sheet.
         const sheet = ok
-          ? finishSheet("worksheet", text, { yearGroup: body.yearGroup, subject: body.subject })
+          ? finishSheet("worksheet", text, { yearGroup: body.yearGroup, subject: body.subject, template: body.template })
           : null;
         await finishTrialRun(
           trialId,

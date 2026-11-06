@@ -9,6 +9,8 @@ import { buildSystem } from "@/app/lib/systemPrompt";
 import { bandName, bandPitch, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
 import { kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
 import { parsePictures, picturesPromptLine } from "@/app/lib/sheets/picture-options";
+import { DEFAULT_TEMPLATE_ID, templateById } from "@/app/lib/sheets/worksheet-templates";
+import { curriculumPromptBlock, worksheetCurriculumRules, type CurriculumAlign } from "@/app/lib/national-curriculum/prompt";
 
 export interface WorksheetRequest {
   curriculum: string;
@@ -26,6 +28,11 @@ export interface WorksheetRequest {
   additionalInfo?: string | null;
   /** "Add pictures": where they come from. Null or missing for none. */
   pictures?: unknown;
+  /** The worksheet type (app/lib/sheets/worksheet-templates.ts). Missing or
+   *  unknown is Classic, the shape every sheet had before types. */
+  template?: string;
+  /** "Align to curriculum": the statements the teacher ticked, verbatim. */
+  curriculumAlign?: CurriculumAlign | null;
 }
 
 const SYSTEM =
@@ -42,6 +49,17 @@ const TYPE_NOTES: Record<string, string> = {
   "Hotspot / Picture Selection": "Picture Selection is a picture question: each option is one emoji with a short label.",
   "Labeling": "Labelling gives clues for the parts to name, with the names in a word bank.",
   "Numerical / Computational": "Numerical questions are calculation questions with space for working.",
+  "Sorting / Categorising": "Sorting means a sort question: items pupils sort into labelled groups.",
+  "Word Search": "Word Search means a wordsearch question: a list of key words that the page hides in a letter grid.",
+  "Crossword": "Crossword means a crossword question: clues and answers that the page lays out as a crossword grid.",
+};
+
+/** How to fill each puzzle, offered only when the schema offers the puzzle.
+ *  The page builds the grids, so the model writes words and clues alone. */
+const PUZZLE_LINES: Partial<Record<string, string>> = {
+  sort: "- sort: 2 to 4 categories, each with a short name and a clear rule that does not overlap another's, and 2 to 6 items each (at most 16 in all). Every item belongs to exactly one category; list it only there. The page shuffles the items for pupils. marks: one per item.",
+  wordsearch: "- wordsearch: 6 to 12 key words from the topic, each a single word or a short phrase with letters only (no numbers or symbols), at most 15 letters. The page builds the grid, sized for the year group; never write a grid. marks: about one per two words.",
+  crossword: "- crossword: 6 to 10 entries. Each answer is a key term from the topic (letters only, at most 15 letters, no repeats); each clue is a short, pupil-friendly definition that never contains its own answer. Prefer answers that share letters, so they can cross. The page builds the grid; never write one. marks: one per entry.",
 };
 
 export function worksheetRequest(body: WorksheetRequest):
@@ -67,6 +85,21 @@ export function worksheetRequest(body: WorksheetRequest):
   const pictures = parsePictures(body.pictures);
   const count = Math.min(40, Math.max(1, Math.round(questionCount)));
   const kinds = kindsForTypes("worksheet", questionTypes);
+
+  // The worksheet type sets out the sections and marks. Classic is the plan
+  // every sheet followed before types, and adds nothing else to the prompt.
+  const template = templateById(body.template);
+  const classic = template.id === DEFAULT_TEMPLATE_ID;
+  const typeLine = classic
+    ? ""
+    : `\n- Worksheet type: ${template.name}. Follow its plan under HOW TO BUILD IT; where it names a question format that the formats above leave out, use the closest one they allow.`;
+  const introLine =
+    template.intro ??
+    `- intro: one short hook that makes the topic interesting. Usually variant "fact" with label "Did you know?" and a surprising, true fact; or "remember" with the one fact pupils need. One or two sentences, with a fitting emoji.`;
+
+  // "Align to curriculum": the ticked statements, quoted, and how to follow
+  // them. Empty when the card was off or nothing was ticked.
+  const curriculumBlock = curriculumPromptBlock(body.curriculumAlign, yearGroup, "worksheet", worksheetCurriculumRules(yearGroup));
   const typesLine = questionTypes.length
     ? `Use ONLY these question formats: ${questionTypes.join(", ")}. ${questionTypes.map((t) => TYPE_NOTES[t]).filter(Boolean).join(" ")}`
     : `Use a varied mix of question formats that suits ${subject} for ${yearGroup}: for example multiple choice, matching, fill in the blanks, short answers and one extended answer. Vary the format within each section.`;
@@ -99,14 +132,13 @@ export function worksheetRequest(body: WorksheetRequest):
 - Learning objective: ${learningObjective}
 - Questions: about ${count} in total.
 - ${detailLine}
-- ${typesLine}${pitchLine}${additionalInfo ?`\n- Teacher's additional instructions (follow them): ${additionalInfo}` : ""}
+- ${typesLine}${typeLine}${pitchLine}${additionalInfo ?`\n- Teacher's additional instructions (follow them): ${additionalInfo}` : ""}${curriculumBlock ? `\n\n${curriculumBlock}` : ""}
 
 HOW TO BUILD IT
 - title: specific and engaging, about the topic. Never just "Worksheet".
 - objective: the learning objective restated for pupils, starting "I am learning to".
-- intro: one short hook that makes the topic interesting. Usually variant "fact" with label "Did you know?" and a surprising, true fact; or "remember" with the one fact pupils need. One or two sentences, with a fitting emoji.
-- sections: 3 or 4 that build from recall, to understanding, to applying, to a challenge. Give each a short pupil-friendly title (for example "Warm up", "Show what you know", "Put it to work", "Challenge"), one fitting emoji, and a one-line instruction.
-- Spread the questions so later sections are harder and worth more marks: 1 mark for recall, 2 for understanding, 3 to 4 for application, up to 6 for the challenge.
+${introLine}
+${template.structure.join("\n")}
 - Give the page some life with blocks: a wordbank when pupils need vocabulary, a short text block or a table when a question needs a stimulus (a scenario, some data), and at most one "tip" or "remember" callout in a section where a reminder helps.
 - Every question must be answerable on paper, with no picture other than an emoji.
 - Fill every answer field correctly: they become the answer page. For an extended answer, put a model answer or mark scheme in answer and 2 to 4 success criteria in criteria.
@@ -117,7 +149,7 @@ HOW TO BUILD IT
 - fillblanks: write ___ for each gap; answers in gap order; a wordBank of the answers plus one or two distractors when it suits the year group.
 - picture: 3 or 4 options, each one emoji with a short label, only when an emoji clearly shows the thing.
 - label: each item is a clue for a part to name, with its answer; put the answers in the wordBank.
-- table: only for data a question needs.
+- table: only for data a question needs.${kinds.map((k) => PUZZLE_LINES[k]).filter(Boolean).map((l) => `\n${l}`).join("")}
 - ${notesLine}
 - Do not use emoji anywhere except the emoji fields. Number nothing yourself: questions are numbered on the page.
 ${picturesPromptLine(pictures, learningObjective)}

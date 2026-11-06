@@ -67,7 +67,8 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
   const pinned = matches.filter((t) => pinnedHrefs.includes(t.href));
 
   return (
-    <>
+    // Marks the well wide: see .wrap:has() in app.module.css.
+    <div data-well="wide">
       <div className={app.hello}>
         <p className={app.helloWhen}>{available.length} tools</p>
         <h1>What would you like to make?</h1>
@@ -165,7 +166,7 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

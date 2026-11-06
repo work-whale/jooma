@@ -15,6 +15,9 @@ export const QUESTION_TYPES = [
   "Closed Questions",
   "Wh- Questions",
   "Word Ordering",
+  "Sorting / Categorising",
+  "Word Search",
+  "Crossword",
 ] as const;
 
 export type QuestionType = (typeof QUESTION_TYPES)[number];

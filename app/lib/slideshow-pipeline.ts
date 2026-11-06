@@ -18,6 +18,7 @@ import { recordUsage, recordAssetCost, recordSlideCosts, costUsd } from "@/app/l
 import { modelFor } from "@/app/lib/tool-model";
 import { forSdk } from "@/app/lib/models";
 import type { SlideJSON } from "@/app/lib/presentations";
+import { curriculumPromptBlock, curriculumStatementTexts, deckCurriculumRules } from "@/app/lib/national-curriculum/prompt";
 
 type ImageSource = "auto" | "ai" | "web";
 
@@ -566,22 +567,9 @@ Apply these throughout the ENTIRE deck — they shape the tone, content, example
   // exact statements at that year's level; an older saved deck carries only a
   // subject and strand, and keeps the one-line version.
   const cur = body.curriculum;
-  const curStatements = (cur?.statements ?? [])
-    .map((s) => (typeof s?.text === "string" ? s.text.trim() : ""))
-    .filter(Boolean)
-    .slice(0, 12);
   const curYear = cur?.year || cur?.grade || body.year || "";
-  const curriculumLine = cur && curStatements.length > 0
-    ? `═══════════════════════════════════════════════════
-CURRICULUM ALIGNMENT (the teacher chose these; follow them exactly)
-═══════════════════════════════════════════════════
-${[cur.curriculumName, cur.stage, curYear, cur.subject, cur.strand].filter(Boolean).join(" · ")}
-This deck must teach towards these statements, quoted from the curriculum:
-${curStatements.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}
-- Pitch every slide at the level these statements set for ${curYear || "this year group"}. Do NOT introduce content, vocabulary or methods from later years.
-- Every content slide must clearly serve at least one of these statements. Do not drift into other strands or subjects.
-- If a learning objectives slide is included, base each objective on these statements, reworded for pupils.
-- The activity slides must check understanding of these statements.`
+  const curriculumLine = cur && curriculumStatementTexts(cur).length > 0
+    ? curriculumPromptBlock(cur, curYear, "deck", deckCurriculumRules(curYear))
     : cur && cur.subject && cur.strand
     ? `Curriculum alignment: ${cur.countryName} · ${cur.curriculumName}${cur.grade ? " · " + cur.grade : ""} · subject "${cur.subject}", strand "${cur.strand}". Anchor the deck's vocabulary, examples, and depth in this strand — DO NOT drift into other strands or subjects.`
     : "";

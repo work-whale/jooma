@@ -10,7 +10,8 @@ import ResourceLibraryModal from "./ResourceLibraryModal";
 import { DEFAULT_THEME_ID, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme } from "@/app/lib/slideshowThemes";
 import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
-import { STAGE_LABEL, curriculumNameFor, isCurriculumYear, stageForYear, type NcStatement } from "@/app/lib/national-curriculum";
+import type { NcStatement } from "@/app/lib/national-curriculum";
+import { curriculumAlignParam } from "@/app/lib/national-curriculum/prompt";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
 import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
@@ -315,22 +316,8 @@ export default function GenerateModal({
   /** What "Align to curriculum" sends: the ticked statements, verbatim, with
    *  where they come from. Undefined when the card is off, the year is not
    *  covered, or nothing is ticked. */
-  const curriculumParam = (): GenerationParams["curriculum"] => {
-    if (!alignCurriculum || !isCurriculumYear(curYear) || curStatements.length === 0) return undefined;
-    const stage = stageForYear(curYear);
-    const strands = new Set(curStatements.map((s) => s.strand));
-    return {
-      countryId: "england",
-      countryName: "England",
-      curriculumName: curriculumNameFor(curYear),
-      grade: curYear,
-      year: curYear,
-      stage: stage ? STAGE_LABEL[stage] : undefined,
-      subject: curSelection.subject || curStatements[0].subject,
-      strand: curSelection.strand || (strands.size === 1 ? curStatements[0].strand : ""),
-      statements: curStatements.map((s) => ({ id: s.id, text: s.text })),
-    };
-  };
+  const curriculumParam = (): GenerationParams["curriculum"] =>
+    curriculumAlignParam(alignCurriculum, curYear, curSelection, curStatements);
 
   // Resolve the pasted YouTube link: parse the id locally, then confirm with
   // YouTube that it exists and will actually play in an embed. Catching a dead

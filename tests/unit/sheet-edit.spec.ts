@@ -76,7 +76,7 @@ test.describe("sheet edits", () => {
   });
 
   test("every new block template is one the normaliser accepts unchanged", () => {
-    const types: BlockType[] = ["text", "callout", "passage", "wordbank", "table", "mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order", "wordorder", "picture", "label"];
+    const types: BlockType[] = ["text", "callout", "passage", "wordbank", "table", "mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order", "wordorder", "picture", "label", "sort", "wordsearch", "crossword"];
     for (const t of types) {
       const b = newBlock(t);
       expect(normalizeBlock(b, b.id), t).toEqual(b);

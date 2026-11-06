@@ -241,7 +241,68 @@ test.describe("V2 fixes", () => {
       await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
     }
   });
+
+  /* ── Wide monitors ────────────────────────────────────────────────────── */
+
+  // The content well used to stop at 1340px, left aligned, so a 2560px screen
+  // showed the tools in three columns beside a 970px empty band. Card-grid
+  // pages now take the whole main column; fixed-column pages stop at 1680px.
+
+  test("the tools and library grids fill a wide monitor", async ({ page }) => {
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await signIn(page, teacher);
+
+    await page.goto("/tools");
+    await expect(page.getByRole("heading", { name: "What would you like to make?" })).toBeVisible();
+    const tools = await measureWell(page);
+    // Main column is 2560 minus the 250px rail. Anything near that means the
+    // cap is gone; 1680 or less means the wide switch did not apply.
+    expect(tools.well, "the tools well is still capped").toBeGreaterThan(2200);
+    expect(tools.well).toBeLessThanOrEqual(tools.main);
+    const columns = await page
+      .locator('[data-well="wide"] a[aria-label]')
+      .first()
+      .evaluate((a) => getComputedStyle(a.parentElement!.parentElement!).gridTemplateColumns.split(" ").length);
+    expect(columns, "the tools grid did not gain columns").toBeGreaterThanOrEqual(5);
+
+    await page.goto("/folders");
+    await expect(page.getByRole("heading", { name: "Library", level: 1 })).toBeVisible();
+    expect((await measureWell(page)).well, "the library well is still capped").toBeGreaterThan(2200);
+  });
+
+  test("fixed-column pages fill a 1080p screen but stop on a wider one", async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await signIn(page, teacher);
+    await page.goto("/dashboard");
+    await expect(page.locator("main h1")).toBeVisible();
+    // 1920 minus the rail is 1670: the old 1340px cap left 330px empty here.
+    const hd = await measureWell(page);
+    expect(hd.well, "Today does not fill a 1080p screen").toBeGreaterThan(1600);
+
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    const wide = await measureWell(page);
+    expect(wide.well, "Today stretched past its cap").toBeLessThanOrEqual(1680);
+
+    // Narrow desktop: the wide switch must not push anything sideways.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/tools");
+    await expect(page.getByRole("heading", { name: "What would you like to make?" })).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, "the tools page scrolls sideways at 1280px").toBe(0);
+  });
 });
+
+/** Widths of the content well (the child of <main> holding the h1) and of <main>. */
+async function measureWell(page: Page): Promise<{ well: number; main: number }> {
+  return page.evaluate(() => {
+    const main = document.querySelector("main")!;
+    let el = main.querySelector("h1") as HTMLElement;
+    while (el.parentElement && el.parentElement !== main) el = el.parentElement;
+    return { well: el.getBoundingClientRect().width, main: main.getBoundingClientRect().width };
+  });
+}
 
 /** The sidebar link that leads to a given route. */
 function navNameFor(path: string): RegExp {

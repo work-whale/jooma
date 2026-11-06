@@ -58,6 +58,7 @@
 //     field is the whole gate.
 import { CURRICULA, YEAR_GROUPS } from "@/app/lib/formOptions";
 import { DIFFERENTIATION_VALUES } from "@/app/lib/differentiation";
+import { WORKSHEET_TEMPLATES } from "@/app/lib/sheets/worksheet-templates";
 
 const CURRICULUM_VALUES = CURRICULA.map((c) => c.value);
 
@@ -266,6 +267,16 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
             "What the worksheet practises, e.g. 'Multiply two-digit numbers by " +
             "one-digit numbers'. This carries the topic — there is no separate " +
             "topic field on this tool.",
+        },
+        // Before questionCount on purpose: the fill runs in this order, and
+        // picking a type presets the count, so a count asked for must land after.
+        template: {
+          type: "string",
+          enum: WORKSHEET_TEMPLATES.map((t) => t.id),
+          description:
+            "The kind of worksheet. " +
+            WORKSHEET_TEMPLATES.map((t) => `${t.id}: ${t.name.toLowerCase()}, ${t.blurb.toLowerCase()}`).join("; ") +
+            ". Leave out unless the teacher asks for one of these; classic is the default.",
         },
         questionCount: {
           type: "integer",

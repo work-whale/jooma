@@ -10,6 +10,7 @@ import {
   PicturesField,
   QuestionTypesField,
   QuestionCountField,
+  WorksheetTypeField,
   AdditionalContextField,
   type OutputDetail,
 } from "@/app/components/fields";
@@ -29,6 +30,10 @@ import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-options";
 import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
 import type { ComprehensionGuestMode } from "@/app/components/forms/ComprehensionForm";
+import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "@/app/components/slideshow/CurriculumAlignment";
+import type { NcStatement } from "@/app/lib/national-curriculum";
+import { curriculumAlignParam } from "@/app/lib/national-curriculum/prompt";
+import { DEFAULT_TEMPLATE_ID, isTemplateId, templateById, type WorksheetTemplate } from "@/app/lib/sheets/worksheet-templates";
 
 const TOOL_SLUG = "worksheet-generator";
 
@@ -59,6 +64,16 @@ export default function WorksheetGeneratorForm({
   const [outputDetail, setOutputDetail] = useState<OutputDetail>("detailed");
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [pictures, setPictures] = useState<SheetPictures | null>(null);
+  // The worksheet type. Picking one presets the question types and count
+  // above; editing those afterwards keeps the type.
+  const [template, setTemplate] = useState(DEFAULT_TEMPLATE_ID);
+  // "Align to curriculum", as on the slides wizard. Signed in only: the card's
+  // topic match calls a gated route. The statements in full ride alongside the
+  // selection so their text can be sent without loading the data again.
+  const [alignCurriculum, setAlignCurriculum] = useState(false);
+  const [curSelection, setCurSelection] = useState<CurriculumSelection>(EMPTY_SELECTION);
+  const [curStatements, setCurStatements] = useState<NcStatement[]>([]);
+  const curYear = curSelection.year || (mixed ? "" : yearGroup);
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -74,7 +89,11 @@ export default function WorksheetGeneratorForm({
     (differentiate === "no" || differentiationLevels.length > 0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { curriculum, yearGroup, mixed, subject, learningObjective, questionTypes, questionCount, differentiate, differentiationLevels, outputDetail, additionalInfo, pictures };
+  const formState = {
+    curriculum, yearGroup, mixed, subject, learningObjective, template, questionTypes, questionCount,
+    differentiate, differentiationLevels, outputDetail, additionalInfo, pictures,
+    ...(guest ? {} : { alignCurriculum, curSelection }),
+  };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -100,6 +119,13 @@ export default function WorksheetGeneratorForm({
     setOutputDetail((i.outputDetail as OutputDetail) ?? "detailed");
     setAdditionalInfo((i.additionalInfo as string) ?? "");
     setPictures(parsePictures(i.pictures));
+    setTemplate(isTemplateId(i.template) ? i.template : DEFAULT_TEMPLATE_ID);
+    // The ticked statements come back as ids; the card loads the year and
+    // hands their text back through onChange.
+    const cur = i.curSelection as CurriculumSelection | undefined;
+    setAlignCurriculum(Boolean(i.alignCurriculum) && !guest);
+    setCurSelection(cur && Array.isArray(cur.statementIds) ? { ...EMPTY_SELECTION, ...cur } : EMPTY_SELECTION);
+    setCurStatements([]);
     setResult(run.output);
     setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
@@ -121,8 +147,16 @@ export default function WorksheetGeneratorForm({
       differentiate: (v) => { if (!guest) setDifferentiate(v as Differentiate); },
       differentiationLevels: (v) => { if (!guest) setDifferentiationLevels(v as string[]); },
       outputDetail: (v) => setOutputDetail(v as OutputDetail),
+      template: (v) => { if (isTemplateId(v)) pickTemplate(v); },
     },
   });
+
+  function pickTemplate(t: WorksheetTemplate | string) {
+    const found = typeof t === "string" ? templateById(t) : t;
+    setTemplate(found.id);
+    setQuestionTypes([...found.questionTypes]);
+    setQuestionCount(found.questionCount);
+  }
 
   const handleGenerate = async () => {
     setError(null);
@@ -130,7 +164,8 @@ export default function WorksheetGeneratorForm({
     setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
-    const info = { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject) };
+    const info = { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject), template };
+    const curriculumAlign = guest ? undefined : curriculumAlignParam(alignCurriculum, curYear, curSelection, curStatements);
     const send = (extra: Record<string, unknown> = {}) =>
       fetch(guest?.endpoint ?? "/api/worksheet-generator", {
         method: "POST",
@@ -150,6 +185,8 @@ export default function WorksheetGeneratorForm({
           outputDetail,
           additionalInfo: additionalInfo.trim() || null,
           pictures,
+          template,
+          curriculumAlign,
           ...extra,
         }),
       });
@@ -161,7 +198,7 @@ export default function WorksheetGeneratorForm({
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
-          read: (res, onOutput) => readSheetStream(res, "worksheet", info, onOutput),
+          read: (res, onOutput, band) => readSheetStream(res, "worksheet", { ...info, band }, onOutput),
           onUpdate: (s) => { set = s; setResult(s); },
         });
         // Still busy, so the run is saved with its pictures in.
@@ -221,8 +258,23 @@ export default function WorksheetGeneratorForm({
             <SubjectField value={subject} onChange={setSubject} />
             <LearningObjectiveField value={learningObjective} onChange={setLearningObjective} />
 
+            {!guest && (
+              <CurriculumAlignment
+                noun="worksheet"
+                checked={alignCurriculum}
+                onCheckedChange={setAlignCurriculum}
+                topic={learningObjective}
+                stepYear={mixed ? "" : yearGroup}
+                value={curSelection}
+                onChange={(next, selected) => { setCurSelection(next); setCurStatements(selected); }}
+              />
+            )}
+
+            <WorksheetTypeField value={template} onChange={pickTemplate} />
+
             <QuestionTypesField value={questionTypes} onChange={setQuestionTypes} optional />
-            <QuestionCountField value={questionCount} onChange={setQuestionCount} />
+            {/* From 1: an exit ticket is three questions. The server takes 1 to 40. */}
+            <QuestionCountField value={questionCount} onChange={setQuestionCount} min={1} />
 
             <OutputDetailField value={outputDetail} onChange={setOutputDetail} />
             <DifferentiationField
@@ -256,7 +308,8 @@ export default function WorksheetGeneratorForm({
                   setSubject(""); setLearningObjective("");
                   setQuestionTypes([]); setQuestionCount(10);
                   setDifferentiate("no"); setDifferentiationLevels([]); setOutputDetail("detailed");
-                  setAdditionalInfo(""); setPictures(null);
+                  setAdditionalInfo(""); setPictures(null); setTemplate(DEFAULT_TEMPLATE_ID);
+                  setAlignCurriculum(false); setCurSelection(EMPTY_SELECTION); setCurStatements([]);
                   setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}

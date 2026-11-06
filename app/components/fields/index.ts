@@ -13,6 +13,7 @@ export type { OutputDetail } from "./OutputDetailField";
 export { default as DifferentiationField } from "./DifferentiationField";
 export { default as PicturesField } from "./PicturesField";
 export { default as QuestionTypesField } from "./QuestionTypesField";
+export { default as WorksheetTypeField } from "./WorksheetTypeField";
 export { default as QuestionCountField } from "./QuestionCountField";
 export { default as LessonCountField } from "./LessonCountField";
 export { default as WriteField } from "./WriteField";

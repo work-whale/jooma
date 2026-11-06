@@ -5,9 +5,11 @@
 // the types the teacher ticked, so "use only these question types" is enforced
 // by the schema itself rather than requested in prose and hoped for.
 //
-// Kept under OpenAI's original limit of 100 object properties in total: the
-// worksheet variants carry no `domain`, and only the comprehension schema has
-// a passage.
+// Kept small, though well within OpenAI's limits (5000 object properties, 10
+// levels of nesting): the worksheet variants carry no `domain`, only the
+// comprehension schema has a passage, and a puzzle asks for its words alone,
+// never its grid (app/lib/sheets/puzzles builds that). tests/unit/
+// sheet-schema.spec.ts holds the size to a budget.
 
 import type { QuestionType, SheetTool } from "./types";
 
@@ -48,6 +50,9 @@ const TYPE_TO_KIND: Record<string, QuestionType> = {
   "Closed Questions": "short",
   "Wh- Questions": "short",
   "Word Ordering": "wordorder",
+  "Sorting / Categorising": "sort",
+  "Word Search": "wordsearch",
+  "Crossword": "crossword",
   // Comprehension (ComprehensionForm)
   "Multiple choice": "mcq",
   "Short answer": "short",
@@ -57,19 +62,30 @@ const TYPE_TO_KIND: Record<string, QuestionType> = {
   "Vocabulary in context": "short",
 };
 
-/** Every kind each tool can produce when the teacher picks no types. */
-const ALL_KINDS: Record<SheetTool, QuestionType[]> = {
+/** The kinds each tool can produce when the teacher picks no types. The
+ *  puzzles are left out: a mix should never turn up a word search unasked. */
+const DEFAULT_KINDS: Record<SheetTool, QuestionType[]> = {
   worksheet: ["mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order", "wordorder", "picture", "label"],
   comprehension: ["mcq", "truefalse", "fillblanks", "short", "long"],
 };
 
-/** The question kinds a request may use: the ticked types' kinds, or every
- *  kind the tool supports when none are ticked. */
+/** Every kind each tool can hold: the defaults, and the puzzles a teacher
+ *  asks for by name. */
+const ALLOWED_KINDS: Record<SheetTool, QuestionType[]> = {
+  worksheet: [...DEFAULT_KINDS.worksheet, "sort", "wordsearch", "crossword"],
+  comprehension: DEFAULT_KINDS.comprehension,
+};
+
+export function allowedKinds(tool: SheetTool): QuestionType[] {
+  return ALLOWED_KINDS[tool];
+}
+
+/** The question kinds a request may use: the ticked types' kinds, or the
+ *  tool's default mix when none are ticked. */
 export function kindsForTypes(tool: SheetTool, teacherTypes: string[] | undefined): QuestionType[] {
   const picked = [...new Set((teacherTypes ?? []).map((t) => TYPE_TO_KIND[t]).filter((k): k is QuestionType => !!k))];
-  const allowed = ALL_KINDS[tool];
-  const out = picked.filter((k) => allowed.includes(k));
-  return out.length > 0 ? out : allowed;
+  const out = picked.filter((k) => ALLOWED_KINDS[tool].includes(k));
+  return out.length > 0 ? out : DEFAULT_KINDS[tool];
 }
 
 function questionVariant(kind: QuestionType, tool: SheetTool): Json {
@@ -100,6 +116,13 @@ function questionVariant(kind: QuestionType, tool: SheetTool): Json {
       return variant("picture", { prompt: str, options: { type: "array", items: obj({ emoji: str, label: str }) }, answer: int, ...tail });
     case "label":
       return variant("label", { prompt: str, items: { type: "array", items: obj({ clue: str, answer: str }) }, wordBank: strList, ...tail });
+    // Puzzles: the words only. The grids are built from them afterwards.
+    case "sort":
+      return variant("sort", { prompt: str, categories: { type: "array", items: obj({ name: str, items: strList }) }, ...tail });
+    case "wordsearch":
+      return variant("wordsearch", { prompt: str, words: strList, ...tail });
+    case "crossword":
+      return variant("crossword", { prompt: str, entries: { type: "array", items: obj({ clue: str, answer: str }) }, ...tail });
   }
 }
 

@@ -18,8 +18,19 @@
    background, so this only handles rhythm and width. */
 .wrap {
   padding: 28px 28px 52px;
-  max-width: 1340px;
+  /* Fills the main column on a 1080p screen (1920 minus the 250px rail).
+     Wider than that, pages with fixed column counts (Today, Analytics) would
+     stretch their cards, so they stop here. */
+  max-width: 1680px;
   width: 100%;
+}
+
+/* Card-grid pages (Tools, Library): their auto-fill grids add columns rather
+   than stretching, so the well takes the whole main column. Switched in CSS
+   rather than through useAppShell, which applies after hydration and would
+   make the page jump wider on every hard load. */
+.wrap:has(> [data-well="wide"]) {
+  max-width: none;
 }
 
 @media (max-width: 640px) {
