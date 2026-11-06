@@ -49,6 +49,17 @@ const TYPE_NOTES: Record<string, string> = {
   "Hotspot / Picture Selection": "Picture Selection is a picture question: each option is one emoji with a short label.",
   "Labeling": "Labelling gives clues for the parts to name, with the names in a word bank.",
   "Numerical / Computational": "Numerical questions are calculation questions with space for working.",
+  "Sorting / Categorising": "Sorting means a sort question: items pupils sort into labelled groups.",
+  "Word Search": "Word Search means a wordsearch question: a list of key words that the page hides in a letter grid.",
+  "Crossword": "Crossword means a crossword question: clues and answers that the page lays out as a crossword grid.",
+};
+
+/** How to fill each puzzle, offered only when the schema offers the puzzle.
+ *  The page builds the grids, so the model writes words and clues alone. */
+const PUZZLE_LINES: Partial<Record<string, string>> = {
+  sort: "- sort: 2 to 4 categories, each with a short name and a clear rule that does not overlap another's, and 2 to 6 items each (at most 16 in all). Every item belongs to exactly one category; list it only there. The page shuffles the items for pupils. marks: one per item.",
+  wordsearch: "- wordsearch: 6 to 12 key words from the topic, each a single word or a short phrase with letters only (no numbers or symbols), at most 15 letters. The page builds the grid, sized for the year group; never write a grid. marks: about one per two words.",
+  crossword: "- crossword: 6 to 10 entries. Each answer is a key term from the topic (letters only, at most 15 letters, no repeats); each clue is a short, pupil-friendly definition that never contains its own answer. Prefer answers that share letters, so they can cross. The page builds the grid; never write one. marks: one per entry.",
 };
 
 export function worksheetRequest(body: WorksheetRequest):
@@ -138,7 +149,7 @@ ${template.structure.join("\n")}
 - fillblanks: write ___ for each gap; answers in gap order; a wordBank of the answers plus one or two distractors when it suits the year group.
 - picture: 3 or 4 options, each one emoji with a short label, only when an emoji clearly shows the thing.
 - label: each item is a clue for a part to name, with its answer; put the answers in the wordBank.
-- table: only for data a question needs.
+- table: only for data a question needs.${kinds.map((k) => PUZZLE_LINES[k]).filter(Boolean).map((l) => `\n${l}`).join("")}
 - ${notesLine}
 - Do not use emoji anywhere except the emoji fields. Number nothing yourself: questions are numbered on the page.
 ${picturesPromptLine(pictures, learningObjective)}

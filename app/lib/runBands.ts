@@ -15,8 +15,9 @@ interface RunBandsOptions {
   /** Send one band's request. `index` is its place in `bands`. */
   start: (band: DifferentiationBand, index: number) => Promise<Response>;
   /** Read one band's stream, reporting its output so far, and resolve with the
-   *  finished output (null or empty when nothing usable came back). */
-  read: (res: Response, onOutput: (output: string) => void) => Promise<string | null>;
+   *  finished output (null or empty when nothing usable came back). `band` is
+   *  whose stream it is, for anything pitched to it (a sheet's puzzles). */
+  read: (res: Response, onOutput: (output: string) => void, band: DifferentiationBand) => Promise<string | null>;
   onUpdate: (serialized: string) => void;
 }
 
@@ -41,10 +42,14 @@ export async function runBands({ bands, start, read, onUpdate }: RunBandsOptions
           const data = await res.json().catch(() => ({}));
           throw new Error((data as { error?: string }).error || "Generation failed");
         }
-        const finished = await read(res, (output) => {
-          set = withBand(set, band, { output });
-          publish();
-        });
+        const finished = await read(
+          res,
+          (output) => {
+            set = withBand(set, band, { output });
+            publish();
+          },
+          band,
+        );
         if (!finished?.trim()) throw new Error("This version came back empty. Please try again.");
         set = withBand(set, band, { output: finished, pending: false });
       } catch (err) {

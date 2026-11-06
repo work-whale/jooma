@@ -8,6 +8,7 @@ import { parsePartialJson } from "./stream";
 import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
+import { clueText, directionName, sortBank, sortRows } from "./puzzles";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
@@ -73,6 +74,37 @@ function blockMarkdown(b: SheetBlock, number: number | undefined): string {
         b.wordBank.length ? `**Word bank:** ${b.wordBank.join(", ")}` : "",
         ...b.items.map((it, i) => `- ${i + 1}. ${it.clue}: __________`),
       ].filter(Boolean).join("\n");
+    case "sort": {
+      const names = b.categories.map((c) => c.name || " ");
+      return [
+        `${lead}${b.prompt}${marks}`,
+        `**Sort these:** ${sortBank(b).join(", ")}`,
+        "",
+        `| ${names.join(" | ")} |`,
+        `| ${names.map(() => "---").join(" | ")} |`,
+        ...Array.from({ length: sortRows(b) }, () => `| ${names.map(() => " ").join(" | ")} |`),
+      ].join("\n");
+    }
+    case "wordsearch":
+      return [
+        `${lead}${b.prompt}${marks}`,
+        "```",
+        ...b.grid.map((row) => row.split("").join(" ")),
+        "```",
+        `**Find:** ${b.placements.map((p) => p.word).join(", ")}`,
+      ].join("\n");
+    case "crossword": {
+      const clues = (dir: "across" | "down") => b.placed.filter((p) => p.dir === dir).map((p) => `- ${p.number}. ${clueText(p)}`);
+      return [
+        `${lead}${b.prompt}${marks}`,
+        "_The grid is on the printed sheet._",
+        "**Across**",
+        ...clues("across"),
+        "**Down**",
+        ...clues("down"),
+        b.wordBank ? `**Word bank:** ${b.placed.map((p) => p.answer).sort((x, y) => x.localeCompare(y)).join(", ")}` : "",
+      ].filter(Boolean).join("\n");
+    }
   }
 }
 
@@ -98,6 +130,12 @@ export function answerText(q: SheetQuestion): string {
       return q.options[q.answer] ? `${q.options[q.answer].emoji} ${q.options[q.answer].label}` : "";
     case "label":
       return q.items.map((it, i) => `${i + 1}. ${it.answer}`).join("  ");
+    case "sort":
+      return q.categories.filter((c) => c.items.length).map((c) => `${c.name}: ${c.items.join(", ")}`).join("; ");
+    case "wordsearch":
+      return q.placements.map((p) => `${p.word} (row ${p.row + 1}, ${directionName(p)})`).join("; ");
+    case "crossword":
+      return q.placed.map((p) => `${p.number} ${p.dir}: ${p.answer}`).join("; ");
   }
 }
 

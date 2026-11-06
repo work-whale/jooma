@@ -13,6 +13,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  HeightRule,
   ImageRun,
   Packer,
   PageBreak,
@@ -20,8 +21,10 @@ import {
   ShadingType,
   Table,
   TableCell,
+  TableLayoutType,
   TableRow,
   TextRun,
+  VerticalAlign,
   WidthType,
   type ParagraphChild,
 } from "docx";
@@ -29,6 +32,7 @@ import { answerText, hasAnswersPage, questionNumbers } from "./markdown";
 import { getSheetTheme } from "./themes";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
 import { sheetImages } from "./normalize";
+import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "./puzzles";
 import { isQuestion, type ImageBlock, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
@@ -190,6 +194,64 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
   const wordBank = (title: string, words: string[]) =>
     box([new Paragraph({ children: [tr(`${title}:  `, { bold: true, color: hex(c.heading) }), tr(words.join("   •   "))] })], hex(c.paper), hex(c.accent), true);
 
+  /**
+   * A puzzle grid: one fixed square per letter. A null square has no border,
+   * so a crossword shows only its answer squares. `numbers` are the small clue
+   * numbers; `shade` marks squares on the answers page.
+   */
+  const letterGrid = (
+    rows: (string | null)[][],
+    o: { numbers?: Map<string, number>; shade?: Set<string>; hideLetters?: boolean; cell?: number } = {},
+  ): Table => {
+    const cols = rows[0]?.length ?? 0;
+    const cell = o.cell ?? Math.min(440, Math.floor(6600 / Math.max(cols, 1)));
+    const line = { style: BorderStyle.SINGLE, size: 6, color: hex(c.ink) };
+    return new Table({
+      alignment: AlignmentType.CENTER,
+      layout: TableLayoutType.FIXED,
+      width: { size: cell * cols, type: WidthType.DXA },
+      columnWidths: Array.from({ length: cols }, () => cell),
+      borders: noBorders,
+      rows: rows.map((row, r) =>
+        new TableRow({
+          height: { value: cell, rule: HeightRule.EXACT },
+          children: row.map((ch, col) => {
+            const key = `${r},${col}`;
+            const on = ch !== null;
+            const n = o.numbers?.get(key);
+            return new TableCell({
+              width: { size: cell, type: WidthType.DXA },
+              verticalAlign: VerticalAlign.CENTER,
+              borders: on ? { top: line, bottom: line, left: line, right: line } : { top: NONE, bottom: NONE, left: NONE, right: NONE },
+              shading: on && o.shade?.has(key) ? { type: ShadingType.CLEAR, color: "auto", fill: hex(c.soft) } : undefined,
+              margins: { top: 0, bottom: 0, left: 20, right: 20 },
+              children: [
+                new Paragraph({
+                  alignment: n !== undefined && o.hideLetters ? AlignmentType.LEFT : AlignmentType.CENTER,
+                  children: [
+                    ...(n !== undefined ? [new TextRun({ text: `${n}`, font: FONT, size: 12, color: hex(c.muted), superScript: !o.hideLetters })] : []),
+                    ...(on && !o.hideLetters ? [new TextRun({ text: ch!, font: FONT, size: Math.min(size, Math.round(cell / 14)), bold: !!o.shade?.has(key) })] : []),
+                  ],
+                }),
+              ],
+            });
+          }),
+        }),
+      ),
+    });
+  };
+
+  /** The answers page's picture of a solved word search or crossword. */
+  const solvedGrid = (q: SheetQuestion): Child[] => {
+    if (q.type === "wordsearch" && q.grid.length) {
+      return [letterGrid(q.grid.map((row) => row.split("")), { shade: new Set(q.placements.flatMap(placementCells)), cell: 260 }), spacer()];
+    }
+    if (q.type === "crossword" && q.placed.length) {
+      return [letterGrid(crosswordCells(q), { cell: 300 }), spacer()];
+    }
+    return [];
+  };
+
   const questionBody = (q: SheetQuestion): Child[] => {
     switch (q.type) {
       case "mcq":
@@ -255,6 +317,51 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
           ...(q.wordBank.length ? [wordBank("Word bank", q.wordBank), spacer()] : []),
           ...q.items.map((it, i) => new Paragraph({ children: [tr(`${i + 1}  `, { bold: true, color: hex(c.heading) }), ...runs(it.clue, { size }), tr("   ____________________")], spacing: { after: 120 } })),
         ];
+      case "sort": {
+        const rows = sortRows(q);
+        return [
+          wordBank("Sort these", sortBank(q)),
+          spacer(),
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                tableHeader: true,
+                children: q.categories.map((cat) =>
+                  new TableCell({ shading: { type: ShadingType.CLEAR, color: "auto", fill: hex(c.soft) }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [tr(cat.name, { bold: true, color: hex(c.heading) })] })] }),
+                ),
+              }),
+              ...Array.from({ length: rows }, () =>
+                new TableRow({
+                  height: { value: 440, rule: HeightRule.ATLEAST },
+                  children: q.categories.map(() => new TableCell({ children: [new Paragraph({ children: [] })] })),
+                }),
+              ),
+            ],
+          }),
+        ];
+      }
+      case "wordsearch":
+        return q.grid.length
+          ? [letterGrid(q.grid.map((row) => row.split(""))), spacer(), wordBank("Find", q.placements.map((p) => p.word))]
+          : [];
+      case "crossword": {
+        if (!q.placed.length) return [];
+        const clues = (dir: "across" | "down") => [
+          new Paragraph({ children: [tr(dir === "across" ? "Across" : "Down", { bold: true, color: hex(c.heading) })], spacing: { after: 60 } }),
+          ...q.placed.filter((p) => p.dir === dir).map((p) => new Paragraph({ spacing: { after: 60 }, children: [tr(`${p.number}  `, { bold: true }), ...runs(clueText(p), { size })] })),
+        ];
+        return [
+          letterGrid(crosswordCells(q), { numbers: crosswordNumbers(q.placed), hideLetters: true }),
+          spacer(),
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: noBorders,
+            rows: [new TableRow({ children: [new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: clues("across") }), new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: clues("down") })] })],
+          }),
+          ...(q.wordBank ? [spacer(), wordBank("Word bank", q.placed.map((p) => p.answer).sort((x, y) => x.localeCompare(y)))] : []),
+        ];
+      }
     }
   };
 
@@ -365,6 +472,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
         if (!a && !criteria.length) continue;
         children.push(new Paragraph({ spacing: { after: 80 }, children: [tr(`${numbers.get(b.id)}.  `, { bold: true, color: hex(c.heading) }), ...runs(a, { size })] }));
         for (const cr of criteria) children.push(new Paragraph({ bullet: { level: 0 }, children: runs(cr, { size }) }));
+        children.push(...solvedGrid(b));
       }
     }
     for (const { note } of visibleNotes(doc)) {

@@ -12,8 +12,13 @@ import type {
   OrderQuestion,
   PictureQuestion,
   LabelQuestion,
+  SortQuestion,
+  WordSearchQuestion,
+  CrosswordQuestion,
 } from "@/app/lib/sheets/types";
 import { isQuestion } from "@/app/lib/sheets/types";
+import { answerText } from "@/app/lib/sheets/markdown";
+import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "@/app/lib/sheets/puzzles";
 import { EditableText, Rich } from "./rich";
 
 /*
@@ -252,7 +257,212 @@ function QuestionBody({ block, edit, onPatch }: { block: SheetQuestion; edit: bo
       return <Pictures q={block} edit={edit} onPatch={onPatch as (p: Partial<PictureQuestion>) => void} />;
     case "label":
       return <Labels q={block} edit={edit} onPatch={onPatch as (p: Partial<LabelQuestion>) => void} />;
+    case "sort":
+      return <Sorting q={block} edit={edit} onPatch={onPatch as (p: Partial<SortQuestion>) => void} />;
+    case "wordsearch":
+      return <WordSearch q={block} edit={edit} onPatch={onPatch as (p: Partial<WordSearchQuestion>) => void} />;
+    case "crossword":
+      return <Crossword q={block} edit={edit} onPatch={onPatch as (p: Partial<CrosswordQuestion>) => void} />;
   }
+}
+
+// ── Puzzles ──────────────────────────────────────────────────────────────
+// The grids are built by app/lib/sheets/puzzles and stored on the block; these
+// only draw them. While editing, the words, items and clues are what change,
+// and the grid rebuilds itself from them (refreshPuzzle in updateBlock).
+
+/** A puzzle square's size in pixels: as large as reads well, small enough that
+ *  the biggest grid (15 squares) still sits on one page. */
+const cellPx = (n: number, room = 600, max = 36) => Math.min(max, Math.floor(room / Math.max(n, 1)));
+
+function Sorting({ q, edit, onPatch }: { q: SortQuestion; edit: boolean; onPatch: (p: Partial<SortQuestion>) => void }) {
+  const rows = sortRows(q);
+  const set = (categories: SortQuestion["categories"]) => onPatch({ categories });
+  return (
+    <>
+      {/* What pupils get, the same while editing: the shuffled bank and empty
+          columns. Showing the items in their columns here made the sheet look
+          already answered. */}
+      <div className="js-wordbank">
+        <span className="js-wordbank-title">Sort these</span>
+        <div className="js-tiles">
+          {sortBank(q).map((w, i) => <span key={i} className="js-tile">{w}</span>)}
+        </div>
+      </div>
+      <div className="js-sort" style={{ gridTemplateColumns: `repeat(${Math.max(1, q.categories.length)}, minmax(0, 1fr))` }}>
+        {q.categories.map((cat, ci) => (
+          <div key={ci} className="js-sort-col">
+            <div className="js-sort-head">
+              <EditableText
+                value={cat.name}
+                editable={edit}
+                onChange={(v) => set(v ? q.categories.map((x, j) => (j === ci ? { ...x, name: v } : x)) : q.categories.filter((_, j) => j !== ci))}
+                label={`group ${ci + 1}`}
+              />
+            </div>
+            {Array.from({ length: rows }, (_, r) => <div key={r} className="js-sort-line" />)}
+          </div>
+        ))}
+      </div>
+      {edit && (
+        // The answers, for the teacher to change. Only drawn while editing, so
+        // it never reaches Preview, Print, the PDF or Word.
+        <div className="js-sort-key" data-testid="sort-answer-key">
+          <p className="js-sort-key-title">Answer key: where each item belongs (not printed)</p>
+          {q.categories.map((cat, ci) => (
+            <div key={ci} className="js-sort-key-row">
+              <span className="js-sort-key-name">{cat.name || `Group ${ci + 1}`}</span>
+              <div className="js-tiles">
+                {cat.items.map((it, ii) => (
+                  <span key={ii} className="js-tile">
+                    <EditableText
+                      value={it}
+                      editable
+                      onChange={(v) =>
+                        set(q.categories.map((x, j) => (j === ci ? { ...x, items: v ? x.items.map((y, k) => (k === ii ? v : y)) : x.items.filter((_, k) => k !== ii) } : x)))
+                      }
+                      label={`item ${ii + 1} in group ${ci + 1}`}
+                    />
+                  </span>
+                ))}
+                {cat.items.length < 8 && (
+                  <button type="button" className="js-mini" onClick={() => set(q.categories.map((x, j) => (j === ci ? { ...x, items: [...x.items, "New item"] } : x)))}>
+                    + item
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          {q.categories.length < 4 && (
+            <button type="button" className="js-mini" onClick={() => set([...q.categories, { name: "New group", items: ["New item"] }])}>+ group</button>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+function LetterGrid({ rows, cell, shade, numbers, blankLetters }: {
+  rows: (string | null)[][];
+  cell: number;
+  shade?: Set<string>;
+  numbers?: Map<string, number>;
+  /** A crossword for pupils: the squares, not the answers. */
+  blankLetters?: boolean;
+}) {
+  const cols = rows[0]?.length ?? 0;
+  return (
+    <div
+      className={numbers ? "js-cw" : "js-ws"}
+      style={{ gridTemplateColumns: `repeat(${cols}, ${cell}px)`, gridAutoRows: `${cell}px`, fontSize: Math.round(cell * 0.55) }}
+      data-cols={cols}
+      data-rows={rows.length}
+    >
+      {rows.flatMap((row, r) =>
+        row.map((ch, c) => {
+          const key = `${r},${c}`;
+          if (ch === null) return <span key={key} className="js-cw-gap" />;
+          const n = numbers?.get(key);
+          return (
+            <span key={key} className={`js-cell${shade?.has(key) ? " js-cell-on" : ""}`} data-cell={key}>
+              {n !== undefined && <b className="js-cw-num" style={{ fontSize: Math.max(7, Math.round(cell * 0.28)) }}>{n}</b>}
+              {!blankLetters && ch}
+            </span>
+          );
+        }),
+      )}
+    </div>
+  );
+}
+
+function WordSearch({ q, edit, onPatch }: { q: WordSearchQuestion; edit: boolean; onPatch: (p: Partial<WordSearchQuestion>) => void }) {
+  return (
+    <>
+      {q.grid.length > 0 && <LetterGrid rows={q.grid.map((row) => row.split(""))} cell={cellPx(q.grid.length)} />}
+      <div className="js-wordbank">
+        <span className="js-wordbank-title">Find</span>
+        {edit ? (
+          <WordTiles words={q.words} edit onChange={(words) => onPatch({ words })} />
+        ) : (
+          <div className="js-tiles">
+            {q.placements.map((p, i) => <span key={i} className="js-tile">{p.word}</span>)}
+          </div>
+        )}
+      </div>
+      {edit && q.skipped.length > 0 && (
+        <p className="js-puzzle-note">Not in the grid: {q.skipped.join(", ")}. Try a shorter word, or make the grid harder so it is bigger.</p>
+      )}
+    </>
+  );
+}
+
+function Crossword({ q, edit, onPatch }: { q: CrosswordQuestion; edit: boolean; onPatch: (p: Partial<CrosswordQuestion>) => void }) {
+  const clues = (dir: "across" | "down") => q.placed.filter((p) => p.dir === dir);
+  const setEntry = (i: number, patch: Partial<{ clue: string; answer: string }> | null) =>
+    onPatch({ entries: patch ? q.entries.map((e, j) => (j === i ? { ...e, ...patch } : e)) : q.entries.filter((_, j) => j !== i) });
+  return (
+    <>
+      {q.placed.length > 0 && (
+        <LetterGrid rows={crosswordCells(q)} cell={cellPx(Math.max(q.width, q.height), 520, 34)} numbers={crosswordNumbers(q.placed)} blankLetters />
+      )}
+      {edit ? (
+        <div className="js-cw-edit">
+          {q.entries.map((e, i) => (
+            <div key={i} className="js-cw-edit-row">
+              <EditableText value={e.clue} editable onChange={(v) => setEntry(i, v ? { clue: v } : null)} label={`clue ${i + 1}`} />
+              <span className="js-tile">
+                <EditableText value={e.answer} editable onChange={(v) => setEntry(i, v ? { answer: v } : null)} label={`answer ${i + 1}`} />
+              </span>
+            </div>
+          ))}
+          {q.entries.length < 12 && (
+            <button type="button" className="js-mini" onClick={() => onPatch({ entries: [...q.entries, { clue: "A clue", answer: "answer" }] })}>+ clue</button>
+          )}
+          {q.unplaced.length > 0 && (
+            <p className="js-puzzle-note">Not in the grid: {q.unplaced.join(", ")}. An answer needs a letter in common with another to cross it.</p>
+          )}
+        </div>
+      ) : (
+        <div className="js-cw-clues">
+          {(["across", "down"] as const).map((dir) => (
+            <div key={dir}>
+              <h4>{dir === "across" ? "Across" : "Down"}</h4>
+              {clues(dir).map((p) => (
+                <p key={`${dir}${p.number}`}><b>{p.number}</b> <Rich text={clueText(p)} /></p>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+      {q.wordBank && !edit && q.placed.length > 0 && (
+        <div className="js-wordbank">
+          <span className="js-wordbank-title">Word bank</span>
+          <div className="js-tiles">
+            {q.placed.map((p) => p.answer).sort((x, y) => x.localeCompare(y)).map((w, i) => <span key={i} className="js-tile">{w}</span>)}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** The answers page's solved grid. */
+function SolvedGrid({ q }: { q: SheetQuestion }) {
+  if (q.type === "wordsearch" && q.grid.length) {
+    return (
+      <div className="js-solved">
+        <LetterGrid rows={q.grid.map((row) => row.split(""))} cell={cellPx(q.grid.length, 300, 20)} shade={new Set(q.placements.flatMap(placementCells))} />
+      </div>
+    );
+  }
+  if (q.type === "crossword" && q.placed.length) {
+    return (
+      <div className="js-solved">
+        <LetterGrid rows={crosswordCells(q)} cell={cellPx(Math.max(q.width, q.height), 300, 22)} numbers={crosswordNumbers(q.placed)} />
+      </div>
+    );
+  }
+  return null;
 }
 
 function Choices({ q, edit, onPatch }: { q: ChoiceQuestion; edit: boolean; onPatch: (p: Partial<ChoiceQuestion>) => void }) {
@@ -446,6 +656,7 @@ export function AnswerView({ q, number, edit, onPatch }: { q: SheetQuestion; num
         ) : (
           <Rich text={answerLine(q)} />
         )}
+        <SolvedGrid q={q} />
         {q.type === "long" && q.criteria.length > 0 && (
           <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
             {q.criteria.map((c, i) => <li key={i}><Rich text={c} /></li>)}
@@ -472,6 +683,10 @@ function answerLine(q: SheetQuestion): string {
       return q.options[q.answer] ? `${q.options[q.answer].emoji} ${q.options[q.answer].label}` : "-";
     case "label":
       return q.items.map((it, i) => `${i + 1}. ${it.answer}`).join("    ");
+    case "sort":
+    case "wordsearch":
+    case "crossword":
+      return answerText(q);
     default:
       return "";
   }

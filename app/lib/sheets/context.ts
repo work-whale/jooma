@@ -11,6 +11,7 @@ import { defaultDesign, normalizeDraft, ownPassageSection, serializeSheet, type 
 import { parsePartialJson } from "./stream";
 import { DEFAULT_SHEET_THEME } from "./themes";
 import { templateById } from "./worksheet-templates";
+import { puzzleDefaults } from "./puzzles/level";
 import type { SheetTool } from "./types";
 
 export interface SheetRequestInfo {
@@ -23,6 +24,8 @@ export interface SheetRequestInfo {
   /** Worksheet: the worksheet type, whose starting design goes over the
    *  year's default (an exam paper drops the objective line). */
   template?: string;
+  /** One band's version of a differentiated set: puzzles are pitched to it. */
+  band?: string;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -40,6 +43,7 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     tool,
     subtitle,
     design,
+    puzzle: puzzleDefaults(info.yearGroup, info.band),
     leadingSections:
       tool === "comprehension" && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

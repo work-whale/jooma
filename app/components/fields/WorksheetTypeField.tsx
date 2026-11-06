@@ -5,13 +5,16 @@ import {
   Backpack,
   BookMarked,
   Check,
+  Columns3,
   DoorOpen,
   Flag,
+  Grid3x3,
   Layers,
   Link2,
   ListChecks,
   MessageSquareQuote,
   ScrollText,
+  Search,
   TextCursorInput,
   Timer,
   Zap,
@@ -37,6 +40,9 @@ const ICONS: Record<string, LucideIcon> = {
   link: Link2,
   bookmark: BookMarked,
   quote: MessageSquareQuote,
+  columns: Columns3,
+  search: Search,
+  grid: Grid3x3,
 };
 
 interface Props {

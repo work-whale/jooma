@@ -15,6 +15,7 @@ import type {
 import type { SlideshowTheme, ArtStyleId, ThemeDesign } from "./slideshowThemes";
 import { getThemeArt, DEFAULT_ART_STYLE, themeDesign } from "./slideshowThemes";
 import { cleanMathText } from "./math-text";
+import { seeded } from "./seeded-random";
 
 const SLIDE_W = 1280;
 const SLIDE_H = 720;
@@ -1784,22 +1785,8 @@ function cardShapes(card: ThemeDesign["card"], theme: SlideshowTheme): ShapeObje
 
 // ── Motifs ────────────────────────────────────────────────────────────────
 
-/** Small seeded generator, so a slide's motif is the same every time it is
- *  rendered (mulberry32 over a string hash). */
-function seeded(seed: string): () => number {
-  let h = 1779033703 ^ seed.length;
-  for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  let a = h >>> 0;
-  return () => {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// The seeded generator (app/lib/seeded-random.ts) keeps a slide's motif the
+// same every time it is rendered.
 
 function motifShapes(motif: ThemeDesign["motif"], theme: SlideshowTheme, seed: string): ShapeObject[] {
   const p = theme.palette;

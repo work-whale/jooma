@@ -3,6 +3,8 @@
 // the page.
 
 import { newSheetId } from "./normalize";
+import { refreshPuzzle, type PuzzleDefaults } from "./puzzles";
+import { seedFrom } from "@/app/lib/seeded-random";
 import type { BlockType, SheetBlock, SheetDoc, SheetSection } from "./types";
 
 function withSection(doc: SheetDoc, si: number, fn: (s: SheetSection) => SheetSection): SheetDoc {
@@ -12,7 +14,8 @@ function withSection(doc: SheetDoc, si: number, fn: (s: SheetSection) => SheetSe
 export function updateBlock(doc: SheetDoc, si: number, bi: number, patch: Partial<SheetBlock>): SheetDoc {
   return withSection(doc, si, (s) => ({
     ...s,
-    blocks: s.blocks.map((b, i) => (i === bi ? ({ ...b, ...patch } as SheetBlock) : b)),
+    // A puzzle's grid is rebuilt when an edit changes what it is built from.
+    blocks: s.blocks.map((b, i) => (i === bi ? refreshPuzzle({ ...b, ...patch } as SheetBlock) : b)),
   }));
 }
 
@@ -22,7 +25,7 @@ export function updateBlockById(doc: SheetDoc, id: string, patch: Partial<SheetB
   return {
     ...doc,
     sections: doc.sections.map((s) =>
-      s.blocks.some((b) => b.id === id) ? { ...s, blocks: s.blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as SheetBlock) : b)) } : s,
+      s.blocks.some((b) => b.id === id) ? { ...s, blocks: s.blocks.map((b) => (b.id === id ? refreshPuzzle({ ...b, ...patch } as SheetBlock) : b)) } : s,
     ),
   };
 }
@@ -96,8 +99,9 @@ export function addSection(doc: SheetDoc): SheetDoc {
   return { ...doc, sections: [...doc.sections, section] };
 }
 
-/** A starting block of each type, filled with placeholders to type over. */
-export function newBlock(type: BlockType): SheetBlock {
+/** A starting block of each type, filled with placeholders to type over.
+ *  `puzzle` pitches a new word search or crossword to the sheet's year. */
+export function newBlock(type: BlockType, puzzle?: PuzzleDefaults): SheetBlock {
   const id = newSheetId("b");
   const q = { id, prompt: "Write your question here", marks: 1, domain: "" };
   switch (type) {
@@ -118,5 +122,27 @@ export function newBlock(type: BlockType): SheetBlock {
     case "picture": return { ...q, prompt: "Circle the right picture.", type: "picture", options: [{ emoji: "🍎", label: "Apple" }, { emoji: "🍌", label: "Banana" }, { emoji: "🍇", label: "Grapes" }], answer: 0 };
     case "label": return { ...q, prompt: "Label the parts.", type: "label", items: [{ clue: "A clue", answer: "part" }], wordBank: ["part"] };
     case "image": return { id, type: "image", query: "", alt: "", src: "", size: "m" };
+    case "sort":
+      return {
+        ...q, marks: 6, prompt: "Sort these into the right groups.", type: "sort", seed: seedFrom(id),
+        categories: [{ name: "Group one", items: ["Item", "Item two", "Item three"] }, { name: "Group two", items: ["Item four", "Item five", "Item six"] }],
+      };
+    case "wordsearch":
+      return refreshPuzzle({
+        ...q, marks: 6, prompt: "Find these words in the grid.", type: "wordsearch",
+        words: ["planet", "orbit", "comet", "star", "moon", "sun"],
+        level: puzzle?.level ?? "medium", seed: seedFrom(id), key: "", grid: [], placements: [], skipped: [],
+      });
+    case "crossword":
+      return refreshPuzzle({
+        ...q, marks: 4, prompt: "Use the clues to fill in the crossword.", type: "crossword",
+        entries: [
+          { clue: "The star our planet goes round", answer: "sun" },
+          { clue: "It goes round the Earth", answer: "moon" },
+          { clue: "The path a planet takes", answer: "orbit" },
+          { clue: "Our home planet", answer: "Earth" },
+        ],
+        wordBank: puzzle?.wordBank ?? false, seed: seedFrom(id), key: "", width: 0, height: 0, placed: [], unplaced: [],
+      });
   }
 }

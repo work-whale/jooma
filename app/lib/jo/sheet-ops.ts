@@ -10,6 +10,7 @@
 import { cleanMathText } from "@/app/lib/math-text";
 import { deleteBlock, deleteSection, insertBlock, updateBlock, updateSection } from "@/app/lib/sheets/edit";
 import { newSheetId, normalizeBlock } from "@/app/lib/sheets/normalize";
+import { puzzleDefaultsFromSubtitle, type PuzzleDefaults } from "@/app/lib/sheets/puzzles";
 import type { SheetBlock, SheetDesign, SheetDoc, SheetSection } from "@/app/lib/sheets/types";
 import type { SheetOp } from "./types";
 
@@ -59,7 +60,15 @@ export function sheetSnapshot(doc: SheetDoc) {
       instructions: s.instructions,
       // A picture as what it shows, not where it is stored: Jo can move or
       // delete one, but choosing pictures is the teacher's.
-      blocks: s.blocks.map((b) => (b.type === "image" ? { id: b.id, type: b.type, alt: b.alt, size: b.size } : b)),
+      // A puzzle as its words: the grid is built from them, so Jo changes the
+      // words, items or clues and never sees or writes a grid.
+      blocks: s.blocks.map((b) => {
+        if (b.type === "image") return { id: b.id, type: b.type, alt: b.alt, size: b.size };
+        if (b.type === "wordsearch") return { id: b.id, type: b.type, prompt: b.prompt, marks: b.marks, words: b.words };
+        if (b.type === "crossword") return { id: b.id, type: b.type, prompt: b.prompt, marks: b.marks, entries: b.entries };
+        if (b.type === "sort") return { id: b.id, type: b.type, prompt: b.prompt, marks: b.marks, categories: b.categories };
+        return b;
+      }),
     })),
   };
 }
@@ -197,6 +206,16 @@ export interface AppliedSheetOp {
   focus: SheetFocus | null;
 }
 
+/** What a rewritten puzzle keeps from the one it replaces: its level, word
+ *  bank and seed, which Jo never writes. Anything else takes the sheet's year. */
+function keepPuzzle(doc: SheetDoc, old: SheetBlock | undefined): PuzzleDefaults {
+  const base = puzzleDefaultsFromSubtitle(doc.subtitle);
+  if (old?.type === "wordsearch") return { ...base, level: old.level, seed: old.seed };
+  if (old?.type === "crossword") return { ...base, wordBank: old.wordBank, seed: old.seed };
+  if (old?.type === "sort") return { ...base, seed: old.seed };
+  return base;
+}
+
 /** One op applied, or null when it does not fit this sheet. */
 export function applySheetOp(doc: SheetDoc, op: SheetOp): AppliedSheetOp | null {
   switch (op.op) {
@@ -206,7 +225,7 @@ export function applySheetOp(doc: SheetDoc, op: SheetOp): AppliedSheetOp | null 
     }
     case "replaceBlock": {
       const at = findBlock(doc, op.blockId);
-      const block = at && normalizeBlock(op.block, op.blockId);
+      const block = at && normalizeBlock(op.block, op.blockId, keepPuzzle(doc, doc.sections[at.si].blocks[at.bi]));
       if (!at || !block) return null;
       const sections = doc.sections.map((s, i) =>
         i === at.si ? { ...s, blocks: s.blocks.map((b, j) => (j === at.bi ? block : b)) } : s,
@@ -217,7 +236,7 @@ export function applySheetOp(doc: SheetDoc, op: SheetOp): AppliedSheetOp | null 
       const si = findSection(doc, op.sectionId);
       if (si === -1) return null;
       const id = newSheetId("b");
-      const block = normalizeBlock(op.block, id);
+      const block = normalizeBlock(op.block, id, puzzleDefaultsFromSubtitle(doc.subtitle));
       if (!block) return null;
       let at = 0;
       if (op.afterBlockId) {
@@ -233,7 +252,7 @@ export function applySheetOp(doc: SheetDoc, op: SheetOp): AppliedSheetOp | null 
     }
     case "addSection": {
       const blocks = (Array.isArray(op.blocks) ? op.blocks : [])
-        .map((b) => normalizeBlock(b, newSheetId("b")))
+        .map((b) => normalizeBlock(b, newSheetId("b"), puzzleDefaultsFromSubtitle(doc.subtitle)))
         .filter((b): b is SheetBlock => !!b);
       const title = clean(op.title ?? "");
       if (!title && blocks.length === 0) return null;

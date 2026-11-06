@@ -15,13 +15,14 @@
 
 import type { SheetDesign } from "./types";
 
-export type WorksheetTemplateGroup = "check" | "assess" | "practise" | "home";
+export type WorksheetTemplateGroup = "check" | "assess" | "practise" | "home" | "puzzle";
 
 export const TEMPLATE_GROUPS: { id: WorksheetTemplateGroup; label: string }[] = [
   { id: "check", label: "Quick checks" },
   { id: "assess", label: "Assess" },
   { id: "practise", label: "Practise" },
   { id: "home", label: "Home and revision" },
+  { id: "puzzle", label: "Puzzles and sorting" },
 ];
 
 export interface WorksheetTemplate {
@@ -244,6 +245,56 @@ export const WORKSHEET_TEMPLATES: WorksheetTemplate[] = [
     ],
   },
 ];
+
+// The puzzle types: the page builds their grids (app/lib/sheets/puzzles), so
+// each plan asks for the words and leaves the layout alone.
+WORKSHEET_TEMPLATES.push(
+  {
+    id: "sorting",
+    name: "Sorting activity",
+    blurb: "Pupils sort items into groups, then explain their thinking",
+    minutes: "15 to 20 mins",
+    group: "puzzle",
+    icon: "columns",
+    questionTypes: ["Sorting / Categorising", "Short Answer"],
+    questionCount: 4,
+    structure: [
+      `- sections: 2. The first, titled something like "Sort it", holds one or two sort questions on the topic's key ideas. The second, "Explain your sorting", has one or two short answers asking why an item belongs where it does, or which was hardest to place.`,
+      "- Choose groups that make pupils think about the topic, not just spot a word.",
+      "- Marks: one per item sorted, 2 for each explanation.",
+    ],
+  },
+  {
+    id: "word-search",
+    name: "Word search",
+    blurb: "Find the topic's key words, then use them",
+    minutes: "15 to 20 mins",
+    group: "puzzle",
+    icon: "search",
+    questionTypes: ["Word Search", "Matching", "Fill in the Blanks"],
+    questionCount: 4,
+    structure: [
+      `- sections: 2. The first, titled something like "Find the words", holds exactly one word search of the topic's key words. The second, "Use the words", has 2 or 3 quick questions that use those same words, such as matching them to meanings or filling them into sentences.`,
+      "- Use only words pupils should learn for this topic.",
+      "- Marks: about one per two words found, then 1 to 2 per follow-up question.",
+    ],
+  },
+  {
+    id: "crossword",
+    name: "Crossword",
+    blurb: "Clues on the topic's key terms, then a short check",
+    minutes: "20 to 25 mins",
+    group: "puzzle",
+    icon: "grid",
+    questionTypes: ["Crossword", "Short Answer"],
+    questionCount: 3,
+    structure: [
+      `- sections: 2. The first, titled something like "Crack the crossword", holds exactly one crossword of 8 to 10 key terms. The second, "Put them to use", has 1 or 2 short answers that use the terms.`,
+      "- Write clues that test meaning, not spelling.",
+      "- Marks: one per crossword answer, 2 per short answer.",
+    ],
+  },
+);
 
 const BY_ID = new Map(WORKSHEET_TEMPLATES.map((t) => [t.id, t]));
 

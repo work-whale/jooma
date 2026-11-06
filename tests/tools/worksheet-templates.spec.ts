@@ -3,6 +3,7 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
 import { normalizeDraft, serializeSheet } from "@/app/lib/sheets/normalize";
 import { sheetContext } from "@/app/lib/sheets/context";
 import primary from "@/app/lib/national-curriculum/data/primary.json";
+import { WORKSHEET_TEMPLATES } from "@/app/lib/sheets/worksheet-templates";
 
 /*
  * Worksheet types and "Align to curriculum" on the Worksheet form.
@@ -95,7 +96,7 @@ test("a type presets the question types and count, the teacher can change them, 
   await expect(page.getByTestId("worksheet-type-field").getByRole("radio")).toHaveCount(2);
   await typeCard(page, "Exam-style paper").click();
   await page.getByRole("button", { name: "All", exact: true }).click();
-  await expect(page.getByTestId("worksheet-type-field").getByRole("radio")).toHaveCount(12);
+  await expect(page.getByTestId("worksheet-type-field").getByRole("radio")).toHaveCount(WORKSHEET_TEMPLATES.length);
 
   // The exam paper's presets land on the chips and the count.
   await expect(typeCard(page, "Exam-style paper")).toHaveAttribute("aria-checked", "true");

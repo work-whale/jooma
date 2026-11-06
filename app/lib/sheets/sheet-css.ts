@@ -101,6 +101,32 @@ export const SHEET_CSS = `
 .js-label-row { display: grid; grid-template-columns: auto 1fr 160px; gap: 10px; align-items: end; }
 .js-label-row i { border-bottom: 1.5px solid var(--js-ink); height: 1.2em; }
 
+/* Puzzles: sorting columns, word search and crossword grids. Square sizes are
+   set inline from the grid's size (blocks.tsx), so the largest still fits a page. */
+.js-sort { display: grid; gap: 10px; }
+.js-sort-col { border: 1.5px solid var(--js-line); border-radius: var(--js-radius); overflow: hidden; display: flex; flex-direction: column; padding-bottom: 8px; }
+.js-sort-head { background: var(--js-soft); color: var(--js-heading); font-weight: 800; text-align: center; padding: 6px 8px; }
+.js-sort-line { height: 2.05em; border-bottom: 1.5px var(--js-lines) var(--js-muted); margin: 0 10px; }
+.js-sort-key { border: 1.5px dashed var(--js-muted); border-radius: var(--js-radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.js-sort-key-title { font-size: .78em; font-weight: 800; color: var(--js-muted); text-transform: uppercase; letter-spacing: .04em; }
+.js-sort-key-row { display: grid; grid-template-columns: 9em 1fr; gap: 10px; align-items: start; }
+.js-sort-key-name { font-weight: 800; color: var(--js-heading); padding-top: 5px; }
+.js-ws, .js-cw { display: grid; width: max-content; margin: 2px auto; line-height: 1; }
+.js-ws { border: 2px solid var(--js-ink); border-radius: 4px; }
+.js-cell { position: relative; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--js-ink); }
+.js-cw .js-cell { border: 1.5px solid var(--js-ink); margin: 0 -1.5px -1.5px 0; background: var(--js-paper); }
+.js-cell-on { background: var(--js-soft); color: var(--js-heading); font-weight: 900; }
+.js-cw-num { position: absolute; top: 1px; left: 2px; line-height: 1; font-weight: 700; color: var(--js-muted); }
+.js-cw-clues { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; }
+.js-cw-clues h4 { margin: 0 0 4px; color: var(--js-heading); font-weight: 800; }
+.js-cw-clues p { margin: 0 0 4px; }
+.js-cw-clues b { color: var(--js-heading); margin-right: 4px; }
+.js-cw-edit { display: flex; flex-direction: column; gap: 6px; }
+.js-cw-edit-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.js-puzzle-note { font-size: .8em; color: var(--js-muted); font-style: italic; }
+.js-solved { margin-top: 6px; }
+.js-solved .js-ws, .js-solved .js-cw { margin: 0; }
+
 /* Word bank, passage, table */
 .js-wordbank { border: 2px dashed var(--js-accent); border-radius: var(--js-radius); padding: 10px 14px; background: var(--js-paper); }
 .js-wordbank-title { font-weight: 800; color: var(--js-heading); margin-right: 8px; }

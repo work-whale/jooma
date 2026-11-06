@@ -8,6 +8,8 @@ import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
 import { answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "@/app/lib/sheets/visibility";
+import { puzzleDefaultsFromSubtitle } from "@/app/lib/sheets/puzzles";
+import { PUZZLE_LEVELS } from "@/app/lib/sheets/types";
 import {
   addSection,
   deleteBlock,
@@ -253,6 +255,18 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
               {onPicture && <ToolButton label="Change picture" text="Change" onClick={() => onPicture(b.id)} />}
             </>
           )}
+          {(b.type === "sort" || b.type === "wordsearch" || b.type === "crossword") && (
+            <ToolButton label={b.type === "sort" ? "Shuffle the items" : "Shuffle the grid"} text="Shuffle" onClick={() => patch({ seed: b.seed + 1 })} />
+          )}
+          {b.type === "wordsearch" && PUZZLE_LEVELS.indexOf(b.level) > 0 && (
+            <ToolButton label="Easier grid" text="Easier" onClick={() => patch({ level: PUZZLE_LEVELS[PUZZLE_LEVELS.indexOf(b.level) - 1] })} />
+          )}
+          {b.type === "wordsearch" && PUZZLE_LEVELS.indexOf(b.level) < PUZZLE_LEVELS.length - 1 && (
+            <ToolButton label="Harder grid" text="Harder" onClick={() => patch({ level: PUZZLE_LEVELS[PUZZLE_LEVELS.indexOf(b.level) + 1] })} />
+          )}
+          {b.type === "crossword" && (
+            <ToolButton label={b.wordBank ? "Hide the word bank" : "Show a word bank"} text={b.wordBank ? "No word bank" : "Word bank"} onClick={() => patch({ wordBank: !b.wordBank })} />
+          )}
           {(b.type === "short" || b.type === "long") && (
             <>
               <ToolButton label="Fewer lines" text="− line" onClick={() => patch({ lines: Math.max(b.type === "long" ? 3 : 1, b.lines - 1) })} />
@@ -307,7 +321,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
                 kind={menu.kind}
                 pictures={!!onPicture}
                 onPick={(type) => {
-                  const block = newBlock(type);
+                  // A new puzzle is pitched to the year in the sheet's subtitle.
+                  const block = newBlock(type, puzzleDefaultsFromSubtitle(doc.subtitle));
                   commit(insertBlock(doc, si, block));
                   setMenu(null);
                   // A new picture is an empty frame: go straight to choosing one.

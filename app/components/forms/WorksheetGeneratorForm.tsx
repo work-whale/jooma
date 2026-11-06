@@ -198,7 +198,7 @@ export default function WorksheetGeneratorForm({
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
-          read: (res, onOutput) => readSheetStream(res, "worksheet", info, onOutput),
+          read: (res, onOutput, band) => readSheetStream(res, "worksheet", { ...info, band }, onOutput),
           onUpdate: (s) => { set = s; setResult(s); },
         });
         // Still busy, so the run is saved with its pictures in.
