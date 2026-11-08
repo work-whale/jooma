@@ -56,3 +56,7 @@ staging_seed.sql
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Before/after screenshots and walkthrough videos for showing changes.
+# Kept locally, never committed.
+/docs/screenshots/
