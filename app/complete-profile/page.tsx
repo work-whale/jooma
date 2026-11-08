@@ -48,6 +48,24 @@ function attributionCookie(): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+type CodeCheck =
+  | { state: "idle" | "checking" }
+  | { state: "good" | "bad"; text: string };
+
+/** Why a code cannot be used, in words a teacher can act on. */
+function codeRefusal(reason: string | undefined): string {
+  switch (reason) {
+    case "unknown":
+      return "That code isn't recognised. Check the spelling, or leave it blank and carry on.";
+    case "inactive":
+      return "That code is no longer being offered. You can leave it blank and carry on.";
+    case "already_claimed":
+      return "There is already a code on this account.";
+    default:
+      return "That code can't be used. You can leave it blank and carry on.";
+  }
+}
+
 export default function CompleteProfilePage() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
@@ -64,6 +82,70 @@ export default function CompleteProfilePage() {
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  /*
+   * An ambassador code, asked here so it is recorded BEFORE the trial starts.
+   *
+   * Most teachers subscribe after the trial, and the code is what credits the
+   * ambassador whichever discount they end up paying with. It used to be offered
+   * only on /welcome, pre-filled from an ambassador's link but recorded only if
+   * the teacher pressed Apply, so skipping it lost the referral.
+   *
+   * Pre-filled from /signup?code= (stashed by /signup), checked as they go, and
+   * claimed when the form is saved. Optional, and never blocks signing up: a code
+   * that does not check out is said so, and they carry on.
+   */
+  const [code, setCode] = useState("");
+  const [codeCheck, setCodeCheck] = useState<CodeCheck>({ state: "idle" });
+  const checkedFor = useRef<string | null>(null);
+
+  const checkCode = async (raw: string) => {
+    const value = raw.trim().toUpperCase();
+    if (!value || checkedFor.current === value) return;
+    checkedFor.current = value;
+    setCodeCheck({ state: "checking" });
+    try {
+      const res = await fetch(`/api/ambassadors/check?code=${encodeURIComponent(value)}`);
+      // Not signed in yet (a cookie race straight after create-password): it is
+      // checked properly when they continue, so say nothing alarming.
+      if (res.status === 401) {
+        setCodeCheck({ state: "idle" });
+        checkedFor.current = null;
+        return;
+      }
+      const json = (await res.json().catch(() => ({}))) as {
+        valid?: boolean;
+        code?: string;
+        offer?: string | null;
+        reason?: string;
+      };
+      if (checkedFor.current !== value) return; // typed over while checking
+      // Our fault, not the code's: say nothing, and it is tried again on save.
+      if (!json.valid && (json.reason === "error" || res.status >= 500)) {
+        setCodeCheck({ state: "idle" });
+        checkedFor.current = null;
+        return;
+      }
+      setCodeCheck(
+        json.valid
+          ? { state: "good", text: json.offer ? `${json.code}: ${json.offer}` : `${json.code} is a valid code` }
+          : { state: "bad", text: codeRefusal(json.reason) },
+      );
+    } catch {
+      setCodeCheck({ state: "idle" });
+      checkedFor.current = null;
+    }
+  };
+
+  // A code from the ambassador's link, filled in and checked straight away.
+  useEffect(() => {
+    const stashed = sessionStorage.getItem("jooma:ambassador-code");
+    if (!stashed) return;
+    queueMicrotask(() => {
+      setCode(stashed);
+      void checkCode(stashed);
+    });
+  }, []);
 
   // The product email box, asked here only when /signup never recorded an
   // answer: a new Google account started from /login, or a Google press made
@@ -205,6 +287,30 @@ export default function CompleteProfilePage() {
     }
     clearProductEmailsChoice();
 
+    // The ambassador code, claimed now that the account exists and before the
+    // trial starts. Never stops them: a code that is refused here is offered
+    // again on /welcome, where they can correct it, and /pricing takes one too.
+    const typedCode = code.trim().toUpperCase();
+    let codeClaimed = false;
+    if (typedCode && codeCheck.state !== "bad") {
+      try {
+        const res = await fetch("/api/ambassadors/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: typedCode }),
+        });
+        codeClaimed = res.ok;
+        if (!res.ok) console.warn("[complete-profile] ambassador code not claimed", res.status);
+      } catch (err) {
+        console.warn("[complete-profile] ambassador code not claimed", err);
+      }
+    }
+    if (codeClaimed || !typedCode) {
+      sessionStorage.removeItem("jooma:ambassador-code");
+    } else {
+      sessionStorage.setItem("jooma:ambassador-code", typedCode);
+    }
+
     // An admin-invited teacher had their plan chosen before this row existed.
     // Applying it is the server's job: /api/invites/accept re-verifies the
     // token and checks it was issued to THIS address before touching `plan`,
@@ -344,6 +450,49 @@ export default function CompleteProfilePage() {
             Country
           </label>
           <CountrySelect value={country} onChange={setCountry} />
+        </div>
+
+        <div className={auth.field}>
+          <label htmlFor="ambassadorCode" className={auth.label}>
+            Ambassador code <span className={styles.optional}>(optional)</span>
+          </label>
+          <div className={styles.codeRow}>
+            <input
+              id="ambassadorCode"
+              type="text"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value.toUpperCase());
+                setCodeCheck({ state: "idle" });
+                checkedFor.current = null;
+              }}
+              onBlur={() => void checkCode(code)}
+              placeholder="If someone shared one with you"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              enterKeyHint="done"
+              className={`${auth.input} ${styles.codeInput}`}
+              data-testid="signup-ambassador-code"
+            />
+            <button
+              type="button"
+              onClick={() => void checkCode(code)}
+              disabled={!code.trim() || codeCheck.state === "checking"}
+              className={styles.codeCheck}
+            >
+              {codeCheck.state === "checking" ? "Checking…" : "Check"}
+            </button>
+          </div>
+          {(codeCheck.state === "good" || codeCheck.state === "bad") && (
+            <p
+              className={codeCheck.state === "good" ? styles.codeGood : styles.codeBad}
+              role="status"
+              data-testid="signup-ambassador-code-result"
+            >
+              {codeCheck.text}
+            </p>
+          )}
         </div>
 
         {askEmails && (

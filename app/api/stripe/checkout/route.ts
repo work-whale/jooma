@@ -4,6 +4,15 @@ import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
 import { isBillingInterval } from "@/app/lib/plans";
+import { discountOfPromotion } from "@/app/lib/ambassador-discount";
+import { PLANS } from "@/app/lib/plans";
+import {
+  betterFirstMonthDiscount,
+  ensureTrialOfferCoupon,
+  trialOfferApplies,
+  trialOfferFor,
+  type TrialOfferRow,
+} from "@/app/lib/trial-offer";
 
 // Creates a Stripe Checkout Session for a paid plan and returns its URL. The
 // browser redirects to it; payment success is confirmed asynchronously by the
@@ -111,6 +120,18 @@ export async function POST(req: NextRequest) {
       ? Math.floor(proUntil.getTime() / 1000)
       : null;
 
+  // The end-of-trial offer: 50% off the first month, monthly only, for 7 days
+  // after a no-card trial ends. Read from the caller's own row through the same
+  // RPC the pages use, never from the body, so it cannot be claimed by editing a
+  // fetch. Before the migration that adds the dates, the columns are absent and
+  // this reads as no offer.
+  const { data: accessData } = await supabase.rpc("my_account_access");
+  const accessRow = (Array.isArray(accessData) ? accessData[0] : accessData) as
+    | TrialOfferRow
+    | undefined;
+  const offer = accessRow ? trialOfferFor(accessRow) : null;
+  const offerApplies = trialOfferApplies(offer, interval);
+
   try {
     // Resolved from plan_config (falling back to the env var), so a price
     // changed in the admin console takes effect on the next checkout without a
@@ -186,6 +207,52 @@ export async function POST(req: NextRequest) {
     // the charge taken at once the webhook has no trial in which to swap it (see
     // reconcileAmbassadorDiscount). Codes claimed in Jooma get the right coupon.
     const promoBox = interval === "month";
+
+    // THE OFFER AND A CLAIMED CODE: Stripe takes one discount per session, so
+    // the one that saves the teacher more on this plan's first month wins (a
+    // tie goes to the code they chose). The referral row is untouched either
+    // way, so the ambassador is still credited on the first payment
+    // (markReferralPaid reads the row by user, not the discount). If the code's
+    // value cannot be read, the offer is used: it is known, and at least half.
+    let useOffer = offerApplies;
+    if (offerApplies && ambassadorDiscounts && codeIds?.promotion_code_id) {
+      const codeValue = await stripe.promotionCodes
+        .retrieve(codeIds.promotion_code_id, { expand: ["promotion.coupon"] })
+        .then((promo) => (promo.active ? discountOfPromotion(promo) : null))
+        .catch(() => null);
+      const fullPence = Math.round((PLANS[plan].priceMonthly ?? 0) * 100);
+      useOffer = betterFirstMonthDiscount(fullPence, true, codeValue) === "offer";
+    }
+
+    if (useOffer && offer) {
+      try {
+        const coupon = await ensureTrialOfferCoupon(stripe);
+        // A session left open must not outlive the window by much. Stripe
+        // allows 30 minutes to 24 hours; inside that, close it with the offer.
+        const nowSec = Math.floor(Date.now() / 1000);
+        const offerEndSec = Math.floor(offer.endsAt.getTime() / 1000);
+        const expiresAt =
+          offerEndSec < nowSec + 24 * 3600
+            ? { expires_at: Math.max(offerEndSec, nowSec + 31 * 60) }
+            : {};
+        const session = await stripe.checkout.sessions.create({
+          ...base,
+          ...expiresAt,
+          discounts: [{ coupon }],
+          subscription_data: {
+            ...base.subscription_data,
+            metadata: { ...base.subscription_data.metadata, trialOffer: coupon },
+          },
+        });
+        return NextResponse.json({ url: session.url });
+      } catch (offerErr) {
+        // Never block a sale over the discount: carry on to the normal paths.
+        console.warn(
+          "[stripe/checkout] trial offer could not be applied, continuing without it",
+          offerErr instanceof Error ? offerErr.message : offerErr,
+        );
+      }
+    }
 
     if (!ambassadorDiscounts) {
       const session = await stripe.checkout.sessions.create({

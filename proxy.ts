@@ -116,6 +116,12 @@ const GATE_EXEMPT = [
   // it with a 403 precisely when it is meant to run. It reports the signup to
   // Meta and stores the advertising cookies, and grants nothing.
   "/api/meta/activation",
+  // The form also checks an ambassador code as it is typed, before the profile
+  // exists, so it can say "not recognised" while there is still time to fix it.
+  // Read-only and signed-in only (the route refuses anyone else), and it
+  // answers nothing beyond whether the one code typed is usable. The claim
+  // itself is made after the profiles row is written, so it stays gated.
+  "/api/ambassadors/check",
   "/auth",
   "/api/auth",
   "/terms",

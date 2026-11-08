@@ -15,6 +15,7 @@ import { ChatTeardropDots } from "@phosphor-icons/react/dist/ssr";
 import { extractHeadings, type Heading } from "@/app/lib/headings";
 import { CLOSED, hoverReducer, tabLabel } from "@/app/lib/outlineHover";
 import styles from "./OutputOutline.module.css";
+import { topBarHeight } from "@/app/lib/topbar";
 
 // Chapter navigation for a generated document, derived from the output itself.
 //
@@ -213,7 +214,8 @@ export function useOutline({
         root: scrollRoot ?? null,
         // Top band: a heading counts as "current" once it reaches the reading
         // position, not when it first peeks into view.
-        rootMargin: `-${offset}px 0px -65% 0px`,
+        // The shell's sticky top bar covers the window's top edge as well.
+        rootMargin: `-${scrollRoot ? offset : offset + topBarHeight()}px 0px -65% 0px`,
         threshold: 0,
       },
     );
@@ -276,7 +278,7 @@ export function useOutline({
         });
       } else {
         window.scrollTo({
-          top: target.getBoundingClientRect().top + window.scrollY - offset,
+          top: target.getBoundingClientRect().top + window.scrollY - offset - topBarHeight(),
           behavior: "smooth",
         });
       }

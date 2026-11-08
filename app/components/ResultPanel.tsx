@@ -18,6 +18,7 @@ import { useRestoredRun } from "@/app/lib/RestoredRunContext";
 import { isBandSetOutput, parseBandSet, saveableBandSet, serializeBandSet, withBand } from "@/app/lib/bands";
 import BandTabs from "@/app/components/BandTabs";
 import type { DifferentiationBand } from "@/app/lib/differentiation";
+import { HEADER_STICKY, topBarHeight } from "@/app/lib/topbar";
 
 /** What a run stores for this output: a band set without its streaming flags
  *  or failed bands, a sheet as it is, markdown cleaned of leaked LaTeX. */
@@ -41,11 +42,11 @@ const SHAREABLE: Record<string, "comprehension" | "worksheet"> = {
  * hid the first lines. Only scrollTo lets the offset be expressed. Same idiom as
  * OutputOutline's heading links.
  *
- * TopBar is a plain non-sticky header, so it needs no budget here.
+ * The shell's top bar is sticky too, so its height is added on top.
  */
 function scrollPanelIntoView(el: HTMLElement | null) {
   if (!el) return;
-  const offset = window.innerWidth >= 1024 ? 32 : 8;
+  const offset = topBarHeight() + (window.innerWidth >= 1024 ? 32 : 8);
   window.scrollTo({
     top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - offset),
     behavior: "smooth",
@@ -171,9 +172,9 @@ export default function ResultPanel({
     if (!header || !panel) return;
 
     const measure = () => {
-      // The offset the header itself sticks at: 0 below lg, 32px at and above
-      // it, matching `top-0 lg:top-8`. The toolbar has to clear both.
-      const offset = window.innerWidth >= 1024 ? 32 : 0;
+      // The offset the header itself sticks at: the top bar, plus 32px at and
+      // above lg, matching HEADER_STICKY. The toolbar has to clear both.
+      const offset = topBarHeight() + (window.innerWidth >= 1024 ? 32 : 0);
       panel.style.setProperty(
         "--result-header-h",
         `${header.getBoundingClientRect().height + offset}px`,
@@ -455,7 +456,7 @@ export default function ResultPanel({
             equal z-index it painted over the open menu — hiding "Download PDF"
             and making it look as though the tool had no PDF export at all.
             This must stay above that toolbar's z-10. */}
-        <div ref={headerRef} className="sticky top-0 lg:top-8 z-30 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white rounded-t-3xl">
+        <div ref={headerRef} className={`${HEADER_STICKY} z-30 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white rounded-t-3xl`}>
           <div className="flex items-center gap-3">
             <h2 className="font-semibold text-gray-900 text-sm">My results</h2>
             {isGenerating && (

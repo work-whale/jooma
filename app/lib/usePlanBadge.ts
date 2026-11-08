@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "./auth/client";
 import { effectivePlan } from "./plans";
-import { planBadgeFor, type AmbassadorTerm, type PlanBadge } from "./plan-badge";
+import { planBadgeFor, type AmbassadorTerm, type PlanBadge, type TrialStatus } from "./plan-badge";
+import { useAccountAccess } from "./useAccountAccess";
 
 /*
  * The sidebar's plan pill, and whether to dress the shell as an ambassador's.
@@ -29,10 +30,15 @@ interface MyAmbassadorRow {
 }
 
 export function usePlanBadge(): PlanBadgeState {
-  const [state, setState] = useState<PlanBadgeState>(() => ({
-    ...planBadgeFor("free", null),
-    loading: true,
-  }));
+  // Shared and cached with the rest of the page (one request), so the trial
+  // countdown costs nothing extra. Null while loading, which reads as no trial.
+  const access = useAccountAccess();
+  const [base, setBase] = useState<{
+    plan: ReturnType<typeof effectivePlan>;
+    term: AmbassadorTerm | null;
+    /** When it was read: the badge's "now". The countdown ticks on its own. */
+    at: Date;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,12 +60,22 @@ export function usePlanBadge(): PlanBadgeState {
         ? { status: row.status, proUntil: row.pro_until ? new Date(row.pro_until) : null }
         : null;
 
-      setState({ ...planBadgeFor(effectivePlan(profile), term), loading: false });
+      setBase({ plan: effectivePlan(profile), term, at: new Date() });
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return state;
+  return useMemo<PlanBadgeState>(() => {
+    if (!base) return { ...planBadgeFor("free", null), loading: true };
+    const trial: TrialStatus | null = access
+      ? {
+          trialEndsAt: access.state === "trial" ? access.trialEndsAt : null,
+          trialStartedAt: access.trialStartedAt,
+          offerEndsAt: access.trialOffer?.endsAt ?? null,
+        }
+      : null;
+    return { ...planBadgeFor(base.plan, base.term, base.at, trial), loading: false };
+  }, [base, access]);
 }

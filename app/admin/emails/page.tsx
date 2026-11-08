@@ -8,7 +8,17 @@ import HistoryView from "./HistoryView";
 import OptOutsView from "./OptOutsView";
 import SystemEmails, { type EmailTemplate } from "./SystemEmails";
 import TemplatesView from "./TemplatesView";
-import type { AutomationRow, BroadcastTemplate, CampaignRow, OptOutRow } from "./types";
+import StatsView from "./StatsView";
+import { stripe } from "@/app/lib/stripe";
+import { TRIAL_OFFER_COUPON } from "@/app/lib/trial-offer";
+import type {
+  AutomationDailyRow,
+  AutomationRow,
+  BroadcastTemplate,
+  CampaignRow,
+  OptOutRow,
+  TrialFunnelRow,
+} from "./types";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +38,7 @@ export const dynamic = "force-dynamic";
 const SEND_TABS = [
   { key: "compose", label: "Compose" },
   { key: "history", label: "History" },
+  { key: "stats", label: "Stats" },
   { key: "templates", label: "Templates" },
 ];
 
@@ -68,6 +79,34 @@ export default async function AdminEmailsPage({
     const { data, error } = await supabase.rpc("admin_email_campaigns", { lim: 200 });
     if (error) problems.push(error.message);
     body = <HistoryView rows={(data ?? []) as CampaignRow[]} />;
+  } else if (tab === "stats") {
+    const days = 30;
+    const [automations, daily, funnel, redemptions] = await Promise.all([
+      supabase.rpc("admin_email_automations"),
+      supabase.rpc("admin_email_automation_daily", { p_days: days }),
+      supabase.rpc("admin_trial_funnel", { p_days: days }),
+      // How often the 50% offer has been used, straight from Stripe. Missing
+      // until the first offer checkout creates the coupon, which reads as 0.
+      stripe.coupons
+        .retrieve(TRIAL_OFFER_COUPON.id)
+        .then((c) => c.times_redeemed)
+        .catch((err: { code?: string }) => (err?.code === "resource_missing" ? 0 : null)),
+    ]);
+    for (const r of [automations, daily, funnel]) {
+      if (r.error) problems.push(r.error.message);
+    }
+    const funnelRow = (Array.isArray(funnel.data) ? funnel.data[0] : funnel.data) as
+      | TrialFunnelRow
+      | undefined;
+    body = (
+      <StatsView
+        automations={(automations.data ?? []) as AutomationRow[]}
+        daily={(daily.data ?? []) as AutomationDailyRow[]}
+        funnel={funnelRow ?? null}
+        redemptions={redemptions}
+        days={days}
+      />
+    );
   } else if (tab === "optouts") {
     const search = (q ?? "").trim().slice(0, 254);
     const { data, error } = await supabase.rpc("admin_email_opt_outs", {

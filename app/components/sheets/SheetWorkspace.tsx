@@ -30,6 +30,7 @@ import { exportSheetDocx, exportSheetPdf, printSheet } from "./sheetExport";
 import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
 import { useSheetPictureDialog } from "./useSheetPictureDialog";
 import type { JoDocRef } from "@/app/lib/jo/threads";
+import { HEADER_STICKY } from "@/app/lib/topbar";
 
 /*
  * A generated Worksheet or Comprehension, as the teacher works on it: the
@@ -210,7 +211,7 @@ export default function SheetWorkspace({
 
   return (
     <div ref={panelRef} className={`bg-white border border-gray-200 rounded-3xl shadow-sm${maxWidth ? " max-w-7xl mx-auto" : ""}`} style={{ overflow: "clip" }} data-testid="sheet-workspace">
-      <div className="sticky top-0 lg:top-8 z-30 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white rounded-t-3xl">
+      <div className={`${HEADER_STICKY} z-30 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white rounded-t-3xl`}>
         <div className="flex items-center gap-3">
           <h2 className="font-semibold text-gray-900 text-sm">My results</h2>
           {status && (
@@ -283,7 +284,7 @@ export default function SheetWorkspace({
           {designOpen && !busy && (wide ? (
             // Sticky beside the pages, and never taller than the window: the
             // panel scrolls on its own rather than running off the bottom.
-            <div className="w-80 shrink-0 sticky top-32 self-start max-h-[calc(100dvh-9rem)] overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
+            <div className="w-80 shrink-0 sticky top-[calc(var(--topbar-h,0px)+8rem)] self-start max-h-[calc(100dvh-9rem-var(--topbar-h,0px))] overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
               <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} onPicture={pictures.onPicture} />
             </div>
           ) : (

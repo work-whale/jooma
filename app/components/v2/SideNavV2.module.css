@@ -367,6 +367,46 @@
   background: color-mix(in srgb, var(--j-gold) 80%, #000);
 }
 
+/* The trial or offer countdown inside the plan card (PlanCountdown.tsx).
+   It replaced the strip across the top of every screen. */
+
+.planClock {
+  margin-top: 2px;
+}
+
+/* The meter's track is styled for a block; here it is a span inside a p's
+   sibling, so it needs saying. */
+.planClock .track {
+  display: block;
+}
+
+.planClockText {
+  font-size: 0.75rem;
+  color: var(--j-body);
+  margin: 0 0 6px;
+}
+
+.planClockText strong {
+  color: var(--j-orange);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.planOffer {
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--j-ink);
+  margin: 0 0 2px;
+}
+
+/* The offer is the one time this card should catch the eye: a warm edge in
+   the marketing accent, nothing louder. */
+.planOfferCard {
+  border-color: color-mix(in srgb, var(--j-orange) 45%, transparent);
+  background: var(--j-orange-bg);
+}
+
 /* ── Credit meter ────────────────────────────────────────────────────────── */
 
 .meterTop {

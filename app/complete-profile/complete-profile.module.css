@@ -23,3 +23,65 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ── Ambassador code ─────────────────────────────────────────────────────── */
+
+.optional {
+  font-weight: 500;
+  color: var(--j-muted);
+}
+
+.codeRow {
+  display: flex;
+  gap: 8px;
+}
+
+.codeInput {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.06em;
+}
+
+.codeInput::placeholder {
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.codeCheck {
+  flex: none;
+  padding: 0 18px;
+  border: 1px solid var(--j-line-2);
+  border-radius: var(--j-r);
+  background: var(--j-card);
+  color: var(--j-deep);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.codeCheck:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .codeCheck:not(:disabled):hover {
+    background: var(--j-tint);
+  }
+}
+
+.codeGood {
+  margin-top: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0f6e56;
+}
+
+/* Not an error colour: the form still goes through. */
+.codeBad {
+  margin-top: 8px;
+  font-size: 0.86rem;
+  color: var(--j-body);
+}

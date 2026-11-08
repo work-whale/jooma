@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import PlanCard, { PlanCardGrid, type PlanCardAction } from "@/app/components/plans/PlanCard";
 import BillingToggle from "@/app/components/plans/BillingToggle";
@@ -14,6 +14,9 @@ import {
 } from "@/app/lib/plan-copy";
 import { DEFAULT_INTERVAL, PLANS, type BillingInterval, type PlanId } from "@/app/lib/plans";
 import type { Discount } from "@/app/lib/ambassador-discount";
+import { TRIAL_OFFER_DISCOUNT, betterFirstMonthDiscount } from "@/app/lib/trial-offer";
+import OfferCountdown from "@/app/components/v2/OfferCountdown";
+import offerStyles from "@/app/components/v2/TrialOffer.module.css";
 import DowngradeButton from "./DowngradeButton";
 import UpgradeButton from "./UpgradeButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
@@ -77,6 +80,10 @@ export default function PlanPicker({
   /** What that code takes off the first monthly payment. The cards that go to
    *  checkout show the first payment with the full price struck beside it. */
   codeDiscount = null,
+  /** When the end-of-trial offer runs out, while it is open (read on the
+   *  server). Monthly checkouts get 50% off the first month; the cards show it
+   *  and a banner counts down. Checkout re-checks it, so this is display only. */
+  trialOfferEndsAt = null,
 }: {
   plans: PlanId[];
   current: PlanId;
@@ -90,7 +97,12 @@ export default function PlanPicker({
   subscriptionInterval?: BillingInterval;
   hasUnusedCode?: boolean;
   codeDiscount?: Discount | null;
+  trialOfferEndsAt?: string | null;
 }) {
+  /** Open until the countdown reaches zero on this page, then the cards go
+   *  back to full price without a reload. */
+  const [offerOpen, setOfferOpen] = useState(Boolean(trialOfferEndsAt));
+  const closeOffer = useCallback(() => setOfferOpen(false), []);
   const [pending, setPending] = useState<PlanId | null>(null);
   /**
    * The interval the cards show and act at.
@@ -118,9 +130,18 @@ export default function PlanPicker({
     setChanging(null);
   }
 
-  /** The code's discount, on the cards a checkout would apply it to. */
-  const discountFor = (id: PlanId): Discount | null =>
-    !hasSubscription && hasUnusedCode && moveFor(id) === "buy" ? codeDiscount : null;
+  /** The discount a checkout would apply to this card. With both the
+   *  end-of-trial offer and a claimed code, whichever saves more on this plan,
+   *  the same rule /api/stripe/checkout applies. Only monthly is discounted by
+   *  the offer, and planCardPricing ignores a discount on yearly. */
+  const discountFor = (id: PlanId): Discount | null => {
+    if (hasSubscription || moveFor(id) !== "buy") return null;
+    const code = hasUnusedCode ? codeDiscount : null;
+    const offer = offerOpen && interval === "month";
+    const fullPence = Math.round((PLANS[id].priceMonthly ?? 0) * 100);
+    const pick = betterFirstMonthDiscount(fullPence, offer, code);
+    return pick === "offer" ? TRIAL_OFFER_DISCOUNT : pick === "code" ? code : null;
+  };
 
   /** The card for the plan AND interval they already have. */
   const isCurrentCard = (id: PlanId) => id === current && !otherInterval;
@@ -240,7 +261,31 @@ export default function PlanPicker({
         </p>
       )}
 
-      {!hasSubscription && hasUnusedCode && interval === "year" && (
+      {offerOpen && trialOfferEndsAt && !hasSubscription && (
+        <div className={offerStyles.banner} data-testid="trial-offer-banner">
+          <div>
+            <p className={offerStyles.bannerKicker}>Your free trial has ended</p>
+            <p className={offerStyles.bannerTitle}>50% off your first month</p>
+            <p className={offerStyles.bannerSub}>
+              {interval === "year"
+                ? "The offer is for monthly plans. Switch to Monthly to use it."
+                : "Already applied at checkout, no code needed. Then the usual monthly price."}
+            </p>
+            {!hasUnusedCode && (
+              <p className={offerStyles.bannerSub}>
+                Got a code from an ambassador?{" "}
+                <a href="#ambassador-code" className={offerStyles.bannerLink}>
+                  Add it below
+                </a>{" "}
+                so they are credited.
+              </p>
+            )}
+          </div>
+          <OfferCountdown endsAt={trialOfferEndsAt} onExpire={closeOffer} />
+        </div>
+      )}
+
+      {!hasSubscription && hasUnusedCode && !offerOpen && interval === "year" && (
         <p className="text-sm mb-3 text-center" style={{ color: "var(--j-faint)" }}>
           Your code applies to monthly plans.
         </p>

@@ -59,3 +59,30 @@ export interface OptOutRow {
   source: "link" | "one_click" | "admin" | "signup" | "profile" | "bounce" | "spam";
   created_at: string;
 }
+
+/** admin_email_automation_daily(): one row per automation per day it sent. */
+export interface AutomationDailyRow {
+  automation: string;
+  /** YYYY-MM-DD, London time. */
+  day: string;
+  sent: number;
+  failed: number;
+  skipped: number;
+  delivered: number;
+  /** Includes dropped. */
+  bounced: number;
+  spam: number;
+}
+
+/** admin_trial_funnel(): the no-card trial, end to end. */
+export interface TrialFunnelRow {
+  started: number;
+  in_trial: number;
+  ended: number;
+  opted_out: number;
+  got_trial_ending: number;
+  got_offer_email: number;
+  got_offer_ending: number;
+  offer_open: number;
+  paid: number;
+}

@@ -292,6 +292,68 @@ test.describe("V2 fixes", () => {
     );
     expect(overflow, "the tools page scrolls sideways at 1280px").toBe(0);
   });
+
+  /* ── A scrolled result page keeps the top bar whole ───────────────────── */
+
+  /*
+   * The top bar is sticky. A tool's result page had its own sticky strip
+   * (StickyMask, top 0, same z-index, later in the DOM) and "My results" header
+   * (top 0 / 2rem, z-30), both written when the bar did not stick. Scrolled,
+   * they painted across the bar and cut its title in half.
+   *
+   * What is asserted is what the teacher sees: the topmost element at points in
+   * the bar's upper and lower halves belongs to the bar, and the header starts
+   * below it. A test that only read the header's computed `top` would pass with
+   * the mask still on top.
+   */
+  for (const [label, viewport] of [
+    ["desktop", { width: 1440, height: 900 }],
+    ["phone", { width: 390, height: 844 }],
+  ] as const) {
+    test(`scrolling a result keeps the top bar uncovered (${label})`, async ({ page }) => {
+      const body = Array.from({ length: 40 }, (_, i) => `## Part ${i + 1}\n\nA paragraph of the lesson body.`).join("\n\n");
+      const runId = await seedResource(teacher, "Long lesson", `# Long lesson\n\n${body}`);
+
+      await page.setViewportSize(viewport);
+      await signIn(page, teacher);
+      await page.goto(`/tools/lesson-planner?run=${runId}`);
+      await expect(page.getByRole("heading", { name: "My results" })).toBeVisible();
+
+      // Let the panel finish scrolling itself into view first (it does on a
+      // ?run= load), then scroll as a teacher would. A scrollTo fired before
+      // that settles is overridden and the page ends up unscrolled, where
+      // nothing overlaps and the test passes against the bug.
+      await page.waitForTimeout(2500);
+      await page.mouse.move(viewport.width / 2, viewport.height / 2);
+      await page.mouse.wheel(0, 1200);
+      await page.waitForTimeout(800);
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
+
+      const result = await page.evaluate(() => {
+        // The shell's top bar: the first header in <main>.
+        const bar = document.querySelector<HTMLElement>("main > header")!;
+        const box = bar.getBoundingClientRect();
+        // Points across the bar, upper and lower halves, avoiding the far
+        // right where its own buttons are (they are inside the bar anyway).
+        const title = bar.querySelector("h2")!.getBoundingClientRect();
+        const xs = [box.left + 40, title.left + title.width / 2, box.left + box.width / 2];
+        const ys = [box.top + box.height * 0.25, box.top + box.height * 0.75];
+        const covered: string[] = [];
+        for (const x of xs) {
+          for (const y of ys) {
+            const hit = document.elementFromPoint(x, y);
+            if (!hit || !bar.contains(hit)) covered.push(`${Math.round(x)},${Math.round(y)}: ${hit?.className ?? "nothing"}`);
+          }
+        }
+        const header = [...document.querySelectorAll("h2")].find((h) => h.textContent === "My results")!;
+        const headerTop = header.closest("div.sticky, div[class*='sticky']")!.getBoundingClientRect().top;
+        return { covered, barBottom: box.bottom, headerTop };
+      });
+
+      expect(result.covered, "something painted over the top bar").toEqual([]);
+      expect(result.headerTop).toBeGreaterThanOrEqual(result.barBottom - 1);
+    });
+  }
 });
 
 /** Widths of the content well (the child of <main> holding the h1) and of <main>. */

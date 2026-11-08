@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { runDue } from "@/app/lib/email-campaigns";
 
-// The automatic signup reminders, once a day at midnight UTC (midnight in the
-// UK in winter, 1am in summer). That is all it does: every other bulk email is
+// The automatic emails (signup reminders, and the no-card trial's ending and
+// end-of-trial offer emails), once a day at 07:00 UTC (7am in the UK in winter,
+// 8am in summer; see vercel.json). That is all it does: every other bulk email is
 // sent by hand from /admin/emails, and a manual send interrupted by a closed
 // tab is resumed from History, not here.
 //

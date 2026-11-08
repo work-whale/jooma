@@ -1,8 +1,10 @@
 /**
  * The strip that hides content scrolling behind a tool's sticky result header.
  *
- * ResultPanel's own header is `sticky top-0 lg:top-8`, which leaves an 8px gap
- * above it on desktop. Without something opaque filling that gap, the page
+ * ResultPanel's own header sticks 2rem below the shell's top bar on desktop
+ * (HEADER_STICKY), which leaves a gap above it. This strip sticks directly under
+ * the bar, never over it: it used to stick at top 0, and once the top bar became
+ * sticky it painted across the bar's lower half and cut the title in two. Without something opaque filling that gap, the page
  * content scrolls through it. This is that filler, so its background MUST track
  * the page background or the seam reappears.
  *
@@ -18,8 +20,8 @@
 export default function StickyMask() {
   return (
     <div
-      className="sticky top-0 z-20 h-0 lg:h-8 -mx-4 sm:-mx-6 lg:-mx-10"
-      style={{ backgroundColor: "var(--j-bg)" }}
+      className="sticky z-20 h-0 lg:h-8 -mx-4 sm:-mx-6 lg:-mx-10"
+      style={{ top: "var(--topbar-h, 0px)", backgroundColor: "var(--j-bg)" }}
       aria-hidden="true"
     />
   );
