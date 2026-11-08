@@ -7,6 +7,7 @@ import { hasActivePlan } from "@/app/lib/plans";
 import { loadPlanState } from "@/app/account/billing/loadPlanState";
 import PlanPicker from "@/app/account/billing/PlanPicker";
 import AmbassadorCodeField from "@/app/account/billing/AmbassadorCodeField";
+import { trialOfferFor, type TrialOfferRow } from "@/app/lib/trial-offer";
 
 // Plans: every plan a teacher can be on, and the way to each one.
 //
@@ -56,6 +57,14 @@ export default async function PricingPage({
   }
 
   const state = await loadPlanState(supabase, user.id);
+
+  // The end-of-trial offer, if it is open. Same row and same rule as checkout,
+  // which applies it; this only shows it.
+  const { data: accessData } = await supabase.rpc("my_account_access");
+  const accessRow = (Array.isArray(accessData) ? accessData[0] : accessData) as
+    | TrialOfferRow
+    | undefined;
+  const trialOffer = accessRow ? trialOfferFor(accessRow) : null;
   const {
     plan,
     hasSubscription,
@@ -159,13 +168,16 @@ export default async function PricingPage({
             subscriptionInterval={interval}
             hasUnusedCode={Boolean(referralCode) && !codeSpent}
             codeDiscount={codeDiscount}
+            trialOfferEndsAt={trialOffer ? trialOffer.endsAt.toISOString() : null}
           />
         )}
 
         {/* A referral code, beside the plans it discounts. Hidden once the
             discount has been used, and for ambassadors, who hand codes out
             rather than claim them. */}
-        {!codeSpent && !ambassador && <AmbassadorCodeField claimedCode={referralCode} />}
+        {!codeSpent && !ambassador && (
+          <AmbassadorCodeField claimedCode={referralCode} offerOpen={Boolean(trialOffer)} />
+        )}
       </div>
     </>
   );

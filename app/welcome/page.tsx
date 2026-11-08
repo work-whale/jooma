@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/auth/server";
+import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { accountAccess, type AccessRow } from "@/app/lib/account-access";
 import StartTrialButton from "@/app/components/billing/StartTrialButton";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
@@ -52,10 +53,20 @@ export default async function WelcomePage({
   // who arrives here without the query string.
   const { code, checkout } = await searchParams;
 
-  const [{ data: profile }, { data: rows }] = await Promise.all([
+  const [{ data: profile }, { data: rows }, { data: referral }] = await Promise.all([
     supabase.from("profiles").select("first_name").eq("id", user.id).maybeSingle(),
     supabase.rpc("my_account_access"),
+    // A code recorded on the profile step. Service role, because
+    // ambassador_referrals is admin-only, and scoped to this user's own id, so
+    // it can only ever find their own (the same read loadPlanState makes).
+    supabaseAdmin
+      .from("ambassador_referrals")
+      .select("ambassador_codes ( code )")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
+  const claimedCode =
+    (referral?.ambassador_codes as unknown as { code?: string } | null)?.code ?? null;
 
   const firstName = (profile?.first_name ?? "").trim();
 
@@ -106,7 +117,16 @@ export default async function WelcomePage({
             URL or sessionStorage. It is claimed here on the trial too, since the
             referral has to be recorded before they ever reach a checkout. The
             plans show only when there is no trial running. */}
-        {(needsPlan || onTrial) && <AmbassadorCode initialCode={code} showPlans={needsPlan} />}
+        {/* Already recorded on the profile step: say so, rather than offer a box
+            that would refuse a second code. */}
+        {onTrial && claimedCode ? (
+          <p className={styles.foot} data-testid="welcome-code-claimed">
+            Your code <strong>{claimedCode}</strong> is on your account. It comes off your first month
+            when you choose a plan.
+          </p>
+        ) : (
+          (needsPlan || onTrial) && <AmbassadorCode initialCode={code} showPlans={needsPlan} />
+        )}
 
         {needsPlan && checkout === "cancelled" && (
           <p className={styles.foot} role="status">

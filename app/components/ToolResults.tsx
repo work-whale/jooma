@@ -103,7 +103,7 @@ export default function ToolResults({
            *             the panel, which is why it is not on this element.
            */
           <div className="hidden lg:block shrink-0 relative w-11 z-40">
-            <div className="lg:sticky lg:top-8">
+            <div className="lg:sticky lg:top-[calc(var(--topbar-h,0px)+2rem)]">
               {/* Optional sections need no declaring here: the outline is
                   derived from the output, so a section appears in it exactly
                   when it appears in the document. (Carried over from

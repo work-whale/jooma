@@ -6,6 +6,7 @@
 // rule for when a trial has run out (see effectivePlan).
 import { effectivePlan, hasActivePlan, reviewTrialEnd } from "./plans";
 import { FREE_TRIES_PER_DAY } from "./free-tries";
+import { trialOfferExpiredAt, trialOfferFor, type TrialOffer } from "./trial-offer";
 
 /** The columns my_account_access() returns. */
 export interface AccessRow {
@@ -20,6 +21,10 @@ export interface AccessRow {
   had_ambassador_pro: boolean | null;
   had_review_trial: boolean | null;
   free_tries_used: number | null;
+  /** When the no-card trial ends or ended. 20261109000000 and later. */
+  trial_ends_at?: string | null;
+  /** When its 50% offer runs out, only for someone it could apply to. */
+  trial_offer_ends_at?: string | null;
 }
 
 /**
@@ -43,6 +48,14 @@ export interface AccountAccess {
   lapsed: boolean;
   /** Runs left today on the free tools. Only meaningful while locked. */
   freeTriesLeft: number;
+  /** Had the no-card trial at some point. */
+  hadTrial: boolean;
+  /** When the no-card trial started, if they had one. */
+  trialStartedAt: Date | null;
+  /** The end-of-trial offer, while it is open. Only ever set while locked. */
+  trialOffer: TrialOffer | null;
+  /** When an offer they had ran out. Null if none, or still open. */
+  trialOfferExpiredAt: Date | null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -78,8 +91,15 @@ export function accountAccess(row: AccessRow, now = new Date()): AccountAccess {
       canExportLibrary: true,
       lapsed: false,
       freeTriesLeft,
+      hadTrial: false,
+      trialStartedAt: null,
+      trialOffer: null,
+      trialOfferExpiredAt: null,
     };
   }
+
+  const hadTrial = Boolean(row.free_trial_started_at);
+  const trialStartedAt = row.free_trial_started_at ? new Date(row.free_trial_started_at) : null;
 
   if (!hasActivePlan(effectivePlan(row, now))) {
     return {
@@ -92,6 +112,10 @@ export function accountAccess(row: AccessRow, now = new Date()): AccountAccess {
       canExportLibrary: paidEra,
       lapsed: paidEra,
       freeTriesLeft,
+      hadTrial,
+      trialStartedAt,
+      trialOffer: hadTrial ? trialOfferFor(row, now) : null,
+      trialOfferExpiredAt: hadTrial ? trialOfferExpiredAt(row, now) : null,
     };
   }
 
@@ -107,6 +131,10 @@ export function accountAccess(row: AccessRow, now = new Date()): AccountAccess {
       canExportLibrary: true,
       lapsed: false,
       freeTriesLeft,
+      hadTrial,
+      trialStartedAt,
+      trialOffer: null,
+      trialOfferExpiredAt: null,
     };
   }
 
@@ -118,5 +146,9 @@ export function accountAccess(row: AccessRow, now = new Date()): AccountAccess {
     canExportLibrary: true,
     lapsed: false,
     freeTriesLeft,
+    hadTrial,
+    trialStartedAt,
+    trialOffer: null,
+    trialOfferExpiredAt: null,
   };
 }

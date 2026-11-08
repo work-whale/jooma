@@ -39,6 +39,13 @@ import BroadcastFields, { PurposePicker } from "./BroadcastFields";
 import BroadcastPreview from "./BroadcastPreview";
 import type { AutomationRow, BroadcastTemplate } from "./types";
 
+/** Automations whose timing comes from the trial's dates, not a delay box. */
+const FIXED_TIMING: Record<string, string> = {
+  trial_ending: "Last 24 hours of the trial",
+  trial_ended_offer: "When the trial ends",
+  trial_offer_ending: "Under 36 hours left on the 50% offer",
+};
+
 export default function TemplatesView({
   templates,
   automations,
@@ -239,11 +246,11 @@ function Automations({
                     </select>
                   </Td>
                   <Td>
-                    {a.key === "trial_ending" ? (
-                      // Decided by when the trial ends. email_automation_enqueue
-                      // does not read delay_hours for this one.
+                    {FIXED_TIMING[a.key] ? (
+                      // Decided by the trial's dates. email_automation_enqueue
+                      // does not read delay_hours for these.
                       <span className="text-xs" style={{ color: C.muted }}>
-                        Last 24 hours of the trial
+                        {FIXED_TIMING[a.key]}
                       </span>
                     ) : (
                       <DelayInput

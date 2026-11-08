@@ -20,9 +20,15 @@ import { useRouter } from "next/navigation";
 // telling them plainly which code they hold.
 export default function AmbassadorCodeField({
   claimedCode,
+  offerOpen = false,
 }: {
   /** The code they have already claimed, if any. */
   claimedCode?: string | null;
+  /** The end-of-trial 50% offer is open. A code is still worth claiming then:
+   *  the ambassador is credited for the teacher whichever discount is used, and
+   *  checkout gives the teacher whichever saves more. Stripe's own code box is
+   *  hidden on a checkout carrying the offer, so this is the place to add it. */
+  offerOpen?: boolean;
 }) {
   const router = useRouter();
   const [code, setCode] = useState("");
@@ -77,7 +83,10 @@ export default function AmbassadorCodeField({
         </p>
         <p className="text-sm" style={{ color: "var(--j-body)" }}>
           <span className="font-mono font-semibold tracking-wider">{claimedCode}</span> is on
-          your account. The discount comes off your first month when you subscribe.
+          your account
+          {offerOpen
+            ? ", so whoever shared it is credited when you subscribe. Your first month gets whichever saves you more: your code or the 50% offer."
+            : ". The discount comes off your first month when you subscribe."}
         </p>
       </div>
     );
@@ -85,6 +94,7 @@ export default function AmbassadorCodeField({
 
   return (
     <div
+      id="ambassador-code"
       className="rounded-2xl border p-5 mt-4"
       style={{ backgroundColor: "var(--j-card)", borderColor: "var(--j-line)" }}
     >
@@ -92,8 +102,9 @@ export default function AmbassadorCodeField({
         Have a code?
       </p>
       <p className="text-sm mb-3" style={{ color: "var(--j-faint)" }}>
-        If someone shared a code with you, add it here and the discount comes off your first
-        month.
+        {offerOpen
+          ? "If an ambassador shared a code with you, add it here so they are credited for introducing you. You still get whichever saves you more on your first month: their code or the 50% offer."
+          : "If someone shared a code with you, add it here and the discount comes off your first month."}
       </p>
 
       <div className="flex gap-2 max-w-md">

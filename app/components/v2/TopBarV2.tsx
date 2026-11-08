@@ -8,6 +8,7 @@ import ToolSearch from "@/app/components/layout/ToolSearch";
 import NotificationBell from "@/app/components/layout/NotificationBell";
 import Avatar from "@/app/components/ui/Avatar";
 import { AccountLinks, type Account } from "@/app/components/v2/AccountLinks";
+import TrialChip from "./TrialChip";
 import styles from "./TopBarV2.module.css";
 
 interface TopBarV2Props {
@@ -75,7 +76,7 @@ export default function TopBarV2({
   }, [dropdownOpen]);
 
   return (
-    <header className={styles.top}>
+    <header className={styles.top} data-topbar>
       {/* min-width: 0 and an ellipsis, not a non-shrinking title: a rigid title
           next to this many controls is what pushed the row off a phone. */}
       <h2 className={styles.title}>{title}</h2>
@@ -89,6 +90,10 @@ export default function TopBarV2({
         {/* A bell reads as "news for you", so it goes where the notifications
             are. Support replies badge the Help link in the sidebar instead,
             alongside the conversations themselves. */}
+        {/* Phones: the trial or offer clock, which on a desktop sits in the
+            sidebar's plan card. Hidden from 901px by CSS. */}
+        <TrialChip />
+
         <NotificationBell />
 
         <div className={styles.profile} ref={profileRef}>

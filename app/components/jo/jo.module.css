@@ -1,8 +1,9 @@
 /* Ask Jo, the editor panel. Jooma tokens only (globals.css :root). */
 
 .dock {
-  /* Clears the result panels' sticky header (lg:top-8 plus its own height). */
-  --jo-top: 112px;
+  /* Clears the shell's top bar and the result panels' sticky header (2rem
+     plus its own height). */
+  --jo-top: calc(var(--topbar-h, 0px) + 112px);
   position: sticky;
   top: var(--jo-top);
   align-self: flex-start;

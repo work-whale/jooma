@@ -19,6 +19,7 @@ import TopUpModal from "@/app/components/v2/TopUpModal";
 import ToolSearch from "@/app/components/layout/ToolSearch";
 import { AccountLinks, type Account } from "@/app/components/v2/AccountLinks";
 import { ToolTile } from "@/app/components/v2/Squircle";
+import PlanCountdown from "./PlanCountdown";
 import styles from "./SideNavV2.module.css";
 
 /*
@@ -267,7 +268,9 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
               between them: what do I have, and how much of it is left. The
               button always goes to /pricing, the one place plans change. */}
           <div
-            className={`${styles.plan} ${plan.ambassador ? styles.planGold : ""}`}
+            className={`${styles.plan} ${plan.ambassador ? styles.planGold : ""} ${
+              plan.countdown?.kind === "offer" ? styles.planOfferCard : ""
+            }`}
             data-testid="sidebar-plan"
           >
             <div className={styles.meterTop}>
@@ -278,7 +281,11 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
                 {plan.loading ? " " : plan.label}
               </span>
             </div>
-            {!plan.loading && plan.note && <p className={styles.meterNote}>{plan.note}</p>}
+            {!plan.loading && plan.countdown ? (
+              <PlanCountdown countdown={plan.countdown} note={plan.note} />
+            ) : (
+              !plan.loading && plan.note && <p className={styles.meterNote}>{plan.note}</p>
+            )}
             {!plan.loading && (
               <Link href={plan.cta.href} className={styles.upgrade} onClick={onMobileClose}>
                 {plan.cta.label}

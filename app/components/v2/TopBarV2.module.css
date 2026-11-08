@@ -1,7 +1,7 @@
 /* min-height, not height, plus the top inset: in a standalone or landscape
    view the bar runs under the notch, and a fixed height would clip it. */
 .top {
-  min-height: calc(64px + env(safe-area-inset-top));
+  min-height: var(--topbar-h, calc(64px + env(safe-area-inset-top)));
   display: flex;
   align-items: center;
   gap: 14px;
@@ -14,8 +14,19 @@
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
-  z-index: 20;
+  /* Above a tool's sticky result header (z-30), so this bar's menus are never
+     painted over, and below the drawer backdrop (40). */
+  z-index: 35;
   flex: none;
+}
+
+/* From 901px there is no drawer or backdrop, and a tool page's outline column
+   is z-40 (ToolResults.tsx: it must beat the result header). The bar has to
+   beat that too, or the column scrolls across it. */
+@media (min-width: 901px) {
+  .top {
+    z-index: 45;
+  }
 }
 
 @media (max-width: 640px) {
@@ -184,5 +195,33 @@
 
   .right {
     gap: 8px;
+  }
+}
+
+/* ── Trial chip (TrialChip.tsx) ──────────────────────────────────────────────
+   Phones only: on a desktop the same clock is in the sidebar's plan card. */
+
+.chip {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 11px;
+    border-radius: var(--j-pill);
+    background: var(--j-tint);
+    color: var(--j-deep);
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .chipOffer {
+    background: var(--j-orange-bg);
+    color: var(--j-orange-ink);
   }
 }

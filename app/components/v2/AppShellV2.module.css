@@ -1,6 +1,11 @@
 /* The V2 app shell: a fixed rail beside a scrolling main column. */
 
 .app {
+  /* The sticky top bar's height. Anything else that sticks while the page
+     scrolls (a tool's result header, Ask Jo's dock) sits below it by this much.
+     Read with a 0px fallback so the same components outside the shell are
+     unchanged. */
+  --topbar-h: calc(64px + env(safe-area-inset-top));
   display: grid;
   grid-template-columns: var(--j-nav) minmax(0, 1fr);
   min-height: 100vh;

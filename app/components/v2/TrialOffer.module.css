@@ -1,0 +1,243 @@
+/* The end-of-trial offer: the countdown, the banner on /pricing and the popup.
+   Tokens are on :root (globals.css), so the portalled popup can read them too.
+   Burnt orange is the marketing accent for the cost of not acting, which is
+   exactly what a countdown is; one orange element per surface. */
+
+/* ── Countdown ─────────────────────────────────────────────────────────── */
+
+.countdown {
+  display: inline-flex;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+  padding: 8px 6px 6px;
+  border-radius: 12px;
+  background: var(--j-orange-bg);
+  color: var(--j-orange-ink);
+}
+
+.unitValue {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.unitLabel {
+  margin-top: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Before mount: the same boxes, empty, so nothing jumps when time arrives. */
+.unitPending .unitValue {
+  opacity: 0.25;
+}
+
+/* ── Banner on /pricing ────────────────────────────────────────────────── */
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border-radius: var(--j-r-lg);
+  background: var(--j-card);
+  border: 1px solid var(--j-line-2);
+  box-shadow: 0 10px 30px rgba(58, 28, 143, 0.08);
+}
+
+.bannerKicker {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--j-orange);
+}
+
+.bannerTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--j-ink);
+}
+
+.bannerSub {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: var(--j-muted);
+}
+
+.bannerLink {
+  color: var(--j-purple);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ── Popup ─────────────────────────────────────────────────────────────── */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 23, 48, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 80;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  animation: fadeIn 180ms var(--j-ease);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  background: var(--j-card);
+  border-radius: var(--j-r-xl);
+  padding: 32px 28px 24px;
+  text-align: center;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  box-shadow: 0 30px 70px -30px rgba(29, 23, 48, 0.55);
+  animation: rise 220ms var(--j-ease);
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--j-pill);
+  background: transparent;
+  color: var(--j-muted);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .close:hover {
+    background: var(--j-tint);
+    color: var(--j-ink);
+  }
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 14px;
+  border-radius: var(--j-pill);
+  background: var(--j-tint);
+  color: var(--j-deep);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--j-ink);
+}
+
+.lead {
+  margin: 0 auto 20px;
+  max-width: 34ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--j-body);
+}
+
+.lead strong {
+  color: var(--j-purple);
+}
+
+.endsLabel {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--j-muted);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.primary {
+  display: block;
+  padding: 14px 18px;
+  border-radius: var(--j-pill);
+  background: var(--j-purple);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.98rem;
+  text-decoration: none;
+  transition: background 150ms var(--j-ease);
+}
+
+@media (hover: hover) {
+  .primary:hover {
+    background: var(--j-deep);
+  }
+}
+
+.secondary {
+  padding: 10px 18px;
+  border: 0;
+  background: transparent;
+  color: var(--j-muted);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .secondary:hover {
+    color: var(--j-ink);
+  }
+}
+
+.fine {
+  margin: 14px 0 0;
+  font-size: 0.75rem;
+  color: var(--j-faint);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .modal {
+    animation: none;
+  }
+}

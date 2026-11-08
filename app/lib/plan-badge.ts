@@ -50,6 +50,22 @@ export interface PlanBadge {
   cta: { label: string; href: "/pricing" };
   /** Whole days of free Pro left, or null when not on an ambassador term. */
   daysLeft: number | null;
+  /**
+   * A clock the card counts down: the no-card trial while it runs, or the 50%
+   * offer once it has ended. The card ticks it, so the note stays true without
+   * a reload. Null for everyone else.
+   */
+  countdown: { kind: "trial" | "offer"; endsAt: Date; startedAt?: Date } | null;
+}
+
+/** The no-card trial and its end-of-trial offer, from useAccountAccess. */
+export interface TrialStatus {
+  /** When the running trial ends. Null when not in a trial. */
+  trialEndsAt: Date | null;
+  /** When the trial started, for the progress bar. */
+  trialStartedAt?: Date | null;
+  /** When the open offer ends. Null when there is none open. */
+  offerEndsAt: Date | null;
 }
 
 function longDate(d: Date): string {
@@ -79,6 +95,7 @@ export function planBadgeFor(
   plan: PlanId,
   term: AmbassadorTerm | null,
   now: Date = new Date(),
+  trial: TrialStatus | null = null,
 ): PlanBadge {
   const ambassador = term?.status === "active";
   const short = SHORT_NAME[plan];
@@ -96,6 +113,39 @@ export function planBadgeFor(
         : `Free until ${longDate(end)}`,
       cta: { label: ending ? "Keep Pro" : "See plans", href: "/pricing" },
       daysLeft,
+      countdown: null,
+    };
+  }
+
+  // The no-card trial, still running. What they are on is a trial, not a
+  // Standard plan they chose, so the pill says so and the button chooses one.
+  if (trial?.trialEndsAt && trial.trialEndsAt.getTime() > now.getTime()) {
+    const daysLeft = daysUntil(trial.trialEndsAt, now);
+    return {
+      plan,
+      label: "Free trial",
+      ambassador,
+      note: `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left of your free trial`,
+      cta: { label: "Choose a plan", href: "/pricing" },
+      daysLeft: null,
+      countdown: {
+        kind: "trial",
+        endsAt: trial.trialEndsAt,
+        ...(trial.trialStartedAt ? { startedAt: trial.trialStartedAt } : {}),
+      },
+    };
+  }
+
+  // The trial is over and its offer is open.
+  if (trial?.offerEndsAt && trial.offerEndsAt.getTime() > now.getTime() && !hasActivePlan(plan)) {
+    return {
+      plan,
+      label: SHORT_NAME.free,
+      ambassador,
+      note: "50% off your first month",
+      cta: { label: "Claim 50% off", href: "/pricing" },
+      daysLeft: null,
+      countdown: { kind: "offer", endsAt: trial.offerEndsAt },
     };
   }
 
@@ -116,5 +166,6 @@ export function planBadgeFor(
     note: null,
     cta: { label: ctaLabel, href: "/pricing" },
     daysLeft: null,
+    countdown: null,
   };
 }

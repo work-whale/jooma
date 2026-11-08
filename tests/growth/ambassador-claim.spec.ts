@@ -118,7 +118,7 @@ test.describe("Claiming an ambassador code", () => {
     await page.goto(`/signup?code=${fixture.code}`);
     // Wait for the form to be interactive, which is proof the client component
     // has mounted and therefore that its stash effect has run.
-    await expect(page.getByLabel("Email")).toBeVisible();
+    await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
 
     // Polled, not read once: the stash is written by an effect, so a single
     // evaluate can land in the gap between the form painting and React

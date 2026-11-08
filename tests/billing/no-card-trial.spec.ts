@@ -157,7 +157,10 @@ test.describe("while it runs and when it ends", () => {
     await endTrial(new Date(Date.now() + 2 * 86_400_000));
     await signIn(page, teacher);
     await page.goto("/dashboard");
-    await expect(page.getByTestId("trial-banner")).toContainText("2 days left");
+    // The countdown moved from a strip across the top into the sidebar's plan
+    // card (TrialBanner no longer speaks during a trial).
+    await expect(page.getByTestId("sidebar-plan-countdown")).toContainText("2 days left of your free trial");
+    await expect(page.getByTestId("trial-banner")).toHaveCount(0);
     await page.goto("/profile?section=subscription");
     await expect(page.getByTestId("review-trial")).toContainText(/no card is needed/i);
     await expect(page.getByTestId("review-trial")).not.toContainText(/ambassador/i);
@@ -172,7 +175,9 @@ test.describe("while it runs and when it ends", () => {
     expect((await res.json()).code).toBe("plan_required");
 
     await page.goto("/dashboard");
-    await expect(page.getByTestId("trial-banner")).toContainText(/your free trial has ended/i);
+    // A popup now says so, not a line across the top.
+    await expect(page.getByTestId("trial-ended-modal")).toContainText(/your free trial has ended/i);
+    await expect(page.getByTestId("trial-banner")).toHaveCount(0);
     await expect(page.getByTestId("locked-card")).toBeVisible();
     // The row was never touched: it is the read that has to be right.
     expect((await trialRow(teacher.id)).plan).toBe("standard");
