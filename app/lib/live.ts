@@ -11,6 +11,7 @@
 
 import { FX_USD_TO_GBP } from "@/app/admin/format";
 import { toCredits } from "./plans";
+import { getLanguage, isNonDefaultLanguage } from "./languages";
 
 export type LiveSurface = "panel" | "assistant";
 
@@ -117,15 +118,23 @@ function tools(surface: LiveSurface, docLabel: string) {
   ];
 }
 
-/** The session a Live call opens with. */
-export function liveSessionConfig(surface: LiveSurface, docLabel: string) {
+/** The session a Live call opens with. `language` is the teacher's output
+ *  language (lib/languages): UK English, or none, gives exactly the session it
+ *  always has; any other adds one line overriding "Speak British English" and
+ *  sets the transcription language to match. */
+export function liveSessionConfig(surface: LiveSurface, docLabel: string, language?: unknown) {
+  const lang = getLanguage(language);
+  const base = surface === "assistant" ? ASSISTANT_INSTRUCTIONS : panelInstructions(docLabel);
+  const instructions = isNonDefaultLanguage(language)
+    ? `${base}\nSpeak ${lang.promptName} throughout. This overrides the line about British English above.`
+    : base;
   return {
     type: "realtime",
     model: LIVE_MODEL,
-    instructions: surface === "assistant" ? ASSISTANT_INSTRUCTIONS : panelInstructions(docLabel),
+    instructions,
     audio: {
       input: {
-        transcription: { model: LIVE_TRANSCRIBE_MODEL, language: "en" },
+        transcription: { model: LIVE_TRANSCRIBE_MODEL, language: lang.transcribeLang },
         // Waits for the end of a thought, not just a pause, so a teacher who
         // stops to think is not cut off.
         turn_detection: { type: "semantic_vad" },

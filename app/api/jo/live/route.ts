@@ -30,7 +30,7 @@ interface GateRow {
 }
 
 export async function POST(req: NextRequest) {
-  let body: { sdp?: unknown; surface?: unknown; docLabel?: unknown };
+  let body: { sdp?: unknown; surface?: unknown; docLabel?: unknown; language?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   const form = new FormData();
   form.set("sdp", sdp);
-  form.set("session", JSON.stringify(liveSessionConfig(surface, cleanDocLabel(body.docLabel))));
+  form.set("session", JSON.stringify(liveSessionConfig(surface, cleanDocLabel(body.docLabel), body.language)));
   const res = await fetch("https://api.openai.com/v1/realtime/calls", {
     method: "POST",
     headers: {

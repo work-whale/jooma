@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info } from "lucide-react";
+import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, ChevronRight, Headphones, Video as VideoIcon, BookOpen, FileUp, FolderSymlink, Link as LinkIcon, CheckCircle2, ChevronDown, GraduationCap, Layers, Info, Globe } from "lucide-react";
 import { createPresentation } from "@/app/lib/presentations";
 import { parseYouTubeId } from "@/app/components/editor/youtube";
 import ResourceLibraryModal from "./ResourceLibraryModal";
@@ -15,6 +15,8 @@ import { curriculumAlignParam } from "@/app/lib/national-curriculum/prompt";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
 import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
+import { useGenerationLanguage } from "@/app/components/LanguageField";
+import { LANGUAGES } from "@/app/lib/languages";
 
 // sessionStorage key used to hand the generation params from this modal to the
 // editor page, which kicks off the SSE stream after navigation.
@@ -26,6 +28,9 @@ export interface GenerationParams {
   topic: string;
   year?: string;
   readingLevel?: string;
+  /** Output language (lib/languages). Saved with the deck, so the editor's
+   *  regenerate and its add-ons (activities, audio) keep the same language. */
+  language?: string;
   slideCount?: number;
   additionalInstructions?: string;
   includeObjectives?: boolean;
@@ -207,6 +212,7 @@ export default function GenerateModal({
   // a starting point the teacher edits, so re-applying them after a render
   // would fight whatever they had just typed. Mount once, then it is theirs.
   const [topic, setTopic] = useState(prefill?.topic ?? "");
+  const [language, setLanguage] = useGenerationLanguage();
   // Cycling typewriter placeholder, matching the other tool forms.
   const topicPlaceholder = useTypingPlaceholder([
     "E.g. The French Revolution",
@@ -374,6 +380,7 @@ export default function GenerateModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           topic: topic.trim(),
           year: year || undefined,
           readingLevel,
@@ -409,7 +416,7 @@ export default function GenerateModal({
       const r = await fetch("/api/suggest-vocabulary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: t, year: year || undefined }),
+        body: JSON.stringify({ language, topic: t, year: year || undefined }),
       });
       if (!r.ok) {
         const err = await r.json().catch(() => ({}));
@@ -476,6 +483,7 @@ export default function GenerateModal({
         topic: topic.trim(),
         year: year || undefined,
         readingLevel,
+        language,
         slideCount,
         additionalInstructions: additionalInstructions.trim() || undefined,
         includeObjectives,
@@ -643,6 +651,14 @@ export default function GenerateModal({
                   placeholder="Reading level"
                   options={READING_LEVELS.map((r) => ({ value: r, label: r }))}
                   onChange={setReadingLevel}
+                  disabled={busy}
+                />
+                <PillSelect
+                  icon={<Globe className="w-3.5 h-3.5" />}
+                  value={language}
+                  placeholder="Language"
+                  options={LANGUAGES.map((l) => ({ value: l.code, label: l.nativeLabel }))}
+                  onChange={setLanguage}
                   disabled={busy}
                 />
                 <div className="flex items-center gap-1.5">

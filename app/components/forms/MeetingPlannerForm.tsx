@@ -19,6 +19,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "meeting-planner";
 
@@ -164,11 +166,14 @@ export default function MeetingPlannerForm({
 
   const durationNum = parseInt(duration, 10);
   const canGenerate = purpose.trim() && participants.trim() && !isNaN(durationNum) && durationNum >= 5 && durationNum <= 480;
-  const formState = { purpose, duration, participants, topics, includeIcebreaker, includeActionItems };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), purpose, duration, participants, topics, includeIcebreaker, includeActionItems };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setPurpose((i.purpose as string) ?? "");
     setDuration((i.duration as string) ?? "60");
@@ -203,7 +208,7 @@ export default function MeetingPlannerForm({
       const res = await fetch("/api/meeting-planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ purpose, duration: durationNum, participants, topics, includeIcebreaker, includeActionItems }),
+        body: JSON.stringify({ language, purpose, duration: durationNum, participants, topics, includeIcebreaker, includeActionItems }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -231,7 +236,7 @@ export default function MeetingPlannerForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -262,6 +267,9 @@ export default function MeetingPlannerForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <MeetingPurposeField value={purpose} onChange={setPurpose} />
 

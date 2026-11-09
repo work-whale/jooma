@@ -14,6 +14,8 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { DifferentiationField } from "@/app/components/fields";
 import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "phonics-support";
 
@@ -57,11 +59,14 @@ export default function PhonicsForm({
 
   const canGenerate = curriculum && grapheme.trim() && (differentiate === "no" || differentiationLevels.length > 0);
 
-  const formState = { curriculum, age, grapheme, differentiate, differentiationLevels };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, age, grapheme, differentiate, differentiationLevels };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setAge((i.age as number) ?? 5);
@@ -99,7 +104,7 @@ export default function PhonicsForm({
       const res = await fetch("/api/phonics-support", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ curriculum, age, grapheme: grapheme.trim(), differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, curriculum, age, grapheme: grapheme.trim(), differentiate, differentiationLevels }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -128,7 +133,7 @@ export default function PhonicsForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -158,6 +163,9 @@ export default function PhonicsForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             {/* Curriculum + Age row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

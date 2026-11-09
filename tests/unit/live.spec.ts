@@ -103,3 +103,24 @@ test("a spent budget makes Jo say goodbye, then ends the call", async () => {
   expect(calls.hangUps).toBe(1);
   expect(calls.recorded.reduce((a, b) => a + b, 0)).toBeCloseTo((650 * 20) / 1_000_000, 10);
 });
+
+/* ── Output language (2026-11-08) ─────────────────────────────────────────── */
+
+test("UK English, or no language, opens exactly the session it always has", () => {
+  for (const surface of ["panel", "assistant"] as const) {
+    const before = JSON.stringify(liveSessionConfig(surface, "worksheet"));
+    expect(JSON.stringify(liveSessionConfig(surface, "worksheet", "en-GB"))).toBe(before);
+    expect(JSON.stringify(liveSessionConfig(surface, "worksheet", "nonsense"))).toBe(before);
+    expect(liveSessionConfig(surface, "worksheet").audio.input.transcription.language).toBe("en");
+  }
+});
+
+test("another language speaks and transcribes in that language", () => {
+  const fr = liveSessionConfig("panel", "worksheet", "fr");
+  expect(fr.instructions).toContain("Speak British English");
+  expect(fr.instructions.endsWith("Speak French throughout. This overrides the line about British English above.")).toBe(true);
+  expect(fr.audio.input.transcription.language).toBe("fr");
+  expect(liveSessionConfig("assistant", "worksheet", "pt-BR").audio.input.transcription.language).toBe("pt");
+  // Tools are untouched.
+  expect(fr.tools).toEqual(liveSessionConfig("panel", "worksheet").tools);
+});

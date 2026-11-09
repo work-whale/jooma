@@ -19,6 +19,8 @@ import { modelFor } from "@/app/lib/tool-model";
 import { forSdk } from "@/app/lib/models";
 import type { SlideJSON } from "@/app/lib/presentations";
 import { curriculumPromptBlock, curriculumStatementTexts, deckCurriculumRules } from "@/app/lib/national-curriculum/prompt";
+import { withLanguage } from "@/app/lib/languages";
+import type OpenAI from "openai";
 
 type ImageSource = "auto" | "ai" | "web";
 
@@ -29,6 +31,10 @@ export interface RequestBody {
   runId?: string;
   year?: string;
   readingLevel?: string;
+  /** Output language code (lib/languages). Missing or "en-GB" leaves the
+   *  prompt exactly as it was. Saved with the deck's generation params, so a
+   *  regenerate keeps the language. */
+  language?: string;
   slideCount?: number;
   additionalInstructions?: string;
   includeObjectives?: boolean;
@@ -1213,10 +1219,11 @@ export function slideshowStream({
         const deckModel = await modelFor("generate-slideshow", "gpt-4o-2024-08-06");
         const stream = await client.chat.completions.create({
           ...forSdk(deckModel),
-          messages: [
+          // UK English (the default) adds nothing: same messages as ever.
+          messages: withLanguage<OpenAI.Chat.Completions.ChatCompletionMessageParam>([
             { role: "system", content: "You are a senior pedagogical lesson designer creating UK classroom slideshows. Your output is structured JSON. Your style is vivid, specific, and memorable — every slide should feel like it was designed by a thoughtful teacher who understands their audience." },
             { role: "user", content: buildPrompt(body) },
-          ],
+          ], body.language),
           response_format: { type: "json_schema", json_schema: schemaFor(body) },
           stream: true,
           // Ask for token usage in the final stream chunk so we can log the
@@ -1572,6 +1579,7 @@ export function slideshowStream({
                 ...subrequestHeaders,
               },
               body: JSON.stringify({
+                language: body.language,
                 topic: body.topic,
                 year: body.year,
                 readingLevel: body.readingLevel,

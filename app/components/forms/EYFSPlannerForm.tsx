@@ -14,6 +14,8 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { DifferentiationField } from "@/app/components/fields";
 import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "eyfs-planner";
 
@@ -47,11 +49,14 @@ export default function EYFSPlannerForm({
     (differentiate === "no" || differentiationLevels.length > 0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate, differentiationLevels };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate, differentiationLevels };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "Early Years Foundation Stage (EYFS)");
     setTopic((i.topic as string) ?? "");
@@ -90,7 +95,7 @@ export default function EYFSPlannerForm({
       const res = await fetch("/api/eyfs-planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ curriculum, topic, numberOfWeeks: weeksNum, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, curriculum, topic, numberOfWeeks: weeksNum, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate, differentiationLevels }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -132,6 +137,9 @@ export default function EYFSPlannerForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1.5">

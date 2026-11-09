@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestLanguage } from "@/app/lib/languages";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 
@@ -52,6 +53,7 @@ PASSAGE:
 ${ownText}`;
 
   const response = await createCompletion({
+    language: requestLanguage(body),
     toolSlug: "generate",
     ...(await modelFor("generate", "gpt-4o")),
     max_completion_tokens: 4096,

@@ -11,6 +11,7 @@ import { supabase } from "@/app/lib/supabase";
 import { recordUsage, recordAssetCost, createCompletion, costUsd, type Usage } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { CLIP_VOICE, saidVerbatim, synthesize } from "@/app/lib/speech";
+import { isNonDefaultLanguage, requestLanguage, voiceAccent } from "@/app/lib/languages";
 
 export const maxDuration = 120;
 
@@ -67,6 +68,13 @@ const scriptSchema = {
 const CLIP_STYLE =
   "A clear, natural British narrator with a Received Pronunciation accent, reading to a UK primary school class. Warm and expressive, at a steady pace with natural pauses.";
 
+/** CLIP_STYLE for UK English (unchanged); otherwise the same narrator in the
+ *  deck's language, so the voice matches the script. */
+function clipStyleFor(language: string): string {
+  if (!isNonDefaultLanguage(language)) return CLIP_STYLE;
+  return `A clear, natural narrator: ${voiceAccent(language)}, reading to a primary school class. Warm and expressive, at a steady pace with natural pauses.`;
+}
+
 export async function POST(req: NextRequest) {
   let body: RequestBody;
   try { body = await req.json(); }
@@ -108,6 +116,7 @@ ${activityInstruction}${extraInstr}
 
 Return the questions array, plus an "answers" array with ONE model answer per question in the same order, plus a brief title and one-sentence description for the activity.`;
     const completion = await createCompletion({
+      language: requestLanguage(body),
       toolSlug: "generate-audio",
       ...scriptModel,
       messages: [
@@ -150,6 +159,7 @@ Write:
 Do NOT rewrite the script — leave the "script" field equal to the supplied text. Use British English in everything you write.`;
 
     const completion = await createCompletion({
+      language: requestLanguage(body),
       toolSlug: "generate-audio",
       ...scriptModel,
       messages: [
@@ -194,6 +204,7 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     // slideshow's step/runId when nested). Recording it here as well would
     // double-count it — and token_usage feeds the spend ceiling.
     const completion = await createCompletion({
+      language: requestLanguage(body),
       toolSlug: "generate-audio",
       skipUsage: true,
       ...scriptModel,
@@ -218,7 +229,7 @@ The "script" must be plain spoken text only — no stage directions, sound effec
   let mp3Buffer: Buffer;
   let ttsCost: number;
   try {
-    const speech = await synthesize(script, { voice: CLIP_VOICE, style: CLIP_STYLE, timeoutMs: 90_000 });
+    const speech = await synthesize(script, { voice: CLIP_VOICE, style: clipStyleFor(requestLanguage(body)), timeoutMs: 90_000 });
     mp3Buffer = speech.mp3;
     ttsCost = speech.costUsd;
     // The questions test what pupils hear, so if the narrator strayed from the

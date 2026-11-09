@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
+import { readGenerationLanguage } from "@/app/components/LanguageField";
 
 interface GenerateOutlineButtonProps {
   topic: string;
@@ -27,7 +28,7 @@ export default function GenerateOutlineButton({
       const res = await fetch("/api/generate-outline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, subject, yearGroup }),
+        body: JSON.stringify({ topic, subject, yearGroup, language: readGenerationLanguage() }),
       });
       if (!res.ok) return;
       const reader = res.body!.getReader();

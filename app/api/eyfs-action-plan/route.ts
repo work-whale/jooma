@@ -3,6 +3,7 @@ import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -130,6 +131,7 @@ A brief, practical summary of likely costs and how they might be funded (e.g. Pu
 Write in a professional, action-oriented tone appropriate for a formal school improvement document. Every action must be specific, named, and practical — avoid vague generalities. Write in UK English.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "eyfs-action-plan",
     ...(await modelFor("eyfs-action-plan", "gpt-4o")),
     max_completion_tokens: 2000,

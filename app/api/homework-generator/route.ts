@@ -10,6 +10,7 @@ import {
   isBand,
   type Differentiate,
 } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface HomeworkRequest {
   curriculum: string;
@@ -164,6 +165,7 @@ ${answerSection}`;
     : userPrompt;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "homework-generator",
     step: bandUsageStep(body.band, body.bandIndex),
     ...(await modelFor("homework-generator", "gpt-4o")),

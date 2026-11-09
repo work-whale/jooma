@@ -14,6 +14,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "policy-generator";
 
@@ -168,11 +170,14 @@ export default function PolicyGeneratorForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum.trim() && policy.trim();
-  const formState = { curriculum, policy, additionalRequirements, outputType };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, policy, additionalRequirements, outputType };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setPolicy((i.policy as string) ?? "");
@@ -197,7 +202,7 @@ export default function PolicyGeneratorForm({
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, language }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -260,6 +265,9 @@ export default function PolicyGeneratorForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <CurriculumField value={curriculum} onChange={setCurriculum} />
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 function buildPrompt(body: {
@@ -58,8 +59,9 @@ ${result}
 Return the full updated risk assessment as a markdown table in the same format. Apply only the changes described. No preamble.`;
 }
 
-async function streamText(system: string, userContent: string) {
+async function streamText(system: string, userContent: string, language: string) {
   return streamChat({
+    language,
     toolSlug: "risk-assessment",
     ...(await modelFor("risk-assessment", "gpt-4o")),
     max_completion_tokens: 4096,
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
     return streamText(
       buildSystem("You are an expert UK school health and safety officer with thorough knowledge of the Health and Safety at Work etc. Act 1974, the Management of Health and Safety at Work Regulations 1999, and DfE and HSE guidance for educational settings. Return only the updated risk assessment as a markdown table with no preamble, and no code block or triple-backtick fence around it."),
       buildRefinePrompt(body.result, body.instruction),
+      requestLanguage(body),
     );
   }
 
@@ -90,5 +93,6 @@ export async function POST(req: NextRequest) {
   return streamText(
     buildSystem("You are an expert UK school health and safety officer and site manager with thorough knowledge of the Health and Safety at Work etc. Act 1974, the Management of Health and Safety at Work Regulations 1999, and DfE and HSE guidance for educational settings, including off-site visits and educational trips. You produce specific, realistic, and legally defensible risk assessments for all types of school activities. Output only a markdown table — no title, no preamble, no explanation, and no code block or triple-backtick fence around it."),
     buildPrompt(body),
+    requestLanguage(body),
   );
 }

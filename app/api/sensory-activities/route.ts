@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface SensoryActivitiesRequest {
   curriculum: string;
@@ -84,6 +85,7 @@ Then for each of the 5 activities use this exact structure:
 Do not use any emojis. Do not add any text before the title or after the last activity.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "sensory-activities",
     ...(await modelFor("sensory-activities", "gpt-4o")),
     max_completion_tokens: 8192,

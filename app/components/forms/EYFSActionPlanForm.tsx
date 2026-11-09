@@ -18,6 +18,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "eyfs-action-plan";
 
@@ -52,11 +54,14 @@ export default function EYFSActionPlanForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = curriculum && objective.trim() && (differentiate === "no" || differentiationLevels.length > 0);
-  const formState = { curriculum, objective, differentiate, differentiationLevels };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, objective, differentiate, differentiationLevels };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setObjective((i.objective as string) ?? "");
@@ -88,7 +93,7 @@ export default function EYFSActionPlanForm({
       const res = await fetch("/api/eyfs-action-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ curriculum, objective, differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, curriculum, objective, differentiate, differentiationLevels }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -116,7 +121,7 @@ export default function EYFSActionPlanForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -146,6 +151,9 @@ export default function EYFSActionPlanForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <CurriculumField value={curriculum} onChange={setCurriculum} />
 

@@ -20,6 +20,7 @@ import {
   type ToolPrefill,
   type ToolClarify,
 } from "@/app/lib/toolPrefill";
+import { readGenerationLanguage } from "@/app/components/LanguageField";
 
 /** Header the route uses to hand back a prefill decision alongside the stream. */
 const TOOL_HEADER = "x-assistant-tool";
@@ -262,6 +263,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            language: readGenerationLanguage(),
             messages: history.map((t) => ({ role: t.role, content: t.content })),
             tool: opts.tool,
             attachment: opts.attachment,

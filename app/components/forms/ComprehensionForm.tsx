@@ -19,6 +19,8 @@ import { defaultDomainCodes, domainsFor, keyStageFor } from "@/app/lib/comprehen
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-options";
 import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 /**
  * How the form runs on /create for a signed out visitor. Same fields, same
@@ -117,7 +119,8 @@ export default function ComprehensionForm({
   const toggleQuestionType = (type: string) =>
     setQuestionTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
 
-  const formState = { curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey, differentiate, differentiationLevels, pictures };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, textSource, topic, ownText, passageWordCount, complexity, contentDomains, questionTypes, numQuestions, includeAnswerKey, differentiate, differentiationLevels, pictures };
   const formSnapshot = JSON.stringify(formState);
 
   // Tell the guest page what the form says, for Ask Jo. A callback into a ref
@@ -129,6 +132,8 @@ export default function ComprehensionForm({
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setYearGroup((i.yearGroup as string) ?? "");
@@ -201,6 +206,7 @@ export default function ComprehensionForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           // The guest route keeps the raw form so a claimed run restores into
           // this form exactly as the visitor left it.
           ...(guest ? { ...(guest.extraBody?.() ?? {}), formState } : {}),
@@ -298,6 +304,9 @@ export default function ComprehensionForm({
               yearGroup={yearGroup} onYearGroupChange={setYearGroup}
               mixed={mixed} onMixedChange={setMixed}
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             {/* Text Source */}
             <div className="space-y-1.5">

@@ -14,6 +14,7 @@ import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { scanForSafeguarding, EXCERPT_MAX } from "@/app/lib/safeguarding";
 import { MODELS, isKnownModel, isReasoning } from "@/app/lib/models";
+import { withLanguage } from "@/app/lib/languages";
 
 // Pricing lives in app/lib/models.ts so the admin dropdown and the cost maths
 // cannot disagree about what a model costs. Unknown models fall back to gpt-4o
@@ -423,6 +424,13 @@ type StreamParams = Omit<
      * messages, which is better than nothing but noisier.
      */
     safeguardingText?: string;
+    /**
+     * The output language the teacher picked, straight from the request body
+     * (untrusted; parsed in lib/languages). UK English or missing adds nothing,
+     * so the prompt is exactly what the route built. Anything else appends one
+     * final system message that overrides the prompts' "UK English" lines.
+     */
+    language?: unknown;
   };
 
 /** Run a streaming chat completion and return a plain-text streaming Response,
@@ -435,8 +443,10 @@ export async function streamChat({
   runId,
   safeguardingText,
   onComplete,
-  ...params
+  language,
+  ...rest
 }: StreamParams): Promise<Response> {
+  const params = { ...rest, messages: withLanguage(rest.messages, language) };
   // Resolve the user NOW, while the request context (and therefore its cookies)
   // is still alive. recordUsage runs in the stream's `finally`, long after the
   // response has been handed off, where the session is no longer readable.
@@ -547,6 +557,8 @@ type CompletionParams = Omit<
      * generation, not just a gap in a report.
      */
     skipUsage?: boolean;
+    /** Output language, as on streamChat. */
+    language?: unknown;
   };
 
 /**
@@ -566,8 +578,10 @@ export async function createCompletion({
   userId,
   runId,
   skipUsage,
-  ...params
+  language,
+  ...rest
 }: CompletionParams): Promise<OpenAI.Chat.Completions.ChatCompletion> {
+  const params = { ...rest, messages: withLanguage(rest.messages, language) };
   const reasoning: ReasoningParams = {
     reasoning_effort: params.reasoning_effort,
     verbosity: params.verbosity,

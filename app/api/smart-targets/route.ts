@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface SmartTargetsRequest {
   curriculum: string;
@@ -48,6 +49,7 @@ Additional rules:
 
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "smart-targets",
     ...(await labModelFor(body, "smart-targets", "gpt-4o")),
     max_completion_tokens: 4096,

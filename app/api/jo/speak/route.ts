@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { JO_VOICE, saidVerbatim, synthesize } from "@/app/lib/speech";
 import { currentUserId, recordAssetCost } from "@/app/lib/usage";
+import { isNonDefaultLanguage, requestLanguage, voiceAccent } from "@/app/lib/languages";
 
 export const maxDuration = 60;
 
@@ -17,11 +18,20 @@ const MAX_CHARS = 1_500;
 const STYLE =
   "A warm, friendly British primary school teacher speaking to a colleague. Southern English accent. Calm, clear and encouraging, at a relaxed pace.";
 
+/** The British STYLE for UK English (unchanged); otherwise the same delivery
+ *  in the teacher's chosen language. */
+function styleFor(language: string): string {
+  if (!isNonDefaultLanguage(language)) return STYLE;
+  return `A warm, friendly primary school teacher speaking to a colleague: ${voiceAccent(language)}. Calm, clear and encouraging, at a relaxed pace.`;
+}
+
 export async function POST(req: NextRequest) {
   let text = "";
+  let language = "en-GB";
   try {
-    const body = (await req.json()) as { text?: unknown };
+    const body = (await req.json()) as { text?: unknown; language?: unknown };
     text = typeof body.text === "string" ? body.text : "";
+    language = requestLanguage(body);
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -30,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const userId = await currentUserId();
   try {
-    const speech = await synthesize(text, { voice: JO_VOICE, style: STYLE });
+    const speech = await synthesize(text, { voice: JO_VOICE, style: styleFor(language) });
     if (!saidVerbatim(text, speech.transcript)) {
       console.warn("[jo/speak] said something other than the text:", { text, said: speech.transcript });
     }

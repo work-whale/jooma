@@ -16,6 +16,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "model-text-generator";
 
@@ -62,11 +64,14 @@ export default function ModelTextGeneratorForm({
     !isNaN(lengthNum) && lengthNum >= 50 && lengthNum <= 5000 &&
     (differentiate === "no" || differentiationLevels.length > 0);
 
-  const formState = { curriculum, yearGroup, mixed, write, features, keywords, differentiate, differentiationLevels, lengthWords };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, write, features, keywords, differentiate, differentiationLevels, lengthWords };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setYearGroup((i.yearGroup as string) ?? "");
@@ -108,6 +113,7 @@ export default function ModelTextGeneratorForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           curriculum,
           yearGroup: mixed ? "Mixed" : yearGroup,
           write,
@@ -163,6 +169,9 @@ export default function ModelTextGeneratorForm({
               mixed={mixed} onMixedChange={setMixed}
               yearGroupNote
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <WriteField value={write} onChange={setWrite} />
             <FeaturesField value={features} onChange={setFeatures} />
@@ -230,7 +239,7 @@ export default function ModelTextGeneratorForm({
               const res = await fetch("/api/modify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ currentContent: bandOutput(base, band), instruction }),
+                body: JSON.stringify({ language, currentContent: bandOutput(base, band), instruction }),
               });
               if (!res.ok) throw new Error("Refinement failed");
               await readTextStream(res, (refined) => setResult(replaceBandOutput(base, band, refined)));

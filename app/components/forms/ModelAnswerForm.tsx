@@ -12,6 +12,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "model-answer-generator";
 
@@ -53,11 +55,14 @@ export default function ModelAnswerForm({
 
   const canGenerate = curriculum && (mixed || yearGroup) && subject.trim() && question.trim();
 
-  const formState = { curriculum, yearGroup, mixed, subject, question, contentRequirements, guidelines, totalMarks };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, subject, question, contentRequirements, guidelines, totalMarks };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setYearGroup((i.yearGroup as string) ?? "");
@@ -99,6 +104,7 @@ export default function ModelAnswerForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           curriculum,
           yearGroup: mixed ? "Mixed" : yearGroup,
           subject: toTitleCase(subject),
@@ -135,7 +141,7 @@ export default function ModelAnswerForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -172,6 +178,9 @@ export default function ModelAnswerForm({
               mixed={mixed} onMixedChange={setMixed}
               yearGroupNote
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <div className="space-y-1.5">
               <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Subject</label>

@@ -20,6 +20,8 @@ const STARTERS = [
 ];
 
 export interface SlidesJoOptions {
+  /** The deck's output language, so Jo edits it in the language it was made in. */
+  language?: string;
   bridge: SlidesBridge;
   /** The canvas area, which the ring is drawn in. */
   canvasRef: RefObject<HTMLElement | null>;
@@ -41,6 +43,7 @@ export function useSlidesJoPanel(opts: SlidesJoOptions) {
     endpoint: opts.guest ? "/api/try/jo" : "/api/jo",
     docRef: opts.guest ? null : opts.docRef,
     guest: opts.guest ? { trialId: opts.guest.trialId, honeypot: opts.guest.honeypot } : undefined,
+    language: opts.language,
   });
   const voice = useJoVoice(!opts.guest);
 

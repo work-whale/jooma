@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface LessonPlanRequest {
   curriculum: string;
@@ -158,6 +159,7 @@ A structured bullet list of all materials, tools, and technology required. Separ
 Do not use any emojis. Write in a professional, teacher-friendly tone appropriate for use in a UK school context.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "lesson-planner",
     ...(await labModelFor(body, "lesson-planner", "gpt-4o")),
     max_completion_tokens: 8192,

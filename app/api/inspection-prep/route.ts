@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 const isOfsted = (body: string) => /ofsted/i.test(body);
@@ -100,6 +101,7 @@ ${evidenceNote}${successNote}${policyNote}
 Write in a professional, authoritative tone appropriate for a senior leadership team. Questions must be genuinely thought-provoking — not surface-level checklist items. Actions must be specific and immediately actionable. Use UK English and accurate inspection terminology throughout.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "inspection-prep",
     ...(await modelFor("inspection-prep", "gpt-4o")),
     max_completion_tokens: 4000,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 function buildPrompt(body: {
@@ -190,8 +191,9 @@ CRITICAL: Each table cell must contain only a single line of text — no line br
 Return the full updated plan in the same markdown table format. Apply only the changes described. No preamble.`;
 }
 
-async function streamText(system: string, userContent: string) {
+async function streamText(system: string, userContent: string, language: string) {
   return streamChat({
+    language,
     toolSlug: "behaviour-support-plan",
     ...(await modelFor("behaviour-support-plan", "gpt-4o")),
     max_completion_tokens: 8192,
@@ -212,6 +214,7 @@ export async function POST(req: NextRequest) {
     return streamText(
       buildSystem("You are an expert UK SENCO and positive behaviour support specialist with extensive experience writing Behaviour Support Plans in line with the SEND Code of Practice and DfE behaviour guidance. Return only the updated plan as markdown tables. Each cell must be a single line — no line breaks or <br> tags inside cells."),
       buildRefinePrompt(body.result, body.instruction),
+      requestLanguage(body),
     );
   }
 
@@ -223,5 +226,6 @@ export async function POST(req: NextRequest) {
   return streamText(
     buildSystem("You are an expert UK SENCO, positive behaviour support specialist, and experienced secondary and primary school teacher with thorough knowledge of the SEND Code of Practice (2015), DfE guidance on behaviour in schools, and evidence-based de-escalation approaches. You create Behaviour Support Plans that are specific, practical, and immediately usable by all staff — not generic templates. Output only markdown tables. CRITICAL: every table cell must be a single line — no line breaks, no <br> tags, no multi-line content inside any cell. Each bullet point must be its own table row."),
     buildPrompt(body),
+    requestLanguage(body),
   );
 }

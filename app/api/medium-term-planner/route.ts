@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface MediumTermPlannerRequest {
   curriculum: string;
@@ -59,6 +60,7 @@ Rules:
 - Write in a professional, teacher-friendly tone using UK English.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "medium-term-planner",
     ...(await modelFor("medium-term-planner", "gpt-4o")),
     max_completion_tokens: 8192,

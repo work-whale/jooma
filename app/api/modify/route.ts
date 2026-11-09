@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
-  const { currentContent, instruction } = await req.json();
+  const body = await req.json();
+  const { currentContent, instruction } = body;
 
   if (!currentContent?.trim() || !instruction?.trim()) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "modify",
     ...(await modelFor("modify", "gpt-4o")),
     max_completion_tokens: 8096,

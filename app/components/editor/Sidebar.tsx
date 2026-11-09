@@ -10,6 +10,7 @@ import type { FrameShape } from "./frames";
 import { GOOGLE_FONTS, injectGoogleFonts } from "./googleFonts";
 import { listGeneratedImages, saveGeneratedImage, thumbUrl, type GeneratedImage } from "@/app/lib/generatedImages";
 import { useEditorGuest } from "./EditorGuest";
+import { useEditorLanguage } from "./EditorLanguage";
 
 type TabId = "elements" | "text" | "activities" | "pictures" | "gif" | "audio" | "video";
 export type SidebarTabId = TabId;
@@ -171,6 +172,7 @@ export default function Sidebar({
   // A signed out visitor on /create: the model calls below open the sign up
   // prompt instead. See EditorGuest.
   const guest = useEditorGuest();
+  const language = useEditorLanguage();
 
   // ── Video tab ─────────────────────────────────────────────────────────────
   const videoFileRef = useRef<HTMLInputElement>(null);
@@ -273,6 +275,7 @@ export default function Sidebar({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           topic: audioTopic.trim() || "Custom script",
           activityType: audioActivityType,
           additionalInstructions: audioInstructions.trim() || undefined,
