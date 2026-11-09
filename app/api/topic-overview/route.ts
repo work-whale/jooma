@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface TopicOverviewRequest {
   curriculum: string;
@@ -69,6 +70,7 @@ Describe 3 concrete assessment opportunities across the topic as a bullet list. 
 Write in a clear, professional tone suitable for ${yearGroup} in a UK school context. Do not use any emojis. When labelling items use plain text letters: (a), (b), (c) — never use the © symbol.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "topic-overview",
     ...(await modelFor("topic-overview", "gpt-4o")),
     max_completion_tokens: 4096,

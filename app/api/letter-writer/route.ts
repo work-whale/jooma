@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -54,6 +55,7 @@ Dear ${recipient.charAt(0).toUpperCase() + recipient.slice(1)},
 Write in UK English. Use £ for currency. Use British date conventions. Do not use emojis.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "letter-writer",
     ...(await labModelFor(body, "letter-writer", "gpt-4o")),
     max_completion_tokens: 2000,

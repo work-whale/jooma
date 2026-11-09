@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -62,6 +63,7 @@ Tier definitions:
 Keep each bullet point to one or two short sentences. Be specific and avoid generic advice. Reference EEF evidence where relevant. Use UK English throughout. Be specific to the education phase: ${educationPhase || "the school phase"}.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "pupil-premium-planner",
     ...(await modelFor("pupil-premium-planner", "gpt-4o")),
     max_completion_tokens: 4000,

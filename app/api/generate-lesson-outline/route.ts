@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 export const maxDuration = 60;
 
@@ -78,6 +79,7 @@ Keep it concise — this gets pasted into a slideshow generator as additional co
 
   try {
     const completion = await createCompletion({
+      language: requestLanguage(body),
       toolSlug: "generate-lesson-outline",
       ...(await modelFor("generate-lesson-outline", "gpt-4o-2024-08-06")),
       messages: [

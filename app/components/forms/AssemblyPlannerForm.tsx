@@ -17,6 +17,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "assembly-planner";
 
@@ -51,9 +53,12 @@ export default function AssemblyPlannerForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { theme, stageOfSchool, lengthMinutes, additionalNotes };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), theme, stageOfSchool, lengthMinutes, additionalNotes };
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setTheme((i.theme as string) ?? "");
     setStageOfSchool((i.stageOfSchool as string) ?? "Primary");
@@ -87,7 +92,7 @@ export default function AssemblyPlannerForm({
       const res = await fetch("/api/assembly-planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme, stageOfSchool, lengthMinutes, additionalNotes }),
+        body: JSON.stringify({ language, theme, stageOfSchool, lengthMinutes, additionalNotes }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -115,7 +120,7 @@ export default function AssemblyPlannerForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -142,6 +147,9 @@ export default function AssemblyPlannerForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <AssemblyStageField value={stageOfSchool} onChange={setStageOfSchool} />

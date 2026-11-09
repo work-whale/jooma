@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { comprehensionMessages, type GenerateRequest } from "@/app/lib/comprehension-prompt";
 import { bandUsageStep } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export type { GenerateRequest };
 
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
 
   const lab = await labModelFor(body, "comprehension-generator", "gpt-4o");
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "comprehension-generator",
     ...lab,
     // A model lab run keeps its own step; otherwise a band's extra versions

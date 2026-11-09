@@ -3,6 +3,7 @@ import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface PhonicsSupportRequest {
   curriculum: string;
@@ -234,6 +235,7 @@ Rules:
 - Do not add any text before the main title or after the last assessment idea.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "phonics-support",
     ...(await modelFor("phonics-support", "gpt-4o")),
     max_completion_tokens: 8192,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -200,6 +201,7 @@ INPUTS:
 ${isTable ? tablePrompt : narrativePrompt}`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "school-improvement-plan",
     ...(await modelFor("school-improvement-plan", "gpt-4o")),
     max_completion_tokens: 8000,

@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LiveSurface } from "./live";
+import { readGenerationLanguage } from "@/app/components/LanguageField";
 
 export type LiveState = "idle" | "connecting" | "live";
 
@@ -204,7 +205,7 @@ export function useLiveCall(opts: Options) {
       const res = await fetch("/api/jo/live", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sdp: offer.sdp, surface: optsRef.current.surface, docLabel: optsRef.current.docLabel }),
+        body: JSON.stringify({ sdp: offer.sdp, surface: optsRef.current.surface, docLabel: optsRef.current.docLabel, language: readGenerationLanguage() }),
       });
       if (pcRef.current !== pc) return;
       if (!res.ok) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { streamChat, createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface SlideData {
   type: "title" | "content" | "quote" | "stat" | "two-column" | "activity";
@@ -155,6 +156,7 @@ export async function POST(req: NextRequest) {
     }
 
     return streamChat({
+      language: requestLanguage(body),
       toolSlug: "cpd-slideshow",
       ...(await modelFor("cpd-slideshow", "gpt-4o")),
       max_completion_tokens: 8192,
@@ -173,6 +175,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const message = await createCompletion({
+        language: requestLanguage(body),
         toolSlug: "cpd-slideshow",
         ...(await modelFor("cpd-slideshow", "gpt-4o")),
         max_completion_tokens: 8192,

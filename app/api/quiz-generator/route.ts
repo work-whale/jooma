@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 
@@ -153,6 +154,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const message = await createCompletion({
+      language: requestLanguage(body),
       toolSlug: "quiz-generator",
       ...(await modelFor("quiz-generator", "gpt-4o")),
       max_completion_tokens: 4096,

@@ -14,6 +14,8 @@ import { saveToolRun, type ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import { useListJoPanel } from "@/app/components/jo/useListJoPanel";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "cpd-slideshow";
 
@@ -917,7 +919,8 @@ export default function CpdSlideshowForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { topic, slideCount, additionalFocus, presentationFocus, contentFormat, includeImageSuggestions };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), topic, slideCount, additionalFocus, presentationFocus, contentFormat, includeImageSuggestions };
 
   // Slides are a structured array, not markdown — store as JSON text.
   const persist = (s: SlideData[]) => {
@@ -956,6 +959,8 @@ export default function CpdSlideshowForm({
   });
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setTopic((i.topic as string) ?? "");
     setSlideCount((i.slideCount as number) ?? 4);
@@ -1029,6 +1034,7 @@ export default function CpdSlideshowForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           action: "generate",
           topic,
           slideCount,
@@ -1099,7 +1105,7 @@ export default function CpdSlideshowForm({
       const res = await fetch("/api/cpd-slideshow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "refine", slides, instruction }),
+        body: JSON.stringify({ language, action: "refine", slides, instruction }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Refinement failed");
@@ -1135,6 +1141,9 @@ export default function CpdSlideshowForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <TopicField
               value={topic}

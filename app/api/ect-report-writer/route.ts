@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 
@@ -106,6 +107,7 @@ Throughout the report:
 
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "ect-report-writer",
     ...(await modelFor("ect-report-writer", "gpt-4o")),
     max_completion_tokens: 8192,

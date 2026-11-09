@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -48,6 +49,7 @@ Apply the "${tone || "Professional and formal"}" tone consistently across all se
 Use the school name "${schoolName?.trim() || "our school"}" naturally in the text where appropriate. Use UK English throughout.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "newsletter-writer",
     ...(await labModelFor(body, "newsletter-writer", "gpt-4o")),
     max_completion_tokens: 4000,

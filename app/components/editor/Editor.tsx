@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Check, Loader2 } from "lucide-react";
 import EditorTopBar from "./EditorTopBar";
 import EditPromptModal from "./EditPromptModal";
+import { EditorLanguageContext } from "./EditorLanguage";
+import { parseLanguage } from "@/app/lib/languages";
 import { GENERATION_STORAGE_KEY } from "@/app/components/slideshow/GenerateModal";
 import ContextualToolbar, { type EditorSelection } from "./ContextualToolbar";
 import Sidebar, { type ActivityKind, type ActivityConfig, type SidebarTabId } from "./Sidebar";
@@ -76,6 +78,7 @@ interface GenerationParams {
   topic: string;
   year?: string;
   readingLevel?: string;
+  language?: string;
   slideCount?: number;
   additionalInstructions?: string;
   includeObjectives?: boolean;
@@ -142,6 +145,8 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   // The params this deck was generated from (if any), powering the "Edit prompt"
   // button → reopen the prompt and regenerate over this same presentation.
   const savedGenParams = (presentation.generation_params ?? null) as Record<string, unknown> | null;
+  // The deck's output language (lib/languages): UK English for older decks.
+  const deckLanguage = parseLanguage(savedGenParams?.language ?? generationParams?.language);
   const [editPromptOpen, setEditPromptOpen] = useState(false);
   const handleRegeneratePrompt = (v: { topic: string; additionalInstructions: string }) => {
     if (!savedGenParams) return;
@@ -2166,6 +2171,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            language: deckLanguage,
             topic: config.topic?.trim() || title || "this lesson",
             activityType: "comprehension",
             slideContext: audioCtx || undefined,
@@ -2203,6 +2209,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        language: deckLanguage,
         kind,
         topic: config.topic,
         level: config.level,
@@ -3216,6 +3223,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
     if (!generating) setJoOpenSignal((n) => n + 1);
   }
   const jo = useSlidesJoPanel({
+    language: deckLanguage,
     bridge: joBridge,
     canvasRef: canvasAreaRef,
     slideRef: slideWrapperRef,
@@ -3263,6 +3271,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
   return (
     <EditorGuestContext.Provider value={guest ?? null}>
+    <EditorLanguageContext.Provider value={deckLanguage}>
     <div className="relative flex flex-col h-dvh overflow-hidden" style={{ backgroundColor: "var(--j-editor-canvas)" }} data-testid="slide-editor">
       {/* Full-screen overlay shown while waiting for OpenAI to respond (pre-meta phase).
           Covers the whole editor so the user sees an engaging animation rather than
@@ -4103,6 +4112,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                  language: deckLanguage,
                   topic: audio.title || "audio activity",
                   activityType,
                   additionalInstructions,
@@ -4160,6 +4170,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         />
       )}
     </div>
+    </EditorLanguageContext.Provider>
     </EditorGuestContext.Provider>
   );
 }

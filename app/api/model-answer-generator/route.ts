@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface ModelAnswerRequest {
   curriculum: string;
@@ -106,6 +107,7 @@ Write a full, exam-worthy model answer pitched at the level of a high-achieving 
 Do not use any emojis. Do not add any text before the main title or after the last teaching opportunity.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "model-answer-generator",
     ...(await modelFor("model-answer-generator", "gpt-4o")),
     max_completion_tokens: 8192,

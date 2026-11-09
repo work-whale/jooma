@@ -8,6 +8,7 @@ import { type FrameShape } from "./frames";
 import { isSvgDataUrl, extractSvgColors, swapSvgColor } from "./svg-recolor";
 import ColorPicker from "./ColorPicker";
 import { useEditorGuest } from "./EditorGuest";
+import { useEditorLanguage } from "./EditorLanguage";
 import type { TextObject, ShapeObject, ImageObject, SlideJSON, VideoObject, AudioObject } from "@/app/lib/presentations";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -508,6 +509,7 @@ const AI_QUICK_ACTIONS = [
 // toolbar's overflow-x-auto — same approach as IconPopover.
 function AiTextEdit({ text, onApply }: { text: string; onApply: (next: string) => void }) {
   const guest = useEditorGuest();
+  const language = useEditorLanguage();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [instruction, setInstruction] = useState("");
@@ -556,7 +558,7 @@ function AiTextEdit({ text, onApply }: { text: string; onApply: (next: string) =
       const res = await fetch("/api/edit-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, instruction: trimmed }),
+        body: JSON.stringify({ language, text, instruction: trimmed }),
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));

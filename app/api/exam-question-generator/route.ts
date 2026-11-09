@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 
@@ -93,6 +94,7 @@ Rules:
 Do not add any text before the title or after the last section. Write in a professional UK examination style.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "exam-question-generator",
     ...(await modelFor("exam-question-generator", "gpt-4o")),
     max_completion_tokens: 8192,

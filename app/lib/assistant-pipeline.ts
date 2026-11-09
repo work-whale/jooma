@@ -30,6 +30,7 @@
 // handler runs — see checkAssistantAccess and COST_BEARING_PATHS.
 import { NextResponse } from "next/server";
 import { streamChat, createCompletion, currentUserId } from "@/app/lib/usage";
+import { requestLanguage } from "@/app/lib/languages";
 import { labModelFor } from "@/app/lib/model-lab";
 import { modelFor } from "@/app/lib/tool-model";
 import {
@@ -237,6 +238,7 @@ export async function runAssistantTurn(
         : "";
 
   const response = await streamChat({
+    language: requestLanguage(body),
     toolSlug: "assistant",
     // Guests never get the admin model lab, whatever their body says.
     ...(opts.guest

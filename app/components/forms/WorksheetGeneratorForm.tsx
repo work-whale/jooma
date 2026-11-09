@@ -34,6 +34,8 @@ import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "
 import type { NcStatement } from "@/app/lib/national-curriculum";
 import { curriculumAlignParam } from "@/app/lib/national-curriculum/prompt";
 import { DEFAULT_TEMPLATE_ID, isTemplateId, templateById, type WorksheetTemplate } from "@/app/lib/sheets/worksheet-templates";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "worksheet-generator";
 
@@ -89,7 +91,9 @@ export default function WorksheetGeneratorForm({
     (differentiate === "no" || differentiationLevels.length > 0);
 
   // Raw form state — saved as history input so a past run can refill the form.
+  const [language, setLanguage] = useGenerationLanguage();
   const formState = {
+    ...languageFormState(language),
     curriculum, yearGroup, mixed, subject, learningObjective, template, questionTypes, questionCount,
     differentiate, differentiationLevels, outputDetail, additionalInfo, pictures,
     ...(guest ? {} : { alignCurriculum, curSelection }),
@@ -105,6 +109,8 @@ export default function WorksheetGeneratorForm({
   }, [formSnapshot, onSnapshot]);
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setYearGroup((i.yearGroup as string) ?? "");
@@ -171,6 +177,7 @@ export default function WorksheetGeneratorForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          language,
           // The guest route keeps the raw form so a claimed run restores into
           // this form exactly as the visitor left it.
           ...(guest ? { ...(guest.extraBody?.() ?? {}), formState } : {}),
@@ -254,6 +261,9 @@ export default function WorksheetGeneratorForm({
               mixed={mixed} onMixedChange={setMixed}
               yearGroupNote
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <SubjectField value={subject} onChange={setSubject} />
             <LearningObjectiveField value={learningObjective} onChange={setLearningObjective} />

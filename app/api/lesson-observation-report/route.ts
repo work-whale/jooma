@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -100,6 +101,7 @@ Provide 4–5 specific, evidence-informed recommendations that directly address 
 Write in a formal, professional tone appropriate for a school leadership observation document. Be specific and evidence-based — draw directly from the observation notes provided. Use UK English throughout.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "lesson-observation-report",
     ...(await modelFor("lesson-observation-report", "gpt-4o")),
     max_completion_tokens: 4000,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -82,6 +83,7 @@ Write 3–4 bullet points, each using this format:
 
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "learning-walk-report",
     ...(await modelFor("learning-walk-report", "gpt-4o")),
     max_completion_tokens: 4000,

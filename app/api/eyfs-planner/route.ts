@@ -3,6 +3,7 @@ import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface EYFSPlannerRequest {
   curriculum: string;
@@ -108,6 +109,7 @@ All activities must be clearly, specifically linked to the topic "${topic}" — 
 Do not use any emojis. Write in a professional, practitioner-friendly tone appropriate for EYFS settings.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "eyfs-planner",
     ...(await modelFor("eyfs-planner", "gpt-4o")),
     max_completion_tokens: 8192,

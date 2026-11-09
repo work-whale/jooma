@@ -6,6 +6,7 @@
 // empties the queue.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { readGenerationLanguage } from "@/app/components/LanguageField";
 
 const AUTO_KEY = "jooma:jo-read-aloud";
 /** Clips fetched ahead of the one playing. More would spend on sentences a
@@ -65,7 +66,7 @@ export function useJoVoice(enabled: boolean) {
       const res = await fetch("/api/jo/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, language: readGenerationLanguage() }),
         signal,
       });
       if (!res.ok) throw new Error("speak failed");

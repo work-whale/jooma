@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 
@@ -92,6 +93,7 @@ Writing guidelines:
 
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "report-writer",
     ...(await labModelFor(body, "report-writer", "gpt-4o")),
     max_completion_tokens: 4096,

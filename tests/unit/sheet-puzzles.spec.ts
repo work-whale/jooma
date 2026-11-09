@@ -363,3 +363,43 @@ test.describe("exports and Jo", () => {
     expect(JSON.parse(serializeSheet(d))).toEqual(d);
   });
 });
+
+/* ── Words in other languages (generation languages, 2026-11-08) ─────────── */
+
+test("gridLetters: English words are exactly as they always were", () => {
+  expect(gridLetters("Water cycle")).toBe("WATERCYCLE");
+  expect(gridLetters("photosynthesis")).toBe("PHOTOSYNTHESIS");
+  expect(gridLetters("rock-pool")).toBe("ROCKPOOL");
+  expect(gridLetters("don't")).toBe("DONT");
+  expect(gridLetters("café")).toBe("CAFE");
+  expect(gridLetters("naïve")).toBe("NAIVE");
+  expect(gridLetters("x²")).toBe("X");
+});
+
+test("gridLetters: accents drop, letters with no accent to drop are spelt out, nothing is lost", () => {
+  // Accents drop, as French and Spanish crosswords do.
+  expect(gridLetters("évaporation")).toBe("EVAPORATION");
+  expect(gridLetters("niño")).toBe("NINO");
+  expect(gridLetters("Größe")).toBe("GROSSE");
+  expect(gridLetters("Ökosystem")).toBe("OKOSYSTEM");
+  expect(gridLetters("öö")).toBe("OO");
+  // These used to vanish entirely.
+  expect(gridLetters("łódź")).toBe("LODZ");
+  expect(gridLetters("Straße")).toBe("STRASSE");
+  expect(gridLetters("cœur")).toBe("COEUR");
+  expect(gridLetters("Ærø")).toBe("AERO");
+  // Every letter of a word in a Chalkie language survives as at least one grid letter.
+  for (const w of ["pszczoła", "źdźbło", "sääsk", "jõgi", "fotossíntese", "ação", "över", "città"]) {
+    const letters = w.replace(/[^\p{L}]/gu, "").length;
+    expect(gridLetters(w).length, w).toBeGreaterThanOrEqual(letters);
+  }
+});
+
+test("a word search with Polish words places every word, read back as its grid letters", () => {
+  const words = ["pszczoła", "łąka", "źdźbło", "kwiat", "miód", "ul"];
+  const { grid, placements } = buildWordSearch(words, "easy", 3);
+  expect(placements.length).toBe(words.length);
+  for (const p of placements) expect(readWord(grid, p), p.word).toBe(gridLetters(p.word));
+  // The grid itself is still plain A to Z.
+  expect(grid.join("")).toMatch(/^[A-Z]+$/);
+});

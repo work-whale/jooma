@@ -18,6 +18,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "school-improvement-plan";
 
@@ -52,9 +54,12 @@ export default function SchoolImprovementPlanForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat };
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setSchoolType((i.schoolType as string) ?? "Primary");
     setAreasToImprove((i.areasToImprove as string) ?? "");
@@ -90,7 +95,7 @@ export default function SchoolImprovementPlanForm({
       const res = await fetch("/api/school-improvement-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat }),
+        body: JSON.stringify({ language, schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -118,7 +123,7 @@ export default function SchoolImprovementPlanForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -145,6 +150,9 @@ export default function SchoolImprovementPlanForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <SIPSchoolTypeField value={schoolType} onChange={setSchoolType} />
 

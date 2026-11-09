@@ -6,6 +6,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { mergeTranscripts, withDictation } from "./dictation";
+import { getLanguage } from "./languages";
+import { readGenerationLanguage } from "@/app/components/LanguageField";
 
 // The Web Speech API is still vendor-prefixed in Chromium and absent in Firefox,
 // and TypeScript's DOM lib does not declare it. Typed minimally rather than
@@ -86,7 +88,8 @@ export function useDictation(onText: (draft: string) => void, onEnd?: (draft: st
       // Words appear while they are spoken. Safe now that each event replaces
       // the draft rather than adding to it.
       recognition.interimResults = true;
-      recognition.lang = "en-GB";
+      // The teacher's chosen language: dictating in French should hear French.
+      recognition.lang = getLanguage(readGenerationLanguage()).speechLocale;
       let draft = typed;
       recognition.onresult = (event) => {
         const parts = Array.from({ length: event.results.length }, (_, i) => event.results[i][0].transcript);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 function buildPrompt(body: {
@@ -111,8 +112,9 @@ ${result}
 Return the full updated profile in the same markdown format. No preamble.`;
 }
 
-async function streamText(system: string, userContent: string) {
+async function streamText(system: string, userContent: string, language: string) {
   return streamChat({
+    language,
     toolSlug: "one-page-profile",
     ...(await modelFor("one-page-profile", "gpt-4o")),
     max_completion_tokens: 4096,
@@ -133,6 +135,7 @@ export async function POST(req: NextRequest) {
     return streamText(
       buildSystem("You are an expert UK SENCO and person-centred planning specialist with deep knowledge of the SEND Code of Practice (2015) and one-page profile best practice. Return only the updated profile in markdown format with no preamble."),
       buildRefinePrompt(body.result, body.instruction),
+      requestLanguage(body),
     );
   }
 
@@ -143,5 +146,6 @@ export async function POST(req: NextRequest) {
   return streamText(
     buildSystem("You are an expert UK SENCO, inclusion specialist, and person-centred planning practitioner with deep knowledge of the SEND Code of Practice (2015) and extensive experience creating one-page profiles that give pupils genuine voice and ownership. You write with warmth, authenticity, and specificity — transforming third-person teacher notes into first-person pupil narratives that feel real and empowering. Output only the profile in markdown format. No preamble, no explanation, no code fences."),
     buildPrompt(body),
+    requestLanguage(body),
   );
 }

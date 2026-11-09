@@ -16,6 +16,7 @@
 
 import { NextResponse } from "next/server";
 import { currentUserId, streamChat } from "@/app/lib/usage";
+import { requestLanguage } from "@/app/lib/languages";
 import { modelFor } from "@/app/lib/tool-model";
 import { isEducationRelated, OFF_TOPIC_REPLY } from "@/app/lib/assistant-prompt";
 import type { SheetTool } from "@/app/lib/sheets/types";
@@ -148,6 +149,7 @@ export async function runJoTurn(body: JoTurnBody, opts: JoTurnOptions = {}): Pro
 
   try {
     return await streamChat({
+      language: requestLanguage(body),
       toolSlug: "jo",
       ...(await modelFor("jo", "gpt-5.6-luna")),
       ...(opts.guest ? { step: "guest" } : {}),

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -117,6 +118,7 @@ Write a numbered list of agenda items with timings, matching the discussion stru
 Make every section specific to the meeting purpose and participants provided — avoid generic filler. The plan should be practical enough to pick up and use directly.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "meeting-planner",
     ...(await modelFor("meeting-planner", "gpt-4o")),
     max_completion_tokens: 3000,

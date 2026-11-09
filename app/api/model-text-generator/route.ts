@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { bandPitch, bandUsageStep, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface ModelTextGeneratorRequest {
   curriculum: string;
@@ -76,6 +77,7 @@ For each of 5–7 significant writing features used in the text, provide:
 Do not use any emojis. Write the model text in the appropriate register and style for ${write}. Write the analysis section in a clear, teacher-friendly tone.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "model-text-generator",
     step: bandUsageStep(body.band, body.bandIndex),
     ...(await modelFor("model-text-generator", "gpt-4o")),

@@ -16,6 +16,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "inspection-prep";
 
@@ -50,11 +52,14 @@ export default function InspectionPrepForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   const canGenerate = inspectionBody.trim();
-  const formState = { inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setInspectionBody((i.inspectionBody as string) ?? "");
     setInspectionFocus((i.inspectionFocus as string) ?? "");
@@ -87,7 +92,7 @@ export default function InspectionPrepForm({
       const res = await fetch("/api/inspection-prep", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges }),
+        body: JSON.stringify({ language, inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -115,7 +120,7 @@ export default function InspectionPrepForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -145,6 +150,9 @@ export default function InspectionPrepForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <InspectionBodyField value={inspectionBody} onChange={setInspectionBody} />
 

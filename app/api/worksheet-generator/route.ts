@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { worksheetRequest, type WorksheetRequest } from "@/app/lib/worksheet-prompt";
 import { bandUsageStep } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export type { WorksheetRequest };
 
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "worksheet-generator",
     step: bandUsageStep(body.band, body.bandIndex),
     ...(await modelFor("worksheet-generator", "gpt-4o")),

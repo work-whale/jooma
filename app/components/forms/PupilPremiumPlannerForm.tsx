@@ -17,6 +17,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
+import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
+import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "pupil-premium-planner";
 
@@ -51,9 +53,12 @@ export default function PupilPremiumPlannerForm({
   const [historyKey, setHistoryKey] = useState(0);
 
   // Raw form state — saved as history input so a past run can refill the form.
-  const formState = { challenges, educationPhase, differentiate, differentiationLevels };
+  const [language, setLanguage] = useGenerationLanguage();
+  const formState = { ...languageFormState(language), challenges, educationPhase, differentiate, differentiationLevels };
 
   const restore = (run: ToolRun) => {
+    // The run's own language: English (UK) for runs saved before languages existed.
+    setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
     setChallenges((i.challenges as string) ?? "");
     setEducationPhase((i.educationPhase as string) ?? "Primary");
@@ -89,7 +94,7 @@ export default function PupilPremiumPlannerForm({
       const res = await fetch("/api/pupil-premium-planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challenges, educationPhase, differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, challenges, educationPhase, differentiate, differentiationLevels }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -117,7 +122,7 @@ export default function PupilPremiumPlannerForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentContent: result, instruction }),
+        body: JSON.stringify({ language, currentContent: result, instruction }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -144,6 +149,9 @@ export default function PupilPremiumPlannerForm({
         <div className="lg:col-span-2">
           <Card className="space-y-6">
             {prefilled && <PrefilledBadge />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <LanguageField value={language} onChange={setLanguage} />
+            </div>
 
             <PupilPremiumChallengesField value={challenges} onChange={setChallenges} />
 

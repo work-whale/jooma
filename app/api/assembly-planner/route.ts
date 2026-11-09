@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 
@@ -96,6 +97,7 @@ A bullet list of physical or digital resources needed to run this assembly. Incl
 Be specific to the stage of school: ${stageOfSchool || "Primary"}. Use UK English throughout. Do not use emojis.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "assembly-planner",
     ...(await modelFor("assembly-planner", "gpt-4o")),
     max_completion_tokens: 4000,

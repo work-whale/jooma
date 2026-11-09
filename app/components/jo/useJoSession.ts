@@ -13,6 +13,7 @@ import { readJoProgress } from "@/app/lib/jo/progress";
 import { JO_MAX_ASKS } from "@/app/lib/jo/prompts";
 import { getOrCreateThread, listJoMessages, saveJoMessage, type JoDocRef, type JoDoneOp } from "@/app/lib/jo/threads";
 import type { JoClarify, JoDocKind, JoOp } from "@/app/lib/jo/types";
+import { readGenerationLanguage } from "@/app/components/LanguageField";
 
 export interface JoAdapter {
   kind: JoDocKind;
@@ -67,6 +68,8 @@ export interface JoSessionOptions {
   /** Signed in: where the conversation is kept. */
   docRef?: JoDocRef | null;
   guest?: JoGuest;
+  /** Output language for Jo's replies and edits; the teacher's current choice when omitted. */
+  language?: string;
 }
 
 let seq = 0;
@@ -236,6 +239,7 @@ export function useJoSession(adapter: JoAdapter, opts: JoSessionOptions) {
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
           body: JSON.stringify({
+            language: o.language ?? readGenerationLanguage(),
             kind: a.kind,
             snapshot: a.snapshot(),
             focus: a.focus(),

@@ -20,6 +20,7 @@ import {
   trialSecret,
 } from "@/app/lib/guest";
 import { trialRefusalMessage } from "@/app/lib/trial-limits";
+import { requestLanguage } from "@/app/lib/languages";
 
 type Body = WorksheetRequest & { website?: string; formState?: Record<string, unknown> };
 
@@ -97,6 +98,7 @@ export async function POST(req: Request) {
   let streamed: Response;
   try {
     streamed = await streamChat({
+      language: requestLanguage(body),
       toolSlug: "worksheet-generator",
       ...(await modelFor("worksheet-generator", "gpt-4o")),
       // JSON carries more tokens than markdown; the same headroom as the

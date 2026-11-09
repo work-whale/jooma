@@ -3,6 +3,7 @@ import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface CoverLessonRequest {
   curriculum: string;
@@ -113,6 +114,7 @@ Provide 4–5 bullet points for the cover teacher to action before leaving the r
 Ensure the total timing adds up to ${lessonLength}. Write in a warm, professional tone that makes the cover teacher feel confident.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "cover-lesson",
     ...(await modelFor("cover-lesson", "gpt-4o")),
     max_completion_tokens: 4096,

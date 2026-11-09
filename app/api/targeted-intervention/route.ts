@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
+import { requestLanguage } from "@/app/lib/languages";
 
 export interface TargetedInterventionRequest {
   curriculum: string;
@@ -79,6 +80,7 @@ For each strategy, use this exact structure:
 Do not include a preamble, introduction, or closing summary. Do not include any research citations or references. Start immediately with "# Intervention Strategies" and the first numbered strategy.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "targeted-intervention",
     ...(await modelFor("targeted-intervention", "gpt-4o")),
     max_completion_tokens: 4096,

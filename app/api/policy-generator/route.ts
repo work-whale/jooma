@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
     }
 
     return streamChat({
+      language: requestLanguage(body),
       toolSlug: "policy-generator",
       ...(await modelFor("policy-generator", "gpt-4o")),
       max_completion_tokens: 8192,
@@ -94,6 +96,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "policy-generator",
     ...(await modelFor("policy-generator", "gpt-4o")),
     max_completion_tokens: 8192,

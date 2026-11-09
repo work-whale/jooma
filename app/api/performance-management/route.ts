@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
+import { requestLanguage } from "@/app/lib/languages";
 
 
 export async function POST(req: NextRequest) {
@@ -45,6 +46,7 @@ Rules for each cell:
 Each cell must be a single paragraph — no line breaks, no bullet points, no sub-lists inside cells.`;
 
   return streamChat({
+    language: requestLanguage(body),
     toolSlug: "performance-management",
     ...(await modelFor("performance-management", "gpt-4o")),
     max_completion_tokens: 4000,
