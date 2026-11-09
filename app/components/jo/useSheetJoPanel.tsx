@@ -7,25 +7,11 @@
 import type { RefObject } from "react";
 import type { JoDocRef } from "@/app/lib/jo/threads";
 import type { SheetDoc } from "@/app/lib/sheets/types";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
 import JoPanel from "./JoPanel";
 import { useJoSession, type JoGuest } from "./useJoSession";
 import { useJoVoice } from "./useJoVoice";
 import { useSheetJo } from "./useSheetJo";
-
-const STARTERS: Record<SheetDoc["tool"], string[]> = {
-  worksheet: [
-    "Make it easier for a lower ability group",
-    "Add a challenge question at the end",
-    "Add a word bank to the first section",
-    "Turn question 1 into multiple choice",
-  ],
-  comprehension: [
-    "Make the questions easier for lower ability",
-    "Add two harder inference questions",
-    "Shorten the passage a little",
-    "Add a vocabulary section",
-  ],
-};
 
 export interface SheetJoOptions {
   doc: SheetDoc | null;
@@ -49,13 +35,13 @@ export function useSheetJoPanel(opts: SheetJoOptions) {
   });
   const voice = useJoVoice(!opts.guest);
 
-  const tool = opts.doc?.tool ?? "worksheet";
+  const profile = sheetToolProfile(opts.doc?.tool ?? "worksheet");
   const panel = (
     <JoPanel
       session={session}
       adapter={adapter}
-      docLabel={tool === "comprehension" ? "comprehension" : "worksheet"}
-      starters={STARTERS[tool]}
+      docLabel={profile.docLabel}
+      starters={profile.joStarters}
       voice={opts.guest ? null : voice}
       guest={opts.guest ? { onSignUp: opts.guest.onSignUp } : null}
       disabled={opts.disabled ?? (opts.guest && !opts.guest.trialId ? "Jo can help once your free try is saved" : null)}

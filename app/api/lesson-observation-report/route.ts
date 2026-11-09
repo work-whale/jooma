@@ -90,7 +90,7 @@ Generate a professional Lesson Observation Report using the following structure.
 Write 3–4 sentences contextualising the lesson. Reference the curriculum area, the relevance of the learning objective to the year group, and what the lesson aimed to achieve in terms of both substantive and disciplinary knowledge. Be specific — this should read as an accurate account of the lesson observed, not a generic description.
 
 ## Strengths
-Identify 3–5 specific strengths from the observation. For each, use the format: **Strength Title**: 2–3 sentences of specific evidence drawn directly from the observations provided, explaining what was seen and why it represents strong practice. Reference relevant teaching principles or frameworks (e.g. Rosenshine's Principles, Ofsted EIF, Teachers' Standards) where appropriate.
+Identify 3–5 specific strengths from the observation. For each, use the format: **Strength Title**: 2–3 sentences of specific evidence drawn directly from the observations provided, explaining what was seen and why it represents strong practice. Reference relevant teaching principles or frameworks (e.g. Rosenshine's Principles, the curriculum and teaching area of Ofsted's inspection toolkit, Teachers' Standards) where appropriate.
 
 ## Areas for Development
 Identify 2–4 areas for development. For each, use the format: **Area Title**: 2–3 sentences describing the gap observed with specific evidence, explaining its impact on pupil learning, and indicating what improved practice would look like.
@@ -106,7 +106,7 @@ Write in a formal, professional tone appropriate for a school leadership observa
     ...(await modelFor("lesson-observation-report", "gpt-4o")),
     max_completion_tokens: 4000,
     messages: [
-      { role: "system", content: buildSystem("You are an experienced school leader and instructional coach with deep expertise in lesson observation and teacher development. You write formal, evidence-based observation reports that are specific, fair, and grounded in the Teachers' Standards and current Ofsted EIF criteria. Your reports support teacher growth through clear, actionable feedback.") },
+      { role: "system", content: buildSystem("You are an experienced school leader and instructional coach with deep expertise in lesson observation and teacher development. You write formal, evidence-based observation reports that are specific, fair, and grounded in the Teachers' Standards and Ofsted's current school inspection toolkit (Ofsted does not grade individual lessons). Your reports support teacher growth through clear, actionable feedback.") },
       { role: "user", content: prompt },
     ],
   });

@@ -10,6 +10,7 @@
 import { cleanMathText } from "@/app/lib/math-text";
 import { seedFrom } from "@/app/lib/seeded-random";
 import { gridLetters, refreshPuzzle, type PuzzleDefaults } from "./puzzles";
+import { sheetToolProfile } from "./tools";
 import {
   SHEET_KIND,
   SHEET_VERSION,
@@ -36,7 +37,7 @@ const CALLOUT_DEFAULTS: Record<SheetCallout["variant"], { label: string; emoji: 
 };
 
 export function defaultDesign(tool: SheetTool, themeId: string): SheetDesign {
-  return { themeId, fontScale: "m", nameDate: true, answers: true, paper: "a4", lineNumbers: tool === "comprehension", objective: true, intro: true, diffNote: true };
+  return { themeId, fontScale: "m", nameDate: true, answers: true, paper: "a4", lineNumbers: sheetToolProfile(tool).lineNumbers, objective: true, intro: true, diffNote: true };
 }
 
 // The copyright sign becomes "(c)", as the markdown tools always did.

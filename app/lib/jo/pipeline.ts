@@ -19,7 +19,7 @@ import { currentUserId, streamChat } from "@/app/lib/usage";
 import { requestLanguage } from "@/app/lib/languages";
 import { modelFor } from "@/app/lib/tool-model";
 import { isEducationRelated, OFF_TOPIC_REPLY } from "@/app/lib/assistant-prompt";
-import type { SheetTool } from "@/app/lib/sheets/types";
+import { isSheetTool, sheetToolProfile } from "@/app/lib/sheets/tools";
 import { joSheetResponseFormat } from "./sheet-schema";
 import { joSlidesResponseFormat } from "./slide-schema";
 import { joMarkdownResponseFormat } from "./md-schema";
@@ -75,12 +75,12 @@ function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget 
   if (!snap) return null;
   if (body.kind === "sheet") {
     const tool = snap.tool;
-    if (!Array.isArray(snap.sections) || (tool !== "worksheet" && tool !== "comprehension")) return null;
+    if (!Array.isArray(snap.sections) || !isSheetTool(tool)) return null;
     return {
-      name: tool === "worksheet" ? "worksheet" : "reading comprehension",
+      name: sheetToolProfile(tool).joName,
       heading: "THE SHEET NOW (JSON)",
-      system: joSheetSystem({ tool: tool as SheetTool, canAsk, guest }),
-      response_format: joSheetResponseFormat(tool as SheetTool),
+      system: joSheetSystem({ tool, canAsk, guest }),
+      response_format: joSheetResponseFormat(tool),
     };
   }
   if (body.kind === "slides") {

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { allowedKinds, kindsForTypes, sheetResponseFormat } from "@/app/lib/sheets/schema";
 import { joSheetResponseFormat } from "@/app/lib/jo/sheet-schema";
+import { SHEET_TOOLS } from "@/app/lib/sheets/tools";
 
 /*
  * "Only these question types" is enforced by the schema, not asked for in
@@ -98,15 +99,24 @@ test.describe("sheetResponseFormat", () => {
 
   // OpenAI allows 5000 object properties and 10 levels of nesting. The budget
   // here is far tighter: every property costs tokens on every generation.
+  // Every registered sheet tool, so a tool added to app/lib/sheets/tools.ts is
+  // held to the same limits without anyone remembering to list it here.
   test("stays within budget at its largest, every kind and pictures included, and strict throughout", () => {
-    for (const f of [
-      sheetResponseFormat({ tool: "worksheet", kinds: allowedKinds("worksheet"), passage: false, images: true }),
-      sheetResponseFormat({ tool: "comprehension", kinds: allowedKinds("comprehension"), passage: true, images: true }),
-    ]) {
-      expect(countProperties(f.json_schema.schema)).toBeLessThanOrEqual(200);
-      expect(objectDepth(f.json_schema.schema)).toBeLessThanOrEqual(10);
-      expect(everyObjectStrict(f.json_schema.schema)).toBe(true);
+    for (const tool of SHEET_TOOLS) {
+      const f = sheetResponseFormat({ tool, kinds: allowedKinds(tool), passage: true, images: true });
+      expect(countProperties(f.json_schema.schema), tool).toBeLessThanOrEqual(200);
+      expect(objectDepth(f.json_schema.schema), tool).toBeLessThanOrEqual(10);
+      expect(everyObjectStrict(f.json_schema.schema), tool).toBe(true);
       expect(f.json_schema.strict).toBe(true);
+    }
+  });
+
+  test("Jo's edit schema for every tool is strict and inside OpenAI's limits", () => {
+    for (const tool of SHEET_TOOLS) {
+      const schema = joSheetResponseFormat(tool).json_schema.schema;
+      expect(countProperties(schema), tool).toBeLessThan(5000);
+      expect(objectDepth(schema), tool).toBeLessThanOrEqual(10);
+      expect(everyObjectStrict(schema), tool).toBe(true);
     }
   });
 

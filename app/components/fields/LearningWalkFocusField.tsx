@@ -16,7 +16,7 @@ export default function LearningWalkFocusField({ value, onChange }: Props) {
   const fieldId = useId();
   const placeholder = useTypingPlaceholder([
     "e.g. Quality of teaching and curriculum sequencing",
-    "e.g. Behaviour and attitudes to learning",
+    "e.g. Attendance and behaviour",
     "e.g. SEND provision and adaptive teaching",
     "e.g. Pupil engagement and on-task behaviour",
     "e.g. Literacy across the curriculum",

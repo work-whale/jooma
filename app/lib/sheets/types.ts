@@ -12,7 +12,10 @@
 export const SHEET_KIND = "jooma-sheet";
 export const SHEET_VERSION = 1;
 
-export type SheetTool = "worksheet" | "comprehension";
+// Which tool made a sheet. The list and what differs per tool live in
+// app/lib/sheets/tools.ts.
+import type { SheetTool } from "./tools";
+export type { SheetTool };
 
 export interface SheetDesign {
   /** A sheet theme id (app/lib/sheets/themes.ts). */

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 - Topic: ${topic}
 - Number of Lessons: ${numberOfLessons}${examSpecSection}${abilityLine}
 
-This medium-term plan is for a UK school. It should demonstrate clear curriculum intent — each lesson must deliberately build on the previous one, developing a coherent sequence of knowledge and skills. The plan should reflect the kind of curriculum thinking that Ofsted's Education Inspection Framework expects: a well-sequenced, knowledge-rich programme of study in which prior learning is built upon and pupils make cumulative progress.
+This medium-term plan is for a UK school. It should demonstrate clear curriculum intent — each lesson must deliberately build on the previous one, developing a coherent sequence of knowledge and skills. The plan should reflect the curriculum thinking Ofsted's renewed inspection framework looks for under curriculum and teaching: a well-sequenced, knowledge-rich programme of study in which prior learning is built upon and pupils make cumulative progress.
 
 Generate the plan as a markdown table with exactly these four columns:
 
@@ -65,7 +65,7 @@ Rules:
     ...(await modelFor("medium-term-planner", "gpt-4o")),
     max_completion_tokens: 8192,
     messages: [
-      { role: "system", content: buildSystem("You are an expert UK teacher, head of department, and curriculum designer with extensive experience writing medium-term plans across primary and secondary phases. You have a deep understanding of curriculum sequencing, knowledge-rich teaching, and the expectations of Ofsted's Education Inspection Framework. You know how to build a coherent sequence of lessons that develops pupils' knowledge and understanding cumulatively. You write in precise, professional UK English and produce planning that reflects genuine subject expertise.") },
+      { role: "system", content: buildSystem("You are an expert UK teacher, head of department, and curriculum designer with extensive experience writing medium-term plans across primary and secondary phases. You have a deep understanding of curriculum sequencing, knowledge-rich teaching, and the expectations of Ofsted's renewed education inspection framework, where curriculum intent and implementation sit within the curriculum and teaching evaluation area. You know how to build a coherent sequence of lessons that develops pupils' knowledge and understanding cumulatively. You write in precise, professional UK English and produce planning that reflects genuine subject expertise.") },
       { role: "user", content: userPrompt },
     ],
   });

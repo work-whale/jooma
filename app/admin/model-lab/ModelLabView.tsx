@@ -46,6 +46,7 @@ import {
 import { LAB_TOOLS, labToolBySlug } from "./samples";
 import { parsePartialJson } from "@/app/lib/sheets/stream";
 import { normalizeDraft } from "@/app/lib/sheets/normalize";
+import { sheetToolForSlug } from "@/app/lib/sheets/tools";
 import { sheetContext } from "@/app/lib/sheets/context";
 import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
 
@@ -55,7 +56,7 @@ import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
  * side by side. Partial JSON is read as far as it has got.
  */
 function labText(slug: string, output: string): string {
-  const tool = slug === "worksheet-generator" ? "worksheet" : slug === "comprehension-generator" ? "comprehension" : null;
+  const tool = sheetToolForSlug(slug);
   if (!tool) return output;
   const raw = parsePartialJson(output);
   if (!raw) return output;

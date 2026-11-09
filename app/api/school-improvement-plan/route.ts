@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { requestLanguage } from "@/app/lib/languages";
+import { ofstedFrameworkSummary } from "@/app/lib/ofsted";
 
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
 # School Improvement Plan: ${areasToImprove.trim()} Focus (${schoolType || "Primary"})
 
-## Aligned with the Education Inspection Framework (EIF) and Current Policy Priorities
+## Aligned with Ofsted's Renewed Inspection Framework and Current Policy Priorities
 
 ---
 
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
 [Bullet list of 6–8 contextual points relevant to the school type and areas for improvement — include likely baseline data, pupil demographics, relevant inspection history, and capacity for improvement. If school context was provided, use it; otherwise infer appropriate context for a ${schoolType || "primary"} school.]
 
 **Inspection Framework Alignment:**
-[Bullet list of 3–4 specific EIF judgement areas, terminology, and requirements directly relevant to the areas for improvement.]
+[Bullet list of 3 to 4 of Ofsted's evaluation areas (for example inclusion, curriculum and teaching, achievement, attendance and behaviour) with the terminology and expectations directly relevant to the areas for improvement.]
 
 **Research Base:**
 [Bullet list of 3–4 specific references to DfE guidance, Ofsted research, EEF evidence, or other published sources relevant to the improvement areas. Include approximate publication years.]
@@ -132,7 +133,7 @@ Include 5–7 realistic risks. Each mitigation strategy should list 2–3 specif
 
 # School Improvement Plan: ${areasToImprove.trim()} Focus (${schoolType || "Primary"})
 
-## Aligned with the Education Inspection Framework (EIF) and Current Policy Priorities
+## Aligned with Ofsted's Renewed Inspection Framework and Current Policy Priorities
 
 ---
 
@@ -146,7 +147,7 @@ Include 5–7 realistic risks. Each mitigation strategy should list 2–3 specif
 
 ## Improvement Priorities and Rationale
 
-[For each area for improvement, write 2 paragraphs: one explaining the priority and the evidence base, one describing the intended approach and its alignment with EIF requirements.]
+[For each area for improvement, write 2 paragraphs: one explaining the priority and the evidence base, one describing the intended approach and its alignment with the relevant Ofsted evaluation areas.]
 
 ## Strategic Objectives
 
@@ -206,7 +207,7 @@ ${isTable ? tablePrompt : narrativePrompt}`;
     ...(await modelFor("school-improvement-plan", "gpt-4o")),
     max_completion_tokens: 8000,
     messages: [
-      { role: "system", content: buildSystem("You are an expert UK school improvement specialist, former Ofsted inspector, and school leadership consultant with deep knowledge of the Education Inspection Framework (EIF), DfE school improvement guidance, and evidence-based approaches to raising standards. You help headteachers and senior leaders draft rigorous, inspection-ready School Improvement Plans that are specific, measurable, and grounded in the latest research and policy. You write with authority, precision, and professional clarity.") },
+      { role: "system", content: buildSystem("You are an expert UK school improvement specialist, former Ofsted inspector, and school leadership consultant with deep knowledge of Ofsted's renewed education inspection framework and its report cards, DfE school improvement guidance, and evidence-based approaches to raising standards. You help headteachers and senior leaders draft rigorous, inspection-ready School Improvement Plans that are specific, measurable, and grounded in the latest research and policy. You write with authority, precision, and professional clarity. " + ofstedFrameworkSummary()) },
       { role: "user", content: prompt },
     ],
   });

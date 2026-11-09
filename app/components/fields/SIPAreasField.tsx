@@ -15,7 +15,7 @@ interface Props {
 export default function SIPAreasField({ value, onChange }: Props) {
   const fieldId = useId();
   const placeholder = useTypingPlaceholder([
-    "e.g. attendance, reading outcomes in KS2, behaviour and attitudes",
+    "e.g. attendance, reading outcomes in KS2, attendance and behaviour",
     "e.g. maths attainment at KS4, staff retention, curriculum sequencing",
     "e.g. SEND provision, early reading, pupil premium outcomes",
   ]);

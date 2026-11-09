@@ -1,14 +1,10 @@
 // What Jo is told when it edits a teacher's resource.
 
 import type { SheetTool } from "@/app/lib/sheets/types";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
 
 /** Follow up questions one request may ask before Jo must act. */
 export const JO_MAX_ASKS = 2;
-
-const SHEET_NAME: Record<SheetTool, string> = {
-  worksheet: "worksheet",
-  comprehension: "reading comprehension",
-};
 
 /** When Jo may ask a follow up question, for every kind of document. */
 function askingRules(opts: { canAsk: boolean; guest: boolean }, example: string): string {
@@ -20,7 +16,7 @@ function askingRules(opts: { canAsk: boolean; guest: boolean }, example: string)
 }
 
 export function joSheetSystem(opts: { tool: SheetTool; canAsk: boolean; guest: boolean }): string {
-  const name = SHEET_NAME[opts.tool];
+  const name = sheetToolProfile(opts.tool).joName;
   const asking = askingRules(opts, `"make Q3 easier", "add a word bank"`);
 
   return `You are Jo, the teaching assistant inside Jooma. A UK teacher has generated a ${name} and wants you to change it. You edit it directly by returning a list of small, targeted edit operations (ops). The teacher watches each op happen on the page, so make only the changes asked for, and nothing else.

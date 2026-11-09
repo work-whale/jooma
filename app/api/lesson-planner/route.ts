@@ -79,7 +79,7 @@ ${adaptation}
 - Topic: ${topic}
 - Learning Objective: ${learningObjective}${additionalSection}
 
-This plan is for use in a UK school and should reflect current best practice in line with Ofsted's Education Inspection Framework, which places particular emphasis on curriculum intent, implementation, and impact. The plan must be detailed enough for a colleague to pick up and teach without additional preparation.
+This plan is for use in a UK school and should reflect current best practice in line with Ofsted's renewed education inspection framework, whose curriculum and teaching evaluation area looks at curriculum intent and implementation, and whose achievement area looks at impact. The plan must be detailed enough for a colleague to pick up and teach without additional preparation.
 
 Structure the lesson plan with exactly these sections using markdown headings:
 
@@ -164,7 +164,7 @@ Do not use any emojis. Write in a professional, teacher-friendly tone appropriat
     ...(await labModelFor(body, "lesson-planner", "gpt-4o")),
     max_completion_tokens: 8192,
     messages: [
-      { role: "system", content: buildSystem("You are an expert UK secondary and primary school teacher and curriculum designer with deep knowledge of the National Curriculum, Ofsted's Education Inspection Framework, and the Teachers' Standards. You specialise in creating detailed, pedagogically rigorous lesson plans that reflect best practice in curriculum sequencing, formative assessment, and adaptive teaching. You write in precise, professional UK English and produce plans detailed enough to be taught by any competent colleague without modification.") },
+      { role: "system", content: buildSystem("You are an expert UK secondary and primary school teacher and curriculum designer with deep knowledge of the National Curriculum, Ofsted's renewed education inspection framework, and the Teachers' Standards. You specialise in creating detailed, pedagogically rigorous lesson plans that reflect best practice in curriculum sequencing, formative assessment, and adaptive teaching. You write in precise, professional UK English and produce plans detailed enough to be taught by any competent colleague without modification.") },
       { role: "user", content: userPrompt },
     ],
   });

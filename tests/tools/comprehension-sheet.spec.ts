@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
  * The Comprehension tool's designed sheet: the passage in a tinted panel with
@@ -48,6 +48,9 @@ test.describe("signed in", () => {
   let teacher: TestTeacher;
   test.beforeAll(async () => {
     teacher = await createTeacher("Compsheet");
+    // A teacher with no plan is sent to the free tools page (the no-card
+    // trial), which is a different form. This test is about the tool page.
+    await setPlan(teacher, "pro", "comped");
   });
   test.afterAll(async () => {
     await deleteTeacher(teacher);

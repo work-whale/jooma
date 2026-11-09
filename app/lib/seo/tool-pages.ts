@@ -1299,7 +1299,7 @@ export const TOOL_PAGES: ToolPage[] = [
     ],
     uk: {
       heading: "A starting point for self evaluation",
-      body: "For Ofsted it covers areas such as the quality of education, behaviour and attitudes, personal development, leadership and safeguarding. Inspection frameworks change, so check the questions against Ofsted's current handbook and toolkit.",
+      body: "For Ofsted it follows the evaluation areas on the report card: inclusion, curriculum and teaching, achievement, attendance and behaviour, personal development and wellbeing, leadership and governance, plus early years and post-16 where you have them, with safeguarding judged as met or not met. Inspection frameworks change, so check the questions against Ofsted's current toolkit.",
     },
     faqs: [
       {

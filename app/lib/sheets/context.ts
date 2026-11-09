@@ -10,8 +10,8 @@ import { defaultFamilyForYear } from "@/app/lib/slideshowThemes";
 import { defaultDesign, normalizeDraft, ownPassageSection, serializeSheet, type NormalizeContext } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { DEFAULT_SHEET_THEME } from "./themes";
-import { templateById } from "./worksheet-templates";
 import { puzzleDefaults } from "./puzzles/level";
+import { sheetToolProfile } from "./tools";
 import type { SheetTool } from "./types";
 
 export interface SheetRequestInfo {
@@ -29,23 +29,23 @@ export interface SheetRequestInfo {
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
+  const profile = sheetToolProfile(tool);
   const year = info.yearGroup && info.yearGroup !== "Mixed" ? info.yearGroup : "";
   const subtitle = [
     info.yearGroup === "Mixed" ? "Mixed years" : year,
-    tool === "comprehension" ? "Reading comprehension" : info.subject?.trim(),
+    profile.subtitleLabel ?? info.subject?.trim(),
   ].filter(Boolean).join(" · ");
   const design = {
     ...defaultDesign(tool, DEFAULT_SHEET_THEME[defaultFamilyForYear(year)]),
-    ...(tool === "worksheet" ? templateById(info.template).design : undefined),
+    ...profile.startDesign(info),
   };
-  if (tool === "comprehension" && info.includeAnswerKey === false) design.answers = false;
   return {
     tool,
     subtitle,
     design,
     puzzle: puzzleDefaults(info.yearGroup, info.band),
     leadingSections:
-      tool === "comprehension" && info.textSource === "own" && info.ownText?.trim()
+      profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]
         : undefined,
   };

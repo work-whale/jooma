@@ -996,7 +996,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         },
         inspectionFocus: {
           type: "string",
-          description: "The focus area, e.g. 'Reading', 'Behaviour and attitudes'.",
+          description: "The focus area, e.g. 'Reading', 'Attendance and behaviour'.",
         },
         includeEvidence: { type: "boolean", description: "Include evidence examples." },
         includeSuccessCriteria: { type: "boolean", description: "Include success criteria." },
