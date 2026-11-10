@@ -141,19 +141,19 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/exam-question-generator": {
     name: "Exam Papers",
-    description: "A full paper for any board and tier.",
+    description: "Practice papers in GCSE and SATs styles, with a mark scheme.",
     category: "assessment",
     icon: "exam",
   },
   "/tools/model-answer-generator": {
     name: "Model Answers",
-    description: "Worked answers at every mark band.",
+    description: "Full marks, middle and near miss answers, annotated.",
     category: "assessment",
     icon: "certificate",
   },
   "/tools/report-writer": {
     name: "Reports",
-    description: "Pupil reports from a few quick notes.",
+    description: "A class of reports from a quick grid.",
     category: "assessment",
     icon: "scroll",
   },
@@ -205,7 +205,7 @@ export const V2_META: Record<string, V2Meta> = {
   // Communication
   "/tools/letter-writer": {
     name: "Letters",
-    description: "Parents, staff or governors, in your tone.",
+    description: "Trips, attendance, behaviour and more.",
     category: "communication",
     icon: "envelope-simple",
   },
@@ -399,7 +399,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/report-writer",
     icon: "report",
     label: "Report Writer",
-    description: "Generate personalised pupil reports from strengths, areas for development, and targets across multiple subjects.",
+    description: "End of term reports for a whole class, from a judgement, effort and a short note for each pupil.",
     tag: "Assessment",
   },
   {
@@ -518,7 +518,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/letter-writer",
     icon: "letter-writer",
     label: "Letter Writer",
-    description: "Draft letters to parents, staff, governors, or any recipient — simply provide the key information and tone and the AI will write it for you.",
+    description: "Letters home on designed pages: trips with a consent slip, attendance, behaviour or anything else, from your facts.",
     tag: "Leadership",
   },
   {

@@ -6,8 +6,11 @@ import { extractHeadings } from "@/app/lib/headings";
 import { paginate, type PageUnit } from "@/app/lib/sheets/paginate";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
-import { answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
-import { showsIntro, showsObjective, showsPictures, visibleNotes } from "@/app/lib/sheets/visibility";
+import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, sheetOutline, showsCover } from "@/app/lib/sheets/markdown";
+import { phaseClock } from "@/app/lib/sheets/lesson";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
+import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "@/app/lib/sheets/visibility";
+import { formatLetterDate } from "@/app/lib/sheets/letter";
 import { puzzleDefaultsFromSubtitle } from "@/app/lib/sheets/puzzles";
 import { PUZZLE_LEVELS } from "@/app/lib/sheets/types";
 import {
@@ -60,6 +63,9 @@ const SAFETY = 6;
 
 const CONTENT_TYPES: BlockType[] = ["text", "callout", "wordbank", "passage", "table"];
 const CONTENT_LABEL: Partial<Record<BlockType, string>> = {
+  list: "List",
+  phase: "Lesson phase",
+  exemplar: "Model answer",
   image: "Picture",
   text: "Text",
   callout: "Callout box",
@@ -125,7 +131,9 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   const editing = edit && !streaming && !!onChange;
   const theme = getSheetTheme(doc.design.themeId);
   const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
-  const numbers = useMemo(() => questionNumbers(doc), [doc]);
+  const numbers = useMemo(() => questionLabels(doc), [doc]);
+  const clocks = useMemo(() => phaseClock(doc), [doc]);
+  const profile = sheetToolProfile(doc.tool);
   const ids = useMemo(() => (anchors ? extractHeadings(sheetOutline(doc)).map((h) => h.id) : []), [doc, anchors]);
   const showAnswers = hasAnswersPage(doc);
 
@@ -139,7 +147,74 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   // toolbar and patch up here.
   const passageTools = new Map<string, { tools: ReactNode; patch: (p: Partial<SheetBlock>) => void; block: Extract<SheetBlock, { type: "passage" }> }>();
 
-  units.push({
+  // An exam paper opens with a cover page instead of the usual header: the
+  // level and tier, title, time allowed, total marks (worked out from the
+  // questions), the candidate's details, instructions and, for a paper in a
+  // board's style, the line saying it is not an official paper.
+  const cover = showsCover(doc) ? examCover(doc) : null;
+  if (cover) {
+    units.push({
+      key: "cover",
+      height: 0,
+      render: (live) => (
+        <div className="js-cover" data-testid={live ? "exam-cover" : undefined}>
+          <p className="js-cover-level">{[cover.level, cover.tier].filter(Boolean).join(", ")}</p>
+          <EditableText
+            as="h1"
+            className="js-title"
+            value={doc.title}
+            placeholder={streaming ? " " : "Paper title"}
+            editable={editing}
+            onChange={(title) => commit({ ...doc, title })}
+            label="title"
+            {...(live && ids[0] ? { id: ids[0] } : {})}
+          />
+          <div className="js-cover-facts">
+            <span>Time allowed <b>{cover.time}</b></span>
+            <span>Total marks <b data-testid={live ? "exam-total" : undefined}>{cover.total}</b></span>
+          </div>
+          <div className="js-cover-boxes">
+            <span>Name <i /></span>
+            <span>Class <i /></span>
+            <span>Candidate number <i /></span>
+          </div>
+          <div className="js-cover-instructions">
+            <p className="js-cover-heading">Instructions</p>
+            <ul>{cover.instructions.map((i) => <li key={i}>{i}</li>)}</ul>
+          </div>
+          {cover.disclaimer && <p className="js-cover-disclaimer">{cover.disclaimer}</p>}
+        </div>
+      ),
+    });
+  }
+
+  // A letter opens with its letterhead: the school and date, the salutation
+  // and the "Re:" line (the title). All built in code, all editable.
+  const letter = doc.letter;
+  const setLetter = (patch: Partial<NonNullable<SheetDoc["letter"]>>) => letter && commit({ ...doc, letter: { ...letter, ...patch } });
+  if (letter) {
+    units.push({
+      key: "letter-head",
+      height: 0,
+      render: (live) => (
+        <div className="js-letter-head" data-testid={live ? "letter-head" : undefined}>
+          <div className="js-letter-top">
+            {(letter.school || editing) && (
+              <EditableText className="js-letter-school" value={letter.school} placeholder="School name" editable={editing} onChange={(school) => setLetter({ school })} label="school name" />
+            )}
+            <EditableText className="js-letter-date" value={formatLetterDate(letter.date)} placeholder="Date" editable={editing} onChange={(date) => setLetter({ date })} label="date" />
+          </div>
+          <EditableText as="p" className="js-letter-salutation" value={letter.salutation} placeholder="Dear..." editable={editing} onChange={(salutation) => setLetter({ salutation })} label="salutation" />
+          <p className="js-letter-re" {...(live && ids[0] ? { id: ids[0] } : {})}>
+            <b>Re: </b>
+            <EditableText value={doc.title} placeholder={streaming ? " " : "What the letter is about"} editable={editing} onChange={(title) => commit({ ...doc, title })} label="subject" />
+          </p>
+        </div>
+      ),
+    });
+  }
+
+  if (!cover && !letter) units.push({
     key: "head",
     height: 0,
     render: (live) => (
@@ -203,7 +278,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   }
 
   doc.sections.forEach((s, si) => {
-    units.push({
+    // A letter's paragraphs sit under no heading.
+    if (!(letter && !s.title && !s.instructions)) units.push({
       key: `sh:${s.id}`,
       height: 0,
       keepWithNext: s.blocks.length > 0,
@@ -302,6 +378,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
               design={doc.design}
               onPatch={patch}
               onPicture={live && onPicture ? () => onPicture(b.id) : undefined}
+              clock={clocks.get(b.id)}
+              layout={doc.lesson?.layout}
             />
           </div>
         ),
@@ -314,12 +392,13 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         height: 0,
         render: (live) => (
           <div className="js-add-row">
-            <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "question" })}>+ Add question</button>
-            <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "content" })}>+ Add text or box</button>
+            {!letter && <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "question" })}>+ Add question</button>}
+            <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "content" })}>{letter ? "+ Add paragraph or box" : "+ Add text or box"}</button>
             {live && menu?.si === si && (
               <AddMenu
                 kind={menu.kind}
                 pictures={!!onPicture}
+                extra={profile.extraBlocks}
                 onPick={(type) => {
                   // A new puzzle is pitched to the year in the sheet's subtitle.
                   const block = newBlock(type, puzzleDefaultsFromSubtitle(doc.subtitle));
@@ -349,6 +428,54 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     });
   }
 
+  // A letter ends with its sign-off and, for a trip, the tear-off slip.
+  if (letter) {
+    units.push({
+      key: "letter-signoff",
+      height: 0,
+      render: (live) => (
+        <div className="js-letter-signoff" data-testid={live ? "letter-signoff" : undefined}>
+          <EditableText as="p" value={letter.signOff} placeholder="Yours sincerely," editable={editing} onChange={(signOff) => setLetter({ signOff })} label="sign-off" />
+          <div className="js-letter-signature" aria-hidden="true" />
+          {(letter.senderName || editing) && (
+            <EditableText as="p" className="js-letter-sender" value={letter.senderName} placeholder="Your name" editable={editing} onChange={(senderName) => setLetter({ senderName })} label="your name" />
+          )}
+          {(letter.senderRole || editing) && (
+            <EditableText as="p" className="js-letter-role" value={letter.senderRole} placeholder="Your role" editable={editing} onChange={(senderRole) => setLetter({ senderRole })} label="your role" />
+          )}
+        </div>
+      ),
+    });
+    const slip = letter.slip;
+    if (slip && showsSlip(doc)) {
+      const setSlip = (patch: Partial<typeof slip>) => setLetter({ slip: { ...slip, ...patch } });
+      units.push({
+        key: "letter-slip",
+        height: 0,
+        render: (live) => (
+          <div className="js-slip" data-testid={live ? "reply-slip" : undefined}>
+            <p className="js-slip-cut" aria-hidden="true">✂ Cut here and return to school</p>
+            <EditableText as="h3" className="js-slip-title" value={slip.title} placeholder="Reply slip" editable={editing} onChange={(title) => setSlip({ title })} label="slip title" />
+            {(slip.returnBy || editing) && (
+              <p className="js-slip-return">
+                <b>Please return by: </b>
+                <EditableText value={slip.returnBy} placeholder="Date" editable={editing} onChange={(returnBy) => setSlip({ returnBy })} label="return by" />
+              </p>
+            )}
+            <EditableText as="p" className="js-slip-statement" value={slip.statement} placeholder="I give permission..." editable={editing} multiline onChange={(statement) => setSlip({ statement })} label="slip statement" />
+            <div className="js-slip-fields">
+              {slip.fields.map((f) => (
+                <span key={f}>
+                  {f} <i />
+                </span>
+              ))}
+            </div>
+          </div>
+        ),
+      });
+    }
+  }
+
   if (showAnswers) {
     units.push({
       key: "answers",
@@ -357,12 +484,17 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
       keepWithNext: true,
       render: (live) => (
         <div>
-          <h2 className="js-answers-title" {...(live && ids[doc.sections.length + 1] ? { id: ids[doc.sections.length + 1] } : {})}>Answers</h2>
-          <p className="js-instructions" style={{ marginTop: 2 }}>For the teacher. Remove this page before handing the sheet out, or switch it off in Design.</p>
+          <h2 className="js-answers-title" {...(live && ids[doc.sections.length + 1] ? { id: ids[doc.sections.length + 1] } : {})}>{answersTitle(doc)}</h2>
+          <p className="js-instructions" style={{ marginTop: 2 }}>{profile.answersNote}</p>
         </div>
       ),
     });
-    doc.sections.forEach((s, si) =>
+    doc.sections.forEach((s, si) => {
+      // Numbering restarts in each section, so each section's answers go
+      // under its own title.
+      if (profile.restartNumbers && s.blocks.some(isQuestion)) {
+        units.push({ key: `ah:${s.id}`, height: 0, keepWithNext: true, render: () => <h3 className="js-answers-sub">{s.title}</h3> });
+      }
       s.blocks.forEach((b, bi) => {
         if (!isQuestion(b)) return;
         if (!editing && !answerText(b) && !(b.type === "long" && b.criteria.length)) return;
@@ -370,11 +502,11 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
           key: `a:${b.id}`,
           height: 0,
           render: () => (
-            <AnswerView q={b} number={numbers.get(b.id) ?? 0} edit={editing} onPatch={(p: Partial<SheetQuestion>) => commit(updateBlock(doc, si, bi, p))} />
+            <AnswerView q={b} number={numbers.get(b.id) ?? ""} edit={editing} showMarks={!!doc.exam} onPatch={(p: Partial<SheetQuestion>) => commit(updateBlock(doc, si, bi, p))} />
           ),
         });
-      }),
-    );
+      });
+    });
     visibleNotes(doc).forEach(({ note, index: ni }) => {
       const setNote = (next: typeof note | null) =>
         commit({ ...doc, teacherNotes: next ? doc.teacherNotes.map((n, j) => (j === ni ? next : n)) : doc.teacherNotes.filter((_, j) => j !== ni) });
@@ -409,6 +541,9 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
       });
     });
   }
+
+  // The questions start on the page after the cover.
+  if (cover && units.length > 1) units[1].breakBefore = true;
 
   // ── Measuring ───────────────────────────────────────────────────────────
 
@@ -639,7 +774,7 @@ function ToolButton({ label, text, onClick }: { label: string; text?: string; on
   );
 }
 
-function AddMenu({ kind, pictures, onPick, onClose }: { kind: "question" | "content"; pictures: boolean; onPick: (t: BlockType) => void; onClose: () => void }) {
+function AddMenu({ kind, pictures, extra = [], onPick, onClose }: { kind: "question" | "content"; pictures: boolean; extra?: BlockType[]; onPick: (t: BlockType) => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -653,7 +788,8 @@ function AddMenu({ kind, pictures, onPick, onClose }: { kind: "question" | "cont
       document.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
-  const types = kind === "question" ? QUESTION_TYPES : pictures ? [...CONTENT_TYPES, "image" as const] : CONTENT_TYPES;
+  const content: BlockType[] = [...extra, ...CONTENT_TYPES, ...(pictures ? ["image" as const] : [])];
+  const types = kind === "question" ? QUESTION_TYPES : content;
   return (
     <div ref={ref} className="js-menu" role="menu" style={{ top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)" }}>
       <span className="js-menu-head">{kind === "question" ? "Add a question" : "Add text or a box"}</span>

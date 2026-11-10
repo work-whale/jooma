@@ -10,10 +10,15 @@
 import { cleanMathText } from "@/app/lib/math-text";
 import { seedFrom } from "@/app/lib/seeded-random";
 import { gridLetters, refreshPuzzle, type PuzzleDefaults } from "./puzzles";
+import { sheetToolProfile } from "./tools";
+import { placeAnnotations } from "./model-answers";
 import {
   SHEET_KIND,
   SHEET_VERSION,
   type ImageBlock,
+  type LessonMeta,
+  type ExamMeta,
+  type LetterMeta,
   type SheetBlock,
   type SheetCallout,
   type SheetDesign,
@@ -36,7 +41,7 @@ const CALLOUT_DEFAULTS: Record<SheetCallout["variant"], { label: string; emoji: 
 };
 
 export function defaultDesign(tool: SheetTool, themeId: string): SheetDesign {
-  return { themeId, fontScale: "m", nameDate: true, answers: true, paper: "a4", lineNumbers: tool === "comprehension", objective: true, intro: true, diffNote: true };
+  return { themeId, fontScale: "m", nameDate: true, answers: true, paper: "a4", lineNumbers: sheetToolProfile(tool).lineNumbers, objective: true, intro: true, diffNote: true };
 }
 
 // The copyright sign becomes "(c)", as the markdown tools always did.
@@ -119,6 +124,46 @@ export function normalizeBlock(raw: unknown, id: string, puzzle?: Partial<Puzzle
           })
         : [];
       return headers.length || rows.length ? { id, type: "table", headers, rows } : null;
+    }
+    case "list": {
+      const items = list(r.items);
+      const style = r.style === "number" || r.style === "check" ? r.style : "bullet";
+      return items.length ? { id, type: "list", title: text(r.title), style, items } : null;
+    }
+    case "phase": {
+      const title = text(r.title);
+      const teacher = text(r.teacher);
+      if (!title && !teacher) return null;
+      const stage = r.stage === "starter" || r.stage === "plenary" ? r.stage : "main";
+      return {
+        id,
+        type: "phase",
+        stage,
+        title,
+        minutes: intOf(r.minutes, 1, 180, 10),
+        teacher,
+        pupils: text(r.pupils),
+        check: list(r.check),
+        feedback: text(r.feedback),
+        support: text(r.support),
+        challenge: text(r.challenge),
+        ta: text(r.ta),
+      };
+    }
+    case "exemplar": {
+      const parts = list(r.parts);
+      if (parts.length === 0) return null;
+      const level = r.level === "mid" || r.level === "low" ? r.level : "full";
+      const outOf = intOf(r.outOf, 0, 60, 0);
+      const form = r.form === "steps" || r.form === "points" ? r.form : "prose";
+      const raw = Array.isArray(r.annotations)
+        ? r.annotations.map((a) => (a && typeof a === "object" ? { quote: text((a as Raw).quote), note: text((a as Raw).note) } : null)).filter((a): a is { quote: string; note: string } => !!a)
+        : [];
+      // A note whose quote is not in the answer cannot point at anything, so
+      // it joins the commentary.
+      const placed = placeAnnotations(parts, raw);
+      const commentary = [text(r.commentary), ...placed.spare].filter(Boolean).join(" ");
+      return { id, type: "exemplar", level, awarded: intOf(r.awarded, 0, outOf || 60, 0), outOf, form, parts, annotations: placed.annotations, commentary };
     }
     case "image": {
       // The model writes what to look for, never where a picture is: `src` is
@@ -265,6 +310,15 @@ export interface NormalizeContext {
   /** Placed by the server ahead of the model's sections, e.g. the teacher's
    *  own passage. Never sent through the model. */
   leadingSections?: SheetSection[];
+  /** Turns a tool's own fixed-shape draft into a generic sheet draft
+   *  (app/lib/sheets/tools.ts `arrange`). */
+  arrange?: (raw: unknown) => unknown;
+  /** Lesson plans: kept on the document. */
+  lesson?: LessonMeta;
+  /** Exam papers: kept on the document. */
+  exam?: ExamMeta;
+  /** Letters: kept on the document. */
+  letter?: LetterMeta;
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -293,7 +347,8 @@ export function sheetImages(doc: SheetDoc): ImageBlock[] {
  * them on every chunk. Blocks added later by the editor get fresh ids.
  */
 export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
-  const r = (raw && typeof raw === "object" ? raw : {}) as Raw;
+  const arranged = ctx.arrange ? ctx.arrange(raw) : raw;
+  const r = (arranged && typeof arranged === "object" ? arranged : {}) as Raw;
   const sections: SheetSection[] = (Array.isArray(r.sections) ? r.sections : [])
     .map((s, si): SheetSection | null => {
       if (!s || typeof s !== "object") return null;
@@ -303,7 +358,8 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
         .filter((b): b is SheetBlock => !!b);
       const title = text(sr.title);
       if (!title && blocks.length === 0) return null;
-      return { id: `s${si}`, title, emoji: text(sr.emoji), instructions: text(sr.instructions), blocks };
+      const role = text(sr.role);
+      return { id: `s${si}`, title, emoji: text(sr.emoji), instructions: text(sr.instructions), blocks, ...(role ? { role } : {}) };
     })
     .filter((s): s is SheetSection => !!s);
 
@@ -315,6 +371,9 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     kind: SHEET_KIND,
     version: SHEET_VERSION,
     tool: ctx.tool,
+    ...(ctx.lesson ? { lesson: ctx.lesson } : {}),
+    ...(ctx.exam ? { exam: ctx.exam } : {}),
+    ...(ctx.letter ? { letter: ctx.letter } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

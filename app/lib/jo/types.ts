@@ -9,7 +9,7 @@
 import type { SheetBlock } from "@/app/lib/sheets/types";
 
 /** The kind of document Jo is editing. Each has its own op vocabulary. */
-export type JoDocKind = "sheet" | "slides" | "markdown" | "quiz" | "staffSlides";
+export type JoDocKind = "sheet" | "slides" | "markdown" | "quiz" | "staffSlides" | "reports";
 
 /** A follow up question, asked instead of editing when a request is vague. */
 export interface JoClarify {

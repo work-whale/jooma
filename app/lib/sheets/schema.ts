@@ -12,6 +12,7 @@
 // sheet-schema.spec.ts holds the size to a budget.
 
 import type { QuestionType, SheetTool } from "./types";
+import { sheetToolProfile } from "./tools";
 
 type Json = Record<string, unknown>;
 
@@ -62,35 +63,25 @@ const TYPE_TO_KIND: Record<string, QuestionType> = {
   "Vocabulary in context": "short",
 };
 
-/** The kinds each tool can produce when the teacher picks no types. The
- *  puzzles are left out: a mix should never turn up a word search unasked. */
-const DEFAULT_KINDS: Record<SheetTool, QuestionType[]> = {
-  worksheet: ["mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order", "wordorder", "picture", "label"],
-  comprehension: ["mcq", "truefalse", "fillblanks", "short", "long"],
-};
-
-/** Every kind each tool can hold: the defaults, and the puzzles a teacher
- *  asks for by name. */
-const ALLOWED_KINDS: Record<SheetTool, QuestionType[]> = {
-  worksheet: [...DEFAULT_KINDS.worksheet, "sort", "wordsearch", "crossword"],
-  comprehension: DEFAULT_KINDS.comprehension,
-};
-
+/** Every kind a tool can hold (app/lib/sheets/tools.ts): its default mix,
+ *  and any it allows only when asked for by name, like the puzzles. */
 export function allowedKinds(tool: SheetTool): QuestionType[] {
-  return ALLOWED_KINDS[tool];
+  return sheetToolProfile(tool).allowedKinds;
 }
 
 /** The question kinds a request may use: the ticked types' kinds, or the
  *  tool's default mix when none are ticked. */
 export function kindsForTypes(tool: SheetTool, teacherTypes: string[] | undefined): QuestionType[] {
+  const profile = sheetToolProfile(tool);
   const picked = [...new Set((teacherTypes ?? []).map((t) => TYPE_TO_KIND[t]).filter((k): k is QuestionType => !!k))];
-  const out = picked.filter((k) => ALLOWED_KINDS[tool].includes(k));
-  return out.length > 0 ? out : DEFAULT_KINDS[tool];
+  const out = picked.filter((k) => profile.allowedKinds.includes(k));
+  return out.length > 0 ? out : profile.defaultKinds;
 }
 
 function questionVariant(kind: QuestionType, tool: SheetTool): Json {
-  // Only comprehension questions are tagged with a reading domain.
-  const tail: Json = tool === "comprehension" ? { marks: int, domain: str } : { marks: int };
+  const profile = sheetToolProfile(tool);
+  // Only a tool whose questions assess reading domains tags them with one.
+  const tail: Json = profile.questionDomain ? { marks: int, domain: str } : { marks: int };
   switch (kind) {
     case "mcq":
       return variant("mcq", { prompt: str, options: strList, answers: intList, ...tail });
@@ -101,7 +92,7 @@ function questionVariant(kind: QuestionType, tool: SheetTool): Json {
     case "fillblanks":
       return variant("fillblanks", { prompt: str, sentences: strList, answers: strList, wordBank: strList, ...tail });
     case "short":
-      return tool === "comprehension"
+      return profile.vocabularyQuote
         ? variant("short", { prompt: str, quote: str, lines: int, answer: str, ...tail })
         : variant("short", { prompt: str, lines: int, answer: str, ...tail });
     case "long":
@@ -132,6 +123,9 @@ export interface SheetSchemaOptions {
   passage: boolean;
   /** Offer a picture block: only when the teacher asked for pictures. */
   images?: boolean;
+  /** How many sections there must be. An exam paper sets this, since asking
+   *  for "exactly N questions" in words alone was not always followed. */
+  sectionCount?: { min: number; max: number };
 }
 
 /**
@@ -146,7 +140,28 @@ export function sheetBlockVariants(opts: SheetSchemaOptions): Json[] {
     variant("wordbank", { title: str, words: strList }),
   ];
   if (opts.passage) content.push(variant("passage", { title: str, paragraphs: strList }));
-  if (opts.tool === "worksheet") content.push(variant("table", { headers: strList, rows: { type: "array", items: strList } }));
+  const profile = sheetToolProfile(opts.tool);
+  if (profile.table) content.push(variant("table", { headers: strList, rows: { type: "array", items: strList } }));
+  if (profile.extraBlocks.includes("list")) {
+    content.push(variant("list", { title: str, style: { type: "string", enum: ["bullet", "number", "check"] }, items: strList }));
+  }
+  if (profile.extraBlocks.includes("exemplar")) {
+    content.push(variant("exemplar", {
+      level: { type: "string", enum: ["full", "mid", "low"] },
+      awarded: int,
+      outOf: int,
+      form: { type: "string", enum: ["prose", "steps", "points"] },
+      parts: strList,
+      annotations: { type: "array", items: obj({ quote: str, note: str }) },
+      commentary: str,
+    }));
+  }
+  if (profile.extraBlocks.includes("phase")) {
+    content.push(variant("phase", {
+      stage: { type: "string", enum: ["starter", "main", "plenary"] },
+      title: str, minutes: int, teacher: str, pupils: str, check: strList, feedback: str, support: str, challenge: str, ta: str,
+    }));
+  }
   // A picture is what to search for and a line describing it; where it comes
   // from is found afterwards (app/lib/sheets/pictures.ts).
   if (opts.images) content.push(variant("image", { query: str, alt: str }));
@@ -174,6 +189,7 @@ export function sheetResponseFormat(opts: SheetSchemaOptions) {
     intro: obj({ variant: { type: "string", enum: ["fact", "remember", "tip", "challenge"] }, label: str, text: str, emoji: str }),
     sections: {
       type: "array",
+      ...(opts.sectionCount ? { minItems: opts.sectionCount.min, maxItems: opts.sectionCount.max } : {}),
       items: obj({ title: str, emoji: str, instructions: str, blocks: { type: "array", items: { anyOf: blocks } } }),
     },
     teacherNotes: { type: "array", items: obj({ title: str, points: strList }) },

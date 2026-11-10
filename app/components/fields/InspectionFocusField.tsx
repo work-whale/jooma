@@ -15,11 +15,11 @@ interface Props {
 export default function InspectionFocusField({ value, onChange }: Props) {
   const fieldId = useId();
   const placeholder = useTypingPlaceholder([
-    "e.g. Quality of education and curriculum intent",
-    "e.g. Safeguarding and personal development",
-    "e.g. Leadership and management",
-    "e.g. Behaviour and attitudes",
-    "e.g. SEND provision and inclusion",
+    "e.g. Curriculum and teaching",
+    "e.g. Safeguarding and personal development and wellbeing",
+    "e.g. Leadership and governance",
+    "e.g. Attendance and behaviour",
+    "e.g. Inclusion and SEND provision",
   ]);
   return (
     <div className="space-y-1.5">

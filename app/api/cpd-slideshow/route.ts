@@ -72,7 +72,7 @@ function buildGeneratePrompt(body: GenerateBody): string {
   return `Create a high-quality CPD (Continuing Professional Development) slideshow for teachers on: "${body.topic}".
 
 ${focusLine}
-${additionalLine ? additionalLine + "\n" : ""}This slideshow is for a UK school CPD session. Reflect current best practice and reference the Teachers' Standards, Ofsted's Education Inspection Framework, or DfE guidance where relevant.
+${additionalLine ? additionalLine + "\n" : ""}This slideshow is for a UK school CPD session. Reflect current best practice and reference the Teachers' Standards, Ofsted's renewed education inspection framework and its evaluation areas, or DfE guidance where relevant.
 
 Output exactly ${body.slideCount} slides. Always start with 1 title slide.
 

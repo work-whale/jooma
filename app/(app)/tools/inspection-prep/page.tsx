@@ -19,7 +19,7 @@ export default async function InspectionPrepPage({
           icon={<Search className="w-5 h-5 text-rose-600" />}
 
           title="Inspection Prep Questions"
-          description="Generate self-evaluation questions and preparation actions aligned to your inspection framework. For Ofsted, output reflects the current Education Inspection Framework (EIF) judgement areas (Quality of Education, Behaviour and Attitudes, Personal Development, and Leadership and Management), updated for the 2024 Big Listen changes."
+          description="Generate self-evaluation questions and preparation actions aligned to your inspection framework. For Ofsted, the guide follows the renewed framework's report card: inclusion, curriculum and teaching, achievement, attendance and behaviour, personal development and wellbeing, leadership and governance, early years and post-16 where relevant, and safeguarding as met or not met."
           steps={[
             {
               label: 'Enter the inspection body',

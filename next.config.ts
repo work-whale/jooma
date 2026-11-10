@@ -5,11 +5,20 @@ const nextConfig: NextConfig = {
   /* config options here */
 };
 
+// A build on a developer's machine, for testing against staging
+// (JOOMA_LOCAL_BUILD=1, set by `pnpm build:local`). It must not upload source
+// maps or create a release in Sentry: the auth token is in .env.local and
+// .env.sentry-build-plugin, so without this every local build would.
+const localBuild = process.env.JOOMA_LOCAL_BUILD === "1";
+
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
   org: "jooma-ai",
+
+  sourcemaps: { disable: localBuild },
+  release: { create: !localBuild, finalize: !localBuild },
 
   project: "jooma",
 

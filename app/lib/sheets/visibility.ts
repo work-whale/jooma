@@ -36,3 +36,8 @@ export function visibleNotes(doc: SheetDoc): { note: SheetNote; index: number }[
   const hideDiff = doc.design.diffNote === false;
   return doc.teacherNotes.map((note, index) => ({ note, index })).filter(({ note }) => !(hideDiff && isDifferentiationNote(note)));
 }
+
+/** A letter's reply slip, unless switched off in Design. */
+export function showsSlip(doc: SheetDoc): boolean {
+  return !!doc.letter?.slip && doc.design.slip !== false;
+}

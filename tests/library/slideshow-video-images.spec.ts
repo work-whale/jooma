@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
  * The CEO's slideshow changes, through the interface.
@@ -85,6 +85,9 @@ test.describe("Slideshow: pasted video and image source", () => {
 
   test.beforeEach(async () => {
     teacher = await createTeacher("Robin");
+    // A teacher with no plan is locked to the free tools since the no-card
+    // trial (1 Nov 2026), so these pages would not appear.
+    await setPlan(teacher, "pro", "comped");
   });
 
   test.afterEach(async () => {

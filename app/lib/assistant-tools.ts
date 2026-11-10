@@ -59,6 +59,7 @@
 import { CURRICULA, YEAR_GROUPS } from "@/app/lib/formOptions";
 import { DIFFERENTIATION_VALUES } from "@/app/lib/differentiation";
 import { WORKSHEET_TEMPLATES } from "@/app/lib/sheets/worksheet-templates";
+import { EXAM_STYLES } from "@/app/lib/sheets/exam-styles";
 
 const CURRICULUM_VALUES = CURRICULA.map((c) => c.value);
 
@@ -237,6 +238,19 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
             "did not state it, phrased as a teacher would ('Identify the stages of " +
             "the water cycle').",
         },
+        layout: {
+          type: "string",
+          enum: ["three-part", "cycles"],
+          description:
+            "three-part: starter, main teaching and plenary (the default). cycles: starter quiz, " +
+            "learning cycles, exit quiz. Leave out unless the teacher asks for one.",
+        },
+        lessonLength: {
+          type: "integer",
+          minimum: 20,
+          maximum: 180,
+          description: "The lesson's length in minutes. Defaults to 60.",
+        },
         differentiate: differentiateField,
         differentiationLevels: differentiationLevelsField,
         outputDetail: detailField,
@@ -300,7 +314,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "Quiz Generator",
     icon: "quiz",
     description:
-      "A multiple-choice quiz, exportable to Kahoot, Blooket, Gimkit and others. " +
+      "A quiz (multiple choice and true or false) to present on the board, print, or export to Kahoot, Blooket, Gimkit and others. " +
       "Use for 'quiz', 'multiple choice', or 'test them on X'.",
     fields: {
       type: "object",
@@ -310,11 +324,25 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           type: "string",
           description: "What the quiz covers, e.g. 'Multiplication'.",
         },
+        // Matches the form: 1 to 20 to start with, 5 by default.
         numQuestions: {
           type: "integer",
           minimum: 1,
-          maximum: 30,
-          description: "How many questions. Defaults to 10.",
+          maximum: 20,
+          description: "How many questions. Defaults to 5.",
+        },
+        answerType: {
+          type: "string",
+          enum: ["single", "multiple", "truefalse", "mixed"],
+          description:
+            "single: one right answer (the default). multiple: more than one right answer. " +
+            "truefalse: true or false statements. mixed: a mix of all three. Leave out unless the teacher asks.",
+        },
+        timeLimit: {
+          type: "integer",
+          minimum: 5,
+          maximum: 300,
+          description: "Seconds per question when the quiz is presented. Defaults to 30.",
         },
       },
       required: ["subject", "topic"],
@@ -773,6 +801,19 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           type: "string",
           description: "Exam board or type, e.g. 'GCSE AQA', 'SATs', 'end of unit'.",
         },
+        examStyle: {
+          type: "string",
+          enum: EXAM_STYLES.map((s) => s.id),
+          description:
+            "The paper's style. " +
+            EXAM_STYLES.map((s) => `${s.id}: ${s.label}`).join("; ") +
+            ". Use a GCSE board only if the teacher names one; school-test for any other test.",
+        },
+        tier: {
+          type: "string",
+          enum: ["foundation", "higher"],
+          description: "GCSE tier, for tiered subjects such as maths and the sciences. Leave out unless the teacher says.",
+        },
         numQuestions: {
           type: "integer",
           minimum: 1,
@@ -996,7 +1037,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         },
         inspectionFocus: {
           type: "string",
-          description: "The focus area, e.g. 'Reading', 'Behaviour and attitudes'.",
+          description: "The focus area, e.g. 'Reading', 'Attendance and behaviour'.",
         },
         includeEvidence: { type: "boolean", description: "Include evidence examples." },
         includeSuccessCriteria: { type: "boolean", description: "Include success criteria." },
@@ -1218,46 +1259,26 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "Report Writer",
     icon: "report",
     description:
-      "A personalised end-of-year pupil report. Use for 'pupil report', 'school " +
-      "report', or 'write a report for X'.",
+      "End of term reports for a whole class, one per pupil. Use for 'pupil " +
+      "reports', 'school reports', or 'write my class reports'.",
     fields: {
       type: "object",
       properties: {
-        name: { type: "string", description: "The pupil's first name." },
-        gender: {
+        // No name and no gender: pupils are entered in the class grid, and a
+        // pupil's name never reaches a model (app/lib/reports/privacy.ts).
+        yearGroup: { type: "string", enum: YEAR_GROUPS, description: "The class's year group." },
+        subject: {
           type: "string",
-          enum: GENDERS,
-          description:
-            "Required — the report uses pronouns throughout. Use 'Non-Binary' " +
-            "if the teacher did not indicate one.",
+          description: "A subject to report on, e.g. 'Maths'. Primary classes can add more in the form.",
         },
-        tone: {
-          type: "string",
-          description: "Report tone, e.g. 'formal', 'warm'. Defaults to formal.",
-        },
-        // STRING, not integer (rule 2).
-        wordCount: {
-          type: "string",
-          description:
-            "Approximate length in words, as digits, e.g. '150'. Must be 50-1000.",
-        },
-        includeTargets: { type: "boolean", description: "Include next-step targets." },
-        // SYNTHETIC FIELD, same reasoning as newsletter's firstSection. Real
-        // state is `subjects: SubjectFocus[]`, and canGenerate needs one with a
-        // non-empty subject name.
-        firstSubject: {
-          type: "string",
-          description:
-            "The first subject to report on, e.g. 'Maths'. The teacher adds the " +
-            "strengths and targets themselves, and can add more subjects.",
-        },
+        tone: { type: "string", enum: ["warm", "formal", "encouraging", "concise"], description: "Defaults to warm." },
+        length: { type: "string", enum: ["short", "standard", "long"], description: "About 50, 100 or 160 words a pupil. Defaults to standard." },
       },
-      required: ["name", "gender", "firstSubject"],
+      required: ["yearGroup"],
     },
-    // ReportWriterForm.tsx. All three are already `required`, so they are
-    // guaranteed present; `gender` is the only one with fixed options anyway.
-    // wordCount defaults in the form.
-    gating: ["name", "gender", "firstSubject"],
+    // ReportWriterForm.tsx. The grid needs a year group before it shows; the
+    // pupils themselves are always typed by the teacher.
+    gating: ["yearGroup"],
   },
 
   // ── Observation and review write-ups ──────────────────────────────────────

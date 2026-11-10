@@ -35,7 +35,7 @@ const REFINE_CHIPS = [
 
 const FOCUS_CATEGORIES = [
   {
-    label: "Quality of Education",
+    label: "Curriculum and Teaching",
     items: [
       "Curriculum intent and sequencing across subjects",
       "Quality of teaching, explanation and modelling",
@@ -45,31 +45,33 @@ const FOCUS_CATEGORIES = [
     ],
   },
   {
-    label: "Behaviour and Attitudes",
+    label: "Attendance and Behaviour",
     items: [
       "Pupil conduct in lessons and around school",
       "On-task engagement and focus during independent work",
       "Attitudes to learning and resilience",
       "Pupil-teacher relationships and classroom climate",
       "Consistency in applying behaviour expectations",
+      "Punctuality and readiness to learn at the start of lessons",
     ],
   },
   {
-    label: "Personal Development",
+    label: "Personal Development and Wellbeing",
     items: [
-      "Cultural capital and enrichment opportunities",
+      "Enrichment and wider opportunities",
       "Student leadership and pupil voice",
       "PSHE and character education delivery",
       "Extracurricular and wider school life",
     ],
   },
   {
-    label: "SEND and Inclusion",
+    label: "Inclusion",
     items: [
       "Adaptive teaching strategies in practice",
       "Deployment and impact of support staff",
       "Accessibility of resources and tasks",
       "Progress and engagement of pupils with SEND",
+      "Support for disadvantaged pupils",
     ],
   },
   {

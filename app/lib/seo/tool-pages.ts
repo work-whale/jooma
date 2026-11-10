@@ -58,38 +58,38 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Report Writer for UK Teachers",
     h1: "AI report writer for school reports",
     description:
-      "Turn your notes on strengths, areas to develop and targets into a personalised school report, subject by subject, in your tone. Built for UK teachers.",
+      "Write end of term reports for your whole class from a quick grid: a judgement, effort and a short note for each pupil. Built for UK teachers.",
     intro:
-      "Jooma's AI report writer turns your notes into a finished school report. Add a pupil's first name, then their strengths, areas for development and targets for each subject. It writes a personal paragraph for every subject in the tone and length you choose, ready for you to check and edit.",
+      "Jooma's AI report writer turns a class grid into finished school reports. Add each pupil's first name, a judgement on your school's scale, their effort and a short note, and it writes a personal report and a next step for every pupil, ready for you to check, edit and copy into your school's system.",
     steps: [
-      "Add the pupil's first name and gender, so the pronouns are right, then choose the length and the tone, such as formal, warm or encouraging.",
-      "For each subject, up to ten, note what they do well, what to work on and their next steps.",
-      "Get a report with a paragraph per subject and an optional target for each. Refine it, then download it as PDF or Word.",
+      "Choose the year group and the subjects, then the scale you report on: working towards, expected or greater depth at primary, a GCSE grade or below, on or above target at secondary.",
+      "Fill a row per pupil, up to 40: first name, pronouns, a judgement, effort and a note on what to mention. Paste the names straight from your register.",
+      "Get a report and a next step for every pupil. Edit any of them, rewrite one, then copy them one by one or download them all as CSV or Word.",
     ],
     features: [
-      "A paragraph for every subject, written from your notes rather than stock phrases",
-      "A target for each subject, or none if you prefer",
-      "Any length from 50 to 1,000 words",
-      "Your choice of tone, from formal to warm",
-      "Changes in a sentence, such as make it more formal",
-      "Download as PDF or Word, print it, or copy it into your school's system",
+      "A whole class at once, up to 40 pupils",
+      "Each report built from your own note, so no two read alike",
+      "Never states a grade or a judgement you did not give it",
+      "Short, standard or long, in a warm, formal, encouraging or concise tone",
+      "A next step for every pupil, or none if you prefer",
+      "Copy one at a time, or download the class as CSV or Word",
     ],
     uk: {
       heading: "Written the way UK reports are read",
-      body: "Reports follow the shape parents expect from a UK school: what the pupil does well, what to work on, and a clear next step. Jooma only asks for a first name, and you should not enter any other personal details about the pupil.",
+      body: "Reports follow the shape parents expect from a UK school: what the pupil does well, what to work on, and a clear next step. Pupils' names stay in your browser: each pupil is sent as a number, and first names from your class are taken out of your notes first.",
     },
     faqs: [
       {
         q: "Can it write reports for a whole class at once?",
-        a: "Not yet. It writes one pupil's report at a time, covering up to ten subjects in one go.",
+        a: "Yes. Fill in a row for each pupil, up to 40, and it writes them all, a few at a time, so you can start reading the first ones while the rest are written.",
       },
       {
         q: "Will every report sound the same?",
-        a: "No. Each paragraph is written from the strengths and areas for development you give it, and generic praise is left out. The more specific your notes, the more personal the report.",
+        a: "No. Each report is written from that pupil's own note and judgements, and generic praise is left out. The more specific your notes, the more personal the report.",
       },
       {
         q: "Is it safe to use with pupil information?",
-        a: "Enter a first name only. Do not enter surnames, dates of birth or other personal details. Your reports are stored in the UK.",
+        a: "Pupils' names are never sent: each pupil goes as a number, and first names from your class are taken out of your notes before anything leaves your browser. Do not type surnames, dates of birth or other personal details into a note. Your reports are stored in the UK.",
       },
       { q: "Can I edit the report?", a: editAnswer },
     ],
@@ -403,21 +403,20 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Model Answer Generator for Teachers",
     h1: "AI model answer generator for exam questions",
     description:
-      "Paste an exam question and get a model answer pitched at the marks, with annotated teacher notes on criteria, technique and common errors.",
+      "Model answers to exam questions at full marks, a middle mark and a near miss, each annotated with where the marks come from. Up to eight questions at once.",
     intro:
-      "Jooma's AI model answer generator writes a model answer to any exam question you give it, pitched at the marks available. Paste in your mark scheme for a closer match. Alongside the answer you get annotated teacher notes on what earns the marks, common errors and how to use it in class.",
+      "Jooma's AI model answer generator writes model answers to your exam questions at the levels you choose: full marks, a middle answer and a near miss. Each is annotated with the phrases that earn marks, so pupils see the difference. Paste in your mark scheme for a closer match, or start from a Jooma exam paper.",
     steps: [
-      "Choose your curriculum, year group and subject, and paste the exam question.",
-      "Set the total marks, from 1 to 50, and add your mark scheme or any guidelines if you have them.",
-      "Get the model answer with teacher notes. Ask for a stronger or simpler version, then download it as PDF or Word.",
+      "Choose your curriculum, year group and subject, and add up to eight questions with their marks, or open it from an exam paper.",
+      "Choose the answers to write and add your mark scheme if you have one.",
+      "Get annotated answers on printable pages, edit them or ask Jo, then download as PDF or Word.",
     ],
     features: [
-      "A model answer in continuous prose, with its length matched to the marks",
-      "Teacher notes on the assessment criteria, content coverage and skills shown",
-      "What separates a full mark answer from a near miss",
-      "Common errors to warn pupils about",
-      "Three ideas for using it in class, including peer and self assessment",
-      "Versions that score more or fewer marks, on request",
+      "Answers at full marks, a middle mark and a near miss, side by side",
+      "Notes showing which phrases earn which marks",
+      "Working set out step by step for calculations, prose for extended writing",
+      "What separates a full mark answer from the rest, and the errors to watch for",
+      "Up to eight questions in one go, or straight from an exam paper",
     ],
     uk: {
       heading: "Written for UK exam questions",
@@ -434,7 +433,7 @@ export const TOOL_PAGES: ToolPage[] = [
       },
       {
         q: "Can I get a weaker answer to compare?",
-        a: "Yes. Ask for a version that scores fewer marks, which is useful for showing pupils what separates a good answer from a great one.",
+        a: "Yes. Choose a middle answer and a near miss alongside the full marks one, each with the marks it would get and why.",
       },
       { q: "Can I edit the answer?", a: editAnswer },
     ],
@@ -740,39 +739,40 @@ export const TOOL_PAGES: ToolPage[] = [
     href: "/tools/letter-writer",
     slug: "letter-writer",
     title: "AI Letter Writer for Schools",
-    h1: "AI letter writer for parent and staff letters",
+    h1: "AI letter writer for letters home",
     description:
-      "Write a clear school letter to parents, staff or governors from a few key points, in a formal, semi formal or informal tone, ready to sign.",
+      "Write a clear letter home from the facts: trips with a consent slip, attendance, behaviour or anything else, on designed pages ready to print.",
     intro:
-      "Jooma's AI letter writer turns a few key points into a clear, well structured school letter. Say who it is for and what it needs to say, choose the tone and the date, and it writes the letter, leaving placeholders for anything you have not told it so nothing is made up.",
+      "Jooma's AI letter writer turns your facts into a clear letter home on designed pages. Pick the kind of letter, give the dates, times and costs, and it writes the body while the date, greeting, sign off, trip details and consent slip are added exactly as you gave them.",
     steps: [
-      "Say who the letter is for, such as parents and carers, staff or governors.",
-      "List the key information it needs to include, then choose the date and the tone.",
-      "Get a finished letter with your name and school left as placeholders, ready to edit and download as PDF or Word.",
+      "Pick the kind of letter: a trip or visit, one child's attendance or behaviour, or anything else.",
+      "Give the facts it needs, such as the date, times, cost and reply deadline, then your name, role and school.",
+      "Get a finished letter with your school, the date, the greeting and sign off in place. Edit anything on the page, then print it, save a PDF or download it for Word.",
     ],
     features: [
-      "Two to four clear paragraphs, from greeting to sign off",
-      "Formal, semi formal or informal, with a sign off to match",
-      "The date in British format",
-      "Placeholders for missing details instead of invented facts",
-      "Your name, role and school left for you to add",
+      "Trip letters with a details table and a tear off consent slip",
+      "Attendance and behaviour letters that stay factual and supportive",
+      "Dear Parents and Carers, with the sign off to match",
+      "Dates and times written the British way",
+      "Never invents a date, cost, time or name you did not give it",
+      "Your name, role and school printed on every letter",
     ],
     uk: {
       heading: "Written the way UK schools write home",
-      body: "Letters use the conventions parents expect from a UK school, from the date format to the sign off, and stick to the facts you give. Add your own letterhead when you print or send it.",
+      body: "Letters use the conventions parents expect from a UK school, from the date format to the sign off, and stick to the facts you give. A letter about one child never sends that child's name: it stays in your browser.",
     },
     faqs: [
       {
         q: "Can it write letters to parents?",
-        a: "Yes, and to staff, governors or anyone else. You say who it is for and it writes for that audience.",
+        a: "Yes, and to staff, governors or anyone else. Choose a trip, attendance, behaviour or general letter and it writes for that audience.",
       },
       {
         q: "Will it make up details?",
-        a: "No. Anything you have not told it, such as a date or a cost, is left as a placeholder for you to fill in.",
+        a: "No. It writes only from the facts you give it, and the dates, times, costs and consent slip are added exactly as you typed them.",
       },
       {
         q: "Does it add our school letterhead?",
-        a: "Not yet. Download it as Word and paste it into your letterhead template.",
+        a: "It adds your school's name and the date at the top. For a logo, download it for Word and paste it into your letterhead template.",
       },
       { q: "Can I edit the letter?", a: editAnswer },
     ],
@@ -1118,24 +1118,25 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Exam Question Generator for Teachers",
     h1: "AI exam question generator with mark schemes",
     description:
-      "Create an exam style paper on any topic: up to 20 questions rising in marks and difficulty, with an optional indicative mark scheme.",
+      "Practice exam papers in GCSE board, KS2 SATs or school test style: a cover, questions with marks and answer space, and a mark scheme.",
     intro:
-      "Jooma's AI exam question generator writes an exam style paper on any topic. Choose how many questions and the range of marks, and the questions rise from recall to evaluation. Add a mark scheme with answers, mark points and marking notes, ready to check and adapt for your class.",
+      "Jooma's AI exam question generator writes a practice paper on any topic, set out the way the paper you choose is: a GCSE board's style, the Key Stage 2 tests, or a school test. It comes as printable pages with a cover, numbered questions and parts, marks and answer lines, and a mark scheme on its own pages.",
     steps: [
-      "Choose the curriculum, year group, subject and topic, and say what style of exam it should follow, such as GCSE.",
+      "Choose the paper style (GCSE board, KS2 SATs or a school test), the tier where it applies, the year group, subject and topic.",
       "Set the number of questions, up to 20, and the minimum and maximum marks per question.",
-      "Get the paper, with a mark scheme if you want one, ready to edit and download as PDF or Word.",
+      "Get the paper with its cover and mark scheme, edit it on the page or ask Jo, then download it as PDF or Word or write model answers for it.",
     ],
     features: [
-      "Up to 20 questions, rising in marks and difficulty from recall to evaluation",
-      "Marks per question within the range you set",
-      "Instructions and a total marks figure",
-      "An optional mark scheme with answers, mark points and marking notes",
-      "The knowledge and skills you name, covered by the questions",
+      "Up to 20 questions in parts, numbered 1(a), 1(b), rising in demand",
+      "A cover page with the time allowed, instructions and the total marks",
+      "Answer lines and working space sized to the marks",
+      "A mark scheme with answers, mark points and levels for extended answers",
+      "Foundation or Higher tier for tiered GCSE subjects",
+      "Model answers for any question, in one click",
     ],
     uk: {
       heading: "In the style of UK exams",
-      body: "Name the exam style, such as GCSE, A level or Functional Skills, and it writes in that style. It is not tied to one exam board, so check the paper and the mark scheme against your board's specification.",
+      body: "Choose a GCSE board's style (AQA, Pearson Edexcel, OCR or WJEC Eduqas), the Key Stage 2 tests or a school test for any year. The questions are always new, so check them and the mark scheme against your board's specification.",
     },
     faqs: [
       {
@@ -1148,7 +1149,7 @@ export const TOOL_PAGES: ToolPage[] = [
       },
       {
         q: "Does it leave space for answers?",
-        a: "Not yet. Download it as Word and add answer lines where you want them.",
+        a: "Yes. Each question gets answer lines, or working space for a calculation, sized to its marks.",
       },
       { q: "Can I edit the paper?", a: editAnswer },
     ],
@@ -1299,7 +1300,7 @@ export const TOOL_PAGES: ToolPage[] = [
     ],
     uk: {
       heading: "A starting point for self evaluation",
-      body: "For Ofsted it covers areas such as the quality of education, behaviour and attitudes, personal development, leadership and safeguarding. Inspection frameworks change, so check the questions against Ofsted's current handbook and toolkit.",
+      body: "For Ofsted it follows the evaluation areas on the report card: inclusion, curriculum and teaching, achievement, attendance and behaviour, personal development and wellbeing, leadership and governance, plus early years and post-16 where you have them, with safeguarding judged as met or not met. Inspection frameworks change, so check the questions against Ofsted's current toolkit.",
     },
     faqs: [
       {

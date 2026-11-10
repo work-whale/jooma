@@ -10,9 +10,10 @@ import { defaultFamilyForYear } from "@/app/lib/slideshowThemes";
 import { defaultDesign, normalizeDraft, ownPassageSection, serializeSheet, type NormalizeContext } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { DEFAULT_SHEET_THEME } from "./themes";
-import { templateById } from "./worksheet-templates";
 import { puzzleDefaults } from "./puzzles/level";
+import { sheetToolProfile } from "./tools";
 import type { SheetTool } from "./types";
+import type { LetterInfo } from "./letter";
 
 export interface SheetRequestInfo {
   yearGroup?: string;
@@ -26,26 +27,46 @@ export interface SheetRequestInfo {
   template?: string;
   /** One band's version of a differentiated set: puzzles are pitched to it. */
   band?: string;
+  /** Lesson plans: the form's curriculum and topic, kept for the buttons
+   *  that make slides, a worksheet or a quiz from the plan. */
+  curriculum?: string;
+  topic?: string;
+  /** Lesson plans: the layout and the lesson's length in minutes. */
+  layout?: string;
+  lessonLength?: number;
+  /** Exam papers: the style (app/lib/sheets/exam-styles.ts), the tier and
+   *  the time allowed in minutes. */
+  examStyle?: string;
+  tier?: string;
+  minutes?: number;
+  /** Letters: the type, recipient, sender, date and facts. The names in it
+   *  (recipient, sender, child) stay in the browser. */
+  letter?: LetterInfo;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
+  const profile = sheetToolProfile(tool);
   const year = info.yearGroup && info.yearGroup !== "Mixed" ? info.yearGroup : "";
   const subtitle = [
     info.yearGroup === "Mixed" ? "Mixed years" : year,
-    tool === "comprehension" ? "Reading comprehension" : info.subject?.trim(),
+    profile.subtitleLabel ?? info.subject?.trim(),
+    profile.subtitleSuffix?.(info),
   ].filter(Boolean).join(" · ");
   const design = {
     ...defaultDesign(tool, DEFAULT_SHEET_THEME[defaultFamilyForYear(year)]),
-    ...(tool === "worksheet" ? templateById(info.template).design : undefined),
+    ...profile.startDesign(info),
   };
-  if (tool === "comprehension" && info.includeAnswerKey === false) design.answers = false;
   return {
     tool,
     subtitle,
     design,
     puzzle: puzzleDefaults(info.yearGroup, info.band),
+    ...(profile.arrange ? { arrange: (raw: unknown) => profile.arrange!(raw, info) } : {}),
+    ...(profile.lessonMeta ? { lesson: profile.lessonMeta(info) } : {}),
+    ...(profile.examMeta ? { exam: profile.examMeta(info) } : {}),
+    ...(profile.letterMeta && info.letter ? { letter: profile.letterMeta(info.letter) } : {}),
     leadingSections:
-      tool === "comprehension" && info.textSource === "own" && info.ownText?.trim()
+      profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]
         : undefined,
   };

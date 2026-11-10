@@ -18,7 +18,7 @@ export default function ResponsibilitiesField({ value, onChange }: Props) {
     "e.g. Year 4 class teacher, science subject leader, improve pupil progress in maths",
     "e.g. Head of English, KS3 curriculum review, raise attainment at grade 5+",
     "e.g. SENCo, develop EHCP review process, improve staff SEND confidence",
-    "e.g. Assistant head, lead on behaviour and attitudes, reduce persistent absence",
+    "e.g. Assistant head, lead on attendance and behaviour, reduce persistent absence",
   ]);
   return (
     <div className="space-y-1.5">

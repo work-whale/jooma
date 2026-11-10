@@ -13,16 +13,17 @@ import { generateAIImage } from "@/app/lib/ai-image";
 import { searchPixabay } from "@/app/lib/slideshow-pipeline";
 import { isPictureStyle, type PictureSource } from "@/app/lib/sheets/picture-options";
 import { recordAssetCost } from "@/app/lib/usage";
+import { isSheetTool, sheetToolProfile } from "@/app/lib/sheets/tools";
 
 export const maxDuration = 120;
-
-const TOOL_SLUG = { worksheet: "worksheet-generator", comprehension: "comprehension-generator" } as const;
 
 interface Body {
   query?: string;
   source?: PictureSource;
   style?: string;
-  tool?: keyof typeof TOOL_SLUG;
+  /** The sheet tool asking (app/lib/sheets/tools.ts). One without pictures
+   *  is refused. */
+  tool?: string;
   /** The sheet's title: anchors an AI picture to the topic, as a slide title does. */
   title?: string;
 }
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   }
   const query = body.query?.trim().slice(0, 120);
   const source = body.source;
-  const toolSlug = body.tool ? TOOL_SLUG[body.tool] : undefined;
+  const toolSlug = isSheetTool(body.tool) && sheetToolProfile(body.tool).pictures ? sheetToolProfile(body.tool).slug : undefined;
   if (!query || !toolSlug || (source !== "web" && source !== "ai" && source !== "auto")) {
     return NextResponse.json({ error: "Missing query, tool or source" }, { status: 400 });
   }

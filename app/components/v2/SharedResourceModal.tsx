@@ -6,8 +6,7 @@ import { Check, X } from "@phosphor-icons/react/dist/ssr";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
 import { OutlineRail } from "@/app/components/OutputOutline";
-import { parseSheet } from "@/app/lib/sheets/normalize";
-import { primaryOutput } from "@/app/lib/bands";
+import { printableSheet, readableOutput } from "@/app/lib/printable";
 import { sheetOutline } from "@/app/lib/sheets/markdown";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import { saveSharedToLibrary, type Share } from "@/app/lib/colleagues";
@@ -113,7 +112,7 @@ function SharedResourceDialog({
    */
   const [output, setOutput] = useState<string | null>(
     // Of a set of differentiated versions, the first.
-    view.kind === "share" ? primaryOutput(view.share.output) : null,
+    view.kind === "share" ? readableOutput(view.share.output) : null,
   );
   const [loadError, setLoadError] = useState(false);
 
@@ -138,7 +137,7 @@ function SharedResourceDialog({
         // there is nothing to read.
         if (!run) setLoadError(true);
         // Of a set of differentiated versions, the first.
-        else setOutput(primaryOutput(run.output));
+        else setOutput(readableOutput(run.output));
       } catch {
         if (!cancelled) setLoadError(true);
       }
@@ -202,9 +201,12 @@ function SharedResourceDialog({
    * still loading, so a slideshow shows its notice straight away rather than a
    * spinner that resolves into one.
    */
-  const structured = isStructuredOutput(slug, output ?? undefined);
+  // A quiz is drawn as its printable version below; only decks (and a quiz
+  // that will not read) keep the notice. While a quiz loads, "Opening" shows.
+  const quizSlug = slug === "quiz-generator";
   // A designed Worksheet or Comprehension: drawn as its pages, read only.
-  const sheet = useMemo(() => parseSheet(output), [output]);
+  const sheet = useMemo(() => printableSheet(slug, output), [slug, output]);
+  const structured = isStructuredOutput(slug, output ?? undefined) && !(quizSlug && (output === null || sheet));
 
   const add = async () => {
     if (view.kind !== "share") return;

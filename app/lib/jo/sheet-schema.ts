@@ -10,6 +10,7 @@
 
 import { allowedKinds, sheetBlockVariants, strictObject } from "@/app/lib/sheets/schema";
 import type { SheetTool } from "@/app/lib/sheets/types";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
 
 const str = { type: "string" } as const;
 const bool = { type: "boolean" } as const;
@@ -22,7 +23,7 @@ function op(name: string, properties: Record<string, unknown>) {
 
 export function joSheetResponseFormat(tool: SheetTool) {
   // Every kind the sheet can hold, puzzles included, so Jo can edit or add one.
-  const blocks = sheetBlockVariants({ tool, kinds: allowedKinds(tool), passage: tool === "comprehension" });
+  const blocks = sheetBlockVariants({ tool, kinds: allowedKinds(tool), passage: sheetToolProfile(tool).joPassage });
 
   const ops = [
     op("setText", { target: str, text: str }),

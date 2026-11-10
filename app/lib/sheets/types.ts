@@ -12,7 +12,10 @@
 export const SHEET_KIND = "jooma-sheet";
 export const SHEET_VERSION = 1;
 
-export type SheetTool = "worksheet" | "comprehension";
+// Which tool made a sheet. The list and what differs per tool live in
+// app/lib/sheets/tools.ts.
+import type { SheetTool } from "./tools";
+export type { SheetTool };
 
 export interface SheetDesign {
   /** A sheet theme id (app/lib/sheets/themes.ts). */
@@ -34,12 +37,78 @@ export interface SheetDesign {
   diffNote?: boolean;
   /** The pictures on the sheet. Missing means on. */
   pictures?: boolean;
+  /** An exam paper's cover page. Missing means on. */
+  cover?: boolean;
+  /** A letter's reply slip. Missing means on. */
+  slip?: boolean;
+}
+
+/** How a lesson plan is laid out (app/lib/sheets/lesson.ts). Both are the
+ *  same plan arranged differently, so a teacher can switch without
+ *  regenerating. */
+export type LessonLayout = "three-part" | "cycles";
+
+/** What a lesson plan knows about itself beyond its pages: the layout it is
+ *  arranged in, the length its timings add up to, and the form's details,
+ *  which the "make slides / worksheet / quiz" buttons carry over. */
+export interface LessonMeta {
+  layout: LessonLayout;
+  minutes: number;
+  curriculum: string;
+  yearGroup: string;
+  subject: string;
+  topic: string;
+}
+
+/** What an exam paper knows about itself: the style it is written in
+ *  (app/lib/sheets/exam-styles.ts), its tier and the time allowed. The total
+ *  marks are always worked out from the questions, never stored. */
+export interface ExamMeta {
+  styleId: string;
+  tier: "" | "foundation" | "higher";
+  minutes: number;
+  subject: string;
+  yearGroup: string;
+}
+
+/** A letter's tear-off reply slip, built in code (app/lib/sheets/letter.ts). */
+export interface ReplySlip {
+  title: string;
+  /** "I give permission for my child to go on the trip to..." */
+  statement: string;
+  /** The lines to fill in: "Child's name", "Signature"... */
+  fields: string[];
+  /** "Friday 5 March 2027", or "" when no date was given. */
+  returnBy: string;
+}
+
+/** What a letter knows about itself beyond its paragraphs: everything built
+ *  in code rather than written by the model, all editable on the page. */
+export interface LetterMeta {
+  type: "trip" | "attendance" | "behaviour" | "general";
+  /** "2026-11-10", printed as "10 November 2026". */
+  date: string;
+  salutation: string;
+  signOff: string;
+  senderName: string;
+  senderRole: string;
+  school: string;
+  /** The child a letter is about, by first name. Ask Jo is off while it is
+   *  set, so the name never reaches a model. */
+  pupil: string;
+  slip: ReplySlip | null;
 }
 
 export interface SheetDoc {
   kind: typeof SHEET_KIND;
   version: number;
   tool: SheetTool;
+  /** Lesson plans only. */
+  lesson?: LessonMeta;
+  /** Exam papers only. */
+  exam?: ExamMeta;
+  /** Letters only. The title is the "Re:" line. */
+  letter?: LetterMeta;
   title: string;
   /** "Year 5 · Maths", built from the form, not written by the model. */
   subtitle: string;
@@ -60,6 +129,10 @@ export interface SheetSection {
   emoji: string;
   instructions: string;
   blocks: SheetBlock[];
+  /** What part of a fixed-shape document this section is (a lesson plan's
+   *  "overview", "starter", "cycle"...), so it can be rearranged. Missing on
+   *  worksheets and on sections the teacher adds. */
+  role?: string;
 }
 
 export interface SheetNote {
@@ -86,6 +159,28 @@ export interface CalloutBlock extends BlockBase, SheetCallout { type: "callout" 
 export interface PassageBlock extends BlockBase { type: "passage"; title: string; paragraphs: string[] }
 export interface WordBankBlock extends BlockBase { type: "wordbank"; title: string; words: string[] }
 export interface TableBlock extends BlockBase { type: "table"; headers: string[]; rows: string[][] }
+/** A titled list: success criteria (ticks), resources (bullets), steps
+ *  (numbers). */
+export interface ListBlock extends BlockBase { type: "list"; title: string; style: "bullet" | "number" | "check"; items: string[] }
+
+/** One stage of a lesson, with its timing. In the learning cycles layout a
+ *  "main" phase is a learning cycle: `teacher` is the explanation, `check` the
+ *  check for understanding, `pupils` the practice and `feedback` the feedback.
+ *  Its clock time is worked out from the phases before it, never stored. */
+export interface PhaseBlock extends BlockBase {
+  type: "phase";
+  stage: "starter" | "main" | "plenary";
+  title: string;
+  minutes: number;
+  teacher: string;
+  pupils: string;
+  check: string[];
+  feedback: string;
+  support: string;
+  challenge: string;
+  /** What a teaching assistant does in this phase. */
+  ta: string;
+}
 
 export type ImageSize = "s" | "m" | "l";
 export type ImageSource = "web" | "ai" | "upload";
@@ -186,7 +281,21 @@ export type SheetQuestion =
   | LongQuestion | CalcQuestion | OrderQuestion | WordOrderQuestion | PictureQuestion | LabelQuestion
   | SortQuestion | WordSearchQuestion | CrosswordQuestion;
 
-export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ImageBlock | SheetQuestion;
+/** One model answer to an exam question, at a level: the answer itself (as
+ *  prose, numbered steps or points), the marks it would get, and notes tying
+ *  phrases in it to the mark scheme. */
+export interface ExemplarBlock extends BlockBase {
+  type: "exemplar";
+  level: "full" | "mid" | "low";
+  awarded: number;
+  outOf: number;
+  form: "prose" | "steps" | "points";
+  parts: string[];
+  annotations: { quote: string; note: string }[];
+  commentary: string;
+}
+
+export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ExemplarBlock | ImageBlock | SheetQuestion;
 
 export type QuestionType = SheetQuestion["type"];
 export type BlockType = SheetBlock["type"];

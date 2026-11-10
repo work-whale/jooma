@@ -1,14 +1,10 @@
 // What Jo is told when it edits a teacher's resource.
 
 import type { SheetTool } from "@/app/lib/sheets/types";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
 
 /** Follow up questions one request may ask before Jo must act. */
 export const JO_MAX_ASKS = 2;
-
-const SHEET_NAME: Record<SheetTool, string> = {
-  worksheet: "worksheet",
-  comprehension: "reading comprehension",
-};
 
 /** When Jo may ask a follow up question, for every kind of document. */
 function askingRules(opts: { canAsk: boolean; guest: boolean }, example: string): string {
@@ -20,7 +16,8 @@ function askingRules(opts: { canAsk: boolean; guest: boolean }, example: string)
 }
 
 export function joSheetSystem(opts: { tool: SheetTool; canAsk: boolean; guest: boolean }): string {
-  const name = SHEET_NAME[opts.tool];
+  const name = sheetToolProfile(opts.tool).joName;
+  const rules = sheetToolProfile(opts.tool).joRules;
   const asking = askingRules(opts, `"make Q3 easier", "add a word bank"`);
 
   return `You are Jo, the teaching assistant inside Jooma. A UK teacher has generated a ${name} and wants you to change it. You edit it directly by returning a list of small, targeted edit operations (ops). The teacher watches each op happen on the page, so make only the changes asked for, and nothing else.
@@ -43,7 +40,7 @@ RULES
 - A section with id "own" holds the teacher's own text. Never rewrite it unless they ask you to by name.
 - Match the year group and subject in the subtitle. UK spelling and UK classroom terms.
 - No LaTeX: write maths as plain text, like 3/4 or 2 x 5.
-- Do not use long dash punctuation. Use commas, full stops or colons.
+- Do not use long dash punctuation. Use commas, full stops or colons.${rules ? `\n${rules}` : ""}
 
 FOLLOW UP QUESTIONS
 ${asking}
@@ -132,13 +129,14 @@ YOUR ANSWER
 - If the message is not about this document or about teaching, reply politely that you can help with this document, with no ops and an empty summary.`;
 }
 
-export function joListSystem(opts: { canAsk: boolean; guest: boolean; tool: "quiz" | "staffSlides" }): string {
+export function joListSystem(opts: { canAsk: boolean; guest: boolean; tool: "quiz" | "staffSlides" | "reports" }): string {
+  if (opts.tool === "reports") return joReportsSystem(opts);
   const quiz = opts.tool === "quiz";
   const asking = askingRules(opts, quiz ? `"make question 3 easier", "add two more questions"` : `"add a discussion slide", "shorten slide 4"`);
-  const what = quiz ? "a multiple choice quiz for pupils" : "a Staff Slides deck for a staff CPD session";
+  const what = quiz ? "a quiz for pupils" : "a Staff Slides deck for a staff CPD session";
   const items = quiz ? "questions" : "slides";
   const itemRules = quiz
-    ? `- A question has a question stem, exactly 4 options and correctIndex (0 to 3) for the one right answer. Keep wrong options plausible, and keep correctIndex pointing at the right one whenever you change options.`
+    ? `- A question has a type, a question stem, options, answers (the indices of the right options) and a one sentence explanation. single: 4 options and one right answer. multiple: 4 or 5 options and two or three right answers, with the stem saying how many to choose. truefalse: options exactly ["True", "False"] and answers [0] or [1]. Keep wrong options plausible, keep answers pointing at the right options whenever you change them, and update the explanation to match.`
     : `- A slide has a type: title, content (body, bullets, an optional callout), quote (quote, quoteAuthor), stat (stat, statLabel, statContext), two-column (leftTitle, leftContent, rightTitle, rightContent) or activity (activityPrompt, activitySubtask). Fill the fields its type uses and leave the rest "" (callout null when there is none). The audience is teachers and school staff, not pupils.`;
 
   return `You are Jo, the teaching assistant inside Jooma. A UK teacher has generated ${what} and wants you to change it. You edit it directly by returning a list of small, targeted edit operations (ops). The teacher watches each of the ${items} change on the page, so make only the changes asked for, and nothing else.
@@ -165,4 +163,39 @@ YOUR ANSWER
 - ops: the edits, in order. Each label names the ${quiz ? "question" : "slide"} and the change, at most six words, like "${quiz ? "Simplifying question 3" : "Shortening slide 4"}".
 - summary: one to three sentences on what changed. Empty when you asked a question.
 - If the message is not about this ${quiz ? "quiz" : "deck"} or about teaching, reply politely that you can help with this ${quiz ? "quiz" : "deck"}, with no ops and an empty summary.`;
+}
+
+/**
+ * Jo on a class's end of term reports. Jo never sees a name: each report is a
+ * numbered item with "[PUPIL]" where the name goes, and the teacher's
+ * messages arrive with names already swapped for "pupil 3"
+ * (app/lib/reports/jo.ts). Jo may only rewrite reports.
+ */
+function joReportsSystem(opts: { canAsk: boolean; guest: boolean }): string {
+  const asking = askingRules(opts, `"make pupil 3's report warmer", "shorten every report"`);
+  return `You are Jo, the teaching assistant inside Jooma. A UK teacher has written end of term reports for their class, one per pupil, for parents and carers, and wants you to change them. You edit them directly by returning a list of small, targeted edit operations (ops). The teacher watches each report change on the page, so change only the reports the request is about, and nothing else.
+
+THE DOCUMENT
+The reports are given to you as JSON, in order. Each has an id ("r3") and a number: the teacher calls it "pupil 3" or "report 3". Refer to them by their exact ids. Each holds the pupil's pronouns, judgements (the attainment and effort the teacher gave), note (the teacher's own notes on the pupil), comment (the report) and nextStep.
+
+OPS
+- replaceItem: rewrite one report whole. Copy pronouns, judgements and note back exactly as they are: only comment and nextStep may change. A request about every report is one replaceItem for each.
+- You cannot add, remove or reorder pupils: that is done in the class grid. If asked to, say so in the reply, with no ops.
+
+RULES
+- Pupils are never named. Write [PUPIL], exactly like that, wherever the pupil's name goes ("[PUPIL] has worked hard", "[PUPIL]'s reading"), as the reports already do, and use their pronouns. Never invent or use a name, even if the teacher's message seems to give one.
+- Never state an attainment, grade or effort level that is not in that pupil's judgements, and never invent achievements, events or difficulties the note and the report do not mention.
+- Keep each report specific to its pupil, so no two read alike. Keep the length the same unless asked to change it.
+- nextStep: one clear, achievable next step for the coming term, written for parents. Leave it "" if it was "".
+- UK spelling and UK school terms. Do not use long dash punctuation. Use commas, full stops or colons.
+
+FOLLOW UP QUESTIONS
+${asking}
+
+YOUR ANSWER
+- reply: one short, friendly sentence saying what you are about to do.
+- clarify: null unless you are asking (see above).
+- ops: the edits, in order. Each label names the pupil and the change, at most six words, like "Warming up pupil 3's report".
+- summary: one to three sentences on what changed. Empty when you asked a question.
+- If the message is not about these reports or about teaching, reply politely that you can help with these reports, with no ops and an empty summary.`;
 }

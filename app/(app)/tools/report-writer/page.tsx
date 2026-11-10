@@ -19,11 +19,11 @@ export default async function ReportWriterPage({
           icon={<FileText className="w-5 h-5 text-violet-600" />}
 
           title="Report Writer"
-          description="This tool can be used to help write pupil reports. Simply fill out the details required, being careful not to include sensitive information. You can add up to 10 additional subjects or focuses by clicking 'Add another subject'."
+          description="Write end of term reports for your whole class at once. Fill a row for each pupil: a judgement, their effort and a short note. Pupils' names stay in your browser and are never sent."
           steps={[
-            { label: "Enter pupil details", detail: "Be specific with strengths and areas for development for more personalised reports." },
-            { label: "Add subjects", detail: "Add up to 10 subjects or focuses using 'Add another subject'." },
-            { label: "Generate", detail: "Ideal for annual or mid-year reports. Do not include personally identifiable information." },
+            { label: "Set up the class", detail: "Choose the year group, the subjects and the scale your school reports on." },
+            { label: "Fill a row per pupil", detail: "Paste names from your register, then add a judgement, effort and a specific note for each. Up to 40 pupils." },
+            { label: "Check and copy", detail: "Edit any report, rewrite one, then copy each into your school's system or download them all." },
           ]}
         />
       }

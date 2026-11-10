@@ -56,7 +56,10 @@ async function ask(page: Page, text: string) {
   await page.getByTestId("jo-send").click();
 }
 
-test("Quiz: Jo rewrites a question and adds one, saved as a new run, undone in one click", async ({ page }) => {
+// The seeded quiz is in the shape saved before question types (a bare array),
+// so this also checks that an old quiz opens, and is saved back into the SAME
+// run in the new shape once it is changed.
+test("Quiz: Jo rewrites a question and adds one, saved into the same run, undone in one click", async ({ page }) => {
   const id = await seed("quiz-generator", [
     { question: "What is 2 + 2?", options: ["3", "4", "5", "6"], correctIndex: 1 },
     { question: "What is 3 x 3?", options: ["6", "8", "9", "12"], correctIndex: 2 },
@@ -68,8 +71,8 @@ test("Quiz: Jo rewrites a question and adds one, saved as a new run, undone in o
       {
         reply: "I'll make question 2 easier and add one.",
         ops: [
-          { op: "replaceItem", label: "Simplifying question 2", itemId: "q2", item: { question: "What is 3 + 3?", options: ["5", "6", "7", "8"], correctIndex: 1 } },
-          { op: "insertItem", label: "Adding question 3", afterItemId: "q2", item: { question: "What is 10 - 4?", options: ["4", "5", "6", "7"], correctIndex: 2 } },
+          { op: "replaceItem", label: "Simplifying question 2", itemId: "q2", item: { type: "single", question: "What is 3 + 3?", options: ["5", "6", "7", "8"], answers: [1], explanation: "" } },
+          { op: "insertItem", label: "Adding question 3", afterItemId: "q2", item: { type: "single", question: "What is 10 - 4?", options: ["4", "5", "6", "7"], answers: [2], explanation: "" } },
         ],
         summary: "Question 2 is easier and there is a third question.",
       },
@@ -90,7 +93,14 @@ test("Quiz: Jo rewrites a question and adds one, saved as a new run, undone in o
   await expect(page.getByTestId("jo-changes")).toContainText("2 changes");
   expect(seen[0]).toMatchObject({ kind: "quiz", snapshot: { tool: "quiz", items: [{ id: "q1", number: 1 }, { id: "q2", number: 2 }] } });
 
-  await expect.poll(async () => (await latest("quiz-generator")).length, NAV).toBe(3);
+  await expect
+    .poll(async () => {
+      const { data } = await admin.from("tool_runs").select("id, output").eq("user_id", teacher.id).eq("tool_slug", "quiz-generator");
+      const row = data?.find((r) => r.id === id);
+      const out = row ? JSON.parse(row.output as string) : null;
+      return { runs: data?.length, kind: out?.kind, questions: out?.questions?.length };
+    }, NAV)
+    .toEqual({ runs: 1, kind: "jooma-quiz", questions: 3 });
 
   await page.getByTestId("jo-undo").click();
   await expect(cards).toHaveCount(2);

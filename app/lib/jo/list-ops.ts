@@ -1,13 +1,15 @@
-// Jo's edits to a list document: a quiz's questions or a Staff Slides deck's
-// slides. Both are an ordered list of items drawn as cards, so they share one
-// op vocabulary; what an item may hold is checked per tool, the same way the
-// generators check what the model sends them.
+// Jo's edits to a list document: a quiz's questions, a Staff Slides deck's
+// slides or a class's reports. Each is an ordered list of items drawn as
+// cards, so they share one op vocabulary; what an item may hold is checked
+// per tool, the same way the generators check what the model sends them.
+// Reports can only be rewritten, never added, removed or reordered.
 
-import type { QuizQuestion } from "@/app/api/quiz-generator/route";
+import { normalizeQuizItem, type QuizItem } from "@/app/lib/quiz/quiz";
 import type { SlideData } from "@/app/api/cpd-slideshow/route";
 import type { ListOp } from "./types";
+import { normalizeJoReport } from "@/app/lib/reports/jo";
 
-export type ListTool = "quiz" | "staffSlides";
+export type ListTool = "quiz" | "staffSlides" | "reports";
 
 export interface ListItem<T> {
   id: string;
@@ -17,16 +19,10 @@ export interface ListItem<T> {
 type Raw = Record<string, unknown>;
 const str = (v: unknown): string => (typeof v === "string" ? v.replace(/\s+$/, "").trim() : "");
 
-/** A question with four options and one right answer, or null. */
-export function normalizeQuizQuestion(raw: unknown): QuizQuestion | null {
-  if (!raw || typeof raw !== "object") return null;
-  const r = raw as Raw;
-  const question = str(r.question);
-  const options = Array.isArray(r.options) ? r.options.map(str) : [];
-  if (!question || options.length !== 4 || options.some((o) => !o)) return null;
-  const correct = typeof r.correctIndex === "number" && Number.isInteger(r.correctIndex) ? r.correctIndex : -1;
-  if (correct < 0 || correct > 3) return null;
-  return { question, options: options as [string, string, string, string], correctIndex: correct };
+/** A quiz question (one answer, several, or true or false), or null. The
+ *  same check the generator uses (app/lib/quiz/quiz.ts). */
+export function normalizeQuizQuestion(raw: unknown): QuizItem | null {
+  return normalizeQuizItem(raw);
 }
 
 const SLIDE_TYPES: SlideData["type"][] = ["title", "content", "quote", "stat", "two-column", "activity"];
@@ -57,13 +53,15 @@ export function normalizeStaffSlide(raw: unknown, presentationTitle: string): Sl
 
 export function normalizeListItem(tool: ListTool, raw: unknown, items: ListItem<unknown>[]): unknown | null {
   if (tool === "quiz") return normalizeQuizQuestion(raw);
+  if (tool === "reports") return normalizeJoReport(raw);
   const deckTitle = (items[0]?.value as SlideData | undefined)?.presentationTitle ?? "";
   return normalizeStaffSlide(raw, deckTitle);
 }
 
-/** Ids for a turn: q1, q2... for questions, s1, s2... for slides. */
+/** Ids for a turn: q1, q2... for questions, s1, s2... for slides, r1, r2...
+ *  for reports. */
 export function toListItems<T>(tool: ListTool, values: T[]): ListItem<T>[] {
-  const prefix = tool === "quiz" ? "q" : "s";
+  const prefix = tool === "quiz" ? "q" : tool === "reports" ? "r" : "s";
   return values.map((value, i) => ({ id: `${prefix}${i + 1}`, value }));
 }
 
@@ -83,6 +81,8 @@ export interface AppliedListOp<T> {
  *  item's id the same across the typing frames. */
 export function applyListOp<T>(tool: ListTool, items: ListItem<T>[], op: ListOp, newId?: string): AppliedListOp<T> | null {
   const index = (id: string) => items.findIndex((it) => it.id === id);
+  // A class's pupils are the grid's to change: Jo only rewrites reports.
+  if (tool === "reports" && op.op !== "replaceItem") return null;
   switch (op.op) {
     case "replaceItem": {
       const i = index(op.itemId);
@@ -132,9 +132,10 @@ export function listOpFocus(items: ListItem<unknown>[], op: ListOp): string | nu
   }
 }
 
-/** The text that types itself in, per tool: a question's stem, a slide's title. */
-export function typedField(tool: ListTool): "question" | "title" {
-  return tool === "quiz" ? "question" : "title";
+/** The text that types itself in, per tool: a question's stem, a slide's
+ *  title, a report. */
+export function typedField(tool: ListTool): "question" | "title" | "comment" {
+  return tool === "quiz" ? "question" : tool === "reports" ? "comment" : "title";
 }
 
 export function isListOp(v: unknown): v is ListOp {

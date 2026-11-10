@@ -33,6 +33,9 @@ export interface JoAdapter {
   restore(before: unknown): void;
   /** Bring a change into view and point at it. */
   reveal(focus: string): void;
+  /** What a message becomes before it is sent, e.g. pupils' names taken out
+   *  of a chat about a class's reports. Missing: sent as typed. */
+  outgoing?(text: string): string;
 }
 
 export type JoStepState = "working" | "done" | "skipped";
@@ -185,7 +188,7 @@ export function useJoSession(adapter: JoAdapter, opts: JoSessionOptions) {
       const user: JoMessage = { id: nextId(), role: "user", text: message };
       const history = [...messagesRef.current, user]
         .filter((m) => !m.error && (m.role === "user" || m.text || m.summary))
-        .map((m) => ({ role: m.role, content: asHistory(m) }));
+        .map((m) => ({ role: m.role, content: a.outgoing ? a.outgoing(asHistory(m)) : asHistory(m) }));
 
       // Follow up questions asked since Jo last edited.
       let askCount = 0;

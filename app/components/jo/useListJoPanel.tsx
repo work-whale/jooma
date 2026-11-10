@@ -29,7 +29,15 @@ const STARTERS: Record<ListTool, string[]> = {
     "Shorten every slide to three bullet points",
     "Add a reflection callout to each content slide",
   ],
+  reports: [
+    "Make every report a little shorter",
+    "Make the tone warmer",
+    "Vary how the reports begin",
+    "Make the next steps more specific",
+  ],
 };
+
+const DOC_LABEL: Record<ListTool, string> = { quiz: "quiz", staffSlides: "deck", reports: "reports" };
 
 export function useListJoPanel<T>(opts: {
   tool: ListTool;
@@ -38,23 +46,30 @@ export function useListJoPanel<T>(opts: {
   containerRef: RefObject<HTMLElement | null>;
   disabled?: string | null;
   openSignal?: number;
+  /** Applied to every message before it is sent: Reports take names out. */
+  outgoing?: (text: string) => string;
+  /** Talking to Jo. Off for Reports: a spoken name would reach the speech
+   *  model before it could be taken out. */
+  voice?: boolean;
 }) {
   const { adapter, shown, focus, working } = useListJo<T>({
     tool: opts.tool,
     values: opts.values,
     commit: opts.commit,
     containerRef: opts.containerRef,
+    outgoing: opts.outgoing,
   });
   const session = useJoSession(adapter, { endpoint: "/api/jo" });
-  const voice = useJoVoice(true);
+  const voiceOn = opts.voice !== false;
+  const voice = useJoVoice(voiceOn);
 
   const panel = (
     <JoPanel
       session={session}
       adapter={adapter}
-      docLabel={opts.tool === "quiz" ? "quiz" : "deck"}
+      docLabel={DOC_LABEL[opts.tool]}
       starters={STARTERS[opts.tool]}
-      voice={voice}
+      voice={voiceOn ? voice : null}
       disabled={opts.disabled ?? null}
       openSignal={opts.openSignal}
     />

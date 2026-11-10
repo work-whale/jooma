@@ -7,24 +7,99 @@ import { isSheetOutput } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
-import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
+import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "./visibility";
+import { formatLetterDate } from "./letter";
 import { clueText, directionName, sortBank, sortRows } from "./puzzles";
+import { sheetToolProfile } from "./tools";
+import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
+import { disclaimerFor, durationText, examStyle } from "./exam-styles";
+import { levelLabel } from "./model-answers";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
-/** Questions numbered 1, 2, 3... down the whole sheet, in page order. */
+/** Questions numbered 1, 2, 3... down the whole sheet, in page order, or
+ *  from 1 again in each section for a tool that says so (a lesson plan's
+ *  starter and exit quizzes are two separate quizzes). */
 export function questionNumbers(doc: SheetDoc): Map<string, number> {
   const numbers = new Map<string, number>();
+  const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
   let n = 0;
-  for (const s of doc.sections) for (const b of s.blocks) if (isQuestion(b)) numbers.set(b.id, ++n);
+  for (const s of doc.sections) {
+    if (restart) n = 0;
+    for (const b of s.blocks) if (isQuestion(b)) numbers.set(b.id, ++n);
+  }
   return numbers;
+}
+
+/**
+ * What each question is called on the page: "1", "2", or, on an exam paper,
+ * by question and part, "1", "2(a)", "2(b)": every section is one question,
+ * and a question with one part is just its number.
+ */
+export function questionLabels(doc: SheetDoc): Map<string, string> {
+  if (!sheetToolProfile(doc.tool)?.partNumbering) {
+    return new Map([...questionNumbers(doc)].map(([id, n]) => [id, String(n)]));
+  }
+  const out = new Map<string, string>();
+  let q = 0;
+  for (const s of doc.sections) {
+    const parts = s.blocks.filter(isQuestion);
+    if (parts.length === 0) continue;
+    q++;
+    if (parts.length === 1) out.set(parts[0].id, String(q));
+    else parts.forEach((b, i) => out.set(b.id, `${q}(${LETTERS[i]})`));
+  }
+  return out;
+}
+
+/** Every mark on the sheet, worked out from its questions. */
+export function totalMarks(doc: SheetDoc): number {
+  return doc.sections.reduce((sum, s) => sum + s.blocks.reduce((a, b) => a + (isQuestion(b) ? b.marks : 0), 0), 0);
+}
+
+/** An exam paper's cover, as words: the same on the page, in Word and in Copy. */
+export function examCover(doc: SheetDoc) {
+  if (!doc.exam) return null;
+  const style = examStyle(doc.exam.styleId);
+  const tier = doc.exam.tier ? `${doc.exam.tier === "higher" ? "Higher" : "Foundation"} tier` : "";
+  return {
+    level: [style.level, doc.exam.subject].filter(Boolean).join(" "),
+    tier,
+    time: durationText(doc.exam.minutes),
+    total: totalMarks(doc),
+    instructions: style.instructions,
+    disclaimer: disclaimerFor(style),
+  };
+}
+
+/** Whether an exam paper shows its cover page. */
+export function showsCover(doc: SheetDoc): boolean {
+  return !!doc.exam && doc.design.cover !== false;
+}
+
+/** The answers page's heading for this sheet's tool. */
+export function answersTitle(doc: SheetDoc): string {
+  return sheetToolProfile(doc.tool)?.answersTitle ?? "Answers";
+}
+
+type Clocks = Map<string, { start: number; end: number }>;
+
+function exemplarMarkdown(b: Extract<SheetBlock, { type: "exemplar" }>): string {
+  const body =
+    b.form === "steps" ? b.parts.map((p, i) => `${i + 1}. ${p}`).join("\n") : b.form === "points" ? b.parts.map((p) => `- ${p}`).join("\n") : b.parts.join("\n\n");
+  return [
+    `#### ${levelLabel(b.level)} (${b.awarded}/${b.outOf} marks)`,
+    body,
+    ...(b.annotations.length ? ["**Where the marks come from:**", ...b.annotations.map((a) => `- "${a.quote}": ${a.note}`)] : []),
+    b.commentary ? `*${b.commentary}*` : "",
+  ].filter(Boolean).join("\n\n");
 }
 
 function lines(n: number): string {
   return Array.from({ length: n }, () => "____________________________________________").join("\n");
 }
 
-function blockMarkdown(b: SheetBlock, number: number | undefined): string {
+function blockMarkdown(b: SheetBlock, number: number | string | undefined, doc?: SheetDoc, clocks?: Clocks): string {
   const lead = number !== undefined ? `**${number}.** ` : "";
   const marks = isQuestion(b) && b.marks > 0 ? ` [${b.marks} mark${b.marks === 1 ? "" : "s"}]` : "";
   switch (b.type) {
@@ -44,6 +119,22 @@ function blockMarkdown(b: SheetBlock, number: number | undefined): string {
         `| ${b.headers.map(() => "---").join(" | ")} |`,
         ...b.rows.map((r) => `| ${r.join(" | ")} |`),
       ].join("\n");
+    case "exemplar":
+      return exemplarMarkdown(b);
+    case "list":
+      return [
+        b.title ? `**${b.title}**` : "",
+        ...b.items.map((it, i) => (b.style === "number" ? `${i + 1}. ${it}` : b.style === "check" ? `- [ ] ${it}` : `- ${it}`)),
+      ].filter(Boolean).join("\n");
+    case "phase": {
+      const layout = doc?.lesson?.layout;
+      const t = clocks?.get(b.id);
+      const when = t ? ` (${clockText(t.start)} to ${clockText(t.end)}, ${b.minutes} min)` : ` (${b.minutes} min)`;
+      return [
+        `### ${stageLabel(b.stage, layout)}: ${b.title}${when}`,
+        ...phaseRows(b, layout).map((r) => (r.items.length ? [`**${r.label}:**`, ...r.items.map((x) => `- ${x}`)].join("\n") : `**${r.label}:** ${r.text}`)),
+      ].join("\n\n");
+    }
     case "mcq":
       return [`${lead}${b.prompt}${marks}`, ...b.options.map((o, i) => `- ${LETTERS[i]}) ${o}`)].join("\n");
     case "truefalse":
@@ -178,17 +269,59 @@ export function hasAnswersPage(doc: SheetDoc): boolean {
  * derives from this same string, so the rail's links land on them.
  */
 export function sheetOutline(doc: SheetDoc): string {
+  // A letter has one heading: its "Re:" line.
+  if (doc.letter) return `# ${doc.title || "Letter"}`;
   return [
     `# ${doc.title || "Worksheet"}`,
     ...doc.sections.map((s) => `## ${s.title || "Section"}`),
-    ...(hasAnswersPage(doc) ? ["## Answers"] : []),
+    ...(hasAnswersPage(doc) ? [`## ${answersTitle(doc)}`] : []),
   ].join("\n");
 }
 
+/** A letter as text: letterhead, paragraphs, sign-off and reply slip. */
+function letterMarkdown(doc: SheetDoc): string {
+  const l = doc.letter!;
+  const out: string[] = [];
+  if (l.school) out.push(`**${l.school}**`);
+  out.push(formatLetterDate(l.date), l.salutation, `**Re: ${doc.title}**`);
+  for (const s of doc.sections) {
+    if (s.title) out.push(`## ${s.title}`);
+    for (const b of s.blocks) {
+      const md = blockMarkdown(b, undefined, doc);
+      if (md) out.push(md);
+    }
+  }
+  // The sign-off, then room for a signature, then the name and role on lines
+  // of their own (a markdown hard break is two spaces before the newline).
+  out.push(l.signOff, [l.senderName, l.senderRole].filter(Boolean).join("  \n"));
+  if (l.slip && showsSlip(doc)) {
+    out.push(
+      "---",
+      "*Cut here and return to school*",
+      `### ${l.slip.title}`,
+      ...(l.slip.returnBy ? [`**Please return by:** ${l.slip.returnBy}`] : []),
+      l.slip.statement,
+      ...l.slip.fields.map((f) => `${f}: ______________________________`),
+    );
+  }
+  return out.filter((p) => p !== "").join("\n\n");
+}
+
 export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {}): string {
-  const numbers = questionNumbers(doc);
+  if (doc.letter) return letterMarkdown(doc);
+  const numbers = questionLabels(doc);
+  const clocks = phaseClock(doc);
   const out: string[] = [`# ${doc.title || "Worksheet"}`];
   if (doc.subtitle) out.push(`*${doc.subtitle}*`);
+  const cover = showsCover(doc) ? examCover(doc) : null;
+  if (cover) {
+    out.push(
+      [cover.level, cover.tier].filter(Boolean).join(", "),
+      `**Time allowed:** ${cover.time}. **Total marks:** ${cover.total}.`,
+      cover.instructions.map((i) => `- ${i}`).join("\n"),
+      ...(cover.disclaimer ? [`*${cover.disclaimer}*`] : []),
+    );
+  }
   if (doc.objective && showsObjective(doc)) out.push(`**Learning objective:** ${doc.objective}`);
   if (doc.intro && showsIntro(doc)) out.push(`> **${doc.intro.label}** ${doc.intro.text}`);
   for (const s of doc.sections) {
@@ -196,14 +329,29 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
     if (s.instructions) out.push(`*${s.instructions}*`);
     for (const b of s.blocks) {
       if (b.type === "image" && !showsPictures(doc)) continue;
-      const md = blockMarkdown(b, numbers.get(b.id));
+      const md = blockMarkdown(b, numbers.get(b.id), doc, clocks);
       if (md) out.push(md);
     }
   }
   const withAnswers = opts.answers ?? doc.design.answers;
   if (withAnswers) {
-    const answers = doc.sections.flatMap((s) => s.blocks).filter(isQuestion).map((q) => ({ n: numbers.get(q.id)!, a: answerText(q) })).filter((x) => x.a);
-    if (answers.length) out.push("## Answers", ...answers.map((x) => `${x.n}. ${x.a}`));
+    const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
+    const lines: string[] = [];
+    for (const s of doc.sections) {
+      // An exam's mark scheme gives each part's marks and mark points too.
+      const marked = !!doc.exam;
+      const answers = s.blocks
+        .filter(isQuestion)
+        .map((q) => ({ n: numbers.get(q.id)!, a: answerText(q), marks: q.marks, points: q.type === "long" ? q.criteria : [] }))
+        .filter((x) => x.a || x.points.length);
+      if (!answers.length) continue;
+      if (restart) lines.push(`### ${s.title}`);
+      for (const x of answers) {
+        lines.push(`${x.n}. ${x.a}${marked ? ` [${x.marks} mark${x.marks === 1 ? "" : "s"}]` : ""}`);
+        if (marked) lines.push(...x.points.map((p) => `   - ${p}`));
+      }
+    }
+    if (lines.length) out.push(`## ${answersTitle(doc)}`, ...lines);
     for (const { note } of visibleNotes(doc)) out.push(`## ${note.title || "Teacher notes"}`, ...note.points.map((p) => `- ${p}`));
   }
   return out.join("\n\n");
