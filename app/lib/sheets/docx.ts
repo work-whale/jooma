@@ -28,7 +28,9 @@ import {
   WidthType,
   type ParagraphChild,
 } from "docx";
-import { answerText, hasAnswersPage, questionNumbers } from "./markdown";
+import { answersTitle, answerText, hasAnswersPage, questionNumbers } from "./markdown";
+import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
+import { sheetToolProfile } from "./tools";
 import { getSheetTheme } from "./themes";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
 import { sheetImages } from "./normalize";
@@ -120,6 +122,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
   const c = theme.colors;
   const size = SIZE[doc.design.fontScale] ?? SIZE.m;
   const numbers = questionNumbers(doc);
+  const clocks = phaseClock(doc);
   // Fetched before the document is built: Word embeds the bytes.
   const pictures = new Map<string, WordPicture>();
   if (showsPictures(doc)) {
@@ -423,6 +426,48 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
           ),
           spacer(),
         ];
+      case "list":
+        return [
+          ...(b.title ? [new Paragraph({ keepNext: true, spacing: { after: 60 }, children: [tr(b.title, { bold: true, color: hex(c.heading) })] })] : []),
+          ...b.items.map((it, i) =>
+            new Paragraph({
+              spacing: { after: 60 },
+              indent: { left: 360, hanging: 360 },
+              children: [tr(b.style === "number" ? `${i + 1}.  ` : b.style === "check" ? "☐  " : "•  ", { bold: b.style === "number", color: hex(c.heading) }), ...runs(it, { size })],
+            }),
+          ),
+          spacer(),
+        ];
+      case "phase": {
+        const layout = doc.lesson?.layout;
+        const t = clocks.get(b.id);
+        const when = t ? `${clockText(t.start)} to ${clockText(t.end)}  (${b.minutes} min)` : `${b.minutes} min`;
+        const cell = (children: Paragraph[], width: number, fill?: string) =>
+          new TableCell({ width: { size: width, type: WidthType.PERCENTAGE }, children, shading: fill ? { type: ShadingType.CLEAR, color: "auto", fill } : undefined, margins: { top: 80, bottom: 80, left: 120, right: 120 } });
+        return [
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                tableHeader: true,
+                children: [
+                  cell([new Paragraph({ children: [tr(stageLabel(b.stage, layout).toUpperCase(), { bold: true, color: hex(c.heading) })] }), new Paragraph({ children: [tr(when, { color: hex(c.muted) })] })], 26, hex(c.soft)),
+                  cell([new Paragraph({ children: [tr(b.title, { bold: true, color: hex(c.heading) })] })], 74, hex(c.soft)),
+                ],
+              }),
+              ...phaseRows(b, layout).map((r) =>
+                new TableRow({
+                  children: [
+                    cell([new Paragraph({ children: [tr(r.label, { bold: true })] })], 26),
+                    cell(r.items.length ? r.items.map((x) => new Paragraph({ bullet: { level: 0 }, children: runs(x, { size }) })) : [new Paragraph({ children: runs(r.text, { size }) })], 74),
+                  ],
+                }),
+              ),
+            ],
+          }),
+          spacer(),
+        ];
+      }
       case "table":
         return [
           new Table({
@@ -463,8 +508,12 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
 
   if (hasAnswersPage(doc)) {
     children.push(new Paragraph({ children: [new PageBreak()] }));
-    children.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: "Answers", font: FONT, size: Math.round(size * 1.6), bold: true, color: hex(c.heading) })] }));
+    children.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: answersTitle(doc), font: FONT, size: Math.round(size * 1.6), bold: true, color: hex(c.heading) })] }));
+    const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
     for (const s of doc.sections) {
+      if (restart && s.blocks.some(isQuestion)) {
+        children.push(new Paragraph({ keepNext: true, spacing: { before: 160, after: 80 }, children: [tr(s.title, { bold: true, color: hex(c.heading) })] }));
+      }
       for (const b of s.blocks) {
         if (!isQuestion(b)) continue;
         const a = answerText(b);

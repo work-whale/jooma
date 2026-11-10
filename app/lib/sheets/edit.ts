@@ -110,6 +110,12 @@ export function newBlock(type: BlockType, puzzle?: PuzzleDefaults): SheetBlock {
     case "passage": return { id, type: "passage", title: "", paragraphs: ["Write or paste the text here."] };
     case "wordbank": return { id, type: "wordbank", title: "Word bank", words: ["word", "word", "word"] };
     case "table": return { id, type: "table", headers: ["Heading", "Heading"], rows: [["", ""], ["", ""]] };
+    case "list": return { id, type: "list", title: "List", style: "bullet", items: ["Write an item here", "Write an item here"] };
+    case "phase":
+      return {
+        id, type: "phase", stage: "main", title: "New phase", minutes: 10,
+        teacher: "What the teacher does or explains.", pupils: "What pupils do.", check: [], feedback: "", support: "", challenge: "", ta: "",
+      };
     case "mcq": return { ...q, type: "mcq", options: ["Option A", "Option B", "Option C", "Option D"], answers: [0] };
     case "truefalse": return { ...q, prompt: "True or false?", type: "truefalse", statements: [{ text: "A statement", answer: true }, { text: "A statement", answer: false }] };
     case "matching": return { ...q, prompt: "Draw a line to match each one.", type: "matching", left: ["Term", "Term", "Term"], right: ["Meaning", "Meaning", "Meaning"], pairs: [0, 1, 2] };

@@ -137,7 +137,17 @@ export function sheetBlockVariants(opts: SheetSchemaOptions): Json[] {
     variant("wordbank", { title: str, words: strList }),
   ];
   if (opts.passage) content.push(variant("passage", { title: str, paragraphs: strList }));
-  if (sheetToolProfile(opts.tool).table) content.push(variant("table", { headers: strList, rows: { type: "array", items: strList } }));
+  const profile = sheetToolProfile(opts.tool);
+  if (profile.table) content.push(variant("table", { headers: strList, rows: { type: "array", items: strList } }));
+  if (profile.extraBlocks.includes("list")) {
+    content.push(variant("list", { title: str, style: { type: "string", enum: ["bullet", "number", "check"] }, items: strList }));
+  }
+  if (profile.extraBlocks.includes("phase")) {
+    content.push(variant("phase", {
+      stage: { type: "string", enum: ["starter", "main", "plenary"] },
+      title: str, minutes: int, teacher: str, pupils: str, check: strList, feedback: str, support: str, challenge: str, ta: str,
+    }));
+  }
   // A picture is what to search for and a line describing it; where it comes
   // from is found afterwards (app/lib/sheets/pictures.ts).
   if (opts.images) content.push(variant("image", { query: str, alt: str }));

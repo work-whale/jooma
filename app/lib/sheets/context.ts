@@ -26,6 +26,13 @@ export interface SheetRequestInfo {
   template?: string;
   /** One band's version of a differentiated set: puzzles are pitched to it. */
   band?: string;
+  /** Lesson plans: the form's curriculum and topic, kept for the buttons
+   *  that make slides, a worksheet or a quiz from the plan. */
+  curriculum?: string;
+  topic?: string;
+  /** Lesson plans: the layout and the lesson's length in minutes. */
+  layout?: string;
+  lessonLength?: number;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -34,6 +41,7 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
   const subtitle = [
     info.yearGroup === "Mixed" ? "Mixed years" : year,
     profile.subtitleLabel ?? info.subject?.trim(),
+    profile.subtitleSuffix?.(info),
   ].filter(Boolean).join(" · ");
   const design = {
     ...defaultDesign(tool, DEFAULT_SHEET_THEME[defaultFamilyForYear(year)]),
@@ -44,6 +52,8 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     subtitle,
     design,
     puzzle: puzzleDefaults(info.yearGroup, info.band),
+    ...(profile.arrange ? { arrange: (raw: unknown) => profile.arrange!(raw, info) } : {}),
+    ...(profile.lessonMeta ? { lesson: profile.lessonMeta(info) } : {}),
     leadingSections:
       profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

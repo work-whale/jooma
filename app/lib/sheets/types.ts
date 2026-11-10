@@ -39,10 +39,29 @@ export interface SheetDesign {
   pictures?: boolean;
 }
 
+/** How a lesson plan is laid out (app/lib/sheets/lesson.ts). Both are the
+ *  same plan arranged differently, so a teacher can switch without
+ *  regenerating. */
+export type LessonLayout = "three-part" | "cycles";
+
+/** What a lesson plan knows about itself beyond its pages: the layout it is
+ *  arranged in, the length its timings add up to, and the form's details,
+ *  which the "make slides / worksheet / quiz" buttons carry over. */
+export interface LessonMeta {
+  layout: LessonLayout;
+  minutes: number;
+  curriculum: string;
+  yearGroup: string;
+  subject: string;
+  topic: string;
+}
+
 export interface SheetDoc {
   kind: typeof SHEET_KIND;
   version: number;
   tool: SheetTool;
+  /** Lesson plans only. */
+  lesson?: LessonMeta;
   title: string;
   /** "Year 5 · Maths", built from the form, not written by the model. */
   subtitle: string;
@@ -63,6 +82,10 @@ export interface SheetSection {
   emoji: string;
   instructions: string;
   blocks: SheetBlock[];
+  /** What part of a fixed-shape document this section is (a lesson plan's
+   *  "overview", "starter", "cycle"...), so it can be rearranged. Missing on
+   *  worksheets and on sections the teacher adds. */
+  role?: string;
 }
 
 export interface SheetNote {
@@ -89,6 +112,28 @@ export interface CalloutBlock extends BlockBase, SheetCallout { type: "callout" 
 export interface PassageBlock extends BlockBase { type: "passage"; title: string; paragraphs: string[] }
 export interface WordBankBlock extends BlockBase { type: "wordbank"; title: string; words: string[] }
 export interface TableBlock extends BlockBase { type: "table"; headers: string[]; rows: string[][] }
+/** A titled list: success criteria (ticks), resources (bullets), steps
+ *  (numbers). */
+export interface ListBlock extends BlockBase { type: "list"; title: string; style: "bullet" | "number" | "check"; items: string[] }
+
+/** One stage of a lesson, with its timing. In the learning cycles layout a
+ *  "main" phase is a learning cycle: `teacher` is the explanation, `check` the
+ *  check for understanding, `pupils` the practice and `feedback` the feedback.
+ *  Its clock time is worked out from the phases before it, never stored. */
+export interface PhaseBlock extends BlockBase {
+  type: "phase";
+  stage: "starter" | "main" | "plenary";
+  title: string;
+  minutes: number;
+  teacher: string;
+  pupils: string;
+  check: string[];
+  feedback: string;
+  support: string;
+  challenge: string;
+  /** What a teaching assistant does in this phase. */
+  ta: string;
+}
 
 export type ImageSize = "s" | "m" | "l";
 export type ImageSource = "web" | "ai" | "upload";
@@ -189,7 +234,7 @@ export type SheetQuestion =
   | LongQuestion | CalcQuestion | OrderQuestion | WordOrderQuestion | PictureQuestion | LabelQuestion
   | SortQuestion | WordSearchQuestion | CrosswordQuestion;
 
-export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ImageBlock | SheetQuestion;
+export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ImageBlock | SheetQuestion;
 
 export type QuestionType = SheetQuestion["type"];
 export type BlockType = SheetBlock["type"];

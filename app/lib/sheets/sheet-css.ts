@@ -172,6 +172,40 @@ export const SHEET_CSS = `
 .js-note h3 { margin: 0 0 6px; font-family: var(--js-font-heading); color: var(--js-heading); font-size: 1.05em; }
 .js-note ul { margin: 0; padding-left: 18px; }
 
+.js-answers-sub { margin: 6px 0 0; font-family: var(--js-font-heading); color: var(--js-heading); font-size: 1.05em; }
+
+/* Lists: success criteria tick boxes, numbered steps, bullets */
+.js-list { display: flex; flex-direction: column; gap: 4px; }
+.js-list-title { margin: 0; font-family: var(--js-font-heading); color: var(--js-heading); font-size: 1.02em; font-weight: 700; }
+.js-list ul, .js-list ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 3px; }
+/* The app's CSS reset removes list markers; a plan's lists need them back. */
+.js-list ul { list-style: disc outside; }
+.js-list ol { list-style: decimal outside; }
+.js-list li { display: list-item; }
+.js-list[data-style="check"] ul { list-style: none; padding-left: 0; }
+.js-list[data-style="check"] li { display: flex; gap: 9px; align-items: flex-start; }
+.js-list-add { list-style: none !important; }
+.js-list[data-style="check"] li:not(.js-list-add)::before { content: ""; flex: none; width: 1em; height: 1em; margin-top: .2em; border: 2px solid var(--js-muted); border-radius: 4px; }
+.js-list ol li::marker { font-weight: 800; color: var(--js-heading); }
+.js-list-add { list-style: none; }
+
+/* Lesson phases: a header band with the stage and time, then labelled rows */
+.js-phase { border: var(--js-border) solid var(--js-line); border-radius: var(--js-radius); overflow: hidden; background: var(--js-paper); box-shadow: var(--js-shadow); }
+.js-phase-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; background: var(--js-soft); padding: 8px 14px; border-bottom: 1.5px solid var(--js-line); }
+.js-phase-stage { font-size: .7em; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--js-on-accent); background: var(--js-accent); border-radius: 999px; padding: 2px 9px; }
+.js-phase-title { flex: 1; min-width: 40%; font-family: var(--js-font-heading); color: var(--js-heading); font-weight: 700; font-size: 1.05em; }
+.js-phase-time { margin-left: auto; font-size: .82em; color: var(--js-muted); white-space: nowrap; display: inline-flex; gap: 8px; align-items: baseline; }
+.js-phase-clock { font-weight: 700; color: var(--js-ink); }
+.js-phase-min { width: 3.4em; font: inherit; padding: 1px 4px; border: 1.5px solid var(--js-line); border-radius: 6px; background: var(--js-paper); color: var(--js-ink); }
+.js-phase-grid { margin: 0; display: flex; flex-direction: column; }
+.js-phase-row { display: grid; grid-template-columns: 9.5em 1fr; gap: 12px; padding: 7px 14px; border-top: 1px solid var(--js-line); }
+.js-phase-row:first-child { border-top: 0; }
+.js-phase-row dt { font-weight: 800; font-size: .86em; color: var(--js-heading); padding-top: .1em; }
+.js-phase-row dd { margin: 0; }
+.js-phase-row dd ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; list-style: disc outside; }
+.js-phase-row dd li { display: list-item; }
+.js-phase-row[data-field="support"] dt, .js-phase-row[data-field="challenge"] dt, .js-phase-row[data-field="ta"] dt { color: var(--js-muted); }
+
 /* Editing */
 .js-edit { outline: 1.5px dashed transparent; outline-offset: 2px; border-radius: 4px; cursor: text; min-width: 1ch; }
 .js-sheet[data-mode="edit"] .js-edit:hover { outline-color: color-mix(in srgb, var(--js-accent) 55%, transparent); }

@@ -2,6 +2,9 @@
 
 import type {
   ImageBlock,
+  LessonLayout,
+  ListBlock,
+  PhaseBlock,
   SheetBlock,
   SheetDesign,
   SheetQuestion,
@@ -20,6 +23,7 @@ import { isQuestion } from "@/app/lib/sheets/types";
 import { answerText } from "@/app/lib/sheets/markdown";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "@/app/lib/sheets/puzzles";
 import { EditableText, Rich } from "./rich";
+import { clockText, PHASE_FIELDS, phaseFieldLabel, stageLabel } from "@/app/lib/sheets/lesson";
 
 /*
  * How each block looks on the page. The same components draw the page on
@@ -41,6 +45,10 @@ export interface BlockProps {
   onPatch: (patch: Partial<SheetBlock>) => void;
   /** Opens the picture chooser for this block: pictures only. */
   onPicture?: () => void;
+  /** A lesson phase's place in the lesson, in minutes from the start. */
+  clock?: { start: number; end: number };
+  /** A lesson plan's layout: what a phase's parts are called. */
+  layout?: LessonLayout;
 }
 
 export function BlockView(props: BlockProps) {
@@ -69,6 +77,10 @@ export function BlockView(props: BlockProps) {
       );
     case "image":
       return <ImageView block={block} edit={edit} onPicture={props.onPicture} />;
+    case "list":
+      return <ListView block={block} edit={edit} onPatch={onPatch} />;
+    case "phase":
+      return <PhaseView block={block} edit={edit} onPatch={onPatch} clock={props.clock} layout={props.layout} />;
     case "passage":
       return <PassageView title={block.title} paragraphs={block.paragraphs} numbered={design.lineNumbers} edit={edit} onPatch={onPatch} />;
     case "table":
@@ -690,4 +702,101 @@ function answerLine(q: SheetQuestion): string {
     default:
       return "";
   }
+}
+
+/** Items of a list, each editable; emptying one removes it. */
+function EditableItems({ items, edit, onChange, label, add }: { items: string[]; edit: boolean; onChange: (items: string[]) => void; label: string; add: string }) {
+  return (
+    <>
+      {items.map((it, i) => (
+        <li key={i}>
+          <EditableText
+            value={it}
+            editable={edit}
+            multiline
+            onChange={(v) => onChange(v ? items.map((x, j) => (j === i ? v : x)) : items.filter((_, j) => j !== i))}
+            label={label}
+          />
+        </li>
+      ))}
+      {edit && (
+        <li className="js-list-add">
+          <button type="button" className="js-mini" onClick={() => onChange([...items, add])}>+ add</button>
+        </li>
+      )}
+    </>
+  );
+}
+
+/** A titled list: ticks for success criteria, numbers for steps. */
+export function ListView({ block, edit, onPatch }: { block: ListBlock; edit: boolean; onPatch: (p: Partial<ListBlock>) => void }) {
+  const Tag = block.style === "number" ? "ol" : "ul";
+  return (
+    <div className="js-list" data-style={block.style}>
+      {(block.title || edit) && (
+        <EditableText as="h3" className="js-list-title" value={block.title} placeholder="List title" editable={edit} onChange={(title) => onPatch({ title })} label="list title" />
+      )}
+      <Tag>
+        <EditableItems items={block.items} edit={edit} onChange={(items) => onPatch({ items })} label="list item" add="New item" />
+      </Tag>
+    </div>
+  );
+}
+
+/**
+ * One stage of a lesson: its stage and timing in a header band, then what the
+ * teacher and pupils do, how understanding is checked, and the adaptations.
+ * Empty parts are left off the printed plan but stay fillable while editing.
+ */
+export function PhaseView({ block, edit, onPatch, clock, layout }: { block: PhaseBlock; edit: boolean; onPatch: (p: Partial<PhaseBlock>) => void; clock?: { start: number; end: number }; layout?: LessonLayout }) {
+  return (
+    <div className="js-phase" data-stage={block.stage}>
+      <div className="js-phase-head">
+        <span className="js-phase-stage">{stageLabel(block.stage, layout)}</span>
+        <EditableText className="js-phase-title" value={block.title} placeholder="Phase title" editable={edit} onChange={(title) => onPatch({ title })} label="phase title" />
+        <span className="js-phase-time">
+          {clock && <span className="js-phase-clock">{clockText(clock.start)} to {clockText(clock.end)}</span>}
+          {edit ? (
+            <input
+              type="number"
+              className="js-phase-min"
+              min={1}
+              max={180}
+              value={block.minutes}
+              aria-label="Minutes"
+              onChange={(e) => {
+                const n = Math.round(Number(e.target.value));
+                if (Number.isFinite(n) && n >= 1 && n <= 180) onPatch({ minutes: n });
+              }}
+            />
+          ) : (
+            <b>{block.minutes}</b>
+          )}{" "}
+          min
+        </span>
+      </div>
+      <dl className="js-phase-grid">
+        {PHASE_FIELDS.map((field) => {
+          const value = block[field];
+          const empty = Array.isArray(value) ? value.length === 0 : !value;
+          if (empty && !edit) return null;
+          const label = phaseFieldLabel(field, block.stage, layout);
+          return (
+            <div className="js-phase-row" key={field} data-field={field}>
+              <dt>{label}</dt>
+              <dd>
+                {Array.isArray(value) ? (
+                  <ul>
+                    <EditableItems items={value} edit={edit} onChange={(check) => onPatch({ check })} label={label} add="A question to ask" />
+                  </ul>
+                ) : (
+                  <EditableText value={value} placeholder={`Add ${label.toLowerCase()}`} editable={edit} multiline onChange={(v) => onPatch({ [field]: v } as Partial<PhaseBlock>)} label={label} />
+                )}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
+  );
 }

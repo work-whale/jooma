@@ -15,6 +15,7 @@ import {
   SHEET_KIND,
   SHEET_VERSION,
   type ImageBlock,
+  type LessonMeta,
   type SheetBlock,
   type SheetCallout,
   type SheetDesign,
@@ -120,6 +121,31 @@ export function normalizeBlock(raw: unknown, id: string, puzzle?: Partial<Puzzle
           })
         : [];
       return headers.length || rows.length ? { id, type: "table", headers, rows } : null;
+    }
+    case "list": {
+      const items = list(r.items);
+      const style = r.style === "number" || r.style === "check" ? r.style : "bullet";
+      return items.length ? { id, type: "list", title: text(r.title), style, items } : null;
+    }
+    case "phase": {
+      const title = text(r.title);
+      const teacher = text(r.teacher);
+      if (!title && !teacher) return null;
+      const stage = r.stage === "starter" || r.stage === "plenary" ? r.stage : "main";
+      return {
+        id,
+        type: "phase",
+        stage,
+        title,
+        minutes: intOf(r.minutes, 1, 180, 10),
+        teacher,
+        pupils: text(r.pupils),
+        check: list(r.check),
+        feedback: text(r.feedback),
+        support: text(r.support),
+        challenge: text(r.challenge),
+        ta: text(r.ta),
+      };
     }
     case "image": {
       // The model writes what to look for, never where a picture is: `src` is
@@ -266,6 +292,11 @@ export interface NormalizeContext {
   /** Placed by the server ahead of the model's sections, e.g. the teacher's
    *  own passage. Never sent through the model. */
   leadingSections?: SheetSection[];
+  /** Turns a tool's own fixed-shape draft into a generic sheet draft
+   *  (app/lib/sheets/tools.ts `arrange`). */
+  arrange?: (raw: unknown) => unknown;
+  /** Lesson plans: kept on the document. */
+  lesson?: LessonMeta;
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -294,7 +325,8 @@ export function sheetImages(doc: SheetDoc): ImageBlock[] {
  * them on every chunk. Blocks added later by the editor get fresh ids.
  */
 export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
-  const r = (raw && typeof raw === "object" ? raw : {}) as Raw;
+  const arranged = ctx.arrange ? ctx.arrange(raw) : raw;
+  const r = (arranged && typeof arranged === "object" ? arranged : {}) as Raw;
   const sections: SheetSection[] = (Array.isArray(r.sections) ? r.sections : [])
     .map((s, si): SheetSection | null => {
       if (!s || typeof s !== "object") return null;
@@ -304,7 +336,8 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
         .filter((b): b is SheetBlock => !!b);
       const title = text(sr.title);
       if (!title && blocks.length === 0) return null;
-      return { id: `s${si}`, title, emoji: text(sr.emoji), instructions: text(sr.instructions), blocks };
+      const role = text(sr.role);
+      return { id: `s${si}`, title, emoji: text(sr.emoji), instructions: text(sr.instructions), blocks, ...(role ? { role } : {}) };
     })
     .filter((s): s is SheetSection => !!s);
 
@@ -316,6 +349,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     kind: SHEET_KIND,
     version: SHEET_VERSION,
     tool: ctx.tool,
+    ...(ctx.lesson ? { lesson: ctx.lesson } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

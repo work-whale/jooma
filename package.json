@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:local": "node scripts/build-local.mjs",
     "start": "next start",
     "lint": "eslint && node scripts/check-language.mjs",
     "db:start": "supabase start",

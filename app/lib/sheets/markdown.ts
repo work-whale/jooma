@@ -9,22 +9,37 @@ import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
 import { clueText, directionName, sortBank, sortRows } from "./puzzles";
+import { sheetToolProfile } from "./tools";
+import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
-/** Questions numbered 1, 2, 3... down the whole sheet, in page order. */
+/** Questions numbered 1, 2, 3... down the whole sheet, in page order, or
+ *  from 1 again in each section for a tool that says so (a lesson plan's
+ *  starter and exit quizzes are two separate quizzes). */
 export function questionNumbers(doc: SheetDoc): Map<string, number> {
   const numbers = new Map<string, number>();
+  const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
   let n = 0;
-  for (const s of doc.sections) for (const b of s.blocks) if (isQuestion(b)) numbers.set(b.id, ++n);
+  for (const s of doc.sections) {
+    if (restart) n = 0;
+    for (const b of s.blocks) if (isQuestion(b)) numbers.set(b.id, ++n);
+  }
   return numbers;
 }
+
+/** The answers page's heading for this sheet's tool. */
+export function answersTitle(doc: SheetDoc): string {
+  return sheetToolProfile(doc.tool)?.answersTitle ?? "Answers";
+}
+
+type Clocks = Map<string, { start: number; end: number }>;
 
 function lines(n: number): string {
   return Array.from({ length: n }, () => "____________________________________________").join("\n");
 }
 
-function blockMarkdown(b: SheetBlock, number: number | undefined): string {
+function blockMarkdown(b: SheetBlock, number: number | undefined, doc?: SheetDoc, clocks?: Clocks): string {
   const lead = number !== undefined ? `**${number}.** ` : "";
   const marks = isQuestion(b) && b.marks > 0 ? ` [${b.marks} mark${b.marks === 1 ? "" : "s"}]` : "";
   switch (b.type) {
@@ -44,6 +59,20 @@ function blockMarkdown(b: SheetBlock, number: number | undefined): string {
         `| ${b.headers.map(() => "---").join(" | ")} |`,
         ...b.rows.map((r) => `| ${r.join(" | ")} |`),
       ].join("\n");
+    case "list":
+      return [
+        b.title ? `**${b.title}**` : "",
+        ...b.items.map((it, i) => (b.style === "number" ? `${i + 1}. ${it}` : b.style === "check" ? `- [ ] ${it}` : `- ${it}`)),
+      ].filter(Boolean).join("\n");
+    case "phase": {
+      const layout = doc?.lesson?.layout;
+      const t = clocks?.get(b.id);
+      const when = t ? ` (${clockText(t.start)} to ${clockText(t.end)}, ${b.minutes} min)` : ` (${b.minutes} min)`;
+      return [
+        `### ${stageLabel(b.stage, layout)}: ${b.title}${when}`,
+        ...phaseRows(b, layout).map((r) => (r.items.length ? [`**${r.label}:**`, ...r.items.map((x) => `- ${x}`)].join("\n") : `**${r.label}:** ${r.text}`)),
+      ].join("\n\n");
+    }
     case "mcq":
       return [`${lead}${b.prompt}${marks}`, ...b.options.map((o, i) => `- ${LETTERS[i]}) ${o}`)].join("\n");
     case "truefalse":
@@ -181,12 +210,13 @@ export function sheetOutline(doc: SheetDoc): string {
   return [
     `# ${doc.title || "Worksheet"}`,
     ...doc.sections.map((s) => `## ${s.title || "Section"}`),
-    ...(hasAnswersPage(doc) ? ["## Answers"] : []),
+    ...(hasAnswersPage(doc) ? [`## ${answersTitle(doc)}`] : []),
   ].join("\n");
 }
 
 export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {}): string {
   const numbers = questionNumbers(doc);
+  const clocks = phaseClock(doc);
   const out: string[] = [`# ${doc.title || "Worksheet"}`];
   if (doc.subtitle) out.push(`*${doc.subtitle}*`);
   if (doc.objective && showsObjective(doc)) out.push(`**Learning objective:** ${doc.objective}`);
@@ -196,14 +226,21 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
     if (s.instructions) out.push(`*${s.instructions}*`);
     for (const b of s.blocks) {
       if (b.type === "image" && !showsPictures(doc)) continue;
-      const md = blockMarkdown(b, numbers.get(b.id));
+      const md = blockMarkdown(b, numbers.get(b.id), doc, clocks);
       if (md) out.push(md);
     }
   }
   const withAnswers = opts.answers ?? doc.design.answers;
   if (withAnswers) {
-    const answers = doc.sections.flatMap((s) => s.blocks).filter(isQuestion).map((q) => ({ n: numbers.get(q.id)!, a: answerText(q) })).filter((x) => x.a);
-    if (answers.length) out.push("## Answers", ...answers.map((x) => `${x.n}. ${x.a}`));
+    const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
+    const lines: string[] = [];
+    for (const s of doc.sections) {
+      const answers = s.blocks.filter(isQuestion).map((q) => ({ n: numbers.get(q.id)!, a: answerText(q) })).filter((x) => x.a);
+      if (!answers.length) continue;
+      if (restart) lines.push(`### ${s.title}`);
+      lines.push(...answers.map((x) => `${x.n}. ${x.a}`));
+    }
+    if (lines.length) out.push(`## ${answersTitle(doc)}`, ...lines);
     for (const { note } of visibleNotes(doc)) out.push(`## ${note.title || "Teacher notes"}`, ...note.points.map((p) => `- ${p}`));
   }
   return out.join("\n\n");

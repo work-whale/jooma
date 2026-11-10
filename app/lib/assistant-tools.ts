@@ -237,6 +237,19 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
             "did not state it, phrased as a teacher would ('Identify the stages of " +
             "the water cycle').",
         },
+        layout: {
+          type: "string",
+          enum: ["three-part", "cycles"],
+          description:
+            "three-part: starter, main teaching and plenary (the default). cycles: starter quiz, " +
+            "learning cycles, exit quiz. Leave out unless the teacher asks for one.",
+        },
+        lessonLength: {
+          type: "integer",
+          minimum: 20,
+          maximum: 180,
+          description: "The lesson's length in minutes. Defaults to 60.",
+        },
         differentiate: differentiateField,
         differentiationLevels: differentiationLevelsField,
         outputDetail: detailField,

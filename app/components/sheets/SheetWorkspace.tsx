@@ -31,6 +31,9 @@ import { useSheetJoPanel } from "@/app/components/jo/useSheetJoPanel";
 import { useSheetPictureDialog } from "./useSheetPictureDialog";
 import type { JoDocRef } from "@/app/lib/jo/threads";
 import { HEADER_STICKY } from "@/app/lib/topbar";
+import { relayoutLesson, timingMismatch } from "@/app/lib/sheets/lesson";
+import { lessonHandoffs } from "@/app/lib/lesson-handoffs";
+import Link from "next/link";
 
 /*
  * A generated Worksheet or Comprehension, as the teacher works on it: the
@@ -193,6 +196,11 @@ export default function SheetWorkspace({
   });
 
   const onDesign = (patch: Partial<SheetDesign>) => commit({ ...doc, design: { ...doc.design, ...patch } });
+  // Lesson plans: switch layout without regenerating, and carry the plan
+  // into slides, a worksheet or a quiz.
+  const onLayout = doc.lesson ? (layout: Parameters<typeof relayoutLesson>[1]) => commit(relayoutLesson(doc, layout)) : undefined;
+  const handoffs = !generating ? lessonHandoffs(doc) : [];
+  const timing = !generating && !preview ? timingMismatch(doc) : null;
   const pictures = useSheetPictureDialog({ doc, commit });
 
   const status = isGenerating
@@ -275,6 +283,21 @@ export default function SheetWorkspace({
       </div>
 
       {exportError && <p className="px-6 py-2 text-sm text-red-600 border-b border-gray-200">{exportError}</p>}
+      {handoffs.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 border-b border-gray-200" data-testid="lesson-handoffs">
+          <span className="text-xs font-semibold text-gray-500 mr-1">Use this plan to</span>
+          {handoffs.map((h) => (
+            <Link key={h.id} href={h.href} className={btn} data-handoff={h.id}>
+              {h.label}
+            </Link>
+          ))}
+        </div>
+      )}
+      {timing && (
+        <p className="px-6 py-2 text-sm text-amber-800 bg-amber-50 border-b border-amber-200" role="status" data-testid="lesson-timing-warning">
+          The phases add up to {timing.planned} minutes, but the lesson is {timing.lesson} minutes. Adjust the minutes on a phase to match.
+        </p>
+      )}
 
       <div className="flex gap-4 bg-stone-100 px-3 py-6 sm:px-6 sm:py-8">
         <div className="flex-1 min-w-0 flex flex-row gap-4">
@@ -285,14 +308,14 @@ export default function SheetWorkspace({
             // Sticky beside the pages, and never taller than the window: the
             // panel scrolls on its own rather than running off the bottom.
             <div className="w-80 shrink-0 sticky top-[calc(var(--topbar-h,0px)+8rem)] self-start max-h-[calc(100dvh-9rem-var(--topbar-h,0px))] overflow-y-auto rounded-2xl" data-testid="sheet-design-scroll">
-              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} onPicture={pictures.onPicture} />
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onLayout={onLayout} onClose={closeDesign} onPicture={pictures.onPicture} />
             </div>
           ) : (
             // Narrower than that there is no room beside the pages, so it is a
             // sidebar over them, as on the guest page, rather than a block
             // above the sheet that pushed it a long scroll away.
             <DesignDrawer onClose={closeDesign}>
-              <SheetDesignPanel doc={doc} onDesign={onDesign} onClose={closeDesign} onPicture={pictures.onPicture} />
+              <SheetDesignPanel doc={doc} onDesign={onDesign} onLayout={onLayout} onClose={closeDesign} onPicture={pictures.onPicture} />
             </DesignDrawer>
           ))}
         </div>

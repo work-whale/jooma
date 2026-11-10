@@ -46,7 +46,7 @@ API routes do not need their own refusal tests: sign-in, plan and spend gates ar
 ## 3. Rules per layer
 
 - **Unit:** no browser, server or database. Runs in seconds; run it while you work.
-- **E2E:** the screens, signed in through the real login page. Reuse a dev server already on :3000; use `localhost`, never `127.0.0.1`. Mock model routes with `page.route`; a test never calls the model live.
+- **E2E:** the screens, signed in through the real login page. Reuse a dev server already on :3000; use `localhost`, never `127.0.0.1`. Mock model routes with `page.route` so the screen tests are free and repeatable. Each AI tool also has ONE live spec that really generates on staging and checks the result parses and renders; it is skipped unless `LIVE_MODEL=1` and is run when that tool's prompt or schema changes, since a mock never proves the model accepts the schema.
 
 ## 4. Before calling it done
 

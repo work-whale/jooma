@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ImageIcon, X } from "lucide-react";
 import { THEME_FAMILIES, THEME_TAG_LABEL, type ThemeFamily } from "@/app/lib/slideshowThemes";
 import { getSheetTheme, SHEET_THEMES, type SheetTheme } from "@/app/lib/sheets/themes";
-import type { SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
+import type { LessonLayout, SheetDesign, SheetDoc } from "@/app/lib/sheets/types";
+import { LESSON_LAYOUTS } from "@/app/lib/sheets/lesson";
 import { sheetImages } from "@/app/lib/sheets/normalize";
 import { hasDifferentiationNote, showsPictures } from "@/app/lib/sheets/visibility";
 
@@ -26,11 +27,14 @@ const SIZES: { id: SheetDesign["fontScale"]; label: string }[] = [
 export default function SheetDesignPanel({
   doc,
   onDesign,
+  onLayout,
   onClose,
   onPicture,
 }: {
   doc: SheetDoc;
   onDesign: (patch: Partial<SheetDesign>) => void;
+  /** Lesson plans: rearrange the plan in another layout. */
+  onLayout?: (layout: LessonLayout) => void;
   onClose: () => void;
   /** Opens the picture chooser for a picture block, by id. */
   onPicture?: (blockId: string) => void;
@@ -50,6 +54,26 @@ export default function SheetDesignPanel({
           <X className="w-4 h-4" />
         </button>
       </div>
+
+      {doc.lesson && onLayout && (
+        <section className="flex flex-col gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Lesson layout</p>
+          <div className="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-xl" role="radiogroup" aria-label="Lesson layout">
+            {LESSON_LAYOUTS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="radio"
+                aria-checked={doc.lesson!.layout === l.id}
+                onClick={() => onLayout(l.id)}
+                className={`text-xs font-semibold py-1.5 rounded-lg cursor-pointer ${doc.lesson!.layout === l.id ? "bg-white text-stone-800 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Theme</p>
@@ -111,7 +135,7 @@ export default function SheetDesignPanel({
         <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />
         <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />
         {doc.intro && <Toggle label={doc.intro.label || "Did you know?"} checked={design.intro !== false} onChange={(intro) => onDesign({ intro })} />}
-        <Toggle label="Answers page" checked={design.answers} onChange={(answers) => onDesign({ answers })} />
+        <Toggle label={doc.lesson ? "Quiz answers and notes page" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />
         {hasDiffNote && (
           <Toggle
             label="Differentiation note"

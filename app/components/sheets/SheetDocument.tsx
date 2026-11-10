@@ -6,7 +6,9 @@ import { extractHeadings } from "@/app/lib/headings";
 import { paginate, type PageUnit } from "@/app/lib/sheets/paginate";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
-import { answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
+import { answersTitle, answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
+import { phaseClock } from "@/app/lib/sheets/lesson";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "@/app/lib/sheets/visibility";
 import { puzzleDefaultsFromSubtitle } from "@/app/lib/sheets/puzzles";
 import { PUZZLE_LEVELS } from "@/app/lib/sheets/types";
@@ -60,6 +62,8 @@ const SAFETY = 6;
 
 const CONTENT_TYPES: BlockType[] = ["text", "callout", "wordbank", "passage", "table"];
 const CONTENT_LABEL: Partial<Record<BlockType, string>> = {
+  list: "List",
+  phase: "Lesson phase",
   image: "Picture",
   text: "Text",
   callout: "Callout box",
@@ -126,6 +130,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   const theme = getSheetTheme(doc.design.themeId);
   const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
   const numbers = useMemo(() => questionNumbers(doc), [doc]);
+  const clocks = useMemo(() => phaseClock(doc), [doc]);
+  const profile = sheetToolProfile(doc.tool);
   const ids = useMemo(() => (anchors ? extractHeadings(sheetOutline(doc)).map((h) => h.id) : []), [doc, anchors]);
   const showAnswers = hasAnswersPage(doc);
 
@@ -302,6 +308,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
               design={doc.design}
               onPatch={patch}
               onPicture={live && onPicture ? () => onPicture(b.id) : undefined}
+              clock={clocks.get(b.id)}
+              layout={doc.lesson?.layout}
             />
           </div>
         ),
@@ -320,6 +328,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
               <AddMenu
                 kind={menu.kind}
                 pictures={!!onPicture}
+                extra={profile.extraBlocks}
                 onPick={(type) => {
                   // A new puzzle is pitched to the year in the sheet's subtitle.
                   const block = newBlock(type, puzzleDefaultsFromSubtitle(doc.subtitle));
@@ -357,12 +366,17 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
       keepWithNext: true,
       render: (live) => (
         <div>
-          <h2 className="js-answers-title" {...(live && ids[doc.sections.length + 1] ? { id: ids[doc.sections.length + 1] } : {})}>Answers</h2>
-          <p className="js-instructions" style={{ marginTop: 2 }}>For the teacher. Remove this page before handing the sheet out, or switch it off in Design.</p>
+          <h2 className="js-answers-title" {...(live && ids[doc.sections.length + 1] ? { id: ids[doc.sections.length + 1] } : {})}>{answersTitle(doc)}</h2>
+          <p className="js-instructions" style={{ marginTop: 2 }}>{profile.answersNote}</p>
         </div>
       ),
     });
-    doc.sections.forEach((s, si) =>
+    doc.sections.forEach((s, si) => {
+      // Numbering restarts in each section, so each section's answers go
+      // under its own title.
+      if (profile.restartNumbers && s.blocks.some(isQuestion)) {
+        units.push({ key: `ah:${s.id}`, height: 0, keepWithNext: true, render: () => <h3 className="js-answers-sub">{s.title}</h3> });
+      }
       s.blocks.forEach((b, bi) => {
         if (!isQuestion(b)) return;
         if (!editing && !answerText(b) && !(b.type === "long" && b.criteria.length)) return;
@@ -373,8 +387,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
             <AnswerView q={b} number={numbers.get(b.id) ?? 0} edit={editing} onPatch={(p: Partial<SheetQuestion>) => commit(updateBlock(doc, si, bi, p))} />
           ),
         });
-      }),
-    );
+      });
+    });
     visibleNotes(doc).forEach(({ note, index: ni }) => {
       const setNote = (next: typeof note | null) =>
         commit({ ...doc, teacherNotes: next ? doc.teacherNotes.map((n, j) => (j === ni ? next : n)) : doc.teacherNotes.filter((_, j) => j !== ni) });
@@ -639,7 +653,7 @@ function ToolButton({ label, text, onClick }: { label: string; text?: string; on
   );
 }
 
-function AddMenu({ kind, pictures, onPick, onClose }: { kind: "question" | "content"; pictures: boolean; onPick: (t: BlockType) => void; onClose: () => void }) {
+function AddMenu({ kind, pictures, extra = [], onPick, onClose }: { kind: "question" | "content"; pictures: boolean; extra?: BlockType[]; onPick: (t: BlockType) => void; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -653,7 +667,8 @@ function AddMenu({ kind, pictures, onPick, onClose }: { kind: "question" | "cont
       document.removeEventListener("keydown", onKey);
     };
   }, [onClose]);
-  const types = kind === "question" ? QUESTION_TYPES : pictures ? [...CONTENT_TYPES, "image" as const] : CONTENT_TYPES;
+  const content: BlockType[] = [...extra, ...CONTENT_TYPES, ...(pictures ? ["image" as const] : [])];
+  const types = kind === "question" ? QUESTION_TYPES : content;
   return (
     <div ref={ref} className="js-menu" role="menu" style={{ top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)" }}>
       <span className="js-menu-head">{kind === "question" ? "Add a question" : "Add text or a box"}</span>

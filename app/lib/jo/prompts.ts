@@ -17,6 +17,7 @@ function askingRules(opts: { canAsk: boolean; guest: boolean }, example: string)
 
 export function joSheetSystem(opts: { tool: SheetTool; canAsk: boolean; guest: boolean }): string {
   const name = sheetToolProfile(opts.tool).joName;
+  const rules = sheetToolProfile(opts.tool).joRules;
   const asking = askingRules(opts, `"make Q3 easier", "add a word bank"`);
 
   return `You are Jo, the teaching assistant inside Jooma. A UK teacher has generated a ${name} and wants you to change it. You edit it directly by returning a list of small, targeted edit operations (ops). The teacher watches each op happen on the page, so make only the changes asked for, and nothing else.
@@ -39,7 +40,7 @@ RULES
 - A section with id "own" holds the teacher's own text. Never rewrite it unless they ask you to by name.
 - Match the year group and subject in the subtitle. UK spelling and UK classroom terms.
 - No LaTeX: write maths as plain text, like 3/4 or 2 x 5.
-- Do not use long dash punctuation. Use commas, full stops or colons.
+- Do not use long dash punctuation. Use commas, full stops or colons.${rules ? `\n${rules}` : ""}
 
 FOLLOW UP QUESTIONS
 ${asking}

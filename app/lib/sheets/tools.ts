@@ -10,11 +10,12 @@
 // Pure and free of React: read by the API routes, the stream reader and the
 // browser alike.
 
-import type { QuestionType, SheetDesign } from "./types";
+import type { LessonMeta, QuestionType, SheetDesign } from "./types";
 import type { SheetRequestInfo } from "./context";
 import { templateById } from "./worksheet-templates";
+import { arrangeLesson, DEFAULT_LESSON_LAYOUT, isLessonLayout, lessonMinutes } from "./lesson";
 
-export const SHEET_TOOLS = ["worksheet", "comprehension"] as const;
+export const SHEET_TOOLS = ["worksheet", "comprehension", "lesson"] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
 export function isSheetTool(v: unknown): v is SheetTool {
@@ -52,6 +53,36 @@ export interface SheetToolProfile {
   ownPassage: boolean;
   /** Design changes the request asks for, over the year's default. */
   startDesign: (info: SheetRequestInfo) => Partial<SheetDesign>;
+  /** Content blocks beyond the shared ones (text, callout, word bank, table)
+   *  that Jo may write and the teacher may add. */
+  extraBlocks: ("list" | "phase")[];
+  /** The answers page's heading and the line under it. */
+  answersTitle: string;
+  answersNote: string;
+  /** Number questions from 1 in each section rather than down the sheet. */
+  restartNumbers: boolean;
+  /** Extra rules for Jo when editing this tool's sheets. */
+  joRules: string;
+  /** A fixed-shape draft (the model's own schema) turned into the generic
+   *  sheet draft normalizeDraft reads. Missing: the draft already is one. */
+  arrange?: (raw: unknown, info: SheetRequestInfo) => unknown;
+  /** Lesson plans: what the plan keeps about itself. */
+  lessonMeta?: (info: SheetRequestInfo) => LessonMeta;
+  /** Added to the end of the subtitle, after the year and subject. */
+  subtitleSuffix?: (info: SheetRequestInfo) => string;
+}
+
+const ANSWERS_NOTE = "For the teacher. Remove this page before handing the sheet out, or switch it off in Design.";
+
+function lessonMetaFor(info: SheetRequestInfo): LessonMeta {
+  return {
+    layout: isLessonLayout(info.layout) ? info.layout : DEFAULT_LESSON_LAYOUT,
+    minutes: lessonMinutes(info.lessonLength),
+    curriculum: info.curriculum ?? "",
+    yearGroup: info.yearGroup ?? "",
+    subject: info.subject?.trim() ?? "",
+    topic: info.topic?.trim() ?? "",
+  };
 }
 
 export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
@@ -80,6 +111,11 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     // The worksheet type's starting design (an exam paper drops the
     // objective line).
     startDesign: (info) => templateById(info.template).design ?? {},
+    extraBlocks: [],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    joRules: "",
   },
   comprehension: {
     slug: "comprehension-generator",
@@ -102,6 +138,47 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     subtitleLabel: "Reading comprehension",
     ownPassage: true,
     startDesign: (info) => (info.includeAnswerKey === false ? { answers: false } : {}),
+    extraBlocks: [],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    joRules: "",
+  },
+  lesson: {
+    slug: "lesson-planner",
+    joName: "lesson plan",
+    docLabel: "lesson plan",
+    joStarters: [
+      "Make the starter more active",
+      "Add a TA task to every phase",
+      "Add a hinge question to the main teaching",
+      "Make the challenge harder for the most able",
+    ],
+    // The starter and exit quizzes. The teacher can add other kinds by hand.
+    defaultKinds: ["mcq"],
+    allowedKinds: ["mcq", "truefalse", "short"],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    // A plan is for the teacher: no name and date lines, and no hook box.
+    startDesign: () => ({ nameDate: false, intro: false }),
+    extraBlocks: ["list", "phase"],
+    answersTitle: "Quiz answers and teacher notes",
+    answersNote: "The answers to the starter and exit quizzes, and notes for whoever teaches the lesson.",
+    restartNumbers: true,
+    joRules:
+      "- This is a lesson plan for the teacher, not a pupil sheet. A phase block is one stage of the lesson: stage (starter, main, plenary), title, minutes, teacher (what the teacher does or explains), pupils (what pupils do), check (questions that check understanding), feedback, support, challenge and ta (what a teaching assistant does). In the learning cycles layout each main phase is a learning cycle: teacher is the explanation and pupils the practice.\n" +
+      "- The phases' minutes must still add up to the lesson length in the subtitle. If you lengthen one phase, shorten another, and say so in the summary.\n" +
+      "- To reword part of a phase, setText its field (\"<blockId>.teacher\", \"<blockId>.pupils\", \"<blockId>.support\", \"<blockId>.challenge\", \"<blockId>.ta\", \"<blockId>.feedback\", \"<blockId>.title\") or one check question (\"<blockId>.check.<n>\"). A list block's items are \"<blockId>.items.<n>\". To change a phase's minutes, replaceBlock it.\n" +
+      "- The starter and exit quizzes are multiple choice questions with one right answer; keep their answers correct.",
+    arrange: (raw, info) => arrangeLesson(raw, lessonMetaFor(info)),
+    lessonMeta: lessonMetaFor,
+    subtitleSuffix: (info) => `${lessonMinutes(info.lessonLength)} minutes`,
   },
 };
 
