@@ -16,6 +16,8 @@ test.setTimeout(240_000);
 const NAV = { timeout: 120_000 };
 
 const CLASS = ["Amira", "Ben", "Chloe", "Daniyal", "Eve", "Freya"];
+/** A name as a whole word, any case: "Ben" but not "benefit". */
+const word = (name: string) => new RegExp(`\\b${name}\\b`, "i");
 
 let teacher: TestTeacher;
 test.beforeAll(async () => {
@@ -78,7 +80,7 @@ test("a class is written in batches, never sends a name, and is saved once then 
   const bodies = raw.map((r) => JSON.parse(r) as { pupils: { ref: string; note: string }[]; chunkIndex: number });
   expect(bodies.map((b) => b.pupils.length).sort()).toEqual([1, 5]);
   expect(bodies.map((b) => b.chunkIndex).sort()).toEqual([0, 1]);
-  for (const r of raw) for (const name of CLASS) expect(r.toLowerCase(), `${name} was sent`).not.toContain(name.toLowerCase());
+  for (const r of raw) for (const name of CLASS) expect(r, `${name} was sent`).not.toMatch(word(name));
   const first = bodies.find((b) => b.chunkIndex === 0)!;
   expect(first.pupils[0].note).toBe("[PUPIL] helped a classmate with fractions. [PUPIL]'s reading is strong.");
 
@@ -105,7 +107,7 @@ test("a class is written in batches, never sends a name, and is saved once then 
   const redo = JSON.parse(raw[2]) as { pupils: unknown[]; redo: boolean };
   expect(redo.redo).toBe(true);
   expect(redo.pupils).toHaveLength(1);
-  for (const name of CLASS) expect(raw[2].toLowerCase()).not.toContain(name.toLowerCase());
+  for (const name of CLASS) expect(raw[2]).not.toMatch(word(name));
 
   await expect.poll(async () => JSON.parse((await reportRuns())[0].output as string).pupils[0].comment, NAV).toMatch(/^Rewritten/);
   const runs = await reportRuns();
@@ -137,6 +139,50 @@ test("a report saved before the class grid still opens as it was", async ({ page
   await expect(page.getByLabel("Pupil 1 note")).toHaveValue("Maths: Quick with mental maths");
 });
 
+test("Ask Jo rewrites a report without a single name reaching it, and the change is saved", async ({ page }) => {
+  const raw: string[] = [];
+  await mockReports(page, raw);
+  const joBodies: string[] = [];
+  await page.route("**/api/jo", (route) => {
+    joBodies.push(route.request().postData() ?? "");
+    return route.fulfill({
+      status: 200,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+      body: JSON.stringify({
+        reply: "I'll warm up pupil 1's report.",
+        clarify: null,
+        ops: [{ op: "replaceItem", label: "Warming up pupil 1's report", itemId: "r1", item: { pronouns: "she/her", judgements: "", note: "", comment: "[PUPIL] is a joy to teach and has had a wonderful term.", nextStep: "[PUPIL] should keep reading every night." } }],
+        summary: "Pupil 1's report is warmer.",
+      }),
+    });
+  });
+  await signIn(page, teacher);
+  await fillClass(page);
+  await page.getByRole("button", { name: /generate/i }).click();
+  await expect(page.getByTestId("report-card")).toHaveCount(CLASS.length, NAV);
+  await expect(page.getByTestId("report-save-state")).toHaveText(/Saved/, NAV);
+
+  // Jo opens itself once the class is written. The teacher names a pupil.
+  await page.getByTestId("jo-input").fill("Make Amira's report warmer, she helped Ben a lot");
+  await page.getByTestId("jo-send").click();
+
+  const amira = page.getByTestId("report-card").filter({ has: page.getByRole("heading", { name: "Amira" }) });
+  await expect(amira.getByLabel("Report for Amira")).toHaveValue("Amira is a joy to teach and has had a wonderful term.", NAV);
+  await expect(amira.getByLabel("Next step for Amira")).toHaveValue("Amira should keep reading every night.");
+
+  expect(joBodies).toHaveLength(1);
+  const body = JSON.parse(joBodies[0]) as { kind: string; snapshot: { items: { id: string }[] }; messages: { content: string }[] };
+  expect(body.kind).toBe("reports");
+  expect(body.snapshot.items.map((i) => i.id)).toEqual(["r1", "r2", "r3", "r4", "r5", "r6"]);
+  expect(body.messages.at(-1)!.content).toBe("Make pupil 1's report warmer, she helped pupil 2 a lot");
+  for (const name of CLASS) expect(joBodies[0], `${name} reached Jo`).not.toMatch(word(name));
+
+  // The change goes into the saved run, with the placeholder kept.
+  await expect.poll(async () => JSON.parse((await reportRuns())[0].output as string).pupils[0].comment, NAV).toBe("[PUPIL] is a joy to teach and has had a wonderful term.");
+  // Live talk is off here: a spoken name would reach the speech model first.
+  await expect(page.getByRole("button", { name: /live/i })).toHaveCount(0);
+});
+
 // ── The live run ────────────────────────────────────────────────────────────
 
 test("LIVE: the real model writes a report for every pupil, with no names and nothing invented", async ({ page }) => {
@@ -156,9 +202,33 @@ test("LIVE: the real model writes a report for every pupil, with no names and no
     expect(p.comment.split(/\s+/).length, p.name).toBeGreaterThan(40);
     expect(p.comment).toContain("[PUPIL]");
     expect(p.target.trim().length, p.name).toBeGreaterThan(0);
-    for (const name of CLASS) expect(p.comment, `${name} in ${p.name}'s report`).not.toContain(name);
+    for (const name of CLASS) expect(p.comment, `${name} in ${p.name}'s report`).not.toMatch(word(name));
     expect(p.comment).not.toMatch(/[–—]/);
   }
   // Only Amira was given a judgement; nobody else may be called greater depth.
   for (const p of saved.pupils.slice(1)) expect(p.comment.toLowerCase()).not.toContain("greater depth");
+  // Chloe to Freya were given no note: no invented difficulties.
+  for (const p of saved.pupils.slice(2)) expect(p.comment, p.name).not.toMatch(/\b(rush\w*|careless|distract\w*|loses? focus|struggl\w*|errors?|mistakes?)\b/i);
+
+  // The real Jo takes the reports schema, rewrites only what it was asked
+  // to, keeps [PUPIL], and never sees a name.
+  await expect(page.getByTestId("report-save-state")).toHaveText(/Saved/, { timeout: 60_000 });
+  const joBodies: string[] = [];
+  page.on("request", (r) => {
+    if (r.url().endsWith("/api/jo") && r.method() === "POST") joBodies.push(r.postData() ?? "");
+  });
+  await page.getByTestId("jo-input").fill("Make Ben's report much shorter, two sentences at most");
+  await page.getByTestId("jo-send").click();
+  await expect
+    .poll(async () => JSON.parse((await reportRuns())[0].output as string).pupils[1].comment, { timeout: 180_000 })
+    .not.toBe(saved.pupils[1].comment);
+  const after = JSON.parse((await reportRuns())[0].output as string) as typeof saved;
+  expect(after.pupils[1].comment).toContain("[PUPIL]");
+  expect(after.pupils[1].comment.split(/\s+/).length).toBeLessThan(saved.pupils[1].comment.split(/\s+/).length);
+  for (const name of CLASS) expect(after.pupils[1].comment).not.toMatch(word(name));
+  // Nobody else was touched.
+  expect(after.pupils[0].comment).toBe(saved.pupils[0].comment);
+  expect(after.pupils[2].comment).toBe(saved.pupils[2].comment);
+  expect(joBodies).toHaveLength(1);
+  for (const name of CLASS) expect(joBodies[0], `${name} reached Jo`).not.toMatch(word(name));
 });

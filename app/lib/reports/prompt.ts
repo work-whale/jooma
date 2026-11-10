@@ -74,7 +74,7 @@ export function reportsRequest(body: ReportsRequestBody):
       `- ${p.ref} (pronouns: ${p.pronouns === "he" ? "he/him" : p.pronouns === "she" ? "she/her" : "they/them"})`,
       att.length ? `  attainment: ${att.map(([s, v]) => `${s}: ${v}`).join("; ")}` : "  attainment: not given",
       `  effort: ${p.effort || "not given"}`,
-      p.note?.trim() ? `  teacher's note: ${p.note.trim().slice(0, 600)}` : "",
+      p.note?.trim() ? `  teacher's note: ${p.note.trim().slice(0, 600)}` : "  teacher's note: none",
       p.nextStep?.trim() ? `  teacher's next step: ${p.nextStep.trim().slice(0, 300)}` : "",
     ].filter(Boolean).join("\n");
   });
@@ -92,7 +92,8 @@ ${lines.join("\n")}
 RULES
 - Refer to each pupil only as ${PLACEHOLDER}, exactly like that (for example "${PLACEHOLDER} has worked hard" or "${PLACEHOLDER}'s reading"), with their pronouns. Never invent or use a name.
 - Never state an attainment, a grade or an effort level that is not given above. Where one is given, put it in plain words for parents (for example "is working at the expected standard"), never as a code.
-- Build each report from that pupil's own note: specific, so no two reports read alike. Do not invent achievements, events or difficulties the note does not mention.${subjects.length > 1 ? "\n- Cover each subject listed, briefly, in one flowing comment rather than a list." : ""}
+- Build each report from that pupil's own note: specific, so no two reports read alike. Do not invent achievements, events or difficulties the note does not mention.
+- A pupil whose note is "none": write only what their attainment and effort support, in general terms. Make no claim about particular work, habits, behaviour, interests or difficulties: the teacher has not given any. This comment may be shorter than the length above; never pad it with invented detail.${subjects.length > 1 ? "\n- Cover each subject listed, briefly, in one flowing comment rather than a list." : ""}
 - comment: the report, in the third person, in full sentences.
 - nextStep: ${body.nextSteps === false ? '"" (no next steps this time).' : "one clear, achievable next step for the coming term, using the teacher's next step if one is given, written for parents."}
 - ref: the pupil's reference, exactly as given. One report for every pupil, in the order given.`;

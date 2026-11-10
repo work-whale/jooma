@@ -41,6 +41,7 @@ export function useListJo<T>({
   values,
   commit,
   containerRef,
+  outgoing,
 }: {
   tool: ListTool;
   /** The committed list. */
@@ -48,15 +49,19 @@ export function useListJo<T>({
   commit: (next: T[]) => void;
   /** Wraps the cards, each marked data-jo-item with its position. */
   containerRef: RefObject<HTMLElement | null>;
+  /** Applied to every message before it is sent (useJoSession). */
+  outgoing?: (text: string) => string;
 }) {
   const [ghost, setGhost] = useState<T[] | null>(null);
   const [focus, setFocus] = useState<ListJoFocus | null>(null);
 
   const valuesRef = useRef(values);
   const commitRef = useRef(commit);
+  const outgoingRef = useRef(outgoing);
   useEffect(() => {
     valuesRef.current = values;
     commitRef.current = commit;
+    outgoingRef.current = outgoing;
   });
   const workingRef = useRef<ListItem<T>[] | null>(null);
   /** The turn's items once it ended, so "show me" can still find them. */
@@ -135,6 +140,7 @@ export function useListJo<T>({
       restore(before) {
         if (Array.isArray(before)) commitRef.current(before as T[]);
       },
+      outgoing: (text: string) => (outgoingRef.current ? outgoingRef.current(text) : text),
       reveal(id) {
         const items = lastRef.current ?? toListItems(tool, valuesRef.current);
         if (flashRef.current) window.clearTimeout(flashRef.current);

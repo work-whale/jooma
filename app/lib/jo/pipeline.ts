@@ -24,6 +24,7 @@ import { joSheetResponseFormat } from "./sheet-schema";
 import { joSlidesResponseFormat } from "./slide-schema";
 import { joMarkdownResponseFormat } from "./md-schema";
 import { joListResponseFormat } from "./list-schema";
+import { carriesName } from "@/app/lib/reports/prompt";
 import { JO_MAX_ASKS, joListSystem, joMarkdownSystem, joSheetSystem, joSlidesSystem } from "./prompts";
 import type { JoTurnBody } from "./types";
 
@@ -106,6 +107,17 @@ function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget 
       heading: "THE DOCUMENT NOW (JSON)",
       system: joMarkdownSystem({ canAsk, guest, toolName }),
       response_format: joMarkdownResponseFormat(),
+    };
+  }
+  if (body.kind === "reports") {
+    // Pupils go as numbered reports with [PUPIL]; a snapshot with a name
+    // field in it is refused rather than sent.
+    if (!Array.isArray(snap.items) || snap.items.length === 0 || carriesName(snap)) return null;
+    return {
+      name: "set of class reports",
+      heading: "THE REPORTS NOW (JSON)",
+      system: joListSystem({ canAsk, guest, tool: "reports" }),
+      response_format: joListResponseFormat("reports"),
     };
   }
   if (body.kind === "quiz" || body.kind === "staffSlides") {

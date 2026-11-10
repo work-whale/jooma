@@ -147,6 +147,9 @@ test.describe("the request", () => {
     expect(user).toMatch(/Never invent or use a name/);
     expect(user).not.toMatch(/[–—]/);
     expect(user).not.toMatch(/Amira|Ben/);
+    // A pupil with no note gets a general comment, never invented detail.
+    expect(user).toContain("teacher's note: none");
+    expect(user).toContain('A pupil whose note is "none": write only what their attainment and effort support');
   });
 
   test("next steps off asks for an empty next step", () => {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode, type RefObject } from "react";
 import { Check, Copy, Download, FileText, Loader2, RefreshCw } from "lucide-react";
 import { reportsCsv, reportsMarkdown, type PupilRow, type ReportsDoc } from "@/app/lib/reports/reports";
 import { scrubText, swapIn } from "@/app/lib/reports/privacy";
+import { writtenPupils } from "@/app/lib/reports/jo";
 
 /*
  * The written reports, one card per pupil: the report and the next step,
@@ -52,7 +53,7 @@ function Card({ pupil, nextSteps, busy, onEdit, onRewrite }: { pupil: PupilRow; 
   // what was written.
   const store = (text: string) => scrubText(text, pupil.name, []);
   return (
-    <article className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3" data-testid="report-card" data-status={pupil.status}>
+    <article className="h-full bg-white border border-gray-200 rounded-2xl p-5 space-y-3" data-testid="report-card" data-status={pupil.status}>
       <header className="flex flex-wrap items-center gap-2">
         <h3 className="text-base font-bold text-gray-900 mr-auto">{pupil.name}</h3>
         {pupil.status === "writing" && <span className="flex items-center gap-1 text-xs text-gray-500"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Writing</span>}
@@ -98,14 +99,25 @@ export default function ReportCards({
   saveState,
   onEdit,
   onRewrite,
+  cardsRef,
+  joOverlay,
+  joBusy = false,
 }: {
   doc: ReportsDoc;
   busy: boolean;
   saveState: string | null;
   onEdit: (id: string, patch: Partial<PupilRow>) => void;
   onRewrite: (id: string) => void;
+  /** Wraps the cards, so Ask Jo can find the one it is changing. */
+  cardsRef?: RefObject<HTMLDivElement | null>;
+  /** Jo's ring over that card. */
+  joOverlay?: ReactNode;
+  /** Jo is mid turn: the cards take no edits of their own. */
+  joBusy?: boolean;
 }) {
   const written = doc.pupils.filter((p) => p.comment || p.status !== "pending");
+  // Jo numbers only the pupils with a report written, in order.
+  const joIndex = new Map(writtenPupils(doc.pupils).map((p, i) => [p.id, i]));
   const base = `reports-${(doc.settings.yearGroup || "class").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <section className="bg-stone-50 border border-gray-200 rounded-3xl p-4 sm:p-6 space-y-4" data-testid="report-cards">
@@ -133,10 +145,13 @@ export default function ReportCards({
           <FileText className="w-3.5 h-3.5" /> Word
         </button>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div ref={cardsRef} className={`relative grid gap-4 lg:grid-cols-2${joBusy ? " pointer-events-none" : ""}`}>
         {written.map((p) => (
-          <Card key={p.id} pupil={p} nextSteps={doc.settings.nextSteps} busy={busy} onEdit={(patch) => onEdit(p.id, patch)} onRewrite={() => onRewrite(p.id)} />
+          <div key={p.id} {...(joIndex.has(p.id) ? { "data-jo-item": joIndex.get(p.id) } : {})}>
+            <Card pupil={p} nextSteps={doc.settings.nextSteps} busy={busy || joBusy} onEdit={(patch) => onEdit(p.id, patch)} onRewrite={() => onRewrite(p.id)} />
+          </div>
         ))}
+        {joOverlay}
       </div>
     </section>
   );

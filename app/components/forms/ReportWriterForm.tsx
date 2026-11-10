@@ -39,6 +39,8 @@ import {
 } from "@/app/lib/reports/reports";
 import { scrubForModel } from "@/app/lib/reports/privacy";
 import { legacyReportSeed } from "@/app/lib/reports/legacy";
+import { applyJoReports, scrubChat, toJoReports, type ReportJoItem } from "@/app/lib/reports/jo";
+import { useListJoPanel } from "@/app/components/jo/useListJoPanel";
 
 const TOOL_SLUG = "report-writer";
 
@@ -121,6 +123,32 @@ export default function ReportWriterForm({
   const formState = { ...languageFormState(language), settings };
 
   const serialized = useMemo(() => serializeReports(makeReports(settings, pupils)), [settings, pupils]);
+
+  // ── Ask Jo ──
+  // Jo sees the written reports numbered, with [PUPIL] for every name, and
+  // what the teacher types has names swapped for "pupil 3" before it is sent
+  // (app/lib/reports/jo.ts). No voice: a spoken name would reach the speech
+  // model first. Opens itself when a class has been written.
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const joValues = useMemo(() => toJoReports(pupils, settings), [pupils, settings]);
+  const [joOpenSignal, setJoOpenSignal] = useState(0);
+  const [joWasGenerating, setJoWasGenerating] = useState(isGenerating);
+  if (isGenerating !== joWasGenerating) {
+    setJoWasGenerating(isGenerating);
+    if (!isGenerating) setJoOpenSignal((n) => n + 1);
+  }
+  const jo = useListJoPanel<ReportJoItem>({
+    tool: "reports",
+    values: joValues,
+    commit: (next) => setPupils((ps) => applyJoReports(ps, next, toJoReports(ps, settings))),
+    containerRef: cardsRef,
+    disabled: isGenerating || writing ? "Jo can help as soon as the reports are written" : null,
+    openSignal: joOpenSignal,
+    outgoing: (text) => scrubChat(text, pupils),
+    voice: false,
+  });
+  // While Jo plays a turn, the cards show its working copy.
+  const shownPupils = jo.joBusy ? applyJoReports(pupils, jo.shown, joValues) : pupils;
 
   // Autosave edits and rewrites into the one run, 800 ms after the last
   // change. Never mid-way through a generation: that saves when it ends.
@@ -499,13 +527,21 @@ export default function ReportWriterForm({
       {error && <div className="bg-red-50 border border-red-200 rounded-md p-4 text-sm text-red-700">{error}</div>}
 
       {written && (
-        <ReportCards
-          doc={makeReports(settings, pupils)}
-          busy={isGenerating || writing}
-          saveState={runId ? (saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : saveState === "error" ? "Not saved" : null) : null}
-          onEdit={(id, patch) => setPupils((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)))}
-          onRewrite={rewrite}
-        />
+        <div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <ReportCards
+              doc={makeReports(settings, shownPupils)}
+              busy={isGenerating || writing}
+              saveState={runId ? (saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : saveState === "error" ? "Not saved" : null) : null}
+              onEdit={(id, patch) => setPupils((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)))}
+              onRewrite={rewrite}
+              cardsRef={cardsRef}
+              joOverlay={jo.overlay}
+              joBusy={jo.joBusy}
+            />
+          </div>
+          {jo.panel}
+        </div>
       )}
 
       {legacy && (

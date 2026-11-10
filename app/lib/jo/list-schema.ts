@@ -16,6 +16,9 @@ function op(name: string, properties: Record<string, unknown>) {
 }
 
 function itemSchema(tool: ListTool) {
+  if (tool === "reports") {
+    return strictObject({ pronouns: str, judgements: str, note: str, comment: str, nextStep: str });
+  }
   if (tool === "quiz") {
     return strictObject({
       type: { type: "string", enum: ["single", "multiple", "truefalse"] },
@@ -50,11 +53,12 @@ function itemSchema(tool: ListTool) {
 }
 
 export function joListResponseFormat(tool: ListTool) {
+  // Reports are rewritten only: the class is the grid's to change.
   const ops = [
     op("replaceItem", { itemId: str, item }),
-    op("insertItem", { afterItemId: str, item }),
-    op("deleteItem", { itemId: str }),
-    op("moveItem", { itemId: str, afterItemId: str }),
+    ...(tool === "reports"
+      ? []
+      : [op("insertItem", { afterItemId: str, item }), op("deleteItem", { itemId: str }), op("moveItem", { itemId: str, afterItemId: str })]),
   ];
   const schema = {
     ...strictObject({
@@ -67,6 +71,6 @@ export function joListResponseFormat(tool: ListTool) {
   };
   return {
     type: "json_schema" as const,
-    json_schema: { name: tool === "quiz" ? "jo_quiz_edit" : "jo_staff_slides_edit", strict: true, schema },
+    json_schema: { name: tool === "quiz" ? "jo_quiz_edit" : tool === "reports" ? "jo_reports_edit" : "jo_staff_slides_edit", strict: true, schema },
   };
 }

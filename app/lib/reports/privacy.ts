@@ -20,7 +20,7 @@ function escapeRegExp(s: string): string {
 
 /** A whole word match of `name`, in any case, with or without "'s". Letters
  *  either side (Ali in Alison) do not match. */
-function nameRegExp(name: string): RegExp {
+export function nameRegExp(name: string): RegExp {
   return new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(name)}(?![\\p{L}\\p{N}])`, "giu");
 }
 
