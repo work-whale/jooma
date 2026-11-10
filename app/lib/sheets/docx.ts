@@ -28,7 +28,8 @@ import {
   WidthType,
   type ParagraphChild,
 } from "docx";
-import { answersTitle, answerText, hasAnswersPage, questionNumbers } from "./markdown";
+import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, showsCover } from "./markdown";
+import { levelLabel } from "./model-answers";
 import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
 import { sheetToolProfile } from "./tools";
 import { getSheetTheme } from "./themes";
@@ -121,7 +122,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
   const theme = getSheetTheme(doc.design.themeId);
   const c = theme.colors;
   const size = SIZE[doc.design.fontScale] ?? SIZE.m;
-  const numbers = questionNumbers(doc);
+  const numbers = questionLabels(doc);
   const clocks = phaseClock(doc);
   // Fetched before the document is built: Word embeds the bytes.
   const pictures = new Map<string, WordPicture>();
@@ -426,6 +427,30 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
           ),
           spacer(),
         ];
+      case "exemplar": {
+        const body =
+          b.form === "prose"
+            ? b.parts.map((p) => new Paragraph({ spacing: { after: 100 }, children: runs(p, { size }) }))
+            : b.parts.map((p, i) => new Paragraph({ spacing: { after: 60 }, indent: { left: 360, hanging: 360 }, children: [tr(b.form === "steps" ? `${i + 1}.  ` : "•  ", { bold: true, color: hex(c.heading) }), ...runs(p, { size })] }));
+        return [
+          box(
+            [
+              new Paragraph({ spacing: { after: 100 }, children: [tr(`${levelLabel(b.level)}   `, { bold: true, color: hex(c.heading) }), tr(`${b.awarded} / ${b.outOf} marks`, { color: hex(c.muted) })] }),
+              ...body,
+              ...(b.annotations.length
+                ? [
+                    new Paragraph({ spacing: { before: 120, after: 60 }, children: [tr("Where the marks come from", { bold: true })] }),
+                    ...b.annotations.map((a) => new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: `"${a.quote}"  `, font: FONT, size, italics: true }), ...runs(a.note, { size })] })),
+                  ]
+                : []),
+              ...(b.commentary ? [new Paragraph({ spacing: { before: 100 }, children: [new TextRun({ text: b.commentary, font: FONT, size, italics: true, color: hex(c.muted) })] })] : []),
+            ],
+            hex(b.level === "full" ? c.panel : c.paper),
+            hex(c.line),
+          ),
+          spacer(),
+        ];
+      }
       case "list":
         return [
           ...(b.title ? [new Paragraph({ keepNext: true, spacing: { after: 60 }, children: [tr(b.title, { bold: true, color: hex(c.heading) })] })] : []),
@@ -483,11 +508,27 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
   };
 
   const children: Child[] = [];
-  if (doc.design.nameDate) {
+  // An exam paper opens with its cover, on a page of its own.
+  const cover = showsCover(doc) ? examCover(doc) : null;
+  if (cover) {
+    children.push(
+      para([cover.level, cover.tier].filter(Boolean).join(", ").toUpperCase(), { bold: true, color: hex(c.muted), after: 80 }),
+      new Paragraph({ spacing: { after: 240 }, children: [new TextRun({ text: doc.title || "Exam paper", font: FONT, size: Math.round(size * 2.2), bold: true, color: hex(c.heading) })] }),
+      para(`Time allowed: ${cover.time}`, { bold: true }),
+      para(`Total marks: ${cover.total}`, { bold: true, after: 240 }),
+      new Paragraph({ spacing: { after: 160 }, children: [tr("Name ", { bold: true }), tr("________________________________   "), tr("Class ", { bold: true }), tr("____________")] }),
+      para("Instructions", { bold: true, color: hex(c.heading), after: 60 }),
+      ...cover.instructions.map((i) => new Paragraph({ bullet: { level: 0 }, children: runs(i, { size }) })),
+      ...(cover.disclaimer ? [spacer(), para(cover.disclaimer, { italics: true, color: hex(c.muted), size: size - 4 })] : []),
+      new Paragraph({ children: [new PageBreak()] }),
+    );
+  }
+  // With a cover, the title and the candidate's details are on it already.
+  if (!cover && doc.design.nameDate) {
     children.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 160 }, children: [tr("Name ", { bold: true }), tr("______________________   "), tr("Date ", { bold: true }), tr("______________")] }));
   }
-  if (doc.subtitle) children.push(para(doc.subtitle.toUpperCase(), { bold: true, color: hex(c.muted), size: size - 4, after: 40 }));
-  children.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] }));
+  if (!cover && doc.subtitle) children.push(para(doc.subtitle.toUpperCase(), { bold: true, color: hex(c.muted), size: size - 4, after: 40 }));
+  if (!cover) children.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] }));
   if (doc.objective && showsObjective(doc)) children.push(box([new Paragraph({ children: [tr("Learning objective:  ", { bold: true, color: hex(c.heading) }), ...runs(doc.objective, { size })] })], hex(c.soft), hex(c.soft)), spacer());
   if (doc.intro && showsIntro(doc)) children.push(...block({ id: "intro", type: "callout", ...doc.intro }));
 
@@ -519,7 +560,16 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
         const a = answerText(b);
         const criteria = b.type === "long" ? b.criteria : [];
         if (!a && !criteria.length) continue;
-        children.push(new Paragraph({ spacing: { after: 80 }, children: [tr(`${numbers.get(b.id)}.  `, { bold: true, color: hex(c.heading) }), ...runs(a, { size })] }));
+        children.push(
+          new Paragraph({
+            spacing: { after: 80 },
+            children: [
+              tr(`${numbers.get(b.id)}.  `, { bold: true, color: hex(c.heading) }),
+              ...runs(a, { size }),
+              ...(doc.exam ? [tr(`   [${b.marks} mark${b.marks === 1 ? "" : "s"}]`, { color: hex(c.muted) })] : []),
+            ],
+          }),
+        );
         for (const cr of criteria) children.push(new Paragraph({ bullet: { level: 0 }, children: runs(cr, { size }) }));
         children.push(...solvedGrid(b));
       }

@@ -6,7 +6,7 @@ import { extractHeadings } from "@/app/lib/headings";
 import { paginate, type PageUnit } from "@/app/lib/sheets/paginate";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
-import { answersTitle, answerText, hasAnswersPage, questionNumbers, sheetOutline } from "@/app/lib/sheets/markdown";
+import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, sheetOutline, showsCover } from "@/app/lib/sheets/markdown";
 import { phaseClock } from "@/app/lib/sheets/lesson";
 import { sheetToolProfile } from "@/app/lib/sheets/tools";
 import { showsIntro, showsObjective, showsPictures, visibleNotes } from "@/app/lib/sheets/visibility";
@@ -64,6 +64,7 @@ const CONTENT_TYPES: BlockType[] = ["text", "callout", "wordbank", "passage", "t
 const CONTENT_LABEL: Partial<Record<BlockType, string>> = {
   list: "List",
   phase: "Lesson phase",
+  exemplar: "Model answer",
   image: "Picture",
   text: "Text",
   callout: "Callout box",
@@ -129,7 +130,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   const editing = edit && !streaming && !!onChange;
   const theme = getSheetTheme(doc.design.themeId);
   const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
-  const numbers = useMemo(() => questionNumbers(doc), [doc]);
+  const numbers = useMemo(() => questionLabels(doc), [doc]);
   const clocks = useMemo(() => phaseClock(doc), [doc]);
   const profile = sheetToolProfile(doc.tool);
   const ids = useMemo(() => (anchors ? extractHeadings(sheetOutline(doc)).map((h) => h.id) : []), [doc, anchors]);
@@ -145,7 +146,48 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   // toolbar and patch up here.
   const passageTools = new Map<string, { tools: ReactNode; patch: (p: Partial<SheetBlock>) => void; block: Extract<SheetBlock, { type: "passage" }> }>();
 
-  units.push({
+  // An exam paper opens with a cover page instead of the usual header: the
+  // level and tier, title, time allowed, total marks (worked out from the
+  // questions), the candidate's details, instructions and, for a paper in a
+  // board's style, the line saying it is not an official paper.
+  const cover = showsCover(doc) ? examCover(doc) : null;
+  if (cover) {
+    units.push({
+      key: "cover",
+      height: 0,
+      render: (live) => (
+        <div className="js-cover" data-testid={live ? "exam-cover" : undefined}>
+          <p className="js-cover-level">{[cover.level, cover.tier].filter(Boolean).join(", ")}</p>
+          <EditableText
+            as="h1"
+            className="js-title"
+            value={doc.title}
+            placeholder={streaming ? " " : "Paper title"}
+            editable={editing}
+            onChange={(title) => commit({ ...doc, title })}
+            label="title"
+            {...(live && ids[0] ? { id: ids[0] } : {})}
+          />
+          <div className="js-cover-facts">
+            <span>Time allowed <b>{cover.time}</b></span>
+            <span>Total marks <b data-testid={live ? "exam-total" : undefined}>{cover.total}</b></span>
+          </div>
+          <div className="js-cover-boxes">
+            <span>Name <i /></span>
+            <span>Class <i /></span>
+            <span>Candidate number <i /></span>
+          </div>
+          <div className="js-cover-instructions">
+            <p className="js-cover-heading">Instructions</p>
+            <ul>{cover.instructions.map((i) => <li key={i}>{i}</li>)}</ul>
+          </div>
+          {cover.disclaimer && <p className="js-cover-disclaimer">{cover.disclaimer}</p>}
+        </div>
+      ),
+    });
+  }
+
+  if (!cover) units.push({
     key: "head",
     height: 0,
     render: (live) => (
@@ -384,7 +426,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
           key: `a:${b.id}`,
           height: 0,
           render: () => (
-            <AnswerView q={b} number={numbers.get(b.id) ?? 0} edit={editing} onPatch={(p: Partial<SheetQuestion>) => commit(updateBlock(doc, si, bi, p))} />
+            <AnswerView q={b} number={numbers.get(b.id) ?? ""} edit={editing} showMarks={!!doc.exam} onPatch={(p: Partial<SheetQuestion>) => commit(updateBlock(doc, si, bi, p))} />
           ),
         });
       });
@@ -423,6 +465,9 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
       });
     });
   }
+
+  // The questions start on the page after the cover.
+  if (cover && units.length > 1) units[1].breakBefore = true;
 
   // ── Measuring ───────────────────────────────────────────────────────────
 

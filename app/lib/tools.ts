@@ -141,13 +141,13 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/exam-question-generator": {
     name: "Exam Papers",
-    description: "A full paper for any board and tier.",
+    description: "Practice papers in GCSE and SATs styles, with a mark scheme.",
     category: "assessment",
     icon: "exam",
   },
   "/tools/model-answer-generator": {
     name: "Model Answers",
-    description: "Worked answers at every mark band.",
+    description: "Full marks, middle and near miss answers, annotated.",
     category: "assessment",
     icon: "certificate",
   },

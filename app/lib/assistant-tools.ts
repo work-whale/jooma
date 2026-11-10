@@ -59,6 +59,7 @@
 import { CURRICULA, YEAR_GROUPS } from "@/app/lib/formOptions";
 import { DIFFERENTIATION_VALUES } from "@/app/lib/differentiation";
 import { WORKSHEET_TEMPLATES } from "@/app/lib/sheets/worksheet-templates";
+import { EXAM_STYLES } from "@/app/lib/sheets/exam-styles";
 
 const CURRICULUM_VALUES = CURRICULA.map((c) => c.value);
 
@@ -799,6 +800,19 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         examType: {
           type: "string",
           description: "Exam board or type, e.g. 'GCSE AQA', 'SATs', 'end of unit'.",
+        },
+        examStyle: {
+          type: "string",
+          enum: EXAM_STYLES.map((s) => s.id),
+          description:
+            "The paper's style. " +
+            EXAM_STYLES.map((s) => `${s.id}: ${s.label}`).join("; ") +
+            ". Use a GCSE board only if the teacher names one; school-test for any other test.",
+        },
+        tier: {
+          type: "string",
+          enum: ["foundation", "higher"],
+          description: "GCSE tier, for tiered subjects such as maths and the sciences. Leave out unless the teacher says.",
         },
         numQuestions: {
           type: "integer",

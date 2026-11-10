@@ -32,7 +32,7 @@ import { useSheetPictureDialog } from "./useSheetPictureDialog";
 import type { JoDocRef } from "@/app/lib/jo/threads";
 import { HEADER_STICKY } from "@/app/lib/topbar";
 import { relayoutLesson, timingMismatch } from "@/app/lib/sheets/lesson";
-import { lessonHandoffs } from "@/app/lib/lesson-handoffs";
+import { examHandoffs, lessonHandoffs } from "@/app/lib/lesson-handoffs";
 import Link from "next/link";
 
 /*
@@ -199,7 +199,7 @@ export default function SheetWorkspace({
   // Lesson plans: switch layout without regenerating, and carry the plan
   // into slides, a worksheet or a quiz.
   const onLayout = doc.lesson ? (layout: Parameters<typeof relayoutLesson>[1]) => commit(relayoutLesson(doc, layout)) : undefined;
-  const handoffs = !generating ? lessonHandoffs(doc) : [];
+  const handoffs = !generating ? [...lessonHandoffs(doc), ...examHandoffs(doc, joDocRef?.id)] : [];
   const timing = !generating && !preview ? timingMismatch(doc) : null;
   const pictures = useSheetPictureDialog({ doc, commit });
 
@@ -285,7 +285,7 @@ export default function SheetWorkspace({
       {exportError && <p className="px-6 py-2 text-sm text-red-600 border-b border-gray-200">{exportError}</p>}
       {handoffs.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 border-b border-gray-200" data-testid="lesson-handoffs">
-          <span className="text-xs font-semibold text-gray-500 mr-1">Use this plan to</span>
+          <span className="text-xs font-semibold text-gray-500 mr-1">{doc.exam ? "Next" : "Use this plan to"}</span>
           {handoffs.map((h) => (
             <Link key={h.id} href={h.href} className={btn} data-handoff={h.id}>
               {h.label}

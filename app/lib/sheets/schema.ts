@@ -123,6 +123,9 @@ export interface SheetSchemaOptions {
   passage: boolean;
   /** Offer a picture block: only when the teacher asked for pictures. */
   images?: boolean;
+  /** How many sections there must be. An exam paper sets this, since asking
+   *  for "exactly N questions" in words alone was not always followed. */
+  sectionCount?: { min: number; max: number };
 }
 
 /**
@@ -141,6 +144,17 @@ export function sheetBlockVariants(opts: SheetSchemaOptions): Json[] {
   if (profile.table) content.push(variant("table", { headers: strList, rows: { type: "array", items: strList } }));
   if (profile.extraBlocks.includes("list")) {
     content.push(variant("list", { title: str, style: { type: "string", enum: ["bullet", "number", "check"] }, items: strList }));
+  }
+  if (profile.extraBlocks.includes("exemplar")) {
+    content.push(variant("exemplar", {
+      level: { type: "string", enum: ["full", "mid", "low"] },
+      awarded: int,
+      outOf: int,
+      form: { type: "string", enum: ["prose", "steps", "points"] },
+      parts: strList,
+      annotations: { type: "array", items: obj({ quote: str, note: str }) },
+      commentary: str,
+    }));
   }
   if (profile.extraBlocks.includes("phase")) {
     content.push(variant("phase", {
@@ -175,6 +189,7 @@ export function sheetResponseFormat(opts: SheetSchemaOptions) {
     intro: obj({ variant: { type: "string", enum: ["fact", "remember", "tip", "challenge"] }, label: str, text: str, emoji: str }),
     sections: {
       type: "array",
+      ...(opts.sectionCount ? { minItems: opts.sectionCount.min, maxItems: opts.sectionCount.max } : {}),
       items: obj({ title: str, emoji: str, instructions: str, blocks: { type: "array", items: { anyOf: blocks } } }),
     },
     teacherNotes: { type: "array", items: obj({ title: str, points: strList }) },

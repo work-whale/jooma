@@ -11,11 +11,13 @@ import { cleanMathText } from "@/app/lib/math-text";
 import { seedFrom } from "@/app/lib/seeded-random";
 import { gridLetters, refreshPuzzle, type PuzzleDefaults } from "./puzzles";
 import { sheetToolProfile } from "./tools";
+import { placeAnnotations } from "./model-answers";
 import {
   SHEET_KIND,
   SHEET_VERSION,
   type ImageBlock,
   type LessonMeta,
+  type ExamMeta,
   type SheetBlock,
   type SheetCallout,
   type SheetDesign,
@@ -146,6 +148,21 @@ export function normalizeBlock(raw: unknown, id: string, puzzle?: Partial<Puzzle
         challenge: text(r.challenge),
         ta: text(r.ta),
       };
+    }
+    case "exemplar": {
+      const parts = list(r.parts);
+      if (parts.length === 0) return null;
+      const level = r.level === "mid" || r.level === "low" ? r.level : "full";
+      const outOf = intOf(r.outOf, 0, 60, 0);
+      const form = r.form === "steps" || r.form === "points" ? r.form : "prose";
+      const raw = Array.isArray(r.annotations)
+        ? r.annotations.map((a) => (a && typeof a === "object" ? { quote: text((a as Raw).quote), note: text((a as Raw).note) } : null)).filter((a): a is { quote: string; note: string } => !!a)
+        : [];
+      // A note whose quote is not in the answer cannot point at anything, so
+      // it joins the commentary.
+      const placed = placeAnnotations(parts, raw);
+      const commentary = [text(r.commentary), ...placed.spare].filter(Boolean).join(" ");
+      return { id, type: "exemplar", level, awarded: intOf(r.awarded, 0, outOf || 60, 0), outOf, form, parts, annotations: placed.annotations, commentary };
     }
     case "image": {
       // The model writes what to look for, never where a picture is: `src` is
@@ -297,6 +314,8 @@ export interface NormalizeContext {
   arrange?: (raw: unknown) => unknown;
   /** Lesson plans: kept on the document. */
   lesson?: LessonMeta;
+  /** Exam papers: kept on the document. */
+  exam?: ExamMeta;
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -350,6 +369,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     version: SHEET_VERSION,
     tool: ctx.tool,
     ...(ctx.lesson ? { lesson: ctx.lesson } : {}),
+    ...(ctx.exam ? { exam: ctx.exam } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

@@ -111,6 +111,8 @@ export function newBlock(type: BlockType, puzzle?: PuzzleDefaults): SheetBlock {
     case "wordbank": return { id, type: "wordbank", title: "Word bank", words: ["word", "word", "word"] };
     case "table": return { id, type: "table", headers: ["Heading", "Heading"], rows: [["", ""], ["", ""]] };
     case "list": return { id, type: "list", title: "List", style: "bullet", items: ["Write an item here", "Write an item here"] };
+    case "exemplar":
+      return { id, type: "exemplar", level: "full", awarded: 4, outOf: 4, form: "prose", parts: ["Write the model answer here."], annotations: [], commentary: "" };
     case "phase":
       return {
         id, type: "phase", stage: "main", title: "New phase", minutes: 10,

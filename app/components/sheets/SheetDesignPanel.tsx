@@ -135,7 +135,8 @@ export default function SheetDesignPanel({
         <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />
         <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />
         {doc.intro && <Toggle label={doc.intro.label || "Did you know?"} checked={design.intro !== false} onChange={(intro) => onDesign({ intro })} />}
-        <Toggle label={doc.lesson ? "Quiz answers and notes page" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />
+        {doc.exam && <Toggle label="Cover page" checked={design.cover !== false} onChange={(cover) => onDesign({ cover })} />}
+        <Toggle label={doc.lesson ? "Quiz answers and notes page" : doc.exam ? "Mark scheme" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />
         {hasDiffNote && (
           <Toggle
             label="Differentiation note"

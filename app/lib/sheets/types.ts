@@ -37,6 +37,8 @@ export interface SheetDesign {
   diffNote?: boolean;
   /** The pictures on the sheet. Missing means on. */
   pictures?: boolean;
+  /** An exam paper's cover page. Missing means on. */
+  cover?: boolean;
 }
 
 /** How a lesson plan is laid out (app/lib/sheets/lesson.ts). Both are the
@@ -56,12 +58,25 @@ export interface LessonMeta {
   topic: string;
 }
 
+/** What an exam paper knows about itself: the style it is written in
+ *  (app/lib/sheets/exam-styles.ts), its tier and the time allowed. The total
+ *  marks are always worked out from the questions, never stored. */
+export interface ExamMeta {
+  styleId: string;
+  tier: "" | "foundation" | "higher";
+  minutes: number;
+  subject: string;
+  yearGroup: string;
+}
+
 export interface SheetDoc {
   kind: typeof SHEET_KIND;
   version: number;
   tool: SheetTool;
   /** Lesson plans only. */
   lesson?: LessonMeta;
+  /** Exam papers only. */
+  exam?: ExamMeta;
   title: string;
   /** "Year 5 · Maths", built from the form, not written by the model. */
   subtitle: string;
@@ -234,7 +249,21 @@ export type SheetQuestion =
   | LongQuestion | CalcQuestion | OrderQuestion | WordOrderQuestion | PictureQuestion | LabelQuestion
   | SortQuestion | WordSearchQuestion | CrosswordQuestion;
 
-export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ImageBlock | SheetQuestion;
+/** One model answer to an exam question, at a level: the answer itself (as
+ *  prose, numbered steps or points), the marks it would get, and notes tying
+ *  phrases in it to the mark scheme. */
+export interface ExemplarBlock extends BlockBase {
+  type: "exemplar";
+  level: "full" | "mid" | "low";
+  awarded: number;
+  outOf: number;
+  form: "prose" | "steps" | "points";
+  parts: string[];
+  annotations: { quote: string; note: string }[];
+  commentary: string;
+}
+
+export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ExemplarBlock | ImageBlock | SheetQuestion;
 
 export type QuestionType = SheetQuestion["type"];
 export type BlockType = SheetBlock["type"];

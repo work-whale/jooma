@@ -11,7 +11,7 @@ import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
 import type { SheetDoc } from "@/app/lib/sheets/types";
 
 export interface LessonHandoff {
-  id: "slides" | "worksheet" | "quiz";
+  id: "slides" | "worksheet" | "quiz" | "modelAnswers";
   label: string;
   href: string;
 }
@@ -57,4 +57,16 @@ export function lessonHandoffs(doc: SheetDoc): LessonHandoff[] {
     const prefill = validatePrefill({ slug: c.slug, fields: c.fields });
     return prefill ? [{ id: c.id, label: c.label, href: prefillHref(prefill) }] : [];
   });
+}
+
+/**
+ * "Write model answers" on an exam paper: opens Model Answers with the paper's
+ * questions ready to pick. By the run's id rather than a prefill, so a whole
+ * paper fits (a prefill is capped at a few hundred characters a field) and the
+ * paper is read back through the teacher's own access to it. Offered once the
+ * paper is saved.
+ */
+export function examHandoffs(doc: SheetDoc, runId: string | null | undefined): LessonHandoff[] {
+  if (!doc.exam || !runId) return [];
+  return [{ id: "modelAnswers", label: "Write model answers", href: `/tools/model-answer-generator?from=${encodeURIComponent(runId)}` }];
 }

@@ -403,21 +403,20 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Model Answer Generator for Teachers",
     h1: "AI model answer generator for exam questions",
     description:
-      "Paste an exam question and get a model answer pitched at the marks, with annotated teacher notes on criteria, technique and common errors.",
+      "Model answers to exam questions at full marks, a middle mark and a near miss, each annotated with where the marks come from. Up to eight questions at once.",
     intro:
-      "Jooma's AI model answer generator writes a model answer to any exam question you give it, pitched at the marks available. Paste in your mark scheme for a closer match. Alongside the answer you get annotated teacher notes on what earns the marks, common errors and how to use it in class.",
+      "Jooma's AI model answer generator writes model answers to your exam questions at the levels you choose: full marks, a middle answer and a near miss. Each is annotated with the phrases that earn marks, so pupils see the difference. Paste in your mark scheme for a closer match, or start from a Jooma exam paper.",
     steps: [
-      "Choose your curriculum, year group and subject, and paste the exam question.",
-      "Set the total marks, from 1 to 50, and add your mark scheme or any guidelines if you have them.",
-      "Get the model answer with teacher notes. Ask for a stronger or simpler version, then download it as PDF or Word.",
+      "Choose your curriculum, year group and subject, and add up to eight questions with their marks, or open it from an exam paper.",
+      "Choose the answers to write and add your mark scheme if you have one.",
+      "Get annotated answers on printable pages, edit them or ask Jo, then download as PDF or Word.",
     ],
     features: [
-      "A model answer in continuous prose, with its length matched to the marks",
-      "Teacher notes on the assessment criteria, content coverage and skills shown",
-      "What separates a full mark answer from a near miss",
-      "Common errors to warn pupils about",
-      "Three ideas for using it in class, including peer and self assessment",
-      "Versions that score more or fewer marks, on request",
+      "Answers at full marks, a middle mark and a near miss, side by side",
+      "Notes showing which phrases earn which marks",
+      "Working set out step by step for calculations, prose for extended writing",
+      "What separates a full mark answer from the rest, and the errors to watch for",
+      "Up to eight questions in one go, or straight from an exam paper",
     ],
     uk: {
       heading: "Written for UK exam questions",
@@ -434,7 +433,7 @@ export const TOOL_PAGES: ToolPage[] = [
       },
       {
         q: "Can I get a weaker answer to compare?",
-        a: "Yes. Ask for a version that scores fewer marks, which is useful for showing pupils what separates a good answer from a great one.",
+        a: "Yes. Choose a middle answer and a near miss alongside the full marks one, each with the marks it would get and why.",
       },
       { q: "Can I edit the answer?", a: editAnswer },
     ],
@@ -1118,24 +1117,25 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Exam Question Generator for Teachers",
     h1: "AI exam question generator with mark schemes",
     description:
-      "Create an exam style paper on any topic: up to 20 questions rising in marks and difficulty, with an optional indicative mark scheme.",
+      "Practice exam papers in GCSE board, KS2 SATs or school test style: a cover, questions with marks and answer space, and a mark scheme.",
     intro:
-      "Jooma's AI exam question generator writes an exam style paper on any topic. Choose how many questions and the range of marks, and the questions rise from recall to evaluation. Add a mark scheme with answers, mark points and marking notes, ready to check and adapt for your class.",
+      "Jooma's AI exam question generator writes a practice paper on any topic, set out the way the paper you choose is: a GCSE board's style, the Key Stage 2 tests, or a school test. It comes as printable pages with a cover, numbered questions and parts, marks and answer lines, and a mark scheme on its own pages.",
     steps: [
-      "Choose the curriculum, year group, subject and topic, and say what style of exam it should follow, such as GCSE.",
+      "Choose the paper style (GCSE board, KS2 SATs or a school test), the tier where it applies, the year group, subject and topic.",
       "Set the number of questions, up to 20, and the minimum and maximum marks per question.",
-      "Get the paper, with a mark scheme if you want one, ready to edit and download as PDF or Word.",
+      "Get the paper with its cover and mark scheme, edit it on the page or ask Jo, then download it as PDF or Word or write model answers for it.",
     ],
     features: [
-      "Up to 20 questions, rising in marks and difficulty from recall to evaluation",
-      "Marks per question within the range you set",
-      "Instructions and a total marks figure",
-      "An optional mark scheme with answers, mark points and marking notes",
-      "The knowledge and skills you name, covered by the questions",
+      "Up to 20 questions in parts, numbered 1(a), 1(b), rising in demand",
+      "A cover page with the time allowed, instructions and the total marks",
+      "Answer lines and working space sized to the marks",
+      "A mark scheme with answers, mark points and levels for extended answers",
+      "Foundation or Higher tier for tiered GCSE subjects",
+      "Model answers for any question, in one click",
     ],
     uk: {
       heading: "In the style of UK exams",
-      body: "Name the exam style, such as GCSE, A level or Functional Skills, and it writes in that style. It is not tied to one exam board, so check the paper and the mark scheme against your board's specification.",
+      body: "Choose a GCSE board's style (AQA, Pearson Edexcel, OCR or WJEC Eduqas), the Key Stage 2 tests or a school test for any year. The questions are always new, so check them and the mark scheme against your board's specification.",
     },
     faqs: [
       {
@@ -1148,7 +1148,7 @@ export const TOOL_PAGES: ToolPage[] = [
       },
       {
         q: "Does it leave space for answers?",
-        a: "Not yet. Download it as Word and add answer lines where you want them.",
+        a: "Yes. Each question gets answer lines, or working space for a calculation, sized to its marks.",
       },
       { q: "Can I edit the paper?", a: editAnswer },
     ],

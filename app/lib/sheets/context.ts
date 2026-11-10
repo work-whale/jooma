@@ -33,6 +33,11 @@ export interface SheetRequestInfo {
   /** Lesson plans: the layout and the lesson's length in minutes. */
   layout?: string;
   lessonLength?: number;
+  /** Exam papers: the style (app/lib/sheets/exam-styles.ts), the tier and
+   *  the time allowed in minutes. */
+  examStyle?: string;
+  tier?: string;
+  minutes?: number;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -54,6 +59,7 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     puzzle: puzzleDefaults(info.yearGroup, info.band),
     ...(profile.arrange ? { arrange: (raw: unknown) => profile.arrange!(raw, info) } : {}),
     ...(profile.lessonMeta ? { lesson: profile.lessonMeta(info) } : {}),
+    ...(profile.examMeta ? { exam: profile.examMeta(info) } : {}),
     leadingSections:
       profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

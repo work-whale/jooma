@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  ExemplarBlock,
   ImageBlock,
   LessonLayout,
   ListBlock,
@@ -24,6 +25,7 @@ import { answerText } from "@/app/lib/sheets/markdown";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "@/app/lib/sheets/puzzles";
 import { EditableText, Rich } from "./rich";
 import { clockText, PHASE_FIELDS, phaseFieldLabel, stageLabel } from "@/app/lib/sheets/lesson";
+import { levelLabel } from "@/app/lib/sheets/model-answers";
 
 /*
  * How each block looks on the page. The same components draw the page on
@@ -39,7 +41,8 @@ const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 export interface BlockProps {
   block: SheetBlock;
   /** The question's number on the sheet, for questions. */
-  number?: number;
+  /** What the question is called: "3", or on an exam paper "2(b)". */
+  number?: number | string;
   edit: boolean;
   design: SheetDesign;
   onPatch: (patch: Partial<SheetBlock>) => void;
@@ -79,6 +82,8 @@ export function BlockView(props: BlockProps) {
       return <ImageView block={block} edit={edit} onPicture={props.onPicture} />;
     case "list":
       return <ListView block={block} edit={edit} onPatch={onPatch} />;
+    case "exemplar":
+      return <ExemplarView block={block} edit={edit} onPatch={onPatch} />;
     case "phase":
       return <PhaseView block={block} edit={edit} onPatch={onPatch} clock={props.clock} layout={props.layout} />;
     case "passage":
@@ -212,7 +217,9 @@ function QuestionCard({ block, number, edit, onPatch }: BlockProps & { block: Sh
   const patch = onPatch as (p: Partial<SheetQuestion>) => void;
   return (
     <div className="js-q" data-type={block.type}>
-      <span className="js-num">{number}</span>
+      {/* A part label such as "2(b)" is wider than the badge's circle: it gets
+          room either side so none of it falls off the coloured shape. */}
+      <span className="js-num" {...(String(number ?? "").length > 2 ? { "data-long": "" } : {})}>{number}</span>
       <div className="js-q-body">
         <p className="js-prompt">
           {block.marks > 0 && (
@@ -650,12 +657,13 @@ function Labels({ q, edit, onPatch }: { q: LabelQuestion; edit: boolean; onPatch
 
 /** The answer page's line for one question: plain text, with the text answers
  *  editable while editing. */
-export function AnswerView({ q, number, edit, onPatch }: { q: SheetQuestion; number: number; edit: boolean; onPatch: (p: Partial<SheetQuestion>) => void }) {
+export function AnswerView({ q, number, edit, onPatch, showMarks = false }: { q: SheetQuestion; number: number | string; edit: boolean; onPatch: (p: Partial<SheetQuestion>) => void; showMarks?: boolean }) {
   const editableAnswer = q.type === "short" || q.type === "long" || q.type === "calc" || q.type === "wordorder";
   return (
     <div className="js-answer">
       <span className="js-answer-n">{number}</span>
-      <div>
+      <div style={{ flex: 1 }}>
+        {showMarks && <span className="js-marks">{q.marks} {q.marks === 1 ? "mark" : "marks"}</span>}
         {editableAnswer ? (
           <EditableText
             value={(q as { answer: string }).answer}
@@ -797,6 +805,62 @@ export function PhaseView({ block, edit, onPatch, clock, layout }: { block: Phas
           );
         })}
       </dl>
+    </div>
+  );
+}
+
+/**
+ * A model answer at a level: a header band with the level and its marks, the
+ * answer (prose, numbered steps or points), then the notes tying its phrases
+ * to the mark scheme and a line of commentary.
+ */
+export function ExemplarView({ block, edit, onPatch }: { block: ExemplarBlock; edit: boolean; onPatch: (p: Partial<ExemplarBlock>) => void }) {
+  const Tag = block.form === "steps" ? "ol" : "ul";
+  return (
+    <div className="js-exemplar" data-level={block.level}>
+      <div className="js-exemplar-head">
+        <span className="js-exemplar-level">{levelLabel(block.level)}</span>
+        <span className="js-exemplar-marks">
+          {edit ? (
+            <EditableText
+              value={String(block.awarded)}
+              editable
+              onChange={(v) => { const n = parseInt(v, 10); if (Number.isFinite(n)) onPatch({ awarded: Math.max(0, Math.min(block.outOf || 60, n)) }); }}
+              label="marks awarded"
+            />
+          ) : (
+            block.awarded
+          )}{" "}
+          / {block.outOf} marks
+        </span>
+      </div>
+      <div className="js-exemplar-body">
+        {block.form === "prose" ? (
+          block.parts.map((p, i) => (
+            <EditableText key={i} as="p" value={p} editable={edit} multiline onChange={(v) => onPatch({ parts: v ? block.parts.map((x, j) => (j === i ? v : x)) : block.parts.filter((_, j) => j !== i) })} label="answer paragraph" />
+          ))
+        ) : (
+          <Tag>
+            <EditableItems items={block.parts} edit={edit} onChange={(parts) => onPatch({ parts })} label="answer step" add="Another step" />
+          </Tag>
+        )}
+      </div>
+      {block.annotations.length > 0 && (
+        <div className="js-exemplar-notes">
+          <p className="js-exemplar-notes-title">Where the marks come from</p>
+          <ul>
+            {block.annotations.map((a, i) => (
+              <li key={i}>
+                <span className="js-quote">&ldquo;{a.quote}&rdquo;</span>{" "}
+                <EditableText value={a.note} editable={edit} multiline onChange={(note) => onPatch({ annotations: note ? block.annotations.map((x, j) => (j === i ? { ...x, note } : x)) : block.annotations.filter((_, j) => j !== i) })} label="mark note" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {(block.commentary || edit) && (
+        <EditableText as="p" className="js-exemplar-comment" value={block.commentary} placeholder="Add a comment on this answer" editable={edit} multiline onChange={(commentary) => onPatch({ commentary })} label="commentary" />
+      )}
     </div>
   );
 }
