@@ -16,7 +16,15 @@ function op(name: string, properties: Record<string, unknown>) {
 }
 
 function itemSchema(tool: ListTool) {
-  if (tool === "quiz") return strictObject({ question: str, options: strList, correctIndex: int });
+  if (tool === "quiz") {
+    return strictObject({
+      type: { type: "string", enum: ["single", "multiple", "truefalse"] },
+      question: str,
+      options: strList,
+      answers: { type: "array", items: int },
+      explanation: str,
+    });
+  }
   return strictObject({
     type: { type: "string", enum: ["title", "content", "quote", "stat", "two-column", "activity"] },
     title: str,

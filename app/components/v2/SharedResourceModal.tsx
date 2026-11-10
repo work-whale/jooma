@@ -6,7 +6,7 @@ import { Check, X } from "@phosphor-icons/react/dist/ssr";
 import MarkdownResult from "@/app/components/MarkdownResult";
 import SheetDocument from "@/app/components/sheets/SheetDocument";
 import { OutlineRail } from "@/app/components/OutputOutline";
-import { parseSheet } from "@/app/lib/sheets/normalize";
+import { printableSheet } from "@/app/lib/printable";
 import { primaryOutput } from "@/app/lib/bands";
 import { sheetOutline } from "@/app/lib/sheets/markdown";
 import { ToolTile } from "@/app/components/v2/Squircle";
@@ -202,9 +202,12 @@ function SharedResourceDialog({
    * still loading, so a slideshow shows its notice straight away rather than a
    * spinner that resolves into one.
    */
-  const structured = isStructuredOutput(slug, output ?? undefined);
+  // A quiz is drawn as its printable version below; only decks (and a quiz
+  // that will not read) keep the notice. While a quiz loads, "Opening" shows.
+  const quizSlug = slug === "quiz-generator";
   // A designed Worksheet or Comprehension: drawn as its pages, read only.
-  const sheet = useMemo(() => parseSheet(output), [output]);
+  const sheet = useMemo(() => printableSheet(slug, output), [slug, output]);
+  const structured = isStructuredOutput(slug, output ?? undefined) && !(quizSlug && (output === null || sheet));
 
   const add = async () => {
     if (view.kind !== "share") return;

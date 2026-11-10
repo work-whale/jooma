@@ -5,6 +5,7 @@ import {
   createTeacher,
   deleteTeacher,
   seedResource,
+  setPlan,
   signIn,
   type TestTeacher,
 } from "../support/users";
@@ -104,6 +105,9 @@ test.describe("Deleting a resource", () => {
 
   test.beforeEach(async () => {
     teacher = await createTeacher("Dara");
+    // A teacher with no plan is locked to the free tools since the no-card
+    // trial (1 Nov 2026), so these pages would not appear.
+    await setPlan(teacher, "pro", "comped");
   });
 
   test.afterEach(async () => {

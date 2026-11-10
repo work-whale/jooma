@@ -17,8 +17,8 @@ import type { ListOp } from "@/app/lib/jo/types";
  */
 
 const QUIZ = [
-  { question: "What is 2 + 2?", options: ["3", "4", "5", "6"] as [string, string, string, string], correctIndex: 1 },
-  { question: "What is 3 x 3?", options: ["6", "8", "9", "12"] as [string, string, string, string], correctIndex: 2 },
+  { type: "single" as const, question: "What is 2 + 2?", options: ["3", "4", "5", "6"], answers: [1], explanation: "" },
+  { type: "single" as const, question: "What is 3 x 3?", options: ["6", "8", "9", "12"], answers: [2], explanation: "" },
 ];
 
 const DECK = [
@@ -29,11 +29,13 @@ const DECK = [
 const op = <T extends ListOp>(o: T) => o;
 
 test.describe("items Jo writes", () => {
-  test("a question needs a stem, exactly four options and one right answer", () => {
-    expect(normalizeQuizQuestion({ question: " Q? ", options: ["a", "b", "c", "d"], correctIndex: 3 })).toEqual({ question: "Q?", options: ["a", "b", "c", "d"], correctIndex: 3 });
-    expect(normalizeQuizQuestion({ question: "Q?", options: ["a", "b", "c"], correctIndex: 0 })).toBeNull();
-    expect(normalizeQuizQuestion({ question: "Q?", options: ["a", "b", "c", "d"], correctIndex: 4 })).toBeNull();
-    expect(normalizeQuizQuestion({ question: "", options: ["a", "b", "c", "d"], correctIndex: 0 })).toBeNull();
+  test("a question needs a stem, options and a right answer that is one of them", () => {
+    expect(normalizeQuizQuestion({ type: "single", question: " Q? ", options: ["a", "b", "c", "d"], answers: [3], explanation: "" })).toEqual({ type: "single", question: "Q?", options: ["a", "b", "c", "d"], answers: [3], explanation: "" });
+    expect(normalizeQuizQuestion({ type: "single", question: "Q?", options: ["a"], answers: [0], explanation: "" })).toBeNull();
+    expect(normalizeQuizQuestion({ type: "single", question: "Q?", options: ["a", "b", "c", "d"], answers: [4], explanation: "" })).toBeNull();
+    expect(normalizeQuizQuestion({ type: "single", question: "", options: ["a", "b", "c", "d"], answers: [0], explanation: "" })).toBeNull();
+    // A question saved before question types still reads.
+    expect(normalizeQuizQuestion({ question: "Q?", options: ["a", "b", "c", "d"], correctIndex: 2 })).toMatchObject({ type: "single", answers: [2] });
   });
 
   test("a slide keeps only filled fields, a known type, and the deck's title", () => {
@@ -52,10 +54,10 @@ test.describe("applyListOp", () => {
     const items = toListItems("quiz", QUIZ);
     expect(items.map((it) => it.id)).toEqual(["q1", "q2"]);
 
-    const replaced = applyListOp("quiz", items, op({ op: "replaceItem", label: "x", itemId: "q1", item: { question: "What is 1 + 1?", options: ["1", "2", "3", "4"], correctIndex: 1 } }))!;
-    expect(replaced.items[0]).toEqual({ id: "q1", value: { question: "What is 1 + 1?", options: ["1", "2", "3", "4"], correctIndex: 1 } });
+    const replaced = applyListOp("quiz", items, op({ op: "replaceItem", label: "x", itemId: "q1", item: { type: "single", question: "What is 1 + 1?", options: ["1", "2", "3", "4"], answers: [1], explanation: "" } }))!;
+    expect(replaced.items[0]).toEqual({ id: "q1", value: { type: "single", question: "What is 1 + 1?", options: ["1", "2", "3", "4"], answers: [1], explanation: "" } });
 
-    const inserted = applyListOp("quiz", items, op({ op: "insertItem", label: "x", afterItemId: "q1", item: { question: "What is 5 - 1?", options: ["3", "4", "5", "6"], correctIndex: 1 } }), "fixed")!;
+    const inserted = applyListOp("quiz", items, op({ op: "insertItem", label: "x", afterItemId: "q1", item: { type: "single", question: "What is 5 - 1?", options: ["3", "4", "5", "6"], answers: [1], explanation: "" } }), "fixed")!;
     expect(inserted.items.map((it) => it.id)).toEqual(["q1", "fixed", "q2"]);
     expect(inserted.focus).toBe("fixed");
 
@@ -72,7 +74,7 @@ test.describe("applyListOp", () => {
   test("an op that does not fit does nothing", () => {
     const items = toListItems("quiz", QUIZ);
     expect(applyListOp("quiz", items, op({ op: "replaceItem", label: "x", itemId: "q9", item: QUIZ[0] }))).toBeNull();
-    expect(applyListOp("quiz", items, op({ op: "replaceItem", label: "x", itemId: "q1", item: { question: "Q", options: ["a"], correctIndex: 0 } }))).toBeNull();
+    expect(applyListOp("quiz", items, op({ op: "replaceItem", label: "x", itemId: "q1", item: { type: "single", question: "Q", options: ["a"], answers: [0], explanation: "" } }))).toBeNull();
     expect(applyListOp("quiz", [items[0]], op({ op: "deleteItem", label: "x", itemId: "q1" }))).toBeNull();
     expect(applyListOp("quiz", items, op({ op: "moveItem", label: "x", itemId: "q1", afterItemId: "q9" }))).toBeNull();
   });
@@ -88,7 +90,9 @@ test.describe("applyListOp", () => {
   test("each tool's answer is strict and carries its own item", () => {
     const quiz = JSON.stringify(joListResponseFormat("quiz"));
     const deck = JSON.stringify(joListResponseFormat("staffSlides"));
-    expect(quiz).toContain('"correctIndex"');
+    expect(quiz).toContain('"answers"');
+    expect(quiz).toContain('"truefalse"');
+    expect(quiz).not.toContain('"correctIndex"');
     expect(quiz).not.toContain('"activityPrompt"');
     expect(deck).toContain('"activityPrompt"');
     expect(joListResponseFormat("quiz").json_schema.strict).toBe(true);

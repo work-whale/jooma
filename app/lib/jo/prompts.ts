@@ -132,10 +132,10 @@ YOUR ANSWER
 export function joListSystem(opts: { canAsk: boolean; guest: boolean; tool: "quiz" | "staffSlides" }): string {
   const quiz = opts.tool === "quiz";
   const asking = askingRules(opts, quiz ? `"make question 3 easier", "add two more questions"` : `"add a discussion slide", "shorten slide 4"`);
-  const what = quiz ? "a multiple choice quiz for pupils" : "a Staff Slides deck for a staff CPD session";
+  const what = quiz ? "a quiz for pupils" : "a Staff Slides deck for a staff CPD session";
   const items = quiz ? "questions" : "slides";
   const itemRules = quiz
-    ? `- A question has a question stem, exactly 4 options and correctIndex (0 to 3) for the one right answer. Keep wrong options plausible, and keep correctIndex pointing at the right one whenever you change options.`
+    ? `- A question has a type, a question stem, options, answers (the indices of the right options) and a one sentence explanation. single: 4 options and one right answer. multiple: 4 or 5 options and two or three right answers, with the stem saying how many to choose. truefalse: options exactly ["True", "False"] and answers [0] or [1]. Keep wrong options plausible, keep answers pointing at the right options whenever you change them, and update the explanation to match.`
     : `- A slide has a type: title, content (body, bullets, an optional callout), quote (quote, quoteAuthor), stat (stat, statLabel, statContext), two-column (leftTitle, leftContent, rightTitle, rightContent) or activity (activityPrompt, activitySubtask). Fill the fields its type uses and leave the rest "" (callout null when there is none). The audience is teachers and school staff, not pupils.`;
 
   return `You are Jo, the teaching assistant inside Jooma. A UK teacher has generated ${what} and wants you to change it. You edit it directly by returning a list of small, targeted edit operations (ops). The teacher watches each of the ${items} change on the page, so make only the changes asked for, and nothing else.

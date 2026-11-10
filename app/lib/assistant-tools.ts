@@ -313,7 +313,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "Quiz Generator",
     icon: "quiz",
     description:
-      "A multiple-choice quiz, exportable to Kahoot, Blooket, Gimkit and others. " +
+      "A quiz (multiple choice and true or false) to present on the board, print, or export to Kahoot, Blooket, Gimkit and others. " +
       "Use for 'quiz', 'multiple choice', or 'test them on X'.",
     fields: {
       type: "object",
@@ -323,11 +323,25 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           type: "string",
           description: "What the quiz covers, e.g. 'Multiplication'.",
         },
+        // Matches the form: 1 to 20 to start with, 5 by default.
         numQuestions: {
           type: "integer",
           minimum: 1,
-          maximum: 30,
-          description: "How many questions. Defaults to 10.",
+          maximum: 20,
+          description: "How many questions. Defaults to 5.",
+        },
+        answerType: {
+          type: "string",
+          enum: ["single", "multiple", "truefalse", "mixed"],
+          description:
+            "single: one right answer (the default). multiple: more than one right answer. " +
+            "truefalse: true or false statements. mixed: a mix of all three. Leave out unless the teacher asks.",
+        },
+        timeLimit: {
+          type: "integer",
+          minimum: 5,
+          maximum: 300,
+          description: "Seconds per question when the quiz is presented. Defaults to 30.",
         },
       },
       required: ["subject", "topic"],

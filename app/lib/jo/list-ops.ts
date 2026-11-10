@@ -3,7 +3,7 @@
 // op vocabulary; what an item may hold is checked per tool, the same way the
 // generators check what the model sends them.
 
-import type { QuizQuestion } from "@/app/api/quiz-generator/route";
+import { normalizeQuizItem, type QuizItem } from "@/app/lib/quiz/quiz";
 import type { SlideData } from "@/app/api/cpd-slideshow/route";
 import type { ListOp } from "./types";
 
@@ -17,16 +17,10 @@ export interface ListItem<T> {
 type Raw = Record<string, unknown>;
 const str = (v: unknown): string => (typeof v === "string" ? v.replace(/\s+$/, "").trim() : "");
 
-/** A question with four options and one right answer, or null. */
-export function normalizeQuizQuestion(raw: unknown): QuizQuestion | null {
-  if (!raw || typeof raw !== "object") return null;
-  const r = raw as Raw;
-  const question = str(r.question);
-  const options = Array.isArray(r.options) ? r.options.map(str) : [];
-  if (!question || options.length !== 4 || options.some((o) => !o)) return null;
-  const correct = typeof r.correctIndex === "number" && Number.isInteger(r.correctIndex) ? r.correctIndex : -1;
-  if (correct < 0 || correct > 3) return null;
-  return { question, options: options as [string, string, string, string], correctIndex: correct };
+/** A quiz question (one answer, several, or true or false), or null. The
+ *  same check the generator uses (app/lib/quiz/quiz.ts). */
+export function normalizeQuizQuestion(raw: unknown): QuizItem | null {
+  return normalizeQuizItem(raw);
 }
 
 const SLIDE_TYPES: SlideData["type"][] = ["title", "content", "quote", "stat", "two-column", "activity"];
