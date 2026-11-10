@@ -177,4 +177,6 @@ test("LIVE: the real model writes only the body, invents nothing it was not give
   // Nothing about what the cost covers or how they travel: neither was given.
   expect(all).not.toMatch(/covers?\s+(the\s+)?(cost of\s+)?(transport|travel|coach|entry|admission)/i);
   expect(all).not.toMatch(/\bcoach\b/i);
+  // Paragraph 1 comes before the details table, so it never points at it.
+  expect(paragraphs[0]).not.toMatch(/\b(above|below)\b|\btable\b/i);
 });

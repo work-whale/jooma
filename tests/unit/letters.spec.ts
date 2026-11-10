@@ -166,6 +166,8 @@ test.describe("what the model is sent", () => {
     expect(t).toContain("Never invent a date, a time, a cost, a name");
     expect(t).toContain("Do not write a date, an address, a salutation");
     expect(t).not.toContain("Refer to the child only as");
+    // The table comes after paragraph 1, so paragraph 1 never points at it.
+    expect(t).toContain('Paragraph 1 must not mention the table or any details "above" or "below"');
     expect(o).toContain(`Refer to the child only as ${PLACEHOLDER}`);
     expect(o).toContain(`To: the parent or carer of ${PLACEHOLDER}`);
     expect(o).toContain("never mention a sanction or exclusion that is not in the facts");
