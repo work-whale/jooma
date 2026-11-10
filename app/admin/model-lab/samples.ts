@@ -10,7 +10,7 @@
 // __labModel / __labEffort / __labVerbosity on top before posting.
 //
 // Coverage is chosen to span the range where terra's economics flip: short
-// output (letter-writer, 2k) through to the longest (lesson-planner, 8k).
+// output (letter-writer, 2.5k) through to the longest (lesson-planner, 8k).
 
 export interface LabTool {
   slug: string;
@@ -26,13 +26,26 @@ export const LAB_TOOLS: LabTool[] = [
   {
     slug: "letter-writer",
     label: "Letter writer",
-    maxTokens: 2000,
-    note: "Shortest output. Plain prose, no structure — the easiest case for a cheap model.",
+    maxTokens: 2500,
+    note: "Shortest output: a subject and a few paragraphs. Tests sticking to the facts and leaving out what the page adds.",
     body: {
-      recipient: "parents",
+      type: "trip",
+      recipient: "Parents and carers",
       tone: "Semi-formal",
-      content:
-        "Year 4 trip to the Natural History Museum on Tuesday 14 May. Coach leaves school at 8:45am and returns by 4:15pm. Cost is £8.50 per pupil, payable via ParentPay by 7 May. Pupils need a packed lunch, a coat, and school uniform. Two parent helpers are still needed — please contact the school office.",
+      date: "2027-04-30",
+      facts: [
+        { label: "Who is going", value: "Year 4" },
+        { label: "Where", value: "the Natural History Museum" },
+        { label: "Date of the trip", value: "Tuesday 14 May 2027" },
+        { label: "Leaving school", value: "8.45am" },
+        { label: "Back at school", value: "4.15pm" },
+        { label: "Cost", value: "£8.50" },
+        { label: "How to pay", value: "ParentPay" },
+        { label: "What to bring", value: "A coat and school uniform" },
+        { label: "Lunch", value: "A packed lunch" },
+        { label: "Reply by", value: "Tuesday 7 May 2027" },
+        { label: "Why we are going", value: "To see the fossils as part of our Rocks and Soils topic. Two parent helpers are still needed." },
+      ],
     },
   },
   {

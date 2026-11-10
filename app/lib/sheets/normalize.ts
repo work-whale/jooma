@@ -18,6 +18,7 @@ import {
   type ImageBlock,
   type LessonMeta,
   type ExamMeta,
+  type LetterMeta,
   type SheetBlock,
   type SheetCallout,
   type SheetDesign,
@@ -316,6 +317,8 @@ export interface NormalizeContext {
   lesson?: LessonMeta;
   /** Exam papers: kept on the document. */
   exam?: ExamMeta;
+  /** Letters: kept on the document. */
+  letter?: LetterMeta;
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -370,6 +373,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     tool: ctx.tool,
     ...(ctx.lesson ? { lesson: ctx.lesson } : {}),
     ...(ctx.exam ? { exam: ctx.exam } : {}),
+    ...(ctx.letter ? { letter: ctx.letter } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

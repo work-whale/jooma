@@ -13,6 +13,7 @@ import { DEFAULT_SHEET_THEME } from "./themes";
 import { puzzleDefaults } from "./puzzles/level";
 import { sheetToolProfile } from "./tools";
 import type { SheetTool } from "./types";
+import type { LetterInfo } from "./letter";
 
 export interface SheetRequestInfo {
   yearGroup?: string;
@@ -38,6 +39,9 @@ export interface SheetRequestInfo {
   examStyle?: string;
   tier?: string;
   minutes?: number;
+  /** Letters: the type, recipient, sender, date and facts. The names in it
+   *  (recipient, sender, child) stay in the browser. */
+  letter?: LetterInfo;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -60,6 +64,7 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     ...(profile.arrange ? { arrange: (raw: unknown) => profile.arrange!(raw, info) } : {}),
     ...(profile.lessonMeta ? { lesson: profile.lessonMeta(info) } : {}),
     ...(profile.examMeta ? { exam: profile.examMeta(info) } : {}),
+    ...(profile.letterMeta && info.letter ? { letter: profile.letterMeta(info.letter) } : {}),
     leadingSections:
       profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

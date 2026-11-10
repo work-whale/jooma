@@ -33,7 +33,8 @@ import { levelLabel } from "./model-answers";
 import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
 import { sheetToolProfile } from "./tools";
 import { getSheetTheme } from "./themes";
-import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
+import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "./visibility";
+import { formatLetterDate } from "./letter";
 import { sheetImages } from "./normalize";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "./puzzles";
 import { isQuestion, type ImageBlock, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
@@ -523,17 +524,30 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
       new Paragraph({ children: [new PageBreak()] }),
     );
   }
+  // A letter: school and date on the right, the salutation and "Re:" line.
+  const letter = doc.letter;
+  if (letter) {
+    if (letter.school) children.push(para(letter.school, { bold: true, color: hex(c.heading), align: AlignmentType.RIGHT, after: 40 }));
+    children.push(para(formatLetterDate(letter.date), { align: AlignmentType.RIGHT, after: 280 }));
+    children.push(para(letter.salutation, { after: 200 }));
+    children.push(new Paragraph({ spacing: { after: 200 }, children: [tr("Re: ", { bold: true, color: hex(c.heading) }), tr(doc.title, { bold: true, color: hex(c.heading) })] }));
+  }
   // With a cover, the title and the candidate's details are on it already.
-  if (!cover && doc.design.nameDate) {
+  if (!cover && !letter && doc.design.nameDate) {
     children.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 160 }, children: [tr("Name ", { bold: true }), tr("______________________   "), tr("Date ", { bold: true }), tr("______________")] }));
   }
-  if (!cover && doc.subtitle) children.push(para(doc.subtitle.toUpperCase(), { bold: true, color: hex(c.muted), size: size - 4, after: 40 }));
-  if (!cover) children.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] }));
+  if (!cover && !letter && doc.subtitle) children.push(para(doc.subtitle.toUpperCase(), { bold: true, color: hex(c.muted), size: size - 4, after: 40 }));
+  if (!cover && !letter) children.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] }));
   if (doc.objective && showsObjective(doc)) children.push(box([new Paragraph({ children: [tr("Learning objective:  ", { bold: true, color: hex(c.heading) }), ...runs(doc.objective, { size })] })], hex(c.soft), hex(c.soft)), spacer());
   if (doc.intro && showsIntro(doc)) children.push(...block({ id: "intro", type: "callout", ...doc.intro }));
 
   for (const s of doc.sections) {
     const title = `${theme.look.emoji && s.emoji ? `${s.emoji}  ` : ""}${s.title}`;
+    // A letter's paragraphs sit under no heading.
+    if (letter && !s.title) {
+      for (const b of s.blocks) children.push(...block(b));
+      continue;
+    }
     children.push(
       new Paragraph({
         keepNext: true,
@@ -545,6 +559,27 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
     );
     if (s.instructions) children.push(para(s.instructions, { italics: true, color: hex(c.muted) }));
     for (const b of s.blocks) children.push(...block(b));
+  }
+
+  if (letter) {
+    children.push(para(letter.signOff, { after: 720 }));
+    if (letter.senderName) children.push(para(letter.senderName, { bold: true, after: 20 }));
+    if (letter.senderRole) children.push(para(letter.senderRole, { color: hex(c.muted) }));
+    const slip = letter.slip;
+    if (slip && showsSlip(doc)) {
+      children.push(
+        new Paragraph({
+          keepNext: true,
+          spacing: { before: 480, after: 160 },
+          border: { top: { style: BorderStyle.DASHED, size: 12, color: hex(c.muted), space: 8 } },
+          children: [tr("Cut here and return to school", { color: hex(c.muted) })],
+        }),
+        new Paragraph({ keepNext: true, spacing: { after: 100 }, children: [tr(slip.title, { bold: true, color: hex(c.heading) })] }),
+        ...(slip.returnBy ? [new Paragraph({ keepNext: true, spacing: { after: 100 }, children: [tr("Please return by: ", { bold: true }), tr(slip.returnBy)] })] : []),
+        new Paragraph({ keepNext: true, spacing: { after: 160 }, children: runs(slip.statement, { size }) }),
+        ...slip.fields.map((f, i) => new Paragraph({ keepNext: i < slip.fields.length - 1, spacing: { before: 200, after: 0 }, children: [tr(`${f}  `, { bold: true }), tr("______________________________________")] })),
+      );
+    }
   }
 
   if (hasAnswersPage(doc)) {

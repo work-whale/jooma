@@ -9,7 +9,8 @@ import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes
 import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, sheetOutline, showsCover } from "@/app/lib/sheets/markdown";
 import { phaseClock } from "@/app/lib/sheets/lesson";
 import { sheetToolProfile } from "@/app/lib/sheets/tools";
-import { showsIntro, showsObjective, showsPictures, visibleNotes } from "@/app/lib/sheets/visibility";
+import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "@/app/lib/sheets/visibility";
+import { formatLetterDate } from "@/app/lib/sheets/letter";
 import { puzzleDefaultsFromSubtitle } from "@/app/lib/sheets/puzzles";
 import { PUZZLE_LEVELS } from "@/app/lib/sheets/types";
 import {
@@ -187,7 +188,33 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     });
   }
 
-  if (!cover) units.push({
+  // A letter opens with its letterhead: the school and date, the salutation
+  // and the "Re:" line (the title). All built in code, all editable.
+  const letter = doc.letter;
+  const setLetter = (patch: Partial<NonNullable<SheetDoc["letter"]>>) => letter && commit({ ...doc, letter: { ...letter, ...patch } });
+  if (letter) {
+    units.push({
+      key: "letter-head",
+      height: 0,
+      render: (live) => (
+        <div className="js-letter-head" data-testid={live ? "letter-head" : undefined}>
+          <div className="js-letter-top">
+            {(letter.school || editing) && (
+              <EditableText className="js-letter-school" value={letter.school} placeholder="School name" editable={editing} onChange={(school) => setLetter({ school })} label="school name" />
+            )}
+            <EditableText className="js-letter-date" value={formatLetterDate(letter.date)} placeholder="Date" editable={editing} onChange={(date) => setLetter({ date })} label="date" />
+          </div>
+          <EditableText as="p" className="js-letter-salutation" value={letter.salutation} placeholder="Dear..." editable={editing} onChange={(salutation) => setLetter({ salutation })} label="salutation" />
+          <p className="js-letter-re" {...(live && ids[0] ? { id: ids[0] } : {})}>
+            <b>Re: </b>
+            <EditableText value={doc.title} placeholder={streaming ? " " : "What the letter is about"} editable={editing} onChange={(title) => commit({ ...doc, title })} label="subject" />
+          </p>
+        </div>
+      ),
+    });
+  }
+
+  if (!cover && !letter) units.push({
     key: "head",
     height: 0,
     render: (live) => (
@@ -251,7 +278,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   }
 
   doc.sections.forEach((s, si) => {
-    units.push({
+    // A letter's paragraphs sit under no heading.
+    if (!(letter && !s.title && !s.instructions)) units.push({
       key: `sh:${s.id}`,
       height: 0,
       keepWithNext: s.blocks.length > 0,
@@ -364,8 +392,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         height: 0,
         render: (live) => (
           <div className="js-add-row">
-            <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "question" })}>+ Add question</button>
-            <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "content" })}>+ Add text or box</button>
+            {!letter && <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "question" })}>+ Add question</button>}
+            <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "content" })}>{letter ? "+ Add paragraph or box" : "+ Add text or box"}</button>
             {live && menu?.si === si && (
               <AddMenu
                 kind={menu.kind}
@@ -398,6 +426,54 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         </div>
       ),
     });
+  }
+
+  // A letter ends with its sign-off and, for a trip, the tear-off slip.
+  if (letter) {
+    units.push({
+      key: "letter-signoff",
+      height: 0,
+      render: (live) => (
+        <div className="js-letter-signoff" data-testid={live ? "letter-signoff" : undefined}>
+          <EditableText as="p" value={letter.signOff} placeholder="Yours sincerely," editable={editing} onChange={(signOff) => setLetter({ signOff })} label="sign-off" />
+          <div className="js-letter-signature" aria-hidden="true" />
+          {(letter.senderName || editing) && (
+            <EditableText as="p" className="js-letter-sender" value={letter.senderName} placeholder="Your name" editable={editing} onChange={(senderName) => setLetter({ senderName })} label="your name" />
+          )}
+          {(letter.senderRole || editing) && (
+            <EditableText as="p" className="js-letter-role" value={letter.senderRole} placeholder="Your role" editable={editing} onChange={(senderRole) => setLetter({ senderRole })} label="your role" />
+          )}
+        </div>
+      ),
+    });
+    const slip = letter.slip;
+    if (slip && showsSlip(doc)) {
+      const setSlip = (patch: Partial<typeof slip>) => setLetter({ slip: { ...slip, ...patch } });
+      units.push({
+        key: "letter-slip",
+        height: 0,
+        render: (live) => (
+          <div className="js-slip" data-testid={live ? "reply-slip" : undefined}>
+            <p className="js-slip-cut" aria-hidden="true">✂ Cut here and return to school</p>
+            <EditableText as="h3" className="js-slip-title" value={slip.title} placeholder="Reply slip" editable={editing} onChange={(title) => setSlip({ title })} label="slip title" />
+            {(slip.returnBy || editing) && (
+              <p className="js-slip-return">
+                <b>Please return by: </b>
+                <EditableText value={slip.returnBy} placeholder="Date" editable={editing} onChange={(returnBy) => setSlip({ returnBy })} label="return by" />
+              </p>
+            )}
+            <EditableText as="p" className="js-slip-statement" value={slip.statement} placeholder="I give permission..." editable={editing} multiline onChange={(statement) => setSlip({ statement })} label="slip statement" />
+            <div className="js-slip-fields">
+              {slip.fields.map((f) => (
+                <span key={f}>
+                  {f} <i />
+                </span>
+              ))}
+            </div>
+          </div>
+        ),
+      });
+    }
   }
 
   if (showAnswers) {

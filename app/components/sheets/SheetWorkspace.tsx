@@ -136,7 +136,9 @@ export default function SheetWorkspace({
     commit,
     containerRef: pagesRef,
     docRef: joDocRef,
-    disabled: generating ? "Jo can help as soon as this is finished" : null,
+    // A letter about a named child keeps Jo off, so the name never reaches
+    // a model.
+    disabled: generating ? "Jo can help as soon as this is finished" : doc.letter?.pupil ? "Jo is off for a letter about a named child, so the name stays private. Edit the letter on the page." : null,
     openSignal,
   });
   const busy = generating || jo.joBusy;

@@ -39,6 +39,8 @@ export interface SheetDesign {
   pictures?: boolean;
   /** An exam paper's cover page. Missing means on. */
   cover?: boolean;
+  /** A letter's reply slip. Missing means on. */
+  slip?: boolean;
 }
 
 /** How a lesson plan is laid out (app/lib/sheets/lesson.ts). Both are the
@@ -69,6 +71,34 @@ export interface ExamMeta {
   yearGroup: string;
 }
 
+/** A letter's tear-off reply slip, built in code (app/lib/sheets/letter.ts). */
+export interface ReplySlip {
+  title: string;
+  /** "I give permission for my child to go on the trip to..." */
+  statement: string;
+  /** The lines to fill in: "Child's name", "Signature"... */
+  fields: string[];
+  /** "Friday 5 March 2027", or "" when no date was given. */
+  returnBy: string;
+}
+
+/** What a letter knows about itself beyond its paragraphs: everything built
+ *  in code rather than written by the model, all editable on the page. */
+export interface LetterMeta {
+  type: "trip" | "attendance" | "behaviour" | "general";
+  /** "2026-11-10", printed as "10 November 2026". */
+  date: string;
+  salutation: string;
+  signOff: string;
+  senderName: string;
+  senderRole: string;
+  school: string;
+  /** The child a letter is about, by first name. Ask Jo is off while it is
+   *  set, so the name never reaches a model. */
+  pupil: string;
+  slip: ReplySlip | null;
+}
+
 export interface SheetDoc {
   kind: typeof SHEET_KIND;
   version: number;
@@ -77,6 +107,8 @@ export interface SheetDoc {
   lesson?: LessonMeta;
   /** Exam papers only. */
   exam?: ExamMeta;
+  /** Letters only. The title is the "Re:" line. */
+  letter?: LetterMeta;
   title: string;
   /** "Year 5 · Maths", built from the form, not written by the model. */
   subtitle: string;

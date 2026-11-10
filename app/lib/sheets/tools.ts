@@ -10,14 +10,16 @@
 // Pure and free of React: read by the API routes, the stream reader and the
 // browser alike.
 
-import type { ExamMeta, LessonMeta, QuestionType, SheetDesign } from "./types";
+import type { ExamMeta, LessonMeta, LetterMeta, QuestionType, SheetDesign } from "./types";
+import type { ThemeFamily } from "@/app/lib/slideshowThemes";
 import type { SheetRequestInfo } from "./context";
 import { templateById } from "./worksheet-templates";
 import { arrangeLesson, DEFAULT_LESSON_LAYOUT, isLessonLayout, lessonMinutes } from "./lesson";
 import { arrangeExam, EXAM_STYLES, examStyle, tierOf } from "./exam-styles";
 import { arrangeModelAnswers } from "./model-answers";
+import { arrangeLetter, letterMetaFor, type LetterInfo } from "./letter";
 
-export const SHEET_TOOLS = ["worksheet", "comprehension", "lesson", "exam", "modelAnswer"] as const;
+export const SHEET_TOOLS = ["worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter"] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
 export function isSheetTool(v: unknown): v is SheetTool {
@@ -76,6 +78,10 @@ export interface SheetToolProfile {
   examMeta?: (info: SheetRequestInfo) => ExamMeta;
   /** Added to the end of the subtitle, after the year and subject. */
   subtitleSuffix?: (info: SheetRequestInfo) => string;
+  /** Letters: the date, salutation, sign-off and reply slip, built in code. */
+  letterMeta?: (info: LetterInfo) => LetterMeta;
+  /** The theme families the Design panel offers. Missing: all of them. */
+  themeFamilies?: ThemeFamily[];
 }
 
 const ANSWERS_NOTE = "For the teacher. Remove this page before handing the sheet out, or switch it off in Design.";
@@ -274,6 +280,40 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
       "- Each section is one exam question (its text and marks are in the section's instructions). Its exemplar blocks are model answers at a level: full (full marks), mid or low (a near miss), each with awarded and outOf marks, the answer as parts (paragraphs, steps or points), annotations quoting a phrase from the answer with the mark scheme point it earns, and a line of commentary.\n" +
       "- Keep awarded marks honest for what the answer contains, never above outOf. An annotation's quote must be words that appear in the answer.",
     arrange: (raw) => arrangeModelAnswers(raw),
+  },
+  letter: {
+    slug: "letter-writer",
+    joName: "letter to parents",
+    docLabel: "letter",
+    joStarters: [
+      "Make it shorter",
+      "Make the tone warmer",
+      "Make the first paragraph clearer",
+      "Add a line about who to contact with questions",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    // A letter is printed plainly: no name lines, objective, hook or answers.
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a letter from a school, usually to parents and carers. The title is the \"Re:\" line. The letter's paragraphs are text blocks; a table block holds a trip's details. The date, the salutation (\"Dear...\"), the sign-off and the reply slip are printed by the page, so never write them into a paragraph.\n" +
+      "- Keep it clear and plain for parents, in short paragraphs. Never invent a date, a time, a cost, a name or a consequence that is not already in the letter.",
+    arrange: (raw, info) => arrangeLetter(raw, info.letter),
+    letterMeta: letterMetaFor,
+    themeFamilies: ["professional", "basic"],
   },
 };
 

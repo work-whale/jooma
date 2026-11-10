@@ -8,6 +8,7 @@ import type { LessonLayout, SheetDesign, SheetDoc } from "@/app/lib/sheets/types
 import { LESSON_LAYOUTS } from "@/app/lib/sheets/lesson";
 import { sheetImages } from "@/app/lib/sheets/normalize";
 import { hasDifferentiationNote, showsPictures } from "@/app/lib/sheets/visibility";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
 
 /*
  * The Design panel: a sheet's theme, text size and page setup. Every change is
@@ -45,6 +46,10 @@ export default function SheetDesignPanel({
   const hasPassage = doc.sections.some((s) => s.blocks.some((b) => b.type === "passage"));
   const hasDiffNote = hasDifferentiationNote(doc);
   const images = sheetImages(doc);
+  // A letter is offered the plain themes only: a letter home in bubblegum
+  // pink does the school no favours.
+  const families = THEME_FAMILIES.filter((f) => sheetToolProfile(doc.tool).themeFamilies?.includes(f.id) ?? true);
+  const letter = !!doc.letter;
 
   return (
     <aside className="flex flex-col gap-5 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm" aria-label="Design" data-testid="sheet-design-panel">
@@ -77,8 +82,8 @@ export default function SheetDesignPanel({
 
       <section className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Theme</p>
-        <div role="tablist" aria-label="Theme style" className="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-xl">
-          {THEME_FAMILIES.map((f) => (
+        <div role="tablist" aria-label="Theme style" className={`grid ${families.length === 2 ? "grid-cols-2" : "grid-cols-3"} gap-1 p-1 bg-gray-100 rounded-xl`}>
+          {families.map((f) => (
             <button
               key={f.id}
               type="button"
@@ -132,11 +137,12 @@ export default function SheetDesignPanel({
             </button>
           ))}
         </div>
-        <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />
-        <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />
+        {!letter && <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />}
+        {!letter && <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />}
+        {doc.letter?.slip && <Toggle label="Reply slip" checked={design.slip !== false} onChange={(slip) => onDesign({ slip })} />}
         {doc.intro && <Toggle label={doc.intro.label || "Did you know?"} checked={design.intro !== false} onChange={(intro) => onDesign({ intro })} />}
         {doc.exam && <Toggle label="Cover page" checked={design.cover !== false} onChange={(cover) => onDesign({ cover })} />}
-        <Toggle label={doc.lesson ? "Quiz answers and notes page" : doc.exam ? "Mark scheme" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />
+        {!letter && <Toggle label={doc.lesson ? "Quiz answers and notes page" : doc.exam ? "Mark scheme" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />}
         {hasDiffNote && (
           <Toggle
             label="Differentiation note"

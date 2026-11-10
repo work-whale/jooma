@@ -19,11 +19,11 @@ export default async function LetterWriterPage({
           icon={<Mail className="w-5 h-5 text-rose-600" />}
 
           title="Letter Writer"
-          description="This tool can be used to write letters to parents, or other recipients. Simply indicate who the letter is to, provide a brief summary of content and required tone. The AI will then draft the letter for you."
+          description="Letters home on designed pages. Pick the kind of letter and give the facts: the date, greeting, sign-off, trip details and consent slip are added for you, and nothing is made up."
           steps={[
-            { label: "Specify the recipient and tone", detail: "Indicate who the letter is to and the tone you need." },
-            { label: "Provide content details", detail: "Provide as much information as possible for the letter." },
-            { label: "Generate", detail: "Get a drafted letter for school events, trips, or general information sharing." },
+            { label: "Pick the kind of letter", detail: "A trip, one child's attendance or behaviour, or anything else." },
+            { label: "Give the facts", detail: "Dates, times and costs exactly as they should appear. A child's name stays in your browser." },
+            { label: "Check, then print or send", detail: "Edit anything on the page, then print it, save a PDF or download it for Word." },
           ]}
         />
       }

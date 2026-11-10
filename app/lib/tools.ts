@@ -205,7 +205,7 @@ export const V2_META: Record<string, V2Meta> = {
   // Communication
   "/tools/letter-writer": {
     name: "Letters",
-    description: "Parents, staff or governors, in your tone.",
+    description: "Trips, attendance, behaviour and more.",
     category: "communication",
     icon: "envelope-simple",
   },
@@ -518,7 +518,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/letter-writer",
     icon: "letter-writer",
     label: "Letter Writer",
-    description: "Draft letters to parents, staff, governors, or any recipient — simply provide the key information and tone and the AI will write it for you.",
+    description: "Letters home on designed pages: trips with a consent slip, attendance, behaviour or anything else, from your facts.",
     tag: "Leadership",
   },
   {

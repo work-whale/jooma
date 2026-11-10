@@ -7,7 +7,8 @@ import { isSheetOutput } from "./normalize";
 import { parsePartialJson } from "./stream";
 import { isBandSetOutput } from "@/app/lib/bands";
 import { isQuestion, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
-import { showsIntro, showsObjective, showsPictures, visibleNotes } from "./visibility";
+import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "./visibility";
+import { formatLetterDate } from "./letter";
 import { clueText, directionName, sortBank, sortRows } from "./puzzles";
 import { sheetToolProfile } from "./tools";
 import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
@@ -268,6 +269,8 @@ export function hasAnswersPage(doc: SheetDoc): boolean {
  * derives from this same string, so the rail's links land on them.
  */
 export function sheetOutline(doc: SheetDoc): string {
+  // A letter has one heading: its "Re:" line.
+  if (doc.letter) return `# ${doc.title || "Letter"}`;
   return [
     `# ${doc.title || "Worksheet"}`,
     ...doc.sections.map((s) => `## ${s.title || "Section"}`),
@@ -275,7 +278,37 @@ export function sheetOutline(doc: SheetDoc): string {
   ].join("\n");
 }
 
+/** A letter as text: letterhead, paragraphs, sign-off and reply slip. */
+function letterMarkdown(doc: SheetDoc): string {
+  const l = doc.letter!;
+  const out: string[] = [];
+  if (l.school) out.push(`**${l.school}**`);
+  out.push(formatLetterDate(l.date), l.salutation, `**Re: ${doc.title}**`);
+  for (const s of doc.sections) {
+    if (s.title) out.push(`## ${s.title}`);
+    for (const b of s.blocks) {
+      const md = blockMarkdown(b, undefined, doc);
+      if (md) out.push(md);
+    }
+  }
+  // The sign-off, then room for a signature, then the name and role on lines
+  // of their own (a markdown hard break is two spaces before the newline).
+  out.push(l.signOff, [l.senderName, l.senderRole].filter(Boolean).join("  \n"));
+  if (l.slip && showsSlip(doc)) {
+    out.push(
+      "---",
+      "*Cut here and return to school*",
+      `### ${l.slip.title}`,
+      ...(l.slip.returnBy ? [`**Please return by:** ${l.slip.returnBy}`] : []),
+      l.slip.statement,
+      ...l.slip.fields.map((f) => `${f}: ______________________________`),
+    );
+  }
+  return out.filter((p) => p !== "").join("\n\n");
+}
+
 export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {}): string {
+  if (doc.letter) return letterMarkdown(doc);
   const numbers = questionLabels(doc);
   const clocks = phaseClock(doc);
   const out: string[] = [`# ${doc.title || "Worksheet"}`];

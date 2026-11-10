@@ -76,6 +76,10 @@ function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget 
   if (body.kind === "sheet") {
     const tool = snap.tool;
     if (!Array.isArray(snap.sections) || !isSheetTool(tool)) return null;
+    // A letter about a named child never goes to a model: the page keeps Jo
+    // off for it, and this refuses one sent anyway.
+    const letter = snap.letter && typeof snap.letter === "object" ? (snap.letter as Record<string, unknown>) : null;
+    if (typeof letter?.pupil === "string" && letter.pupil.trim()) return null;
     return {
       name: sheetToolProfile(tool).joName,
       heading: "THE SHEET NOW (JSON)",
