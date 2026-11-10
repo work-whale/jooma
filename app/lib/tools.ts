@@ -153,7 +153,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/report-writer": {
     name: "Reports",
-    description: "Pupil reports from a few quick notes.",
+    description: "A class of reports from a quick grid.",
     category: "assessment",
     icon: "scroll",
   },
@@ -399,7 +399,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/report-writer",
     icon: "report",
     label: "Report Writer",
-    description: "Generate personalised pupil reports from strengths, areas for development, and targets across multiple subjects.",
+    description: "End of term reports for a whole class, from a judgement, effort and a short note for each pupil.",
     tag: "Assessment",
   },
   {

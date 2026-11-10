@@ -58,38 +58,38 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Report Writer for UK Teachers",
     h1: "AI report writer for school reports",
     description:
-      "Turn your notes on strengths, areas to develop and targets into a personalised school report, subject by subject, in your tone. Built for UK teachers.",
+      "Write end of term reports for your whole class from a quick grid: a judgement, effort and a short note for each pupil. Built for UK teachers.",
     intro:
-      "Jooma's AI report writer turns your notes into a finished school report. Add a pupil's first name, then their strengths, areas for development and targets for each subject. It writes a personal paragraph for every subject in the tone and length you choose, ready for you to check and edit.",
+      "Jooma's AI report writer turns a class grid into finished school reports. Add each pupil's first name, a judgement on your school's scale, their effort and a short note, and it writes a personal report and a next step for every pupil, ready for you to check, edit and copy into your school's system.",
     steps: [
-      "Add the pupil's first name and gender, so the pronouns are right, then choose the length and the tone, such as formal, warm or encouraging.",
-      "For each subject, up to ten, note what they do well, what to work on and their next steps.",
-      "Get a report with a paragraph per subject and an optional target for each. Refine it, then download it as PDF or Word.",
+      "Choose the year group and the subjects, then the scale you report on: working towards, expected or greater depth at primary, a GCSE grade or below, on or above target at secondary.",
+      "Fill a row per pupil, up to 40: first name, pronouns, a judgement, effort and a note on what to mention. Paste the names straight from your register.",
+      "Get a report and a next step for every pupil. Edit any of them, rewrite one, then copy them one by one or download them all as CSV or Word.",
     ],
     features: [
-      "A paragraph for every subject, written from your notes rather than stock phrases",
-      "A target for each subject, or none if you prefer",
-      "Any length from 50 to 1,000 words",
-      "Your choice of tone, from formal to warm",
-      "Changes in a sentence, such as make it more formal",
-      "Download as PDF or Word, print it, or copy it into your school's system",
+      "A whole class at once, up to 40 pupils",
+      "Each report built from your own note, so no two read alike",
+      "Never states a grade or a judgement you did not give it",
+      "Short, standard or long, in a warm, formal, encouraging or concise tone",
+      "A next step for every pupil, or none if you prefer",
+      "Copy one at a time, or download the class as CSV or Word",
     ],
     uk: {
       heading: "Written the way UK reports are read",
-      body: "Reports follow the shape parents expect from a UK school: what the pupil does well, what to work on, and a clear next step. Jooma only asks for a first name, and you should not enter any other personal details about the pupil.",
+      body: "Reports follow the shape parents expect from a UK school: what the pupil does well, what to work on, and a clear next step. Pupils' names stay in your browser: each pupil is sent as a number, and first names from your class are taken out of your notes first.",
     },
     faqs: [
       {
         q: "Can it write reports for a whole class at once?",
-        a: "Not yet. It writes one pupil's report at a time, covering up to ten subjects in one go.",
+        a: "Yes. Fill in a row for each pupil, up to 40, and it writes them all, a few at a time, so you can start reading the first ones while the rest are written.",
       },
       {
         q: "Will every report sound the same?",
-        a: "No. Each paragraph is written from the strengths and areas for development you give it, and generic praise is left out. The more specific your notes, the more personal the report.",
+        a: "No. Each report is written from that pupil's own note and judgements, and generic praise is left out. The more specific your notes, the more personal the report.",
       },
       {
         q: "Is it safe to use with pupil information?",
-        a: "Enter a first name only. Do not enter surnames, dates of birth or other personal details. Your reports are stored in the UK.",
+        a: "Pupils' names are never sent: each pupil goes as a number, and first names from your class are taken out of your notes before anything leaves your browser. Do not type surnames, dates of birth or other personal details into a note. Your reports are stored in the UK.",
       },
       { q: "Can I edit the report?", a: editAnswer },
     ],

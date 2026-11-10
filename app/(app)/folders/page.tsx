@@ -943,11 +943,9 @@ function ResourceItem({
       // A designed Worksheet or Comprehension builds its own, styled document.
       // Of a set of differentiated versions, the first.
       // A quiz builds its printable version, answer key included.
-      const [{ printableSheet }, { primaryOutput }] = await Promise.all([
-        import("@/app/lib/printable"),
-        import("@/app/lib/bands"),
-      ]);
-      const output = primaryOutput(run.output);
+      // A class's reports download as their text, names in.
+      const { printableSheet, readableOutput } = await import("@/app/lib/printable");
+      const output = readableOutput(run.output);
       const sheet = printableSheet(run.tool_slug, run.output, run.input);
       if (sheet) {
         const [{ buildSheetDocx }, { triggerDownload }] = await Promise.all([

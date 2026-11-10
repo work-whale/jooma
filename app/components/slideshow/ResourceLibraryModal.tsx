@@ -5,9 +5,8 @@ import { X, ChevronLeft, Loader2, Folder, FileText, Presentation } from "lucide-
 import { listRecentRuns, type ToolRun } from "@/app/lib/toolRuns";
 import { listPresentations, getPresentation, type PresentationListItem } from "@/app/lib/presentations";
 import { TOOLS } from "@/app/lib/tools";
-import { primaryOutput } from "@/app/lib/bands";
 import { sheetToMarkdown } from "@/app/lib/sheets/markdown";
-import { printableSheet } from "@/app/lib/printable";
+import { printableSheet, readableOutput } from "@/app/lib/printable";
 
 const SLIDESHOW_SLUG = "__slideshows__";
 
@@ -96,7 +95,8 @@ export default function ResourceLibraryModal({
     // A designed sheet or a quiz is JSON; the lesson material is its text.
     // Of a set of differentiated versions, the first.
     const sheet = printableSheet(run.tool_slug, run.output, run.input);
-    onSelect(sheet ? sheetToMarkdown(sheet) : primaryOutput(run.output), run.title || folder?.label || "Tool output");
+    // A class's reports go without pupils' names: this text is sent to a model.
+    onSelect(sheet ? sheetToMarkdown(sheet) : readableOutput(run.output, { forModel: true }), run.title || folder?.label || "Tool output");
     onClose();
   };
 

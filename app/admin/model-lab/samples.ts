@@ -68,31 +68,34 @@ export const LAB_TOOLS: LabTool[] = [
     slug: "report-writer",
     label: "Report writer",
     maxTokens: 4096,
-    note: "Structured input, personalised output. Tests pronoun handling and named-pupil consistency.",
+    note: "Two pupils as references. Tests pronouns, the [PUPIL] placeholder and no invented attainment.",
     body: {
-      name: "Amelia",
-      gender: "Female",
-      wordCount: 150,
-      includeTargets: true,
-      tone: "Warm and encouraging",
-      subjects: [
+      yearGroup: "Year 4",
+      subjects: ["Maths", "English"],
+      scale: "primary",
+      length: "standard",
+      tone: "encouraging",
+      nextSteps: true,
+      // References, never names: the form swaps names out before sending.
+      pupils: [
         {
-          subject: "Mathematics",
-          strengths:
-            "Confident with written methods for addition and subtraction. Explains reasoning clearly during class discussion.",
-          areasForDevelopment:
-            "Finds multi-step word problems difficult, particularly deciding which operation to use.",
-          targets: "To identify the correct operation in two-step word problems independently.",
+          ref: "p1",
+          pronouns: "she",
+          attainment: { Maths: "Expected standard", English: "Greater depth" },
+          effort: "Excellent",
+          note: "Confident with written methods for addition and subtraction and explains her reasoning clearly. Finds two-step word problems hard. Reads widely and recommends books to a classmate.",
+          nextStep: "Identify the operation in two-step word problems on her own.",
         },
         {
-          subject: "English",
-          strengths:
-            "Vocabulary is rich and adventurous. Reads widely and recommends books to classmates.",
-          areasForDevelopment:
-            "Handwriting is inconsistent when writing at length, and paragraphs are not always used.",
-          targets: "To use paragraphs to organise writing into clear sections.",
+          ref: "p2",
+          pronouns: "he",
+          attainment: { Maths: "Working towards", English: "Expected standard" },
+          effort: "Inconsistent",
+          note: "Times tables much improved since the autumn. Handwriting is inconsistent at length and he rarely uses paragraphs. Loved the Romans topic.",
+          nextStep: "",
         },
       ],
+      chunkIndex: 0,
     },
   },
   {
