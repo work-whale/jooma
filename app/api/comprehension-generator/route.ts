@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { comprehensionMessages, type GenerateRequest } from "@/app/lib/comprehension-prompt";
 import { bandUsageStep } from "@/app/lib/differentiation";
+import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
 
 export type { GenerateRequest };
@@ -23,8 +24,9 @@ export async function POST(req: NextRequest) {
     toolSlug: "comprehension-generator",
     ...lab,
     // A model lab run keeps its own step; otherwise a band's extra versions
-    // are tagged so they do not count as more generations.
-    step: lab.step ?? bandUsageStep(body.band, body.bandIndex),
+    // are tagged so they do not count as more generations, within the
+    // teacher's budget of band versions (app/lib/follow-on.ts).
+    step: lab.step ?? (await confirmFollowOn("comprehension-generator", bandUsageStep(body.band, body.bandIndex))),
     // A passage and its questions as JSON: more headroom than the markdown had.
     max_completion_tokens: 8000,
     messages: built.messages,

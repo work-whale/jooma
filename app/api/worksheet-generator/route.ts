@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { worksheetRequest, type WorksheetRequest } from "@/app/lib/worksheet-prompt";
 import { bandUsageStep } from "@/app/lib/differentiation";
+import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
 
 export type { WorksheetRequest };
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "worksheet-generator",
-    step: bandUsageStep(body.band, body.bandIndex),
+    step: await confirmFollowOn("worksheet-generator", bandUsageStep(body.band, body.bandIndex)),
     ...(await modelFor("worksheet-generator", "gpt-4o")),
     // JSON carries more tokens than the markdown it replaced; a 40 question
     // sheet with its answers needs the headroom.

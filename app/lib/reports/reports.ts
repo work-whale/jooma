@@ -132,7 +132,9 @@ export function chunk<T>(items: T[], size = CHUNK_SIZE): T[][] {
 /**
  * The `step` a request is recorded under: only the first request for a class
  * counts as a generation. Like a differentiated set's bands, the rest are part
- * of the same piece of work. A rewrite of one report is an edit.
+ * of the same piece of work. A rewrite of one report is an edit. These are
+ * the browser's claims, so the route keeps them only within the teacher's
+ * follow-up budget (confirmFollowOn, app/lib/follow-on.ts).
  */
 export function reportUsageStep(chunkIndex: unknown, redo: unknown): string | null {
   if (redo === true) return "Report redo";

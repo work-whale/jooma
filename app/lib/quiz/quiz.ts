@@ -185,7 +185,9 @@ export function isQuizSlugOutput(slug: string, output: string | null | undefined
  * The `step` a request is recorded under. Only a whole new quiz counts as a
  * generation: adding or refining a question is part of editing that quiz.
  * is_counted_generation (supabase/migrations/20260810000100_cost_ceiling.sql)
- * ignores any row with a step, so this needs no change to the database.
+ * ignores any row with a step, so this needs no change to the database. The
+ * action comes from the browser, so the route keeps the step only within the
+ * teacher's follow-up budget (confirmFollowOn, app/lib/follow-on.ts).
  */
 export function quizUsageStep(action: unknown): string | null {
   if (action === "add") return "Quiz add";
