@@ -8,7 +8,7 @@
 
 import { prefillHref, validatePrefill } from "@/app/lib/toolPrefill";
 import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
-import type { SheetDoc } from "@/app/lib/sheets/types";
+import type { SheetDoc, UnitLesson } from "@/app/lib/sheets/types";
 
 export interface LessonHandoff {
   id: "slides" | "worksheet" | "quiz" | "modelAnswers";
@@ -57,6 +57,29 @@ export function lessonHandoffs(doc: SheetDoc): LessonHandoff[] {
     const prefill = validatePrefill({ slug: c.slug, fields: c.fields });
     return prefill ? [{ id: c.id, label: c.label, href: prefillHref(prefill) }] : [];
   });
+}
+
+/**
+ * "Plan this lesson" on a row of a unit plan (Topic Map, Term Plan): opens
+ * Lesson Plan filled in with the unit's curriculum, year and subject, the
+ * lesson as the topic and its objective. Null when the plan does not know its
+ * unit (an old run) or the link would not validate.
+ */
+export function unitLessonHref(doc: SheetDoc, lesson: UnitLesson, index: number): string | null {
+  const meta = doc.unit;
+  if (!meta) return null;
+  const year = meta.yearGroup && meta.yearGroup !== "Mixed" ? meta.yearGroup : undefined;
+  const title = lesson.title.trim() || `Lesson ${index + 1}`;
+  const topic = meta.topic.trim() ? `${meta.topic.trim()}: ${title}` : title;
+  const fields: Record<string, string> = {
+    ...(meta.curriculum ? { curriculum: meta.curriculum } : {}),
+    ...(year ? { yearGroup: year } : {}),
+    ...(meta.subject ? { subject: meta.subject } : {}),
+    topic: cap(topic),
+    ...(lesson.objective.trim() ? { learningObjective: cap(lesson.objective.trim()) } : {}),
+  };
+  const prefill = validatePrefill({ slug: "lesson-planner", fields });
+  return prefill ? prefillHref(prefill) : null;
 }
 
 /**

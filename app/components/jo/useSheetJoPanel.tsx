@@ -33,16 +33,20 @@ export function useSheetJoPanel(opts: SheetJoOptions) {
     docRef: opts.guest ? null : opts.docRef,
     guest: opts.guest ? { trialId: opts.guest.trialId, honeypot: opts.guest.honeypot } : undefined,
   });
-  const voice = useJoVoice(!opts.guest);
-
   const profile = sheetToolProfile(opts.doc?.tool ?? "worksheet");
+  // A document about one child: no voice, as on Reports. Typed messages have
+  // the child's name taken out before they are sent (useSheetJo's outgoing);
+  // speech cannot be, so it is not offered.
+  const voiceOn = !opts.guest && !profile.aboutPupil;
+  const voice = useJoVoice(voiceOn);
+
   const panel = (
     <JoPanel
       session={session}
       adapter={adapter}
       docLabel={profile.docLabel}
       starters={profile.joStarters}
-      voice={opts.guest ? null : voice}
+      voice={voiceOn ? voice : null}
       guest={opts.guest ? { onSignUp: opts.guest.onSignUp } : null}
       disabled={opts.disabled ?? (opts.guest && !opts.guest.trialId ? "Jo can help once your free try is saved" : null)}
       openSignal={opts.openSignal}

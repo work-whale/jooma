@@ -117,8 +117,9 @@ export function bandPitch(band: DifferentiationBand): string {
  * One click makes one request per band. Every one of them is charged for what
  * it spends, but only the first should count as a generation against the
  * hourly fair-use limit: `is_counted_generation` counts rows whose step is
- * null, so the others are tagged. A client that lies about its index only
- * dodges that count; the spend ceiling still caps what it costs.
+ * null, so the others are tagged. This is only the browser's claim: the route
+ * passes it through confirmFollowOn (app/lib/follow-on.ts), which keeps it
+ * only within the teacher's budget of band versions.
  */
 export function bandUsageStep(band: unknown, bandIndex: unknown): string | null {
   return isBand(band) && typeof bandIndex === "number" && bandIndex > 0 ? "Band version" : null;

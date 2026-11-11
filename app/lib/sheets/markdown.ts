@@ -11,11 +11,20 @@ import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } fr
 import { formatLetterDate } from "./letter";
 import { clueText, directionName, sortBank, sortRows } from "./puzzles";
 import { sheetToolProfile } from "./tools";
-import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
+import { clockText, phaseClock, phaseRows, phaseWording, stageLabel } from "./lesson";
 import { disclaimerFor, durationText, examStyle } from "./exam-styles";
 import { levelLabel } from "./model-answers";
+import { lessonItems, lessonLabel, TOPIC_MAP_COLUMNS, UNIT_COLUMNS, visibleColumns, type UnitColumn } from "./unit";
+import { withPupilName } from "./pupil";
+import { PRIVATE_ROLES } from "./behaviour";
+import { headedSections, shownSections } from "./visibility";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
+
+/** A lesson table's shown columns: the teacher's choice, or the tool's. */
+export function sequenceColumns(doc: SheetDoc): UnitColumn[] {
+  return visibleColumns(doc, sheetToolProfile(doc.tool)?.unitColumns ?? TOPIC_MAP_COLUMNS);
+}
 
 /** Questions numbered 1, 2, 3... down the whole sheet, in page order, or
  *  from 1 again in each section for a tool that says so (a lesson plan's
@@ -114,6 +123,8 @@ function blockMarkdown(b: SheetBlock, number: number | string | undefined, doc?:
     case "wordbank":
       return `**${b.title}:** ${b.words.join(", ")}`;
     case "table":
+      // Without headings (a plan's details): one "label: value" line a row.
+      if (b.headers.length === 0) return b.rows.map((r) => `**${r[0] ?? ""}:** ${r.slice(1).join(" ")}`.trimEnd()).join("  \n");
       return [
         `| ${b.headers.join(" | ")} |`,
         `| ${b.headers.map(() => "---").join(" | ")} |`,
@@ -121,13 +132,28 @@ function blockMarkdown(b: SheetBlock, number: number | string | undefined, doc?:
       ].join("\n");
     case "exemplar":
       return exemplarMarkdown(b);
+    case "twocol":
+      return [b.left, b.right]
+        .filter((s) => s.title || s.items.length)
+        .map((s) => [s.title ? `**${s.title}**` : "", ...s.items.map((it) => `- ${it}`)].filter(Boolean).join("\n"))
+        .join("\n\n");
+    case "sequence": {
+      const columns = doc ? sequenceColumns(doc) : UNIT_COLUMNS;
+      const cell = (s: string) => s.replace(/\|/g, "/").replace(/\s*\n\s*/g, " ");
+      const headers = ["Lesson", ...columns.map((c) => c.label)];
+      return [
+        `| ${headers.join(" | ")} |`,
+        `| ${headers.map(() => "---").join(" | ")} |`,
+        ...b.lessons.map((l, i) => `| ${[lessonLabel(l, i), ...columns.map((c) => lessonItems(l, c.id).join(c.list ? "; " : " "))].map(cell).join(" | ")} |`),
+      ].join("\n");
+    }
     case "list":
       return [
         b.title ? `**${b.title}**` : "",
         ...b.items.map((it, i) => (b.style === "number" ? `${i + 1}. ${it}` : b.style === "check" ? `- [ ] ${it}` : `- ${it}`)),
       ].filter(Boolean).join("\n");
     case "phase": {
-      const layout = doc?.lesson?.layout;
+      const layout = doc ? phaseWording(doc) : undefined;
       const t = clocks?.get(b.id);
       const when = t ? ` (${clockText(t.start)} to ${clockText(t.end)}, ${b.minutes} min)` : ` (${b.minutes} min)`;
       return [
@@ -268,12 +294,15 @@ export function hasAnswersPage(doc: SheetDoc): boolean {
  * answers page. SheetDocument gives its headings the ids extractHeadings
  * derives from this same string, so the rail's links land on them.
  */
-export function sheetOutline(doc: SheetDoc): string {
+export function sheetOutline(stored: SheetDoc): string {
+  // Read with the child's name in, as the page draws it, so the rail's
+  // headings and the page's ids agree.
+  const doc = withPupilName(stored);
   // A letter has one heading: its "Re:" line.
   if (doc.letter) return `# ${doc.title || "Letter"}`;
   return [
     `# ${doc.title || "Worksheet"}`,
-    ...doc.sections.map((s) => `## ${s.title || "Section"}`),
+    ...headedSections(doc).map((s) => `## ${s.title || "Section"}`),
     ...(hasAnswersPage(doc) ? [`## ${answersTitle(doc)}`] : []),
   ].join("\n");
 }
@@ -307,7 +336,14 @@ function letterMarkdown(doc: SheetDoc): string {
   return out.filter((p) => p !== "").join("\n\n");
 }
 
-export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {}): string {
+export function sheetToMarkdown(stored: SheetDoc, opts: { answers?: boolean; forModel?: boolean } = {}): string {
+  // A document about one child is copied with the child's name in it, as
+  // it reads on the page. Bound for a model instead (a slideshow made from
+  // it), it keeps "[PUPIL]" and leaves out the parts built from what the
+  // teacher typed: the details, incident log and signatures.
+  const doc = opts.forModel
+    ? { ...stored, sections: stored.sections.filter((s) => !PRIVATE_ROLES.includes(s.role ?? "")) }
+    : withPupilName(stored);
   if (doc.letter) return letterMarkdown(doc);
   const numbers = questionLabels(doc);
   const clocks = phaseClock(doc);
@@ -324,8 +360,9 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
   }
   if (doc.objective && showsObjective(doc)) out.push(`**Learning objective:** ${doc.objective}`);
   if (doc.intro && showsIntro(doc)) out.push(`> **${doc.intro.label}** ${doc.intro.text}`);
-  for (const s of doc.sections) {
-    out.push(`## ${s.title}`);
+  for (const s of shownSections(doc)) {
+    // A built-in part with no title (a profile's dates) has no heading.
+    if (s.title || !s.role) out.push(`## ${s.title}`);
     if (s.instructions) out.push(`*${s.instructions}*`);
     for (const b of s.blocks) {
       if (b.type === "image" && !showsPictures(doc)) continue;
@@ -337,7 +374,7 @@ export function sheetToMarkdown(doc: SheetDoc, opts: { answers?: boolean } = {})
   if (withAnswers) {
     const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
     const lines: string[] = [];
-    for (const s of doc.sections) {
+    for (const s of shownSections(doc)) {
       // An exam's mark scheme gives each part's marks and mark points too.
       const marked = !!doc.exam;
       const answers = s.blocks

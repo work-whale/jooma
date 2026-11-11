@@ -16,6 +16,8 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { DEFAULT_UNIT_LESSONS, MAX_UNIT_LESSONS, unitLessonCount } from "@/app/lib/sheets/unit";
 
 const TOOL_SLUG = "medium-term-planner";
 
@@ -31,7 +33,7 @@ export default function MediumTermPlannerForm({
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
-  const [numberOfLessons, setNumberOfLessons] = useState(6);
+  const [numberOfLessons, setNumberOfLessons] = useState(DEFAULT_UNIT_LESSONS);
   const [examSpec, setExamSpec] = useState<"yes" | "no">("no");
   const [examSpecText, setExamSpecText] = useState("");
   const [differentiate, setDifferentiate] = useState<Differentiate>("no");
@@ -43,6 +45,8 @@ export default function MediumTermPlannerForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its plan save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate =
     curriculum && (mixed || yearGroup) && subject.trim() && topic.trim() &&
@@ -62,13 +66,14 @@ export default function MediumTermPlannerForm({
     setMixed(Boolean(i.mixed));
     setSubject((i.subject as string) ?? "");
     setTopic((i.topic as string) ?? "");
-    setNumberOfLessons((i.numberOfLessons as number) ?? 6);
+    setNumberOfLessons(i.numberOfLessons === undefined ? DEFAULT_UNIT_LESSONS : unitLessonCount(i.numberOfLessons));
     setExamSpec((i.examSpec as "yes" | "no") ?? "no");
     setExamSpecText((i.examSpecText as string) ?? "");
     const d = restoreDifferentiation(i);
     setDifferentiate(d.differentiate);
     setDifferentiationLevels(d.levels);
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -81,7 +86,7 @@ export default function MediumTermPlannerForm({
       yearGroup: (v) => setYearGroup(v as string),
       subject: (v) => setSubject(v as string),
       topic: (v) => setTopic(v as string),
-      numberOfLessons: (v) => setNumberOfLessons(v as number),
+      numberOfLessons: (v) => setNumberOfLessons(unitLessonCount(v)),
       differentiate: (v) => setDifferentiate(v as Differentiate),
       differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
     },
@@ -90,8 +95,10 @@ export default function MediumTermPlannerForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = { curriculum, yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject), topic };
     try {
       const res = await fetch("/api/medium-term-planner", {
         method: "POST",
@@ -112,14 +119,10 @@ export default function MediumTermPlannerForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      // The route streams the unit as JSON; each update arrives here as a
+      // whole, valid sheet, so the table fills in row by row.
+      const finished = await readSheetStream(res, "termPlan", info, setResult);
+      if (!finished) throw new Error("The term plan came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -153,7 +156,7 @@ export default function MediumTermPlannerForm({
 
             <SubjectField value={subject} onChange={setSubject} />
             <TopicField value={topic} onChange={setTopic} />
-            <LessonCountField value={numberOfLessons} onChange={setNumberOfLessons} max={30} />
+            <LessonCountField value={numberOfLessons} onChange={setNumberOfLessons} max={MAX_UNIT_LESSONS} />
 
             <ExamSpecField value={examSpec} onChange={setExamSpec} text={examSpecText} onTextChange={setExamSpecText} />
 
@@ -171,7 +174,7 @@ export default function MediumTermPlannerForm({
                 title="Reset form?"
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
-                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setNumberOfLessons(6); setExamSpec("no"); setExamSpecText(""); setDifferentiate("no"); setDifferentiationLevels([]); setResult(null); setError(null); setConfirmingReset(false); }}
+                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setNumberOfLessons(DEFAULT_UNIT_LESSONS); setExamSpec("no"); setExamSpecText(""); setDifferentiate("no"); setDifferentiationLevels([]); setResult(null); setRunId(null); setError(null); setConfirmingReset(false); }}
                 onCancel={() => setConfirmingReset(false)}
               />
               <GenerateButton onClick={handleGenerate} disabled={!canGenerate || isGenerating || unchangedSinceGeneration} isGenerating={isGenerating} hasResult={result !== null} />
@@ -188,9 +191,10 @@ export default function MediumTermPlannerForm({
         result={result}
         isGenerating={isGenerating}
         onChange={(md) => setResult(md)}
-        exportFilename={`medium-term-plan-${topic || subject || "export"}`}
+        exportFilename={`term-plan-${topic || subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: topic || subject || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
     </div>
   );

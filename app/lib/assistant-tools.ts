@@ -100,8 +100,6 @@ const COVER_RESOURCES = [
 const NEWSLETTER_TONES = [
   "Professional and formal", "Warm and friendly", "Inspiring and motivational",
 ] as const;
-/** fields/GenderField.tsx */
-const GENDERS = ["Male", "Female", "Non-Binary"] as const;
 
 /**
  * The slideshow wizard's year list — components/slideshow/GenerateModal.tsx.
@@ -472,7 +470,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         numLessons: {
           type: "integer",
           minimum: 1,
-          maximum: 20,
+          maximum: 30,
           description: "How many lessons the topic spans. Defaults to 6.",
         },
       },
@@ -1195,11 +1193,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       properties: {
         curriculum: curriculumFields.curriculum,
         yearGroup: curriculumFields.yearGroup,
-        studentName: { type: "string", description: "The pupil's first name." },
         studentClass: { type: "string", description: "Their class, e.g. '4B'." },
-        studentGender: {
+        pronouns: {
           type: "string",
-          enum: GENDERS,
+          enum: ["he", "she", "they"],
           description: "Only if the teacher stated or clearly implied it.",
         },
         supportNeeds: {
@@ -1207,12 +1204,13 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           description: "Known SEND or support needs, if the teacher mentioned any.",
         },
       },
-      required: ["curriculum", "yearGroup", "studentName"],
+      required: ["curriculum", "yearGroup"],
     },
-    // BehaviourSupportPlanForm.tsx:74. studentName is listed only because it is
-    // already `required`, so it is guaranteed present and can never be the gap
-    // Jo asks about. The behaviour notes are the teacher's own and stay out.
-    gating: ["curriculum", "yearGroup", "studentName"],
+    // BehaviourSupportPlanForm.tsx. The pupil's name is never prefilled: the
+    // teacher types it on the form, where it stays in the browser and the plan
+    // is written with [PUPIL] (app/lib/sheets/pupil.ts). The behaviour notes
+    // are the teacher's own and stay out.
+    gating: ["curriculum", "yearGroup"],
   },
   {
     slug: "one-page-profile",
@@ -1226,14 +1224,14 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       properties: {
         curriculum: curriculumFields.curriculum,
         yearGroup: curriculumFields.yearGroup,
-        name: { type: "string", description: "The pupil's first name." },
       },
-      required: ["curriculum", "yearGroup", "name"],
+      required: ["curriculum", "yearGroup"],
     },
-    // OnePageProfileForm.tsx. `name` is already `required`, so it is guaranteed
-    // present rather than something Jo would ask for. The pupil's likes and
-    // support needs are the teacher's to supply and stay out.
-    gating: ["curriculum", "yearGroup", "name"],
+    // OnePageProfileForm.tsx. The pupil's name is never prefilled: the teacher
+    // types it on the form, where it stays in the browser (app/lib/sheets/
+    // pupil.ts). The pupil's likes and support needs are the teacher's to
+    // supply and stay out.
+    gating: ["curriculum", "yearGroup"],
   },
   {
     slug: "targeted-intervention",

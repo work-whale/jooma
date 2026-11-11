@@ -160,12 +160,37 @@ export function sheetBlockVariants(opts: SheetSchemaOptions): Json[] {
     content.push(variant("phase", {
       stage: { type: "string", enum: ["starter", "main", "plenary"] },
       title: str, minutes: int, teacher: str, pupils: str, check: strList, feedback: str, support: str, challenge: str, ta: str,
+      // A cover lesson's phases carry the words to say; a lesson plan's do not.
+      ...(opts.tool === "cover" ? { say: str } : {}),
     }));
+  }
+  if (profile.extraBlocks.includes("sequence")) content.push(variant("sequence", { lessons: { type: "array", items: unitLessonSchema() } }));
+  if (profile.extraBlocks.includes("twocol")) {
+    const side = obj({ title: str, items: strList });
+    content.push(variant("twocol", { left: side, right: side }));
   }
   // A picture is what to search for and a line describing it; where it comes
   // from is found afterwards (app/lib/sheets/pictures.ts).
   if (opts.images) content.push(variant("image", { query: str, alt: str }));
   return [...content, ...opts.kinds.map((k) => questionVariant(k, opts.tool))];
+}
+
+/** One lesson of a unit plan, every field required: the generators and Jo
+ *  write the same shape, so any column can be shown. */
+export function unitLessonSchema(): Json {
+  return obj({
+    title: str,
+    objective: str,
+    starter: str,
+    input: str,
+    activity: str,
+    plenary: str,
+    summary: str,
+    keyKnowledge: strList,
+    resources: strList,
+    questions: strList,
+    vocabulary: strList,
+  });
 }
 
 /** A strict object: every property required, nothing extra. */

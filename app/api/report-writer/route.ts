@@ -4,14 +4,17 @@ import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
 import { reportsRequest, type ReportsRequestBody } from "@/app/lib/reports/prompt";
 import { reportUsageStep } from "@/app/lib/reports/reports";
+import { confirmFollowOn } from "@/app/lib/follow-on-server";
 
 /*
  * Streams reports for up to ten pupils as JSON ({ reports: [{ ref, comment,
  * nextStep }] }). Pupils arrive as references, never names: the browser
  * swaps the names out before sending and back in afterwards
  * (app/lib/reports/privacy.ts), and a request carrying a name is refused.
- * Only a class's first request counts as a generation (reportUsageStep).
- * Prompt and schema: app/lib/reports/prompt.ts.
+ * Only a class's first request counts as a generation: the rest claim a step
+ * (reportUsageStep), which the server honours only within the teacher's
+ * follow-up budget (app/lib/follow-on.ts). Prompt and schema:
+ * app/lib/reports/prompt.ts.
  */
 export async function POST(req: NextRequest) {
   const body: ReportsRequestBody = await req.json();
@@ -28,7 +31,7 @@ export async function POST(req: NextRequest) {
     language: requestLanguage(body),
     toolSlug: "report-writer",
     ...lab,
-    step: lab.step ?? reportUsageStep(body.chunkIndex, body.redo),
+    step: lab.step ?? (await confirmFollowOn("report-writer", reportUsageStep(body.chunkIndex, body.redo))),
     max_completion_tokens: 8000,
     messages: built.messages,
     response_format: built.response_format,

@@ -142,6 +142,8 @@ export const SHEET_CSS = `
 .js-table th { background: var(--js-soft); color: var(--js-heading); text-align: left; font-weight: 800; }
 .js-table th, .js-table td { padding: 8px 12px; border-bottom: 1px solid var(--js-line); vertical-align: top; }
 .js-table tr:last-child td { border-bottom: 0; }
+.js-table tr[data-blank] td { height: 2.6em; }
+.js-table[data-headless] td:first-child { width: 30%; font-weight: 700; color: var(--js-heading); background: var(--js-soft); }
 .js-text { }
 
 /* Pictures: a fixed frame per size, on its own row, so a page's height is
@@ -192,6 +194,35 @@ export const SHEET_CSS = `
 .js-list-add { list-style: none; }
 
 /* Lesson phases: a header band with the stage and time, then labelled rows */
+/* A one page profile's head: an empty frame for a printed photo, then the title. */
+.js-head-photo { display: grid; grid-template-columns: 112px 1fr; gap: 18px; align-items: center; }
+.js-photo-box { width: 112px; height: 136px; border: 2px dashed var(--js-line); border-radius: var(--js-radius); display: grid; place-items: center; color: var(--js-muted); font-size: .8em; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: var(--js-panel); }
+
+/* Two titled lists side by side (a behaviour plan's paired boxes). */
+.js-twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.js-twocol[data-sides="1"] { grid-template-columns: 1fr; }
+.js-twocol-side { border: var(--js-border) solid var(--js-line); border-radius: var(--js-radius); background: var(--js-paper); box-shadow: var(--js-shadow); overflow: hidden; }
+.js-twocol-title { margin: 0; padding: 7px 12px; background: var(--js-soft); color: var(--js-heading); font-family: var(--js-font-heading); font-size: .95em; font-weight: 700; border-bottom: 1px solid var(--js-line); }
+.js-twocol-side ul { margin: 0; padding: 8px 12px 9px 28px; list-style: disc outside; display: flex; flex-direction: column; gap: 3px; }
+.js-twocol-side li { display: list-item; }
+
+/* A unit's lessons: a table one row per lesson, split across pages between
+   rows. Each page's piece is its own .js-seq with the header row repeated. */
+.js-seq { border: 1.5px solid var(--js-line); border-radius: var(--js-radius); overflow: hidden; background: var(--js-paper); font-size: .86em; line-height: 1.35; }
+.js-seq[data-cols="wide"] { font-size: .76em; }
+.js-seq-head, .js-seq-row { display: grid; }
+.js-seq-head { background: var(--js-soft); color: var(--js-heading); font-weight: 800; }
+.js-seq-head > span, .js-seq-row > div { padding: 6px 8px; border-left: 1px solid var(--js-line); min-width: 0; overflow-wrap: anywhere; }
+.js-seq-head > span:first-child, .js-seq-row > div:first-child { border-left: 0; }
+.js-seq-row { border-top: 1px solid var(--js-line); position: relative; }
+.js-seq-lesson { font-weight: 700; color: var(--js-heading); display: flex; flex-direction: column; gap: 2px; }
+.js-seq-num { font-size: .78em; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--js-muted); }
+.js-seq-row ul { margin: 0; padding-left: 14px; list-style: disc outside; display: flex; flex-direction: column; gap: 2px; }
+.js-seq-row li { display: list-item; }
+.js-seq-row .js-tools { top: 4px; }
+.js-seq-plan { align-self: flex-start; margin-top: 4px; font: 700 10.5px/1.2 system-ui, sans-serif; color: var(--js-heading); background: var(--js-soft); border: 1px solid var(--js-line); border-radius: 999px; padding: 3px 8px; text-decoration: none; }
+a.js-seq-plan:hover { border-color: var(--js-heading); }
+
 .js-phase { border: var(--js-border) solid var(--js-line); border-radius: var(--js-radius); overflow: hidden; background: var(--js-paper); box-shadow: var(--js-shadow); }
 .js-phase-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; background: var(--js-soft); padding: 8px 14px; border-bottom: 1.5px solid var(--js-line); }
 .js-phase-stage { font-size: .7em; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--js-on-accent); background: var(--js-accent); border-radius: 999px; padding: 2px 9px; }
@@ -274,6 +305,8 @@ export const SHEET_CSS = `
 .js-sheet[data-mode="edit"] .js-block:hover > .js-tools, .js-sheet[data-mode="edit"] .js-block:focus-within > .js-tools { display: flex; }
 .js-tools button { all: unset; cursor: pointer; color: #fff; font: 600 11px/1 system-ui, sans-serif; padding: 5px 7px; border-radius: 6px; }
 .js-tools button:hover { background: rgba(255,255,255,.16); }
+.js-tools a { all: unset; cursor: pointer; color: #fff; font: 700 11px/1 system-ui, sans-serif; padding: 5px 7px; border-radius: 6px; background: rgba(255,255,255,.14); }
+.js-tools a:hover { background: rgba(255,255,255,.26); }
 .js-add-row { position: relative; display: flex; gap: 8px; justify-content: center; padding: 2px 0; }
 .js-menu-head { grid-column: 1 / -1; font: 700 10.5px/1 system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #6D6683; padding: 8px 10px 4px; }
 .js-add { all: unset; cursor: pointer; font: 600 12px/1 system-ui, sans-serif; color: var(--js-heading); border: 1.5px dashed var(--js-line); border-radius: 999px; padding: 7px 14px; background: var(--js-paper); }

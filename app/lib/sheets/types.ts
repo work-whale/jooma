@@ -41,6 +41,15 @@ export interface SheetDesign {
   cover?: boolean;
   /** A letter's reply slip. Missing means on. */
   slip?: boolean;
+  /** Pages turned on their side. Missing means portrait. Offered only by
+   *  tools whose profile allows it (the unit planners). */
+  landscape?: boolean;
+  /** A lesson sequence's visible columns (app/lib/sheets/unit.ts), in table
+   *  order. Missing means the tool's defaults. */
+  columns?: string[];
+  /** Parts of a document switched off in Design, by id: a unit plan's
+   *  "overview", a behaviour plan's "log". Missing means all shown. */
+  hidden?: string[];
 }
 
 /** How a lesson plan is laid out (app/lib/sheets/lesson.ts). Both are the
@@ -99,10 +108,38 @@ export interface LetterMeta {
   slip: ReplySlip | null;
 }
 
+/** What a unit plan (Topic Map, Term Plan) keeps about itself: the form's
+ *  details, which "Plan this lesson" carries over to Lesson Plan. */
+export interface UnitMeta {
+  curriculum: string;
+  yearGroup: string;
+  subject: string;
+  topic: string;
+}
+
+/** He, she or they: how the model and the page refer to a pupil. */
+export type PupilPronouns = "he" | "she" | "they";
+
+/**
+ * The child a document is about (Behaviour Support Plan, One Page Profile).
+ * The name lives here and in the teacher's saved copy only: the text holds
+ * "[PUPIL]" (app/lib/reports/privacy.ts), swapped for the name when the page
+ * is drawn or exported (app/lib/sheets/pupil.ts), and nothing sent to a model
+ * carries this field.
+ */
+export interface PupilMeta {
+  name: string;
+  pronouns: PupilPronouns;
+}
+
 export interface SheetDoc {
   kind: typeof SHEET_KIND;
   version: number;
   tool: SheetTool;
+  /** Unit plans only. */
+  unit?: UnitMeta;
+  /** Documents about one child only. Never sent to a model. */
+  pupil?: PupilMeta;
   /** Lesson plans only. */
   lesson?: LessonMeta;
   /** Exam papers only. */
@@ -180,6 +217,47 @@ export interface PhaseBlock extends BlockBase {
   challenge: string;
   /** What a teaching assistant does in this phase. */
   ta: string;
+  /** Cover lessons only: the words the cover teacher can say to the class.
+   *  Missing on a lesson plan's phases, which never show it. */
+  say?: string;
+}
+
+/** One lesson in a unit plan. Every field is filled, so any column of the
+ *  table can be switched on without asking the model again. */
+export interface UnitLesson {
+  title: string;
+  objective: string;
+  starter: string;
+  input: string;
+  activity: string;
+  plenary: string;
+  /** Term Plan's "summary of the lesson". */
+  summary: string;
+  keyKnowledge: string[];
+  resources: string[];
+  questions: string[];
+  vocabulary: string[];
+}
+
+/** A unit's lessons, drawn as a table one row per lesson. Splits across pages
+ *  between rows, repeating the header row. */
+export interface SequenceBlock extends BlockBase {
+  type: "sequence";
+  lessons: UnitLesson[];
+}
+
+/** One side of a two-column box: a heading and its points. */
+export interface TwoColSide {
+  title: string;
+  items: string[];
+}
+
+/** Two titled lists side by side, as a behaviour plan pairs them: "What does
+ *  it look like?" beside "What are we working towards?". */
+export interface TwoColBlock extends BlockBase {
+  type: "twocol";
+  left: TwoColSide;
+  right: TwoColSide;
 }
 
 export type ImageSize = "s" | "m" | "l";
@@ -295,7 +373,7 @@ export interface ExemplarBlock extends BlockBase {
   commentary: string;
 }
 
-export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ExemplarBlock | ImageBlock | SheetQuestion;
+export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ExemplarBlock | SequenceBlock | TwoColBlock | ImageBlock | SheetQuestion;
 
 export type QuestionType = SheetQuestion["type"];
 export type BlockType = SheetBlock["type"];

@@ -10,6 +10,7 @@ import {
   isBand,
   type Differentiate,
 } from "@/app/lib/differentiation";
+import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
 
 export interface HomeworkRequest {
@@ -167,7 +168,7 @@ ${answerSection}`;
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "homework-generator",
-    step: bandUsageStep(body.band, body.bandIndex),
+    step: await confirmFollowOn("homework-generator", bandUsageStep(body.band, body.bandIndex)),
     ...(await modelFor("homework-generator", "gpt-4o")),
     max_completion_tokens: 4096,
     messages: [

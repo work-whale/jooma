@@ -4,12 +4,15 @@ import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { parseQuizAnswer, quizRequest, type QuizRequestBody } from "@/app/lib/quiz/prompt";
 import { quizUsageStep } from "@/app/lib/quiz/quiz";
+import { confirmFollowOn } from "@/app/lib/follow-on-server";
 
 /*
  * Quiz questions as strict JSON (app/lib/quiz). Three actions: a whole quiz
  * ("generate"), one more question ("add") and a rewrite to an instruction
- * ("refine"). Only "generate" counts as a generation; the other two are
- * recorded under a step (quizUsageStep), which is_counted_generation ignores.
+ * ("refine"). Only "generate" counts as a generation; the other two claim a
+ * step (quizUsageStep), which is_counted_generation ignores, and the server
+ * honours the claim only within the teacher's follow-up budget
+ * (app/lib/follow-on.ts).
  * The prompts and schema live in app/lib/quiz/prompt.ts.
  */
 export async function POST(req: NextRequest) {
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
     const message = await createCompletion({
       language: requestLanguage(body),
       toolSlug: "quiz-generator",
-      step: quizUsageStep(body.action),
+      step: await confirmFollowOn("quiz-generator", quizUsageStep(body.action)),
       ...(await modelFor("quiz-generator", "gpt-4o")),
       max_completion_tokens: 8000,
       messages: built.messages,

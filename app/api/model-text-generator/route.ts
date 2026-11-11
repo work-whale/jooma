@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { bandPitch, bandUsageStep, differentiationPrompt, isBand, type Differentiate } from "@/app/lib/differentiation";
+import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
 
 export interface ModelTextGeneratorRequest {
@@ -79,7 +80,7 @@ Do not use any emojis. Write the model text in the appropriate register and styl
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "model-text-generator",
-    step: bandUsageStep(body.band, body.bandIndex),
+    step: await confirmFollowOn("model-text-generator", bandUsageStep(body.band, body.bandIndex)),
     ...(await modelFor("model-text-generator", "gpt-4o")),
     max_completion_tokens: 8192,
     messages: [

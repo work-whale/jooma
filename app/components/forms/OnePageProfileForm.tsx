@@ -6,11 +6,13 @@ import {
   TopicField,
   AdditionalContextField,
   IncludeAdditionalSupportField,
+  PlanStartDateField,
+  ReviewDateField,
 } from "@/app/components/fields";
+import PronounsField, { PupilPrivacyNote } from "@/app/components/fields/PronounsField";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
@@ -20,17 +22,20 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { isPupilPronouns, pronounsFromInput, scrubPupilText } from "@/app/lib/sheets/pupil";
+import { factDate } from "@/app/lib/sheets/behaviour";
+import type { PupilPronouns } from "@/app/lib/sheets/types";
 
 const TOOL_SLUG = "one-page-profile";
 
-const REFINE_CHIPS = [
-  "Translate to...",
-  "Make the language simpler for a younger student to read",
-  "Make the language more detailed for an older student",
-  "Include the following...",
-  "Suggest support strategies which...",
-];
-
+/*
+ * One Page Profile. As on the Behaviour Support Plan, the pupil's name stays
+ * in this browser and the saved copy: what is sent has it as "[PUPIL]", and
+ * the dates, intervention groups and outside agencies are never sent at all,
+ * the page builds those lines from them. The profile comes back as JSON in the
+ * pupil's own voice (app/lib/sheets/pupil-profile.ts).
+ */
 export default function OnePageProfileForm({
   sidebar,
   launch,
@@ -43,6 +48,7 @@ export default function OnePageProfileForm({
   const [mixed, setMixed] = useState(false);
 
   const [name, setName] = useState("");
+  const [pronouns, setPronouns] = useState<PupilPronouns>("they");
   const [likes, setLikes] = useState("");
   const [happy, setHappy] = useState("");
   const [supportNeeds, setSupportNeeds] = useState("");
@@ -51,19 +57,24 @@ export default function OnePageProfileForm({
   const [interventionGroups, setInterventionGroups] = useState("");
   const [outsideAgency, setOutsideAgency] = useState("");
   const [includeAdditionalSupport, setIncludeAdditionalSupport] = useState(true);
+  const [updatedDate, setUpdatedDate] = useState("");
+  const [reviewDate, setReviewDate] = useState("");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its profile save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
   const canGenerate = curriculum.trim() && resolvedYearGroup.trim() && name.trim() && likes.trim() && supportNeeds.trim();
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, name, likes, happy, supportNeeds, supportStyle, hopes, interventionGroups, outsideAgency, includeAdditionalSupport };
+  // Saved as the run's input (in the teacher's own history, never sent to a
+  // model) so a past profile can refill the form.
+  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, name, pronouns, likes, happy, supportNeeds, supportStyle, hopes, interventionGroups, outsideAgency, includeAdditionalSupport, updatedDate, reviewDate };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -75,6 +86,7 @@ export default function OnePageProfileForm({
     setYearGroup((i.yearGroup as string) ?? "");
     setMixed(Boolean(i.mixed));
     setName((i.name as string) ?? "");
+    setPronouns(pronounsFromInput(i));
     setLikes((i.likes as string) ?? "");
     setHappy((i.happy as string) ?? "");
     setSupportNeeds((i.supportNeeds as string) ?? "");
@@ -83,71 +95,73 @@ export default function OnePageProfileForm({
     setInterventionGroups((i.interventionGroups as string) ?? "");
     setOutsideAgency((i.outsideAgency as string) ?? "");
     setIncludeAdditionalSupport(i.includeAdditionalSupport === undefined ? true : Boolean(i.includeAdditionalSupport));
+    setUpdatedDate((i.updatedDate as string) ?? "");
+    setReviewDate((i.reviewDate as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
-  // `?run=` reopens a saved run from Dashboard, Folders or Analytics.
+  // `?run=` reopens a saved run from Dashboard, Folders or Analytics. The
+  // assistant never prefills the name (app/lib/assistant-tools.ts).
   const { prefilled } = useToolLaunch({
     params: launch,
     onRestore: restore,
     prefill: {
       curriculum: (v) => setCurriculum(v as string),
       yearGroup: (v) => setYearGroup(v as string),
-      name: (v) => setName(v as string),
+      pronouns: (v) => { if (isPupilPronouns(v)) setPronouns(v); },
     },
   });
-
-  const streamResponse = async (body: object, onChunk: (c: string) => void) => {
-    const res = await fetch("/api/one-page-profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, language }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error((data as { error?: string }).error || "Request failed");
-    }
-    const reader = res.body!.getReader();
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      onChunk(decoder.decode(value, { stream: true }));
-    }
-  };
 
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const pupil = name.trim();
+    const scrub = (t: string) => scrubPupilText(t, pupil);
+    // On the page, never sent: the dates and the links to other support.
+    const info = {
+      yearGroup: resolvedYearGroup,
+      pupil: { name: pupil, pronouns },
+      pupilFacts: [
+        { label: "Last updated", value: factDate(updatedDate) },
+        { label: "Review date", value: factDate(reviewDate) },
+      ],
+      pupilLinks: [
+        { label: "Intervention groups", value: interventionGroups.trim() },
+        { label: "Outside agency input", value: outsideAgency.trim() },
+      ],
+    };
     try {
-      await streamResponse(
-        { action: "generate", curriculum, yearGroup: resolvedYearGroup, name, likes, happy, supportNeeds, supportStyle, hopes, interventionGroups, outsideAgency, includeAdditionalSupport },
-        (chunk) => setResult((prev) => (prev ?? "") + chunk),
-      );
+      const res = await fetch("/api/one-page-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language,
+          yearGroup: resolvedYearGroup,
+          pronouns,
+          likes: scrub(likes),
+          happy: scrub(happy),
+          supportNeeds: scrub(supportNeeds),
+          supportStyle: scrub(supportStyle),
+          hopes: scrub(hopes),
+          includeAdditionalSupport,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error || "Generation failed");
+      }
+      const finished = await readSheetStream(res, "pupilProfile", info, setResult);
+      if (!finished) throw new Error("The profile came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result || !instruction.trim()) return;
-    setIsRefining(true);
-    setResult("");
-    try {
-      await streamResponse(
-        { action: "refine", result, instruction },
-        (chunk) => setResult((prev) => (prev ?? "") + chunk),
-      );
-    } catch {
-      // silently ignore
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -176,7 +190,13 @@ export default function OnePageProfileForm({
               <LanguageField value={language} onChange={setLanguage} />
             </div>
 
-            <PupilNameField value={name} onChange={setName} />
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <PupilNameField value={name} onChange={setName} />
+                <PronounsField value={pronouns} onChange={setPronouns} />
+              </div>
+              <PupilPrivacyNote />
+            </div>
 
             <TopicField
               label="What people like and admire about the student"
@@ -264,6 +284,11 @@ export default function OnePageProfileForm({
               ]}
             />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <PlanStartDateField value={updatedDate} onChange={setUpdatedDate} label="Last updated" />
+              <ReviewDateField value={reviewDate} onChange={setReviewDate} />
+            </div>
+
             <IncludeAdditionalSupportField
               value={includeAdditionalSupport}
               onChange={setIncludeAdditionalSupport}
@@ -277,10 +302,11 @@ export default function OnePageProfileForm({
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
                 onConfirm={() => {
-                  setName(""); setLikes(""); setHappy(""); setSupportNeeds("");
+                  setName(""); setPronouns("they"); setLikes(""); setHappy(""); setSupportNeeds("");
                   setSupportStyle(""); setHopes(""); setInterventionGroups("");
                   setOutsideAgency(""); setIncludeAdditionalSupport(true);
-                  setResult(null); setError(null); setConfirmingReset(false);
+                  setUpdatedDate(""); setReviewDate("");
+                  setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
@@ -302,20 +328,12 @@ export default function OnePageProfileForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
-        exportFilename={`support-profile-${name.toLowerCase().replace(/\s+/g, "-") || "student"}`}
-        historyMeta={{ toolSlug: TOOL_SLUG, title: name || null, input: formState }}
+        exportFilename={`one-page-profile-${name.trim().toLowerCase().replace(/\s+/g, "-") || "pupil"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: name.trim() || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

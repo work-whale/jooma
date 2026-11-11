@@ -124,8 +124,15 @@ export const PAPER_PX: Record<"a4" | "letter", { w: number; h: number }> = {
   letter: { w: 816, h: 1056 },
 };
 
+/** A sheet's page in CSS pixels, turned on its side when it is landscape.
+ *  Everything that draws or exports pages reads its size from here. */
+export function pagePx(design: { paper: "a4" | "letter"; landscape?: boolean }): { w: number; h: number } {
+  const p = PAPER_PX[design.paper] ?? PAPER_PX.a4;
+  return design.landscape ? { w: p.h, h: p.w } : p;
+}
+
 /** The theme as CSS custom properties on the sheet's root element. */
-export function sheetThemeVars(theme: SheetTheme, fontScale: keyof typeof FONT_SCALE_PX, paper: keyof typeof PAPER_PX): Record<string, string> {
+export function sheetThemeVars(theme: SheetTheme, fontScale: keyof typeof FONT_SCALE_PX, page: { w: number; h: number }): Record<string, string> {
   const c = theme.colors;
   const l = theme.look;
   return {
@@ -146,7 +153,7 @@ export function sheetThemeVars(theme: SheetTheme, fontScale: keyof typeof FONT_S
     "--js-font-heading": theme.fonts.heading,
     "--js-font-body": theme.fonts.body,
     "--js-size": `${FONT_SCALE_PX[fontScale]}px`,
-    "--js-page-w": `${PAPER_PX[paper].w}px`,
-    "--js-page-h": `${PAPER_PX[paper].h}px`,
+    "--js-page-w": `${page.w}px`,
+    "--js-page-h": `${page.h}px`,
   };
 }

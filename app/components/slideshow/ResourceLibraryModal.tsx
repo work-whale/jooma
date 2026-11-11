@@ -96,7 +96,11 @@ export default function ResourceLibraryModal({
     // Of a set of differentiated versions, the first.
     const sheet = printableSheet(run.tool_slug, run.output, run.input);
     // A class's reports go without pupils' names: this text is sent to a model.
-    onSelect(sheet ? sheetToMarkdown(sheet) : readableOutput(run.output, { forModel: true }), run.title || folder?.label || "Tool output");
+    // forModel: a plan about one child goes as [PUPIL], never by name. Its
+    // run is titled with the child's name, so its source is the plan's own
+    // title instead (the source is quoted in the slideshow prompt).
+    const source = sheet?.pupil ? sheet.title || "A pupil's plan" : run.title || folder?.label || "Tool output";
+    onSelect(sheet ? sheetToMarkdown(sheet, { forModel: true }) : readableOutput(run.output, { forModel: true }), source);
     onClose();
   };
 
