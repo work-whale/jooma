@@ -19,6 +19,8 @@ import {
   type LessonMeta,
   type ExamMeta,
   type LetterMeta,
+  type PupilMeta,
+  type UnitMeta,
   type SheetBlock,
   type SheetCallout,
   type SheetDesign,
@@ -87,6 +89,10 @@ function seedOf(v: unknown, id: string): number {
   return typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : seedFrom(id);
 }
 
+/** The most lessons a sequence block holds. The form asks for at most 30; a
+ *  little room is left for lessons a teacher or Jo adds. */
+export const MAX_SEQUENCE_LESSONS = 40;
+
 /**
  * One block, or null when it is empty or (mid-stream) not yet typed.
  *
@@ -148,7 +154,45 @@ export function normalizeBlock(raw: unknown, id: string, puzzle?: Partial<Puzzle
         support: text(r.support),
         challenge: text(r.challenge),
         ta: text(r.ta),
+        // A cover lesson's script. Only a phase that came with one has one,
+        // so a lesson plan's phases are exactly what they were.
+        ...(typeof r.say === "string" ? { say: text(r.say) } : {}),
       };
+    }
+    case "sequence": {
+      // A unit's lessons. One with neither a title nor an objective is not a
+      // lesson yet (mid-stream) and is left out; past the cap is dropped.
+      const lessons = (Array.isArray(r.lessons) ? r.lessons : [])
+        .map((l) => {
+          const lr = (l && typeof l === "object" ? l : {}) as Raw;
+          return {
+            title: text(lr.title),
+            objective: text(lr.objective),
+            starter: text(lr.starter),
+            input: text(lr.input),
+            activity: text(lr.activity),
+            plenary: text(lr.plenary),
+            summary: text(lr.summary),
+            keyKnowledge: list(lr.keyKnowledge),
+            resources: list(lr.resources),
+            questions: list(lr.questions),
+            vocabulary: list(lr.vocabulary),
+          };
+        })
+        .filter((l) => l.title || l.objective)
+        .slice(0, MAX_SEQUENCE_LESSONS);
+      return lessons.length ? { id, type: "sequence", lessons } : null;
+    }
+    case "twocol": {
+      const side = (v: unknown) => {
+        const sr = (v && typeof v === "object" ? v : {}) as Raw;
+        return { title: text(sr.title), items: list(sr.items) };
+      };
+      const left = side(r.left);
+      const right = side(r.right);
+      // Nothing on either side yet (mid-stream) is not a box.
+      if (!left.items.length && !right.items.length && !left.title && !right.title) return null;
+      return { id, type: "twocol", left, right };
     }
     case "exemplar": {
       const parts = list(r.parts);
@@ -319,6 +363,10 @@ export interface NormalizeContext {
   exam?: ExamMeta;
   /** Letters: kept on the document. */
   letter?: LetterMeta;
+  /** Unit plans: kept on the document. */
+  unit?: UnitMeta;
+  /** Documents about one child: kept on the document, never sent. */
+  pupil?: PupilMeta;
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -374,6 +422,8 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     ...(ctx.lesson ? { lesson: ctx.lesson } : {}),
     ...(ctx.exam ? { exam: ctx.exam } : {}),
     ...(ctx.letter ? { letter: ctx.letter } : {}),
+    ...(ctx.unit ? { unit: ctx.unit } : {}),
+    ...(ctx.pupil ? { pupil: ctx.pupil } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

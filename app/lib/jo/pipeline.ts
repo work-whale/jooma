@@ -25,6 +25,7 @@ import { joSlidesResponseFormat } from "./slide-schema";
 import { joMarkdownResponseFormat } from "./md-schema";
 import { joListResponseFormat } from "./list-schema";
 import { carriesName } from "@/app/lib/reports/prompt";
+import { isSendableSheetSnapshot } from "./sheet-ops";
 import { JO_MAX_ASKS, joListSystem, joMarkdownSystem, joSheetSystem, joSlidesSystem } from "./prompts";
 import type { JoTurnBody } from "./types";
 
@@ -81,6 +82,7 @@ function targetFor(body: JoTurnBody, canAsk: boolean, guest: boolean): JoTarget 
     // off for it, and this refuses one sent anyway.
     const letter = snap.letter && typeof snap.letter === "object" ? (snap.letter as Record<string, unknown>) : null;
     if (typeof letter?.pupil === "string" && letter.pupil.trim()) return null;
+    if (!isSendableSheetSnapshot(snap)) return null;
     return {
       name: sheetToolProfile(tool).joName,
       heading: "THE SHEET NOW (JSON)",

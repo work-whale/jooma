@@ -37,6 +37,23 @@ export function visibleNotes(doc: SheetDoc): { note: SheetNote; index: number }[
   return doc.teacherNotes.map((note, index) => ({ note, index })).filter(({ note }) => !(hideDiff && isDifferentiationNote(note)));
 }
 
+/** A part switched off in Design (design.hidden), by id: a section's role or
+ *  a piece built in code. False for no id, so an untagged section always shows. */
+export function isHidden(doc: Pick<SheetDoc, "design">, part: string | undefined): boolean {
+  return !!part && Array.isArray(doc.design.hidden) && doc.design.hidden.includes(part);
+}
+
+/** The sections on the page, in order: all but the parts switched off. */
+export function shownSections(doc: SheetDoc): SheetDoc["sections"] {
+  return doc.sections.filter((s) => !isHidden(doc, s.role));
+}
+
+/** The sections that have a heading on the page, for the outline rail: the
+ *  shown ones, less a built-in part with no title (a profile's dates). */
+export function headedSections(doc: SheetDoc): SheetDoc["sections"] {
+  return shownSections(doc).filter((s) => s.title || s.instructions || !s.role);
+}
+
 /** A letter's reply slip, unless switched off in Design. */
 export function showsSlip(doc: SheetDoc): boolean {
   return !!doc.letter?.slip && doc.design.slip !== false;

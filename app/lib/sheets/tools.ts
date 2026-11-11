@@ -10,7 +10,8 @@
 // Pure and free of React: read by the API routes, the stream reader and the
 // browser alike.
 
-import type { ExamMeta, LessonMeta, LetterMeta, QuestionType, SheetDesign } from "./types";
+import type { ExamMeta, LessonMeta, LetterMeta, QuestionType, SheetDesign, UnitMeta } from "./types";
+import type { UnitField } from "./unit";
 import type { ThemeFamily } from "@/app/lib/slideshowThemes";
 import type { SheetRequestInfo } from "./context";
 import { templateById } from "./worksheet-templates";
@@ -18,8 +19,12 @@ import { arrangeLesson, DEFAULT_LESSON_LAYOUT, isLessonLayout, lessonMinutes } f
 import { arrangeExam, EXAM_STYLES, examStyle, tierOf } from "./exam-styles";
 import { arrangeModelAnswers } from "./model-answers";
 import { arrangeLetter, letterMetaFor, type LetterInfo } from "./letter";
+import { arrangeUnit, TERM_PLAN_COLUMNS, TOPIC_MAP_COLUMNS, UNIT_PARTS } from "./unit";
+import { arrangeBehaviour, BEHAVIOUR_PARTS } from "./behaviour";
+import { arrangePupilProfile, PROFILE_PARTS } from "./pupil-profile";
+import { arrangeCover, COVER_KINDS, COVER_TASK_ROLE } from "./cover";
 
-export const SHEET_TOOLS = ["worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter"] as const;
+export const SHEET_TOOLS = ["worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter", "topicMap", "termPlan", "behaviourPlan", "pupilProfile", "cover"] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
 export function isSheetTool(v: unknown): v is SheetTool {
@@ -59,7 +64,7 @@ export interface SheetToolProfile {
   startDesign: (info: SheetRequestInfo) => Partial<SheetDesign>;
   /** Content blocks beyond the shared ones (text, callout, word bank, table)
    *  that Jo may write and the teacher may add. */
-  extraBlocks: ("list" | "phase" | "exemplar")[];
+  extraBlocks: ("list" | "phase" | "exemplar" | "sequence" | "twocol")[];
   /** The answers page's heading and the line under it. */
   answersTitle: string;
   answersNote: string;
@@ -82,6 +87,25 @@ export interface SheetToolProfile {
   letterMeta?: (info: LetterInfo) => LetterMeta;
   /** The theme families the Design panel offers. Missing: all of them. */
   themeFamilies?: ThemeFamily[];
+  /** Design offers landscape pages. */
+  landscape?: boolean;
+  /** Unit plans: the lesson table's columns before the teacher changes them. */
+  unitColumns?: UnitField[];
+  /** Unit plans: what the plan keeps about itself, for "Plan this lesson". */
+  unitMeta?: (info: SheetRequestInfo) => UnitMeta;
+  /** Parts of the document Design can switch off (design.hidden), by id:
+   *  section roles, or pieces built in code such as a plan's incident log. */
+  parts?: { id: string; label: string }[];
+  /** About one child: the name is kept in doc.pupil and "[PUPIL]" stands in
+   *  for it everywhere else (app/lib/sheets/pupil.ts). */
+  aboutPupil?: boolean;
+  /** An empty box beside the title to stick a printed photo in (a one page
+   *  profile). Switched off in Design as the part "photo". */
+  photoBox?: boolean;
+  /** The section role where the pupils' pages start (a cover lesson's task):
+   *  it opens a new page with the name and date lines, which then do not
+   *  print at the top of the teacher's pages. */
+  pupilPageRole?: string;
 }
 
 const ANSWERS_NOTE = "For the teacher. Remove this page before handing the sheet out, or switch it off in Design.";
@@ -95,6 +119,29 @@ function examMetaFor(info: SheetRequestInfo): ExamMeta {
   const minutes = typeof info.minutes === "number" && info.minutes > 0 ? Math.min(240, Math.round(info.minutes)) : style.minutes;
   return { styleId: style.id, tier: tierOf(style, subject, info.tier), minutes, subject, yearGroup: info.yearGroup ?? "" };
 }
+
+function unitMetaFor(info: SheetRequestInfo): UnitMeta {
+  return {
+    curriculum: info.curriculum ?? "",
+    yearGroup: info.yearGroup ?? "",
+    subject: info.subject?.trim() ?? "",
+    topic: info.topic?.trim() ?? "",
+  };
+}
+
+/** What Jo is told about a unit plan, for both planners. */
+const UNIT_JO_RULES =
+  "- This is a unit plan for teachers: a sequence of lessons on one topic. The lessons are one sequence block; each lesson has title, objective, starter, input, activity, plenary, summary (strings) and keyKnowledge, resources, questions, vocabulary (lists of strings). Every field is filled even when its column is hidden, so keep all of them filled and consistent when you change a lesson.\n" +
+  "- To reword one cell, setText \"<blockId>.lessons.<n>.<field>\" (n counts from 0) for a string field. To change a list field, add, remove or reorder lessons, replaceBlock the whole sequence block with every lesson in it.\n" +
+  "- Lessons build on each other: if you change one, check the lessons after it still follow. Never invent exam board content that was not asked for.";
+
+/** What Jo is told about any document about one child. */
+const PUPIL_JO_RULES =
+  "- The child this is about is written as [PUPIL]. Always write [PUPIL] where you would use their name, never a name, and never name other children or staff. Keep the pronouns the document already uses.\n";
+
+/** A unit plan starts landscape, for staff: no name lines, objective line,
+ *  hook box or answers page. */
+const unitStartDesign = () => ({ landscape: true, nameDate: false, objective: false, intro: false, answers: false, pictures: false });
 
 function lessonMetaFor(info: SheetRequestInfo): LessonMeta {
   return {
@@ -314,6 +361,173 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     arrange: (raw, info) => arrangeLetter(raw, info.letter),
     letterMeta: letterMetaFor,
     themeFamilies: ["professional", "basic"],
+  },
+  topicMap: {
+    slug: "topic-overview",
+    joName: "topic map (a unit of lessons)",
+    docLabel: "topic map",
+    joStarters: [
+      "Add a retrieval starter to every lesson",
+      "Make lesson 3 more practical",
+      "Add an assessment point halfway",
+      "Add a lesson to consolidate before the end",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    startDesign: unitStartDesign,
+    extraBlocks: ["list", "sequence"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules: UNIT_JO_RULES,
+    arrange: (raw) => arrangeUnit(raw),
+    landscape: true,
+    unitColumns: TOPIC_MAP_COLUMNS,
+    unitMeta: unitMetaFor,
+    parts: UNIT_PARTS,
+  },
+  termPlan: {
+    slug: "medium-term-planner",
+    joName: "medium-term plan (a unit of lessons)",
+    docLabel: "term plan",
+    joStarters: [
+      "Make the key knowledge more precise",
+      "Add a lesson on exam technique",
+      "Move the assessment point earlier",
+      "Make the objectives build more clearly",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    startDesign: unitStartDesign,
+    extraBlocks: ["list", "sequence"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules: UNIT_JO_RULES,
+    arrange: (raw) => arrangeUnit(raw),
+    landscape: true,
+    unitColumns: TERM_PLAN_COLUMNS,
+    unitMeta: unitMetaFor,
+    parts: UNIT_PARTS,
+  },
+  behaviourPlan: {
+    slug: "behaviour-support-plan",
+    joName: "Behaviour Support Plan",
+    docLabel: "behaviour plan",
+    joStarters: [
+      "Make the targets more measurable",
+      "Add more de-escalation steps",
+      "Add phrases for a supply teacher to use",
+      "Make the language warmer",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: false,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Behaviour Support Plan",
+    ownPassage: false,
+    // For staff, printed plainly.
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list", "twocol"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules: PUPIL_JO_RULES +
+      "- This is a Behaviour Support Plan for every adult who works with [PUPIL]. Most of it is twocol blocks: two headed lists side by side (\"What triggers it?\" beside \"How do we get there?\"). To change a box, replaceBlock it with both sides. Keep each point short, specific and observable, and describe behaviour, never the child.",
+    arrange: (raw, info) => arrangeBehaviour(raw, info.pupilFacts ?? []),
+    themeFamilies: ["professional", "basic"],
+    parts: BEHAVIOUR_PARTS,
+    aboutPupil: true,
+  },
+  pupilProfile: {
+    slug: "one-page-profile",
+    joName: "one page profile, written in the pupil's own voice",
+    docLabel: "profile",
+    joStarters: [
+      "Make it sound more like a younger child",
+      "Add a point about lunchtimes",
+      "Make the support points more specific",
+      "Shorten every box to three points",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: false,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "One page profile",
+    ownPassage: false,
+    startDesign: () => ({ nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list", "twocol"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules: PUPIL_JO_RULES +
+      "- This is a one page profile in the pupil's own voice: every point is in the first person (\"I like...\", \"It helps me when...\"), warm and simple. The boxes are twocol blocks; to change one, replaceBlock it with both sides. Keep it to one page: short points, 3 to 5 a box.",
+    arrange: (raw, info) => arrangePupilProfile(raw, { dates: info.pupilFacts ?? [], links: info.pupilLinks ?? [] }),
+    parts: PROFILE_PARTS,
+    aboutPupil: true,
+    photoBox: true,
+  },
+  cover: {
+    slug: "cover-lesson",
+    joName: "cover lesson (a plan for a non-specialist cover teacher, then a pupil task sheet)",
+    docLabel: "cover lesson",
+    joStarters: [
+      "Make the instructions simpler",
+      "Add two harder questions at the end",
+      "Make the starter work without the board",
+      "Add a quiet reading task for early finishers",
+    ],
+    defaultKinds: [...COVER_KINDS],
+    allowedKinds: [...COVER_KINDS],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    // Name and date lines go on the pupil task page, not the teacher's.
+    startDesign: () => ({ objective: false, intro: false, pictures: false }),
+    extraBlocks: ["list", "phase"],
+    answersTitle: "Answers to the pupil task",
+    answersNote: "For the cover teacher, to go through the task with the class. Remove this page before handing the task out, or switch it off in Design.",
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a cover lesson for a cover teacher who is not a subject specialist, then a pupil task. Each phase block is one stage: say (the words to say to the class), teacher (numbered steps for the cover teacher), pupils, challenge (what early finishers do) and minutes. The phases' minutes must still add up to the lesson; if you lengthen one, shorten another and say so.\n" +
+      "- The last section is the pupil task: its blocks are the questions pupils answer on their own. Keep every answer correct. Never assume the cover teacher knows the subject.",
+    arrange: (raw, info) => arrangeCover(raw, lessonMinutes(info.lessonLength)),
+    subtitleSuffix: (info) => `Cover lesson · ${lessonMinutes(info.lessonLength)} minutes`,
+    pupilPageRole: COVER_TASK_ROLE,
   },
 };
 

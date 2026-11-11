@@ -280,38 +280,51 @@ export function relayoutLesson(doc: SheetDoc, layout: LessonLayout): SheetDoc {
 
 // ── How a phase reads ─────────────────────────────────────────────────────
 
-/** The fields of a phase that hold words, in the order they are shown. */
-export type PhaseField = "teacher" | "pupils" | "check" | "feedback" | "support" | "challenge" | "ta";
-export const PHASE_FIELDS: PhaseField[] = ["teacher", "pupils", "check", "feedback", "support", "challenge", "ta"];
+/** The fields of a phase that hold words, in the order they are shown. "say"
+ *  is a cover lesson's script and exists only on its phases. */
+export type PhaseField = "say" | "teacher" | "pupils" | "check" | "feedback" | "support" | "challenge" | "ta";
+export const PHASE_FIELDS: PhaseField[] = ["say", "teacher", "pupils", "check", "feedback", "support", "challenge", "ta"];
+
+/** How a phase's parts are named: a lesson plan's layout, or a cover lesson,
+ *  which is written for a non-specialist adult. */
+export type PhaseWording = LessonLayout | "cover" | undefined;
 
 /** What a phase's stage is called in a layout. */
-export function stageLabel(stage: PhaseBlock["stage"], layout: LessonLayout | undefined): string {
+export function stageLabel(stage: PhaseBlock["stage"], layout: PhaseWording): string {
   if (layout === "cycles") return stage === "starter" ? "Starter quiz" : stage === "plenary" ? "Exit quiz" : "Learning cycle";
+  if (layout === "cover") return stage === "starter" ? "Starter" : stage === "plenary" ? "End of lesson" : "Main task";
   return stage === "starter" ? "Starter" : stage === "plenary" ? "Plenary" : "Main";
 }
 
 /** What each field of a phase is called. A learning cycle reads explain,
- *  check, practise, feedback. */
-export function phaseFieldLabel(field: PhaseField, stage: PhaseBlock["stage"], layout: LessonLayout | undefined): string {
+ *  check, practise, feedback; a cover lesson speaks to the cover teacher. */
+export function phaseFieldLabel(field: PhaseField, stage: PhaseBlock["stage"], layout: PhaseWording): string {
   const cycle = layout === "cycles" && stage === "main";
+  const cover = layout === "cover";
   switch (field) {
-    case "teacher": return cycle ? "Explain" : "Teacher";
-    case "pupils": return cycle ? "Practise" : "Pupils";
+    case "say": return "What to say to the class";
+    case "teacher": return cover ? "What you do" : cycle ? "Explain" : "Teacher";
+    case "pupils": return cover ? "What pupils do" : cycle ? "Practise" : "Pupils";
     case "check": return cycle ? "Check for understanding" : "Checking understanding";
     case "feedback": return "Feedback";
     case "support": return "Support";
-    case "challenge": return "Challenge";
+    case "challenge": return cover ? "If pupils finish early" : "Challenge";
     case "ta": return "Teaching assistant";
   }
 }
 
 /** A phase's fields that have something in them, labelled, for the Word file
  *  and Copy. */
-export function phaseRows(p: PhaseBlock, layout: LessonLayout | undefined): { field: PhaseField; label: string; text: string; items: string[] }[] {
+export function phaseRows(p: PhaseBlock, layout: PhaseWording): { field: PhaseField; label: string; text: string; items: string[] }[] {
   return PHASE_FIELDS.map((field) => ({
     field,
     label: phaseFieldLabel(field, p.stage, layout),
-    text: field === "check" ? "" : p[field],
+    text: field === "check" ? "" : (p[field] ?? ""),
     items: field === "check" ? p.check : [],
   })).filter((r) => r.text || r.items.length);
+}
+
+/** How a sheet's phases are worded: its lesson layout, or a cover lesson. */
+export function phaseWording(doc: Pick<SheetDoc, "lesson" | "tool">): PhaseWording {
+  return doc.lesson?.layout ?? (doc.tool === "cover" ? "cover" : undefined);
 }

@@ -15,6 +15,8 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { DEFAULT_UNIT_LESSONS, MAX_UNIT_LESSONS, unitLessonCount } from "@/app/lib/sheets/unit";
 
 const TOOL_SLUG = "topic-overview";
 
@@ -30,7 +32,7 @@ export default function TopicOverviewForm({
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
-  const [numLessons, setNumLessons] = useState(6);
+  const [numLessons, setNumLessons] = useState(DEFAULT_UNIT_LESSONS);
   const [additionalInfo, setAdditionalInfo] = useState("");
 
   const [result, setResult] = useState<string | null>(null);
@@ -39,6 +41,8 @@ export default function TopicOverviewForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its plan save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate =
     curriculum && (mixed || yearGroup) && subject.trim() && topic.trim();
@@ -58,9 +62,10 @@ export default function TopicOverviewForm({
     setMixed(Boolean(i.mixed));
     setSubject((i.subject as string) ?? "");
     setTopic((i.topic as string) ?? "");
-    setNumLessons((i.numLessons as number) ?? 6);
+    setNumLessons(i.numLessons === undefined ? DEFAULT_UNIT_LESSONS : unitLessonCount(i.numLessons));
     setAdditionalInfo((i.additionalInfo as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -73,15 +78,17 @@ export default function TopicOverviewForm({
       yearGroup: (v) => setYearGroup(v as string),
       subject: (v) => setSubject(v as string),
       topic: (v) => setTopic(v as string),
-      numLessons: (v) => setNumLessons(v as number),
+      numLessons: (v) => setNumLessons(unitLessonCount(v)),
     },
   });
 
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = { curriculum, yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject), topic };
     try {
       const res = await fetch("/api/topic-overview", {
         method: "POST",
@@ -100,14 +107,10 @@ export default function TopicOverviewForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      // The route streams the unit as JSON; each update arrives here as a
+      // whole, valid sheet, so the table fills in row by row.
+      const finished = await readSheetStream(res, "topicMap", info, setResult);
+      if (!finished) throw new Error("The topic map came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -141,7 +144,7 @@ export default function TopicOverviewForm({
             <SubjectField value={subject} onChange={setSubject} />
             <TopicField value={topic} onChange={setTopic} />
 
-            <LessonCountField value={numLessons} onChange={setNumLessons} />
+            <LessonCountField value={numLessons} onChange={setNumLessons} max={MAX_UNIT_LESSONS} />
 
             <AdditionalContextField value={additionalInfo} onChange={setAdditionalInfo} />
 
@@ -152,7 +155,7 @@ export default function TopicOverviewForm({
                 title="Reset form?"
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
-                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setNumLessons(6); setAdditionalInfo(""); setResult(null); setError(null); setConfirmingReset(false); }}
+                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setNumLessons(DEFAULT_UNIT_LESSONS); setAdditionalInfo(""); setResult(null); setRunId(null); setError(null); setConfirmingReset(false); }}
                 onCancel={() => setConfirmingReset(false)}
               />
               <GenerateButton onClick={handleGenerate} disabled={!canGenerate || isGenerating || unchangedSinceGeneration} isGenerating={isGenerating} hasResult={result !== null} />
@@ -169,9 +172,10 @@ export default function TopicOverviewForm({
         result={result}
         isGenerating={isGenerating}
         onChange={(md) => setResult(md)}
-        exportFilename={`topic-overview-${topic || subject || "export"}`}
+        exportFilename={`topic-map-${topic || subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: topic || subject || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
     </div>
   );

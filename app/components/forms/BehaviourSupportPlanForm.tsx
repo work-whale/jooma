@@ -4,7 +4,6 @@ import { useState } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import {
   PupilNameField,
-  GenderField,
   StudentClassField,
   SupportNeedsField,
   KeyStaffField,
@@ -14,10 +13,10 @@ import {
   PlanStartDateField,
   ReviewDateField,
 } from "@/app/components/fields";
+import PronounsField, { PupilPrivacyNote } from "@/app/components/fields/PronounsField";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
@@ -26,18 +25,21 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { isPupilPronouns, pronounsFromInput, scrubPupilText } from "@/app/lib/sheets/pupil";
+import { factDate } from "@/app/lib/sheets/behaviour";
+import type { PupilPronouns } from "@/app/lib/sheets/types";
 
 const TOOL_SLUG = "behaviour-support-plan";
 
-const REFINE_CHIPS = [
-  "Translate to...",
-  "Provide more strategies for...",
-  "Remove the section on...",
-  "Add more detail on...",
-  "Make the plan more concise...",
-  "Add in the following strategy:",
-];
-
+/*
+ * Behaviour Support Plan. The pupil's name stays in this browser and the
+ * teacher's saved copy: everything sent has it replaced by "[PUPIL]"
+ * (scrubPupilText), and the class, staff and dates are never sent at all, the
+ * page builds the details table from them. The plan comes back as JSON and is
+ * drawn as the familiar two-column plan (app/lib/sheets/behaviour.ts), edited
+ * on the page or with Jo.
+ */
 export default function BehaviourSupportPlanForm({
   sidebar,
   launch,
@@ -50,7 +52,7 @@ export default function BehaviourSupportPlanForm({
   const [mixed, setMixed] = useState(false);
 
   const [studentName, setStudentName] = useState("");
-  const [studentGender, setStudentGender] = useState("Male");
+  const [pronouns, setPronouns] = useState<PupilPronouns>("they");
   const [studentClass, setStudentClass] = useState("");
   const [supportNeeds, setSupportNeeds] = useState("");
   const [keyStaff, setKeyStaff] = useState("");
@@ -65,18 +67,21 @@ export default function BehaviourSupportPlanForm({
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its plan save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const resolvedYearGroup = mixed ? "Mixed year group" : yearGroup;
   const canGenerate = curriculum.trim() && resolvedYearGroup.trim() && studentName.trim() &&
     behaviourDescription.trim() && behaviouralTriggers.trim();
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, studentName, studentGender, studentClass, supportNeeds, keyStaff, behaviourDescription, behaviouralTriggers, behaviouralPatterns, strengths, dislikes, previousInterventions, planStartDate, reviewDate };
+  // Saved as the run's input (in the teacher's own history, never sent to a
+  // model) so a past plan can refill the form.
+  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, studentName, pronouns, studentClass, supportNeeds, keyStaff, behaviourDescription, behaviouralTriggers, behaviouralPatterns, strengths, dislikes, previousInterventions, planStartDate, reviewDate };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -88,7 +93,8 @@ export default function BehaviourSupportPlanForm({
     setYearGroup((i.yearGroup as string) ?? "");
     setMixed(Boolean(i.mixed));
     setStudentName((i.studentName as string) ?? "");
-    setStudentGender((i.studentGender as string) ?? "Male");
+    // Runs saved before pronouns had a gender: Male he, Female she, else they.
+    setPronouns(pronounsFromInput(i));
     setStudentClass((i.studentClass as string) ?? "");
     setSupportNeeds((i.supportNeeds as string) ?? "");
     setKeyStaff((i.keyStaff as string) ?? "");
@@ -101,75 +107,75 @@ export default function BehaviourSupportPlanForm({
     setPlanStartDate((i.planStartDate as string) ?? "");
     setReviewDate((i.reviewDate as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
-  // `?run=` reopens a saved run from Dashboard, Folders or Analytics.
+  // `?run=` reopens a saved run from Dashboard, Folders or Analytics. The
+  // assistant never prefills the name (app/lib/assistant-tools.ts).
   const { prefilled } = useToolLaunch({
     params: launch,
     onRestore: restore,
     prefill: {
       curriculum: (v) => setCurriculum(v as string),
       yearGroup: (v) => setYearGroup(v as string),
-      studentName: (v) => setStudentName(v as string),
       studentClass: (v) => setStudentClass(v as string),
-      studentGender: (v) => setStudentGender(v as string),
+      pronouns: (v) => { if (isPupilPronouns(v)) setPronouns(v); },
       supportNeeds: (v) => setSupportNeeds(v as string),
     },
   });
-
-  const streamResponse = async (body: object, onChunk: (c: string) => void) => {
-    const res = await fetch("/api/behaviour-support-plan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, language }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error((data as { error?: string }).error || "Request failed");
-    }
-    const reader = res.body!.getReader();
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      onChunk(decoder.decode(value, { stream: true }));
-    }
-  };
 
   const handleGenerate = async () => {
     setTouched(true);
     if (!canGenerate) return;
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const name = studentName.trim();
+    const scrub = (t: string) => scrubPupilText(t, name);
+    // On the page, never sent: the details table and the child's name.
+    const info = {
+      yearGroup: resolvedYearGroup,
+      pupil: { name, pronouns },
+      pupilFacts: [
+        { label: "Year group", value: resolvedYearGroup },
+        { label: "Class", value: studentClass.trim() },
+        { label: "Additional needs", value: supportNeeds.trim() },
+        { label: "Staff working with [PUPIL]", value: keyStaff.trim() },
+        { label: "Plan starts", value: factDate(planStartDate) },
+        { label: "Next review", value: factDate(reviewDate) },
+      ],
+    };
     try {
-      await streamResponse(
-        { action: "generate", curriculum, yearGroup: resolvedYearGroup, studentName, studentGender, studentClass, supportNeeds, keyStaff, behaviourDescription, behaviouralTriggers, behaviouralPatterns, strengths, dislikes, previousInterventions, planStartDate, reviewDate },
-        (chunk) => setResult((prev) => (prev ?? "") + chunk),
-      );
+      const res = await fetch("/api/behaviour-support-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language,
+          yearGroup: resolvedYearGroup,
+          pronouns,
+          supportNeeds: scrub(supportNeeds),
+          behaviourDescription: scrub(behaviourDescription),
+          behaviouralTriggers: scrub(behaviouralTriggers),
+          behaviouralPatterns: scrub(behaviouralPatterns),
+          strengths: scrub(strengths),
+          dislikes: scrub(dislikes),
+          previousInterventions: scrub(previousInterventions),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error || "Generation failed");
+      }
+      const finished = await readSheetStream(res, "behaviourPlan", info, setResult);
+      if (!finished) throw new Error("The plan came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result || !instruction.trim()) return;
-    setIsRefining(true);
-    setResult("");
-    try {
-      await streamResponse(
-        { action: "refine", result, instruction },
-        (chunk) => setResult((prev) => (prev ?? "") + chunk),
-      );
-    } catch {
-      // silently ignore
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -198,9 +204,12 @@ export default function BehaviourSupportPlanForm({
               <LanguageField value={language} onChange={setLanguage} />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <PupilNameField value={studentName} onChange={setStudentName} />
-              <GenderField value={studentGender} onChange={setStudentGender} label="Student gender" />
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <PupilNameField value={studentName} onChange={setStudentName} />
+                <PronounsField value={pronouns} onChange={setPronouns} />
+              </div>
+              <PupilPrivacyNote />
             </div>
 
             <StudentClassField value={studentClass} onChange={setStudentClass} />
@@ -282,11 +291,11 @@ export default function BehaviourSupportPlanForm({
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
                 onConfirm={() => {
-                  setStudentName(""); setStudentClass(""); setSupportNeeds(""); setKeyStaff("");
+                  setStudentName(""); setPronouns("they"); setStudentClass(""); setSupportNeeds(""); setKeyStaff("");
                   setBehaviourDescription(""); setBehaviouralTriggers(""); setBehaviouralPatterns("");
                   setStrengths(""); setDislikes(""); setPreviousInterventions("");
                   setPlanStartDate(""); setReviewDate(""); setTouched(false);
-                  setResult(null); setError(null); setConfirmingReset(false);
+                  setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
@@ -308,20 +317,12 @@ export default function BehaviourSupportPlanForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
-        exportFilename={`bsp-${studentName.toLowerCase().replace(/\s+/g, "-") || "student"}`}
-        historyMeta={{ toolSlug: TOOL_SLUG, title: studentName || null, input: formState }}
+        exportFilename={`behaviour-plan-${studentName.trim().toLowerCase().replace(/\s+/g, "-") || "pupil"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: studentName.trim() || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

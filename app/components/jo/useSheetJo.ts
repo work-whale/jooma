@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import { applySheetOp, isSheetOp, setSheetText, sheetOpFocus, sheetSnapshot, sheetTextAt } from "@/app/lib/jo/sheet-ops";
 import type { JoOp } from "@/app/lib/jo/types";
 import type { SheetDoc } from "@/app/lib/sheets/types";
+import { scrubPupilText } from "@/app/lib/sheets/pupil";
 import type { JoAdapter } from "./useJoSession";
 
 /** Resolves after `ms`, or at once when the turn is stopped. */
@@ -77,6 +78,12 @@ export function useSheetJo({
     () => ({
       kind: "sheet",
       snapshot: () => (docRef.current ? sheetSnapshot(docRef.current) : null),
+      // A document about one child: the name typed to Jo goes as [PUPIL],
+      // as it is everywhere else Jo sees.
+      outgoing: (text: string) => {
+        const name = docRef.current?.pupil?.name;
+        return name ? scrubPupilText(text, name) : text;
+      },
       focus: () => null,
       isOp: (v: unknown): v is JoOp => isSheetOp(v),
       begin() {

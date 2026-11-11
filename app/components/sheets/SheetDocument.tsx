@@ -5,9 +5,13 @@ import { injectGoogleFonts } from "@/app/components/editor/googleFonts";
 import { extractHeadings } from "@/app/lib/headings";
 import { paginate, type PageUnit } from "@/app/lib/sheets/paginate";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
-import { getSheetTheme, PAPER_PX, sheetThemeVars } from "@/app/lib/sheets/themes";
+import { getSheetTheme, pagePx, sheetThemeVars } from "@/app/lib/sheets/themes";
+import { withPupilName, withPupilPlaceholder } from "@/app/lib/sheets/pupil";
+import { emptyLesson, TOPIC_MAP_COLUMNS, visibleColumns, type UnitColumn } from "@/app/lib/sheets/unit";
+import { unitLessonHref } from "@/app/lib/lesson-handoffs";
+import { headedSections, isHidden } from "@/app/lib/sheets/visibility";
 import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, sheetOutline, showsCover } from "@/app/lib/sheets/markdown";
-import { phaseClock } from "@/app/lib/sheets/lesson";
+import { phaseClock, phaseWording } from "@/app/lib/sheets/lesson";
 import { sheetToolProfile } from "@/app/lib/sheets/tools";
 import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "@/app/lib/sheets/visibility";
 import { formatLetterDate } from "@/app/lib/sheets/letter";
@@ -35,7 +39,7 @@ import {
   type SheetDoc,
   type SheetQuestion,
 } from "@/app/lib/sheets/types";
-import { AnswerView, BlockView, PassageView } from "./blocks";
+import { AnswerView, BlockView, PassageView, SequenceHead, SequenceRow } from "./blocks";
 import { EditableText } from "./rich";
 
 /*
@@ -66,6 +70,8 @@ const CONTENT_LABEL: Partial<Record<BlockType, string>> = {
   list: "List",
   phase: "Lesson phase",
   exemplar: "Model answer",
+  sequence: "Lesson table",
+  twocol: "Two-column box",
   image: "Picture",
   text: "Text",
   callout: "Callout box",
@@ -84,6 +90,8 @@ interface Unit extends PageUnit {
   key: string;
   /** One paragraph of a passage that may run over a page break. */
   para?: { blockId: string; si: number; bi: number; p: number };
+  /** One lesson of a lesson table; the first (r = 0) carries the header row. */
+  seq?: { blockId: string; r: number };
   /** Draws the piece. `live` is false for the hidden measuring copy, which
    *  must carry no ids and no toolbars. */
   render?: (live: boolean) => ReactNode;
@@ -97,9 +105,17 @@ interface PassageMeasure {
   paras: number[];
 }
 
+interface SequenceMeasure {
+  /** The table's frame: its height less the header and rows. */
+  chrome: number;
+  head: number;
+  rows: number[];
+}
+
 interface Measured {
   units: Record<string, number>;
   passages: Record<string, PassageMeasure>;
+  sequences: Record<string, SequenceMeasure>;
   foot: number;
 }
 
@@ -127,18 +143,27 @@ export interface SheetDocumentProps {
   onPicture?: (blockId: string) => void;
 }
 
-export default function SheetDocument({ doc, edit = false, onChange, streaming = false, anchors = true, fit = true, exporting = false, joFocus = null, onPicture }: SheetDocumentProps) {
+export default function SheetDocument({ doc: stored, edit = false, onChange, streaming = false, anchors = true, fit = true, exporting = false, joFocus = null, onPicture }: SheetDocumentProps) {
+  // A document about one child is drawn with the child's name in place of
+  // "[PUPIL]", and every edit goes back with the name taken out again, so the
+  // stored copy (the one Jo and autosave see) never holds it in its text.
+  const doc = useMemo(() => withPupilName(stored), [stored]);
   const editing = edit && !streaming && !!onChange;
   const theme = getSheetTheme(doc.design.themeId);
-  const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
+  const paper = pagePx(doc.design);
   const numbers = useMemo(() => questionLabels(doc), [doc]);
   const clocks = useMemo(() => phaseClock(doc), [doc]);
   const profile = sheetToolProfile(doc.tool);
   const ids = useMemo(() => (anchors ? extractHeadings(sheetOutline(doc)).map((h) => h.id) : []), [doc, anchors]);
   const showAnswers = hasAnswersPage(doc);
+  // The outline lists the sections on the page, so a heading's id is found
+  // by its place among those, not among every section.
+  const shown = headedSections(doc);
+  const headingAt = new Map(shown.map((s, i) => [s.id, i + 1]));
 
   const [menu, setMenu] = useState<Menu>(null);
-  const commit = (next: SheetDoc) => onChange?.(next);
+  const commit = (next: SheetDoc) => onChange?.(withPupilPlaceholder(next));
+  const columns: UnitColumn[] = visibleColumns(doc, profile.unitColumns ?? TOPIC_MAP_COLUMNS);
 
   // ── The pieces ──────────────────────────────────────────────────────────
 
@@ -214,12 +239,21 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     });
   }
 
+  // A one page profile has an empty box beside the title for a printed
+  // photo. Nothing is uploaded: the box is only a frame.
+  const photo = !!profile.photoBox && !isHidden(doc, "photo");
   if (!cover && !letter) units.push({
     key: "head",
     height: 0,
     render: (live) => (
+      <div className={photo ? "js-head-photo" : undefined}>
+      {photo && (
+        <div className="js-photo-box" aria-label="Space for a photo" data-testid={live ? "photo-box" : undefined}>
+          <span>Photo</span>
+        </div>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {doc.design.nameDate && (
+        {doc.design.nameDate && !profile.pupilPageRole && (
           <div className="js-namedate">
             <span>Name <i /></span>
             <span>Date <i /></span>
@@ -247,6 +281,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
             </p>
           </div>
         )}
+      </div>
       </div>
     ),
   });
@@ -277,14 +312,31 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     });
   }
 
+  // A lesson table is drawn in pieces, possibly across pages, like a passage.
+  const pupilPage = (s: SheetDoc["sections"][number]) => !!profile.pupilPageRole && s.role === profile.pupilPageRole;
+  const sequenceTools = new Map<string, { tools: ReactNode; block: Extract<SheetBlock, { type: "sequence" }>; si: number; bi: number }>();
+
   doc.sections.forEach((s, si) => {
-    // A letter's paragraphs sit under no heading.
-    if (!(letter && !s.title && !s.instructions)) units.push({
+    // A part switched off in Design (a unit plan's overview) is left off
+    // the page, and out of the outline's way.
+    if (isHidden(doc, s.role)) return;
+    // A letter's paragraphs sit under no heading, nor does a built-in part
+    // with no title (a profile's review dates).
+    if (!((letter || s.role) && !s.title && !s.instructions)) units.push({
       key: `sh:${s.id}`,
       height: 0,
       keepWithNext: s.blocks.length > 0,
+      // The pupils' pages (a cover lesson's task) start on a page of their
+      // own, with the name and date lines at the top.
+      breakBefore: !!pupilPage(s),
       render: (live) => (
         <div className="js-block" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {pupilPage(s) && doc.design.nameDate && (
+            <div className="js-namedate" data-testid={live ? "pupil-page-namedate" : undefined}>
+              <span>Name <i /></span>
+              <span>Date <i /></span>
+            </div>
+          )}
           {live && editing && (
             <Tools>
               <ToolButton label="Move up" text="↑" onClick={() => commit(moveSection(doc, si, -1))} />
@@ -292,7 +344,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
               <ToolButton label="Delete section" text="Delete" onClick={() => commit(deleteSection(doc, si))} />
             </Tools>
           )}
-          <div className="js-section-head" {...(live && ids[si + 1] ? { id: ids[si + 1] } : {})}>
+          <div className="js-section-head" {...(live && ids[headingAt.get(s.id) ?? -1] ? { id: ids[headingAt.get(s.id)!] } : {})}>
             {theme.look.emoji && (s.emoji || editing) && (
               <EditableText className="js-section-emoji" value={s.emoji} placeholder="+" editable={editing} onChange={(emoji) => commit(updateSection(doc, si, { emoji }))} label="section emoji" />
             )}
@@ -365,6 +417,17 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         return;
       }
 
+      if (b.type === "sequence") {
+        // One unit per lesson. The first carries the header row, so the
+        // section heading, the header and the first lesson always share a
+        // page; any lesson that opens a later page draws the header again
+        // above it (see drawSequence). An emptied table is its header alone.
+        const count = Math.max(1, b.lessons.length);
+        for (let r = 0; r < count; r++) units.push({ key: `sq:${b.id}:${r}`, height: 0, seq: { blockId: b.id, r } });
+        sequenceTools.set(b.id, { tools, block: b, si, bi });
+        return;
+      }
+
       units.push({
         key: b.id,
         height: 0,
@@ -379,7 +442,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
               onPatch={patch}
               onPicture={live && onPicture ? () => onPicture(b.id) : undefined}
               clock={clocks.get(b.id)}
-              layout={doc.lesson?.layout}
+              layout={phaseWording(doc)}
             />
           </div>
         ),
@@ -392,7 +455,8 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         height: 0,
         render: (live) => (
           <div className="js-add-row">
-            {!letter && <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "question" })}>+ Add question</button>}
+            {/* A letter, a unit plan or a plan about one child has no questions to add. */}
+            {!letter && !doc.unit && !profile.aboutPupil && <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "question" })}>+ Add question</button>}
             <button type="button" className="js-add" onClick={() => live && setMenu({ si, kind: "content" })}>{letter ? "+ Add paragraph or box" : "+ Add text or box"}</button>
             {live && menu?.si === si && (
               <AddMenu
@@ -484,12 +548,13 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
       keepWithNext: true,
       render: (live) => (
         <div>
-          <h2 className="js-answers-title" {...(live && ids[doc.sections.length + 1] ? { id: ids[doc.sections.length + 1] } : {})}>{answersTitle(doc)}</h2>
+          <h2 className="js-answers-title" {...(live && ids[shown.length + 1] ? { id: ids[shown.length + 1] } : {})}>{answersTitle(doc)}</h2>
           <p className="js-instructions" style={{ marginTop: 2 }}>{profile.answersNote}</p>
         </div>
       ),
     });
     doc.sections.forEach((s, si) => {
+      if (isHidden(doc, s.role)) return;
       // Numbering restarts in each section, so each section's answers go
       // under its own title.
       if (profile.restartNumbers && s.blocks.some(isQuestion)) {
@@ -553,10 +618,17 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
   const measure = useCallback(() => {
     const root = measureRef.current;
     if (!root) return;
-    const next: Measured = { units: {}, passages: {}, foot: 0 };
+    const next: Measured = { units: {}, passages: {}, sequences: {}, foot: 0 };
     const h = (el: Element) => Math.ceil(el.getBoundingClientRect().height);
     root.querySelectorAll<HTMLElement>("[data-m]").forEach((el) => {
       const key = el.dataset.m!;
+      if (key.startsWith("Q:")) {
+        const head = el.querySelector(".js-seq-head");
+        const rows = [...el.querySelectorAll(".js-seq-row")].map(h);
+        const headH = head ? h(head) : 0;
+        next.sequences[key.slice(2)] = { chrome: Math.max(0, h(el) - headH - rows.reduce((a, b) => a + b, 0)), head: headH, rows };
+        return;
+      }
       if (!key.startsWith("P:")) {
         next.units[key] = h(el);
         return;
@@ -607,6 +679,19 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
 
   if (measured) {
     for (const u of units) {
+      if (u.seq) {
+        // The pieces of one table touch: each row's height already includes
+        // the gap paginate adds before it. A row that opens a page carries
+        // the frame and the repeated header with it.
+        const m = measured.sequences[u.seq.blockId];
+        if (!m) u.height = 0;
+        else if (u.seq.r === 0) u.height = m.chrome + m.head + (m.rows[0] ?? 0);
+        else {
+          u.height = (m.rows[u.seq.r] ?? 0) - GAP;
+          u.openHeight = m.chrome + m.head + GAP;
+        }
+        continue;
+      }
       if (!u.para) {
         u.height = measured.units[u.key] ?? 0;
         continue;
@@ -665,10 +750,61 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     );
   };
 
+  /** Rows `from` to `to` of a lesson table, under its header. The piece that
+   *  starts with the header carries the table's toolbar and Jo's mark. */
+  const drawSequence = (blockId: string, from: number, to: number, first: boolean, live: boolean) => {
+    const entry = sequenceTools.get(blockId);
+    if (!entry) return null;
+    const { block, tools, si, bi } = entry;
+    const setLesson = (r: number, next: (typeof block.lessons)[number] | null) =>
+      commit(updateBlock(doc, si, bi, { lessons: next ? block.lessons.map((l, j) => (j === r ? next : l)) : block.lessons.filter((_, j) => j !== r) }));
+    const addLesson = (after: number) =>
+      commit(updateBlock(doc, si, bi, { lessons: [...block.lessons.slice(0, after + 1), emptyLesson(), ...block.lessons.slice(after + 1)] }));
+    const rows = block.lessons.slice(Math.max(0, from), to);
+    return (
+      <div className="js-block" key={`${blockId}:${from}`} data-block="sequence" {...(first ? joMark(blockId, live) : {})}>
+        {first && joLabel(blockId, live)}
+        {live && editing && first && tools}
+        <div className="js-seq" role="table" data-cols={columns.length > 6 ? "wide" : undefined} data-testid={live ? "lesson-table" : undefined}>
+          <SequenceHead columns={columns} />
+          {rows.map((lesson, k) => {
+            const r = Math.max(0, from) + k;
+            return (
+              <div className="js-block" key={r}>
+                {live && editing && (
+                  <Tools>
+                    <ToolButton label={`Add a lesson after lesson ${r + 1}`} text="+ Lesson" onClick={() => addLesson(r)} />
+                    <ToolButton label={`Delete lesson ${r + 1}`} text="Delete" onClick={() => setLesson(r, null)} />
+                  </Tools>
+                )}
+                <SequenceRow
+                  lesson={lesson}
+                  index={r}
+                  columns={columns}
+                  edit={editing}
+                  onChange={(next) => setLesson(r, next)}
+                  planHref={exporting ? null : unitLessonHref(doc, lesson, r)}
+                  live={live}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const drawPage = (indices: number[]) => {
     const out: ReactNode[] = [];
     for (let k = 0; k < indices.length; k++) {
       const u = units[indices[k]];
+      if (u.seq) {
+        let end = k;
+        while (end + 1 < indices.length && units[indices[end + 1]].seq?.blockId === u.seq.blockId) end++;
+        out.push(drawSequence(u.seq.blockId, u.seq.r, units[indices[end]].seq!.r + 1, u.seq.r === 0, true));
+        k = end;
+        continue;
+      }
       if (!u.para) {
         out.push(
           <div key={u.key} {...joMark(u.key, true)}>
@@ -701,7 +837,7 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
     return () => observer.disconnect();
   }, [fit, paper.w]);
 
-  const vars = sheetThemeVars(theme, doc.design.fontScale, doc.design.paper) as CSSProperties;
+  const vars = sheetThemeVars(theme, doc.design.fontScale, paper) as CSSProperties;
   const highContrast = theme.tags?.includes("high-contrast");
 
   return (
@@ -748,7 +884,9 @@ export default function SheetDocument({ doc, edit = false, onChange, streaming =
         <div className="js-page">
           <div className="js-page-body">
             {units.map((u) =>
-              u.para ? (
+              u.seq ? (
+                u.seq.r === 0 ? <div key={u.key} data-m={`Q:${u.seq.blockId}`}>{drawSequence(u.seq.blockId, 0, Infinity, true, false)}</div> : null
+              ) : u.para ? (
                 u.para.p === 0 ? <div key={u.key} data-m={`P:${u.para.blockId}`}>{drawPassage(u.para.blockId, 0, Infinity, false)}</div> : null
               ) : (
                 <div key={u.key} data-m={u.key}>{u.render?.(false)}</div>

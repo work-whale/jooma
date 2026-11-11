@@ -12,8 +12,9 @@ import { parsePartialJson } from "./stream";
 import { DEFAULT_SHEET_THEME } from "./themes";
 import { puzzleDefaults } from "./puzzles/level";
 import { sheetToolProfile } from "./tools";
-import type { SheetTool } from "./types";
+import type { PupilMeta, SheetTool } from "./types";
 import type { LetterInfo } from "./letter";
+import type { PupilFact } from "./behaviour";
 
 export interface SheetRequestInfo {
   yearGroup?: string;
@@ -42,6 +43,14 @@ export interface SheetRequestInfo {
   /** Letters: the type, recipient, sender, date and facts. The names in it
    *  (recipient, sender, child) stay in the browser. */
   letter?: LetterInfo;
+  /** Documents about one child: the name and pronouns. Kept in the browser
+   *  and on the saved document; the request to the model never has them. */
+  pupil?: PupilMeta;
+  /** Documents about one child: facts that go on the page as typed (class,
+   *  staff, dates), built into tables by code and never sent to a model. */
+  pupilFacts?: PupilFact[];
+  /** One page profiles: intervention groups and outside agencies, the same way. */
+  pupilLinks?: PupilFact[];
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -65,6 +74,8 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     ...(profile.lessonMeta ? { lesson: profile.lessonMeta(info) } : {}),
     ...(profile.examMeta ? { exam: profile.examMeta(info) } : {}),
     ...(profile.letterMeta && info.letter ? { letter: profile.letterMeta(info.letter) } : {}),
+    ...(profile.unitMeta ? { unit: profile.unitMeta(info) } : {}),
+    ...(profile.aboutPupil && info.pupil ? { pupil: { name: info.pupil.name.trim(), pronouns: info.pupil.pronouns } } : {}),
     leadingSections:
       profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

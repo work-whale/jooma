@@ -3,7 +3,7 @@
 import { createRoot } from "react-dom/client";
 import { triggerDownload } from "@/app/lib/exportUtils";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
-import { getSheetTheme, PAPER_PX } from "@/app/lib/sheets/themes";
+import { getSheetTheme, pagePx } from "@/app/lib/sheets/themes";
 import type { SheetDoc } from "@/app/lib/sheets/types";
 import SheetDocument from "./SheetDocument";
 
@@ -19,7 +19,7 @@ import SheetDocument from "./SheetDocument";
 /** Draws the sheet offscreen and resolves with its root once it is ready. */
 async function renderOffscreen(doc: SheetDoc): Promise<{ root: HTMLElement; dispose: () => void }> {
   const host = document.createElement("div");
-  host.style.cssText = `position:fixed;left:-30000px;top:0;width:${PAPER_PX[doc.design.paper]?.w ?? 794}px;`;
+  host.style.cssText = `position:fixed;left:-30000px;top:0;width:${pagePx(doc.design).w}px;`;
   document.body.appendChild(host);
   const reactRoot = createRoot(host);
   reactRoot.render(<SheetDocument doc={doc} fit={false} anchors={false} exporting />);
@@ -64,10 +64,10 @@ export async function exportSheetPdf(doc: SheetDoc, filename: string): Promise<v
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([import("jspdf"), import("html2canvas")]);
   const { root, dispose } = await renderOffscreen(doc);
   try {
-    const paper = PAPER_PX[doc.design.paper] ?? PAPER_PX.a4;
+    const paper = pagePx(doc.design);
     // hotfixes: see exportToPdf in exportUtils.ts. Without it unit "px" is
     // not 96 dpi and every page comes out the wrong size.
-    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: doc.design.paper === "letter" ? "letter" : "a4", hotfixes: ["px_scaling"] });
+    const pdf = new jsPDF({ orientation: doc.design.landscape ? "landscape" : "portrait", unit: "px", format: doc.design.paper === "letter" ? "letter" : "a4", hotfixes: ["px_scaling"] });
     const w = pdf.internal.pageSize.getWidth();
     const h = pdf.internal.pageSize.getHeight();
     const pages = [...root.querySelectorAll<HTMLElement>(".js-pages > .js-page")];
@@ -96,7 +96,7 @@ export async function printSheet(doc: SheetDoc, title: string): Promise<void> {
     dispose();
   }
   const fonts = document.querySelector<HTMLLinkElement>('link[data-jooma="google-fonts"]')?.href;
-  const page = doc.design.paper === "letter" ? "letter" : "A4";
+  const page = `${doc.design.paper === "letter" ? "letter" : "A4"}${doc.design.landscape ? " landscape" : ""}`;
   const iframe = document.createElement("iframe");
   iframe.style.cssText = "position:fixed;visibility:hidden;top:0;left:0;width:0;height:0;border:none;";
   iframe.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${title.replace(/</g, "&lt;")}</title>

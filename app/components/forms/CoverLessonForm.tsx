@@ -13,7 +13,6 @@ import {
 import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { toTitleCase } from "@/app/lib/formOptions";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -25,17 +24,11 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { coverMinutes } from "@/app/lib/sheets/cover";
+import { lessonMinutes } from "@/app/lib/sheets/lesson";
 
 const TOOL_SLUG = "cover-lesson";
-
-const REFINE_CHIPS = [
-  "Make instructions simpler",
-  "Add more structured activities",
-  "Make it more suitable for a challenging class",
-  "Add a creative task",
-  "Include more discussion activities",
-  "Make it suitable for SEND learners",
-];
 
 export default function CoverLessonForm({
   sidebar,
@@ -57,11 +50,12 @@ export default function CoverLessonForm({
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  // The history run on screen, so edits to its plan save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   // Raw form state — saved as history input so a past run can refill the form.
   const [language, setLanguage] = useGenerationLanguage();
@@ -83,6 +77,7 @@ export default function CoverLessonForm({
     setDifferentiate(d.differentiate);
     setDifferentiationLevels(d.levels);
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -113,8 +108,11 @@ export default function CoverLessonForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    // The length as minutes, for the timings and the subtitle.
+    const info = { curriculum, yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject), topic, lessonLength: lessonMinutes(coverMinutes(lessonLength) ?? undefined) };
     try {
       const res = await fetch("/api/cover-lesson", {
         method: "POST",
@@ -136,44 +134,15 @@ export default function CoverLessonForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }).replace(/©/g, "(c)"));
-      }
+      // The route streams the lesson as JSON; each update arrives here as a
+      // whole, valid sheet, so the pages fill in as the model writes.
+      const finished = await readSheetStream(res, "cover", info, setResult);
+      if (!finished) throw new Error("The cover lesson came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -189,6 +158,7 @@ export default function CoverLessonForm({
     setDifferentiate("no");
     setDifferentiationLevels([]);
     setResult(null);
+    setRunId(null);
     setError(null);
     setConfirmingReset(false);
   };
@@ -234,9 +204,9 @@ export default function CoverLessonForm({
               rows={4}
               placeholders={[
                 `e.g. "This is a top set."`,
-                `e.g. "The class can be challenging — keep activities short."`,
+                `e.g. "The class can be challenging, so keep activities short."`,
                 `e.g. "Pupils have been revising for an upcoming test."`,
-                `e.g. "There are several SEND pupils — please keep instructions clear."`,
+                `e.g. "There are several SEND pupils, so please keep instructions clear."`,
               ]}
               labelSlot={
                 <GenerateOutlineButton
@@ -276,20 +246,12 @@ export default function CoverLessonForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`cover-lesson-${subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: topic || subject || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

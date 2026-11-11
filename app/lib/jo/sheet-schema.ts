@@ -33,7 +33,9 @@ export function joSheetResponseFormat(tool: SheetTool) {
     op("addSection", { afterSectionId: str, title: str, emoji: str, instructions: str, blocks: { type: "array", items: block } }),
     op("deleteSection", { sectionId: str }),
     op("setDesign", {
-      key: { type: "string", enum: ["fontScale", "answers", "nameDate", "lineNumbers", "paper", "objective", "intro", "diffNote", "pictures"] },
+      // Landscape only where Design offers it, so the other tools' schemas
+      // are exactly what they were.
+      key: { type: "string", enum: ["fontScale", "answers", "nameDate", "lineNumbers", "paper", "objective", "intro", "diffNote", "pictures", ...(sheetToolProfile(tool).landscape ? ["landscape"] : [])] },
       value: str,
     }),
   ];

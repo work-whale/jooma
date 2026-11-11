@@ -9,6 +9,7 @@ import { LESSON_LAYOUTS } from "@/app/lib/sheets/lesson";
 import { sheetImages } from "@/app/lib/sheets/normalize";
 import { hasDifferentiationNote, showsPictures } from "@/app/lib/sheets/visibility";
 import { sheetToolProfile } from "@/app/lib/sheets/tools";
+import { TOPIC_MAP_COLUMNS, UNIT_COLUMNS, visibleColumns, type UnitField } from "@/app/lib/sheets/unit";
 
 /*
  * The Design panel: a sheet's theme, text size and page setup. Every change is
@@ -50,6 +51,19 @@ export default function SheetDesignPanel({
   // pink does the school no favours.
   const families = THEME_FAMILIES.filter((f) => sheetToolProfile(doc.tool).themeFamilies?.includes(f.id) ?? true);
   const letter = !!doc.letter;
+  const profile = sheetToolProfile(doc.tool);
+  // A unit plan or a plan about one child is for staff, not a pupil sheet:
+  // no name lines, objective line or answers page to switch.
+  const staffDoc = !!doc.unit || !!profile.aboutPupil;
+  const hasSequence = doc.sections.some((s) => s.blocks.some((b) => b.type === "sequence"));
+  const shown = new Set(visibleColumns(doc, profile.unitColumns ?? TOPIC_MAP_COLUMNS).map((c) => c.id));
+  const hidden = new Set(design.hidden ?? []);
+  const setPart = (id: string, on: boolean) => onDesign({ hidden: on ? [...hidden].filter((h) => h !== id) : [...hidden, id] });
+  const setColumn = (id: UnitField, on: boolean) => {
+    const next = on ? [...shown, id] : [...shown].filter((c) => c !== id);
+    // Table order, whatever order they were switched in; at least one column.
+    if (next.length > 0) onDesign({ columns: UNIT_COLUMNS.map((c) => c.id).filter((c) => next.includes(c)) });
+  };
 
   return (
     <aside className="flex flex-col gap-5 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm" aria-label="Design" data-testid="sheet-design-panel">
@@ -137,12 +151,28 @@ export default function SheetDesignPanel({
             </button>
           ))}
         </div>
-        {!letter && <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />}
-        {!letter && <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />}
+        {profile.landscape && (
+          <div className="grid grid-cols-2 gap-1 p-1 bg-gray-100 rounded-xl" role="radiogroup" aria-label="Page orientation">
+            {([false, true] as const).map((wide) => (
+              <button
+                key={String(wide)}
+                type="button"
+                role="radio"
+                aria-checked={(design.landscape === true) === wide}
+                onClick={() => onDesign({ landscape: wide })}
+                className={`text-xs font-semibold py-1.5 rounded-lg cursor-pointer ${(design.landscape === true) === wide ? "bg-white text-stone-800 shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+              >
+                {wide ? "Landscape" : "Portrait"}
+              </button>
+            ))}
+          </div>
+        )}
+        {!letter && !staffDoc && <Toggle label="Name and date lines" checked={design.nameDate} onChange={(nameDate) => onDesign({ nameDate })} />}
+        {!letter && !staffDoc && <Toggle label="Learning objective" checked={design.objective !== false} onChange={(objective) => onDesign({ objective })} />}
         {doc.letter?.slip && <Toggle label="Reply slip" checked={design.slip !== false} onChange={(slip) => onDesign({ slip })} />}
         {doc.intro && <Toggle label={doc.intro.label || "Did you know?"} checked={design.intro !== false} onChange={(intro) => onDesign({ intro })} />}
         {doc.exam && <Toggle label="Cover page" checked={design.cover !== false} onChange={(cover) => onDesign({ cover })} />}
-        {!letter && <Toggle label={doc.lesson ? "Quiz answers and notes page" : doc.exam ? "Mark scheme" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />}
+        {!letter && !staffDoc && <Toggle label={doc.lesson ? "Quiz answers and notes page" : doc.exam ? "Mark scheme" : "Answers page"} checked={design.answers} onChange={(answers) => onDesign({ answers })} />}
         {hasDiffNote && (
           <Toggle
             label="Differentiation note"
@@ -154,6 +184,25 @@ export default function SheetDesignPanel({
         )}
         {hasPassage && <Toggle label="Paragraph numbers" checked={design.lineNumbers} onChange={(lineNumbers) => onDesign({ lineNumbers })} />}
       </section>
+
+      {profile.parts && profile.parts.length > 0 && (
+        <section className="flex flex-col gap-2" aria-label="Parts" data-testid="sheet-design-parts">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Show on the plan</p>
+          {profile.parts.map((p) => (
+            <Toggle key={p.id} label={p.label} checked={!hidden.has(p.id)} onChange={(on) => setPart(p.id, on)} />
+          ))}
+        </section>
+      )}
+
+      {hasSequence && (
+        <section className="flex flex-col gap-2" aria-label="Table columns" data-testid="sheet-design-columns">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Table columns</p>
+          <p className="text-xs text-gray-500 -mt-1">Every column is already written, so switching one on needs no new plan.</p>
+          {UNIT_COLUMNS.map((c) => (
+            <Toggle key={c.id} label={c.label} checked={shown.has(c.id)} disabled={shown.has(c.id) && shown.size === 1} onChange={(on) => setColumn(c.id, on)} />
+          ))}
+        </section>
+      )}
 
       {images.length > 0 && (
         <section className="flex flex-col gap-2" aria-label="Pictures" data-testid="sheet-design-pictures">

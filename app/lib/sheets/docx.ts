@@ -17,6 +17,7 @@ import {
   ImageRun,
   Packer,
   PageBreak,
+  PageOrientation,
   Paragraph,
   ShadingType,
   Table,
@@ -30,11 +31,14 @@ import {
 } from "docx";
 import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, showsCover } from "./markdown";
 import { levelLabel } from "./model-answers";
-import { clockText, phaseClock, phaseRows, stageLabel } from "./lesson";
+import { clockText, phaseClock, phaseRows, phaseWording, stageLabel } from "./lesson";
 import { sheetToolProfile } from "./tools";
 import { getSheetTheme } from "./themes";
-import { showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "./visibility";
+import { isHidden, shownSections, showsIntro, showsObjective, showsPictures, showsSlip, visibleNotes } from "./visibility";
 import { formatLetterDate } from "./letter";
+import { withPupilName } from "./pupil";
+import { sequenceColumns } from "./markdown";
+import { LESSON_COLUMN_WEIGHT, lessonItems, lessonLabel } from "./unit";
 import { sheetImages } from "./normalize";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "./puzzles";
 import { isQuestion, type ImageBlock, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
@@ -119,7 +123,9 @@ export function fitPicture(size: ImageBlock["size"], width: number, height: numb
 const NONE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
 const noBorders = { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE };
 
-export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
+export async function buildSheetDocx(stored: SheetDoc): Promise<Blob> {
+  // A document about one child goes out with the child's name in it.
+  const doc = withPupilName(stored);
   const theme = getSheetTheme(doc.design.themeId);
   const c = theme.colors;
   const size = SIZE[doc.design.fontScale] ?? SIZE.m;
@@ -194,7 +200,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
     return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: noBorders, rows });
   };
 
-  const tr = (text: string, o: { bold?: boolean; color?: string } = {}) => new TextRun({ text, font: FONT, size, bold: o.bold, color: o.color ?? hex(c.ink) });
+  const tr = (text: string, o: { bold?: boolean; color?: string; size?: number } = {}) => new TextRun({ text, font: FONT, size: o.size ?? size, bold: o.bold, color: o.color ?? hex(c.ink) });
 
   const wordBank = (title: string, words: string[]) =>
     box([new Paragraph({ children: [tr(`${title}:  `, { bold: true, color: hex(c.heading) }), tr(words.join("   •   "))] })], hex(c.paper), hex(c.accent), true);
@@ -465,7 +471,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
           spacer(),
         ];
       case "phase": {
-        const layout = doc.lesson?.layout;
+        const layout = phaseWording(doc);
         const t = clocks.get(b.id);
         const when = t ? `${clockText(t.start)} to ${clockText(t.end)}  (${b.minutes} min)` : `${b.minutes} min`;
         const cell = (children: Paragraph[], width: number, fill?: string) =>
@@ -494,13 +500,91 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
           spacer(),
         ];
       }
+      case "twocol": {
+        // Two headed lists side by side, as one two-column table.
+        const sides = [b.left, b.right].filter((s) => s.title || s.items.length);
+        if (sides.length === 0) return [];
+        const pct = Math.floor(100 / sides.length);
+        return [
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                tableHeader: true,
+                cantSplit: true,
+                children: sides.map((s) => new TableCell({ width: { size: pct, type: WidthType.PERCENTAGE }, shading: { type: ShadingType.CLEAR, color: "auto", fill: hex(c.soft) }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [new Paragraph({ children: [tr(s.title, { bold: true, color: hex(c.heading) })] })] })),
+              }),
+              new TableRow({
+                children: sides.map((s) => new TableCell({ width: { size: pct, type: WidthType.PERCENTAGE }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: s.items.length ? s.items.map((it) => new Paragraph({ bullet: { level: 0 }, children: runs(it, { size }) })) : [new Paragraph({ children: [] })] })),
+              }),
+            ],
+          }),
+          spacer(),
+        ];
+      }
+      case "sequence": {
+        // The lesson table, shown columns only, with the header row repeated
+        // on each page Word breaks it across.
+        const columns = sequenceColumns(doc);
+        const total = LESSON_COLUMN_WEIGHT + columns.reduce((a, col) => a + col.weight, 0);
+        const pct = (w: number) => Math.round((w / total) * 100);
+        const small = Math.max(14, size - (columns.length > 6 ? 6 : 3));
+        const cell = (children: Paragraph[], weight: number, fill?: string) =>
+          new TableCell({ width: { size: pct(weight), type: WidthType.PERCENTAGE }, children, shading: fill ? { type: ShadingType.CLEAR, color: "auto", fill } : undefined, margins: { top: 60, bottom: 60, left: 80, right: 80 } });
+        return [
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                tableHeader: true,
+                children: [
+                  cell([new Paragraph({ children: [tr("Lesson", { bold: true, color: hex(c.heading), size: small })] })], LESSON_COLUMN_WEIGHT, hex(c.soft)),
+                  ...columns.map((col) => cell([new Paragraph({ children: [tr(col.label, { bold: true, color: hex(c.heading), size: small })] })], col.weight, hex(c.soft))),
+                ],
+              }),
+              ...b.lessons.map((l, i) =>
+                new TableRow({
+                  cantSplit: true,
+                  children: [
+                    cell([new Paragraph({ children: [tr(lessonLabel(l, i), { bold: true, color: hex(c.heading), size: small })] })], LESSON_COLUMN_WEIGHT),
+                    ...columns.map((col) => {
+                      const items = lessonItems(l, col.id);
+                      const paras = col.list
+                        ? items.map((x) => new Paragraph({ bullet: { level: 0 }, children: runs(x, { size: small }) }))
+                        : items.map((x) => new Paragraph({ children: runs(x, { size: small }) }));
+                      return cell(paras.length ? paras : [new Paragraph({ children: [] })], col.weight);
+                    }),
+                  ],
+                }),
+              ),
+            ],
+          }),
+          spacer(),
+        ];
+      }
       case "table":
         return [
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
-              new TableRow({ tableHeader: true, children: b.headers.map((h) => new TableCell({ shading: { type: ShadingType.CLEAR, color: "auto", fill: hex(c.soft) }, children: [new Paragraph({ children: [tr(h, { bold: true, color: hex(c.heading) })] })] })) }),
-              ...b.rows.map((r) => new TableRow({ children: r.map((cell) => new TableCell({ children: [new Paragraph({ children: runs(cell, { size }) })], margins: { top: 80, bottom: 80, left: 100, right: 100 } })) })),
+              // No header row for a table without headings (a plan's details).
+              ...(b.headers.length
+                ? [new TableRow({ tableHeader: true, children: b.headers.map((h) => new TableCell({ shading: { type: ShadingType.CLEAR, color: "auto", fill: hex(c.soft) }, children: [new Paragraph({ children: [tr(h, { bold: true, color: hex(c.heading) })] })] })) })]
+                : []),
+              ...b.rows.map((r) => {
+                // A blank row is for writing in by hand, so it gets room to.
+                const blank = r.every((cell) => !cell.trim());
+                return new TableRow({
+                  ...(blank ? { height: { value: 620, rule: HeightRule.ATLEAST } } : {}),
+                  children: r.map((cell, ci) =>
+                    new TableCell({
+                      ...(!b.headers.length && ci === 0 ? { shading: { type: ShadingType.CLEAR, color: "auto", fill: hex(c.soft) } } : {}),
+                      children: [new Paragraph({ children: !b.headers.length && ci === 0 ? [tr(cell, { bold: true, color: hex(c.heading) })] : runs(cell, { size }) })],
+                      margins: { top: 80, bottom: 80, left: 100, right: 100 },
+                    }),
+                  ),
+                });
+              }),
             ],
           }),
           spacer(),
@@ -533,18 +617,45 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
     children.push(new Paragraph({ spacing: { after: 200 }, children: [tr("Re: ", { bold: true, color: hex(c.heading) }), tr(doc.title, { bold: true, color: hex(c.heading) })] }));
   }
   // With a cover, the title and the candidate's details are on it already.
-  if (!cover && !letter && doc.design.nameDate) {
-    children.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 160 }, children: [tr("Name ", { bold: true }), tr("______________________   "), tr("Date ", { bold: true }), tr("______________")] }));
-  }
+  const nameDateLine = () => new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 160 }, children: [tr("Name ", { bold: true }), tr("______________________   "), tr("Date ", { bold: true }), tr("______________")] });
+  // A cover lesson's name lines go on the pupil task's page instead.
+  const pupilPageRole = sheetToolProfile(doc.tool)?.pupilPageRole;
+  if (!cover && !letter && doc.design.nameDate && !pupilPageRole) children.push(nameDateLine());
   if (!cover && !letter && doc.subtitle) children.push(para(doc.subtitle.toUpperCase(), { bold: true, color: hex(c.muted), size: size - 4, after: 40 }));
-  if (!cover && !letter) children.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] }));
+  const titlePara = new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: doc.title || "Worksheet", font: FONT, size: Math.round(size * 2), bold: true, color: hex(c.heading) })] });
+  if (!cover && !letter && sheetToolProfile(doc.tool)?.photoBox && !isHidden(doc, "photo")) {
+    // A one page profile: an empty frame for a printed photo beside the title.
+    const dashed = { style: BorderStyle.DASHED, size: 12, color: hex(c.line) };
+    const none = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+    children.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            height: { value: 2000, rule: HeightRule.ATLEAST },
+            children: [
+              new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, verticalAlign: VerticalAlign.CENTER, borders: { top: dashed, bottom: dashed, left: dashed, right: dashed }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [tr("PHOTO", { bold: true, color: hex(c.muted) })] })] }),
+              new TableCell({ width: { size: 80, type: WidthType.PERCENTAGE }, verticalAlign: VerticalAlign.CENTER, borders: { top: none, bottom: none, left: none, right: none }, margins: { left: 300 }, children: [titlePara] }),
+            ],
+          }),
+        ],
+      }),
+      spacer(),
+    );
+  } else if (!cover && !letter) children.push(titlePara);
   if (doc.objective && showsObjective(doc)) children.push(box([new Paragraph({ children: [tr("Learning objective:  ", { bold: true, color: hex(c.heading) }), ...runs(doc.objective, { size })] })], hex(c.soft), hex(c.soft)), spacer());
   if (doc.intro && showsIntro(doc)) children.push(...block({ id: "intro", type: "callout", ...doc.intro }));
 
-  for (const s of doc.sections) {
+  for (const s of shownSections(doc)) {
     const title = `${theme.look.emoji && s.emoji ? `${s.emoji}  ` : ""}${s.title}`;
-    // A letter's paragraphs sit under no heading.
-    if (letter && !s.title) {
+    // The pupils' pages start on a new page, with the name lines.
+    if (pupilPageRole && s.role === pupilPageRole) {
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      if (doc.design.nameDate) children.push(nameDateLine());
+    }
+    // A letter's paragraphs sit under no heading, nor does a built-in part
+    // with no title (a profile's review dates).
+    if ((letter || s.role) && !s.title) {
       for (const b of s.blocks) children.push(...block(b));
       continue;
     }
@@ -586,7 +697,7 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
     children.push(new Paragraph({ children: [new PageBreak()] }));
     children.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: answersTitle(doc), font: FONT, size: Math.round(size * 1.6), bold: true, color: hex(c.heading) })] }));
     const restart = sheetToolProfile(doc.tool)?.restartNumbers ?? false;
-    for (const s of doc.sections) {
+    for (const s of shownSections(doc)) {
       if (restart && s.blocks.some(isQuestion)) {
         children.push(new Paragraph({ keepNext: true, spacing: { before: 160, after: 80 }, children: [tr(s.title, { bold: true, color: hex(c.heading) })] }));
       }
@@ -627,7 +738,11 @@ export async function buildSheetDocx(doc: SheetDoc): Promise<Blob> {
       {
         properties: {
           page: {
-            size: doc.design.paper === "letter" ? { width: 12240, height: 15840 } : { width: 11906, height: 16838 },
+            // Portrait sizes; the docx library swaps them for landscape.
+            size: {
+              ...(doc.design.paper === "letter" ? { width: 12240, height: 15840 } : { width: 11906, height: 16838 }),
+              ...(doc.design.landscape ? { orientation: PageOrientation.LANDSCAPE } : {}),
+            },
             margin: { top: 1000, bottom: 1000, left: 1080, right: 1080 },
           },
         },

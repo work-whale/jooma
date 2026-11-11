@@ -11,6 +11,8 @@ import { cleanMathText } from "@/app/lib/math-text";
 import { deleteBlock, deleteSection, insertBlock, updateBlock, updateSection } from "@/app/lib/sheets/edit";
 import { newSheetId, normalizeBlock } from "@/app/lib/sheets/normalize";
 import { puzzleDefaultsFromSubtitle, type PuzzleDefaults } from "@/app/lib/sheets/puzzles";
+import { sheetToolProfile } from "@/app/lib/sheets/tools";
+import { PRIVATE_ROLES } from "@/app/lib/sheets/behaviour";
 import type { SheetBlock, SheetDesign, SheetDoc, SheetSection } from "@/app/lib/sheets/types";
 import type { SheetOp } from "./types";
 
@@ -52,8 +54,11 @@ export function sheetSnapshot(doc: SheetDoc) {
       intro: doc.design.intro !== false,
       diffNote: doc.design.diffNote !== false,
       pictures: doc.design.pictures !== false,
+      ...(sheetToolProfile(doc.tool)?.landscape ? { landscape: doc.design.landscape === true } : {}),
     },
-    sections: doc.sections.map((s) => ({
+    // The parts built from what the teacher typed about a child (details,
+    // incident log, signatures, links) are not Jo's to read or change.
+    sections: doc.sections.filter((s) => !PRIVATE_ROLES.includes(s.role ?? "")).map((s) => ({
       id: s.id,
       title: s.title,
       emoji: s.emoji,
@@ -71,6 +76,16 @@ export function sheetSnapshot(doc: SheetDoc) {
       }),
     })),
   };
+}
+
+/**
+ * Whether a sheet snapshot may go to a model. A document about one child goes
+ * with "[PUPIL]" in its text and no `pupil` field; one that arrives with the
+ * child's details on it is refused rather than passed on. (Not carriesName
+ * from Reports: a sort question's groups have a "name" key.)
+ */
+export function isSendableSheetSnapshot(snap: Record<string, unknown>): boolean {
+  return !("pupil" in snap);
 }
 
 /** The `data-jo` key of the piece an op changes, or null for a whole sheet
@@ -128,6 +143,14 @@ export function sheetTextAt(doc: SheetDoc, target: string): string | null {
   if (found.type === "image" && field !== "alt") return null;
   const value = (found as unknown as Record<string, unknown>)[field];
   if (parts.length === 2) return typeof value === "string" ? value : null;
+  // One cell of a lesson table: "<blockId>.lessons.<n>.<field>". A list cell
+  // (key knowledge, resources) is rewritten with replaceBlock instead.
+  if (parts.length === 4) {
+    if (found.type !== "sequence" || field !== "lessons") return null;
+    const lesson = found.lessons[Number(index)];
+    const cell = lesson ? (lesson as unknown as Record<string, unknown>)[parts[3]] : undefined;
+    return Number.isInteger(Number(index)) && typeof cell === "string" ? cell : null;
+  }
   if (parts.length !== 3 || !Array.isArray(value)) return null;
   const n = Number(index);
   if (!Number.isInteger(n) || n < 0 || n > value.length) return null;
@@ -162,6 +185,11 @@ export function setSheetText(doc: SheetDoc, target: string, value: string, raw =
   const at = findBlock(doc, head)!;
   const block = doc.sections[at.si].blocks[at.bi] as unknown as Record<string, unknown>;
   if (parts.length === 2) return updateBlock(doc, at.si, at.bi, { [field]: text } as Partial<SheetBlock>);
+  if (parts.length === 4) {
+    const n = Number(index);
+    const lessons = (block.lessons as Record<string, unknown>[]).map((l, i) => (i === n ? { ...l, [parts[3]]: text } : l));
+    return updateBlock(doc, at.si, at.bi, { lessons } as unknown as Partial<SheetBlock>);
+  }
 
   const list = [...(block[field] as unknown[])];
   const n = Number(index);
@@ -183,6 +211,11 @@ function design(doc: SheetDoc, key: string, value: string): SheetDoc | null {
     case "paper":
       if (v !== "a4" && v !== "letter") return null;
       patch.paper = v;
+      break;
+    case "landscape":
+      // Only where Design offers it (the unit planners).
+      if (!sheetToolProfile(doc.tool)?.landscape || (v !== "true" && v !== "false")) return null;
+      patch.landscape = v === "true";
       break;
     case "answers":
     case "nameDate":
@@ -216,8 +249,30 @@ function keepPuzzle(doc: SheetDoc, old: SheetBlock | undefined): PuzzleDefaults 
   return base;
 }
 
+/** Whether an op lands in a part Jo is not shown (a plan's details, log or
+ *  signatures). Such an op is refused even if Jo guessed the id. */
+function touchesPrivate(doc: SheetDoc, op: SheetOp): boolean {
+  const isPrivate = (si: number) => si !== -1 && PRIVATE_ROLES.includes(doc.sections[si].role ?? "");
+  const blockSection = (id: string) => findBlock(doc, id)?.si ?? -1;
+  switch (op.op) {
+    case "setText": {
+      const head = op.target.split(".")[0];
+      return isPrivate(findSection(doc, head)) || isPrivate(blockSection(head));
+    }
+    case "replaceBlock":
+    case "deleteBlock":
+      return isPrivate(blockSection(op.blockId));
+    case "insertBlock":
+    case "deleteSection":
+      return isPrivate(findSection(doc, op.sectionId));
+    default:
+      return false;
+  }
+}
+
 /** One op applied, or null when it does not fit this sheet. */
 export function applySheetOp(doc: SheetDoc, op: SheetOp): AppliedSheetOp | null {
+  if (touchesPrivate(doc, op)) return null;
   switch (op.op) {
     case "setText": {
       const next = setSheetText(doc, op.target, op.text);

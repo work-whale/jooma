@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "./PlaceholderOverlay";
 
@@ -29,10 +30,11 @@ export default function AdditionalContextField({
   labelSlot,
 }: Props) {
   const placeholder = useTypingPlaceholder(placeholders);
+  const id = useId();
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-semibold text-gray-800">
+        <label htmlFor={id} className="block text-sm font-semibold text-gray-800">
           {label} <span className="text-xs font-normal text-gray-400">(optional)</span>
         </label>
         {labelSlot}
@@ -40,6 +42,7 @@ export default function AdditionalContextField({
       <div className="relative">
         {rows ? (
           <textarea
+            id={id}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder=""
@@ -47,7 +50,7 @@ export default function AdditionalContextField({
             className={`${inputClass} resize-none`}
           />
         ) : (
-          <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
+          <input id={id} type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
         )}
         {!value && <PlaceholderOverlay text={placeholder} area={!!rows} />}
       </div>

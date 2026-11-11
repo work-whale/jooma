@@ -3,7 +3,6 @@
 import type {
   ExemplarBlock,
   ImageBlock,
-  LessonLayout,
   ListBlock,
   PhaseBlock,
   SheetBlock,
@@ -19,13 +18,16 @@ import type {
   SortQuestion,
   WordSearchQuestion,
   CrosswordQuestion,
+  TwoColBlock,
+  UnitLesson,
 } from "@/app/lib/sheets/types";
 import { isQuestion } from "@/app/lib/sheets/types";
 import { answerText } from "@/app/lib/sheets/markdown";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "@/app/lib/sheets/puzzles";
 import { EditableText, Rich } from "./rich";
-import { clockText, PHASE_FIELDS, phaseFieldLabel, stageLabel } from "@/app/lib/sheets/lesson";
+import { clockText, PHASE_FIELDS, phaseFieldLabel, stageLabel, type PhaseWording } from "@/app/lib/sheets/lesson";
 import { levelLabel } from "@/app/lib/sheets/model-answers";
+import { LESSON_COLUMN_WEIGHT, UNIT_COLUMNS, type UnitColumn } from "@/app/lib/sheets/unit";
 
 /*
  * How each block looks on the page. The same components draw the page on
@@ -50,8 +52,10 @@ export interface BlockProps {
   onPicture?: () => void;
   /** A lesson phase's place in the lesson, in minutes from the start. */
   clock?: { start: number; end: number };
-  /** A lesson plan's layout: what a phase's parts are called. */
-  layout?: LessonLayout;
+  /** A lesson plan's layout, or a cover lesson: what a phase's parts are called. */
+  layout?: PhaseWording;
+  /** A lesson table's shown columns. Missing: all of them. */
+  columns?: UnitColumn[];
 }
 
 export function BlockView(props: BlockProps) {
@@ -88,21 +92,40 @@ export function BlockView(props: BlockProps) {
       return <PhaseView block={block} edit={edit} onPatch={onPatch} clock={props.clock} layout={props.layout} />;
     case "passage":
       return <PassageView title={block.title} paragraphs={block.paragraphs} numbered={design.lineNumbers} edit={edit} onPatch={onPatch} />;
+    case "twocol":
+      return <TwoColView block={block} edit={edit} onPatch={onPatch} />;
+    case "sequence": {
+      // The page draws a sequence row by row (SheetDocument); this whole-table
+      // form is for anywhere else a block is drawn on its own.
+      const columns = props.columns ?? UNIT_COLUMNS;
+      return (
+        <div className="js-seq" role="table">
+          <SequenceHead columns={columns} />
+          {block.lessons.map((l, i) => (
+            <SequenceRow key={i} lesson={l} index={i} columns={columns} edit={edit} onChange={(next) => onPatch({ lessons: block.lessons.map((x, j) => (j === i ? next : x)) })} />
+          ))}
+        </div>
+      );
+    }
     case "table":
       return (
-        <table className="js-table">
-          <thead>
-            <tr>
-              {block.headers.map((h, i) => (
-                <th key={i}>
-                  <EditableText value={h} editable={edit} onChange={(v) => onPatch({ headers: block.headers.map((x, j) => (j === i ? v : x)) })} label="heading" />
-                </th>
-              ))}
-            </tr>
-          </thead>
+        <table className="js-table" data-headless={block.headers.length === 0 ? "" : undefined}>
+          {block.headers.length > 0 && (
+            <thead>
+              <tr>
+                {block.headers.map((h, i) => (
+                  <th key={i}>
+                    <EditableText value={h} editable={edit} onChange={(v) => onPatch({ headers: block.headers.map((x, j) => (j === i ? v : x)) })} label="heading" />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
           <tbody>
             {block.rows.map((row, ri) => (
-              <tr key={ri}>
+              // A row with nothing in it is a row to fill in by hand: an
+              // incident log, a signature line. It is drawn tall enough to write in.
+              <tr key={ri} data-blank={row.every((c) => !c.trim()) ? "" : undefined}>
                 {row.map((cell, ci) => (
                   <td key={ci}>
                     <EditableText
@@ -756,7 +779,7 @@ export function ListView({ block, edit, onPatch }: { block: ListBlock; edit: boo
  * teacher and pupils do, how understanding is checked, and the adaptations.
  * Empty parts are left off the printed plan but stay fillable while editing.
  */
-export function PhaseView({ block, edit, onPatch, clock, layout }: { block: PhaseBlock; edit: boolean; onPatch: (p: Partial<PhaseBlock>) => void; clock?: { start: number; end: number }; layout?: LessonLayout }) {
+export function PhaseView({ block, edit, onPatch, clock, layout }: { block: PhaseBlock; edit: boolean; onPatch: (p: Partial<PhaseBlock>) => void; clock?: { start: number; end: number }; layout?: PhaseWording }) {
   return (
     <div className="js-phase" data-stage={block.stage}>
       <div className="js-phase-head">
@@ -785,7 +808,10 @@ export function PhaseView({ block, edit, onPatch, clock, layout }: { block: Phas
       </div>
       <dl className="js-phase-grid">
         {PHASE_FIELDS.map((field) => {
-          const value = block[field];
+          // The script row belongs to cover lessons; a lesson plan's phases
+          // have no "say" at all and never show it, even while editing.
+          if (field === "say" && block.say === undefined) return null;
+          const value = block[field] ?? "";
           const empty = Array.isArray(value) ? value.length === 0 : !value;
           if (empty && !edit) return null;
           const label = phaseFieldLabel(field, block.stage, layout);
@@ -805,6 +831,97 @@ export function PhaseView({ block, edit, onPatch, clock, layout }: { block: Phas
           );
         })}
       </dl>
+    </div>
+  );
+}
+
+/** Two titled lists side by side, each in its own box. An empty side is left
+ *  off the printed page but stays fillable while editing. */
+export function TwoColView({ block, edit, onPatch }: { block: TwoColBlock; edit: boolean; onPatch: (p: Partial<TwoColBlock>) => void }) {
+  const sides = (["left", "right"] as const).filter((k) => edit || block[k].title || block[k].items.length);
+  return (
+    <div className="js-twocol" data-sides={sides.length}>
+      {sides.map((k) => {
+        const s = block[k];
+        return (
+          <div className="js-twocol-side" key={k}>
+            <EditableText as="h3" className="js-twocol-title" value={s.title} placeholder="Heading" editable={edit} onChange={(title) => onPatch({ [k]: { ...s, title } } as Partial<TwoColBlock>)} label={`${k} heading`} />
+            <ul>
+              <EditableItems items={s.items} edit={edit} onChange={(items) => onPatch({ [k]: { ...s, items } } as Partial<TwoColBlock>)} label={s.title.toLowerCase() || "point"} add="A new point" />
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The CSS grid columns a lesson table is drawn with: the lesson's title,
+ *  then each shown column by its weight. Header and rows share it, so a table
+ *  split across pages lines up. */
+export function sequenceGrid(columns: UnitColumn[]): string {
+  return [LESSON_COLUMN_WEIGHT, ...columns.map((c) => c.weight)].map((w) => `minmax(0, ${w}fr)`).join(" ");
+}
+
+/** A lesson table's header row. */
+export function SequenceHead({ columns }: { columns: UnitColumn[] }) {
+  return (
+    <div className="js-seq-head" role="row" style={{ gridTemplateColumns: sequenceGrid(columns) }}>
+      <span role="columnheader">Lesson</span>
+      {columns.map((c) => (
+        <span key={c.id} role="columnheader">{c.label}</span>
+      ))}
+    </div>
+  );
+}
+
+/** One lesson as a table row. Lists (key knowledge, resources, questions)
+ *  are bullets; vocabulary is a comma list. */
+export function SequenceRow({ lesson, index, columns, edit, onChange, planHref = null, live = true }: {
+  lesson: UnitLesson;
+  index: number;
+  columns: UnitColumn[];
+  edit: boolean;
+  onChange: (next: UnitLesson) => void;
+  /** "Plan this lesson": Lesson Plan filled in from this row. Drawn on screen
+   *  only; exports pass null. */
+  planHref?: string | null;
+  /** False in the measuring copy: the link is drawn (it takes room) but is
+   *  not a link. */
+  live?: boolean;
+}) {
+  return (
+    <div className="js-seq-row" role="row" style={{ gridTemplateColumns: sequenceGrid(columns) }}>
+      <div role="cell" className="js-seq-lesson">
+        <span className="js-seq-num">Lesson {index + 1}</span>
+        <EditableText value={lesson.title} placeholder="Lesson title" editable={edit} multiline onChange={(title) => onChange({ ...lesson, title })} label={`lesson ${index + 1} title`} />
+        {planHref &&
+          (live ? (
+            <a className="js-seq-plan" href={planHref} target="_blank" rel="noopener" title="Opens Lesson Plan in a new tab, filled in from this lesson" data-testid="plan-this-lesson">
+              Plan this lesson
+            </a>
+          ) : (
+            <span className="js-seq-plan">Plan this lesson</span>
+          ))}
+      </div>
+      {columns.map((c) => {
+        const value = lesson[c.id];
+        return (
+          <div role="cell" key={c.id} data-col={c.id}>
+            {Array.isArray(value) ? (
+              c.id === "vocabulary" && !edit ? (
+                <p>{value.join(", ")}</p>
+              ) : (
+                <ul>
+                  <EditableItems items={value} edit={edit} onChange={(items) => onChange({ ...lesson, [c.id]: items })} label={c.label.toLowerCase()} add="New item" />
+                </ul>
+              )
+            ) : (
+              <EditableText value={value} placeholder=" " editable={edit} multiline onChange={(v) => onChange({ ...lesson, [c.id]: v })} label={`${c.label.toLowerCase()} for lesson ${index + 1}`} />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

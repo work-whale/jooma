@@ -5,6 +5,7 @@
 import { newSheetId } from "./normalize";
 import { refreshPuzzle, type PuzzleDefaults } from "./puzzles";
 import { seedFrom } from "@/app/lib/seeded-random";
+import { emptyLesson } from "./unit";
 import type { BlockType, SheetBlock, SheetDoc, SheetSection } from "./types";
 
 function withSection(doc: SheetDoc, si: number, fn: (s: SheetSection) => SheetSection): SheetDoc {
@@ -118,6 +119,8 @@ export function newBlock(type: BlockType, puzzle?: PuzzleDefaults): SheetBlock {
         id, type: "phase", stage: "main", title: "New phase", minutes: 10,
         teacher: "What the teacher does or explains.", pupils: "What pupils do.", check: [], feedback: "", support: "", challenge: "", ta: "",
       };
+    case "sequence": return { id, type: "sequence", lessons: [emptyLesson()] };
+    case "twocol": return { id, type: "twocol", left: { title: "Heading", items: ["Write a point here"] }, right: { title: "Heading", items: ["Write a point here"] } };
     case "mcq": return { ...q, type: "mcq", options: ["Option A", "Option B", "Option C", "Option D"], answers: [0] };
     case "truefalse": return { ...q, prompt: "True or false?", type: "truefalse", statements: [{ text: "A statement", answer: true }, { text: "A statement", answer: false }] };
     case "matching": return { ...q, prompt: "Draw a line to match each one.", type: "matching", left: ["Term", "Term", "Term"], right: ["Meaning", "Meaning", "Meaning"], pairs: [0, 1, 2] };
