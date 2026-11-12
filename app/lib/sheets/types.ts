@@ -140,6 +140,10 @@ export interface SheetDoc {
   unit?: UnitMeta;
   /** Documents about one child only. Never sent to a model. */
   pupil?: PupilMeta;
+  /** Newsletters: the pupils in its celebrations, in order. The text holds
+   *  "[PUPIL 1]", "[PUPIL 2]" (app/lib/sheets/roster.ts), swapped for these
+   *  names when drawn or exported. Never sent to a model. */
+  roster?: string[];
   /** Lesson plans only. */
   lesson?: LessonMeta;
   /** Exam papers only. */

@@ -11,8 +11,8 @@ export default function SIPOutputFormatField({ value, onChange }: Props) {
       <label className="block text-sm font-semibold text-gray-800">Output format</label>
       <div className="flex flex-wrap gap-6">
         {[
-          { val: "table", label: "Table format", sub: "a briefer summary" },
-          { val: "narrative", label: "Narrative format", sub: "a more detailed plan" },
+          { val: "table", label: "Table format", sub: "actions, timeline and budget as tables" },
+          { val: "narrative", label: "Narrative format", sub: "the plan as written paragraphs" },
         ].map(({ val, label, sub }) => (
           <label key={val} className="flex items-start gap-2.5 cursor-pointer">
             <input

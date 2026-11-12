@@ -19,6 +19,7 @@ import { isBandSetOutput, parseBandSet, saveableBandSet, serializeBandSet, withB
 import BandTabs from "@/app/components/BandTabs";
 import type { DifferentiationBand } from "@/app/lib/differentiation";
 import { HEADER_STICKY, topBarHeight } from "@/app/lib/topbar";
+import type { TextPrivacy } from "@/app/lib/staff-privacy";
 
 /** What a run stores for this output: a band set without its streaming flags
  *  or failed bands, a sheet as it is, markdown cleaned of leaked LaTeX. */
@@ -72,6 +73,8 @@ interface ResultPanelProps {
    *  the version on screen); otherwise the panel keeps it itself. */
   activeBand?: string | null;
   onActiveBandChange?: (band: DifferentiationBand) => void;
+  /** A name kept away from Ask Jo (app/lib/staff-privacy.ts). */
+  privacy?: TextPrivacy;
 }
 
 export default function ResultPanel({
@@ -86,6 +89,7 @@ export default function ResultPanel({
   runId = null,
   activeBand: activeBandProp,
   onActiveBandChange,
+  privacy,
 }: ResultPanelProps) {
   /*
    * Differentiated versions. A result holding one output per band shows the
@@ -397,6 +401,7 @@ export default function ResultPanel({
       ? `${v2ToolForSlug(historyMeta.toolSlug)?.name ?? ""}${band ? ` (the ${band.band} version)` : ""}`
       : "",
     docRef: sheet ? null : joDocRef,
+    privacy,
     disabled: isBusy ? "Jo can help as soon as this is finished" : null,
     openSignal: mdOpenSignal,
   });

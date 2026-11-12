@@ -8,6 +8,7 @@ import { parseSheet } from "@/app/lib/sheets/normalize";
 import { sheetOutline } from "@/app/lib/sheets/markdown";
 import { bandOutput } from "@/app/lib/bands";
 import type { DifferentiationBand } from "@/app/lib/differentiation";
+import type { TextPrivacy } from "@/app/lib/staff-privacy";
 
 /*
  * The results half of a tool page: the sticky mask, the outline column and the
@@ -49,9 +50,13 @@ interface ToolResultsProps {
    *  (Refine works on that version only). Kept here when omitted. */
   activeBand?: string | null;
   onActiveBandChange?: (band: DifferentiationBand) => void;
+  /** A name kept away from Ask Jo: Jo works on the scrubbed text and its
+   *  edits are swapped back (app/lib/staff-privacy.ts). */
+  privacy?: TextPrivacy;
 }
 
 export default function ToolResults({
+  privacy,
   result,
   isGenerating,
   isRefining,
@@ -134,6 +139,7 @@ export default function ToolResults({
             runId={runId}
             activeBand={band}
             onActiveBandChange={onActiveBandChange ?? setOwnBand}
+            privacy={privacy}
           />
         </div>
       </div>

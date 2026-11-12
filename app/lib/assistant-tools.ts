@@ -422,6 +422,16 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           enum: ["Formal", "Semi-formal", "Informal"],
           description: "Register. Defaults to Semi-formal.",
         },
+        // After `content`: the fill plan runs in this order, and the content
+        // setter starts a general letter, which a trip then overrides.
+        letterType: {
+          type: "string",
+          enum: ["trip", "general"],
+          description: "'trip' for a trip or visit letter with a consent slip; otherwise 'general'.",
+        },
+        group: { type: "string", description: "Trip letters: who is going, e.g. 'Year 4'." },
+        destination: { type: "string", description: "Trip letters: where, e.g. 'the Natural History Museum, London'." },
+        tripDate: { type: "string", description: "Trip letters: the date as YYYY-MM-DD, only if the teacher gave it." },
       },
       required: ["recipient", "content"],
     },
@@ -645,8 +655,6 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
             "The improvement objective, e.g. 'Improve outdoor provision for " +
             "communication and language'.",
         },
-        differentiate: differentiateField,
-        differentiationLevels: differentiationLevelsField,
       },
       required: ["curriculum", "objective"],
     },
@@ -1087,8 +1095,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "Pupil Premium Planner",
     icon: "pupil-premium",
     description:
-      "Tiered, evidence-based strategies for a Pupil Premium challenge. Use for " +
-      "'pupil premium', 'PP strategy', or 'disadvantaged pupils'.",
+      "A draft pupil premium strategy statement on the DfE template, from the school's " +
+      "challenges. Use for 'pupil premium', 'PP strategy', or 'disadvantaged pupils'.",
     fields: {
       type: "object",
       properties: {
@@ -1102,8 +1110,6 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           enum: EDUCATION_PHASES,
           description: "Phase of education. Defaults to Primary.",
         },
-        differentiate: differentiateField,
-        differentiationLevels: differentiationLevelsField,
       },
       required: ["challenges"],
     },

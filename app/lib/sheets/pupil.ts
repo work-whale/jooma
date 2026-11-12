@@ -13,9 +13,10 @@
 
 import { PLACEHOLDER, scrubText, swapIn } from "@/app/lib/reports/privacy";
 import type { PupilPronouns, SheetDoc } from "./types";
+import { hasRosterPlaceholder, scrubRoster, swapRoster } from "./roster";
 
 /** Keys whose strings are not words on the page and are never rewritten. */
-const SKIP = new Set(["id", "kind", "tool", "pupil", "design", "role", "type", "stage", "level", "form", "variant", "src", "source", "query"]);
+const SKIP = new Set(["id", "kind", "tool", "pupil", "roster", "design", "role", "type", "stage", "level", "form", "variant", "src", "source", "query"]);
 
 /** `value` with `fn` applied to every string in it, skipping SKIP keys. */
 function mapStrings<T>(value: T, fn: (s: string) => string): T {
@@ -32,6 +33,11 @@ function mapStrings<T>(value: T, fn: (s: string) => string): T {
 /** The document as the teacher sees it: "[PUPIL]" replaced by the child's
  *  name, or by "the pupil" when there is none. Unchanged without `pupil`. */
 export function withPupilName(doc: SheetDoc): SheetDoc {
+  // A newsletter's pupils: "[PUPIL 2]" is the second in the roster.
+  if (doc.roster?.length) {
+    const roster = doc.roster;
+    return mapStrings(doc, (s) => (hasRosterPlaceholder(s) ? swapRoster(s, roster) : s));
+  }
   if (!doc.pupil) return doc;
   const name = doc.pupil.name.trim();
   return mapStrings(doc, (s) => (s.includes(PLACEHOLDER) ? (name ? swapIn(s, name) : s.split(PLACEHOLDER).join("the pupil")) : s));
@@ -40,6 +46,10 @@ export function withPupilName(doc: SheetDoc): SheetDoc {
 /** The document as it is stored: the child's name, wherever it was typed,
  *  back to "[PUPIL]". Unchanged without a name. */
 export function withPupilPlaceholder(doc: SheetDoc): SheetDoc {
+  if (doc.roster?.length) {
+    const roster = doc.roster;
+    return mapStrings(doc, (s) => scrubRoster(s, roster));
+  }
   const name = doc.pupil?.name.trim();
   if (!name) return doc;
   return mapStrings(doc, (s) => scrubText(s, name, []));

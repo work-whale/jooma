@@ -371,6 +371,8 @@ export interface NormalizeContext {
   unit?: UnitMeta;
   /** Documents about one child: kept on the document, never sent. */
   pupil?: PupilMeta;
+  /** Newsletters: the pupils celebrated, kept on the document, never sent. */
+  roster?: string[];
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -428,6 +430,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     ...(ctx.letter ? { letter: ctx.letter } : {}),
     ...(ctx.unit ? { unit: ctx.unit } : {}),
     ...(ctx.pupil ? { pupil: ctx.pupil } : {}),
+    ...(ctx.roster?.length ? { roster: ctx.roster } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

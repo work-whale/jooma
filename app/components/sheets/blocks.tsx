@@ -56,6 +56,9 @@ export interface BlockProps {
   layout?: PhaseWording;
   /** A lesson table's shown columns. Missing: all of them. */
   columns?: UnitColumn[];
+  /** A table taller than a page is drawn in pieces: the rows of this piece,
+   *  under the header row. Missing: every row. */
+  rows?: { from: number; to: number };
 }
 
 export function BlockView(props: BlockProps) {
@@ -122,7 +125,7 @@ export function BlockView(props: BlockProps) {
             </thead>
           )}
           <tbody>
-            {block.rows.map((row, ri) => (
+            {block.rows.map((row, ri) => ri < (props.rows?.from ?? 0) || ri >= (props.rows?.to ?? Infinity) ? null : (
               // A row with nothing in it is a row to fill in by hand: an
               // incident log, a signature line. It is drawn tall enough to write in.
               <tr key={ri} data-blank={row.every((c) => !c.trim()) ? "" : undefined}>

@@ -13,7 +13,7 @@ import type { SheetDoc, UnitLesson } from "@/app/lib/sheets/types";
 import { PRACTICE_ROLE } from "@/app/lib/sheets/intervention";
 
 export interface LessonHandoff {
-  id: "slides" | "worksheet" | "quiz" | "homework" | "modelAnswers" | "practiceWorksheet";
+  id: "slides" | "worksheet" | "quiz" | "homework" | "modelAnswers" | "practiceWorksheet" | "tripLetter";
   label: string;
   href: string;
 }
@@ -122,4 +122,39 @@ export function interventionHandoffs(doc: SheetDoc): LessonHandoff[] {
   };
   const prefill = validatePrefill({ slug: "worksheet-generator", fields });
   return prefill ? [{ id: "practiceWorksheet", label: "Make a practice worksheet", href: prefillHref(prefill) }] : [];
+}
+
+/** "4 March 2027" back to "2027-03-04"; "" for anything else. */
+export function isoFromLongDate(text: string): string {
+  const m = /^(\d{1,2}) ([A-Za-z]+) (\d{4})$/.exec(text.trim());
+  if (!m) return "";
+  const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+  const month = months.indexOf(m[2].toLowerCase());
+  if (month < 0) return "";
+  return `${m[3]}-${String(month + 1).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+}
+
+/**
+ * "Write the trip letter" on a risk assessment for an off-site visit: opens
+ * Letter Writer as a trip letter with the group, destination and date from
+ * the details table. Never the leader's name. Empty for an on-site activity.
+ */
+export function riskHandoffs(doc: SheetDoc): LessonHandoff[] {
+  if (doc.tool !== "riskAssessment") return [];
+  const table = doc.sections.find((s) => s.role === "details")?.blocks.find((b) => b.type === "table");
+  if (!table || table.type !== "table") return [];
+  const facts = new Map(table.rows.map((r) => [r[0], (r[1] ?? "").trim()]));
+  if (!facts.has("Destination")) return [];
+  const activity = facts.get("Activity") ?? "";
+  if (!activity) return [];
+  const fields: Record<string, string> = {
+    recipient: "Parents and carers",
+    content: cap(activity),
+    letterType: "trip",
+    ...(facts.get("Group") ? { group: cap(facts.get("Group")!, 120) } : {}),
+    ...(facts.get("Destination") ? { destination: cap(facts.get("Destination")!, 200) } : {}),
+    ...(isoFromLongDate(facts.get("Date") ?? "") ? { tripDate: isoFromLongDate(facts.get("Date") ?? "") } : {}),
+  };
+  const prefill = validatePrefill({ slug: "letter-writer", fields });
+  return prefill ? [{ id: "tripLetter", label: "Write the trip letter", href: prefillHref(prefill) }] : [];
 }
