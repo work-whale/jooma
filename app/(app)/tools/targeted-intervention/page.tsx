@@ -21,9 +21,9 @@ export default async function TargetedInterventionPage({
           title="Targeted Intervention Ideas"
           description="Generate personalised, evidence-based intervention strategies to close the gap for individual students — based on the attitudinal, aptitudinal, and attainment data you have."
           steps={[
-            { label: "Enter student data", detail: "Be specific and detailed — the more data the AI has, the more personalised the strategies will be." },
-            { label: "Generate strategies", detail: "The AI will analyse the full profile and produce 8–10 targeted interventions with research-backed rationale." },
-            { label: "Refine and export", detail: "Edit the results, use the refine panel to adjust focus, then download as a Word document." },
+            { label: "Describe the pupil", detail: "Give attitudes, scores and needs, never surnames or other children's names. A first name, if you add one, stays on your device." },
+            { label: "Generate strategies", detail: "Get 8 to 10 practical strategies, each with steps, who runs it, how often and how you will know it is working." },
+            { label: "Edit and export", detail: "Edit on the page or ask Jo, then print or download as a PDF or Word document." },
           ]}
         />
       }

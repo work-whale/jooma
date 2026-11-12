@@ -292,6 +292,11 @@ a.js-seq-plan:hover { border-color: var(--js-heading); }
 .js-exemplar-notes-title { font-weight: 800; color: var(--js-heading); margin-bottom: 4px !important; }
 .js-exemplar-notes ul { margin: 0; padding-left: 18px; list-style: disc outside; display: flex; flex-direction: column; gap: 3px; }
 .js-exemplar-notes li { display: list-item; }
+/* A note's quote marked in the text, numbered to match its note */
+.js-mark { background: var(--js-soft); color: inherit; border-bottom: 2px solid var(--js-accent); padding: 0 1px; border-radius: 2px; }
+.js-mark-n { font-size: .78em; font-weight: 800; color: var(--js-accent); margin-left: 1px; vertical-align: super; line-height: 0; }
+.js-mark-key { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5em; height: 1.5em; border-radius: 999px; background: var(--js-accent); color: var(--js-on-accent); vertical-align: baseline; line-height: 1; margin: 0 6px 0 0; font-size: .75em; }
+.js-exemplar[data-purpose="text"] { border-color: var(--js-line); }
 .js-exemplar-comment { padding: 8px 14px 10px; font-style: italic; color: var(--js-muted); border-top: 1px solid var(--js-line); }
 
 /* Editing */

@@ -11,8 +11,7 @@ import ResetButton from "@/app/components/ui/ResetButton";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
-import { DifferentiationField } from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
@@ -33,9 +32,12 @@ export default function EYFSPlannerForm({
   const [numberOfWeeks, setNumberOfWeeks] = useState("2");
   const [includeBookList, setIncludeBookList] = useState(false);
   const [includeHomeLearning, setIncludeHomeLearning] = useState(false);
-  const [includeWeeklyOverview, setIncludeWeeklyOverview] = useState(false);
-  const [differentiate, setDifferentiate] = useState<Differentiate>("no");
-  const [differentiationLevels, setDifferentiationLevels] = useState<string[]>([]);
+  // On by default: the week by week grid is the heart of the plan. Every
+  // option is generated either way and only switched off in Design, so
+  // ticking one later needs no regenerating. The WBS to GDS bands this form
+  // used to offer are gone: Early Years does not use them, and every
+  // adult-led activity now carries its own support and challenge.
+  const [includeWeeklyOverview, setIncludeWeeklyOverview] = useState(true);
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -43,14 +45,14 @@ export default function EYFSPlannerForm({
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
   const weeksNum = parseInt(numberOfWeeks, 10);
-  const canGenerate = curriculum && topic.trim() && !isNaN(weeksNum) && weeksNum >= 1 && weeksNum <= 12 &&
-    (differentiate === "no" || differentiationLevels.length > 0);
+  const canGenerate = curriculum && topic.trim() && !isNaN(weeksNum) && weeksNum >= 1 && weeksNum <= 12;
 
   // Raw form state — saved as history input so a past run can refill the form.
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate, differentiationLevels };
+  const formState = { ...languageFormState(language), curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -64,10 +66,8 @@ export default function EYFSPlannerForm({
     setIncludeBookList(Boolean(i.includeBookList));
     setIncludeHomeLearning(Boolean(i.includeHomeLearning));
     setIncludeWeeklyOverview(Boolean(i.includeWeeklyOverview));
-    const d = restoreDifferentiation(i);
-    setDifferentiate(d.differentiate);
-    setDifferentiationLevels(d.levels);
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -81,34 +81,30 @@ export default function EYFSPlannerForm({
       includeBookList: (v) => setIncludeBookList(v as boolean),
       includeHomeLearning: (v) => setIncludeHomeLearning(v as boolean),
       includeWeeklyOverview: (v) => setIncludeWeeklyOverview(v as boolean),
-      differentiate: (v) => setDifferentiate(v as Differentiate),
-      differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
     },
   });
 
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    // The unticked options start switched off in Design.
+    const eyfsHidden = [!includeWeeklyOverview && "grid", !includeBookList && "books", !includeHomeLearning && "home"].filter((x): x is string => !!x);
+    const info = { curriculum, yearGroup: "Reception", topic, eyfsHidden };
     try {
       const res = await fetch("/api/eyfs-planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, curriculum, topic, numberOfWeeks: weeksNum, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, curriculum, topic, numberOfWeeks: weeksNum, includeBookList, includeHomeLearning, includeWeeklyOverview }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      const finished = await readSheetStream(res, "eyfsPlan", info, setResult);
+      if (!finished) throw new Error("The plan came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -223,13 +219,6 @@ export default function EYFSPlannerForm({
               </div>
             </div>
 
-            <DifferentiationField
-              value={differentiate}
-              onChange={setDifferentiate}
-              levels={differentiationLevels}
-              onLevelsChange={setDifferentiationLevels}
-            />
-
             <div className="flex gap-3">
               <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
@@ -243,9 +232,8 @@ export default function EYFSPlannerForm({
                   setNumberOfWeeks("2");
                   setIncludeBookList(false);
                   setIncludeHomeLearning(false);
-                  setIncludeWeeklyOverview(false);
-                  setDifferentiate("no");
-                  setDifferentiationLevels([]);
+                  setIncludeWeeklyOverview(true);
+                  setRunId(null);
                   setResult(null);
                   setError(null);
                   setConfirmingReset(false);
@@ -269,6 +257,7 @@ export default function EYFSPlannerForm({
         exportFilename={`eyfs-plan-${topic || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: topic || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
     </div>
   );

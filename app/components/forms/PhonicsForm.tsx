@@ -5,28 +5,18 @@ import { CURRICULA } from "@/app/lib/formOptions";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import { Loader2, Sparkles, Minus, Plus } from "lucide-react";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
-import { DifferentiationField } from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { OTHER_SCHEME, PHONICS_SCHEMES } from "@/app/lib/phonics-schemes";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "phonics-support";
-
-const REFINE_CHIPS = [
-  "Provide more words",
-  "Provide simpler words that use this phoneme",
-  "Provide more complex words that use this phoneme",
-  "Make the activities more interactive",
-  "Add more pseudo-words",
-  "Simplify the decodable text",
-];
 
 const selectClass =
   "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
@@ -46,21 +36,24 @@ export default function PhonicsForm({
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
   const [age, setAge] = useState(5);
   const [grapheme, setGrapheme] = useState("");
-  const [differentiate, setDifferentiate] = useState<Differentiate>("no");
-  const [differentiationLevels, setDifferentiationLevels] = useState<string[]>([]);
+  // The school's phonics scheme, so the resource uses its words. The WBS to
+  // GDS bands this form used to offer are gone: they are KS1 and KS2 labels,
+  // and every activity now carries its own support and challenge.
+  const [scheme, setScheme] = useLocalStorage("ll:phonics-scheme", "");
+  const [schemeOther, setSchemeOther] = useState("");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
+  const [runId, setRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
 
-  const canGenerate = curriculum && grapheme.trim() && (differentiate === "no" || differentiationLevels.length > 0);
+  const canGenerate = curriculum && grapheme.trim() && (scheme !== OTHER_SCHEME || schemeOther.trim());
 
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, age, grapheme, differentiate, differentiationLevels };
+  const formState = { ...languageFormState(language), curriculum, age, grapheme, scheme, schemeOther };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -71,10 +64,10 @@ export default function PhonicsForm({
     setCurriculum((i.curriculum as string) ?? "");
     setAge((i.age as number) ?? 5);
     setGrapheme((i.grapheme as string) ?? "");
-    const d = restoreDifferentiation(i);
-    setDifferentiate(d.differentiate);
-    setDifferentiationLevels(d.levels);
+    setScheme((i.scheme as string) ?? "");
+    setSchemeOther((i.schemeOther as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -86,8 +79,6 @@ export default function PhonicsForm({
       curriculum: (v) => setCurriculum(v as string),
       grapheme: (v) => setGrapheme(v as string),
       age: (v) => setAge(v as number),
-      differentiate: (v) => setDifferentiate(v as Differentiate),
-      differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
     },
   });
 
@@ -98,57 +89,27 @@ export default function PhonicsForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = { curriculum, age, phonicsScheme: scheme || undefined, phonicsSchemeOther: schemeOther.trim() || undefined };
     try {
       const res = await fetch("/api/phonics-support", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, curriculum, age, grapheme: grapheme.trim(), differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, curriculum, age, grapheme: grapheme.trim(), scheme: scheme || undefined, schemeOther: scheme === OTHER_SCHEME ? schemeOther.trim() : undefined }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u00A9/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      const finished = await readSheetStream(res, "phonics", info, setResult);
+      if (!finished) throw new Error("The resource came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -224,12 +185,29 @@ export default function PhonicsForm({
               </p>
             </div>
 
-            <DifferentiationField
-              value={differentiate}
-              onChange={setDifferentiate}
-              levels={differentiationLevels}
-              onLevelsChange={setDifferentiationLevels}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-1.5">
+                <label htmlFor={`${fieldId}-2`} className="block text-sm font-semibold text-gray-800">
+                  Your phonics scheme <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <select id={`${fieldId}-2`} value={scheme} onChange={(e) => setScheme(e.target.value)} className={selectClass}>
+                  <option value="">Not set</option>
+                  {PHONICS_SCHEMES.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                  <option value={OTHER_SCHEME}>Other (type it)</option>
+                </select>
+              </div>
+              {scheme === OTHER_SCHEME && (
+                <div className="space-y-1.5">
+                  <label htmlFor={`${fieldId}-3`} className="block text-sm font-semibold text-gray-800">Scheme name</label>
+                  <input id={`${fieldId}-3`} type="text" value={schemeOther} maxLength={60} onChange={(e) => setSchemeOther(e.target.value)} placeholder="e.g. Phonics Shed" className={inputClass} />
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 -mt-3">
+              The resource will use your scheme&apos;s words (such as its name for tricky words) as extra practice alongside it. It never copies the scheme&apos;s own materials.
+            </p>
 
             <div className="flex gap-3">
               <button
@@ -249,9 +227,9 @@ export default function PhonicsForm({
                   setCurriculum("");
                   setAge(5);
                   setGrapheme("");
-                  setDifferentiate("no");
-                  setDifferentiationLevels([]);
+                  setSchemeOther("");
                   setResult(null);
+                  setRunId(null);
                   setError(null);
                   setConfirmingReset(false);
                 }}
@@ -279,20 +257,12 @@ export default function PhonicsForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`phonics-support-${grapheme || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: grapheme || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

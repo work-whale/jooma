@@ -32,7 +32,7 @@ import { useSheetPictureDialog } from "./useSheetPictureDialog";
 import type { JoDocRef } from "@/app/lib/jo/threads";
 import { HEADER_STICKY } from "@/app/lib/topbar";
 import { relayoutLesson, timingMismatch } from "@/app/lib/sheets/lesson";
-import { examHandoffs, lessonHandoffs } from "@/app/lib/lesson-handoffs";
+import { examHandoffs, interventionHandoffs, lessonHandoffs } from "@/app/lib/lesson-handoffs";
 import Link from "next/link";
 
 /*
@@ -201,7 +201,7 @@ export default function SheetWorkspace({
   // Lesson plans: switch layout without regenerating, and carry the plan
   // into slides, a worksheet or a quiz.
   const onLayout = doc.lesson ? (layout: Parameters<typeof relayoutLesson>[1]) => commit(relayoutLesson(doc, layout)) : undefined;
-  const handoffs = !generating ? [...lessonHandoffs(doc), ...examHandoffs(doc, joDocRef?.id)] : [];
+  const handoffs = !generating ? [...lessonHandoffs(doc), ...examHandoffs(doc, joDocRef?.id), ...interventionHandoffs(doc)] : [];
   const timing = !generating && !preview ? timingMismatch(doc) : null;
   const pictures = useSheetPictureDialog({ doc, commit });
 

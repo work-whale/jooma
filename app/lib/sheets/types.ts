@@ -371,6 +371,9 @@ export interface ExemplarBlock extends BlockBase {
   parts: string[];
   annotations: { quote: string; note: string }[];
   commentary: string;
+  /** "text": a model text's teacher copy (Model Texts), annotated with its
+   *  writing features and carrying no marks. Missing: a marked model answer. */
+  purpose?: "text";
 }
 
 export type SheetBlock = TextBlock | CalloutBlock | PassageBlock | WordBankBlock | TableBlock | ListBlock | PhaseBlock | ExemplarBlock | SequenceBlock | TwoColBlock | ImageBlock | SheetQuestion;

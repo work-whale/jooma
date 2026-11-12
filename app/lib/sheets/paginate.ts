@@ -43,7 +43,11 @@ export function paginate(units: PageUnit[], pageHeight: number, gap = 0): number
     if (unit.breakBefore && current.length) newPage();
     // A heading moves with its first block when the two do not fit together.
     const together = unit.keepWithNext && i + 1 < units.length ? unit.height + gap + units[i + 1].height : unit.height;
-    if (!fits(together) && current.length) newPage();
+    // A block taller than a whole page, after the heading that opens this
+    // page, stays with it: it overflows any page, and moving it on would
+    // leave the heading alone on a page of its own.
+    const afterOpeningHeading = current.length > 0 && current.every((j) => units[j].keepWithNext) && unit.height > pageHeight;
+    if (!afterOpeningHeading && !fits(together) && current.length) newPage();
     place(i);
   }
   newPage();

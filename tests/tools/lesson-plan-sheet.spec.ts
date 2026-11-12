@@ -103,7 +103,7 @@ test("a plan streams in as timed, designed pages and is saved once, as a plan", 
   await expect(pages(page).locator('.js-list[data-style="check"] li:not(.js-list-add)')).toHaveCount(2);
   await expect(pages(page).locator(".js-answers-title")).toHaveText("Quiz answers and teacher notes");
   await expect(page.getByTestId("lesson-timing-warning")).toHaveCount(0);
-  await expect(page.getByTestId("lesson-handoffs").getByRole("link")).toHaveText(["Make slides", "Make a worksheet", "Make a quiz"]);
+  await expect(page.getByTestId("lesson-handoffs").getByRole("link")).toHaveText(["Make slides", "Make a worksheet", "Make a quiz", "Set homework"]);
 
   // Saved exactly once, as a plan that knows its layout and length.
   await expect.poll(async () => (await lessonRuns()).length, NAV).toBe(before + 1);

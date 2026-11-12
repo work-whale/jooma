@@ -9,11 +9,16 @@ import {
   AttainmentDataField,
   OtherDataField,
   DifferentiationField,
+  PupilNameField,
 } from "@/app/components/fields";
+import PronounsField, { PupilPrivacyNote } from "@/app/components/fields/PronounsField";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { parseSheet } from "@/app/lib/sheets/normalize";
+import { isPupilPronouns, pronounsFromInput, scrubPupilText } from "@/app/lib/sheets/pupil";
+import type { PupilPronouns } from "@/app/lib/sheets/types";
 import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
 import { toTitleCase } from "@/app/lib/formOptions";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -26,15 +31,6 @@ import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageF
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "targeted-intervention";
-
-const REFINE_CHIPS = [
-  "Add more strategies",
-  "Make strategies more specific",
-  "Focus on pastoral support",
-  "Focus on academic support",
-  "Make strategies more suitable for SEND learners",
-  "Include strategies for parental engagement",
-];
 
 export default function TargetedInterventionForm({
   sidebar,
@@ -53,10 +49,14 @@ export default function TargetedInterventionForm({
   const [otherData, setOtherData] = useState("");
   const [differentiate, setDifferentiate] = useState<Differentiate>("no");
   const [differentiationLevels, setDifferentiationLevels] = useState<string[]>([]);
+  // The child's first name stays in the browser and the saved run: every box
+  // is sent with "[PUPIL]" in its place (app/lib/sheets/pupil.ts).
+  const [studentName, setStudentName] = useState("");
+  const [pronouns, setPronouns] = useState<PupilPronouns>("they");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
+  const [runId, setRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export default function TargetedInterventionForm({
     ...languageFormState(language),
     curriculum, yearGroup, mixed, subject,
     attitudinalData, aptitudinalData, attainmentData, otherData,
-    differentiate, differentiationLevels,
+    differentiate, differentiationLevels, studentName, pronouns,
   };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
@@ -90,7 +90,10 @@ export default function TargetedInterventionForm({
     const d = restoreDifferentiation(i);
     setDifferentiate(d.differentiate);
     setDifferentiationLevels(d.levels);
+    setStudentName((i.studentName as string) ?? "");
+    setPronouns(pronounsFromInput(i));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -104,14 +107,32 @@ export default function TargetedInterventionForm({
       subject: (v) => setSubject(v as string),
       differentiate: (v) => setDifferentiate(v as Differentiate),
       differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
+      pronouns: (v) => { if (isPupilPronouns(v)) setPronouns(v); },
     },
   });
 
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const name = studentName.trim();
+    const scrub = (t: string) => scrubPupilText(t, name);
+    const resolvedYear = mixed ? "Mixed" : yearGroup;
+    // On the page, never sent: the name. The year and subject also carry
+    // over to the "Make a worksheet" link.
+    const info = {
+      curriculum,
+      yearGroup: resolvedYear,
+      subject: toTitleCase(subject),
+      topic: toTitleCase(subject),
+      ...(name ? { pupil: { name, pronouns } } : {}),
+      pupilFacts: [
+        { label: "Year group", value: resolvedYear === "Mixed" ? "" : resolvedYear },
+        { label: "Subject", value: toTitleCase(subject) },
+      ],
+    };
     try {
       const res = await fetch("/api/targeted-intervention", {
         method: "POST",
@@ -121,56 +142,29 @@ export default function TargetedInterventionForm({
           curriculum,
           yearGroup: mixed ? "Mixed" : yearGroup,
           subject: toTitleCase(subject),
-          attitudinalData,
-          aptitudinalData: aptitudinalData.trim() || undefined,
-          attainmentData: attainmentData.trim() || undefined,
-          otherData: otherData.trim() || undefined,
+          attitudinalData: scrub(attitudinalData),
+          aptitudinalData: scrub(aptitudinalData).trim() || undefined,
+          attainmentData: scrub(attainmentData).trim() || undefined,
+          otherData: scrub(otherData).trim() || undefined,
           differentiate,
           differentiationLevels,
+          named: !!name,
+          pronouns,
         }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }).replace(/©/g, "(c)"));
-      }
+      const finished = await readSheetStream(res, "intervention", info, setResult);
+      // The details table is built from the form, so a run the model wrote
+      // nothing into still has a page: count it as failed, never save it.
+      if (!finished || !parseSheet(finished)?.sections.some((s) => s.role === "strategy")) throw new Error("The strategies came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -185,7 +179,10 @@ export default function TargetedInterventionForm({
     setOtherData("");
     setDifferentiate("no");
     setDifferentiationLevels([]);
+    setStudentName("");
+    setPronouns("they");
     setResult(null);
+    setRunId(null);
     setError(null);
     setConfirmingReset(false);
   };
@@ -210,6 +207,14 @@ export default function TargetedInterventionForm({
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <LanguageField value={language} onChange={setLanguage} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <PupilNameField value={studentName} onChange={setStudentName} />
+                <PronounsField value={pronouns} onChange={setPronouns} />
+              </div>
+              <PupilPrivacyNote doc="strategies" optional />
             </div>
 
             <SubjectField value={subject} onChange={setSubject} />
@@ -257,20 +262,12 @@ export default function TargetedInterventionForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`intervention-${subject || "export"}`}
-        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || null, input: formState }}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: studentName.trim() ? `${studentName.trim()}: ${subject || "interventions"}` : subject || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

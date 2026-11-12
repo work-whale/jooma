@@ -207,7 +207,11 @@ export function normalizeBlock(raw: unknown, id: string, puzzle?: Partial<Puzzle
       // it joins the commentary.
       const placed = placeAnnotations(parts, raw);
       const commentary = [text(r.commentary), ...placed.spare].filter(Boolean).join(" ");
-      return { id, type: "exemplar", level, awarded: intOf(r.awarded, 0, outOf || 60, 0), outOf, form, parts, annotations: placed.annotations, commentary };
+      return {
+        id, type: "exemplar", level, awarded: intOf(r.awarded, 0, outOf || 60, 0), outOf, form, parts, annotations: placed.annotations, commentary,
+        // A model text's teacher copy; a model answer has no purpose field.
+        ...(r.purpose === "text" ? { purpose: "text" as const } : {}),
+      };
     }
     case "image": {
       // The model writes what to look for, never where a picture is: `src` is

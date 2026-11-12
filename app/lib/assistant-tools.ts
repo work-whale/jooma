@@ -616,9 +616,9 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         includeBookList: { type: "boolean", description: "Include a book list." },
         includeHomeLearning: { type: "boolean", description: "Include home learning ideas." },
         includeWeeklyOverview: { type: "boolean", description: "Include a weekly overview." },
-        // curriculum omitted: this form hardcodes it to EYFS.
-        differentiate: differentiateField,
-        differentiationLevels: differentiationLevelsField,
+        // curriculum omitted: this form hardcodes it to EYFS. No
+        // differentiation: Early Years does not use the WBS to GDS bands, and
+        // every adult-led activity carries its own support and challenge.
       },
       required: ["topic"],
     },
@@ -773,8 +773,8 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           maximum: 11,
           description: "Pupil age in years. Defaults to 5.",
         },
-        differentiate: differentiateField,
-        differentiationLevels: differentiationLevelsField,
+        // No differentiation: every activity carries its own support and
+        // challenge. The school's phonics scheme is the teacher's to pick.
       },
       required: ["curriculum", "grapheme"],
     },

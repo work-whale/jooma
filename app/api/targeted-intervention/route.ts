@@ -1,97 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
-import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { requestLanguage } from "@/app/lib/languages";
+import { interventionRequest, type TargetedInterventionRequest } from "@/app/lib/intervention-prompt";
 
-export interface TargetedInterventionRequest {
-  curriculum: string;
-  yearGroup: string;
-  subject: string;
-  attitudinalData: string;
-  aptitudinalData?: string;
-  attainmentData?: string;
-  otherData?: string;
-  differentiate?: Differentiate;
-  differentiationLevels?: string[];
-}
+export type { TargetedInterventionRequest };
 
-
+/*
+ * Streams intervention ideas for one pupil as sheet JSON
+ * (app/lib/sheets/intervention.ts). The child's name never arrives: a request
+ * with a name field is refused. The prompt and the schema live in
+ * app/lib/intervention-prompt.ts.
+ */
 export async function POST(req: NextRequest) {
   const body: TargetedInterventionRequest = await req.json();
 
-  const { curriculum, yearGroup, subject, attitudinalData, aptitudinalData, attainmentData, otherData, differentiate = "no", differentiationLevels = [] } = body;
-
-  if (!curriculum || !yearGroup || !subject?.trim() || !attitudinalData?.trim()) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  const built = interventionRequest(body);
+  if ("error" in built) {
+    return NextResponse.json({ error: built.error }, { status: 400 });
   }
-
-  const aptitudinalSection = aptitudinalData?.trim()
-    ? `\n- Aptitudinal data: ${aptitudinalData.trim()}`
-    : "";
-
-  const attainmentSection = attainmentData?.trim()
-    ? `\n- Attainment data: ${attainmentData.trim()}`
-    : "";
-
-  const otherSection = otherData?.trim()
-    ? `\n- Other relevant data: ${otherData.trim()}`
-    : "";
-
-  // Opt-in: empty when the teacher chose not to differentiate.
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const adaptationSection = adaptation ? `\n\nDIFFERENTIATION — ${adaptation}` : "";
-
-  const userPrompt = `You are an expert educational practitioner and intervention specialist. Generate a set of targeted, practical intervention strategies for the following student profile:
-
-- Curriculum: ${curriculum}
-- Year Group: ${yearGroup}
-- Subject: ${subject}
-- Attitudinal data: ${attitudinalData}${aptitudinalSection}${attainmentSection}${otherSection}${adaptationSection}
-
-Analyse the full student profile carefully. Identify the key strengths, gaps, and tensions in the data — then generate between 8 and 10 specific, personalised intervention strategies to close those gaps.
-
-For each strategy:
-- Draw directly on the specific data provided (reference scores, comments, or observations where relevant)
-- Ensure the strategy is realistic and practical for a classroom teacher or SENCO to implement
-- Include 2–3 concrete activities that put the strategy into practice
-
-Format the output using markdown as follows:
-
-# Intervention Strategies
-
-For each strategy, use this exact structure:
-
-## [Number]. [Strategy Name]
-
-**Strategy Summary:**
-[2–3 sentences describing exactly what the teacher or school should do. Be specific and actionable.]
-
-**How to implement:**
-- [Concrete classroom activity or task — specific enough to use in a lesson or session]
-- [Second activity]
-- [Third activity]
-
-[Create a worksheet for this strategy →](/tools/worksheet-generator)
-
----
-
-Do not include a preamble, introduction, or closing summary. Do not include any research citations or references. Start immediately with "# Intervention Strategies" and the first numbered strategy.`;
 
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "targeted-intervention",
     ...(await modelFor("targeted-intervention", "gpt-4o")),
-    max_completion_tokens: 4096,
-    messages: [
-      {
-        role: "system",
-        content: buildSystem(
-          `You are an expert educational practitioner, intervention specialist, and SENCO advisor with deep knowledge of UK schools. You produce targeted, evidence-based intervention strategies grounded in educational research (Hattie, EEF, Rosenshine, etc.). Your strategies are specific, actionable, and directly tied to the student data provided. You write in clear, professional UK English for a teacher audience.`
-        ),
-      },
-      { role: "user", content: userPrompt },
-    ],
+    max_completion_tokens: 8000,
+    messages: built.messages,
+    response_format: built.response_format,
   });
 }

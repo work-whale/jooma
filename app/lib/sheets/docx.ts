@@ -30,7 +30,7 @@ import {
   type ParagraphChild,
 } from "docx";
 import { answersTitle, answerText, examCover, hasAnswersPage, questionLabels, showsCover } from "./markdown";
-import { levelLabel } from "./model-answers";
+import { levelLabel, markSegments, quoteMarks } from "./model-answers";
 import { clockText, phaseClock, phaseRows, phaseWording, stageLabel } from "./lesson";
 import { sheetToolProfile } from "./tools";
 import { getSheetTheme } from "./themes";
@@ -435,19 +435,33 @@ export async function buildSheetDocx(stored: SheetDoc): Promise<Blob> {
           spacer(),
         ];
       case "exemplar": {
+        const modelText = b.purpose === "text";
+        // Each note's quote in bold, with the note's number raised after it.
+        const marks = quoteMarks(b.parts, b.annotations.map((a) => a.quote));
+        const markedRuns = (p: string, i: number) =>
+          markSegments(p, marks.filter((m) => m.part === i)).flatMap((seg) =>
+            seg.n
+              ? [...runs(seg.text, { size, bold: true, color: hex(c.heading) }), new TextRun({ text: String(seg.n), superScript: true, bold: true, font: FONT, size, color: hex(c.accent) })]
+              : runs(seg.text, { size }),
+          );
         const body =
           b.form === "prose"
-            ? b.parts.map((p) => new Paragraph({ spacing: { after: 100 }, children: runs(p, { size }) }))
+            ? b.parts.map((p, i) => new Paragraph({ spacing: { after: 100 }, children: markedRuns(p, i) }))
             : b.parts.map((p, i) => new Paragraph({ spacing: { after: 60 }, indent: { left: 360, hanging: 360 }, children: [tr(b.form === "steps" ? `${i + 1}.  ` : "•  ", { bold: true, color: hex(c.heading) }), ...runs(p, { size })] }));
         return [
           box(
             [
-              new Paragraph({ spacing: { after: 100 }, children: [tr(`${levelLabel(b.level)}   `, { bold: true, color: hex(c.heading) }), tr(`${b.awarded} / ${b.outOf} marks`, { color: hex(c.muted) })] }),
+              new Paragraph({
+                spacing: { after: 100 },
+                children: modelText
+                  ? [tr("Teacher copy   ", { bold: true, color: hex(c.heading) }), tr("Features marked", { color: hex(c.muted) })]
+                  : [tr(`${levelLabel(b.level)}   `, { bold: true, color: hex(c.heading) }), tr(`${b.awarded} / ${b.outOf} marks`, { color: hex(c.muted) })],
+              }),
               ...body,
               ...(b.annotations.length
                 ? [
-                    new Paragraph({ spacing: { before: 120, after: 60 }, children: [tr("Where the marks come from", { bold: true })] }),
-                    ...b.annotations.map((a) => new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: `"${a.quote}"  `, font: FONT, size, italics: true }), ...runs(a.note, { size })] })),
+                    new Paragraph({ spacing: { before: 120, after: 60 }, children: [tr(modelText ? "The writing features" : "Where the marks come from", { bold: true })] }),
+                    ...b.annotations.map((a, i) => new Paragraph({ bullet: { level: 0 }, children: [...(marks.some((m) => m.n === i + 1) ? [tr(`${i + 1}  `, { bold: true, color: hex(c.accent) })] : []), new TextRun({ text: `"${a.quote}"  `, font: FONT, size, italics: true }), ...runs(a.note, { size })] })),
                   ]
                 : []),
               ...(b.commentary ? [new Paragraph({ spacing: { before: 100 }, children: [new TextRun({ text: b.commentary, font: FONT, size, italics: true, color: hex(c.muted) })] })] : []),

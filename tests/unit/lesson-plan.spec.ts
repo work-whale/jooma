@@ -316,15 +316,16 @@ test.describe("the request", () => {
   });
 });
 
-test.describe("make slides, a worksheet or a quiz from the plan", () => {
-  test("three links, each opening its tool filled in from the plan", () => {
+test.describe("make slides, a worksheet, a quiz or homework from the plan", () => {
+  test("four links, each opening its tool filled in from the plan", () => {
     const links = lessonHandoffs(planFor());
-    expect(links.map((l) => l.id)).toEqual(["slides", "worksheet", "quiz"]);
+    expect(links.map((l) => l.id)).toEqual(["slides", "worksheet", "quiz", "homework"]);
     const decoded = Object.fromEntries(links.map((l) => [l.id, decodePrefill(new URL(l.href, "http://x").searchParams.get("prefill"))]));
     expect(decoded.slides).toMatchObject({ slug: "slideshow", fields: { topic: "Fractions", year: "Year 5" } });
     expect(String(decoded.slides?.fields.additionalInstructions)).toContain("Key words: numerator, denominator");
     expect(decoded.worksheet).toMatchObject({ slug: "worksheet-generator", fields: { subject: "Maths", yearGroup: "Year 5", learningObjective: "To add fractions with the same denominator" } });
     expect(decoded.quiz).toMatchObject({ slug: "quiz-generator", fields: { subject: "Maths", topic: "Fractions", curriculum: "2014 National Curriculum" } });
+    expect(decoded.homework).toMatchObject({ slug: "homework-generator", fields: { subject: "Maths", yearGroup: "Year 5", learningObjective: "To add fractions with the same denominator" } });
   });
 
   test("a mixed class leaves the year out rather than sending an invalid one", () => {

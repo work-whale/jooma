@@ -29,10 +29,10 @@ export default function PronounsField({ value, onChange }: { value: PupilPronoun
 }
 
 /** Under the name: what happens to it, and what to keep out of the boxes. */
-export function PupilPrivacyNote() {
+export function PupilPrivacyNote({ doc = "plan", optional = false }: { doc?: string; optional?: boolean }) {
   return (
     <p className="text-xs text-gray-500 leading-relaxed" data-testid="pupil-privacy-note">
-      The name stays on your device and in your saved copy. Jooma writes the plan with &ldquo;the pupil&rdquo; in its place and puts the name back on your page.
+      {optional ? "The name is optional. " : ""}The name stays on your device and in your saved copy. Jooma writes the {doc} with &ldquo;the pupil&rdquo; in its place and puts the name back on your page.
       Please use a first name only, and keep surnames and other children&rsquo;s names out of the boxes below.
     </p>
   );

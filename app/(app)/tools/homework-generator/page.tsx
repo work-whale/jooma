@@ -23,7 +23,7 @@ export default async function HomeworkGeneratorPage({
           steps={[
             { label: "Fill in the details", detail: "Choose your year group, subject, learning objective, homework type, and effort level." },
             { label: "Customise", detail: "Add any additional instructions or paste in your lesson plan for a homework task that closely follows your lesson." },
-            { label: "Generate and export", detail: "Review the output, edit as needed, then download as a Word document ready to share with pupils." },
+            { label: "Generate and export", detail: "Edit the pupil sheet on the page or ask Jo, then print or download it as a PDF or Word document, with or without the answers." },
           ]}
         />
       }
