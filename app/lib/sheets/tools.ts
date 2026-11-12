@@ -30,10 +30,16 @@ import { arrangeIntervention, INTERVENTION_PARTS } from "./intervention";
 import { arrangePhonics } from "./phonics";
 import { arrangeEyfs, EYFS_PARTS } from "./eyfs";
 import { phonicsScheme, schemeNote } from "@/app/lib/phonics-schemes";
+import { arrangePupilPremium, PP_PARTS, PP_START_HIDDEN } from "./pupil-premium";
+import { arrangeEyfsActionPlan, EYFS_ACTION_PARTS, eyfsTimescale } from "./eyfs-action-plan";
+import { arrangeRisk, RISK_PARTS } from "./risk";
+import { arrangeSensory, SENSORY_PARTS } from "./sensory";
+import { arrangeNewsletter, diaryDate, NEWSLETTER_PARTS } from "./newsletter";
 
 export const SHEET_TOOLS = [
   "worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter", "topicMap", "termPlan", "behaviourPlan", "pupilProfile", "cover",
   "homework", "modelText", "targets", "intervention", "phonics", "eyfsPlan",
+  "pupilPremium", "eyfsActionPlan", "riskAssessment", "sensory", "newsletter",
 ] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
@@ -752,6 +758,172 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     landscape: true,
     unitMeta: unitMetaFor,
     parts: EYFS_PARTS,
+  },
+  pupilPremium: {
+    slug: "pupil-premium-planner",
+    joName: "pupil premium strategy statement, drafted on the DfE template",
+    docLabel: "statement",
+    joStarters: [
+      "Add an activity on attendance",
+      "Make the success criteria more measurable",
+      "Make the statement of intent shorter",
+      "Check every challenge has an activity",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Pupil premium",
+    ownPassage: false,
+    startDesign: (info) => ({ ...unitStartDesign(), themeId: "classic", hidden: [...PP_START_HIDDEN, ...(info.hiddenParts ?? [])] }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a draft of a school's pupil premium strategy statement on the DfE template. Keep the template's headings and order. The activity tables have three columns: Activity, Evidence that supports this approach, Challenge number(s) addressed; every challenge number must be one in the Challenges table.\n" +
+      "- Evidence names an EEF Teaching and Learning Toolkit strand, an EEF guidance report or DfE guidance by title. Never write months of progress, effect sizes, costs, budgets or pupil data the school did not give: the Budgeted cost lines and the school and funding overviews are the school's to fill in. Part B is for the school to write.",
+    arrange: (raw, info) => arrangePupilPremium(raw, { schoolName: info.schoolName, facts: info.schoolFacts, challenges: info.ppChallenges }),
+    landscape: true,
+    parts: PP_PARTS,
+  },
+  eyfsActionPlan: {
+    slug: "eyfs-action-plan",
+    joName: "EYFS action plan for improving one area of an Early Years setting's provision",
+    docLabel: "action plan",
+    joStarters: [
+      "Add an action on working with parents",
+      "Make the success criteria easier to measure",
+      "Shorten the plan to one term",
+      "Add more training for staff",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "EYFS action plan",
+    ownPassage: false,
+    startDesign: () => ({ ...unitStartDesign(), themeId: "classic" }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is an improvement action plan for an Early Years setting in England, in four phases. Each phase is a table: Action, Lead, Resources, Monitoring, RAG, Evidence of impact. Leads are roles (EYFS lead, Reception teacher, SENCO), never names. RAG and Evidence of impact are for the school to fill in: leave them blank.\n" +
+      "- Quote Early Learning Goals only as the EYFS statutory framework (September 2025) words them. Never invent figures, baselines or costs.",
+    arrange: (raw) => arrangeEyfsActionPlan(raw),
+    subtitleSuffix: (info) => (info.timescale ? eyfsTimescale(info.timescale) : ""),
+    landscape: true,
+    parts: EYFS_ACTION_PARTS,
+  },
+  riskAssessment: {
+    slug: "risk-assessment",
+    joName: "risk assessment for a school trip or activity, scored on a 5 by 5 matrix",
+    docLabel: "risk assessment",
+    joStarters: [
+      "Add a hazard for a pupil with a severe allergy",
+      "Add hazards for wet weather",
+      "Make the control measures more specific",
+      "Add a hazard for the journey back",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Risk assessment",
+    ownPassage: false,
+    // Smaller type: six columns of controls are a lot of words on one page.
+    startDesign: () => ({ ...unitStartDesign(), themeId: "classic", fontScale: "s" }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a school risk assessment. The hazards table has the columns Hazard, Who might be harmed and how, Risk, Control measures, Risk after controls, Further action needed. Risk is likelihood times severity, each a whole number 1 to 5, written as the score, its band and the sum: \"12 Medium (4 × 3)\". Bands: Low for 1 to 6, Medium for 8 to 12, High for 15 to 25. Risk after controls is the same, after the controls. If you change a likelihood or severity, recalculate the score and band exactly.\n" +
+      "- Never name a person: use roles (trip leader, first aider, EVC). The details, emergency information and sign-off tables are the school's to fill in.",
+    arrange: (raw, info) => arrangeRisk(raw, info.risk),
+    landscape: true,
+    parts: RISK_PARTS,
+  },
+  sensory: {
+    slug: "sensory-activities",
+    joName: "set of five multisensory activities for teaching one topic, with SEND adaptations",
+    docLabel: "activities",
+    joStarters: [
+      "Add more movement to the activities",
+      "Make one activity quieter for a pupil who finds noise hard",
+      "Swap the taste activity for something else",
+      "Add an activity for pupils who use a wheelchair",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: false,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    startDesign: () => ({ nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list", "twocol"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- These are five multisensory activities for teachers. Each activity section has a learning objective, a Senses line (from Sight, Hearing, Touch, Movement, Smell, Taste), what it is for, what you need, the steps, words to use, and a twocol box: sensory-sensitive adaptations beside sensory-seeking ones.\n" +
+      "- Keep every activity teaching the topic, safe and practical. Use taste or smell only where safe, and never suggest food without an allergy check.",
+    arrange: (raw) => arrangeSensory(raw),
+    parts: SENSORY_PARTS,
+  },
+  newsletter: {
+    slug: "newsletter-writer",
+    joName: "school newsletter for parents and carers",
+    docLabel: "newsletter",
+    joStarters: [
+      "Make it shorter and easier to skim",
+      "Make the tone warmer",
+      "Add a reminder about the uniform",
+      "Make the headings more inviting",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    startDesign: () => ({ nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a school newsletter for parents and carers. Pupils are written as [PUPIL 1], [PUPIL 2] and so on: always keep those placeholders exactly, never write a pupil's name, and never name any other child or adult.\n" +
+      "- The celebrations table and the dates for the diary are the school's: do not add to them or change them. Never invent facts, dates or events.",
+    arrange: (raw, info) => arrangeNewsletter(raw, info.newsletter),
+    subtitleSuffix: (info) => [info.newsletter?.schoolName?.trim(), info.newsletter?.date ? diaryDate(info.newsletter.date, true) : ""].filter(Boolean).join(" · "),
+    parts: NEWSLETTER_PARTS,
   },
 };
 

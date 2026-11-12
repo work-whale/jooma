@@ -33,7 +33,7 @@ export default function PupilPremiumChallengesField({ value, onChange }: Props) 
         />
         {!value && <PlaceholderOverlay text={placeholder} area />}
       </div>
-      <p className="text-xs text-gray-400">Provide up to 3 challenges at a time for best results.</p>
+      <p className="text-xs text-gray-400">One challenge per line, up to 8. Give any figures you have: they are kept, and none are invented.</p>
     </div>
   );
 }

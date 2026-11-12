@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import { applyMdOp, isMdOp, markdownSnapshot, mdOpFocus, parseMarkdownDoc, serializeMarkdownDoc, type MdDoc } from "@/app/lib/jo/md-ops";
 import type { JoOp, MdOp } from "@/app/lib/jo/types";
 import type { JoAdapter } from "./useJoSession";
+import type { TextPrivacy } from "@/app/lib/staff-privacy";
 
 function wait(ms: number, signal: AbortSignal): Promise<void> {
   if (ms <= 0 || signal.aborted) return Promise.resolve();
@@ -42,6 +43,7 @@ export function useMarkdownJo({
   commit,
   containerRef,
   toolName,
+  privacy,
 }: {
   /** The committed document. */
   markdown: string | null;
@@ -50,6 +52,9 @@ export function useMarkdownJo({
   containerRef: RefObject<HTMLElement | null>;
   /** "Lesson Planner", for Jo's context. */
   toolName: string;
+  /** A name Jo never sees: Jo is handed the scrubbed text, works on it, and
+   *  what is drawn or committed has the name swapped back in. */
+  privacy?: TextPrivacy;
 }) {
   const [ghost, setGhost] = useState<string | null>(null);
   const [focus, setFocus] = useState<MdJoFocus | null>(null);
@@ -59,18 +64,22 @@ export function useMarkdownJo({
   const markdownRef = useRef(markdown);
   const commitRef = useRef(commit);
   const toolRef = useRef(toolName);
+  const privacyRef = useRef(privacy);
   useEffect(() => {
     markdownRef.current = markdown;
     commitRef.current = commit;
     toolRef.current = toolName;
+    privacyRef.current = privacy;
   });
+  const scrub = useCallback((text: string) => (privacyRef.current ? privacyRef.current.scrub(text) : text), []);
+  const swap = useCallback((text: string) => (privacyRef.current ? privacyRef.current.swap(text) : text), []);
   const workingRef = useRef<MdDoc | null>(null);
   const flashRef = useRef<number | null>(null);
 
   const show = useCallback((doc: MdDoc) => {
     setShownDoc(doc);
-    setGhost(serializeMarkdownDoc(doc));
-  }, []);
+    setGhost(swap(serializeMarkdownDoc(doc)));
+  }, [swap]);
 
   const scrollTo = useCallback(
     (doc: MdDoc, sectionId: string) => {
@@ -87,12 +96,12 @@ export function useMarkdownJo({
   const adapter = useMemo<JoAdapter>(
     () => ({
       kind: "markdown",
-      snapshot: () => ({ toolName: toolRef.current, ...markdownSnapshot(parseMarkdownDoc(markdownRef.current ?? "")) }),
+      snapshot: () => ({ toolName: toolRef.current, ...markdownSnapshot(parseMarkdownDoc(scrub(markdownRef.current ?? ""))) }),
       focus: () => null,
       isOp: (v: unknown): v is JoOp => isMdOp(v),
       begin() {
         const before = markdownRef.current ?? "";
-        workingRef.current = parseMarkdownDoc(before);
+        workingRef.current = parseMarkdownDoc(scrub(before));
         setShownDoc(workingRef.current);
         return before;
       },
@@ -141,7 +150,7 @@ export function useMarkdownJo({
         const working = workingRef.current;
         workingRef.current = null;
         if (working) {
-          const next = serializeMarkdownDoc(working);
+          const next = swap(serializeMarkdownDoc(working));
           if (next !== markdownRef.current) commitRef.current(next);
         }
         setGhost(null);
@@ -159,7 +168,7 @@ export function useMarkdownJo({
         flashRef.current = window.setTimeout(() => setFocus(null), 1600);
       },
     }),
-    [scrollTo, show],
+    [scrollTo, show, scrub, swap],
   );
 
   return { adapter, shown: ghost ?? markdown, focus, shownDoc, working: ghost !== null };

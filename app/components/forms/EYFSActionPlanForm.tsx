@@ -1,14 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import {
-  CurriculumField,
-  EyfsObjectiveField,
-  DifferentiationField,
-} from "@/app/components/fields";
-import { restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
+import { useId, useState } from "react";
+import { CurriculumField, EyfsObjectiveField } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -20,18 +14,18 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { EYFS_TIMESCALES, eyfsTimescale } from "@/app/lib/sheets/eyfs-action-plan";
 
 const TOOL_SLUG = "eyfs-action-plan";
 
-const REFINE_CHIPS = [
-  "Translate to...",
-  "Make the action plan more detailed",
-  "Simplify the language",
-  "Add more specific resources",
-  "Extend the timeline",
-  "Focus more on staff development",
-];
-
+/*
+ * An EYFS action plan as a designed landscape document
+ * (app/lib/sheets/eyfs-action-plan.ts): four phases of actions, each a table
+ * with RAG and evidence columns for the school to fill in. The WBS to GDS
+ * bands this form used to offer are gone: they are KS1 and KS2 attainment
+ * labels, and a plan for a setting is not pitched at pupils.
+ */
 export default function EYFSActionPlanForm({
   sidebar,
   launch,
@@ -40,22 +34,22 @@ export default function EYFSActionPlanForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
   const [objective, setObjective] = useState("");
-  const [differentiate, setDifferentiate] = useState<Differentiate>("no");
-  const [differentiationLevels, setDifferentiationLevels] = useState<string[]>([]);
+  const [timescale, setTimescale] = useState<string>("One year");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
-  const canGenerate = curriculum && objective.trim() && (differentiate === "no" || differentiationLevels.length > 0);
+  const canGenerate = curriculum && objective.trim();
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, objective, differentiate, differentiationLevels };
+  const formState = { ...languageFormState(language), curriculum, objective, timescale };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -65,78 +59,46 @@ export default function EYFSActionPlanForm({
     const i = run.input;
     setCurriculum((i.curriculum as string) ?? "");
     setObjective((i.objective as string) ?? "");
-    const d = restoreDifferentiation(i);
-    setDifferentiate(d.differentiate);
-    setDifferentiationLevels(d.levels);
+    setTimescale(eyfsTimescale(i.timescale));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
-  // `?run=` reopens a saved run from Dashboard, Folders or Analytics.
+  // `?run=` reopens a saved run from Dashboard, Folders or Analytics. An old
+  // prefill carrying `differentiate` is ignored: there is no setter for it.
   const { prefilled } = useToolLaunch({
     params: launch,
     onRestore: restore,
     prefill: {
       curriculum: (v) => setCurriculum(v as string),
       objective: (v) => setObjective(v as string),
-      differentiate: (v) => setDifferentiate(v as Differentiate),
-      differentiationLevels: (v) => setDifferentiationLevels(v as string[]),
     },
   });
 
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
     try {
       const res = await fetch("/api/eyfs-action-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, curriculum, objective, differentiate, differentiationLevels }),
+        body: JSON.stringify({ language, curriculum, objective, timescale }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "eyfsActionPlan", { curriculum, timescale }, setResult);
+      if (!finished) throw new Error("The plan came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -159,12 +121,17 @@ export default function EYFSActionPlanForm({
 
             <EyfsObjectiveField value={objective} onChange={setObjective} />
 
-            <DifferentiationField
-              value={differentiate}
-              onChange={setDifferentiate}
-              levels={differentiationLevels}
-              onLevelsChange={setDifferentiationLevels}
-            />
+            <fieldset className="space-y-2">
+              <legend className="block text-sm font-semibold text-gray-800">How long the plan runs</legend>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                {EYFS_TIMESCALES.map((t) => (
+                  <label key={t} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                    <input type="radio" name={`${fieldId}-timescale`} value={t} checked={timescale === t} onChange={() => setTimescale(t)} className="accent-gray-900 w-4 h-4" />
+                    {t}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             <div className="flex gap-3">
               <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
@@ -175,20 +142,15 @@ export default function EYFSActionPlanForm({
                 confirmLabel="Yes, reset"
                 onConfirm={() => {
                   setObjective("");
-                  setDifferentiate("no");
-                  setDifferentiationLevels([]);
+                  setTimescale("One year");
+                  setRunId(null);
                   setResult(null);
                   setError(null);
                   setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
-              <GenerateButton
-                onClick={handleGenerate}
-                disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
-                isGenerating={isGenerating}
-                hasResult={result !== null}
-              />
+              <GenerateButton onClick={handleGenerate} disabled={!canGenerate || isGenerating || unchangedSinceGeneration} isGenerating={isGenerating} hasResult={result !== null} />
             </div>
           </Card>
         </div>
@@ -201,20 +163,12 @@ export default function EYFSActionPlanForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="eyfs-action-plan"
-        historyMeta={{ toolSlug: TOOL_SLUG, title: objective || null, input: formState }}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: objective.slice(0, 80) || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

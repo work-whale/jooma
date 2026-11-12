@@ -23,7 +23,7 @@ export default function StaffMemberField({ value, onChange }: Props) {
   ]);
   return (
     <div className="space-y-1.5">
-      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Staff member / role</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Role</label>
       <div className="relative">
         <input id={`${fieldId}-0`}
           type="text"
@@ -34,6 +34,7 @@ export default function StaffMemberField({ value, onChange }: Props) {
         />
         {!value && <PlaceholderOverlay text={placeholder} />}
       </div>
+      <p className="text-xs text-gray-500">The role only, not a name. Targets are written for the role.</p>
     </div>
   );
 }

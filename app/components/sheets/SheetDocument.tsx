@@ -92,6 +92,9 @@ interface Unit extends PageUnit {
   para?: { blockId: string; si: number; bi: number; p: number };
   /** One lesson of a lesson table; the first (r = 0) carries the header row. */
   seq?: { blockId: string; r: number };
+  /** One row of a table taller than a page, drawn in pieces like a lesson
+   *  table: any piece that opens a page repeats the header row. */
+  trow?: { blockId: string; r: number };
   /** Draws the piece. `live` is false for the hidden measuring copy, which
    *  must carry no ids and no toolbars. */
   render?: (live: boolean) => ReactNode;
@@ -116,6 +119,8 @@ interface Measured {
   units: Record<string, number>;
   passages: Record<string, PassageMeasure>;
   sequences: Record<string, SequenceMeasure>;
+  /** Tables drawn in pieces, measured like lesson tables. */
+  tables: Record<string, SequenceMeasure>;
   foot: number;
 }
 
@@ -164,6 +169,18 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
   const [menu, setMenu] = useState<Menu>(null);
   const commit = (next: SheetDoc) => onChange?.(withPupilPlaceholder(next));
   const columns: UnitColumn[] = visibleColumns(doc, profile.unitColumns ?? TOPIC_MAP_COLUMNS);
+
+  // Measured on the last render (see Measuring below). Read here because a
+  // table only splits across pages once it is known to be taller than one.
+  const [measured, setMeasured] = useState<Measured | null>(null);
+  const bodyHeight = paper.h - PAGE_PADDING - (measured?.foot ?? 28) - SAFETY;
+  /** A table taller than a page body. Measured whole while it fits, and by
+   *  its pieces once split, so the choice holds steady between renders. */
+  const tallTable = (id: string) => {
+    const t = measured?.tables[id];
+    const h = t ? t.chrome + t.head + t.rows.reduce((a, b) => a + b, 0) : (measured?.units[id] ?? 0);
+    return h > bodyHeight;
+  };
 
   // ── The pieces ──────────────────────────────────────────────────────────
 
@@ -315,6 +332,7 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
   // A lesson table is drawn in pieces, possibly across pages, like a passage.
   const pupilPage = (s: SheetDoc["sections"][number]) => !!profile.pupilPageRole && s.role === profile.pupilPageRole;
   const sequenceTools = new Map<string, { tools: ReactNode; block: Extract<SheetBlock, { type: "sequence" }>; si: number; bi: number }>();
+  const tableTools = new Map<string, { tools: ReactNode; block: Extract<SheetBlock, { type: "table" }>; patch: (p: Partial<SheetBlock>) => void }>();
 
   doc.sections.forEach((s, si) => {
     // A part switched off in Design (a unit plan's overview) is left off
@@ -425,6 +443,15 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
         const count = Math.max(1, b.lessons.length);
         for (let r = 0; r < count; r++) units.push({ key: `sq:${b.id}:${r}`, height: 0, seq: { blockId: b.id, r } });
         sequenceTools.set(b.id, { tools, block: b, si, bi });
+        return;
+      }
+
+      if (b.type === "table" && b.rows.length > 1 && tallTable(b.id)) {
+        // Taller than a page: one unit per row, the header repeated on each
+        // page it runs onto (see drawTable). A table that fits on a page is
+        // drawn whole, below, and moves to the next page whole as before.
+        b.rows.forEach((_, r) => units.push({ key: `tr:${b.id}:${r}`, height: 0, trow: { blockId: b.id, r } }));
+        tableTools.set(b.id, { tools, block: b, patch });
         return;
       }
 
@@ -613,12 +640,11 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
   // ── Measuring ───────────────────────────────────────────────────────────
 
   const measureRef = useRef<HTMLDivElement>(null);
-  const [measured, setMeasured] = useState<Measured | null>(null);
 
   const measure = useCallback(() => {
     const root = measureRef.current;
     if (!root) return;
-    const next: Measured = { units: {}, passages: {}, sequences: {}, foot: 0 };
+    const next: Measured = { units: {}, passages: {}, sequences: {}, tables: {}, foot: 0 };
     const h = (el: Element) => Math.ceil(el.getBoundingClientRect().height);
     root.querySelectorAll<HTMLElement>("[data-m]").forEach((el) => {
       const key = el.dataset.m!;
@@ -627,6 +653,13 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
         const rows = [...el.querySelectorAll(".js-seq-row")].map(h);
         const headH = head ? h(head) : 0;
         next.sequences[key.slice(2)] = { chrome: Math.max(0, h(el) - headH - rows.reduce((a, b) => a + b, 0)), head: headH, rows };
+        return;
+      }
+      if (key.startsWith("T:")) {
+        const head = el.querySelector("thead");
+        const rows = [...el.querySelectorAll("tbody > tr")].map(h);
+        const headH = head ? h(head) : 0;
+        next.tables[key.slice(2)] = { chrome: Math.max(0, h(el) - headH - rows.reduce((a, b) => a + b, 0)), head: headH, rows };
         return;
       }
       if (!key.startsWith("P:")) {
@@ -679,15 +712,16 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
 
   if (measured) {
     for (const u of units) {
-      if (u.seq) {
+      const piece = u.seq ?? u.trow;
+      if (piece) {
         // The pieces of one table touch: each row's height already includes
         // the gap paginate adds before it. A row that opens a page carries
         // the frame and the repeated header with it.
-        const m = measured.sequences[u.seq.blockId];
+        const m = u.seq ? measured.sequences[piece.blockId] : measured.tables[piece.blockId];
         if (!m) u.height = 0;
-        else if (u.seq.r === 0) u.height = m.chrome + m.head + (m.rows[0] ?? 0);
+        else if (piece.r === 0) u.height = m.chrome + m.head + (m.rows[0] ?? 0);
         else {
-          u.height = (m.rows[u.seq.r] ?? 0) - GAP;
+          u.height = (m.rows[piece.r] ?? 0) - GAP;
           u.openHeight = m.chrome + m.head + GAP;
         }
         continue;
@@ -708,7 +742,6 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
       }
     }
   }
-  const bodyHeight = paper.h - PAGE_PADDING - (measured?.foot ?? 28) - SAFETY;
   const pages = measured ? paginate(units, bodyHeight, GAP) : [units.map((_, i) => i)];
 
   // ── Drawing ─────────────────────────────────────────────────────────────
@@ -794,6 +827,21 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
     );
   };
 
+  /** Rows `from` to `to` of a table taller than a page, under its header
+   *  row. The first piece carries the toolbar and Jo's mark. */
+  const drawTable = (blockId: string, from: number, to: number, first: boolean, live: boolean) => {
+    const entry = tableTools.get(blockId);
+    if (!entry) return null;
+    const { block, tools, patch } = entry;
+    return (
+      <div className="js-block" key={`${blockId}:${from}`} data-block="table" {...(first ? joMark(blockId, live) : {})}>
+        {first && joLabel(blockId, live)}
+        {live && editing && first && tools}
+        <BlockView block={block} edit={editing} design={doc.design} onPatch={patch} rows={{ from: Math.max(0, from), to }} />
+      </div>
+    );
+  };
+
   const drawPage = (indices: number[]) => {
     const out: ReactNode[] = [];
     for (let k = 0; k < indices.length; k++) {
@@ -802,6 +850,13 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
         let end = k;
         while (end + 1 < indices.length && units[indices[end + 1]].seq?.blockId === u.seq.blockId) end++;
         out.push(drawSequence(u.seq.blockId, u.seq.r, units[indices[end]].seq!.r + 1, u.seq.r === 0, true));
+        k = end;
+        continue;
+      }
+      if (u.trow) {
+        let end = k;
+        while (end + 1 < indices.length && units[indices[end + 1]].trow?.blockId === u.trow.blockId) end++;
+        out.push(drawTable(u.trow.blockId, u.trow.r, units[indices[end]].trow!.r + 1, u.trow.r === 0, true));
         k = end;
         continue;
       }
@@ -886,6 +941,8 @@ export default function SheetDocument({ doc: stored, edit = false, onChange, str
             {units.map((u) =>
               u.seq ? (
                 u.seq.r === 0 ? <div key={u.key} data-m={`Q:${u.seq.blockId}`}>{drawSequence(u.seq.blockId, 0, Infinity, true, false)}</div> : null
+              ) : u.trow ? (
+                u.trow.r === 0 ? <div key={u.key} data-m={`T:${u.trow.blockId}`}>{drawTable(u.trow.blockId, 0, Infinity, true, false)}</div> : null
               ) : u.para ? (
                 u.para.p === 0 ? <div key={u.key} data-m={`P:${u.para.blockId}`}>{drawPassage(u.para.blockId, 0, Infinity, false)}</div> : null
               ) : (

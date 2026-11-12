@@ -27,6 +27,7 @@ export default function EctNameField({ value, onChange }: Props) {
         <input id={`${fieldId}-0`} type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="" className={inputClass} />
         {!value && <PlaceholderOverlay text={placeholder} />}
       </div>
+      <p className="text-xs text-gray-500">Shown on the report only. The name is added in your browser and never sent. Refer to colleagues by role in your notes, not by name.</p>
     </div>
   );
 }

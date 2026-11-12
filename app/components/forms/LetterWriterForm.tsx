@@ -138,8 +138,16 @@ export default function LetterWriterForm({
       content: (v) => {
         setType("general");
         set("content", v as string);
+        // A trip letter (letterType comes after this) says why in "purpose".
+        set("purpose", v as string);
       },
       tone: (v) => setTone(letterTone(v)),
+      letterType: (v) => {
+        if (v === "trip" || v === "general") setType(v);
+      },
+      group: (v) => set("group", v as string),
+      destination: (v) => set("destination", v as string),
+      tripDate: (v) => set("tripDate", /^\d{4}-\d{2}-\d{2}$/.test(v as string) ? (v as string) : ""),
     },
   });
 

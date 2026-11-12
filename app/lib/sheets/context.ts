@@ -12,9 +12,12 @@ import { parsePartialJson } from "./stream";
 import { DEFAULT_SHEET_THEME } from "./themes";
 import { puzzleDefaults } from "./puzzles/level";
 import { sheetToolProfile } from "./tools";
+import { newsletterRoster } from "./newsletter";
 import type { PupilMeta, SheetTool } from "./types";
 import type { LetterInfo } from "./letter";
 import type { PupilFact } from "./behaviour";
+import type { RiskInfo } from "./risk";
+import type { NewsletterInfo } from "./newsletter";
 
 export interface SheetRequestInfo {
   yearGroup?: string;
@@ -59,6 +62,23 @@ export interface SheetRequestInfo {
   /** Early Years plans: the parts the form's checkboxes left unticked, which
    *  start switched off in Design (app/lib/sheets/eyfs.ts EYFS_PARTS). */
   eyfsHidden?: string[];
+  /** Parts of the document the form leaves switched off at the start, by
+   *  part id (the profile's `parts`). */
+  hiddenParts?: string[];
+  /** Plans for a school (a pupil premium statement): the school's name and
+   *  the facts typed into the form, put on the page by code, never sent. */
+  schoolName?: string;
+  schoolFacts?: Record<string, string>;
+  /** Pupil premium: how many challenges the teacher gave. */
+  ppChallenges?: number;
+  /** EYFS action plans: how long the plan runs. */
+  timescale?: string;
+  /** Risk assessments: the activity's details as typed, printed by code.
+   *  The leader's name in it is never sent. */
+  risk?: RiskInfo;
+  /** Newsletters: the celebrations and dates typed into the form, put on
+   *  the page by code and never sent. Its pupils become the roster. */
+  newsletter?: NewsletterInfo;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -84,6 +104,7 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     ...(profile.letterMeta && info.letter ? { letter: profile.letterMeta(info.letter) } : {}),
     ...(profile.unitMeta ? { unit: profile.unitMeta(info) } : {}),
     ...(profile.aboutPupil && info.pupil ? { pupil: { name: info.pupil.name.trim(), pronouns: info.pupil.pronouns } } : {}),
+    ...(info.newsletter ? { roster: newsletterRoster(info.newsletter) } : {}),
     leadingSections:
       profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

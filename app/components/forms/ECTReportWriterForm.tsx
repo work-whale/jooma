@@ -20,6 +20,7 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { scrubStaffName, staffNamePrivacy, swapStaffName } from "@/app/lib/staff-privacy";
 
 const TOOL_SLUG = "ect-report-writer";
 
@@ -85,6 +86,11 @@ export default function ECTReportWriterForm({
     },
   });
 
+  // The ECT's name stays in the browser: everything sent has "[ECT]" in its
+  // place, and the name is put back into what streams in.
+  const privacy = staffNamePrivacy(ectName);
+  const scrub = (text: string) => scrubStaffName(text, ectName);
+
   const handleGenerate = async () => {
     setError(null);
     setResult("");
@@ -97,10 +103,9 @@ export default function ECTReportWriterForm({
         body: JSON.stringify({
           language,
           curriculum,
-          ectName,
-          subject,
-          strengths,
-          areasForDevelopment,
+          subject: scrub(subject),
+          strengths: scrub(strengths),
+          areasForDevelopment: scrub(areasForDevelopment),
           includeProfessionalDevelopmentPlan: includePDP,
         }),
       });
@@ -110,10 +115,12 @@ export default function ECTReportWriterForm({
       }
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
+      let raw = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }).replace(/©/g, "(c)"));
+        raw += decoder.decode(value, { stream: true }).replace(/©/g, "(c)");
+        setResult(swapStaffName(raw, ectName));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -130,7 +137,11 @@ export default function ECTReportWriterForm({
       const res = await fetch("/api/modify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
+        body: JSON.stringify({
+          language,
+          currentContent: privacy ? privacy.scrub(result) : result,
+          instruction: privacy ? privacy.scrub(instruction) : instruction,
+        }),
       });
       if (!res.ok) throw new Error("Refinement failed");
       let refined = "";
@@ -140,7 +151,7 @@ export default function ECTReportWriterForm({
         const { done, value } = await reader.read();
         if (done) break;
         refined += decoder.decode(value, { stream: true });
-        setResult(refined);
+        setResult(privacy ? privacy.swap(refined) : refined);
       }
     } catch {
       // result stays as-is
@@ -236,6 +247,7 @@ export default function ECTReportWriterForm({
         exportFilename={`ect-report-${ectName.toLowerCase().replace(/\s+/g, "-") || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: ectName || subject || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        privacy={privacy}
       />
 
       {result && !isGenerating && (

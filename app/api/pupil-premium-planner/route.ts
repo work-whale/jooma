@@ -1,75 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
-import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { requestLanguage } from "@/app/lib/languages";
+import { pupilPremiumRequest } from "@/app/lib/pupil-premium-prompt";
 
-
+/*
+ * Streams a draft pupil premium strategy statement as sheet JSON
+ * (app/lib/sheets/pupil-premium.ts), on the DfE template. Only the challenges
+ * and the phase are sent: the school's details and every cost stay in the
+ * browser and on the page.
+ */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { challenges, educationPhase, differentiate = "no", differentiationLevels = [] } = body;
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-  if (!challenges?.trim()) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
-
-  // Opt-in: empty when the teacher chose not to differentiate.
-  const adaptation = differentiationPrompt(differentiate as Differentiate, differentiationLevels as string[]);
-  const adaptationSection = adaptation ? `\n\nDIFFERENTIATION — ${adaptation}` : "";
-
-  const prompt = `You are an expert school improvement adviser helping a UK school plan their Pupil Premium strategy. Generate evidence-based strategies for the challenges provided, using the DfE Pupil Premium guidance framework of Tier 1, Tier 2, and Tier 3 approaches.
-
-INPUTS:
-- Challenges: ${challenges}
-- Education phase: ${educationPhase || "Not specified"}${adaptationSection}
-
-Generate a Pupil Premium Strategy Plan using the structure below. Use proper markdown formatting. No preamble, no explanation after the content.
-
-# Pupil Premium Strategy Plan
-
-For each challenge provided, output a section using this exact structure:
-
----
-
-## [Challenge name — concise, 5 words or fewer]
-
-### Tier 1: High-quality teaching
-
-- **Approach:** [One specific, named strategy — e.g. "Explicit vocabulary instruction using Frayer models"]
-- **Implementation:** [Two or three concrete steps to put this in place]
-- **Impact:** [One sentence — expected measurable outcome for disadvantaged pupils]
-- **Monitoring:** [One sentence — specific data source and review frequency]
-
-### Tier 2: Targeted academic support
-
-- **Approach:** [One specific, named intervention — e.g. "Small group tuition using a structured phonics programme"]
-- **Implementation:** [Two or three concrete steps to put this in place]
-- **Impact:** [One sentence — expected measurable outcome]
-- **Monitoring:** [One sentence — specific data source and review frequency]
-
-### Tier 3: Wider strategies
-
-- **Approach:** [One specific strategy addressing a non-academic barrier — e.g. "Attendance mentoring with a key worker"]
-- **Implementation:** [Two or three concrete steps to put this in place]
-- **Impact:** [One sentence — expected measurable outcome]
-- **Monitoring:** [One sentence — specific data source and review frequency]
-
-Tier definitions:
-- Tier 1: Whole-class teaching approaches that benefit all pupils, with particular benefit to disadvantaged pupils.
-- Tier 2: Structured small-group or one-to-one academic interventions.
-- Tier 3: Approaches that address non-academic barriers such as attendance, mental health, or family engagement.
-
-Keep each bullet point to one or two short sentences. Be specific and avoid generic advice. Reference EEF evidence where relevant. Use UK English throughout. Be specific to the education phase: ${educationPhase || "the school phase"}.`;
+  const built = pupilPremiumRequest(body);
+  if ("error" in built) return NextResponse.json({ error: built.error }, { status: 400 });
 
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "pupil-premium-planner",
     ...(await modelFor("pupil-premium-planner", "gpt-4o")),
-    max_completion_tokens: 4000,
-    messages: [
-      { role: "system", content: buildSystem("You are an expert UK school improvement adviser and Pupil Premium specialist with deep knowledge of the EEF Teaching and Learning Toolkit, DfE Pupil Premium guidance, and evidence-based approaches to closing the disadvantage gap. You help school leaders write rigorous, evidence-informed Pupil Premium strategy plans that meet DfE requirements and genuinely improve outcomes for disadvantaged pupils.") },
-      { role: "user", content: prompt },
-    ],
+    max_completion_tokens: 8000,
+    messages: built.messages,
+    response_format: built.response_format,
   });
 }

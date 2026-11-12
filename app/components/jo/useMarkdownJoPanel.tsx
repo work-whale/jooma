@@ -6,6 +6,7 @@
 
 import type { RefObject } from "react";
 import type { JoDocRef } from "@/app/lib/jo/threads";
+import type { TextPrivacy } from "@/app/lib/staff-privacy";
 import JoPanel from "./JoPanel";
 import JoSectionFocus from "./JoSectionFocus";
 import { useJoSession } from "./useJoSession";
@@ -27,6 +28,8 @@ export interface MarkdownJoOptions {
   /** "Lesson Planner". */
   toolName: string;
   docRef?: JoDocRef | null;
+  /** Jo sees the scrubbed text; its edits are swapped back. */
+  privacy?: TextPrivacy;
   disabled?: string | null;
   openSignal?: number;
 }
@@ -37,6 +40,7 @@ export function useMarkdownJoPanel(opts: MarkdownJoOptions) {
     commit: opts.commit,
     containerRef: opts.containerRef,
     toolName: opts.toolName,
+    privacy: opts.privacy,
   });
   const session = useJoSession(adapter, { endpoint: "/api/jo", docRef: opts.docRef });
   const voice = useJoVoice(true);

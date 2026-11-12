@@ -127,7 +127,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/sensory-activities": {
     name: "Sensory Ideas",
-    description: "Five multisensory activities for any topic.",
+    description: "Five multisensory activities, with sensory adaptations.",
     category: "resources",
     icon: "hand-palm",
   },
@@ -191,13 +191,13 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/pupil-premium-planner": {
     name: "Pupil Premium Plan",
-    description: "Tier 1, 2 and 3 strategies with rationale.",
+    description: "Your strategy statement, drafted on the DfE template.",
     category: "send",
     icon: "coins",
   },
   "/tools/risk-assessment": {
     name: "Risk Assessment",
-    description: "Hazards, likelihood and controls for any trip.",
+    description: "Hazards scored 5 by 5, with sign-off, for any trip.",
     category: "send",
     icon: "warning",
   },
@@ -211,7 +211,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/newsletter-writer": {
     name: "Newsletter",
-    description: "A full newsletter, section by section.",
+    description: "Sections, celebrations and dates for the diary.",
     category: "communication",
     icon: "newspaper",
   },
@@ -267,7 +267,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/eyfs-action-plan": {
     name: "Early Years Actions",
-    description: "A four phase plan for any improvement aim.",
+    description: "Four phases of actions with RAG columns.",
     category: "leadership",
     icon: "clipboard-text",
   },
@@ -364,7 +364,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/sensory-activities",
     icon: "sensory",
     label: "Sensory Activities",
-    description: "Generate 5 multisensory activity ideas for any topic, with resources, adaptations and cross-curricular links.",
+    description: "Five multisensory activities for any topic, with steps, resources, adaptations for sensory-sensitive and sensory-seeking pupils, and cross-curricular links.",
     tag: "SEND",
   },
   {
@@ -441,7 +441,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/risk-assessment",
     icon: "risk-assessment",
     label: "Risk Assessment",
-    description: "Draft a risk assessment for any school trip or activity, with hazards, likelihood, severity, control measures, and further actions.",
+    description: "A risk assessment for any school trip or activity: hazards scored on a 5 by 5 matrix before and after controls, with emergency information and sign-off.",
     tag: "Planning",
   },
   {
@@ -462,7 +462,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/eyfs-action-plan",
     icon: "eyfs-action-plan",
     label: "EYFS Action Plan",
-    description: "Generate a structured 4-phase action plan for any EYFS improvement objective, with responsibilities, monitoring, and resource requirements.",
+    description: "A four phase action plan for any Early Years improvement objective, with leads, resources, monitoring and RAG columns to track it.",
     tag: "Early Years",
   },
   {
@@ -525,7 +525,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/pupil-premium-planner",
     icon: "pupil-premium",
     label: "Pupil Premium Planner",
-    description: "Generate evidence-based Tier 1, 2, and 3 strategies for any Pupil Premium challenge, aligned with DfE guidance and EEF research.",
+    description: "A draft pupil premium strategy statement on the DfE template, from your challenges, with activities backed by EEF evidence.",
     tag: "Leadership",
   },
   {
@@ -539,7 +539,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/newsletter-writer",
     icon: "newsletter",
     label: "Newsletter Writer",
-    description: "Write a school newsletter with the tone of your choice, covering as many sections as you need — for parents, staff, or the whole community.",
+    description: "A school newsletter in the tone you choose, with a celebrations table and dates for the diary. Pupils' names are never sent.",
     tag: "Leadership",
   },
   {

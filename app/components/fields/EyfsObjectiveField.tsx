@@ -18,7 +18,7 @@ export default function EyfsObjectiveField({ value, onChange }: Props) {
     "e.g. Improve opportunities for child-initiated outdoor learning across all 7 areas",
     "e.g. Strengthen the quality of adult interactions during continuous provision",
     "e.g. Develop a more consistent approach to phonics across the EYFS team",
-    "e.g. Improve assessment practice and use of Learning Journeys",
+    "e.g. Improve how we use observation to plan each child's next steps",
   ]);
   return (
     <div className="space-y-1.5">

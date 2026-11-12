@@ -5,7 +5,6 @@ import CurriculumYearFields, { useCurriculumYear } from "@/app/components/Curric
 import { SubjectField, TopicField } from "@/app/components/fields";
 import { toTitleCase } from "@/app/lib/formOptions";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import GenerateButton from "@/app/components/ui/GenerateButton";
@@ -16,16 +15,10 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 
 const TOOL_SLUG = "sensory-activities";
 
-const REFINE_CHIPS = [
-  "Translate to French",
-  "Include more activities which target the following senses:",
-  "Make the activities suitable for older students",
-  "Make the activities suitable for younger students",
-  "Include activities which make use of these resources:",
-];
 
 export default function SensoryActivitiesForm({
   sidebar,
@@ -42,7 +35,7 @@ export default function SensoryActivitiesForm({
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
+  const [runId, setRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
@@ -66,6 +59,7 @@ export default function SensoryActivitiesForm({
     setSubject((i.subject as string) ?? "");
     setTopic((i.topic as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -84,8 +78,11 @@ export default function SensoryActivitiesForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const year = mixed ? "Mixed" : yearGroup;
+    const info = { curriculum, yearGroup: year, subject: toTitleCase(subject), topic };
     try {
       const res = await fetch("/api/sensory-activities", {
         method: "POST",
@@ -102,45 +99,13 @@ export default function SensoryActivitiesForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/©/g, "(c)");
-        setResult((prev) => (prev ?? "") + chunk);
-      }
+      const finished = await readSheetStream(res, "sensory", info, setResult);
+      if (!finished) throw new Error("The activities came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -176,7 +141,7 @@ export default function SensoryActivitiesForm({
                 title="Reset form?"
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
-                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setResult(null); setError(null); setConfirmingReset(false); }}
+                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setSubject(""); setTopic(""); setRunId(null); setResult(null); setError(null); setConfirmingReset(false); }}
                 onCancel={() => setConfirmingReset(false)}
               />
               <GenerateButton onClick={handleGenerate} disabled={!canGenerate || isGenerating || unchangedSinceGeneration} isGenerating={isGenerating} hasResult={result !== null} />
@@ -192,21 +157,12 @@ export default function SensoryActivitiesForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`sensory-activities-${topic || subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: topic || subject || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-          maxWidth={false}
-        />
-      )}
     </div>
   );
 }

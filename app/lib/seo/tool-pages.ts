@@ -658,32 +658,34 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Pupil Premium Strategy Planner for Schools",
     h1: "AI pupil premium planner",
     description:
-      "Turn your school's challenges into a tiered pupil premium plan: high quality teaching, targeted academic support and wider strategies, with monitoring.",
+      "Draft your pupil premium strategy statement on the DfE template: statement of intent, challenges, intended outcomes and activities with their evidence.",
     intro:
-      "Jooma's AI pupil premium planner turns the challenges your disadvantaged pupils face into a tiered strategy. For each challenge it suggests high quality teaching, targeted academic support and wider strategies, each with an approach, implementation steps, the intended impact and how you will monitor it.",
+      "Jooma's AI pupil premium planner drafts your strategy statement on the DfE template from the challenges your disadvantaged pupils face. It writes the statement of intent, tidies your challenges, sets intended outcomes with success criteria, and plans activities across teaching, targeted academic support and wider strategies, each with the EEF evidence behind it and the challenges it addresses.",
     steps: [
-      "Describe the challenges your disadvantaged pupils face, up to three at a time for the best results.",
-      "Choose your phase, from early years to secondary, a special school or alternative provision.",
-      "Get a tiered plan to edit and download as PDF or Word, ready to build your strategy statement from.",
+      "List the challenges your disadvantaged pupils face, one per line, with any figures you have.",
+      "Choose your phase, and add your school's details if you want them on the statement.",
+      "Get a landscape draft in the DfE template's order, to finish with your costs and Part B, and download as PDF or Word.",
     ],
     features: [
-      "Three tiers for every challenge: high quality teaching, targeted academic support and wider strategies",
-      "An approach, implementation steps, intended impact and monitoring for each tier",
-      "Pitched to your phase, including special schools and alternative provision",
-      "Changes to any section in a sentence",
+      "The DfE template's headings and order, with the school and funding overviews",
+      "Intended outcomes, each with success criteria",
+      "Activities for teaching, targeted academic support and wider strategies, with the evidence and challenge numbers for each",
+      "Evidence that names EEF Toolkit strands and guidance, never invented figures",
+      "Costs and amounts left blank for you, never made up",
+      "Part B laid out for your review of last year",
     ],
     uk: {
-      heading: "Follows the DfE tiered approach",
-      body: "Plans use the tiered approach the DfE asks schools to follow for pupil premium, drawing on EEF evidence. They give you the strategy content; your published statement still needs your funding figures and outcomes.",
+      heading: "Built on the DfE template",
+      body: "Every school that receives pupil premium publishes a strategy statement on the DfE template by 31 December. The draft follows that template and the DfE menu of approaches, drawing on EEF evidence. Your funding, costs and review of last year come from you.",
     },
     faqs: [
       {
         q: "Does it fill in the DfE strategy statement template?",
-        a: "Not directly. It writes the tiered strategy content to use in your statement. Budget figures, outcomes and the review of last year come from you.",
+        a: "It drafts Part A in the template's headings and order, and lays out the rest for you. Costs, funding and the review of last year come from you.",
       },
       {
         q: "How many challenges can I enter?",
-        a: "As many as you like, but up to three at a time gives the most detailed plan.",
+        a: "Up to eight, one per line, numbered as you number them.",
       },
       {
         q: "Does it need pupil data?",
@@ -699,18 +701,21 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI Risk Assessment Generator for Schools",
     h1: "AI risk assessment generator for trips and activities",
     description:
-      "Draft a risk assessment for a school trip or activity: hazards, who could be harmed, likelihood and severity scores, controls and further actions.",
+      "Draft a risk assessment for a school trip or activity: hazards scored on a 5 by 5 matrix before and after controls, with emergency information and sign-off.",
     intro:
-      "Jooma's AI risk assessment generator drafts a risk assessment for any school trip or activity, from a museum visit to a science practical. It lists at least ten hazards, who could be harmed, likelihood and severity scores with a risk level, the controls already in place and further actions to take.",
+      "Jooma's AI risk assessment generator drafts a risk assessment for any school trip or activity, from a museum visit to a science practical. It lists at least ten hazards, who could be harmed and how, and scores each on a 5 by 5 matrix before and after the control measures, with further actions, emergency information and a sign-off table.",
     steps: [
       "Choose the curriculum and year group, and describe the activity or trip.",
-      "Add the location, the transport and the resources, if they apply.",
+      "Say whether it is off site or on the school site, and add the destination, transport, numbers and leader if you like.",
       "Get a risk assessment table to check, adapt and download as PDF or Word.",
     ],
     features: [
       "At least ten hazards, including one for pupils with SEND or medical needs",
       "Who or what might be harmed, and how",
-      "Likelihood from 1 to 4 and severity from 1 to 5, multiplied into a risk level",
+      "Likelihood and severity from 1 to 5, multiplied into Low, Medium or High, before and after controls",
+      "Every score worked out exactly, never left to guesswork",
+      "Details, emergency information and sign-off for the trip leader, EVC and headteacher",
+      "A button to write the matching trip letter for parents",
       "Existing control measures and further actions required",
       "Works for trips and for activities in school, such as science practicals and DT workshops",
     ],
@@ -1089,10 +1094,10 @@ export const TOOL_PAGES: ToolPage[] = [
     ],
     features: [
       "Five activities with a mix of senses and individual, paired and group work",
-      "A learning objective and core concepts for each",
-      "The senses each activity targets, and why",
-      "The resources needed and a clear description",
-      "Adaptations for sensory sensitive and sensory seeking pupils",
+      "A learning objective, the senses it uses and what it teaches",
+      "What you need, the steps and the words to use",
+      "Adaptations for sensory sensitive and sensory seeking pupils, side by side",
+      "A reminder to check allergies whenever an activity uses taste or smell",
       "Inclusion notes for autism, dyslexia, DCD, physical disability and EAL",
     ],
     uk: {
@@ -1163,17 +1168,18 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI School Newsletter Writer",
     h1: "AI newsletter writer for schools",
     description:
-      "Turn your notes into a finished school newsletter, section by section, in a professional, warm or inspiring tone. Download it as PDF or Word.",
+      "Turn your notes into a finished school newsletter, with a celebrations table and dates for the diary, in a professional, warm or inspiring tone.",
     intro:
       "Jooma's AI newsletter writer turns your notes into a finished school newsletter. Add a section for each item, from sports results to dates for the diary, choose a professional, warm or inspiring tone, and it writes each section with its own heading in clear paragraphs, ready to check and send home.",
     steps: [
       "Add your newsletter title and school name, and choose the tone.",
-      "Add a section for each item, with the notes you want it to cover.",
+      "Add a section for each item, then any pupils to celebrate and dates for the diary.",
       "Get the finished newsletter to edit and download as PDF or Word.",
     ],
     features: [
-      "A heading for every section you add",
-      "Two or three clear paragraphs per section",
+      "A heading and short paragraphs for every section you add",
+      "A celebrations table and dates for the diary, laid out for you",
+      "Pupils' names stay on the page and are never sent",
       "A professional, warm or inspiring tone",
       "As many sections as you need",
       "UK English throughout",
@@ -1485,23 +1491,24 @@ export const TOOL_PAGES: ToolPage[] = [
     title: "AI EYFS Action Plan Generator",
     h1: "AI EYFS action plan for early years improvement",
     description:
-      "Turn an early years improvement aim into a four phase action plan: success criteria, actions, responsibilities, monitoring, resources and staffing.",
+      "Turn an early years improvement aim into a four phase action plan: success criteria, then actions, leads, resources and monitoring, with RAG columns.",
     intro:
-      "Jooma's AI EYFS action plan generator turns an early years improvement aim into a phased plan. Give the objective, such as improving outdoor provision or early language, and it sets out success criteria and four phases of actions with responsibilities, timelines, expected outcomes, monitoring and the resources and staffing you need.",
+      "Jooma's AI EYFS action plan generator turns an early years improvement aim into a phased plan. Give the objective, such as improving outdoor provision or early language, and it sets out success criteria and four phases of actions, each with a lead, resources and monitoring, on landscape pages with RAG columns for your team to track progress.",
     steps: [
       "Write the early years objective you want to achieve.",
-      "Switch on differentiation if you want adaptations for different groups of children.",
+      "Choose how long the plan runs: one term, two terms or a year.",
       "Get a four phase action plan to edit with your team and download as PDF or Word.",
     ],
     features: [
-      "Three or four success criteria for the objective",
-      "Four phases, from the first month to beyond week 13",
-      "Actions, responsibilities, timelines, expected outcomes and monitoring in each phase",
-      "Resources, staffing, CPD and budget considerations",
+      "Success criteria for the objective",
+      "Four phases, each a table of actions with a lead, resources and monitoring",
+      "RAG and evidence of impact columns left for you to track progress",
+      "Review points at the end of every phase",
+      "Landscape pages, ready to print for a team meeting",
     ],
     uk: {
       heading: "Grounded in the EYFS",
-      body: "Plans draw on the Early Learning Goals and the characteristics of effective teaching and learning. Check them against the current EYFS statutory framework, as it is updated from time to time.",
+      body: "Plans draw on the EYFS statutory framework (September 2025), Development Matters and the Early Learning Goals. Leads are named by role, so the plan works for any setting.",
     },
     faqs: [
       {
