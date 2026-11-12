@@ -1,121 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildSystem } from "@/app/lib/systemPrompt";
-import { differentiationPrompt, type Differentiate } from "@/app/lib/differentiation";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { eyfsRequest, type EYFSPlannerRequest } from "@/app/lib/eyfs-prompt";
 
-export interface EYFSPlannerRequest {
-  curriculum: string;
-  topic: string;
-  numberOfWeeks: number;
-  includeBookList: boolean;
-  includeHomeLearning: boolean;
-  includeWeeklyOverview: boolean;
-  differentiate?: Differentiate;
-  differentiationLevels?: string[];
-}
+export type { EYFSPlannerRequest };
 
-
+/*
+ * Streams an Early Years topic plan as sheet JSON (app/lib/sheets/eyfs.ts):
+ * a week by week grid, then the seven areas of learning. The prompt and the
+ * schema live in app/lib/eyfs-prompt.ts.
+ */
 export async function POST(req: NextRequest) {
   const body: EYFSPlannerRequest = await req.json();
 
-  const { curriculum, topic, numberOfWeeks, includeBookList, includeHomeLearning, includeWeeklyOverview, differentiate = "no", differentiationLevels = [] } = body;
-
-  if (!curriculum || !topic?.trim() || !numberOfWeeks) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  const built = eyfsRequest(body);
+  if ("error" in built) {
+    return NextResponse.json({ error: built.error }, { status: 400 });
   }
-
-  const additionalSections: string[] = [];
-  if (includeBookList) additionalSections.push("Book List");
-  if (includeHomeLearning) additionalSections.push("Home Learning Ideas");
-  if (includeWeeklyOverview) additionalSections.push("Weekly Overview");
-
-  const additionalSection = additionalSections.length > 0
-    ? `\n\nAfter all learning areas, also include the following additional sections: ${additionalSections.join(", ")}.`
-    : "";
-
-  // Opt-in. The per-activity Differentiation bullet was previously hardcoded
-  // into every activity template; it now appears only when asked for.
-  const adaptation = differentiationPrompt(differentiate, differentiationLevels);
-  const diffBullet = adaptation
-    ? `\n  - **Differentiation:** [Specific adaptations for this activity]`
-    : "";
-  const adaptationSection = adaptation ? `\n\nDIFFERENTIATION — ${adaptation}` : "";
-
-  const userPrompt = `Create a comprehensive Early Years Foundation Stage (EYFS) plan for the following:
-
-- Curriculum: ${curriculum}
-- Topic: ${topic}
-- Number of Weeks: ${numberOfWeeks}
-
-This plan is for use in an English Early Years setting (Nursery or Reception). All activities must be grounded in the EYFS Statutory Framework (2021) and aligned with the Early Learning Goals. The plan should reflect the EYFS pedagogical principles: learning through play, a balance of child-initiated and adult-led provision, and a rich enabling environment. Scale the breadth and number of activities so that the plan is realistic and sufficient to sustain approximately ${numberOfWeeks} week(s) of teaching.
-
-Structure the output as follows:
-
-# Early Years Plan: ${topic}
-
-## Overview
-
-Write a short paragraph (3–5 sentences) explaining how the topic "${topic}" will be woven through provision across the 7 areas of learning. Identify 2–3 ELGs that this topic is particularly well-suited to develop. Note any specific vocabulary focus, books, or real-world experiences that will enrich the provision.
-
-## Learning Areas
-
-Then for each of the 7 EYFS areas of learning below, create a full, detailed section:
-
-1. Communication and Language
-2. Physical Development
-3. Personal, Social and Emotional Development
-4. Literacy
-5. Mathematics
-6. Understanding the World
-7. Expressive Arts and Design
-
-For each learning area, use this exact structure:
-
-## [Learning Area Name]
-
-### Child-Initiated Learning and Continuous Provision
-
-**Indoor:**
-
-- **[Activity Name]:** [A specific, detailed description of the activity, how it relates to the topic, and how it promotes learning in this area. Include the practitioner's role in observing and extending learning.]
-  - **Resources:** [Specific list of materials, books, or equipment needed]
-  - **Key Vocabulary:** [4–6 carefully chosen words that adults should model and children are expected to encounter]${diffBullet}
-  - **Learning Goal:** "[Quote the precise ELG statement this activity addresses]" (ELG: [Full ELG Name])
-
-(Provide 2 distinct indoor continuous provision activities per learning area)
-
-**Outdoor:**
-
-- **[Activity Name]:** [Detailed description, topic link, and practitioner role]
-  - **Resources:** [Specific list]
-  - **Key Vocabulary:** [4–6 words]${diffBullet}
-  - **Learning Goal:** "[ELG statement]" (ELG: [Full ELG Name])
-
-(Provide 2 distinct outdoor continuous provision activities per learning area)
-
-### Adult-Led Activities
-
-- **[Activity Name]:** [A detailed description of the structured, adult-led activity including: what the adult does, what children are expected to do, how it develops the learning area, and how it connects to the topic. Include approximate duration.]
-  - **Resources:** [Specific list]
-  - **Key Vocabulary:** [4–6 words]${diffBullet}
-  - **Learning Goal:** "[ELG statement]" (ELG: [Full ELG Name])
-
-(Provide 2 distinct adult-led activities per learning area)
-
-All activities must be clearly, specifically linked to the topic "${topic}" — not just labelled with it. All ELG references must be accurate and drawn from the EYFS Statutory Framework (2021).${adaptationSection}${additionalSection}
-
-Do not use any emojis. Write in a professional, practitioner-friendly tone appropriate for EYFS settings.`;
 
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "eyfs-planner",
     ...(await modelFor("eyfs-planner", "gpt-4o")),
-    max_completion_tokens: 8192,
-    messages: [
-      { role: "system", content: buildSystem("You are an expert Early Years Foundation Stage (EYFS) practitioner and curriculum leader with comprehensive knowledge of the EYFS Statutory Framework (2021), the Early Learning Goals, and best practice in child development. You design rich, purposeful provision that balances child-initiated play with adult-led learning across all seven areas of the EYFS. Your ELG references are always accurate and drawn directly from the 2021 framework. You understand the importance of the enabling environment, sustained shared thinking, and the key person approach. You write in professional UK English using EYFS-specific terminology.") },
-      { role: "user", content: userPrompt },
-    ],
+    max_completion_tokens: 14000,
+    messages: built.messages,
+    response_format: built.response_format,
   });
 }

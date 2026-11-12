@@ -23,8 +23,18 @@ import { arrangeUnit, TERM_PLAN_COLUMNS, TOPIC_MAP_COLUMNS, UNIT_PARTS } from ".
 import { arrangeBehaviour, BEHAVIOUR_PARTS } from "./behaviour";
 import { arrangePupilProfile, PROFILE_PARTS } from "./pupil-profile";
 import { arrangeCover, COVER_KINDS, COVER_TASK_ROLE } from "./cover";
+import { arrangeHomework } from "./homework";
+import { arrangeModelText, MODEL_TEXT_PARTS } from "./model-text";
+import { arrangeTargets, TARGETS_PARTS } from "./targets";
+import { arrangeIntervention, INTERVENTION_PARTS } from "./intervention";
+import { arrangePhonics } from "./phonics";
+import { arrangeEyfs, EYFS_PARTS } from "./eyfs";
+import { phonicsScheme, schemeNote } from "@/app/lib/phonics-schemes";
 
-export const SHEET_TOOLS = ["worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter", "topicMap", "termPlan", "behaviourPlan", "pupilProfile", "cover"] as const;
+export const SHEET_TOOLS = [
+  "worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter", "topicMap", "termPlan", "behaviourPlan", "pupilProfile", "cover",
+  "homework", "modelText", "targets", "intervention", "phonics", "eyfsPlan",
+] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
 export function isSheetTool(v: unknown): v is SheetTool {
@@ -153,6 +163,17 @@ function lessonMetaFor(info: SheetRequestInfo): LessonMeta {
     topic: info.topic?.trim() ?? "",
   };
 }
+
+/** A staff document about one child, printed plainly: no name lines,
+ *  objective, hook, answers page or pictures. */
+const pupilDocDesign = () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false });
+
+/** Whether the teacher gave the child's first name (the name itself never
+ *  leaves the browser). */
+const isNamed = (info: SheetRequestInfo) => !!info.pupil?.name.trim();
+
+/** The question kinds a homework can hold: a worksheet's. */
+const HOMEWORK_KINDS: QuestionType[] = ["mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order", "wordorder", "label", "sort", "wordsearch", "crossword"];
 
 export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
   worksheet: {
@@ -528,6 +549,209 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     arrange: (raw, info) => arrangeCover(raw, lessonMinutes(info.lessonLength)),
     subtitleSuffix: (info) => `Cover lesson · ${lessonMinutes(info.lessonLength)} minutes`,
     pupilPageRole: COVER_TASK_ROLE,
+  },
+  homework: {
+    slug: "homework-generator",
+    joName: "homework task (a sheet pupils complete at home)",
+    docLabel: "homework",
+    joStarters: [
+      "Make it a little shorter",
+      "Add a challenge question at the end",
+      "Make the instructions simpler",
+      "Add two more key words to the reminder",
+    ],
+    defaultKinds: ["mcq", "truefalse", "matching", "fillblanks", "short", "long", "calc", "order"],
+    allowedKinds: HOMEWORK_KINDS,
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: true,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: null,
+    ownPassage: false,
+    startDesign: (info) => ({ intro: false, pictures: false, ...(info.includeAnswerKey === false ? { answers: false } : {}) }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: "For the teacher, to mark the homework or go through it in class. Remove this page before sending the homework home, or switch it off in Design.",
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is homework a pupil completes alone at home, with no adult to explain it: instructions must be clear enough to follow without help, and the amount must fit the time in the subtitle. If you add a question, take one out or say the time has grown.\n" +
+      "- The \"Remember\" section reminds pupils of key words; the task section is the work; \"How did I do?\" is a checklist pupils tick. Keep every answer correct: the answers page is built from them.",
+    arrange: (raw) => arrangeHomework(raw),
+    subtitleSuffix: (info) => (typeof info.minutes === "number" && info.minutes > 0 ? `Homework · about ${info.minutes} minutes` : "Homework"),
+  },
+  modelText: {
+    slug: "model-text-generator",
+    joName: "model text (an example piece of writing for pupils, with a teacher copy marking its features)",
+    docLabel: "model text",
+    joStarters: [
+      "Make it shorter for a younger class",
+      "Add another example of a fronted adverbial",
+      "Make the vocabulary more ambitious",
+      "Explain each feature more simply",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: false,
+    joPassage: true,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Model text",
+    ownPassage: false,
+    startDesign: () => ({ nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list", "exemplar"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a model text for pupils, then a teacher copy. The text is a passage block; the teacher copy is an exemplar block (purpose \"text\") holding the SAME paragraphs, with annotations: each quotes words that appear exactly in the text and says which writing feature they show and why it works.\n" +
+      "- If you change the text, make the same change in both the passage and the teacher copy's parts, and keep every annotation's quote word for word from the text. Never give the teacher copy marks.",
+    arrange: (raw) => arrangeModelText(raw),
+    parts: MODEL_TEXT_PARTS,
+  },
+  targets: {
+    slug: "smart-targets",
+    joName: "set of SMART targets for one pupil",
+    docLabel: "targets",
+    joStarters: [
+      "Make the targets easier for the pupil to read",
+      "Make the measures more precise",
+      "Add a target about independence",
+      "Shorten the review dates to six weeks",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "SMART targets",
+    ownPassage: false,
+    startDesign: () => ({ ...pupilDocDesign(), landscape: true }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules: PUPIL_JO_RULES +
+      "- These are SMART targets for one pupil, as one table: Target, Specific (an \"I will...\" statement the pupil can read), Measurable, Achievable (the support given), Relevant and Time-bound. To change a target, replaceBlock the whole table with every row. Keep the review table's first column matching the targets.",
+    arrange: (raw, info) => arrangeTargets(raw, info.pupilFacts ?? [], isNamed(info)),
+    themeFamilies: ["professional", "basic"],
+    landscape: true,
+    parts: TARGETS_PARTS,
+    aboutPupil: true,
+  },
+  intervention: {
+    slug: "targeted-intervention",
+    joName: "set of intervention ideas for one pupil",
+    docLabel: "intervention plan",
+    joStarters: [
+      "Make the strategies more practical",
+      "Add a strategy a TA can run",
+      "Make the measures more specific",
+      "Cut it to the five strongest strategies",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Intervention ideas",
+    ownPassage: false,
+    startDesign: pupilDocDesign,
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules: PUPIL_JO_RULES +
+      "- These are intervention strategies for one pupil, each its own section: a summary, \"How to do it\" steps, who runs it and how often, and how staff will know it is working. Keep every strategy realistic for a school and grounded in what the information says. Never invent a diagnosis, a score or a name. Keep the tracking table's first column matching the strategies.",
+    arrange: (raw, info) => arrangeIntervention(raw, info.pupilFacts ?? [], isNamed(info)),
+    themeFamilies: ["professional", "basic"],
+    unitMeta: unitMetaFor,
+    parts: INTERVENTION_PARTS,
+    aboutPupil: true,
+  },
+  phonics: {
+    slug: "phonics-support",
+    joName: "phonics resource for one grapheme",
+    docLabel: "phonics resource",
+    joStarters: [
+      "Make the decodable text shorter",
+      "Add more CVC words",
+      "Make activity 2 work outdoors",
+      "Add more made-up words for practice",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: true,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Phonics",
+    ownPassage: false,
+    startDesign: () => ({ nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a phonics resource for one grapheme, for an adult teaching young children. Every word in the decodable text must be decodable with the sounds taught so far, apart from the common words listed. The made-up words must use the grapheme and must not be real words.\n" +
+      "- Keep the school's phonics scheme's words if the page names a scheme, and never copy a scheme's own texts or rhymes.",
+    arrange: (raw, info) => {
+      const s = phonicsScheme(info.phonicsScheme);
+      return arrangePhonics(raw, { schemeNote: schemeNote(info.phonicsScheme, info.phonicsSchemeOther), trickyLabel: s?.tricky ?? "", pseudoLabel: s?.pseudo ?? "" });
+    },
+    subtitleSuffix: (info) => (typeof info.age === "number" ? `Age ${info.age}` : ""),
+  },
+  eyfsPlan: {
+    slug: "eyfs-planner",
+    joName: "Early Years (EYFS) topic plan across the seven areas of learning",
+    docLabel: "early years plan",
+    joStarters: [
+      "Add more outdoor provision",
+      "Make the maths activities more hands-on",
+      "Add a week on a story",
+      "Make the home learning easier for parents",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Early Years plan",
+    ownPassage: false,
+    // The form's checkboxes become parts switched off, never left out: the
+    // plan always has them, so switching one on needs no regenerating.
+    startDesign: (info) => ({ ...unitStartDesign(), hidden: [...(info.eyfsHidden ?? [])] }),
+    extraBlocks: ["list", "twocol"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is an Early Years Foundation Stage topic plan for Nursery or Reception. The week grid is a table: one row per area of learning, one column per week; keep each cell to a short phrase. Each area's section has continuous provision (a twocol block: indoors beside outdoors) and adult-led activities.\n" +
+      "- Quote Early Learning Goals only as the EYFS statutory framework words them, and never invent one. Activities must suit three to five year olds, be play-based and be safe.",
+    arrange: (raw) => arrangeEyfs(raw),
+    landscape: true,
+    unitMeta: unitMetaFor,
+    parts: EYFS_PARTS,
   },
 };
 

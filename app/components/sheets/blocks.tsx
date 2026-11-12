@@ -26,7 +26,7 @@ import { answerText } from "@/app/lib/sheets/markdown";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "@/app/lib/sheets/puzzles";
 import { EditableText, Rich } from "./rich";
 import { clockText, PHASE_FIELDS, phaseFieldLabel, stageLabel, type PhaseWording } from "@/app/lib/sheets/lesson";
-import { levelLabel } from "@/app/lib/sheets/model-answers";
+import { levelLabel, quoteMarks } from "@/app/lib/sheets/model-answers";
 import { LESSON_COLUMN_WEIGHT, UNIT_COLUMNS, type UnitColumn } from "@/app/lib/sheets/unit";
 
 /*
@@ -933,8 +933,18 @@ export function SequenceRow({ lesson, index, columns, edit, onChange, planHref =
  */
 export function ExemplarView({ block, edit, onPatch }: { block: ExemplarBlock; edit: boolean; onPatch: (p: Partial<ExemplarBlock>) => void }) {
   const Tag = block.form === "steps" ? "ol" : "ul";
+  const modelText = block.purpose === "text";
+  // Each note's quote marked in the answer with the note's number.
+  const marks = quoteMarks(block.parts, block.annotations.map((a) => a.quote));
+  const marksIn = (part: number) => marks.filter((m) => m.part === part);
   return (
-    <div className="js-exemplar" data-level={block.level}>
+    <div className="js-exemplar" data-level={block.level} data-purpose={block.purpose}>
+      {modelText ? (
+        <div className="js-exemplar-head">
+          <span className="js-exemplar-level">Teacher copy</span>
+          <span className="js-exemplar-marks">Features marked</span>
+        </div>
+      ) : (
       <div className="js-exemplar-head">
         <span className="js-exemplar-level">{levelLabel(block.level)}</span>
         <span className="js-exemplar-marks">
@@ -951,10 +961,11 @@ export function ExemplarView({ block, edit, onPatch }: { block: ExemplarBlock; e
           / {block.outOf} marks
         </span>
       </div>
+      )}
       <div className="js-exemplar-body">
         {block.form === "prose" ? (
           block.parts.map((p, i) => (
-            <EditableText key={i} as="p" value={p} editable={edit} multiline onChange={(v) => onPatch({ parts: v ? block.parts.map((x, j) => (j === i ? v : x)) : block.parts.filter((_, j) => j !== i) })} label="answer paragraph" />
+            <EditableText key={i} as="p" value={p} marks={marksIn(i)} editable={edit} multiline onChange={(v) => onPatch({ parts: v ? block.parts.map((x, j) => (j === i ? v : x)) : block.parts.filter((_, j) => j !== i) })} label={modelText ? "paragraph" : "answer paragraph"} />
           ))
         ) : (
           <Tag>
@@ -964,10 +975,11 @@ export function ExemplarView({ block, edit, onPatch }: { block: ExemplarBlock; e
       </div>
       {block.annotations.length > 0 && (
         <div className="js-exemplar-notes">
-          <p className="js-exemplar-notes-title">Where the marks come from</p>
+          <p className="js-exemplar-notes-title">{modelText ? "The writing features" : "Where the marks come from"}</p>
           <ul>
             {block.annotations.map((a, i) => (
               <li key={i}>
+                {marks.some((m) => m.n === i + 1) && <span className="js-mark-n js-mark-key">{i + 1}</span>}
                 <span className="js-quote">&ldquo;{a.quote}&rdquo;</span>{" "}
                 <EditableText value={a.note} editable={edit} multiline onChange={(note) => onPatch({ annotations: note ? block.annotations.map((x, j) => (j === i ? { ...x, note } : x)) : block.annotations.filter((_, j) => j !== i) })} label="mark note" />
               </li>
@@ -976,7 +988,7 @@ export function ExemplarView({ block, edit, onPatch }: { block: ExemplarBlock; e
         </div>
       )}
       {(block.commentary || edit) && (
-        <EditableText as="p" className="js-exemplar-comment" value={block.commentary} placeholder="Add a comment on this answer" editable={edit} multiline onChange={(commentary) => onPatch({ commentary })} label="commentary" />
+        <EditableText as="p" className="js-exemplar-comment" value={block.commentary} placeholder={modelText ? "Add a note on this text" : "Add a comment on this answer"} editable={edit} multiline onChange={(commentary) => onPatch({ commentary })} label="commentary" />
       )}
     </div>
   );

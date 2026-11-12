@@ -96,10 +96,13 @@ type Clocks = Map<string, { start: number; end: number }>;
 function exemplarMarkdown(b: Extract<SheetBlock, { type: "exemplar" }>): string {
   const body =
     b.form === "steps" ? b.parts.map((p, i) => `${i + 1}. ${p}`).join("\n") : b.form === "points" ? b.parts.map((p) => `- ${p}`).join("\n") : b.parts.join("\n\n");
+  const modelText = b.purpose === "text";
   return [
-    `#### ${levelLabel(b.level)} (${b.awarded}/${b.outOf} marks)`,
+    modelText ? "#### Teacher copy" : `#### ${levelLabel(b.level)} (${b.awarded}/${b.outOf} marks)`,
     body,
-    ...(b.annotations.length ? ["**Where the marks come from:**", ...b.annotations.map((a) => `- "${a.quote}": ${a.note}`)] : []),
+    ...(b.annotations.length
+      ? [modelText ? "**The writing features:**" : "**Where the marks come from:**", ...b.annotations.map((a, i) => `- ${modelText ? `${i + 1}. ` : ""}"${a.quote}": ${a.note}`)]
+      : []),
     b.commentary ? `*${b.commentary}*` : "",
   ].filter(Boolean).join("\n\n");
 }

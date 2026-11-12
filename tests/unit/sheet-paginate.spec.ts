@@ -43,6 +43,18 @@ test.describe("paginate", () => {
     expect(paginate(tight, 1000, 0)).toEqual([[0], [1], [2]]);
   });
 
+  test("a heading stays with a block taller than any page, rather than sitting alone on a page", () => {
+    const units = [{ height: 800 }, { height: 50, keepWithNext: true }, { height: 1500 }, { height: 100 }];
+    expect(paginate(units, 1000, 0)).toEqual([[0], [1, 2], [3]]);
+  });
+
+  test("a block that fits a page on its own is never squeezed in after its heading", () => {
+    // 50 + 960 overflows, so the block moves on, as it always did: a lone
+    // heading is better than a clipped block.
+    const units = [{ height: 800 }, { height: 50, keepWithNext: true }, { height: 960 }];
+    expect(paginate(units, 1000, 0)).toEqual([[0], [1], [2]]);
+  });
+
   test("no pieces, no pages", () => {
     expect(paginate([], 1000, 10)).toEqual([]);
   });

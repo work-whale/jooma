@@ -1,4 +1,5 @@
-// "Make slides", "Make a worksheet" and "Make a quiz" on a lesson plan.
+// "Make slides", "Make a worksheet", "Make a quiz" and "Set homework" on a
+// lesson plan.
 //
 // Each opens the other tool with its form filled in from the plan, through
 // the same ?prefill= path the assistant and the timetable use. Every payload
@@ -9,9 +10,10 @@
 import { prefillHref, validatePrefill } from "@/app/lib/toolPrefill";
 import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
 import type { SheetDoc, UnitLesson } from "@/app/lib/sheets/types";
+import { PRACTICE_ROLE } from "@/app/lib/sheets/intervention";
 
 export interface LessonHandoff {
-  id: "slides" | "worksheet" | "quiz" | "modelAnswers";
+  id: "slides" | "worksheet" | "quiz" | "homework" | "modelAnswers" | "practiceWorksheet";
   label: string;
   href: string;
 }
@@ -51,6 +53,9 @@ export function lessonHandoffs(doc: SheetDoc): LessonHandoff[] {
     },
     { id: "worksheet", label: "Make a worksheet", slug: "worksheet-generator", fields: { ...curriculum, learningObjective: cap(objective) } },
     { id: "quiz", label: "Make a quiz", slug: "quiz-generator", fields: { ...curriculum, topic: cap(topic) } },
+    // The homework type and length are left to the teacher, as the
+    // assistant's prefill leaves them: they are choices, not facts in the plan.
+    { id: "homework", label: "Set homework", slug: "homework-generator", fields: { ...curriculum, learningObjective: cap(objective) } },
   ];
 
   return candidates.flatMap((c) => {
@@ -92,4 +97,29 @@ export function unitLessonHref(doc: SheetDoc, lesson: UnitLesson, index: number)
 export function examHandoffs(doc: SheetDoc, runId: string | null | undefined): LessonHandoff[] {
   if (!doc.exam || !runId) return [];
   return [{ id: "modelAnswers", label: "Write model answers", href: `/tools/model-answer-generator?from=${encodeURIComponent(runId)}` }];
+}
+
+/**
+ * "Make a practice worksheet" on a set of intervention ideas: opens Worksheets
+ * with the plan's curriculum, year and subject, and the practice the strategies
+ * call for as the objective. Never the pupil: the link carries the subject and
+ * the practice focus only. Empty when the plan has no focus or no curriculum.
+ */
+export function interventionHandoffs(doc: SheetDoc): LessonHandoff[] {
+  if (doc.tool !== "intervention" || !doc.unit) return [];
+  const focus = doc.sections
+    .find((s) => s.role === PRACTICE_ROLE)
+    ?.blocks.find((b) => b.type === "text");
+  const objective = focus && focus.type === "text" ? focus.text.replace(/\[PUPIL\]/g, "the pupil").trim() : "";
+  if (!objective) return [];
+  const meta = doc.unit;
+  const year = meta.yearGroup && meta.yearGroup !== "Mixed" ? meta.yearGroup : undefined;
+  const fields: Record<string, string> = {
+    ...(meta.curriculum ? { curriculum: meta.curriculum } : {}),
+    ...(year ? { yearGroup: year } : {}),
+    ...(meta.subject ? { subject: meta.subject } : {}),
+    learningObjective: cap(objective),
+  };
+  const prefill = validatePrefill({ slug: "worksheet-generator", fields });
+  return prefill ? [{ id: "practiceWorksheet", label: "Make a practice worksheet", href: prefillHref(prefill) }] : [];
 }

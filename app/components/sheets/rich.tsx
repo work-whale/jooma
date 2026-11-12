@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { markSegments } from "@/app/lib/sheets/model-answers";
 
 /**
  * Inline text on a sheet: **bold**, fractions drawn stacked (3/4), and, where
@@ -10,7 +11,25 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
  * such as 12/05/2026 is left alone. Drawn stacked so a maths sheet reads like
  * a maths sheet, rather than as the "random slashes" teachers reported.
  */
-export function Rich({ text, gaps = false }: { text: string; gaps?: boolean }) {
+export function Rich({ text, gaps = false, marks }: { text: string; gaps?: boolean; marks?: { start: number; end: number; n: number }[] }) {
+  // Numbered quotes (a model answer's or model text's notes): each marked run
+  // is highlighted with its number after it, the rest drawn as usual.
+  if (marks?.length) {
+    return (
+      <>
+        {markSegments(text, marks).map((seg, i) =>
+          seg.n ? (
+            <Fragment key={i}>
+              <mark className="js-mark"><Rich text={seg.text} gaps={gaps} /></mark>
+              <sup className="js-mark-n">{seg.n}</sup>
+            </Fragment>
+          ) : (
+            <Rich key={i} text={seg.text} gaps={gaps} />
+          ),
+        )}
+      </>
+    );
+  }
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
     <>
@@ -70,7 +89,10 @@ export function EditableText({
   gaps = false,
   label,
   id,
+  marks,
 }: {
+  /** Numbered quotes to highlight while not being edited. */
+  marks?: { start: number; end: number; n: number }[];
   value: string;
   onChange?: (next: string) => void;
   editable: boolean;
@@ -124,7 +146,7 @@ export function EditableText({
         role={editable ? "button" : undefined}
         aria-label={editable ? `Edit ${label ?? "text"}` : undefined}
       >
-        {value ? <Rich text={value} gaps={gaps} /> : null}
+        {value ? <Rich text={value} gaps={gaps} marks={marks} /> : null}
       </Tag>
     );
   }

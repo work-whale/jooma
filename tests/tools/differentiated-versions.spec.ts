@@ -210,23 +210,25 @@ test("every band failing shows the error, as a single failed generation does", a
   await expect(tabs(page)).toHaveCount(0);
 });
 
-test("homework for WTS and EXS: two documents in tabs, and Refine changes only the one on screen", async ({ page }) => {
+test("homework for WTS and EXS: two designed sheets in tabs, saved as one run", async ({ page }) => {
   await signIn(page, teacher);
 
+  // Homework is a sheet since tool uplift batch 3: each band's request is
+  // answered with that band's homework as JSON.
   const sent: Record<string, unknown>[] = [];
   await page.route("**/api/homework-generator", (route) => {
     const body = route.request().postDataJSON() as Record<string, unknown>;
     sent.push(body);
-    return route.fulfill({
-      status: 200,
-      headers: { "content-type": "text/plain; charset=utf-8" },
-      body: `# ${TITLES[body.band as string]}\n\n## Task\n\nAnswer the questions.`,
-    });
-  });
-  let refinedFrom: string | null = null;
-  await page.route("**/api/modify", (route) => {
-    refinedFrom = (route.request().postDataJSON() as { currentContent: string }).currentContent;
-    return route.fulfill({ status: 200, headers: { "content-type": "text/plain; charset=utf-8" }, body: "# Shorter homework\n\n## Task\n\nOne question." });
+    const homework = {
+      title: TITLES[body.band as string],
+      objective: "I am learning to add fractions",
+      instructions: "Answer the questions.",
+      remember: { keyWords: [{ term: "Fraction", meaning: "part of a whole" }], reminder: "" },
+      task: { title: "Your task", instructions: "", stimulus: { title: "", paragraphs: [] }, steps: [], successCriteria: [], questions: [{ type: "short", prompt: "1/2 + 1/4?", lines: 1, answer: "3/4", marks: 1 }] },
+      checklist: ["I showed my working"],
+      teacherNotes: [],
+    };
+    return route.fulfill({ status: 200, headers: { "content-type": "text/plain; charset=utf-8" }, body: JSON.stringify(homework) });
   });
 
   const fields = { ...WORKSHEET_FIELDS, differentiate: "yes", differentiationLevels: ["WTS", "EXS"] };
@@ -238,31 +240,22 @@ test("homework for WTS and EXS: two documents in tabs, and Refine changes only t
 
   await expect(tabs(page).getByRole("tab")).toHaveCount(2, NAV);
   expect(sent.map((b) => b.band).sort()).toEqual(["EXS", "WTS"]);
-  const editor = page.locator(".ProseMirror");
-  await expect(editor).toContainText(TITLES.WTS, NAV);
+  await expect(sheet(page)).toHaveAttribute("data-ready", "true", NAV);
+  await expect(sheet(page).locator(".js-title").first()).toHaveText(TITLES.WTS, NAV);
   await tab(page, "EXS").click();
-  await expect(editor).toContainText(TITLES.EXS);
-  await expect(editor).not.toContainText(TITLES.WTS);
+  await expect(sheet(page).locator(".js-title").first()).toHaveText(TITLES.EXS, NAV);
+  // The old Refine box is gone: Jo edits a sheet.
+  await expect(page.getByRole("button", { name: "Refine", exact: true })).toHaveCount(0);
 
-  // Refine the EXS version: only its text is sent, and only it changes.
-  await page.getByRole("button", { name: "Make more concise" }).click();
-  await page.getByRole("button", { name: "Refine", exact: true }).click();
-  await expect(editor).toContainText("Shorter homework", NAV);
-  expect(refinedFrom).toContain(TITLES.EXS);
-  expect(refinedFrom).not.toContain(TITLES.WTS);
-  await tab(page, "WTS").click();
-  await expect(editor).toContainText(TITLES.WTS);
-
-  // Saved with both versions; the refine is saved too.
   await expect
     .poll(async () => {
       const run = await latestRun("homework-generator");
       if (!run?.output.startsWith('{"kind":"jooma-bands"')) return null;
-      return (await storedBands(run.id)).map((b) => [b.band, b.output.split("\n")[0]]);
+      return (await storedBands(run.id)).map((b) => [b.band, (JSON.parse(b.output) as { tool: string; title: string }).tool, (JSON.parse(b.output) as { title: string }).title]);
     }, NAV)
     .toEqual([
-      ["WTS", `# ${TITLES.WTS}`],
-      ["EXS", "# Shorter homework"],
+      ["WTS", "homework", TITLES.WTS],
+      ["EXS", "homework", TITLES.EXS],
     ]);
 });
 

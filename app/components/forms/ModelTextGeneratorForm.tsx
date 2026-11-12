@@ -4,10 +4,9 @@ import { useState, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { DifferentiationField, WriteField, FeaturesField, WordCountField } from "@/app/components/fields";
 import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
-import { readTextStream, runBands } from "@/app/lib/runBands";
-import { bandOutput, replaceBandOutput } from "@/app/lib/bands";
+import { runBands } from "@/app/lib/runBands";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import Card from "@/app/components/ui/Card";
 import GenerateButton from "@/app/components/ui/GenerateButton";
@@ -21,14 +20,6 @@ import { languageFormState, parseLanguage } from "@/app/lib/languages";
 
 const TOOL_SLUG = "model-text-generator";
 
-const REFINE_CHIPS = [
-  "Make more concise",
-  "Make longer",
-  "Increase the complexity",
-  "Reduce the complexity",
-  "Add more examples",
-  "Translate to French",
-];
 
 export default function ModelTextGeneratorForm({
   sidebar,
@@ -50,13 +41,12 @@ export default function ModelTextGeneratorForm({
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
-  // The differentiated version on screen, so Refine changes that one only.
-  const [band, setBand] = useState<string | null>(null);
+  // The history run on screen, so edits to its sheet save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const lengthNum = parseInt(lengthWords, 10);
   const canGenerate =
@@ -82,8 +72,9 @@ export default function ModelTextGeneratorForm({
     const d = restoreDifferentiation(i);
     setDifferentiate(d.differentiate);
     setDifferentiationLevels(d.levels);
-    setLengthWords((i.lengthWords as string) ?? "500");
+    setLengthWords(String(i.lengthWords ?? "500"));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -106,8 +97,10 @@ export default function ModelTextGeneratorForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = { curriculum, yearGroup: mixed ? "Mixed" : yearGroup, topic: write };
     const send = (extra: Record<string, unknown> = {}) =>
       fetch("/api/model-text-generator", {
         method: "POST",
@@ -125,14 +118,13 @@ export default function ModelTextGeneratorForm({
           ...extra,
         }),
       });
-    const tidy = (chunk: string) => chunk.replace(/\u00A9/g, "(c)");
     try {
       // Differentiated: one model text per band, each in its own tab.
       if (differentiate === "yes") {
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
-          read: (res, onOutput) => readTextStream(res, onOutput, tidy),
+          read: (res, onOutput, band) => readSheetStream(res, "modelText", { ...info, band }, onOutput),
           onUpdate: setResult,
         });
         return;
@@ -142,7 +134,10 @@ export default function ModelTextGeneratorForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      await readTextStream(res, setResult, tidy);
+      // The route streams the text as JSON; each update arrives here as a
+      // whole, valid sheet, so the page fills in as the model writes.
+      const finished = await readSheetStream(res, "modelText", info, setResult);
+      if (!finished) throw new Error("The model text came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -202,7 +197,7 @@ export default function ModelTextGeneratorForm({
                 title="Reset form?"
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
-                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setWrite(""); setFeatures(""); setKeywords(""); setDifferentiate("no"); setDifferentiationLevels([]); setLengthWords("500"); setResult(null); setError(null); setConfirmingReset(false); }}
+                onConfirm={() => { setCurriculum(""); setYearGroup(""); setMixed(false); setWrite(""); setFeatures(""); setKeywords(""); setDifferentiate("no"); setDifferentiationLevels([]); setLengthWords("500"); setResult(null); setRunId(null); setError(null); setConfirmingReset(false); }}
                 onCancel={() => setConfirmingReset(false)}
               />
               <GenerateButton onClick={handleGenerate} disabled={!canGenerate || isGenerating || unchangedSinceGeneration} isGenerating={isGenerating} hasResult={result !== null} />
@@ -218,39 +213,13 @@ export default function ModelTextGeneratorForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`model-text-${write.slice(0, 30).replace(/\s+/g, "-") || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: write || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
-        activeBand={band}
-        onActiveBandChange={setBand}
+        runId={runId}
       />
 
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            // Only the version on screen is refined; the others are kept.
-            const base = result;
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ language, currentContent: bandOutput(base, band), instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              await readTextStream(res, (refined) => setResult(replaceBandOutput(base, band, refined)));
-            } catch {
-              // silently fail — result stays as-is
-            } finally {
-              setIsRefining(false);
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

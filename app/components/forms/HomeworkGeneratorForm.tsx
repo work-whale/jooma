@@ -4,12 +4,12 @@ import { useState, useRef, useId } from "react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import { SubjectField, LearningObjectiveField, DifferentiationField, QuestionTypesField, AdditionalContextField } from "@/app/components/fields";
 import { orderedBands, restoreDifferentiation, type Differentiate } from "@/app/lib/differentiation";
-import { readTextStream, runBands } from "@/app/lib/runBands";
-import { bandOutput, replaceBandOutput } from "@/app/lib/bands";
+import { runBands } from "@/app/lib/runBands";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { homeworkMinutes } from "@/app/lib/sheets/homework";
 import { toTitleCase } from "@/app/lib/formOptions";
 import { Upload, X, Search, ImageIcon } from "lucide-react";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -40,13 +40,6 @@ const LENGTH_OPTIONS = [
   { label: "Extended task (30 minutes)", value: "Extended task (30 minutes)" },
 ];
 
-const REFINE_CHIPS = [
-  "Make more concise",
-  "Make it more challenging",
-  "Make it more accessible",
-  "Add a challenge extension task",
-  "Translate to French",
-];
 
 const inputClass =
   "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
@@ -89,13 +82,12 @@ export default function HomeworkGeneratorForm({
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
-  // The differentiated version on screen, so Refine changes that one only.
-  const [band, setBand] = useState<string | null>(null);
+  // The history run on screen, so edits to its sheet save back into it.
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate =
     curriculum &&
@@ -137,6 +129,7 @@ export default function HomeworkGeneratorForm({
     setLessonContent((i.lessonContent as string) ?? "");
     setImageBase64((i.imageBase64 as string) ?? null);
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -186,8 +179,19 @@ export default function HomeworkGeneratorForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    // What the page needs besides the model's draft: the subtitle's year,
+    // subject and time, and whether the answers page starts on.
+    const info = {
+      curriculum,
+      yearGroup: mixed ? "Mixed" : yearGroup,
+      subject: toTitleCase(subject),
+      topic: learningObjective,
+      minutes: homeworkMinutes(length) ?? undefined,
+      includeAnswerKey: includeAnswers === "yes",
+    };
     const send = (extra: Record<string, unknown> = {}) =>
       fetch("/api/homework-generator", {
         method: "POST",
@@ -212,14 +216,13 @@ export default function HomeworkGeneratorForm({
           ...extra,
         }),
       });
-    const tidy = (chunk: string) => chunk.replace(/©/g, "(c)");
     try {
       // Differentiated: one whole homework per band, each in its own tab.
       if (differentiate === "yes") {
         await runBands({
           bands: orderedBands(differentiationLevels),
           start: (band, bandIndex) => send({ band, bandIndex }),
-          read: (res, onOutput) => readTextStream(res, onOutput, tidy),
+          read: (res, onOutput, band) => readSheetStream(res, "homework", { ...info, band }, onOutput),
           onUpdate: setResult,
         });
         return;
@@ -229,7 +232,10 @@ export default function HomeworkGeneratorForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      await readTextStream(res, setResult, tidy);
+      // The route streams the homework as JSON; each update arrives here as a
+      // whole, valid sheet, so the page fills in as the model writes.
+      const finished = await readSheetStream(res, "homework", info, setResult);
+      if (!finished) throw new Error("The homework came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -244,7 +250,7 @@ export default function HomeworkGeneratorForm({
     setQuestionTypes([]); setQuestionCounts({}); setHomeworkType(""); setLength("");
     setIncludeAnswers("no"); setAdditionalInstructions(""); setLessonContent("");
     setImageSource(""); clearImage();
-    setResult(null); setError(null); setConfirmingReset(false);
+    setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
   };
 
   return (
@@ -466,39 +472,13 @@ export default function HomeworkGeneratorForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename={`homework-${subject || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: subject || learningObjective || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
-        activeBand={band}
-        onActiveBandChange={setBand}
+        runId={runId}
       />
 
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={async (instruction) => {
-            setIsRefining(true);
-            // Only the version on screen is refined; the others are kept.
-            const base = result;
-            try {
-              const res = await fetch("/api/modify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ language, currentContent: bandOutput(base, band), instruction }),
-              });
-              if (!res.ok) throw new Error("Refinement failed");
-              await readTextStream(res, (refined) => setResult(replaceBandOutput(base, band, refined)));
-            } catch {
-              // result stays as-is
-            } finally {
-              setIsRefining(false);
-            }
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -15,9 +15,9 @@ interface Props {
 export default function OtherDataField({ value, onChange }: Props) {
   const fieldId = useId();
   const placeholder = useTypingPlaceholder([
-    "e.g. SEND needs, EAL status, attendance concerns, pastoral notes",
-    "e.g. Recently identified dyslexia; attendance 78%; strong family support",
-    "e.g. EAL — arrived 18 months ago; strong oral English, weaker written",
+    "e.g. On SEN support for reading; attendance 78%",
+    "e.g. EAL: strong spoken English, written English still developing",
+    "e.g. Works best in a small group; finds starting tasks hard",
   ]);
   return (
     <div className="space-y-1.5">
@@ -34,7 +34,7 @@ export default function OtherDataField({ value, onChange }: Props) {
         />
         {!value && <PlaceholderOverlay text={placeholder} area />}
       </div>
-      <p className="text-xs text-gray-400">100,000 character maximum input text</p>
+      <p className="text-xs text-gray-400">Describe needs and scores, never names. Leave out anything the pupil&rsquo;s family would not expect a planning tool to hold.</p>
     </div>
   );
 }

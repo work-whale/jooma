@@ -51,6 +51,14 @@ export interface SheetRequestInfo {
   pupilFacts?: PupilFact[];
   /** One page profiles: intervention groups and outside agencies, the same way. */
   pupilLinks?: PupilFact[];
+  /** Phonics: the children's age, and the school's scheme (an id from
+   *  app/lib/phonics-schemes.ts, or "other" with its typed name). */
+  age?: number;
+  phonicsScheme?: string;
+  phonicsSchemeOther?: string;
+  /** Early Years plans: the parts the form's checkboxes left unticked, which
+   *  start switched off in Design (app/lib/sheets/eyfs.ts EYFS_PARTS). */
+  eyfsHidden?: string[];
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {

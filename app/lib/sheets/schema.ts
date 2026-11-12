@@ -154,6 +154,8 @@ export function sheetBlockVariants(opts: SheetSchemaOptions): Json[] {
       parts: strList,
       annotations: { type: "array", items: obj({ quote: str, note: str }) },
       commentary: str,
+      // A model text's teacher copy says so, so Jo's copy keeps its look.
+      ...(opts.tool === "modelText" ? { purpose: { type: "string", enum: ["text"] } } : {}),
     }));
   }
   if (profile.extraBlocks.includes("phase")) {
