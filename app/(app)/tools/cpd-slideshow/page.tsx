@@ -18,12 +18,12 @@ export default async function CpdSlideshowPage({
         <ToolInfoPanel
           icon={<Monitor className="w-5 h-5 text-blue-600" />}
 
-          title="CPD Slideshow Generator"
-          description="This tool will create presentations for teacher professional development sessions. Simply enter the topic and number of slides and let the AI draft the content. You can also select whether the slides focus on practical application or research and theory."
+          title="Staff Slides"
+          description="A staff training (CPD) deck, made in the slide editor. Every slide has a picture and speaker notes, with a discussion task or two, ending on what staff will try next. Choose practical application or research and theory."
           steps={[
             { label: "Enter topic and slide count", detail: "A detailed title will produce more tailored slide content." },
             { label: "Set focus areas", detail: "Steer the content towards specific themes or goals for your session.", optional: true },
-            { label: "Generate", detail: "Create training resources for staff CPD sessions focusing on practical application or theory." },
+            { label: "Generate, then edit and present", detail: "The deck opens in the slide editor: change the theme, edit the notes, ask Jo, present it, or download it for PowerPoint with the notes." },
           ]}
         />
       }

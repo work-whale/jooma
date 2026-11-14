@@ -3,7 +3,7 @@ import { ectReportRequest } from "@/app/lib/ect-report-prompt";
 import { performanceManagementRequest } from "@/app/lib/performance-management-prompt";
 import { sipRequest } from "@/app/lib/sip-prompt";
 import { lessonObservationRequest } from "@/app/lib/lesson-observation-prompt";
-import { buildMeetingPlannerPrompt } from "@/app/lib/meeting-planner-prompt";
+import { meetingRequest } from "@/app/lib/meeting-planner-prompt";
 import { carriesStaffName, ECT_PLACEHOLDER, nameParts, scrubStaffName, staffNamePrivacy, swapStaffName } from "@/app/lib/staff-privacy";
 
 /*
@@ -12,10 +12,6 @@ import { carriesStaffName, ECT_PLACEHOLDER, nameParts, scrubStaffName, staffName
  * Ofsted framework in the SIP narrative, and no invented names.
  */
 
-function text(r: { system: string; user: string } | { error: string }): string {
-  if ("error" in r) throw new Error(r.error);
-  return `${r.system}\n${r.user}`;
-}
 
 test.describe("staff name privacy", () => {
   test("the whole name and each part are found, longest first, single letters skipped", () => {
@@ -165,15 +161,19 @@ test.describe("prompts that used to invite names", () => {
     expect(t).not.toMatch(/approaches, or colleagues where possible/);
   });
 
-  test("meeting actions go to roles, never invented names", () => {
-    const t = text(buildMeetingPlannerPrompt({ purpose: "p", participants: "Head, TAs", duration: "60", includeActionItems: true }));
+  // Batch 6 made the meeting a sheet with a blank action log: actions are
+  // never assigned by the model at all (tool-uplift-batch6.spec.ts).
+  test("meeting plans name roles, never invented names", () => {
+    const r = meetingRequest({ purpose: "p", participants: "Head, TAs", duration: "60", includeActionItems: true });
+    if ("error" in r) throw new Error(r.error);
+    const t = r.messages.map((m) => m.content).join(" ");
     expect(t).not.toContain("[Name of responsible person]");
-    expect(t).toContain("[Role responsible");
     expect(t).toMatch(/never invent names/);
+    expect(t).toMatch(/Never assign actions to people/);
   });
 
   test("both still refuse missing required fields", () => {
     expect("error" in lessonObservationRequest({ curriculum: "x", strengths: "", areasForDevelopment: "b" })).toBe(true);
-    expect("error" in buildMeetingPlannerPrompt({ purpose: "p", participants: "", duration: "60" })).toBe(true);
+    expect("error" in meetingRequest({ purpose: "p", participants: "", duration: "60" })).toBe(true);
   });
 });

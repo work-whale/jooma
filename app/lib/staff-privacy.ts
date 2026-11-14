@@ -162,15 +162,15 @@ const TITLE_RE = /(?<![\p{L}\p{N}])(Mr|Mrs|Ms|Miss|Mx|Dr)\.?\s+(\p{L}+(?:['’-]
  * teacher's"), the usual way staff are named in a school. A title written
  * with a capital needs a capitalised surname, so "Mrs and Mr were" is left
  * alone; an all lower case "mr patel" is caught. First names alone are not:
- * the form says so.
+ * the form says so. A meeting passes "colleague" for `word`.
  */
-export function scrubStaffTitles(text: string): string {
+export function scrubStaffTitles(text: string, word = "teacher"): string {
   return text.replace(TITLE_RE, (match, title: string, surname: string, possessive: string | undefined, offset: number, whole: string) => {
     const titleLower = title === title.toLowerCase();
     const surnameCapital = surname[0] === surname[0].toUpperCase() && surname[0] !== surname[0].toLowerCase();
     if (!titleLower && !surnameCapital) return match;
     const before = whole.slice(0, offset);
     const sentenceStart = /^\s*$/.test(before) || /[.!?]\s+$/.test(before);
-    return `${sentenceStart ? "A" : "a"} teacher${possessive ?? ""}`;
+    return `${sentenceStart ? "A" : "a"} ${word}${possessive ?? ""}`;
   });
 }

@@ -78,6 +78,10 @@ export async function POST(req: NextRequest) {
   body.imageSource = "web";
   delete body.imageMixWeb;
   delete body.imageStyle;
+  // A free try is a pupil deck: Staff Slides and assembly decks are for
+  // teachers with an account.
+  delete body.deckKind;
+  delete body.staffFocus;
 
   // Minted here, never accepted from the client: a guest cannot choose which
   // run their spend is filed under.

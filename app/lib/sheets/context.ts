@@ -23,6 +23,10 @@ import type { EctInfo } from "./ect";
 import type { AppraisalInfo } from "./appraisal";
 import type { LearningWalkInfo, LessonObservationInfo } from "./observation";
 import type { SipInfo } from "./sip";
+import type { InspectionInfo } from "./inspection";
+import type { PolicyInfo } from "./policy";
+import type { MeetingInfo } from "./meeting";
+import type { AssemblyInfo } from "./assembly";
 
 export interface SheetRequestInfo {
   yearGroup?: string;
@@ -99,6 +103,17 @@ export interface SheetRequestInfo {
   learningWalk?: LearningWalkInfo;
   /** School improvement plans: the school type and how many years. */
   sip?: SipInfo;
+  /** Inspection prep: the body, the focus, which optional parts were asked
+   *  for, and whether the school has early years or post-16 provision. */
+  inspection?: InspectionInfo;
+  /** Policies: which policy (for the catalogue facts), the curriculum (for
+   *  England or not) and whether it is a full draft or an outline. */
+  policy?: PolicyInfo;
+  /** Meetings: the length, start time and participants, printed by code.
+   *  A pupil the meeting is about is in `pupil`, never sent. */
+  meeting?: MeetingInfo;
+  /** Assemblies: the stage, the length and the closing the school picked. */
+  assembly?: AssemblyInfo;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {

@@ -13,7 +13,7 @@ import type { SheetDoc, UnitLesson } from "@/app/lib/sheets/types";
 import { PRACTICE_ROLE } from "@/app/lib/sheets/intervention";
 
 export interface LessonHandoff {
-  id: "slides" | "worksheet" | "quiz" | "homework" | "modelAnswers" | "practiceWorksheet" | "tripLetter";
+  id: "slides" | "worksheet" | "quiz" | "homework" | "modelAnswers" | "practiceWorksheet" | "tripLetter" | "assemblySlides";
   label: string;
   href: string;
 }
@@ -97,6 +97,17 @@ export function unitLessonHref(doc: SheetDoc, lesson: UnitLesson, index: number)
 export function examHandoffs(doc: SheetDoc, runId: string | null | undefined): LessonHandoff[] {
   if (!doc.exam || !runId) return [];
   return [{ id: "modelAnswers", label: "Write model answers", href: `/tools/model-answer-generator?from=${encodeURIComponent(runId)}` }];
+}
+
+/**
+ * "Make assembly slides" on an assembly script: opens a page that builds an
+ * assembly deck in the main Slides engine from the saved script, with speaker
+ * notes (app/lib/sheets/assembly.ts assemblyDeckParams). By the run's id, as
+ * Model Answers is, so the whole script travels; offered once it is saved.
+ */
+export function assemblyHandoffs(doc: SheetDoc, runId: string | null | undefined): LessonHandoff[] {
+  if (doc.tool !== "assembly" || !runId) return [];
+  return [{ id: "assemblySlides", label: "Make assembly slides", href: `/tools/assembly-planner/slides?from=${encodeURIComponent(runId)}` }];
 }
 
 /**

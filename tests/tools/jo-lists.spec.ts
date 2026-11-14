@@ -2,7 +2,7 @@ import { test, expect, type Page, type Route } from "@playwright/test";
 import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
 
 /*
- * Ask Jo on the two list tools, Quiz and Staff Slides: Jo rings the card it
+ * Ask Jo on the list tools (Quiz here): Jo rings the card it
  * changes, the list updates, and the turn is saved as a new run (the way their
  * refine step always has). Undo puts the list back.
  *
@@ -33,11 +33,6 @@ async function seed(toolSlug: string, output: unknown): Promise<string> {
     .single();
   if (error) throw new Error(error.message);
   return data.id as string;
-}
-
-async function latest(toolSlug: string): Promise<unknown[]> {
-  const { data } = await admin.from("tool_runs").select("output").eq("user_id", teacher.id).eq("tool_slug", toolSlug).order("created_at", { ascending: false }).limit(1);
-  return JSON.parse((data?.[0]?.output as string) ?? "[]");
 }
 
 function jo(body: Record<string, unknown>, seen: Record<string, unknown>[]) {
@@ -107,42 +102,6 @@ test("Quiz: Jo rewrites a question and adds one, saved into the same run, undone
   await expect(cards.nth(1).locator("input").first()).toHaveValue("What is 3 x 3?");
 });
 
-test("Staff Slides: Jo adds a slide and deletes one, on the page and saved", async ({ page }) => {
-  const id = await seed("cpd-slideshow", [
-    { type: "title", title: "Feedback that works", presentationTitle: "Feedback that works", subtitle: "INSET day" },
-    { type: "content", title: "Why feedback matters", presentationTitle: "Feedback that works", body: "It closes the gap.", bullets: ["Timely", "Specific"] },
-    { type: "content", title: "An old slide", presentationTitle: "Feedback that works", body: "Remove me." },
-  ]);
-  const seen: Record<string, unknown>[] = [];
-  await page.route(
-    "**/api/jo",
-    jo(
-      {
-        reply: "I'll add a discussion slide and remove the last one.",
-        ops: [
-          { op: "insertItem", label: "Adding a discussion slide", afterItemId: "s2", item: { type: "activity", title: "Talk it through", activityPrompt: "Share one piece of feedback that changed your teaching.", activitySubtask: "Two minutes each." } },
-          { op: "deleteItem", label: "Removing slide 3", itemId: "s3" },
-        ],
-        summary: "There is a discussion slide after slide 2.",
-      },
-      seen,
-    ),
-  );
-
-  await signIn(page, teacher);
-  await page.goto(`/tools/cpd-slideshow?run=${id}`);
-  const cards = page.locator("[data-jo-item]");
-  await expect(cards).toHaveCount(3, NAV);
-  await ask(page, "Add a discussion slide and drop the last one");
-
-  await expect(page.getByTestId("jo-item-focus")).toContainText("Adding a discussion slide", NAV);
-  await expect(cards.nth(2)).toContainText("Talk it through", NAV);
-  await expect(page.getByTestId("jo-changes")).toContainText("2 changes", NAV);
-  await expect(cards).toHaveCount(3);
-  await expect(page.locator("body")).not.toContainText("Remove me.");
-  expect(seen[0]).toMatchObject({ kind: "staffSlides" });
-
-  await expect
-    .poll(async () => ((await latest("cpd-slideshow")) as { title: string }[]).map((s) => s.title), NAV)
-    .toEqual(["Feedback that works", "Why feedback matters", "Talk it through"]);
-});
+// Staff Slides left this list engine in batch 6: new decks are made and
+// edited with Jo in the slide editor, and old runs open read-only
+// (tests/tools/tool-uplift-batch6.spec.ts).

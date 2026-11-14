@@ -9,6 +9,7 @@ import {
   quotaBlockStatus,
 } from "@/app/lib/generation-guard";
 import { slideshowStream, SSE_HEADERS, type RequestBody } from "@/app/lib/slideshow-pipeline";
+import { deckKindOf, deckToolSlug } from "@/app/lib/deck-kind";
 
 export const maxDuration = 120; // AI image gen can push past the default
 
@@ -72,6 +73,17 @@ export async function POST(req: NextRequest) {
   }
   if (!body.topic?.trim()) {
     return NextResponse.json({ error: "Missing topic" }, { status: 400 });
+  }
+
+  // A Staff Slides or assembly deck is that tool's spend too: when either is
+  // switched off in /admin/tools, its decks stop here, as its page does.
+  const kind = deckKindOf(body.deckKind);
+  body.deckKind = kind === "pupil" ? undefined : kind;
+  if (kind !== "pupil" && !(await isToolEnabled(supabase, deckToolSlug(kind)))) {
+    return NextResponse.json(
+      { error: "This tool is currently unavailable.", code: "tool_disabled" },
+      { status: 403 },
+    );
   }
 
   // One id for everything this deck spends — its own text call, the images,

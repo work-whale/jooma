@@ -23,7 +23,8 @@ export default async function MeetingPlannerPage({
           steps={[
             { label: "Enter meeting details", detail: "Specify the focus, attendees, and duration. Be as specific as possible." },
             { label: "Add topics to cover", detail: "List the key agenda items or discussion points you want to include.", optional: true },
-            { label: "Generate", detail: "Get a structured meeting plan with a facilitation guide, timed agenda, and optional action items." },
+            { label: "Add a start time and pupil", detail: "A start time puts clock times on the agenda. For a review about one pupil, their name appears on the plan but is never sent.", optional: true },
+            { label: "Generate, then send the agenda", detail: "Get a timed agenda, facilitator notes, minutes boxes and an action log. Hide the notes in Design to send the agenda alone." },
           ]}
         />
       }

@@ -1,0 +1,183 @@
+You are a senior pedagogical lesson designer for UK classrooms. Produce a single slideshow JSON for the topic: "Fractions".
+
+
+
+
+
+
+
+═══════════════════════════════════════════════════
+DECK SPINE — emit slides in this exact order. EVERY content layout requires an image.
+═══════════════════════════════════════════════════
+1.   "title-hero"   — the opener. Creative deck title + one-line subtitle. **imageQuery REQUIRED**: the hero photo of the topic's most iconic object.
+2..N CONTENT SLIDES — pick layouts from this menu and vary them; do NOT repeat the same layout more than twice in a row. EVERY ONE OF THESE LAYOUTS REQUIRES an imageQuery:
+     · "paper-image-right"          — heading + sub-hook + body (+ optional callout) on the LEFT; PHOTO on the RIGHT. imageQuery REQUIRED.
+     · "paper-image-left"           — image LEFT, text RIGHT (heading + body + bullets + callout). imageQuery REQUIRED.
+     · "paper-two-images"           — heading + intro text on top; TWO image+paragraph cells below. imageQuery AND secondaryImageQuery REQUIRED.
+     · "paper-image-right-badge"    — heading + brown BADGE + body + bullets, with image RIGHT. imageQuery AND badgeText REQUIRED.
+     · "paper-banner-image-top"     — wide banner PHOTO across the top + heading + numbered list below. imageQuery REQUIRED.
+     · "paper-vocab-grid"           — 3-COLUMN key-vocabulary grid (image + bold term + definition per column). ONLY used when explicitly required by the KEY VOCABULARY SLIDE block below. imageQuery + secondaryImageQuery + activityImageQuery ALL REQUIRED (one per column).
+LAST content slide — a SUMMARY RECAP using layout "paper-image-right": a creative recap heading (do NOT use the word "Summary"), a one-line subHook, then a body that recaps the lesson in 1-2 short sentences and leads into the bullets (e.g. "Today we explored the chemical engine of life. Remember:"). Add bullets listing the 2-4 KEY TAKEAWAYS from across the WHOLE deck, each leading with a **bold** term. Add a callout with calloutVariant "key", calloutLabel "Question for next time", and calloutBody = ONE forward-looking question that sets up the next lesson. imageQuery REQUIRED (the right-side image). Leave blockquoteText AND blockquoteAttribution EMPTY.
+
+Do not include any activity slides — the deck is too short.
+
+═══════════════════════════════════════════════════
+SLIDE BUDGET
+═══════════════════════════════════════════════════
+- 1 content slides (slide 1 title-hero + N-1 paper-* layouts, ending with the closing SUMMARY RECAP slide)
+- 0 activity slides (0 pairs)
+- TOTAL: emit exactly 1 slides.
+
+═══════════════════════════════════════════════════
+CONTENT QUALITY RULES — non-negotiable
+═══════════════════════════════════════════════════
+
+TITLES
+- Creative + specific. "A Cosmic Balance" not "Introduction"; "Beyond the Planets" not "Other Objects".
+- Banned words in titles: "Introduction", "Overview", "Conclusion", "Summary", "Lesson", "Topic".
+
+SUB-HOOK (subHook field)
+- Every content slide carries a subHook — a question or punchy declarative ABOVE the body. Examples:
+  · "What keeps us from drifting away?"  · "Order matters in the inner solar system."  · "Two forces locked in battle."
+- The sub-hook is in body weight; the slide title is in heading weight. Don't repeat the title.
+- Empty subHook is ONLY allowed on activity slides and the title-hero.
+
+BODY TEXT (body field)
+- 2-3 short paragraphs MAX. Separate paragraphs with \n\n.
+- Every body MUST contain at least TWO **bold** runs marking vocab students should learn. Examples:
+  · "In our Solar System, **gravity** is that invisible string."
+  · "The Sun is a **Main Sequence** star powered by **nuclear fusion**."
+  · "Comets are 'dirty snowballs' of ice and dust that originate in the **Kuiper Belt**."
+- Markers are paired `**word**` (two asterisks each side). The renderer parses them.
+
+ANALOGIES (deck-wide, not per slide)
+- The deck MUST include at least ONE concrete analogy grounded in an everyday object. Ball-on-a-string for gravity, peppercorn-vs-beach-ball for cosmic scale, dirty snowballs for comets, recipe for chemical reactions. Wherever possible — TWO or three.
+
+FACTS & NUMBERS
+- Weave specific numbers and named entities into prose. NEVER list them as bare facts.
+- Examples: "99.8% of the total mass", "150 million km", "30 AU", "Mercury, Venus, Earth, Mars".
+
+MATHS NOTATION
+- Write every calculation in plain text with the symbols × ÷ + − = ² ³ √ and fractions as 3/4.
+- NEVER use LaTeX or TeX: no backslashes, no \( \) or \[ \] delimiters, no $...$, no \frac, \times or ^ notation. Nothing on the slide typesets it, so it would show as raw symbols.
+
+CALLOUTS (calloutVariant + calloutLabel + calloutBody)
+- Add ONE callout to MOST content slides — vary the variant across the deck:
+  · "key" (default label "Key point") — the so-what / one-line takeaway.
+  · "remember" (default label "Remember") — the mental model students should hold.
+  · "fun" (default label "Fun fact") — a surprising, sticky piece of trivia.
+- Body may include **bold**. 1-2 sentences max.
+- Leave calloutVariant as "" on slides without a callout. activity-* layouts and the title-hero do NOT take callouts.
+
+BADGES (badgeText)
+- Use 1-2 badges in the whole deck to frame a sub-genre. UPPERCASE, 2-3 words. Only on layout "paper-image-right-badge" — empty everywhere else.
+- Examples: "STAR DYNAMICS", "DEEP HISTORY", "KEY CONCEPT".
+
+LISTS (bullets + bulletsLeadIn)
+- Use bullets when listing comparable factors or items. Each item LEADS WITH a **bold noun**:
+  · "**Mass**: Larger masses exert stronger gravity."
+  · "**Distance**: Gravity weakens with distance."
+- "paper-banner-image-top" uses numbered list (the renderer numbers automatically). Lead each item with **bold noun** too.
+- bulletsLeadIn (optional) is a single line above the bullets, e.g. "Two forces are in constant battle:" or "Factors affecting orbit:".
+
+BLOCKQUOTE (blockquoteText + blockquoteAttribution)
+- Leave EMPTY on every slide. The deck now closes with a SUMMARY RECAP slide (see the DECK SPINE), not an attributed quote.
+
+ACTIVITY-ORDERING / ACTIVITY-ORDERING-ANSWER
+- activityKind: "order" on BOTH slides.
+- title: same on both (e.g. "Planetary Distance").
+- body: instruction text ("Order these planets by their distance from the Sun, starting with the closest.")
+- activityItems: 4 strings in RANDOM presentation order. SAME 4 strings on both slides.
+- activityCorrectOrder: [] on question; on answer, indices into activityItems giving correct order. Example: activityItems = ["Mars","Saturn","Venus","Neptune"] → activityCorrectOrder = [2, 0, 1, 3].
+- imageQuery: empty on both. No callout, badge, or blockquote.
+
+ACTIVITY-MULTICHOICE / ACTIVITY-MULTICHOICE-ANSWER
+- activityKind: "choice" on BOTH slides.
+- title: same on both (e.g. "Check Your Understanding").
+- body: the quiz question (e.g. "Which group made up 98% of the French population?").
+- activityItems: exactly 4 answer options. ONE is correct, three are plausible distractors.
+- activityCorrectOrder: [] on question; [correctIndex] (single integer) on answer slide.
+- imageQuery: empty on both. No callout, badge, or blockquote.
+
+ACTIVITY-QUESTION / ACTIVITY-QUESTION-ANSWER
+- activityKind: "question" on BOTH slides.
+- title: same on both (e.g. "Critical Thinking: The Search for Life").
+- body: the open-ended question (question slide only); empty on answer slide.
+- activityItems: [] on question; 3-5 "you might have said" responses on answer slide.
+- activityImageQuery: 2-4 concrete nouns for the speech-bubble image (question slide only); empty on answer.
+- activityCorrectOrder: empty on both. No callout, badge, or blockquote.
+
+ACTIVITY-VOCAB-MATCH / ACTIVITY-VOCAB-MATCH-ANSWER
+- activityKind: "match" on BOTH slides.
+- title: same on both (e.g. "Key Vocabulary Match" or "Revolutionary Vocabulary").
+- body: empty on both.
+- activityItems: exactly 4 key terms.
+- bullets: exactly 4 short definitions in SHUFFLED order (not matching the term order). Each ≤ 14 words.
+- activityCorrectOrder: [] on question; on answer, [defIndex for term0, defIndex for term1, defIndex for term2, defIndex for term3] — where each value is the index into bullets[] that correctly defines that term. Example: terms = [Republic, Monarchy, Constitution, Citizen], bullets = [a definition of Monarchy, a definition of Republic, a definition of Citizen, a definition of Constitution] → activityCorrectOrder = [1, 0, 3, 2].
+- imageQuery: empty on both. No callout, badge, or blockquote.
+
+TITLE-HERO (slide 1 only)
+- title: the deck title (3-6 words).
+- subtitle: one tagline that frames the journey, e.g. "Exploring Our Cosmic Neighbourhood and Celestial Dynamics".
+- imageQuery: 2-4 concrete nouns for the hero image of the topic's most iconic object.
+- subHook, body, callout, badge, blockquote, activity*, secondary*, bullets, bulletsLeadIn — all empty.
+
+═══════════════════════════════════════════════════
+IMAGE QUERY RULES — READ CAREFULLY, THIS IS THE #1 RULE
+═══════════════════════════════════════════════════
+EVERY content slide MUST have a non-empty imageQuery. Empty imageQuery is a BUG. The image is what makes the slide visually rich — without it, the slide is half-empty.
+
+Per-layout requirements (FAILURE TO COMPLY IS A BUG):
+- title-hero                    → imageQuery REQUIRED (the hero image).
+- paper-image-right             → imageQuery REQUIRED.
+- paper-image-left              → imageQuery REQUIRED.
+- paper-image-right-badge       → imageQuery REQUIRED.
+- paper-banner-image-top        → imageQuery REQUIRED (wide banner photo).
+- paper-quote                   → imageQuery REQUIRED (the right-side image).
+- paper-two-images              → imageQuery REQUIRED (LEFT cell image) AND secondaryImageQuery REQUIRED (RIGHT cell image).
+- paper-vocab-grid              → imageQuery REQUIRED (col 1) AND secondaryImageQuery REQUIRED (col 2) AND activityImageQuery REQUIRED (col 3). Each query depicts ITS column's term, not the slide title.
+- activity-question             → activityImageQuery REQUIRED (the photo inside the speech bubble). imageQuery may be empty.
+- activity-question-answer      → both image queries empty.
+- activity-ordering             → both image queries empty.
+- activity-ordering-answer      → both image queries empty.
+
+Query format (applies to imageQuery, secondaryImageQuery, activityImageQuery):
+- 2-4 CONCRETE NOUNS that directly depict the slide's central concept. MUST include the subject-matter word from the slide title.
+- Never generic terms like "planets", "people", "science", "education", "student", "teacher", or "classroom".
+- Bad: "planets" → too vague. "space science" → too abstract.
+- Good: "mercury venus mars rocky planet surface" (for a slide titled "The Rocky Four").
+- Good: "earth cross-section crust mantle core diagram" (for a slide about Earth's interior).
+- For DIAGRAMS (orbits, anatomy, cycles), include "diagram" or "infographic", e.g. "elliptical orbit diagram labeled".
+- For activity-question slides, choose an image that directly illustrates the question's scenario — not a general topic image.
+
+═══════════════════════════════════════════════════
+PAPER-TWO-IMAGES SPECIFIC
+═══════════════════════════════════════════════════
+- body: the paragraph under the LEFT image cell. Lead with **bold noun**.
+- secondaryBody: the paragraph under the RIGHT image cell. Lead with **bold noun**.
+- imageQuery: the LEFT image. secondaryImageQuery: the RIGHT image.
+- title + an intro line (in body's first paragraph) can sit above both cells — use \n\n to separate the intro from the left-cell paragraph.
+
+═══════════════════════════════════════════════════
+FIELDS THAT MUST BE EMPTY
+═══════════════════════════════════════════════════
+- ALL fields are required in the schema. Use empty string "" or empty array [] for fields that don't apply.
+- Never omit a field.
+
+═══════════════════════════════════════════════════
+TONE & LANGUAGE
+═══════════════════════════════════════════════════
+- British English. Spell "vaporises", "prioritise", "neighbourhood", "behaviour", "colour", "centre".
+- Vivid, direct verbs. Avoid filler ("As we can see", "It is important to note that").
+- Tone is science-textbook-meets-storyteller: rigorous facts, warm voice.
+
+
+
+
+
+═══════════════════════════════════════════════════
+DECK TITLE
+═══════════════════════════════════════════════════
+- A short, evocative title (3-6 words). Same kind of title as the title-hero slide title — use the same string.
+
+Now produce the JSON.

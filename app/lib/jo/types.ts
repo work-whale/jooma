@@ -143,8 +143,11 @@ export interface DeleteSlideOp extends OpBase { op: "deleteSlide"; slideId: stri
 /** `afterSlideId` "" moves it to the front. */
 export interface MoveSlideOp extends OpBase { op: "moveSlide"; slideId: string; afterSlideId: string }
 export interface SetThemeOp extends OpBase { op: "setTheme"; themeId: string }
+/** A slide's speaker notes, what the presenter says; "" clears them. */
+export interface SetSlideNotesOp extends OpBase { op: "setSlideNotes"; slideId: string; notes: string }
 
 export type SlideOp =
+  | SetSlideNotesOp
   | SetSlideTextOp
   | RewriteSlideOp
   | AddSlideOp

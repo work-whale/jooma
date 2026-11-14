@@ -79,3 +79,4 @@ export { default as SIPSchoolTypeField } from "./SIPSchoolTypeField";
 export { default as SIPAreasField } from "./SIPAreasField";
 export { default as SIPContextField } from "./SIPContextField";
 export { default as SIPTimeframeField } from "./SIPTimeframeField";
+export { default as AssemblyReflectionField } from "./AssemblyReflectionField";

@@ -4,7 +4,7 @@ type OutputType = "full" | "structure";
 
 const OPTIONS: { value: OutputType; label: string }[] = [
   { value: "full", label: "Draft full policy" },
-  { value: "structure", label: "Draft policy section structure" },
+  { value: "structure", label: "Section outline with notes" },
 ];
 
 interface Props {

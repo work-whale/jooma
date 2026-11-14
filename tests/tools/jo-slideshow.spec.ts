@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import {
   createTeacher,
   deleteTeacher,
+  setPlan,
   signIn,
   type TestTeacher,
 } from "../support/users";
@@ -60,6 +61,9 @@ let teacher: TestTeacher;
 
 test.beforeAll(async () => {
   teacher = await createTeacher("Joslides");
+  // A teacher with no plan is sent to /free-tools (the no-card trial), so the
+  // wizard never opens: these tests need a plan.
+  await setPlan(teacher, "pro", "comped");
 });
 
 test.afterAll(async () => {

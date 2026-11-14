@@ -26,6 +26,10 @@ export type YoutubeLength = "short" | "medium" | "long" | "any";
 
 export interface GenerationParams {
   topic: string;
+  /** Staff Slides ("staff") or an assembly's slides ("assembly"): the same
+   *  engine with its own prompt and speaker notes. Never set by this modal. */
+  deckKind?: "staff" | "assembly";
+  staffFocus?: "practical" | "research";
   year?: string;
   readingLevel?: string;
   /** Output language (lib/languages). Saved with the deck, so the editor's

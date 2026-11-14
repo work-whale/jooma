@@ -39,12 +39,17 @@ import { arrangeEct, ECT_PARTS } from "./ect";
 import { APPRAISAL_PARTS, arrangeAppraisal } from "./appraisal";
 import { arrangeLearningWalk, arrangeLessonObservation, LEARNING_WALK_PARTS, LESSON_OBS_PARTS } from "./observation";
 import { arrangeSip, SIP_PARTS } from "./sip";
+import { arrangeInspection, INSPECTION_PARTS } from "./inspection";
+import { arrangePolicy, POLICY_PARTS } from "./policy";
+import { arrangeMeeting, MEETING_PARTS } from "./meeting";
+import { arrangeAssembly, ASSEMBLY_SHEET_PARTS } from "./assembly";
 
 export const SHEET_TOOLS = [
   "worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter", "topicMap", "termPlan", "behaviourPlan", "pupilProfile", "cover",
   "homework", "modelText", "targets", "intervention", "phonics", "eyfsPlan",
   "pupilPremium", "eyfsActionPlan", "riskAssessment", "sensory", "newsletter",
   "ectReport", "appraisal", "lessonObservation", "learningWalk", "sip",
+  "inspection", "policy", "meeting", "assembly",
 ] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
@@ -1095,6 +1100,139 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     arrange: (raw, info) => arrangeSip(raw, info.sip),
     landscape: true,
     parts: SIP_PARTS,
+  },
+  inspection: {
+    slug: "inspection-prep",
+    joName: "inspection preparation guide for senior leaders, area by area",
+    docLabel: "guide",
+    joStarters: [
+      "Make the questions more challenging",
+      "Add an action on governors",
+      "Focus more on disadvantaged pupils",
+      "Make it shorter",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Inspection preparation",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is an inspection preparation guide, one section per evaluation area: self-evaluation questions, an action table (Action, Lead, By when, Done), and optional evidence and success criteria. Leads are roles, never names; the Done column, the details and the \"Where are we now?\" tick rows are the school's: leave them as they are.\n" +
+      "- Never grade the school or predict a grade. For Ofsted use the renewed framework's areas and report card grades only, never the old judgements or \"outstanding\", \"good\", \"requires improvement\" or \"inadequate\". Never invent recent policy changes.",
+    arrange: (raw, info) => arrangeInspection(raw, info.inspection),
+    subtitleSuffix: (info) => info.inspection?.focus?.trim() ?? "",
+    parts: INSPECTION_PARTS,
+  },
+  policy: {
+    slug: "policy-generator",
+    joName: "school policy with numbered sections",
+    docLabel: "policy",
+    joStarters: [
+      "Make the language plainer for parents",
+      "Add a section on online safety",
+      "Make the roles more specific",
+      "Shorten each section",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "School policy",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a school policy. Sections are numbered (\"2. Our approach\") and each clause starts with its number (\"2.1\"): keep the numbering in order when you add, move or remove sections or clauses. People are named by role only, never by name.\n" +
+      "- The details box (status, review, approval, dates, version) and the version history are filled in by the school or from DfE guidance: never change them. Keep the check note on the references, and never invent laws or guidance.",
+    arrange: (raw, info) => arrangePolicy(raw, info.policy),
+    parts: POLICY_PARTS,
+  },
+  meeting: {
+    slug: "meeting-planner",
+    joName: "meeting plan: a timed agenda, facilitator notes, minutes boxes and an action log",
+    docLabel: "plan",
+    joStarters: [
+      "Give more time to the main discussion",
+      "Make the facilitator notes shorter",
+      "Add a decision item at the end",
+      "Make it a 30 minute meeting",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Meeting",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    // A meeting can be about one child (a looked-after child review): the
+    // name stays in doc.pupil and the text holds [PUPIL].
+    aboutPupil: true,
+    joRules:
+      "- This is a meeting plan for a UK school. The agenda table's times must still add up to the meeting's length when you change items. People are named by role only; if the pupil is written as [PUPIL], keep [PUPIL] exactly and never give a name.\n" +
+      "- The details, the minutes boxes and the action log are for the meeting to fill in: leave them blank, and never assign actions or invent dates.",
+    arrange: (raw, info) => arrangeMeeting(raw, info.meeting),
+    parts: MEETING_PARTS,
+  },
+  assembly: {
+    slug: "assembly-planner",
+    joName: "assembly script: a running order, then each part with what to say and delivery tips",
+    docLabel: "script",
+    joStarters: [
+      "Make the story more vivid",
+      "Make it suit younger children",
+      "Add a song to the reflection",
+      "Make it a 15 minute assembly",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Assembly",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a school assembly script. The running order's minutes must still add up to the assembly's length when you change parts, and each part's minutes line must match. Never name a pupil or member of staff.\n" +
+      "- The closing part follows the school's choice in the details (a reflection, collective worship, or a faith school's prayer): keep its heading, and never add a prayer to a reflection. The details are for the school to fill in.",
+    arrange: (raw, info) => arrangeAssembly(raw, info.assembly),
+    subtitleSuffix: (info) => info.assembly?.stage?.trim() ?? "",
+    parts: ASSEMBLY_SHEET_PARTS,
   },
 };
 

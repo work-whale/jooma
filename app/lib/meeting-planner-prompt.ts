@@ -1,123 +1,86 @@
-// The Meeting Planner prompt, pure so it can be tested.
+// The Meeting Planner prompt: the plan as structured JSON
+// (app/lib/sheets/meeting.ts), pure so it can be tested.
 //
-// Actions are assigned to roles, never to invented names: the model only
-// knows the participants' roles, so a "[Name of responsible person]" slot
-// invited it to make people up.
+// People are named by role only. A pupil's name never arrives: the form
+// sends "[PUPIL]" in its place and this refuses any name key. Colleagues
+// typed with a title ("Mrs Lee") become "a colleague" here too, whatever the
+// form did. The model never assigns actions or invents names, dates or
+// owners: the action log is blank, for the meeting to fill in.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the request body as posted by the form
-type Body = Record<string, any>;
+import { strictObject } from "@/app/lib/sheets/schema";
+import { buildSystem } from "@/app/lib/systemPrompt";
+import { scrubStaffTitles } from "@/app/lib/staff-privacy";
+import { carriesPupilName } from "@/app/lib/behaviour-prompt";
+import { MEETING_PURPOSES, meetingMinutes } from "@/app/lib/sheets/meeting";
 
-const SYSTEM = "You are an expert facilitator and school leader with extensive experience designing and running productive professional meetings in UK schools. You create structured, time-efficient meeting plans that respect participants' time, drive clear outcomes, and follow best practice for collaborative professional dialogue.";
+export interface MeetingBody {
+  purpose?: string;
+  duration?: number | string;
+  participants?: string;
+  topics?: string;
+  includeIcebreaker?: boolean;
+  includeActionItems?: boolean;
+}
 
-export function buildMeetingPlannerPrompt(body: Body): { system: string; user: string } | { error: string } {
-  const { purpose, duration, participants, topics, includeIcebreaker, includeActionItems } = body;
-  if (typeof purpose !== "string" || !purpose.trim() || !duration || typeof participants !== "string" || !participants.trim()) {
-    return { error: "Missing required fields" };
-  }
+const str = { type: "string" } as const;
+const strings = { type: "array", items: str } as const;
 
-  const icebreakerSection = includeIcebreaker
-    ? `\n\n### Opening Activity (5 minutes)
+export function meetingResponseFormat() {
+  const item = strictObject({
+    title: str,
+    minutes: { type: "integer" },
+    leadRole: str,
+    purpose: { type: "string", enum: [...MEETING_PURPOSES] },
+    notes: strings,
+  });
+  const schema = strictObject({
+    title: str,
+    overview: str,
+    preparation: strings,
+    icebreaker: str,
+    items: { type: "array", items: item },
+    followUp: strings,
+  });
+  return { type: "json_schema" as const, json_schema: { name: "meeting_plan", strict: true, schema } };
+}
 
-**Type:** [A specific, appropriate icebreaker activity for this group and purpose]
-**Purpose:** [Why this icebreaker suits this meeting]
-**Implementation:** [Exactly how to run it — step by step]`
-    : "";
+const SYSTEM =
+  "You are an expert facilitator and school leader with extensive experience designing and running productive professional meetings in UK schools. You create structured, time-efficient meeting plans that respect participants' time and drive clear outcomes. " +
+  "You return the plan as JSON that matches the given schema exactly. Write in UK English. Never use emoji. Do not use long dashes: use commas, colons or full stops.";
 
-  const actionItemsSection = includeActionItems
-    ? `\n\n## Action Items
+const clean = (v: unknown) => (typeof v === "string" ? scrubStaffTitles(v.trim(), "colleague") : "");
 
-| Action Item | Assigned To | Deadline |
-|---|---|---|
-| [Specific action 1] | [Role responsible, from the participants] | [Completion date] |
-| [Specific action 2] | [Role responsible] | [Completion date] |
-| [Specific action 3] | [Role responsible] | [Completion date] |
-| [Specific action 4] | [Role responsible] | [Completion date] |
-| [Specific action 5] | [Role responsible] | [Completion date] |`
-    : "";
+export function meetingRequest(body: MeetingBody & Record<string, unknown>):
+  | { messages: { role: "system" | "user"; content: string }[]; response_format: ReturnType<typeof meetingResponseFormat> }
+  | { error: string } {
+  if (carriesPupilName(body)) return { error: "A pupil's name is never sent. Please reload the page and try again." };
+  const purpose = clean(body.purpose);
+  const participants = clean(body.participants);
+  const topics = clean(body.topics);
+  const length = meetingMinutes(body.duration);
+  if (!purpose || !participants || length === null) return { error: "Missing required fields" };
+  const aboutPupil = [purpose, participants, topics].some((t) => t.includes("[PUPIL]"));
 
-  const topicsLine = topics?.trim()
-    ? `Topics to cover: ${topics}`
-    : "";
+  const user = `Plan a ${length} minute meeting in a UK school.
 
-  const user = `You are a professional meeting facilitator helping a UK school plan a structured, productive meeting. Generate a detailed meeting plan based on the following inputs.
+PURPOSE: ${purpose}
+PARTICIPANTS: ${participants}${topics ? `\nTOPICS TO COVER: ${topics}` : ""}
 
-INPUTS:
-- Meeting purpose: ${purpose}
-- Duration: ${duration} minutes
-- Participants: ${participants}
-${topicsLine ? `- ${topicsLine}` : ""}
+${aboutPupil ? "[PUPIL] is the pupil the meeting is about: keep [PUPIL] exactly wherever you refer to them, and never give them a name. " : ""}Refer to people by role only (headteacher, SENCo, class teacher, parents), never by name, and never invent names. Never assign actions to people, and never invent dates: the meeting does that.
 
-Generate a complete meeting plan using the following structure. Use proper markdown. Do not use emojis.
+FIELDS
+- title: a short title for the meeting, a few words.
+- overview: 2 sentences on what the meeting is for and what it should decide or produce.
+- preparation: 3 or 4 specific things the chair should do beforehand (papers, data, room).
+- icebreaker: ${body.includeIcebreaker === true ? "one short, suitable opening activity for this group, and how to run it, in 2 sentences. Include a 5 minute item for it at the start of the agenda." : "an empty string."}
+- items: the agenda, in order, from a welcome to a close that confirms actions. For each: title (a few words), minutes (a whole number; the items must come to ${length} minutes in total), leadRole (a role from the participants), purpose (inform, discuss or decide), and notes (2 or 3 short facilitation notes for the chair: what to cover and how to run it).
+- followUp: 2 or 3 things to do after the meeting (sharing minutes, checking actions).`;
 
-# Detailed Meeting Plan
-
-## Meeting Overview
-
-**Purpose:** ${purpose}
-**Duration:** ${duration} minutes
-**Participants:** ${participants}
-
-## Facilitation Guide
-
-### Pre-Meeting Preparation (Facilitator Tasks)
-
-List 4 specific preparation tasks for the facilitator before the meeting. Use the format: **Task name:** description. Cover room setup, materials, advance distribution, and facilitator preparation.
-${icebreakerSection}
-
-### Opening and Context Setting (5 minutes)
-
-**Opening approach:** [How to open the meeting — specific and practical]
-**Purpose clarification:** [How to state the meeting goals clearly]
-**Expectations setting:** [How to set the tone and ground rules]
-
-### Discussion Structure
-
-Divide the remaining time across the topics to cover. For each topic, write a numbered section using this format:
-
-### [Number]. [Topic Name] ([X] minutes)
-
-**Discussion purpose:** [What this segment aims to achieve]
-**Presentation approach:** [How the topic will be introduced or presented]
-**Key discussion points:** [2–3 specific points to cover]
-**Facilitation guidance:** [How to facilitate the discussion — specific techniques]
-**Desired outcome:** [What should be agreed, decided, or produced by the end of this segment]
-${actionItemsSection}
-
-### Closing and Next Steps (5 minutes)
-
-**Summary approach:** [How to summarise key points and decisions]
-**Action confirmation:** [How to confirm assigned actions and deadlines]
-**Forward planning:** [How to agree on follow-up]
-**Closing remarks:** [How to close the meeting positively]
-
-## Follow-up Plan
-
-**Documentation:** [How meeting notes will be recorded and shared]
-**Action tracking:** [How agreed actions will be monitored]
-**Impact assessment:** [How the effectiveness of the meeting will be evaluated]
-**Continuous improvement:** [How feedback will be gathered for future meetings]
-
----
-
-## Meeting Agenda
-
-### Basic Information
-
-- **Date:** [To be completed]
-- **Time:** [To be completed]
-- **Location:** [To be completed]
-- **Duration:** ${duration} minutes
-- **Facilitator:** [To be completed]
-
-### Meeting Purpose
-
-${purpose}
-
-### Agenda Items
-
-Write a numbered list of agenda items with timings, matching the discussion structure above.
-
-Refer to people by role only, never by name, and never invent names. Make every section specific to the meeting purpose and participants provided — avoid generic filler. The plan should be practical enough to pick up and use directly.`;
-
-  return { system: SYSTEM, user };
+  return {
+    messages: [
+      { role: "system", content: buildSystem(SYSTEM) },
+      { role: "user", content: user },
+    ],
+    response_format: meetingResponseFormat(),
+  };
 }

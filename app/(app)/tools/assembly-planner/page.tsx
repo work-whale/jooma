@@ -23,7 +23,8 @@ export default async function AssemblyPlannerPage({
           steps={[
             { label: "Enter the theme", detail: "Be specific when entering the theme of the assembly." },
             { label: "Set phase and duration", detail: "Specify the phase of education and how long the assembly will run." },
-            { label: "Generate", detail: "Get a complete assembly plan with script, speaker notes, story, and interactive elements." },
+            { label: "Choose the closing", detail: "A quiet reflection, collective worship of a broadly Christian character, or your faith school's prayer." },
+            { label: "Generate, then make the slides", detail: "Get a running order that adds up to your time and a script for each part. Press Make assembly slides for a deck with speaker notes." },
           ]}
         />
       }
