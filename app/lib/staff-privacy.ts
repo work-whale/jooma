@@ -16,6 +16,27 @@
 import { nameRegExp } from "@/app/lib/reports/privacy";
 
 export const ECT_PLACEHOLDER = "[ECT]";
+/** A lesson observation's observed teacher and observer. */
+export const TEACHER_PLACEHOLDER = "[TEACHER]";
+export const OBSERVER_PLACEHOLDER = "[OBSERVER]";
+
+/** What a placeholder reads as when no name was given. */
+const ROLES: Record<string, string> = {
+  [ECT_PLACEHOLDER]: "the ECT",
+  [TEACHER_PLACEHOLDER]: "the teacher",
+  [OBSERVER_PLACEHOLDER]: "the observer",
+};
+
+function roleFor(placeholder: string): string {
+  return ROLES[placeholder] ?? `the ${placeholder.replace(/[[\]]/g, "").toLowerCase()}`;
+}
+
+/** One member of staff on a document: the name stays in the browser and on
+ *  the saved document, the placeholder is all a model sees. */
+export interface StaffName {
+  placeholder: string;
+  name: string;
+}
 
 /** The whole name and each part of it, longest first, so "Sarah Johnson" is
  *  replaced whole before "Sarah" is looked for on its own. Parts of one letter
@@ -45,9 +66,9 @@ function shortName(full: string): string {
  * heading and at the first mention in the text, the surname after that.
  * With no name given, "the ECT" stands in.
  */
-export function swapStaffName(text: string, full: string, placeholder = ECT_PLACEHOLDER): string {
+export function swapStaffName(text: string, full: string, placeholder = ECT_PLACEHOLDER, fallback = roleFor(placeholder)): string {
   const whole = full.trim().replace(/\s+/g, " ");
-  if (!whole) return text.split(placeholder).join("the ECT");
+  if (!whole) return text.split(placeholder).join(fallback);
   const short = shortName(whole);
   let named = false;
   return text
@@ -68,7 +89,7 @@ export function swapStaffName(text: string, full: string, placeholder = ECT_PLAC
 }
 
 /** Keys a request about a member of staff must never carry. */
-const STAFF_NAME_KEYS = /^(ectName|staffName|teacherName|name|firstName|first_name|surname|fullName)$/i;
+const STAFF_NAME_KEYS = /^(ectName|staffName|teacherName|observerName|name|firstName|first_name|surname|fullName)$/i;
 
 /** Whether a request body carries a staff name key, at any depth. */
 export function carriesStaffName(body: unknown): boolean {
@@ -87,4 +108,69 @@ export interface TextPrivacy {
 export function staffNamePrivacy(full: string): TextPrivacy | undefined {
   if (!full.trim()) return undefined;
   return { scrub: (t) => scrubStaffName(t, full), swap: (t) => swapStaffName(t, full) };
+}
+
+// ── Several members of staff (a lesson observation: teacher and observer) ──
+
+/** Every name part of every person, with whose it is, longest first. A part
+ *  two people share (a surname) goes to the first listed. */
+function staffParts(staff: StaffName[]): { part: string; placeholder: string }[] {
+  const out: { part: string; placeholder: string }[] = [];
+  const seen = new Set<string>();
+  for (const s of staff) {
+    for (const part of nameParts(s.name)) {
+      const key = part.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ part, placeholder: s.placeholder });
+    }
+  }
+  return out.sort((a, b) => b.part.length - a.part.length);
+}
+
+/** `text` with each person, whole or in part, as their own placeholder. */
+export function scrubStaff(text: string, staff: StaffName[]): string {
+  let out = text;
+  for (const { part, placeholder } of staffParts(staff)) out = out.replace(nameRegExp(part), placeholder);
+  return out;
+}
+
+/** Each placeholder back to its person's name (full first, surname after),
+ *  or to its role ("the teacher") when no name was given. */
+export function swapStaff(text: string, staff: StaffName[]): string {
+  let out = text;
+  for (const s of staff) out = swapStaffName(out, s.name, s.placeholder);
+  for (const placeholder of Object.keys(ROLES)) {
+    if (out.includes(placeholder)) out = out.split(placeholder).join(roleFor(placeholder));
+  }
+  return out;
+}
+
+/** The scrub and swap pair for several people; undefined when no name was given. */
+export function staffPrivacy(staff: StaffName[]): TextPrivacy | undefined {
+  const named = staff.filter((s) => s.name.trim());
+  if (!named.length) return undefined;
+  return { scrub: (t) => scrubStaff(t, named), swap: (t) => swapStaff(t, named) };
+}
+
+// ── Staff named by title in free text (a learning walk) ────────────────────
+
+const TITLE_RE = /(?<![\p{L}\p{N}])(Mr|Mrs|Ms|Miss|Mx|Dr)\.?\s+(\p{L}+(?:['’-](?!s(?!\p{L}))\p{L}+)*)(['’]s(?!\p{L}))?/giu;
+
+/**
+ * "Mr Patel", "Mrs O'Neil's", "Dr. Smith-Jones" as "a teacher" ("a
+ * teacher's"), the usual way staff are named in a school. A title written
+ * with a capital needs a capitalised surname, so "Mrs and Mr were" is left
+ * alone; an all lower case "mr patel" is caught. First names alone are not:
+ * the form says so.
+ */
+export function scrubStaffTitles(text: string): string {
+  return text.replace(TITLE_RE, (match, title: string, surname: string, possessive: string | undefined, offset: number, whole: string) => {
+    const titleLower = title === title.toLowerCase();
+    const surnameCapital = surname[0] === surname[0].toUpperCase() && surname[0] !== surname[0].toLowerCase();
+    if (!titleLower && !surnameCapital) return match;
+    const before = whole.slice(0, offset);
+    const sentenceStart = /^\s*$/.test(before) || /[.!?]\s+$/.test(before);
+    return `${sentenceStart ? "A" : "a"} teacher${possessive ?? ""}`;
+  });
 }

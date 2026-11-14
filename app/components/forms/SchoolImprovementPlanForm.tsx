@@ -6,10 +6,8 @@ import {
   SIPAreasField,
   SIPContextField,
   SIPTimeframeField,
-  SIPOutputFormatField,
 } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -20,17 +18,18 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { sipYears } from "@/app/lib/sheets/sip";
 
 const TOOL_SLUG = "school-improvement-plan";
 
-const REFINE_CHIPS = [
-  "Make the strategies and actions more detailed",
-  "Include more specific reference to...",
-  "Make the timeframes of targets shorter",
-  "Include further suggestions for strategies to...",
-  "Translate to...",
-];
-
+/*
+ * A school improvement plan as a designed landscape document
+ * (app/lib/sheets/sip.ts): an action table per priority with blank Cost and
+ * RAG columns, a baseline line per priority and a monitoring calendar. The
+ * narrative parts can be switched off in Design. The old table and narrative
+ * formats are gone; an old prefill's outputFormat is ignored.
+ */
 export default function SchoolImprovementPlanForm({
   sidebar,
   launch,
@@ -43,19 +42,18 @@ export default function SchoolImprovementPlanForm({
   const [areasToImprove, setAreasToImprove] = useState("");
   const [schoolContext, setSchoolContext] = useState("");
   const [planTimeframe, setPlanTimeframe] = useState(1);
-  const [outputFormat, setOutputFormat] = useState<"table" | "narrative">("table");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
   // Raw form state — saved as history input so a past run can refill the form.
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat };
+  const formState = { ...languageFormState(language), schoolType, areasToImprove, schoolContext, planTimeframe };
 
   const restore = (run: ToolRun) => {
     // The run's own language: English (UK) for runs saved before languages existed.
@@ -64,9 +62,9 @@ export default function SchoolImprovementPlanForm({
     setSchoolType((i.schoolType as string) ?? "Primary");
     setAreasToImprove((i.areasToImprove as string) ?? "");
     setSchoolContext((i.schoolContext as string) ?? "");
-    setPlanTimeframe((i.planTimeframe as number) ?? 1);
-    setOutputFormat((i.outputFormat as "table" | "narrative") ?? "table");
+    setPlanTimeframe(sipYears(i.planTimeframe));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -77,68 +75,38 @@ export default function SchoolImprovementPlanForm({
     prefill: {
       areasToImprove: (v) => setAreasToImprove(v as string),
       schoolType: (v) => setSchoolType(v as string),
-      planTimeframe: (v) => setPlanTimeframe(v as number),
-      outputFormat: (v) => setOutputFormat(v as "table" | "narrative"),
+      planTimeframe: (v) => setPlanTimeframe(sipYears(v)),
     },
   });
 
   const canGenerate = areasToImprove.trim();
-  const formSnapshot = JSON.stringify({ schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat });
+  const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = { sip: { schoolType, timeframe: planTimeframe } };
     try {
       const res = await fetch("/api/school-improvement-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, schoolType, areasToImprove, schoolContext, planTimeframe, outputFormat }),
+        body: JSON.stringify({ language, schoolType, areasToImprove, schoolContext, planTimeframe }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "sip", info, setResult);
+      if (!finished) throw new Error("The plan came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -162,8 +130,6 @@ export default function SchoolImprovementPlanForm({
 
             <SIPTimeframeField value={planTimeframe} onChange={setPlanTimeframe} />
 
-            <SIPOutputFormatField value={outputFormat} onChange={setOutputFormat} />
-
             <div className="flex gap-3">
               <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
@@ -172,14 +138,8 @@ export default function SchoolImprovementPlanForm({
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
                 onConfirm={() => {
-                  setSchoolType("Primary");
-                  setAreasToImprove("");
-                  setSchoolContext("");
-                  setPlanTimeframe(1);
-                  setOutputFormat("table");
-                  setResult(null);
-                  setError(null);
-                  setConfirmingReset(false);
+                  setSchoolType("Primary"); setAreasToImprove(""); setSchoolContext(""); setPlanTimeframe(1);
+                  setRunId(null); setResult(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
@@ -201,20 +161,12 @@ export default function SchoolImprovementPlanForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="school-improvement-plan"
-        historyMeta={{ toolSlug: TOOL_SLUG, title: areasToImprove || null, input: formState }}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: areasToImprove.split(/\r?\n/)[0]?.replace(/^\s*\d+[.)]\s*/, "").trim() || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

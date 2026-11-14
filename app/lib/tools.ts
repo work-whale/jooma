@@ -165,7 +165,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/ect-report-writer": {
     name: "ECT Reports",
-    description: "Evidence against the Teacher Standards.",
+    description: "Progress reviews and assessments against the Teachers' Standards.",
     category: "assessment",
     icon: "student",
   },
@@ -237,7 +237,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/school-improvement-plan": {
     name: "Improvement Plan",
-    description: "Objectives, actions, owners and timelines.",
+    description: "An action table per priority, with a monitoring calendar.",
     category: "leadership",
     icon: "chart-bar",
   },
@@ -249,13 +249,13 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/lesson-observation-report": {
     name: "Observation",
-    description: "A formal report with agreed next steps.",
+    description: "A developmental report with response and sign-off.",
     category: "leadership",
     icon: "eye",
   },
   "/tools/performance-management": {
     name: "Appraisal Targets",
-    description: "Structured targets for any staff role.",
+    description: "A year of objectives for any staff role, with review columns.",
     category: "leadership",
     icon: "medal",
   },
@@ -455,7 +455,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/ect-report-writer",
     icon: "ect-report",
     label: "ECT Report Writer",
-    description: "Draft evidence-based ECT assessment reports with Teacher Standards references, development plans, and recommended resources.",
+    description: "Draft an ECT's termly progress review or formal assessment, laid out by Teachers' Standard, with agreed targets, comments and sign-off. The name and your outcome are never sent.",
     tag: "Leadership",
   },
   {
@@ -476,14 +476,14 @@ export const TOOLS: Tool[] = [
     href: "/tools/learning-walk-report",
     icon: "learning-walk",
     label: "Learning Walk Report",
-    description: "Draft a professional learning walk report from your observations, with optional recommendations and a next steps timeline.",
+    description: "Draft a developmental learning walk report from your notes: overall picture, strengths, areas for development, recommendations and next steps by when, with a response box and sign-off. Staff are never named.",
     tag: "Leadership",
   },
   {
     href: "/tools/lesson-observation-report",
     icon: "lesson-observation",
     label: "Lesson Observation Report",
-    description: "Write up a formal lesson observation report from your notes, with optional action plan and follow-up support suggestions.",
+    description: "Write up a developmental lesson observation from your notes: strengths, areas for development and recommendations, an optional action plan, and a teacher response box and sign-off. Never graded; names stay on the page.",
     tag: "Leadership",
   },
   {
@@ -511,7 +511,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/performance-management",
     icon: "performance-management",
     label: "Performance Management Targets",
-    description: "Draft SMART performance management targets for any staff role, with objectives, success criteria, evidence, actions, timescales, and review points.",
+    description: "Draft SMART appraisal objectives for any staff role, with success criteria, support and evidence, plus blank mid-year and end-of-year review columns and sign-off. Only the role is sent, never a name.",
     tag: "Leadership",
   },
   {
@@ -546,7 +546,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/school-improvement-plan",
     icon: "sip",
     label: "School Improvement Plans",
-    description: "Draft a detailed, inspection-ready SIP with objectives, action steps, timelines, budget, monitoring schedule, and risk assessment — in table or narrative format.",
+    description: "Draft a school improvement plan from your priorities: an action table for each, with leads, timescales, monitoring and success criteria, blank cost and RAG columns for you, and a half-termly monitoring calendar. Uses Ofsted's renewed framework.",
     tag: "Leadership",
   },
 ];

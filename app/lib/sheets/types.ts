@@ -14,6 +14,7 @@ export const SHEET_VERSION = 1;
 
 // Which tool made a sheet. The list and what differs per tool live in
 // app/lib/sheets/tools.ts.
+import type { StaffName } from "@/app/lib/staff-privacy";
 import type { SheetTool } from "./tools";
 export type { SheetTool };
 
@@ -144,6 +145,11 @@ export interface SheetDoc {
    *  "[PUPIL 1]", "[PUPIL 2]" (app/lib/sheets/roster.ts), swapped for these
    *  names when drawn or exported. Never sent to a model. */
   roster?: string[];
+  /** Staff documents (ECT report, lesson observation): the people named in
+   *  it. The text holds their placeholders ("[ECT]", "[TEACHER]"), swapped
+   *  for these names when drawn or exported (app/lib/staff-privacy.ts).
+   *  Never sent to a model. */
+  staff?: StaffName[];
   /** Lesson plans only. */
   lesson?: LessonMeta;
   /** Exam papers only. */

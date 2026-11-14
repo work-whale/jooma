@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import CurriculumYearFields, { useCurriculumYear } from "@/app/components/CurriculumYearFields";
 import {
@@ -12,7 +12,6 @@ import {
   TopicField,
 } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -23,16 +22,10 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { OBSERVER_PLACEHOLDER, scrubStaff, TEACHER_PLACEHOLDER, type StaffName } from "@/app/lib/staff-privacy";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 
 const TOOL_SLUG = "lesson-observation-report";
-
-const REFINE_CHIPS = [
-  "Make the lesson observation report more detailed",
-  "Expand the section on...",
-  "Do not include...",
-  "Make the tone more...",
-  "Make the lesson observation report more concise",
-];
 
 const OBSERVATION_CATEGORIES = [
   {
@@ -147,6 +140,7 @@ export default function LessonObservationReportForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const { curriculum, setCurriculum, yearGroup, setYearGroup } = useCurriculumYear();
   const [mixed, setMixed] = useState(false);
   const [subject, setSubject] = useState("");
@@ -157,18 +151,21 @@ export default function LessonObservationReportForm({
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [includeActionPlan, setIncludeActionPlan] = useState(false);
   const [includeFollowUpSupport, setIncludeFollowUpSupport] = useState(false);
+  // Printed on the report, never sent: the text carries [TEACHER] and [OBSERVER].
+  const [teacherName, setTeacherName] = useState("");
+  const [observerName, setObserverName] = useState("");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate = curriculum && (mixed || yearGroup) && strengths.trim() && areasForDevelopment.trim();
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, subject, learningObjective, observationFocus, strengths, areasForDevelopment, date, includeActionPlan, includeFollowUpSupport };
+  const formState = { ...languageFormState(language), curriculum, yearGroup, mixed, subject, learningObjective, observationFocus, strengths, areasForDevelopment, date, includeActionPlan, includeFollowUpSupport, teacherName, observerName };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -187,7 +184,10 @@ export default function LessonObservationReportForm({
     setDate((i.date as string) ?? new Date().toISOString().slice(0, 10));
     setIncludeActionPlan(Boolean(i.includeActionPlan));
     setIncludeFollowUpSupport(Boolean(i.includeFollowUpSupport));
+    setTeacherName((i.teacherName as string) ?? "");
+    setObserverName((i.observerName as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -206,25 +206,47 @@ export default function LessonObservationReportForm({
     },
   });
 
+  const staff: StaffName[] = [
+    { placeholder: TEACHER_PLACEHOLDER, name: teacherName },
+    { placeholder: OBSERVER_PLACEHOLDER, name: observerName },
+  ];
+  const scrub = (text: string) => scrubStaff(text, staff.filter((p) => p.name.trim()));
+
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const resolvedYear = mixed ? "Mixed" : yearGroup;
+    const info = {
+      curriculum,
+      yearGroup: resolvedYear,
+      staff,
+      observation: {
+        date,
+        yearGroup: mixed ? "Mixed years" : yearGroup,
+        subject,
+        learningObjective,
+        focus: observationFocus,
+        teacherNamed: !!teacherName.trim(),
+        observerNamed: !!observerName.trim(),
+      },
+    };
     try {
       const res = await fetch("/api/lesson-observation-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Never the names: [TEACHER] and [OBSERVER] stand in for them.
         body: JSON.stringify({
           language,
           curriculum,
-          yearGroup: mixed ? "Mixed" : yearGroup,
-          subject,
-          learningObjective,
-          observationFocus,
-          strengths,
-          areasForDevelopment,
-          date,
+          yearGroup: resolvedYear,
+          subject: scrub(subject),
+          learningObjective: scrub(learningObjective),
+          observationFocus: scrub(observationFocus),
+          strengths: scrub(strengths),
+          areasForDevelopment: scrub(areasForDevelopment),
           includeActionPlan,
           includeFollowUpSupport,
         }),
@@ -233,44 +255,13 @@ export default function LessonObservationReportForm({
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "lessonObservation", info, setResult);
+      if (!finished) throw new Error("The report came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -331,6 +322,21 @@ export default function LessonObservationReportForm({
 
             <LessonObservationDateField value={date} onChange={setDate} />
 
+            <fieldset className="space-y-3">
+              <legend className="block text-sm font-semibold text-gray-800">Names for the report (optional)</legend>
+              <p className="text-xs text-gray-500">Printed on the report only. Names are added in your browser and never sent. Refer to anyone else by role in your notes.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor={`${fieldId}-teacher`} className="block text-sm text-gray-700">Teacher observed</label>
+                  <input id={`${fieldId}-teacher`} type="text" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} placeholder="e.g. Sarah Johnson" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white" />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor={`${fieldId}-observer`} className="block text-sm text-gray-700">Observer</label>
+                  <input id={`${fieldId}-observer`} type="text" value={observerName} onChange={(e) => setObserverName(e.target.value)} placeholder="e.g. David Okafor" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white" />
+                </div>
+              </div>
+            </fieldset>
+
             <LessonObservationOptionsField
               includeActionPlan={includeActionPlan}
               includeFollowUpSupport={includeFollowUpSupport}
@@ -357,6 +363,9 @@ export default function LessonObservationReportForm({
                   setDate(new Date().toISOString().slice(0, 10));
                   setIncludeActionPlan(false);
                   setIncludeFollowUpSupport(false);
+                  setTeacherName("");
+                  setObserverName("");
+                  setRunId(null);
                   setResult(null);
                   setError(null);
                   setConfirmingReset(false);
@@ -381,20 +390,12 @@ export default function LessonObservationReportForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
-        exportFilename={`lesson-observation-${subject.slice(0, 20).replace(/\s+/g, "-") || "report"}`}
-        historyMeta={{ toolSlug: TOOL_SLUG, title: subject || observationFocus || null, input: formState }}
+        exportFilename={`lesson-observation-${(teacherName.trim() || subject).slice(0, 30).replace(/\s+/g, "-").toLowerCase() || "report"}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: [teacherName.trim(), subject].filter(Boolean).join(", ") || observationFocus || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

@@ -35,11 +35,16 @@ import { arrangeEyfsActionPlan, EYFS_ACTION_PARTS, eyfsTimescale } from "./eyfs-
 import { arrangeRisk, RISK_PARTS } from "./risk";
 import { arrangeSensory, SENSORY_PARTS } from "./sensory";
 import { arrangeNewsletter, diaryDate, NEWSLETTER_PARTS } from "./newsletter";
+import { arrangeEct, ECT_PARTS } from "./ect";
+import { APPRAISAL_PARTS, arrangeAppraisal } from "./appraisal";
+import { arrangeLearningWalk, arrangeLessonObservation, LEARNING_WALK_PARTS, LESSON_OBS_PARTS } from "./observation";
+import { arrangeSip, SIP_PARTS } from "./sip";
 
 export const SHEET_TOOLS = [
   "worksheet", "comprehension", "lesson", "exam", "modelAnswer", "letter", "topicMap", "termPlan", "behaviourPlan", "pupilProfile", "cover",
   "homework", "modelText", "targets", "intervention", "phonics", "eyfsPlan",
   "pupilPremium", "eyfsActionPlan", "riskAssessment", "sensory", "newsletter",
+  "ectReport", "appraisal", "lessonObservation", "learningWalk", "sip",
 ] as const;
 export type SheetTool = (typeof SHEET_TOOLS)[number];
 
@@ -924,6 +929,172 @@ export const SHEET_TOOL_PROFILES: Record<SheetTool, SheetToolProfile> = {
     arrange: (raw, info) => arrangeNewsletter(raw, info.newsletter),
     subtitleSuffix: (info) => [info.newsletter?.schoolName?.trim(), info.newsletter?.date ? diaryDate(info.newsletter.date, true) : ""].filter(Boolean).join(" · "),
     parts: NEWSLETTER_PARTS,
+  },
+  ectReport: {
+    slug: "ect-report-writer",
+    joName: "induction progress review or formal assessment for an early career teacher, against the Teachers' Standards",
+    docLabel: "report",
+    joStarters: [
+      "Make the targets more specific",
+      "Add a next step for adaptive teaching",
+      "Make the summary shorter",
+      "Check every target has support by role",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "ECT induction",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is an early career teacher's induction record in England, against the Teachers' Standards (DfE, 2011). The ECT is written as [ECT]: always keep [ECT] exactly, never write a name, and name colleagues by role only (mentor, induction tutor, subject lead).\n" +
+      "- The outcome, the ECT's comments and the sign-off are the school's: never fill them in or change them, and never state or imply whether the ECT is on track or their performance satisfactory. Use only the evidence in the document; write [add evidence] rather than inventing any.",
+    arrange: (raw, info) => arrangeEct(raw, info.ect),
+    subtitleSuffix: (info) => info.ect?.subject?.trim() ?? "",
+    parts: ECT_PARTS,
+  },
+  appraisal: {
+    slug: "performance-management",
+    joName: "set of appraisal (performance management) objectives for one member of staff",
+    docLabel: "objectives",
+    joStarters: [
+      "Make the success criteria more measurable",
+      "Add an objective on pupil wellbeing",
+      "Make the objectives more ambitious",
+      "Link each objective to a Teachers' Standard",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Appraisal",
+    ownPassage: false,
+    // Smaller type, as Risk Assessment: six columns are a lot of words to a page.
+    startDesign: () => ({ ...unitStartDesign(), themeId: "classic", fontScale: "s" }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- These are appraisal objectives for one member of staff, referred to by role only: never write a name. The objectives table has the columns Objective, Success criteria, Support and CPD, Evidence, Mid-year review, End-of-year review. Keep objectives SMART and numbered.\n" +
+      "- The review columns, the details and the sign-off are the school's: leave them blank. Evidence never includes lesson observation grades: lessons are not graded.",
+    arrange: (raw, info) => arrangeAppraisal(raw, info.appraisal),
+    landscape: true,
+    parts: APPRAISAL_PARTS,
+  },
+  lessonObservation: {
+    slug: "lesson-observation-report",
+    joName: "developmental lesson observation report",
+    docLabel: "report",
+    joStarters: [
+      "Make the recommendations more specific",
+      "Make the tone warmer",
+      "Add an action plan target on questioning",
+      "Make it shorter",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Lesson observation",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a developmental lesson observation report. The teacher is written as [TEACHER] and the observer as [OBSERVER]: always keep those placeholders exactly, never write a name, and name anyone else by role only.\n" +
+      "- Never grade, rate or give an overall judgement on the lesson or the teacher: lessons are not graded. The details, the teacher's response and the sign-off are for people to fill in: leave them as they are.",
+    arrange: (raw, info) => arrangeLessonObservation(raw, info.observation),
+    parts: LESSON_OBS_PARTS,
+  },
+  learningWalk: {
+    slug: "learning-walk-report",
+    joName: "learning walk report across several classes",
+    docLabel: "report",
+    joStarters: [
+      "Make the next steps more specific",
+      "Make the summary shorter",
+      "Make the tone more encouraging",
+      "Add a recommendation on feedback",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "Learning walk",
+    ownPassage: false,
+    startDesign: () => ({ themeId: "classic", nameDate: false, objective: false, intro: false, answers: false, pictures: false }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a developmental learning walk report across several classes. Never name a teacher or anyone else: write about classes and year groups, and refer to leaders by role. Never grade a lesson or a teacher.\n" +
+      "- Next steps are one table: When (Within two weeks, By the end of this half term, By the end of the term), Action, Led by (a role), Done (blank, for the school). The details, the response box and the sign-off are for people to fill in.",
+    arrange: (raw, info) => arrangeLearningWalk(raw, info.learningWalk),
+    subtitleSuffix: (info) => info.learningWalk?.classesVisited?.trim() ?? "",
+    parts: LEARNING_WALK_PARTS,
+  },
+  sip: {
+    slug: "school-improvement-plan",
+    joName: "school improvement plan, with an action table per priority",
+    docLabel: "plan",
+    joStarters: [
+      "Make the success criteria more measurable",
+      "Add an action on governor monitoring",
+      "Make the summary shorter",
+      "Spread the monitoring across the year",
+    ],
+    defaultKinds: [],
+    allowedKinds: [],
+    questionDomain: false,
+    vocabularyQuote: false,
+    table: true,
+    joPassage: false,
+    pictures: false,
+    lineNumbers: false,
+    subtitleLabel: "School improvement plan",
+    ownPassage: false,
+    // Smaller type: seven columns to a priority.
+    startDesign: () => ({ ...unitStartDesign(), themeId: "classic", fontScale: "s" }),
+    extraBlocks: ["list"],
+    answersTitle: "Answers",
+    answersNote: ANSWERS_NOTE,
+    restartNumbers: false,
+    partNumbering: false,
+    joRules:
+      "- This is a school improvement plan in England. Each priority is a section with one table: Action, Lead, Timescale, Monitoring, Success criteria, Cost, RAG. Leads are roles, never names. Cost and RAG, the details, the baseline and the monitoring Done column are the school's: leave them blank.\n" +
+      "- Use Ofsted's renewed framework (evaluation areas and report cards); never the old judgements or grades, nor \"intent, implementation and impact\". Never invent data, results or costs: write [school to add].",
+    arrange: (raw, info) => arrangeSip(raw, info.sip),
+    landscape: true,
+    parts: SIP_PARTS,
   },
 };
 

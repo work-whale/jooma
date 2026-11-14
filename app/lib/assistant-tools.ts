@@ -1059,7 +1059,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "School Improvement Plan",
     icon: "sip",
     description:
-      "A SIP with objectives, actions, timelines and monitoring. Use for 'school " +
+      "A SIP with an action table per priority and a monitoring calendar. Use for 'school " +
       "improvement plan', 'SIP', or 'SDP'.",
     fields: {
       type: "object",
@@ -1078,11 +1078,6 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           minimum: 1,
           maximum: 5,
           description: "Plan length in years. Defaults to 1.",
-        },
-        outputFormat: {
-          type: "string",
-          enum: ["table", "narrative"],
-          description: "Layout of the plan. Defaults to table.",
         },
       },
       required: ["areasToImprove"],
@@ -1345,16 +1340,19 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "ECT Report Writer",
     icon: "ect-report",
     description:
-      "An ECT assessment report against the Teachers' Standards. Use for 'ECT " +
-      "report', 'NQT report', or 'early career teacher assessment'.",
+      "An ECT induction record against the Teachers' Standards: a termly " +
+      "progress review or a formal assessment draft, with agreed targets. Use " +
+      "for 'ECT report', 'ECT progress review', 'NQT report', or 'early " +
+      "career teacher assessment'.",
     fields: {
       type: "object",
       properties: {
         ectName: { type: "string", description: "The ECT's name." },
         subject: { type: "string", description: "Their subject or phase." },
-        includePDP: {
-          type: "boolean",
-          description: "Include a professional development plan.",
+        reportType: {
+          type: "string",
+          enum: ["review", "assessment"],
+          description: "'review' for a termly progress review (the default), 'assessment' for a formal assessment at the end of a year.",
         },
         // curriculum omitted: this form defaults it to the National Curriculum.
       },
