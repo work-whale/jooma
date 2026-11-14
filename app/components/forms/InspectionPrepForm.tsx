@@ -7,7 +7,6 @@ import {
   InspectionOptionsField,
 } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -18,17 +17,18 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { resolveInspectionBody } from "@/app/lib/sheets/inspection";
 
 const TOOL_SLUG = "inspection-prep";
 
-const REFINE_CHIPS = [
-  "Translate to...",
-  "Include more questions on...",
-  "Make the output more concise",
-  "Make the output more detailed",
-  "Explain more about...",
-];
-
+/*
+ * Inspection preparation as a designed document (app/lib/sheets/inspection.ts):
+ * per area, questions, a prep action table, optional evidence and success
+ * criteria, and for Ofsted a blank "Where are we now?" tick row. The body is
+ * a dropdown; an old run or prefill with a typed body ("Ofsted", "KHDA") is
+ * mapped onto it. Old markdown runs open in their old view.
+ */
 export default function InspectionPrepForm({
   sidebar,
   launch,
@@ -37,36 +37,48 @@ export default function InspectionPrepForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
-  const [inspectionBody, setInspectionBody] = useState("");
+  const [inspectionBody, setInspectionBody] = useState("ofsted");
+  const [otherBody, setOtherBody] = useState("");
   const [inspectionFocus, setInspectionFocus] = useState("");
   const [includeEvidence, setIncludeEvidence] = useState(false);
   const [includeSuccessCriteria, setIncludeSuccessCriteria] = useState(false);
-  const [includePolicyChanges, setIncludePolicyChanges] = useState(false);
+  const [earlyYears, setEarlyYears] = useState(false);
+  const [postSixteen, setPostSixteen] = useState(false);
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
-  const canGenerate = inspectionBody.trim();
+  const body = resolveInspectionBody(inspectionBody, otherBody);
+  const ofsted = body?.id === "ofsted";
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges };
+  const formState = { ...languageFormState(language), inspectionBody, otherBody, inspectionFocus, includeEvidence, includeSuccessCriteria, earlyYears, postSixteen };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
+
+  /** A body id, or an old typed body mapped onto the dropdown. */
+  const setBody = (v: unknown, other?: unknown) => {
+    const r = resolveInspectionBody(v, other);
+    setInspectionBody(r?.id ?? "ofsted");
+    setOtherBody(r?.id === "other" ? r.name : "");
+  };
 
   const restore = (run: ToolRun) => {
     // The run's own language: English (UK) for runs saved before languages existed.
     setLanguage(parseLanguage(run.input?.language));
     const i = run.input;
-    setInspectionBody((i.inspectionBody as string) ?? "");
+    setBody(i.inspectionBody, i.otherBody);
     setInspectionFocus((i.inspectionFocus as string) ?? "");
     setIncludeEvidence(Boolean(i.includeEvidence));
     setIncludeSuccessCriteria(Boolean(i.includeSuccessCriteria));
-    setIncludePolicyChanges(Boolean(i.includePolicyChanges));
+    setEarlyYears(Boolean(i.earlyYears));
+    setPostSixteen(Boolean(i.postSixteen));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -75,36 +87,40 @@ export default function InspectionPrepForm({
     params: launch,
     onRestore: restore,
     prefill: {
-      inspectionBody: (v) => setInspectionBody(v as string),
+      inspectionBody: (v) => setBody(v),
       inspectionFocus: (v) => setInspectionFocus(v as string),
       includeEvidence: (v) => setIncludeEvidence(v as boolean),
       includeSuccessCriteria: (v) => setIncludeSuccessCriteria(v as boolean),
-      includePolicyChanges: (v) => setIncludePolicyChanges(v as boolean),
+      earlyYears: (v) => setEarlyYears(v as boolean),
+      postSixteen: (v) => setPostSixteen(v as boolean),
     },
   });
 
   const handleGenerate = async () => {
+    if (!body) return;
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = {
+      inspection: { bodyId: body.id, bodyName: body.name, focus: inspectionFocus, includeEvidence, includeSuccessCriteria, earlyYears: ofsted && earlyYears, postSixteen: ofsted && postSixteen },
+    };
     try {
       const res = await fetch("/api/inspection-prep", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, inspectionBody, inspectionFocus, includeEvidence, includeSuccessCriteria, includePolicyChanges }),
+        body: JSON.stringify({
+          language, inspectionBody, otherBody, inspectionFocus, includeEvidence, includeSuccessCriteria,
+          earlyYears: ofsted && earlyYears, postSixteen: ofsted && postSixteen,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "inspection", info, setResult);
+      if (!finished) throw new Error("The guide came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
@@ -113,30 +129,10 @@ export default function InspectionPrepForm({
     }
   };
 
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
-    }
+  const reset = () => {
+    setInspectionBody("ofsted"); setOtherBody(""); setInspectionFocus("");
+    setIncludeEvidence(false); setIncludeSuccessCriteria(false); setEarlyYears(false); setPostSixteen(false);
+    setRunId(null); setResult(null); setError(null); setConfirmingReset(false);
   };
 
   return (
@@ -154,17 +150,20 @@ export default function InspectionPrepForm({
               <LanguageField value={language} onChange={setLanguage} />
             </div>
 
-            <InspectionBodyField value={inspectionBody} onChange={setInspectionBody} />
+            <InspectionBodyField value={inspectionBody} onChange={setInspectionBody} other={otherBody} onChangeOther={setOtherBody} />
 
             <InspectionFocusField value={inspectionFocus} onChange={setInspectionFocus} />
 
             <InspectionOptionsField
               includeEvidence={includeEvidence}
               includeSuccessCriteria={includeSuccessCriteria}
-              includePolicyChanges={includePolicyChanges}
               onChangeEvidence={setIncludeEvidence}
               onChangeSuccessCriteria={setIncludeSuccessCriteria}
-              onChangePolicyChanges={setIncludePolicyChanges}
+              showProvision={ofsted}
+              earlyYears={earlyYears}
+              postSixteen={postSixteen}
+              onChangeEarlyYears={setEarlyYears}
+              onChangePostSixteen={setPostSixteen}
             />
 
             <div className="flex gap-3">
@@ -174,21 +173,12 @@ export default function InspectionPrepForm({
                 title="Reset form?"
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
-                onConfirm={() => {
-                  setInspectionBody("");
-                  setInspectionFocus("");
-                  setIncludeEvidence(false);
-                  setIncludeSuccessCriteria(false);
-                  setIncludePolicyChanges(false);
-                  setResult(null);
-                  setError(null);
-                  setConfirmingReset(false);
-                }}
+                onConfirm={reset}
                 onCancel={() => setConfirmingReset(false)}
               />
               <GenerateButton
                 onClick={handleGenerate}
-                disabled={!canGenerate || isGenerating || unchangedSinceGeneration}
+                disabled={!body || isGenerating || unchangedSinceGeneration}
                 isGenerating={isGenerating}
                 hasResult={result !== null}
               />
@@ -204,20 +194,12 @@ export default function InspectionPrepForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
-        exportFilename={`inspection-prep-${inspectionBody.slice(0, 20).replace(/\s+/g, "-") || "guide"}`}
-        historyMeta={{ toolSlug: TOOL_SLUG, title: inspectionBody || inspectionFocus || null, input: formState }}
+        exportFilename={`inspection-prep-${(body?.name ?? "guide").slice(0, 20).replace(/\s+/g, "-")}`}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: [body?.name, inspectionFocus.trim()].filter(Boolean).join(": ") || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

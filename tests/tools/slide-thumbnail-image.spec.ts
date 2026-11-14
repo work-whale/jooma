@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
  * Slide thumbnails (the slide tray, the Slideshows list, Made with Jooma) all
@@ -24,6 +24,8 @@ const title = `Thumb ${Date.now().toString(36)}`;
 
 test.beforeAll(async () => {
   teacher = await createTeacher("Thumbs");
+  // A teacher with no plan is sent to /free-tools, never the editor.
+  await setPlan(teacher, "pro", "comped");
   const { error } = await admin.from("presentations").insert({
     user_id: teacher.id,
     title,

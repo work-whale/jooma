@@ -23,6 +23,7 @@ export function joSlidesResponseFormat({ pictures = true }: { pictures?: boolean
   const ops = [
     op("rewriteSlide", { slideId: str, fields }),
     op("setSlideText", { slideId: str, textId: str, text: str }),
+    op("setSlideNotes", { slideId: str, notes: str }),
     op("addSlide", { afterSlideId: str, layout: { type: "string", enum: [...ADDABLE_LAYOUTS] }, fields, imageQuery: str }),
     ...(pictures ? [op("setSlideImage", { slideId: str, imageQuery: str })] : []),
     op("deleteSlide", { slideId: str }),

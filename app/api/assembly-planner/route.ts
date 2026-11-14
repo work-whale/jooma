@@ -1,109 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildSystem } from "@/app/lib/systemPrompt";
-import { requestLanguage } from "@/app/lib/languages";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
+import { requestLanguage } from "@/app/lib/languages";
+import { assemblyRequest } from "@/app/lib/assembly-prompt";
 
-
+/*
+ * Streams an assembly script as sheet JSON (app/lib/sheets/assembly.ts): the
+ * parts with what to say and how, a running order that code makes add up to
+ * the length, and a closing that follows the school's choice of reflection,
+ * collective worship or faith school prayer.
+ */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { theme, stageOfSchool, lengthMinutes, additionalNotes } = body;
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-  if (!theme?.trim()) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
-
-  const duration = Number(lengthMinutes) || 20;
-
-  const notesSection = additionalNotes?.trim()
-    ? `\n- Additional notes: ${additionalNotes.trim()}`
-    : "";
-
-  const prompt = `You are an expert UK school leader and assembly specialist. Plan and script a complete assembly for the inputs below.
-
-INPUTS:
-- Theme: ${theme}
-- Stage of school: ${stageOfSchool || "Primary"}
-- Length: ${duration} minutes${notesSection}
-
-Generate a complete Assembly Plan and Script using the structure below. No preamble, no explanation after the output.
-
-# Assembly Script: [Descriptive title based on the theme]
-
-## Overview and Timing Breakdown
-
-List each section with its allocated time as bullet points. The times must add up exactly to ${duration} minutes. End with a **Total: ${duration} minutes** line.
-
-Sections to include (adjust times proportionally to fill exactly ${duration} minutes):
-- Introduction
-- Main Message
-- Story/Example
-- Interactive Element
-- Audience Questions
-- Reflection/Call to Action
-
-## Introduction ([X] minutes)
-
-**Speaker Notes:**
-[Script for the opening — greet the audience, introduce the theme with an engaging hook or question. Write as bullet points — each bullet is one thing the speaker says or does.]
-
-**Delivery Notes:**
-[3–4 practical tips for how to deliver this section well — tone, body language, pacing.]
-
-## Main Message ([X] minutes)
-
-**Speaker Notes:**
-[Core content of the assembly — the key messages the audience should take away. Write as bullet points.]
-
-**Delivery Notes:**
-[3–4 practical delivery tips specific to this section.]
-
-## Story/Example ([X] minutes)
-
-**Speaker Notes:**
-[A short, age-appropriate story or real-world example that illustrates the theme. Write as bullet points. If additional notes reference a specific theme or topic, weave it in here in a natural, relevant way.]
-
-**Delivery Notes:**
-[3–4 tips for storytelling delivery — voice, expression, audience engagement.]
-
-## Interactive Element ([X] minutes)
-
-**Speaker Notes:**
-[A participatory activity or discussion prompt that involves the audience. Write as bullet points. Include differentiation for the stage of school.]
-
-**Delivery Notes:**
-[3–4 tips for managing participation and keeping the activity on track.]
-
-## Audience Questions ([X] minutes)
-
-**Speaker Notes:**
-[4–5 discussion questions to pose to the audience, written as sub-bullets under a "Let's think together:" opener. Questions should be open-ended and age-appropriate.]
-
-**Delivery Notes:**
-[3–4 tips for facilitating responses and managing discussion.]
-
-## Reflection/Call to Action ([X] minutes)
-
-**Speaker Notes:**
-[A closing reflection prompt and a clear call to action — one specific thing the audience can do. Write as bullet points.]
-
-**Delivery Notes:**
-[3 tips for the closing — tone, pace, ending on a positive note.]
-
-## Required Resources
-
-A bullet list of physical or digital resources needed to run this assembly. Include a preparation sub-list if relevant.
-
-Be specific to the stage of school: ${stageOfSchool || "Primary"}. Use UK English throughout. Do not use emojis.`;
+  const built = assemblyRequest(body);
+  if ("error" in built) return NextResponse.json({ error: built.error }, { status: 400 });
 
   return streamChat({
     language: requestLanguage(body),
     toolSlug: "assembly-planner",
     ...(await modelFor("assembly-planner", "gpt-4o")),
-    max_completion_tokens: 4000,
-    messages: [
-      { role: "system", content: buildSystem("You are an expert UK school leader, PSHE specialist, and assembly writer with extensive experience planning and scripting whole-school assemblies for all phases. You write engaging, age-appropriate assembly scripts that are practical to deliver, curriculum-linked where relevant, and aligned with British values and safeguarding principles.") },
-      { role: "user", content: prompt },
-    ],
+    max_completion_tokens: 5000,
+    messages: built.messages,
+    response_format: built.response_format,
   });
 }

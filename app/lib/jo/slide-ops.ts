@@ -70,6 +70,8 @@ export function deckSnapshot(slides: DeckSlide[]) {
         ...(spec ? { layout: spec.layout, fields: skeletonFields(spec), picture: spec.imageQuery ?? "" } : {}),
         // Text boxes only where there is no layout to rebuild from.
         ...(kind === "plain" || kind === "video" ? { texts: s.texts.map((t) => ({ id: t.id, text: t.text })) } : {}),
+        // Speaker notes, where the deck has them (staff and assembly decks).
+        ...(s.notes?.trim() ? { notes: s.notes } : {}),
       };
     }),
   };
@@ -134,6 +136,7 @@ export function slideOpFocus(slides: DeckSlide[], op: SlideOp): SlideFocus | nul
     case "setSlideText":
       return has(op.slideId) ? { slideId: op.slideId, textId: op.textId } : null;
     case "rewriteSlide":
+    case "setSlideNotes":
     case "setSlideImage":
     case "deleteSlide":
     case "moveSlide":
@@ -163,6 +166,15 @@ export function applySlideOp(slides: DeckSlide[], op: SlideOp, artStyle: ArtStyl
       if (!text) return null;
       const next = slides.map((s, j) => (j === i ? { ...s, texts: s.texts.map((t) => (t.id === op.textId ? { ...t, text } : t)) } : s));
       return { slides: next, focus: { slideId: op.slideId, textId: op.textId } };
+    }
+    case "setSlideNotes": {
+      const i = index(op.slideId);
+      if (i === -1) return null;
+      // "" rather than deleting, so a theme change cannot bring the
+      // generated notes back from the skeleton.
+      const notes = clean(op.notes ?? "");
+      const next = slides.map((s, j) => (j === i ? { ...s, notes } : s));
+      return { slides: next, focus: { slideId: op.slideId } };
     }
     case "rewriteSlide": {
       const i = index(op.slideId);
@@ -232,6 +244,7 @@ export function applySlideOp(slides: DeckSlide[], op: SlideOp, artStyle: ArtStyl
         backgroundArtScrim: s.backgroundArtScrim,
         audios: s.audios,
         videos: s.videos,
+        ...(s.notes !== undefined ? { notes: s.notes } : {}),
       } as DeckSlide;
       return { slides: slides.map((x, j) => (j === i ? slide : x)), focus: { slideId: s.id } };
     }
@@ -295,6 +308,8 @@ export function fillSlidePicture(
       artStyleId: s.artStyleId,
       backgroundArt: s.backgroundArt,
       backgroundArtScrim: s.backgroundArtScrim,
+      // The slide's own (maybe edited) notes, not the skeleton's.
+      ...(s.notes !== undefined ? { notes: s.notes } : {}),
     } as DeckSlide;
   });
 }
@@ -316,6 +331,7 @@ export function isSlideOp(v: unknown): v is SlideOp {
   if (!s("label")) return false;
   switch (o.op) {
     case "setSlideText": return s("slideId") && s("textId") && s("text");
+    case "setSlideNotes": return s("slideId") && s("notes");
     case "rewriteSlide": return s("slideId") && Array.isArray(o.fields);
     case "addSlide": return s("afterSlideId") && s("layout") && Array.isArray(o.fields) && s("imageQuery");
     case "setSlideImage": return s("slideId") && s("imageQuery");

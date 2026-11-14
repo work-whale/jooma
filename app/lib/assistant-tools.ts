@@ -581,6 +581,13 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           maximum: 120,
           description: "Assembly length in minutes. Defaults to 20.",
         },
+        reflection: {
+          type: "string",
+          enum: ["reflection", "worship", "faith"],
+          description:
+            "How it closes: 'reflection' (a quiet reflection, no prayer; the default), 'worship' (collective worship of a broadly Christian character) or 'faith' (a faith school's prayer; give faith).",
+        },
+        faith: { type: "string", description: "Only with reflection 'faith': the school's faith, e.g. 'Catholic', 'Church of England', 'Muslim'." },
       },
       required: ["theme"],
     },
@@ -953,10 +960,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
   },
   {
     slug: "cpd-slideshow",
-    label: "CPD Slideshow",
+    label: "Staff Slides",
     icon: "cpd-slideshow",
     description:
-      "A staff professional-development presentation. Use for 'CPD', 'staff " +
+      "A staff training (CPD) deck with speaker notes, opened in the slide editor. Use for 'CPD', 'staff " +
       "training', or 'INSET' slides — NOT for teaching pupils.",
     fields: {
       type: "object",
@@ -964,23 +971,14 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         topic: { type: "string", description: "The CPD topic." },
         slideCount: {
           type: "integer",
-          minimum: 2,
-          maximum: 20,
-          description: "How many slides. Defaults to 4.",
+          minimum: 3,
+          maximum: 15,
+          description: "How many content slides, the title included. Defaults to 6.",
         },
         presentationFocus: {
           type: "string",
           enum: ["Practical application", "Research and theory"],
           description: "Emphasis of the session. Defaults to practical.",
-        },
-        contentFormat: {
-          type: "string",
-          enum: ["Text", "Text and bullet point summary"],
-          description: "Slide content style.",
-        },
-        includeImageSuggestions: {
-          type: "boolean",
-          description: "Suggest an image for each slide.",
         },
       },
       required: ["topic"],
@@ -995,7 +993,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "Meeting Planner",
     icon: "meeting-planner",
     description:
-      "A timed agenda and facilitation guide for a meeting. Use for 'meeting', " +
+      "A timed agenda with facilitator notes, minutes boxes and an action log. Never put a pupil's name in any field. Use for 'meeting', " +
       "'agenda', or 'plan a staff meeting'.",
     fields: {
       type: "object",
@@ -1020,7 +1018,11 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
             "Defaults to '60'.",
         },
         includeIcebreaker: { type: "boolean", description: "Open with an icebreaker." },
-        includeActionItems: { type: "boolean", description: "Close with action items." },
+        includeActionItems: { type: "boolean", description: "Add a blank action log for the meeting to fill in." },
+        startTime: {
+          type: "string",
+          description: "Optional start time as HH:MM on the 24 hour clock, e.g. '15:30', so the agenda shows clock times.",
+        },
       },
       required: ["purpose", "participants"],
     },
@@ -1039,15 +1041,17 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
       properties: {
         inspectionBody: {
           type: "string",
-          description: "Who is inspecting, e.g. 'Ofsted', 'ISI'. Defaults to Ofsted.",
+          description:
+            "Who is inspecting: 'ofsted', 'isi', 'siams', 'estyn', 'education-scotland', 'eti', or the body's own name (e.g. 'KHDA'). Defaults to Ofsted.",
         },
         inspectionFocus: {
           type: "string",
           description: "The focus area, e.g. 'Reading', 'Attendance and behaviour'.",
         },
-        includeEvidence: { type: "boolean", description: "Include evidence examples." },
+        includeEvidence: { type: "boolean", description: "Include evidence the school already keeps." },
         includeSuccessCriteria: { type: "boolean", description: "Include success criteria." },
-        includePolicyChanges: { type: "boolean", description: "Suggest policy changes." },
+        earlyYears: { type: "boolean", description: "The school has nursery or reception classes (Ofsted inspects early years)." },
+        postSixteen: { type: "boolean", description: "The school has a sixth form (Ofsted inspects post-16 provision)." },
       },
       required: ["inspectionBody"],
     },
@@ -1059,7 +1063,7 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "School Improvement Plan",
     icon: "sip",
     description:
-      "A SIP with objectives, actions, timelines and monitoring. Use for 'school " +
+      "A SIP with an action table per priority and a monitoring calendar. Use for 'school " +
       "improvement plan', 'SIP', or 'SDP'.",
     fields: {
       type: "object",
@@ -1078,11 +1082,6 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
           minimum: 1,
           maximum: 5,
           description: "Plan length in years. Defaults to 1.",
-        },
-        outputFormat: {
-          type: "string",
-          enum: ["table", "narrative"],
-          description: "Layout of the plan. Defaults to table.",
         },
       },
       required: ["areasToImprove"],
@@ -1345,16 +1344,19 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
     label: "ECT Report Writer",
     icon: "ect-report",
     description:
-      "An ECT assessment report against the Teachers' Standards. Use for 'ECT " +
-      "report', 'NQT report', or 'early career teacher assessment'.",
+      "An ECT induction record against the Teachers' Standards: a termly " +
+      "progress review or a formal assessment draft, with agreed targets. Use " +
+      "for 'ECT report', 'ECT progress review', 'NQT report', or 'early " +
+      "career teacher assessment'.",
     fields: {
       type: "object",
       properties: {
         ectName: { type: "string", description: "The ECT's name." },
         subject: { type: "string", description: "Their subject or phase." },
-        includePDP: {
-          type: "boolean",
-          description: "Include a professional development plan.",
+        reportType: {
+          type: "string",
+          enum: ["review", "assessment"],
+          description: "'review' for a termly progress review (the default), 'assessment' for a formal assessment at the end of a year.",
         },
         // curriculum omitted: this form defaults it to the National Curriculum.
       },

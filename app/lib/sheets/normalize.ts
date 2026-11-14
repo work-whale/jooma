@@ -8,6 +8,7 @@
 // as a fraction.
 
 import { cleanMathText } from "@/app/lib/math-text";
+import type { StaffName } from "@/app/lib/staff-privacy";
 import { seedFrom } from "@/app/lib/seeded-random";
 import { gridLetters, refreshPuzzle, type PuzzleDefaults } from "./puzzles";
 import { sheetToolProfile } from "./tools";
@@ -373,6 +374,8 @@ export interface NormalizeContext {
   pupil?: PupilMeta;
   /** Newsletters: the pupils celebrated, kept on the document, never sent. */
   roster?: string[];
+  /** Staff documents: the people named in it, kept on the document, never sent. */
+  staff?: StaffName[];
 }
 
 /** The most pictures a generated sheet holds: one near the top and up to two
@@ -431,6 +434,7 @@ export function normalizeDraft(raw: unknown, ctx: NormalizeContext): SheetDoc {
     ...(ctx.unit ? { unit: ctx.unit } : {}),
     ...(ctx.pupil ? { pupil: ctx.pupil } : {}),
     ...(ctx.roster?.length ? { roster: ctx.roster } : {}),
+    ...(ctx.staff ? { staff: ctx.staff } : {}),
     title: text(r.title),
     subtitle: ctx.subtitle,
     objective: text(r.objective),

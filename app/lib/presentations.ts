@@ -261,6 +261,10 @@ export interface SlideJSON {
    *  src from this slide's `images[0]`. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   skeleton?: Record<string, any>;
+  /** Speaker notes: what the presenter says. Staff and assembly decks have
+   *  them; the editor shows them under the slide and PowerPoint gets them as
+   *  slide notes. Never drawn on the slide. */
+  notes?: string;
   /** Deck-level active theme. Only meaningful on slides[0] — the first slide
    *  acts as the carrier for deck-wide metadata so we don't need a new DB
    *  column. Read via getDeckTheme / write via setDeckTheme. */

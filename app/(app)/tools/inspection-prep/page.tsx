@@ -19,29 +19,29 @@ export default async function InspectionPrepPage({
           icon={<Search className="w-5 h-5 text-rose-600" />}
 
           title="Inspection Prep Questions"
-          description="Generate self-evaluation questions and preparation actions aligned to your inspection framework. For Ofsted, the guide follows the renewed framework's report card: inclusion, curriculum and teaching, achievement, attendance and behaviour, personal development and wellbeing, leadership and governance, early years and post-16 where relevant, and safeguarding as met or not met."
+          description="A preparation guide laid out area by area. For Ofsted it follows the renewed framework's report card: inclusion, curriculum and teaching, achievement, attendance and behaviour, personal development and wellbeing, leadership and governance, early years and post-16 where you have them, and safeguarding as met or not met. Each area ends with a blank row for leaders to tick where they are now: the guide never grades you."
           steps={[
             {
-              label: 'Enter the inspection body',
+              label: 'Pick the inspection body',
               detail:
-                'Specify the inspectorate or accrediting body — e.g. Ofsted, ISI, CIS, KHDA.',
+                'Ofsted, ISI, SIAMS, Estyn, Education Scotland or ETI, or type another (for example CIS or KHDA).',
             },
             {
               label: 'Add a focus area',
               detail:
-                'Optionally narrow the output to a specific judgement area such as safeguarding, SEND, or curriculum intent.',
+                'Optionally give extra weight to an area such as safeguarding, SEND or early reading.',
               optional: true,
             },
             {
-              label: 'Select additional sections',
+              label: 'Choose the extras',
               detail:
-                'Optionally include evidence examples, success criteria, or recent policy developments.',
+                'For Ofsted, tick early years or a sixth form if you have them. Optionally add the evidence you already keep and success criteria.',
               optional: true,
             },
             {
-              label: 'Generate',
+              label: 'Generate, then refine with Jo',
               detail:
-                'Get framework-aligned self-evaluation questions and concrete preparation actions for your senior leadership team.',
+                'Get questions, a prep action table with leads and dates per area, and a self-check row. Ask Jo to change anything, then print or download it.',
             },
           ]}
         />

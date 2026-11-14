@@ -17,6 +17,7 @@
 // Pure, free of React, normalize.ts and schema.ts.
 
 import { undash } from "./undash";
+import { signOffTable } from "./signoff";
 
 export const RISK_PARTS: { id: string; label: string }[] = [
   { id: "details", label: "Details" },
@@ -183,13 +184,7 @@ export function arrangeRisk(raw: unknown, info: RiskInfo = {}): Raw {
       emoji: "",
       instructions: offsite ? "Check against your school's educational visits policy and the OEAP National Guidance before the visit is approved." : "Check against your school's health and safety policy before the activity goes ahead.",
       blocks: rows.length
-        ? [
-            {
-              type: "table",
-              headers: ["Role", "Name", "Signature", "Date"],
-              rows: [[lead, info.leader?.trim() ?? "", "", ""], ...(offsite ? [["Educational Visits Coordinator (EVC)", "", "", ""]] : []), ["Headteacher", "", "", ""]],
-            },
-          ]
+        ? [signOffTable([[lead, info.leader], ...(offsite ? [["Educational Visits Coordinator (EVC)"] as [string]] : []), ["Headteacher"]])!]
         : [],
     },
   ];

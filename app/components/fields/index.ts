@@ -35,7 +35,6 @@ export { default as BehaviouralTriggersField } from "./BehaviouralTriggersField"
 export { default as PlanStartDateField } from "./PlanStartDateField";
 export { default as ReviewDateField } from "./ReviewDateField";
 export { default as EctNameField } from "./EctNameField";
-export { default as IncludePdpField } from "./IncludePdpField";
 export { default as EyfsObjectiveField } from "./EyfsObjectiveField";
 export { default as InspectionBodyField } from "./InspectionBodyField";
 export { default as InspectionFocusField } from "./InspectionFocusField";
@@ -80,4 +79,4 @@ export { default as SIPSchoolTypeField } from "./SIPSchoolTypeField";
 export { default as SIPAreasField } from "./SIPAreasField";
 export { default as SIPContextField } from "./SIPContextField";
 export { default as SIPTimeframeField } from "./SIPTimeframeField";
-export { default as SIPOutputFormatField } from "./SIPOutputFormatField";
+export { default as AssemblyReflectionField } from "./AssemblyReflectionField";

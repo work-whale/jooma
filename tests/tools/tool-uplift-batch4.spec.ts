@@ -49,84 +49,8 @@ async function savedSheet(slug: string, before: number): Promise<SavedSheet> {
   return JSON.parse((await runs(slug))[0].output as string) as SavedSheet;
 }
 
-// ── Step 0: the ECT's name never reaches the model ─────────────────────────
-
-const ECT_REPORT = `# ECT Progress Report: [ECT]
-
-## Strengths
-
-[ECT] explains clearly, with worked examples (Teacher Standard 2: Promote good progress and outcomes by pupils).
-
-## Professional Summary
-
-[ECT] is making good progress.`;
-
-test("ECT report: the name is on the page but in no request body (generate, Ask Jo, Refine)", async ({ page }) => {
-  const bodies: string[] = [];
-  await page.route("**/api/ect-report-writer", (route) => {
-    bodies.push(route.request().postData() ?? "");
-    return route.fulfill(plain(ECT_REPORT));
-  });
-  await page.route("**/api/jo", (route) => {
-    const sent = route.request().postData() ?? "";
-    bodies.push(sent);
-    const sections = (JSON.parse(sent) as { snapshot: { sections: { id: string; heading: string }[] } }).snapshot.sections;
-    const strengths = sections.find((s) => s.heading === "Strengths")!.id;
-    return route.fulfill(
-      plain(
-        JSON.stringify({
-          reply: "Done.",
-          clarify: null,
-          ops: [{ op: "editText", label: "Sharpening a strength", sectionId: strengths, find: "[ECT] explains clearly", replace: "[ECT] explains very clearly" }],
-          summary: "One strength is sharper.",
-        }),
-      ),
-    );
-  });
-  await page.route("**/api/modify", (route) => {
-    const sent = route.request().postData() ?? "";
-    bodies.push(sent);
-    const current = (JSON.parse(sent) as { currentContent: string }).currentContent;
-    return route.fulfill(plain(current.replace("is making good progress", "is making strong progress")));
-  });
-
-  await signIn(page, teacher);
-  await page.goto("/tools/ect-report-writer", NAV);
-  await page.getByLabel("ECT name").fill("Sarah Johnson");
-  await page.getByLabel("Subject").fill("Maths");
-  await page.getByLabel("Strengths", { exact: true }).fill("Sarah models clearly; Johnson's routines are secure.");
-  await page.getByLabel("Areas for development", { exact: true }).fill("Adaptive teaching for pupils with SEND.");
-  await generate(page).click();
-
-  const doc = page.locator(".ProseMirror");
-  await expect(doc).toContainText("ECT Progress Report: Sarah Johnson", NAV);
-  await expect(doc).toContainText("Sarah Johnson explains clearly");
-  await expect(doc).toContainText("Johnson is making good progress");
-  // The run is saved before Jo is asked: the save gives the document its id,
-  // which starts Jo's conversation afresh (a turn sent before it would be
-  // cut off; that race predates this batch).
-  await expect.poll(async () => (await runs("ect-report-writer")).length, NAV).toBeGreaterThan(0);
-  await page.waitForTimeout(500);
-
-  // Ask Jo: Jo is handed [ECT] and its edit lands with the name back in.
-  await page.getByTestId("jo-input").fill("Make the first strength sharper");
-  await page.getByTestId("jo-send").click();
-  await expect(doc).toContainText("Sarah Johnson explains very clearly", NAV);
-  // Jo's turn commits when it ends; refining before then would be overwritten.
-  await expect(page.getByTestId("jo-changes")).toContainText("1 change", NAV);
-
-  // Refine works on the placeholder too.
-  await page.getByRole("button", { name: "Make more concise" }).click();
-  await page.getByRole("button", { name: /^refine$/i }).click();
-  await expect(doc).toContainText("Johnson is making strong progress", NAV);
-
-  expect(bodies.length).toBe(3);
-  for (const b of bodies) {
-    expect(b).not.toMatch(/Sarah|Johnson/);
-    expect(b).not.toMatch(/ectName/);
-  }
-  expect(bodies[0]).toContain("[ECT] models clearly; [ECT]'s routines are secure.");
-});
+// Step 0's ECT name test moved to tool-uplift-batch5.spec.ts when the ECT
+// report became a sheet (generate and Ask Jo; Refine gave way to Jo).
 
 // ── Step 0: a table taller than a page runs onto the next, header repeated ─
 

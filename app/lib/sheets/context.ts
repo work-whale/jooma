@@ -18,6 +18,15 @@ import type { LetterInfo } from "./letter";
 import type { PupilFact } from "./behaviour";
 import type { RiskInfo } from "./risk";
 import type { NewsletterInfo } from "./newsletter";
+import type { StaffName } from "@/app/lib/staff-privacy";
+import type { EctInfo } from "./ect";
+import type { AppraisalInfo } from "./appraisal";
+import type { LearningWalkInfo, LessonObservationInfo } from "./observation";
+import type { SipInfo } from "./sip";
+import type { InspectionInfo } from "./inspection";
+import type { PolicyInfo } from "./policy";
+import type { MeetingInfo } from "./meeting";
+import type { AssemblyInfo } from "./assembly";
 
 export interface SheetRequestInfo {
   yearGroup?: string;
@@ -79,6 +88,32 @@ export interface SheetRequestInfo {
   /** Newsletters: the celebrations and dates typed into the form, put on
    *  the page by code and never sent. Its pupils become the roster. */
   newsletter?: NewsletterInfo;
+  /** Staff documents: the people named in it ("[ECT]", "[TEACHER]" and
+   *  their names), kept on the document and never sent. */
+  staff?: StaffName[];
+  /** ECT reports: the report type, the point in induction and the outcome
+   *  the induction tutor picked (printed by code, never sent). */
+  ect?: EctInfo;
+  /** Appraisal objectives: the role, pay range and how many objectives. */
+  appraisal?: AppraisalInfo;
+  /** Lesson observations: the lesson's details, printed by code, and whether
+   *  the teacher and observer were named (the names are in `staff`). */
+  observation?: LessonObservationInfo;
+  /** Learning walks: the date, classes and focus, printed by code. */
+  learningWalk?: LearningWalkInfo;
+  /** School improvement plans: the school type and how many years. */
+  sip?: SipInfo;
+  /** Inspection prep: the body, the focus, which optional parts were asked
+   *  for, and whether the school has early years or post-16 provision. */
+  inspection?: InspectionInfo;
+  /** Policies: which policy (for the catalogue facts), the curriculum (for
+   *  England or not) and whether it is a full draft or an outline. */
+  policy?: PolicyInfo;
+  /** Meetings: the length, start time and participants, printed by code.
+   *  A pupil the meeting is about is in `pupil`, never sent. */
+  meeting?: MeetingInfo;
+  /** Assemblies: the stage, the length and the closing the school picked. */
+  assembly?: AssemblyInfo;
 }
 
 export function sheetContext(tool: SheetTool, info: SheetRequestInfo): NormalizeContext {
@@ -105,6 +140,7 @@ export function sheetContext(tool: SheetTool, info: SheetRequestInfo): Normalize
     ...(profile.unitMeta ? { unit: profile.unitMeta(info) } : {}),
     ...(profile.aboutPupil && info.pupil ? { pupil: { name: info.pupil.name.trim(), pronouns: info.pupil.pronouns } } : {}),
     ...(info.newsletter ? { roster: newsletterRoster(info.newsletter) } : {}),
+    ...(info.staff ? { staff: info.staff.map((s) => ({ placeholder: s.placeholder, name: s.name.trim() })) } : {}),
     leadingSections:
       profile.ownPassage && info.textSource === "own" && info.ownText?.trim()
         ? [ownPassageSection(info.ownText)]

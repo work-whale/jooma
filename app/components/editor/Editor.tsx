@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Check, Loader2 } from "lucide-react";
 import EditorTopBar from "./EditorTopBar";
 import EditPromptModal from "./EditPromptModal";
+import SpeakerNotesPanel from "./SpeakerNotesPanel";
+import { deckKindOf, deckRunSlug, slideNotesText } from "@/app/lib/deck-kind";
 import { EditorLanguageContext } from "./EditorLanguage";
 import { parseLanguage } from "@/app/lib/languages";
 import { GENERATION_STORAGE_KEY } from "@/app/components/slideshow/GenerateModal";
@@ -76,6 +78,8 @@ type SlideState = DeckSlide;
 
 interface GenerationParams {
   topic: string;
+  /** Staff Slides or an assembly's slides (app/lib/deck-kind.ts). */
+  deckKind?: "staff" | "assembly";
   year?: string;
   readingLevel?: string;
   language?: string;
@@ -203,6 +207,8 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       skeleton: s.skeleton,
       themeId: s.themeId,
       artStyleId: s.artStyleId,
+      // Speaker notes (staff and assembly decks); no key on a pupil deck.
+      ...(s.notes !== undefined ? { notes: s.notes } : {}),
     }));
   });
   const [activeIndex, setActiveIndex] = useState(0);
@@ -936,6 +942,8 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         skeleton: s.skeleton,
         themeId: s.themeId,
         artStyleId: s.artStyleId,
+        // Speaker notes (staff and assembly decks); no key on a pupil deck.
+        ...(s.notes !== undefined ? { notes: s.notes } : {}),
       }));
       // While we still inline base64 image data in slides, a save can be many
       // MB. Log the payload size so it's obvious when Postgres' statement
@@ -1195,6 +1203,10 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   const updateSlide = useCallback((patch: Partial<SlideJSON>) => {
     mutateActiveSlide((s) => ({ ...s, ...patch }));
   }, [mutateActiveSlide]);
+
+  // Staff and assembly decks carry speaker notes; a pupil deck never shows
+  // the notes panel, so its editor is unchanged.
+  const deckHasNotes = slides.some((s) => s.notes !== undefined);
 
   // Auto-measure: if the current slide has a backgroundImage but no stored natural
   // dimensions (e.g. data persisted before width/height was added), load them so
@@ -2653,6 +2665,9 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
       for (const s of slidesRef.current) {
         const slide = pptx.addSlide();
+        // Speaker notes (staff and assembly decks) as PowerPoint's own notes.
+        const notes = slideNotesText(s);
+        if (notes) slide.addNotes(notes);
         if (s.backgroundImage) {
           slide.background = s.backgroundImage.startsWith("data:")
             ? { data: s.backgroundImage }
@@ -2897,7 +2912,9 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         // /folders matches runs to the TOOLS registry on `/tools/<slug>`, so
         // the route name never resolved and produced a folder literally called
         // "generate-slideshow". Cost/usage tracking still keys on the route.
-        toolSlug: "slideshow",
+        // A Staff Slides deck is saved under that tool, so its history panel
+        // reopens it (app/lib/deck-kind.ts).
+        toolSlug: deckRunSlug(deckKindOf(generationParams?.deckKind)),
         title: titleRef.current || "Untitled deck",
         input: {
           presentationId: presentation.id,
@@ -3425,7 +3442,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
             style={{ scrollbarWidth: "none" }}
             onMouseDown={handleViewportMouseDown}
           >
-            <div className="min-h-full min-w-full flex items-center justify-center px-4 md:px-8 pt-8 pb-48 md:pb-36">
+            <div className={`min-h-full min-w-full flex ${deckHasNotes ? "flex-col " : ""}items-center justify-center px-4 md:px-8 pt-8 pb-48 md:pb-36`}>
               <div className="shrink-0" style={{ width: SLIDE_W * zoom, height: SLIDE_H * zoom }}>
                 <div
                   ref={slideWrapperRef}
@@ -3813,6 +3830,14 @@ export default function Editor({ presentation, generationParams, guest }: Props)
                   })()}
                 </div>
               </div>
+              {deckHasNotes && slides[activeIndex] && (
+                <SpeakerNotesPanel
+                  notes={slides[activeIndex].notes ?? ""}
+                  onChange={(notes) => updateSlide({ notes })}
+                  width={SLIDE_W * zoom}
+                  disabled={!!generating}
+                />
+              )}
             </div>
           </div>
           {/* Floating contextual toolbar (or adjust-mode banner) */}

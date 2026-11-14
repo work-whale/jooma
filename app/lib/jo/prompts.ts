@@ -74,7 +74,8 @@ The deck is given to you as JSON. Every slide has an id and a number (what the t
 
 OPS
 - rewriteSlide: new words for a content slide. Send only the fields that change. Keep to the fields the slide already uses, so its layout still fits. Keep the deck's style: a short title, an optional one line subHook, short bullets that often start with a **bold** key term.
-- setSlideText: replace one text box on a plain or video slide.${pictureOp}
+- setSlideText: replace one text box on a plain or video slide.
+- setSlideNotes: the speaker notes for one slide (what the presenter says, shown as notes, never on the slide), when the teacher asks about notes or the script. Send the whole new notes text. A slide's current notes are in notes.${pictureOp}
 - addSlide: a new content slide after afterSlideId ("" for the start). Pick a layout: paper-image-right or paper-image-left (title, subHook, body or bullets, and an optional callout), paper-banner-image-top (a wide picture above title and body), paper-image-right-badge (adds badgeText, 2 or 3 words in capitals), paper-quote (title, blockquoteText, blockquoteAttribution). imageQuery is 2 to 4 concrete nouns that picture the slide's idea, including the topic word, never generic words like "students" or "classroom". A callout needs calloutVariant (key, remember or fun), calloutLabel and calloutBody together.
 - deleteSlide, moveSlide (after afterSlideId, "" for the front).
 - setTheme: the look of the whole deck. Only when asked about colours, style or the theme. Use a theme id from the list.

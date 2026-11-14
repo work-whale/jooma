@@ -57,7 +57,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/cpd-slideshow": {
     name: "Staff Slides",
-    description: "A training deck for staff, with activities and next steps.",
+    description: "A training deck with speaker notes, in the slide editor.",
     category: "slides",
     icon: "projector-screen",
   },
@@ -165,7 +165,7 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/ect-report-writer": {
     name: "ECT Reports",
-    description: "Evidence against the Teacher Standards.",
+    description: "Progress reviews and assessments against the Teachers' Standards.",
     category: "assessment",
     icon: "student",
   },
@@ -217,13 +217,13 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/assembly-planner": {
     name: "Assembly",
-    description: "A timed script with reflection points.",
+    description: "A timed script, then slides with speaker notes.",
     category: "communication",
     icon: "megaphone",
   },
   "/tools/meeting-planner": {
     name: "Meeting Agenda",
-    description: "A timed agenda and facilitation guide.",
+    description: "A timed agenda, notes, minutes and action log.",
     category: "communication",
     icon: "users-three",
   },
@@ -231,13 +231,13 @@ export const V2_META: Record<string, V2Meta> = {
   // Leadership
   "/tools/inspection-prep": {
     name: "Inspection Prep",
-    description: "The questions you will be asked, and answers.",
+    description: "Questions and actions per area, with a self-check.",
     category: "leadership",
     icon: "magnifying-glass",
   },
   "/tools/school-improvement-plan": {
     name: "Improvement Plan",
-    description: "Objectives, actions, owners and timelines.",
+    description: "An action table per priority, with a monitoring calendar.",
     category: "leadership",
     icon: "chart-bar",
   },
@@ -249,19 +249,19 @@ export const V2_META: Record<string, V2Meta> = {
   },
   "/tools/lesson-observation-report": {
     name: "Observation",
-    description: "A formal report with agreed next steps.",
+    description: "A developmental report with response and sign-off.",
     category: "leadership",
     icon: "eye",
   },
   "/tools/performance-management": {
     name: "Appraisal Targets",
-    description: "Structured targets for any staff role.",
+    description: "A year of objectives for any staff role, with review columns.",
     category: "leadership",
     icon: "medal",
   },
   "/tools/policy-generator": {
     name: "Policies",
-    description: "A whole policy or a single section.",
+    description: "A numbered policy with review and approval details.",
     category: "leadership",
     icon: "gavel",
   },
@@ -420,14 +420,14 @@ export const TOOLS: Tool[] = [
     href: "/tools/cpd-slideshow",
     icon: "cpd-slideshow",
     label: "CPD Slideshow Generator",
-    description: "Generate a professional development presentation for teachers, with slide-by-slide content, bullet points, and image suggestions.",
+    description: "Make a staff training deck in the slide editor: pictures, discussion tasks and speaker notes on every slide, any theme, presented in class or downloaded for PowerPoint with the notes.",
     tag: "Planning",
   },
   {
     href: "/tools/policy-generator",
     icon: "policy",
     label: "Policy Generator",
-    description: "Draft a full school policy or a policy section structure for any area of school life, ready to customise for your setting.",
+    description: "Draft a full school policy or a section outline: numbered sections, roles and legislation, with its statutory status, review cycle and approver from DfE guidance, plus a version history.",
     tag: "Planning",
   },
   {
@@ -455,7 +455,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/ect-report-writer",
     icon: "ect-report",
     label: "ECT Report Writer",
-    description: "Draft evidence-based ECT assessment reports with Teacher Standards references, development plans, and recommended resources.",
+    description: "Draft an ECT's termly progress review or formal assessment, laid out by Teachers' Standard, with agreed targets, comments and sign-off. The name and your outcome are never sent.",
     tag: "Leadership",
   },
   {
@@ -469,28 +469,28 @@ export const TOOLS: Tool[] = [
     href: "/tools/inspection-prep",
     icon: "inspection-prep",
     label: "Inspection Prep Questions",
-    description: "Generate self-evaluation questions and preparation actions for any inspection or accreditation body, with optional evidence examples and success criteria.",
+    description: "Prepare for Ofsted, ISI, SIAMS, Estyn, Education Scotland or ETI, area by area: self-evaluation questions, a prep action table, optional evidence and success criteria, and a blank row to tick where you are now.",
     tag: "Leadership",
   },
   {
     href: "/tools/learning-walk-report",
     icon: "learning-walk",
     label: "Learning Walk Report",
-    description: "Draft a professional learning walk report from your observations, with optional recommendations and a next steps timeline.",
+    description: "Draft a developmental learning walk report from your notes: overall picture, strengths, areas for development, recommendations and next steps by when, with a response box and sign-off. Staff are never named.",
     tag: "Leadership",
   },
   {
     href: "/tools/lesson-observation-report",
     icon: "lesson-observation",
     label: "Lesson Observation Report",
-    description: "Write up a formal lesson observation report from your notes, with optional action plan and follow-up support suggestions.",
+    description: "Write up a developmental lesson observation from your notes: strengths, areas for development and recommendations, an optional action plan, and a teacher response box and sign-off. Never graded; names stay on the page.",
     tag: "Leadership",
   },
   {
     href: "/tools/meeting-planner",
     icon: "meeting-planner",
     label: "Meeting Planner",
-    description: "Plan a structured, productive meeting with a facilitation guide, timed agenda, discussion structure, and optional action items.",
+    description: "Plan a meeting: a timed agenda that adds up to your length, facilitator notes you can hide to send the agenda alone, minutes boxes and a blank action log. A pupil's name stays on the page.",
     tag: "Leadership",
   },
   {
@@ -511,7 +511,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/performance-management",
     icon: "performance-management",
     label: "Performance Management Targets",
-    description: "Draft SMART performance management targets for any staff role, with objectives, success criteria, evidence, actions, timescales, and review points.",
+    description: "Draft SMART appraisal objectives for any staff role, with success criteria, support and evidence, plus blank mid-year and end-of-year review columns and sign-off. Only the role is sent, never a name.",
     tag: "Leadership",
   },
   {
@@ -532,7 +532,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/assembly-planner",
     icon: "assembly",
     label: "Assembly Planner",
-    description: "Plan a complete assembly around any theme — with a timed script, speaker notes, story, interactive element, and delivery guidance.",
+    description: "Plan an assembly around any theme: a running order that fits your time, what to say and how for each part, a story, questions and a closing reflection, collective worship or prayer. Then make the slides, with speaker notes, in one click.",
     tag: "Planning",
   },
   {
@@ -546,7 +546,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/school-improvement-plan",
     icon: "sip",
     label: "School Improvement Plans",
-    description: "Draft a detailed, inspection-ready SIP with objectives, action steps, timelines, budget, monitoring schedule, and risk assessment — in table or narrative format.",
+    description: "Draft a school improvement plan from your priorities: an action table for each, with leads, timescales, monitoring and success criteria, blank cost and RAG columns for you, and a half-termly monitoring calendar. Uses Ofsted's renewed framework.",
     tag: "Leadership",
   },
 ];

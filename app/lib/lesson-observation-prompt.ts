@@ -1,106 +1,80 @@
-// The Lesson Observation Report prompt, pure so it can be tested.
+// The Lesson Observation Report prompt: the report as structured JSON
+// (app/lib/sheets/observation.ts), pure so it can be tested.
 //
-// Developmental, not graded: Ofsted does not grade individual lessons. The
-// report never names the teacher or anyone else; colleagues who could help
-// are suggested by role (mentor, subject lead), never invented by name.
+// Developmental, never graded: Ofsted does not grade individual lessons. The
+// teacher and observer may be named in the form, but the names stay in the
+// browser: the text arrives with "[TEACHER]" and "[OBSERVER]" in their place,
+// and a request carrying a name key is refused. Colleagues who could help are
+// suggested by role (mentor, subject lead), never invented by name.
+
+import { strictObject } from "@/app/lib/sheets/schema";
+import { buildSystem } from "@/app/lib/systemPrompt";
+import { carriesStaffName, OBSERVER_PLACEHOLDER, TEACHER_PLACEHOLDER } from "@/app/lib/staff-privacy";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the request body as posted by the form
 type Body = Record<string, any>;
 
-const SYSTEM = "You are an experienced school leader and instructional coach with deep expertise in lesson observation and teacher development. You write formal, evidence-based observation reports that are specific, fair, and grounded in the Teachers' Standards and Ofsted's current school inspection toolkit (Ofsted does not grade individual lessons). Your reports support teacher growth through clear, actionable feedback.";
+const str = { type: "string" } as const;
 
-export function buildLessonObservationPrompt(body: Body): { system: string; user: string } | { error: string } {
-  const {
-    curriculum,
-    yearGroup,
-    subject,
-    learningObjective,
-    observationFocus,
-    strengths,
-    areasForDevelopment,
-    date,
-    includeActionPlan,
-    includeFollowUpSupport,
-  } = body;
-  if (!curriculum || typeof strengths !== "string" || !strengths.trim() || typeof areasForDevelopment !== "string" || !areasForDevelopment.trim()) {
-    return { error: "Missing required fields" };
-  }
+export function lessonObservationResponseFormat() {
+  const schema = strictObject({
+    context: str,
+    strengths: { type: "array", items: strictObject({ title: str, evidence: str }) },
+    areas: { type: "array", items: strictObject({ title: str, evidence: str, impact: str }) },
+    recommendations: { type: "array", items: strictObject({ title: str, how: str }) },
+    actionPlan: { type: "array", items: strictObject({ target: str, actions: str, support: str, byWhen: str }) },
+    followUp: { type: "array", items: str },
+  });
+  return { type: "json_schema" as const, json_schema: { name: "lesson_observation", strict: true, schema } };
+}
 
-  const dateStr = date
-    ? new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
-    : "";
+const SYSTEM =
+  "You are an experienced school leader and instructional coach with deep expertise in lesson observation and teacher development. You write formal, evidence-based, developmental observation reports that are specific, fair, and grounded in the Teachers' Standards and Ofsted's current school inspection toolkit (Ofsted does not grade individual lessons). " +
+  "You return the report as JSON that matches the given schema exactly. Write in UK English. Never use emoji. Do not use long dashes: use commas, colons or full stops.";
 
-  const actionPlanSection = includeActionPlan
-    ? `\n\n## Action Plan
+const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
-For each main area for development, write a structured action plan entry using the following format exactly. Use ### for each target heading.
+export function lessonObservationRequest(body: Body):
+  | { messages: { role: "system" | "user"; content: string }[]; response_format: ReturnType<typeof lessonObservationResponseFormat> }
+  | { error: string } {
+  if (carriesStaffName(body)) return { error: "Names are never sent. Please reload the page and try again." };
+  const curriculum = text(body.curriculum);
+  const strengths = text(body.strengths);
+  const areas = text(body.areasForDevelopment);
+  if (!curriculum || !strengths || !areas) return { error: "Missing required fields" };
+  const T = TEACHER_PLACEHOLDER;
+  const O = OBSERVER_PLACEHOLDER;
+  const lines = [
+    `- Curriculum: ${curriculum}`,
+    text(body.yearGroup) ? `- Year group: ${text(body.yearGroup)}` : "",
+    text(body.subject) ? `- Subject: ${text(body.subject)}` : "",
+    text(body.learningObjective) ? `- Learning objective: ${text(body.learningObjective)}` : "",
+    text(body.observationFocus) ? `- Observation focus: ${text(body.observationFocus)}` : "",
+    `- Strengths observed: ${strengths}`,
+    `- Areas for development: ${areas}`,
+  ].filter(Boolean);
 
-### Target 1: [specific, measurable target drawn directly from the areas for development]
+  const user = `Write a developmental lesson observation report from the observer's notes below.
 
-**Success Criteria:** [what it will look like when this target is met — specific and observable]
+${lines.join("\n")}
 
-**Strategies:**
-- [specific strategy 1]
-- [specific strategy 2]
-- [specific strategy 3]
+The teacher observed is written as ${T} and the observer as ${O}: keep those placeholders exactly where a name would go. Never name any person: refer to anyone else by role (mentor, subject lead, SENCO). Never give the lesson or the teacher a grade, a rating or an overall judgement: lessons are not graded.
 
-**Timeline:** [realistic timeline with a clear review point]
+Use only the notes above. Do not invent pupils, data, quotes or events that were not described.
 
-### Target 2: [next target]
+FIELDS
+- context: 2 or 3 sentences setting the lesson in context: the curriculum area, why the objective matters for this year group, and what the lesson set out to achieve.
+- strengths: 3 to 5. title: a short name for the strength. evidence: 2 sentences on what was seen and why it is strong practice, citing a teaching principle (for example Rosenshine's Principles or the Teachers' Standards) where it fits.
+- areas: 2 to 4. title: a short name. evidence: what was seen, 1 or 2 sentences. impact: the effect on pupils' learning, 1 sentence.
+- recommendations: 3 to 5, each addressing an area for development. title: the change. how: 1 or 2 sentences on how to do it.
+- actionPlan: ${body.includeActionPlan ? "2 or 3 targets agreed from the areas for development. target: specific and measurable. actions: what the teacher will do. support: by role only. byWhen: a realistic point, such as \"by half term\"." : "an empty list."}
+- followUp: ${body.includeFollowUpSupport ? "3 or 4 practical follow-up support options, each one sentence, naming real organisations or resources only where you are sure they exist, and colleagues by role only." : "an empty list."}`;
 
-**Success Criteria:** [...]
-
-**Strategies:**
-- [...]
-- [...]
-- [...]
-
-**Timeline:** [...]
-
-Write 2–3 targets, each addressing a distinct area for development.`
-    : "";
-
-  const followUpSection = includeFollowUpSupport
-    ? `\n\n## Follow-up Support
-
-List 4–5 specific, practical follow-up support options for the teacher. Each should be a concrete action — name specific, real organisations, resources or approaches where possible, and suggest colleagues by role only (for example mentor, subject lead, SENCO), never by name. Avoid vague suggestions.`
-    : "";
-
-  const user = `You are an experienced school leader writing a formal lesson observation report. Write directly and professionally. Do not refuse or add caveats.
-
-OBSERVATION DETAILS:
-- Curriculum: ${curriculum}
-- Year Group: ${yearGroup || "Not specified"}
-- Subject: ${subject?.trim() || "Not specified"}
-- Learning Objective: ${learningObjective?.trim() || "Not specified"}
-- Observation Focus: ${observationFocus?.trim() || "Not specified"}
-- Date: ${dateStr || "Not specified"}
-- Observed Strengths: ${strengths}
-- Areas for Development: ${areasForDevelopment}
-
-Generate a professional Lesson Observation Report using the following structure. Use proper markdown formatting.
-
-# Lesson Observation Report
-
-## Observation Details
-**Date:** ${dateStr || "Not specified"}
-**Subject:** ${subject?.trim() || "Not specified"}
-**Year Group:** ${yearGroup || "Not specified"}
-**Learning Objective:** ${learningObjective?.trim() || "Not specified"}${observationFocus?.trim() ? `\n**Observation Focus:** ${observationFocus.trim()}` : ""}
-
-## Lesson Context
-Write 3–4 sentences contextualising the lesson. Reference the curriculum area, the relevance of the learning objective to the year group, and what the lesson aimed to achieve in terms of both substantive and disciplinary knowledge. Be specific — this should read as an accurate account of the lesson observed, not a generic description.
-
-## Strengths
-Identify 3–5 specific strengths from the observation. For each, use the format: **Strength Title**: 2–3 sentences of specific evidence drawn directly from the observations provided, explaining what was seen and why it represents strong practice. Reference relevant teaching principles or frameworks (e.g. Rosenshine's Principles, the curriculum and teaching area of Ofsted's inspection toolkit, Teachers' Standards) where appropriate.
-
-## Areas for Development
-Identify 2–4 areas for development. For each, use the format: **Area Title**: 2–3 sentences describing the gap observed with specific evidence, explaining its impact on pupil learning, and indicating what improved practice would look like.
-
-## Recommendations
-Provide 4–5 specific, evidence-informed recommendations that directly address the areas for development. For each, use the format: **Recommendation Title**: 2–3 sentences describing the specific change needed, how to implement it, and the expected impact on pupil outcomes. Be concrete — name specific strategies, approaches, or tools.${actionPlanSection}${followUpSection}
-
-Never name the teacher or any other person: write "the teacher" and refer to others by role. Write in a formal, professional tone appropriate for a school leadership observation document. Be specific and evidence-based — draw directly from the observation notes provided. Use UK English throughout.`;
-
-  return { system: SYSTEM, user };
+  return {
+    messages: [
+      { role: "system", content: buildSystem(SYSTEM) },
+      { role: "user", content: user },
+    ],
+    response_format: lessonObservationResponseFormat(),
+  };
 }

@@ -214,6 +214,8 @@ export function revealSlide(prev: DeckSlide[], p: SlidePayload, arrived?: SlideJ
     backgroundArtScrim: src.backgroundArtScrim ?? p.slide.backgroundArtScrim,
     skeleton: p.slide.skeleton,
     themeId: p.slide.themeId,
+    // Speaker notes (staff and assembly decks); no key at all on a pupil deck.
+    ...(p.slide.notes !== undefined ? { notes: p.slide.notes } : {}),
   };
   return next;
 }
@@ -255,6 +257,8 @@ export function mergeSlideImage(prev: DeckSlide[], p: SlideImagePayload): DeckSl
     // doesn't strip the re-theming metadata.
     skeleton: target.skeleton,
     themeId: target.themeId,
+    // The slide's own notes, edited or not, win over the re-render's.
+    ...(target.notes !== undefined || p.slide.notes !== undefined ? { notes: target.notes ?? p.slide.notes } : {}),
   };
   return next;
 }

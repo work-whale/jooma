@@ -15,13 +15,13 @@ interface Props {
 export default function SIPAreasField({ value, onChange }: Props) {
   const fieldId = useId();
   const placeholder = useTypingPlaceholder([
-    "e.g. attendance, reading outcomes in KS2, attendance and behaviour",
-    "e.g. maths attainment at KS4, staff retention, curriculum sequencing",
-    "e.g. SEND provision, early reading, pupil premium outcomes",
+    "e.g. 1. KS2 reading fluency  2. Attendance of disadvantaged pupils",
+    "e.g. 1. Maths attainment at KS4  2. Curriculum sequencing in science",
+    "e.g. 1. SEND provision  2. Early reading in Reception",
   ]);
   return (
     <div className="space-y-1.5">
-      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Areas to improve</label>
+      <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Priorities to improve</label>
       <div className="relative">
         <textarea id={`${fieldId}-0`}
           value={value}
@@ -32,7 +32,7 @@ export default function SIPAreasField({ value, onChange }: Props) {
         />
         {!value && <PlaceholderOverlay text={placeholder} area />}
       </div>
-      <p className="text-xs text-gray-400">100,000 character maximum input text</p>
+      <p className="text-xs text-gray-500">One priority per line, up to 8. Each gets its own action table.</p>
     </div>
   );
 }

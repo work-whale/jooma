@@ -41,7 +41,6 @@ const GENERATION_PATHS: ReadonlySet<string> = new Set([
   "/api/behaviour-support-plan",
   "/api/comprehension-generator",
   "/api/cover-lesson",
-  "/api/cpd-slideshow",
   "/api/ect-report-writer",
   "/api/exam-question-generator",
   "/api/eyfs-action-plan",
@@ -96,7 +95,9 @@ if (process.env.NODE_ENV !== "production") {
       // Known and deliberate: the Slideshow Generator's endpoint is
       // /api/generate-slideshow, which is excluded as a sub-asset route and
       // self-gates in its own handler instead.
-      const EXPECTED_UNGATED = new Set(["slideshow"]);
+      // Staff Slides makes its decks through the same endpoint (batch 6), so
+      // it has no route of its own either.
+      const EXPECTED_UNGATED = new Set(["slideshow", "cpd-slideshow"]);
 
       const uncapped = [...catalogue].filter(
         (s) => !gated.has(s) && !EXPECTED_UNGATED.has(s),

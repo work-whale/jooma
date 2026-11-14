@@ -19,11 +19,12 @@ export default async function PolicyGeneratorPage({
           icon={<ScrollText className="w-5 h-5 text-blue-600" />}
 
           title="Policy Generator"
-          description="Create a draft school policy or a policy section structure. Enter the policy name and the AI will generate a complete, professional document you can customise for your setting."
+          description="Draft a school policy with numbered sections, roles and the legislation it follows. For policies in our list, whether it is statutory, how often to review it and who approves it come from DfE guidance, not the AI, and the policy has a details box and version history for your governors."
           steps={[
-            { label: "Enter the policy name", detail: "For example, \"Anti-Bullying Policy\" or \"Online Safety Policy\"." },
-            { label: "Choose output type", detail: "Draft a full policy or a section structure you can fill in yourself." },
-            { label: "Add requirements", detail: "Include specific legislation, elements, or school-specific details.", optional: true },
+            { label: "Pick or type the policy", detail: "Choose from the list, or type your own, for example \"School Uniform Policy\"." },
+            { label: "Choose full draft or outline", detail: "Draft the whole policy, or an outline of sections with notes on what to write." },
+            { label: "Add requirements", detail: "School-specific details, by role rather than name.", optional: true },
+            { label: "Refine with Jo, then download", detail: "Ask Jo to change anything, then print it or download it as a Word file." },
           ]}
         />
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   CurriculumField,
   SchoolTypeField,
@@ -9,7 +9,6 @@ import {
   ResponsibilitiesField,
 } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -21,17 +20,20 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { DEFAULT_OBJECTIVES, objectiveCount } from "@/app/lib/sheets/appraisal";
 
 const TOOL_SLUG = "performance-management";
 
-const REFINE_CHIPS = [
-  "Translate to...",
-  "Include a target on...",
-  "Provide more detail on...",
-  "Make the text more detailed",
-  "Make the text more concise",
-];
+const inputClass =
+  "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white";
 
+/*
+ * Appraisal objectives as a designed landscape document
+ * (app/lib/sheets/appraisal.ts): the objectives table with blank mid-year and
+ * end-of-year review columns, and sign-off, so one document lasts the cycle.
+ * The model hears the role, never a name.
+ */
 export default function PerformanceManagementForm({
   sidebar,
   launch,
@@ -40,23 +42,26 @@ export default function PerformanceManagementForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
+  const fieldId = useId();
   const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
   const [schoolType, setSchoolType] = useState("");
   const [staffMember, setStaffMember] = useState("");
   const [payScale, setPayScale] = useState("");
   const [responsibilities, setResponsibilities] = useState("");
+  const [priorities, setPriorities] = useState("");
+  const [count, setCount] = useState(DEFAULT_OBJECTIVES);
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate = curriculum && staffMember.trim() && responsibilities.trim();
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), curriculum, schoolType, staffMember, payScale, responsibilities };
+  const formState = { ...languageFormState(language), curriculum, schoolType, staffMember, payScale, responsibilities, priorities, objectiveCount: count };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -69,7 +74,10 @@ export default function PerformanceManagementForm({
     setStaffMember((i.staffMember as string) ?? "");
     setPayScale((i.payScale as string) ?? "");
     setResponsibilities((i.responsibilities as string) ?? "");
+    setPriorities((i.priorities as string) ?? "");
+    setCount(objectiveCount(i.objectiveCount));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -89,56 +97,27 @@ export default function PerformanceManagementForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const info = { curriculum, appraisal: { role: staffMember, payScale, count } };
     try {
       const res = await fetch("/api/performance-management", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, curriculum, schoolType, staffMember, payScale, responsibilities }),
+        body: JSON.stringify({ language, curriculum, schoolType, staffMember, payScale, responsibilities, priorities, objectiveCount: count }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "appraisal", info, setResult);
+      if (!finished) throw new Error("The objectives came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -169,6 +148,21 @@ export default function PerformanceManagementForm({
 
             <ResponsibilitiesField value={responsibilities} onChange={setResponsibilities} />
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor={`${fieldId}-priorities`} className="block text-sm font-semibold text-gray-800">
+                  School priorities <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input id={`${fieldId}-priorities`} type="text" value={priorities} onChange={(e) => setPriorities(e.target.value)} placeholder="e.g. Reading fluency in KS2; attendance of disadvantaged pupils" className={inputClass} />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor={`${fieldId}-count`} className="block text-sm font-semibold text-gray-800">Number of objectives</label>
+                <select id={`${fieldId}-count`} value={count} onChange={(e) => setCount(objectiveCount(e.target.value))} className={inputClass}>
+                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+            </div>
+
             <div className="flex gap-3">
               <ResetButton onClick={() => setConfirmingReset(true)} disabled={!result} />
               <ConfirmModal
@@ -177,13 +171,9 @@ export default function PerformanceManagementForm({
                 message="This will clear your current results and reset all form inputs."
                 confirmLabel="Yes, reset"
                 onConfirm={() => {
-                  setSchoolType("");
-                  setStaffMember("");
-                  setPayScale("");
-                  setResponsibilities("");
-                  setResult(null);
-                  setError(null);
-                  setConfirmingReset(false);
+                  setSchoolType(""); setStaffMember(""); setPayScale(""); setResponsibilities("");
+                  setPriorities(""); setCount(DEFAULT_OBJECTIVES);
+                  setRunId(null); setResult(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}
               />
@@ -205,20 +195,12 @@ export default function PerformanceManagementForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
-        exportFilename="performance-management-targets"
+        exportFilename={`appraisal-objectives-${staffMember.toLowerCase().replace(/\s+/g, "-").slice(0, 40) || "export"}`}
         historyMeta={{ toolSlug: TOOL_SLUG, title: staffMember || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

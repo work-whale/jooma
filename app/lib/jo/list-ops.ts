@@ -5,7 +5,7 @@
 // Reports can only be rewritten, never added, removed or reordered.
 
 import { normalizeQuizItem, type QuizItem } from "@/app/lib/quiz/quiz";
-import type { SlideData } from "@/app/api/cpd-slideshow/route";
+import type { SlideData } from "@/app/lib/legacy-staff-slides";
 import type { ListOp } from "./types";
 import { normalizeJoReport } from "@/app/lib/reports/jo";
 

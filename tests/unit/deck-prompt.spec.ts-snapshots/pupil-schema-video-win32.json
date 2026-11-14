@@ -1,0 +1,158 @@
+{
+  "name": "slideshow",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "title",
+      "slides",
+      "videoSlideHeading",
+      "videoSlideSubtitle",
+      "videoSlideAfter"
+    ],
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "slides": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "layout",
+            "title",
+            "subHook",
+            "body",
+            "bulletsLeadIn",
+            "bullets",
+            "imageQuery",
+            "calloutVariant",
+            "calloutLabel",
+            "calloutBody",
+            "badgeText",
+            "blockquoteText",
+            "blockquoteAttribution",
+            "activityKind",
+            "activityItems",
+            "activityCorrectOrder",
+            "activityImageQuery",
+            "secondaryImageQuery",
+            "secondaryBody",
+            "subtitle"
+          ],
+          "properties": {
+            "layout": {
+              "type": "string",
+              "enum": [
+                "title-hero",
+                "paper-image-right",
+                "paper-image-left",
+                "paper-two-images",
+                "paper-image-right-badge",
+                "paper-banner-image-top",
+                "paper-quote",
+                "paper-vocab-grid",
+                "activity-ordering",
+                "activity-ordering-answer",
+                "activity-question",
+                "activity-question-answer",
+                "activity-multichoice",
+                "activity-multichoice-answer",
+                "activity-vocab-match",
+                "activity-vocab-match-answer"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "subHook": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "bulletsLeadIn": {
+              "type": "string"
+            },
+            "bullets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "imageQuery": {
+              "type": "string"
+            },
+            "calloutVariant": {
+              "type": "string",
+              "enum": [
+                "key",
+                "remember",
+                "fun",
+                ""
+              ]
+            },
+            "calloutLabel": {
+              "type": "string"
+            },
+            "calloutBody": {
+              "type": "string"
+            },
+            "badgeText": {
+              "type": "string"
+            },
+            "blockquoteText": {
+              "type": "string"
+            },
+            "blockquoteAttribution": {
+              "type": "string"
+            },
+            "activityKind": {
+              "type": "string",
+              "enum": [
+                "order",
+                "question",
+                ""
+              ]
+            },
+            "activityItems": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "activityCorrectOrder": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "activityImageQuery": {
+              "type": "string"
+            },
+            "secondaryImageQuery": {
+              "type": "string"
+            },
+            "secondaryBody": {
+              "type": "string"
+            },
+            "subtitle": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "videoSlideHeading": {
+        "type": "string"
+      },
+      "videoSlideSubtitle": {
+        "type": "string"
+      },
+      "videoSlideAfter": {
+        "type": "integer"
+      }
+    }
+  }
+}

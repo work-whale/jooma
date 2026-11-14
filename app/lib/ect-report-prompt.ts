@@ -1,111 +1,90 @@
-// The ECT Report Writer's prompt, pure so it can be tested.
+// The ECT Report Writer's prompt: an induction progress review or formal
+// assessment as structured JSON (app/lib/sheets/ect.ts), pure so it can be
+// tested.
 //
 // The ECT's name never reaches this module: the browser sends "[ECT]" in its
 // place (app/lib/staff-privacy.ts) and the request is refused if it carries a
 // name key. Statutory induction has run under the Initial Teacher Training and
-// Early Career Framework (ITTECF) since September 2025, and ECTs are still
-// assessed against the Teachers' Standards (2011). The model writes from the
-// evidence it is given and never makes the formal judgement itself: that is
-// the induction tutor's, confirmed by the appropriate body.
+// Early Career Framework (ITTECF) since September 2025, and ECTs are assessed
+// against the Teachers' Standards (2011), never against the ITTECF. The model
+// writes from the evidence it is given and never makes the judgement: the
+// induction tutor picks the outcome in the form, it is printed by code, and it
+// is not sent here at all.
 
+import { strictObject } from "@/app/lib/sheets/schema";
+import { buildSystem } from "@/app/lib/systemPrompt";
 import { carriesStaffName, ECT_PLACEHOLDER } from "@/app/lib/staff-privacy";
+import { ECT_STANDARDS, ectPeriod, ectReportType } from "@/app/lib/sheets/ect";
 
 export interface EctReportBody {
   curriculum?: string;
   subject?: string;
+  reportType?: string;
+  period?: string;
   strengths?: string;
   areasForDevelopment?: string;
-  includeProfessionalDevelopmentPlan?: boolean;
+}
+
+const str = { type: "string" } as const;
+
+export function ectResponseFormat() {
+  const standard = strictObject({ standard: { type: "integer" }, strengths: str, nextSteps: str });
+  const target = strictObject({ target: str, support: str, byWhen: str });
+  const schema = strictObject({
+    summary: str,
+    standards: { type: "array", items: standard },
+    conduct: str,
+    targets: { type: "array", items: target },
+  });
+  return { type: "json_schema" as const, json_schema: { name: "ect_report", strict: true, schema } };
 }
 
 const SYSTEM =
-  "You are an experienced UK induction tutor and ECT mentor. You know statutory induction for early career teachers in England, the Initial Teacher Training and Early Career Framework (ITTECF, from September 2025) and the Teachers' Standards (DfE, 2011). " +
-  "You write formal, evidence-based progress reports for mentors, induction tutors, headteachers and appropriate bodies, in third person and professional UK English, referencing the Teachers' Standards by number and full title.";
+  "You are an experienced induction tutor and ECT mentor in an English school. You know the DfE statutory guidance on induction for early career teachers, the Initial Teacher Training and Early Career Framework (ITTECF) that induction training is based on, and the Teachers' Standards (DfE, 2011) that ECTs are assessed against. " +
+  "You write formal, evidence-based induction records in the third person and professional UK English. You return the record as JSON that matches the given schema exactly. Never use emoji. Do not use long dashes: use commas, colons or full stops.";
 
-const PDP = `
+const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
-## Professional Development Plan
-
-After the summary, include a structured Professional Development Plan with:
-
-### Short-term Actions (Next 4 to 6 weeks)
-
-2 numbered action points, each with:
-- **Teacher Standard:** [TS reference and full title]
-- **Implementation strategy:** [Specific, concrete steps the ECT should take]
-- **Resources required:** [What is needed to complete this action]
-- **Success indicators:** [How progress will be measured]
-
-### Medium-term Actions (Next term)
-
-2 numbered action points, each with:
-- **Teacher Standard:** [TS reference]
-- **Implementation strategy:** [Specific steps]
-- **Support:** [Who can support, by role: mentor, induction tutor, subject lead, SENCO]
-- **Expected classroom impact:** [What improvement in outcomes should be seen]
-
-### Long-term Professional Goals (Next 6 to 12 months)
-
-1 or 2 overarching goals, each with bullet points for:
-- **Teacher Standards:** [Relevant TS references]
-- **Professional development opportunities:** [The ITTECF programme, CPD, networks]
-- **School improvement alignment:** [How this links to school priorities]
-
-### Recommended Resources
-
-A short categorised list of well-known, real resources only (for example the ITTECF itself, EEF guidance reports, subject association materials). If unsure a resource exists, leave it out.`;
-
-export function buildEctReportPrompt(
-  body: EctReportBody & Record<string, unknown>,
-): { system: string; user: string } | { error: string } {
+export function ectReportRequest(body: EctReportBody & Record<string, unknown>):
+  | { messages: { role: "system" | "user"; content: string }[]; response_format: ReturnType<typeof ectResponseFormat> }
+  | { error: string } {
   if (carriesStaffName(body)) return { error: "The ECT's name is never sent. Please reload the page and try again." };
-  const curriculum = typeof body.curriculum === "string" ? body.curriculum.trim() : "";
-  const strengths = typeof body.strengths === "string" ? body.strengths.trim() : "";
-  const areas = typeof body.areasForDevelopment === "string" ? body.areasForDevelopment.trim() : "";
+  const curriculum = text(body.curriculum);
+  const strengths = text(body.strengths);
+  const areas = text(body.areasForDevelopment);
   if (!curriculum || !strengths || !areas) return { error: "Missing required fields" };
-  const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+  const subject = text(body.subject);
+  const type = ectReportType(body.reportType);
+  const period = ectPeriod(type, body.period);
   const E = ECT_PLACEHOLDER;
+  const kind = type === "assessment" ? "formal assessment report" : "progress review record";
 
-  const user = `Write a formal, evidence-based progress report on an early career teacher (ECT) in statutory induction.
+  const user = `Write the evidence for an early career teacher's induction ${kind}.
 
-- Curriculum: ${curriculum}${subject ? `\n- Subject: ${subject}` : ""}
+- Point in induction: ${period.label}
+- Curriculum: ${curriculum}${subject ? `\n- Subject or phase: ${subject}` : ""}
 - Strengths seen: ${strengths}
 - Areas for development: ${areas}
 
-The ECT is called ${E} everywhere: write "${E}" exactly where you would use their name, every time, including the title. Never invent a name, and never name any other person: refer to colleagues by role (mentor, induction tutor, subject lead, SENCO).
+The ECT is called ${E} everywhere: write "${E}" exactly where you would use their name. Never invent a name, and never name any other person: refer to colleagues by role (mentor, induction tutor, subject lead, SENCO).
 
-Induction in England runs under the Initial Teacher Training and Early Career Framework (ITTECF), and ECTs are assessed against the Teachers' Standards (DfE, 2011). Reference the Teachers' Standards accurately, by number and full title.
+${type === "assessment" ? "A formal assessment shows the ECT's performance against the Teachers' Standards at the time of the assessment, drawn from evidence gathered during the progress reviews and the assessment period." : "A progress review summarises the evidence collected so far and sets the agreed development targets, so there is nothing unexpected for the ECT at their formal assessment."} Judgements relate to the Teachers' Standards (DfE, 2011), never to the ITTECF.
 
-Use only the evidence above. Do not invent observations, lesson details, data, pupil work or incidents. Where a point would need more evidence, write "[add evidence]" for the mentor to complete.
+Use only the evidence above. Do not invent observations, lesson details, data, pupil work or incidents. Where a point would need more evidence, write "[add evidence]" for the tutor to complete.
 
-Structure the report as follows:
+The judgement is the induction tutor's, recorded separately. Never state or imply whether ${E} is on track, making satisfactory progress, or whether their performance is satisfactory or unsatisfactory, and never recommend an extension.
 
-# ECT Progress Report: ${E}
+FIELDS
+- summary: 2 or 3 sentences summarising the evidence, in the third person.
+- standards: one entry for each Teachers' Standard the evidence above speaks to, and only those (usually 3 to 5). standard is its number, 1 to 8: ${ECT_STANDARDS.map((s, i) => `${i + 1} ${s}`).join("; ")}. strengths: 1 or 2 sentences on what the evidence shows for that standard. nextSteps: 1 sentence on the next step for that standard, or "" when none is needed.
+- conduct: 1 or 2 sentences on Part Two of the Teachers' Standards (personal and professional conduct), only from the evidence given; if the evidence says nothing about it, write "[add evidence]".
+- targets: 2 to 4 agreed development targets drawn from the areas for development. target: specific and measurable, one sentence. support: what support will be given, by role only. byWhen: a realistic point such as "by February half term" or "by the next progress review".`;
 
-## Strengths
-
-3 paragraphs, each:
-- opening with the strength and the relevant Teacher Standard(s) by number and full title
-- grounded in the strengths given above, without adding evidence that was not given
-- describing the likely impact on pupils' learning, progress or wellbeing
-- formal and third person, around 100 words
-
-## Areas for Development
-
-3 paragraphs, each:
-- naming the relevant Teacher Standard(s) by number and full title
-- describing the gap clearly and constructively, from the areas given above
-- giving 2 or 3 precise, actionable development steps, with support named by role only
-- stating the expected impact on pupils, framed as normal professional growth
-
-## Professional Summary
-
-3 paragraphs:
-1. A synthesis of ${E}'s key strengths and their impact to date.
-2. The principal areas for development and the support that will be provided.
-3. Progress against the Teachers' Standards as the evidence above shows it, written for the induction tutor to confirm. Do not make the formal induction judgement yourself.${body.includeProfessionalDevelopmentPlan ? PDP : ""}
-
-Throughout: third person, formal language, Teachers' Standards by number and full title at every mention, no emojis, and no vague descriptors.`;
-
-  return { system: SYSTEM, user };
+  return {
+    messages: [
+      { role: "system", content: buildSystem(SYSTEM) },
+      { role: "user", content: user },
+    ],
+    response_format: ectResponseFormat(),
+  };
 }

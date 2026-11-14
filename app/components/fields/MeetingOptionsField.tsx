@@ -33,7 +33,7 @@ export default function MeetingOptionsField({
             onChange={(e) => onChangeActionItems(e.target.checked)}
             className="accent-gray-900 w-4 h-4"
           />
-          Include action items section
+          Include a blank action log
         </label>
       </div>
     </div>

@@ -42,27 +42,26 @@ test.describe("the framework description", () => {
   });
 });
 
+// The guide itself is a sheet now (batch 6); its full tests are in
+// tool-uplift-batch6.spec.ts. These keep the framework checks.
 test.describe("Inspection Prep", () => {
   test("an Ofsted guide is organised by the current areas, not the old judgements", () => {
-    const p = userPrompt({ inspectionBody: "Ofsted" });
-    for (const a of ["Safeguarding", ...OFSTED_GRADED_AREAS.map((x) => x.name)]) expect(p).toContain(`### ${a}`);
-    for (const old of ["### Quality of Education", "### Behaviour and Attitudes", "### Leadership and Management", "### Personal Development\n"]) {
-      expect(p).not.toContain(old);
-    }
-    expect(p).toContain("### Early years (where applicable)");
+    const p = userPrompt({ inspectionBody: "Ofsted", earlyYears: true, postSixteen: true });
+    for (const a of ["Safeguarding", ...OFSTED_GRADED_AREAS.map((x) => x.name)]) expect(p).toContain(`- ${a}:`);
+    for (const old of ["Quality of Education", "Behaviour and Attitudes", "Leadership and Management"]) expect(p).not.toContain(`- ${old}`);
     expect(p).not.toMatch(/Big Listen|\bEIF\b/);
     for (const g of OFSTED_GRADES) expect(p).toContain(g);
   });
 
   test("Ofsted is recognised however the teacher types it", () => {
-    expect(userPrompt({ inspectionBody: "an OFSTED section 5" })).toContain("### Curriculum and teaching");
+    expect(userPrompt({ inspectionBody: "an OFSTED section 5" })).toContain("- Curriculum and teaching:");
   });
 
-  test("another body gets the generic headings and no Ofsted framework text", () => {
+  test("another body gets its own framework and no Ofsted framework text", () => {
     const p = userPrompt({ inspectionBody: "ISI" });
-    expect(p).toContain("### Quality of Teaching and Learning");
+    expect(p).toContain("Independent Schools Inspectorate");
     expect(p).not.toContain("renewed education inspection framework (from");
-    expect(p).not.toContain("### Curriculum and teaching");
+    expect(p).not.toContain("- Curriculum and teaching:");
   });
 
   test("a missing or blank inspection body is refused before the model sees it", () => {
@@ -70,21 +69,8 @@ test.describe("Inspection Prep", () => {
     expect(inspectionPrepRequest({ inspectionBody: "   " })).toEqual({ error: "Missing required fields" });
   });
 
-  test("the optional sections appear only when asked for, and the focus is carried through", () => {
-    const bare = userPrompt({ inspectionBody: "Ofsted" });
-    expect(bare).not.toContain("## Recommended Evidence");
-    expect(bare).not.toContain("## Success Criteria");
-    expect(bare).not.toContain("## Recent Policy Developments");
-
-    const full = userPrompt({ inspectionBody: "Ofsted", inspectionFocus: "early reading", includeEvidence: true, includeSuccessCriteria: true, includePolicyChanges: true });
-    expect(full).toContain("## Recommended Evidence");
-    expect(full).toContain("## Success Criteria");
-    expect(full).toContain("## Recent Policy Developments");
-    expect(full).toContain("with a specific focus on **early reading**");
-  });
-
   test("the text we write has no long dashes", () => {
-    expect(userPrompt({ inspectionBody: "Ofsted", includeEvidence: true, includeSuccessCriteria: true, includePolicyChanges: true })).not.toMatch(DASHES);
+    expect(userPrompt({ inspectionBody: "Ofsted", includeEvidence: true, includeSuccessCriteria: true })).not.toMatch(DASHES);
     expect(userPrompt({ inspectionBody: "ISI" })).not.toMatch(DASHES);
   });
 });

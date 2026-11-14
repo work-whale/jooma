@@ -10,7 +10,6 @@ import {
   MeetingOptionsField,
 } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -21,17 +20,20 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { scrubPupilText } from "@/app/lib/sheets/pupil";
+import { scrubStaffTitles } from "@/app/lib/staff-privacy";
 
 const TOOL_SLUG = "meeting-planner";
 
-const REFINE_CHIPS = [
-  "Translate to...",
-  "Include more time on...",
-  "Include less time on...",
-  "Include more small group breakout sessions",
-  "Include more opportunities for sharing ideas",
-  "Make the meeting shorter",
-];
+/*
+ * A meeting plan as a designed document (app/lib/sheets/meeting.ts): a timed
+ * agenda that adds up to the length, facilitator notes (switchable in Design
+ * so the agenda can be sent alone), minutes boxes and a blank action log.
+ * A pupil the meeting is about is named on the page only: the model sees
+ * [PUPIL]. "Mr Patel" style names become "a colleague" before sending.
+ * Refine is gone: Ask Jo edits the plan. Old markdown runs open as before.
+ */
 
 const MEETING_CATEGORIES = [
   {
@@ -155,19 +157,21 @@ export default function MeetingPlannerForm({
   const [topics, setTopics] = useState("");
   const [includeIcebreaker, setIncludeIcebreaker] = useState(false);
   const [includeActionItems, setIncludeActionItems] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [pupilName, setPupilName] = useState("");
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
   const durationNum = parseInt(duration, 10);
   const canGenerate = purpose.trim() && participants.trim() && !isNaN(durationNum) && durationNum >= 5 && durationNum <= 480;
   const [language, setLanguage] = useGenerationLanguage();
-  const formState = { ...languageFormState(language), purpose, duration, participants, topics, includeIcebreaker, includeActionItems };
+  const formState = { ...languageFormState(language), purpose, duration, participants, topics, includeIcebreaker, includeActionItems, startTime, pupilName };
   const formSnapshot = JSON.stringify(formState);
   const unchangedSinceGeneration = result !== null && lastGenerated === formSnapshot;
 
@@ -181,7 +185,10 @@ export default function MeetingPlannerForm({
     setTopics((i.topics as string) ?? "");
     setIncludeIcebreaker(Boolean(i.includeIcebreaker));
     setIncludeActionItems(Boolean(i.includeActionItems));
+    setStartTime((i.startTime as string) ?? "");
+    setPupilName((i.pupilName as string) ?? "");
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -202,56 +209,36 @@ export default function MeetingPlannerForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    const name = pupilName.trim();
+    // The pupil as [PUPIL] and titled colleagues as "a colleague", before
+    // anything leaves the browser. The route refuses a name key and scrubs
+    // titles again.
+    const clean = (t: string) => scrubStaffTitles(scrubPupilText(t, name), "colleague");
+    const sent = { purpose: clean(purpose), participants: clean(participants), topics: clean(topics) };
+    const info = {
+      meeting: { duration: durationNum, startTime, participants: sent.participants, pupilNamed: !!name, includeActionItems },
+      ...(name ? { pupil: { name, pronouns: "they" as const } } : {}),
+    };
     try {
       const res = await fetch("/api/meeting-planner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, purpose, duration: durationNum, participants, topics, includeIcebreaker, includeActionItems }),
+        body: JSON.stringify({ language, ...sent, duration: durationNum, includeIcebreaker, includeActionItems }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "meeting", info, setResult);
+      if (!finished) throw new Error("The plan came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -280,6 +267,18 @@ export default function MeetingPlannerForm({
 
             <MeetingTopicsField value={topics} onChange={setTopics} />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label htmlFor="meeting-start" className="block text-sm font-semibold text-gray-800">Start time (optional)</label>
+                <input id="meeting-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="meeting-pupil" className="block text-sm font-semibold text-gray-800">Pupil (optional, page only)</label>
+                <input id="meeting-pupil" type="text" value={pupilName} onChange={(e) => setPupilName(e.target.value)} placeholder="For a review about one pupil" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent bg-white" />
+              </div>
+            </div>
+            <p className="-mt-3 text-xs text-gray-500" data-testid="meeting-privacy">The pupil&apos;s name is shown on the plan but never sent. Use roles for staff: &quot;Mr Patel&quot; style names become &quot;a colleague&quot; before sending, but first names alone are not caught.</p>
+
             <MeetingOptionsField
               includeIcebreaker={includeIcebreaker}
               includeActionItems={includeActionItems}
@@ -301,6 +300,9 @@ export default function MeetingPlannerForm({
                   setTopics("");
                   setIncludeIcebreaker(false);
                   setIncludeActionItems(false);
+                  setStartTime("");
+                  setPupilName("");
+                  setRunId(null);
                   setResult(null);
                   setError(null);
                   setConfirmingReset(false);
@@ -325,20 +327,12 @@ export default function MeetingPlannerForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="meeting-plan"
-        historyMeta={{ toolSlug: TOOL_SLUG, title: purpose || null, input: formState }}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: scrubStaffTitles(purpose, "colleague").slice(0, 80) || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

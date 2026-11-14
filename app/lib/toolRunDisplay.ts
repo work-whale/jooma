@@ -12,7 +12,7 @@ const TYPE_LABEL: Record<string, string> = {
   // The tool is gone, but its saved runs are not: a handful of rows still carry
   // this slug and would otherwise render as the raw string. Kept for them.
   "lesson-slideshow": "Slideshow",
-  "cpd-slideshow": "CPD Slideshow",
+  "cpd-slideshow": "Staff Slides",
   "homework-generator": "Homework",
   "report-writer": "Report",
   // Not tools, but they spend, so usage tables list them: Jo editing beside a

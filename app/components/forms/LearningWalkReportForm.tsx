@@ -11,7 +11,6 @@ import {
   TopicField,
 } from "@/app/components/fields";
 import ToolResults from "@/app/components/ToolResults";
-import RefinePanel from "@/app/components/RefinePanel";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
@@ -23,15 +22,10 @@ import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { scrubStaffTitles } from "@/app/lib/staff-privacy";
+import { readSheetStream } from "@/app/lib/sheets/client-stream";
 
 const TOOL_SLUG = "learning-walk-report";
-
-const REFINE_CHIPS = [
-  "Make the report more detailed",
-  "Make the report more concise",
-  "Expand the section on...",
-  "Include reference to...",
-];
 
 const FOCUS_CATEGORIES = [
   {
@@ -159,11 +153,11 @@ export default function LearningWalkReportForm({
 
   const [result, setResult] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isRefining, setIsRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [lastGenerated, setLastGenerated] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
+  const [runId, setRunId] = useState<string | null>(null);
 
   const canGenerate = curriculum && strengths.trim() && areasForDevelopment.trim();
   const [language, setLanguage] = useGenerationLanguage();
@@ -184,6 +178,7 @@ export default function LearningWalkReportForm({
     setIncludeRecommendations(i.includeRecommendations === undefined ? true : Boolean(i.includeRecommendations));
     setIncludeNextSteps(i.includeNextSteps === undefined ? true : Boolean(i.includeNextSteps));
     setResult(run.output);
+    setRunId(run.id);
     setLastGenerated(JSON.stringify(i));
   };
 
@@ -203,56 +198,40 @@ export default function LearningWalkReportForm({
   const handleGenerate = async () => {
     setError(null);
     setResult("");
+    setRunId(null);
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
+    // Staff named by title ("Mr Patel's Year 7") become "a teacher" in
+    // everything sent and on the page: a learning walk names nobody.
+    const classes = scrubStaffTitles(classesVisited);
+    const walkFocus = scrubStaffTitles(focus);
+    const info = { curriculum, learningWalk: { date, classesVisited: classes, focus: walkFocus } };
     try {
       const res = await fetch("/api/learning-walk-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, curriculum, date, classesVisited, focus, strengths, areasForDevelopment, includeRecommendations, includeNextSteps }),
+        body: JSON.stringify({
+          language,
+          curriculum,
+          classesVisited: classes,
+          focus: walkFocus,
+          strengths: scrubStaffTitles(strengths),
+          areasForDevelopment: scrubStaffTitles(areasForDevelopment),
+          includeRecommendations,
+          includeNextSteps,
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Generation failed");
       }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        setResult((prev) => (prev ?? "") + decoder.decode(value, { stream: true }));
-      }
+      const finished = await readSheetStream(res, "learningWalk", info, setResult);
+      if (!finished) throw new Error("The report came back empty. Please try again.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setResult(null);
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRefine = async (instruction: string) => {
-    if (!result) return;
-    setIsRefining(true);
-    try {
-      const res = await fetch("/api/modify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, currentContent: result, instruction }),
-      });
-      if (!res.ok) throw new Error("Refinement failed");
-      let refined = "";
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        refined += decoder.decode(value, { stream: true });
-        setResult(refined);
-      }
-    } catch {
-      // result stays as-is
-    } finally {
-      setIsRefining(false);
     }
   };
 
@@ -307,6 +286,10 @@ export default function LearningWalkReportForm({
               ]}
             />
 
+            <p className="text-xs text-gray-500" data-testid="walk-names-note">
+              A learning walk report names nobody. Staff written as Mr, Mrs, Ms, Miss, Mx or Dr with a surname are changed to &quot;a teacher&quot; before anything is sent. First names on their own are not caught, so use classes or roles.
+            </p>
+
             <LearningWalkOptionsField
               includeRecommendations={includeRecommendations}
               includeNextSteps={includeNextSteps}
@@ -329,6 +312,7 @@ export default function LearningWalkReportForm({
                   setAreasForDevelopment("");
                   setIncludeRecommendations(true);
                   setIncludeNextSteps(true);
+                  setRunId(null);
                   setResult(null);
                   setError(null);
                   setConfirmingReset(false);
@@ -353,20 +337,12 @@ export default function LearningWalkReportForm({
       <ToolResults
         result={result}
         isGenerating={isGenerating}
-        isRefining={isRefining}
         onChange={(md) => setResult(md)}
         exportFilename="learning-walk-report"
-        historyMeta={{ toolSlug: TOOL_SLUG, title: focus || classesVisited || null, input: formState }}
+        historyMeta={{ toolSlug: TOOL_SLUG, title: scrubStaffTitles(focus || classesVisited) || null, input: formState }}
         onSaved={() => setHistoryKey((k) => k + 1)}
+        runId={runId}
       />
-
-      {result && !isGenerating && (
-        <RefinePanel
-          isRefining={isRefining}
-          chips={REFINE_CHIPS}
-          onRefine={handleRefine}
-        />
-      )}
     </div>
   );
 }

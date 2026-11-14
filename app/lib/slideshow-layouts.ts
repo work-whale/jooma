@@ -68,6 +68,9 @@ export interface SlideSpec {
   subtitle?: string;
   body?: string;
   bullets?: string[];
+  /** Staff and assembly decks: what the presenter says. Copied to the
+   *  slide's `notes`, never drawn. */
+  speakerNotes?: string;
   imageQuery?: string;
   imageDataUrl?: string;   // injected server-side after Pixabay fetch
   imageWidth?: number;     // natural dims, if known
@@ -1583,6 +1586,8 @@ export function renderSlide(
       slide.backgroundArt = art.src;
       slide.backgroundArtScrim = art.scrim;
     }
+    const notes = rawSpec.speakerNotes?.trim();
+    if (notes) slide.notes = notes;
     return slide;
   } finally {
     activeTheme = undefined;
@@ -2193,5 +2198,8 @@ export function rerenderSlideWithTheme(
   rebuilt.videos = slide.videos;
   rebuilt.skeleton = slide.skeleton;
   if (slide.themeId !== undefined) rebuilt.themeId = slide.themeId;
+  // The slide's own notes, which the teacher may have edited, win over the
+  // ones the skeleton was generated with.
+  if (slide.notes !== undefined) rebuilt.notes = slide.notes;
   return rebuilt;
 }
