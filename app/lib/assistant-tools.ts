@@ -56,12 +56,16 @@
 //     planner with a dead Generate button and no question asked. `slideshow` is
 //     the only tool without one: it is a wizard, and its own single required
 //     field is the whole gate.
-import { CURRICULA, YEAR_GROUPS } from "@/app/lib/formOptions";
+import { YEAR_GROUPS } from "@/app/lib/formOptions";
+import { JO_CURRICULUM_VALUES, JO_YEAR_VALUES } from "@/app/lib/curricula/jo";
 import { DIFFERENTIATION_VALUES } from "@/app/lib/differentiation";
 import { WORKSHEET_TEMPLATES } from "@/app/lib/sheets/worksheet-templates";
 import { EXAM_STYLES } from "@/app/lib/sheets/exam-styles";
 
-const CURRICULUM_VALUES = CURRICULA.map((c) => c.value);
+// Every curriculum in the registry, the UK five first. Jo still defaults to
+// England's; app/lib/curricula/jo.ts fits the prefill to the teacher's own
+// school system afterwards, and needs its values to survive validation.
+const CURRICULUM_VALUES = JO_CURRICULUM_VALUES;
 
 /** Output length, shared by every tool with an OutputDetailField. */
 const OUTPUT_DETAILS = ["condensed", "standard", "detailed"] as const;
@@ -177,7 +181,9 @@ const curriculumFields = {
   },
   yearGroup: {
     type: "string",
-    enum: YEAR_GROUPS,
+    // England's years first, then every other system's, so a year fitted to
+    // the teacher's curriculum (curricula/jo.ts) passes validation.
+    enum: JO_YEAR_VALUES,
     description: "The year group, e.g. 'Year 4'. Omit if the teacher did not say.",
   },
   subject: {
@@ -933,7 +939,10 @@ export const ASSISTANT_TOOLS: AssistantTool[] = [
         // value this list does not contain, and it would then be discarded.
         year: {
           type: "string",
-          enum: SLIDESHOW_YEARS,
+          // The wizard's own list, then every other system's year names, so
+          // a year fitted to the teacher's curriculum (curricula/jo.ts)
+          // survives validation.
+          enum: [...SLIDESHOW_YEARS, ...JO_YEAR_VALUES.filter((y) => !(SLIDESHOW_YEARS as readonly string[]).includes(y))],
           description:
             "The year group. Omit if the teacher did not say — the wizard " +
             "treats that as 'Any year'.",

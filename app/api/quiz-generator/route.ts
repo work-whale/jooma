@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { parseQuizAnswer, quizRequest, type QuizRequestBody } from "@/app/lib/quiz/prompt";
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const message = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "quiz-generator",
       step: await confirmFollowOn("quiz-generator", quizUsageStep(body.action)),
       ...(await modelFor("quiz-generator", "gpt-4o")),

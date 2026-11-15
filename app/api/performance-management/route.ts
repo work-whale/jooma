@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { performanceManagementRequest } from "@/app/lib/performance-management-prompt";
 
 /*
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
   if ("error" in built) return NextResponse.json({ error: built.error }, { status: 400 });
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "performance-management",
     ...(await modelFor("performance-management", "gpt-4o")),
     max_completion_tokens: 4000,

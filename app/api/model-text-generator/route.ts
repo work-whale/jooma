@@ -4,6 +4,7 @@ import { modelFor } from "@/app/lib/tool-model";
 import { bandUsageStep } from "@/app/lib/differentiation";
 import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { modelTextRequest, type ModelTextRequest } from "@/app/lib/model-text-prompt";
 
 export type { ModelTextRequest as ModelTextGeneratorRequest };
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "model-text-generator",
     step: await confirmFollowOn("model-text-generator", bandUsageStep(body.band, body.bandIndex)),
     ...(await modelFor("model-text-generator", "gpt-4o")),

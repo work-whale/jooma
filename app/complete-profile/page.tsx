@@ -9,6 +9,9 @@ import DialCodeSelect, {
   DEFAULT_DIAL_CODE as DEFAULT_CODE,
 } from "@/app/components/DialCodeSelect";
 import { CountrySelect } from "@/app/components/ui/FormFields";
+import CurriculumPicker from "@/app/components/CurriculumPicker";
+import { inferCurriculum } from "@/app/lib/curricula";
+import { resetTeacherCurriculum, useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
 import styles from "./complete-profile.module.css";
@@ -79,6 +82,13 @@ export default function CompleteProfilePage() {
   useEffect(() => {
     setCountry(dialCountry);
   }, [dialCountry]);
+
+  // Their curriculum, defaulted from the country until they pick one: a
+  // teacher in Jersey starts on the Jersey Curriculum, everyone else on
+  // England, as before. Saved after the profile, and never blocks signing up.
+  const { offered } = useTeacherCurriculum();
+  const [pickedCurriculum, setPickedCurriculum] = useState<string | null>(null);
+  const curriculumId = pickedCurriculum || inferCurriculum({ country }, offered);
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -273,6 +283,18 @@ export default function CompleteProfilePage() {
       return;
     }
 
+    // Separate from the upsert above so a failure here (or the column not
+    // existing yet) can never stop a teacher signing up. Logged, not shown:
+    // the Curriculum section of /profile can always set it.
+    const { error: curriculumError } = await supabase
+      .from("profiles")
+      .update({ curriculum_id: curriculumId, curriculum_confirmed_at: new Date().toISOString() })
+      .eq("id", user.id);
+    if (curriculumError) console.error("[complete-profile] curriculum not saved", curriculumError);
+    // The store loaded before this profile existed; reload it, or the app
+    // would ask them to confirm the curriculum they have just chosen.
+    resetTeacherCurriculum();
+
     // Record a "rather not" from either page, now that there is an account to
     // record it against. Before the invite step, which can end this handler
     // early. A failure is logged and not shown: the profile is saved, and the
@@ -450,6 +472,16 @@ export default function CompleteProfilePage() {
             Country
           </label>
           <CountrySelect value={country} onChange={setCountry} />
+        </div>
+
+        <div className={auth.field}>
+          <CurriculumPicker
+            value={curriculumId}
+            onChange={setPickedCurriculum}
+            offered={offered}
+            selectClassName={auth.input}
+            labelClassName={auth.label}
+          />
         </div>
 
         <div className={auth.field}>

@@ -7,7 +7,6 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
@@ -16,6 +15,7 @@ import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageF
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { EYFS_TIMESCALES, eyfsTimescale } from "@/app/lib/sheets/eyfs-action-plan";
+import { useFormCurriculum } from "@/app/components/CurriculumYearFields";
 
 const TOOL_SLUG = "eyfs-action-plan";
 
@@ -35,7 +35,7 @@ export default function EYFSActionPlanForm({
   launch?: ToolLaunchParams;
 }) {
   const fieldId = useId();
-  const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
+  const [curriculum, setCurriculum] = useFormCurriculum();
   const [objective, setObjective] = useState("");
   const [timescale, setTimescale] = useState<string>("One year");
 

@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 export const maxDuration = 30;
 
@@ -44,7 +45,7 @@ Return 5-8 essential terms — the specific subject words pupils need to learn f
 
   try {
     const completion = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "suggest-vocabulary",
       ...(await modelFor("suggest-vocabulary", "gpt-4o-2024-08-06")),
       messages: [

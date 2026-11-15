@@ -18,7 +18,8 @@ import { languageFormState, parseLanguage } from "@/app/lib/languages";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parseSheet } from "@/app/lib/sheets/normalize";
 import { isQuestion } from "@/app/lib/sheets/types";
-import { DEFAULT_EXAM_STYLE, EXAM_STYLES, examStyle, isExamStyle, offersTier, styleFromExamType } from "@/app/lib/sheets/exam-styles";
+import { DEFAULT_EXAM_STYLE, examStyle, isExamStyle, offersTier, styleFromExamType } from "@/app/lib/sheets/exam-styles";
+import { examStylesFor } from "@/app/lib/curricula/tool-scope";
 
 const TOOL_SLUG = "exam-question-generator";
 
@@ -192,9 +193,10 @@ export default function ExamQuestionGeneratorForm({
             <div className="space-y-1.5">
               <label htmlFor={`${fieldId}-style`} className="block text-sm font-semibold text-gray-800">Paper style</label>
               <select id={`${fieldId}-style`} value={styleId} onChange={(e) => pickStyle(e.target.value)} className={inputClass} data-testid="exam-style">
-                {GROUPS.map((g) => (
+                {/* KS2 SATs and GCSE board styles only where England's papers are sat. */}
+                {GROUPS.filter((g) => examStylesFor(curriculum).some((s) => s.phase === g.phase)).map((g) => (
                   <optgroup key={g.phase} label={g.label}>
-                    {EXAM_STYLES.filter((s) => s.phase === g.phase).map((s) => (
+                    {examStylesFor(curriculum).filter((s) => s.phase === g.phase).map((s) => (
                       <option key={s.id} value={s.id}>{s.label}</option>
                     ))}
                   </optgroup>

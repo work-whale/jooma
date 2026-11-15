@@ -1,6 +1,8 @@
 "use client";
 
-import { DIFFERENTIATION_BANDS, type Differentiate } from "@/app/lib/differentiation";
+import { type Differentiate } from "@/app/lib/differentiation";
+import { bandsFor } from "@/app/lib/curricula/tool-scope";
+import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 
 interface Props {
   value: Differentiate;
@@ -29,6 +31,10 @@ export default function DifferentiationField({
   name = "differentiate",
   onLocked,
 }: Props) {
+  // England's KS codes for a UK-like teacher; plain names for anyone else.
+  // Same four values either way.
+  const bands = bandsFor(useTeacherCurriculum().id);
+  const standard = bands.find((b) => b.value === "EXS")!.label;
   const toggle = (band: string) => {
     if (levels.includes(band)) onLevelsChange(levels.filter((b) => b !== band));
     else onLevelsChange([...levels, band]);
@@ -73,11 +79,11 @@ export default function DifferentiationField({
       {value === "yes" && !onLocked && (
         <div className="space-y-2 pt-1">
           <p className="text-xs text-gray-500">
-            Select the attainment bands to adapt for, as many as apply. EXS is the standard version.
+            Select the attainment bands to adapt for, as many as apply. {standard} is the standard version.
           </p>
 
           <div className="flex flex-wrap gap-3">
-            {DIFFERENTIATION_BANDS.map(({ value: band, label, detail }) => {
+            {bands.map(({ value: band, label, detail }) => {
               const selected = levels.includes(band);
               return (
                 <button

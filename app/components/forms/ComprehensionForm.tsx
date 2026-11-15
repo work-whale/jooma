@@ -15,7 +15,8 @@ import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
-import { defaultDomainCodes, domainsFor, keyStageFor } from "@/app/lib/comprehension-domains";
+import { domainsFor } from "@/app/lib/comprehension-domains";
+import { readingStageFor } from "@/app/lib/curricula/tool-scope";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-options";
 import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
@@ -102,7 +103,8 @@ export default function ComprehensionForm({
   // The history run on screen, so edits to its sheet save back into it.
   const [runId, setRunId] = useState<string | null>(null);
 
-  const ks = keyStageFor(yearGroup, mixed);
+  // By age for any school system, so "3rd Class" and "Stage 2" get the right set.
+  const ks = readingStageFor(yearGroup, mixed, curriculum);
   const currentDomains = domainsFor(ks);
 
   const prevKsRef = useRef(ks);
@@ -191,7 +193,7 @@ export default function ComprehensionForm({
     if (!yearGroup && !mixed) return;
     if (autoDomainsFor.current === ks) return;
     autoDomainsFor.current = ks;
-    if (contentDomains.length === 0) setContentDomains(defaultDomainCodes(yearGroup, mixed));
+    if (contentDomains.length === 0) setContentDomains(domainsFor(ks).map((d) => d.code));
   }, [prefilled, ks, yearGroup, mixed, contentDomains.length]);
 
   const handleGenerate = async () => {

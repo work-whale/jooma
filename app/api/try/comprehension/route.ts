@@ -21,6 +21,7 @@ import {
 } from "@/app/lib/guest";
 import { trialRefusalMessage } from "@/app/lib/trial-limits";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 type Body = GenerateRequest & { website?: string; formState?: Record<string, unknown> };
 
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
   let streamed: Response;
   try {
     streamed = await streamChat({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "comprehension-generator",
       ...(await modelFor("comprehension-generator", "gpt-4o")),
       max_completion_tokens: 8000,

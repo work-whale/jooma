@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { interventionRequest, type TargetedInterventionRequest } from "@/app/lib/intervention-prompt";
 
 export type { TargetedInterventionRequest };
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "targeted-intervention",
     ...(await modelFor("targeted-intervention", "gpt-4o")),
     max_completion_tokens: 8000,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { coverRequest, type CoverLessonRequest } from "@/app/lib/cover-prompt";
 
 export type { CoverLessonRequest };
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "cover-lesson",
     ...(await labModelFor(body, "cover-lesson", "gpt-4o")),
     max_completion_tokens: 8192,

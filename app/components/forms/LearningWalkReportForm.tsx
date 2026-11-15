@@ -15,7 +15,6 @@ import ConfirmModal from "@/app/components/ConfirmModal";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
 import Card from "@/app/components/ui/Card";
-import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
@@ -24,6 +23,7 @@ import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageF
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
 import { scrubStaffTitles } from "@/app/lib/staff-privacy";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
+import { useFormCurriculum } from "@/app/components/CurriculumYearFields";
 
 const TOOL_SLUG = "learning-walk-report";
 
@@ -142,7 +142,7 @@ export default function LearningWalkReportForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
-  const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
+  const [curriculum, setCurriculum] = useFormCurriculum();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [classesVisited, setClassesVisited] = useState("");
   const [focus, setFocus] = useState("");

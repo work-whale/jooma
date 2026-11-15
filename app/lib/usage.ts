@@ -15,6 +15,8 @@ import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { scanForSafeguarding, EXCERPT_MAX } from "@/app/lib/safeguarding";
 import { MODELS, isKnownModel, isReasoning } from "@/app/lib/models";
 import { withLanguage } from "@/app/lib/languages";
+import { withCurriculum } from "@/app/lib/curricula";
+import { resolveCurriculum } from "@/app/lib/curricula/server";
 
 // Pricing lives in app/lib/models.ts so the admin dropdown and the cost maths
 // cannot disagree about what a model costs. Unknown models fall back to gpt-4o
@@ -431,6 +433,13 @@ type StreamParams = Omit<
      * final system message that overrides the prompts' "UK English" lines.
      */
     language?: unknown;
+    /**
+     * The teacher's curriculum id (or the label a form sent), untrusted and
+     * parsed in lib/curricula. When the request names none, the teacher's
+     * profile curriculum is used. A UK curriculum or none adds nothing. Any
+     * other school system appends one final system message naming it.
+     */
+    curriculum?: unknown;
   };
 
 /** Run a streaming chat completion and return a plain-text streaming Response,
@@ -444,9 +453,11 @@ export async function streamChat({
   safeguardingText,
   onComplete,
   language,
+  curriculum,
   ...rest
 }: StreamParams): Promise<Response> {
-  const params = { ...rest, messages: withLanguage(rest.messages, language) };
+  const curriculumId = await resolveCurriculum(curriculum);
+  const params = { ...rest, messages: withCurriculum(withLanguage(rest.messages, language, curriculumId), curriculumId) };
   // Resolve the user NOW, while the request context (and therefore its cookies)
   // is still alive. recordUsage runs in the stream's `finally`, long after the
   // response has been handed off, where the session is no longer readable.
@@ -559,6 +570,13 @@ type CompletionParams = Omit<
     skipUsage?: boolean;
     /** Output language, as on streamChat. */
     language?: unknown;
+    /**
+     * The teacher's curriculum id (or the label a form sent), untrusted and
+     * parsed in lib/curricula. When the request names none, the teacher's
+     * profile curriculum is used. A UK curriculum or none adds nothing. Any
+     * other school system appends one final system message naming it.
+     */
+    curriculum?: unknown;
   };
 
 /**
@@ -579,9 +597,11 @@ export async function createCompletion({
   runId,
   skipUsage,
   language,
+  curriculum,
   ...rest
 }: CompletionParams): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-  const params = { ...rest, messages: withLanguage(rest.messages, language) };
+  const curriculumId = await resolveCurriculum(curriculum);
+  const params = { ...rest, messages: withCurriculum(withLanguage(rest.messages, language, curriculumId), curriculumId) };
   const reasoning: ReasoningParams = {
     reasoning_effort: params.reasoning_effort,
     verbosity: params.verbosity,

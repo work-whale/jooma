@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useId } from "react";
-import { CURRICULA } from "@/app/lib/formOptions";
+import CurriculumOptions from "@/app/components/CurriculumOptions";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import { Loader2, Sparkles, Minus, Plus } from "lucide-react";
 import ToolResults from "@/app/components/ToolResults";
@@ -12,9 +12,11 @@ import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { OTHER_SCHEME, PHONICS_SCHEMES } from "@/app/lib/phonics-schemes";
+import { showsUkPhonicsSchemes } from "@/app/lib/curricula/tool-scope";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
+import { useFormCurriculum } from "@/app/components/CurriculumYearFields";
 
 const TOOL_SLUG = "phonics-support";
 
@@ -33,7 +35,7 @@ export default function PhonicsForm({
   launch?: ToolLaunchParams;
 }) {
   const fieldId = useId();
-  const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
+  const [curriculum, setCurriculum] = useFormCurriculum();
   const [age, setAge] = useState(5);
   const [grapheme, setGrapheme] = useState("");
   // The school's phonics scheme, so the resource uses its words. The WBS to
@@ -133,10 +135,7 @@ export default function PhonicsForm({
               <div className="space-y-1.5">
                 <label htmlFor={`${fieldId}-0`} className="block text-sm font-semibold text-gray-800">Curriculum</label>
                 <select id={`${fieldId}-0`} value={curriculum} onChange={(e) => setCurriculum(e.target.value)} className={selectClass}>
-                  <option value="" disabled>Select curriculum</option>
-                  {CURRICULA.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
+                  <CurriculumOptions value={curriculum} />
                 </select>
               </div>
 
@@ -192,7 +191,8 @@ export default function PhonicsForm({
                 </label>
                 <select id={`${fieldId}-2`} value={scheme} onChange={(e) => setScheme(e.target.value)} className={selectClass}>
                   <option value="">Not set</option>
-                  {PHONICS_SCHEMES.map((s) => (
+                  {/* England's DfE-validated schemes; elsewhere a teacher types their own. */}
+                  {(showsUkPhonicsSchemes(curriculum) ? PHONICS_SCHEMES : []).map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                   <option value={OTHER_SCHEME}>Other (type it)</option>

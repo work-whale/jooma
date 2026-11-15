@@ -8,7 +8,6 @@ import Card from "@/app/components/ui/Card";
 import ToolResults from "@/app/components/ToolResults";
 import GenerateButton from "@/app/components/ui/GenerateButton";
 import ResetButton from "@/app/components/ui/ResetButton";
-import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import ToolHistoryPanel from "@/app/components/ToolHistoryPanel";
 import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
@@ -18,6 +17,7 @@ import { languageFormState, parseLanguage } from "@/app/lib/languages";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { findPolicy, policyStatusText, POLICY_GROUPS } from "@/app/lib/policy-catalogue";
 import { isEnglandCurriculum } from "@/app/lib/sheets/policy";
+import { useFormCurriculum } from "@/app/components/CurriculumYearFields";
 
 const TOOL_SLUG = "policy-generator";
 
@@ -79,7 +79,7 @@ export default function PolicyGeneratorForm({
   /** `?run=` — reopen a saved run. */
   launch?: ToolLaunchParams;
 }) {
-  const [curriculum, setCurriculum] = useLocalStorage("ll:curriculum", "");
+  const [curriculum, setCurriculum] = useFormCurriculum();
   const [policy, setPolicy] = useState("");
   const [additionalRequirements, setAdditionalRequirements] = useState("");
   const [outputType, setOutputType] = useState<"full" | "structure">("full");

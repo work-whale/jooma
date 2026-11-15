@@ -32,6 +32,8 @@ export interface SettingRow {
 const SECTION_TITLE: Record<string, string> = {
   access: "Access",
   general: "General",
+  // One switch per region (app/lib/curricula). The UK curricula need none.
+  curricula: "Curricula by region",
 };
 
 // Settings that persist correctly and are shown honestly, but that nothing

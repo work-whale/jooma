@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { behaviourRequest, type BehaviourPlanRequest } from "@/app/lib/behaviour-prompt";
 
 /*
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "behaviour-support-plan",
     ...(await labModelFor(body, "behaviour-support-plan", "gpt-4o")),
     max_completion_tokens: 8192,

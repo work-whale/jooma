@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { reportsRequest, type ReportsRequestBody } from "@/app/lib/reports/prompt";
 import { reportUsageStep } from "@/app/lib/reports/reports";
 import { confirmFollowOn } from "@/app/lib/follow-on-server";
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   // teacher's; otherwise the class's first request is the generation.
   const lab = await labModelFor(body, "report-writer", "gpt-4o");
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "report-writer",
     ...lab,
     step: lab.step ?? (await confirmFollowOn("report-writer", reportUsageStep(body.chunkIndex, body.redo))),

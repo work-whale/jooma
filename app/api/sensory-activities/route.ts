@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { sensoryRequest } from "@/app/lib/sensory-prompt";
 
 /*
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
   if ("error" in built) return NextResponse.json({ error: built.error }, { status: 400 });
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "sensory-activities",
     ...(await modelFor("sensory-activities", "gpt-4o")),
     max_completion_tokens: 8192,

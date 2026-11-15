@@ -12,20 +12,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { isCurriculumYear, loadStatements } from "@/app/lib/national-curriculum";
+import { alignmentMode, loadStandardsFor } from "@/app/lib/standards";
 
 export const maxDuration = 15;
 
 const empty = { subject: "", strand: "", statementIds: [] as string[] };
 
 export async function POST(req: NextRequest) {
-  let body: { topic?: string; year?: string };
+  let body: { topic?: string; year?: string; curriculumId?: string };
   try { body = await req.json(); } catch { return NextResponse.json(empty); }
 
   const topic = body.topic?.trim().slice(0, 300);
   const year = body.year;
-  if (!topic || !isCurriculumYear(year)) return NextResponse.json(empty);
+  if (!topic || typeof year !== "string") return NextResponse.json(empty);
 
-  const statements = await loadStatements(year);
+  // A curriculum with published standards picks from those; anything else
+  // (England, or no curriculum named) from England's, exactly as before.
+  const standards = alignmentMode(body.curriculumId) === "standards";
+  if (!standards && !isCurriculumYear(year)) return NextResponse.json(empty);
+  const statements = standards ? (await loadStandardsFor(body.curriculumId, year)).statements : await loadStatements(year as Parameters<typeof loadStatements>[0]);
   if (statements.length === 0) return NextResponse.json(empty);
 
   // Numbers rather than ids: shorter for the model, and unambiguous to check.

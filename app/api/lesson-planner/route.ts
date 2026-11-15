@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { lessonRequest, type LessonPlanRequest } from "@/app/lib/lesson-prompt";
 
 export type { LessonPlanRequest };
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "lesson-planner",
     ...(await labModelFor(body, "lesson-planner", "gpt-4o")),
     // A whole plan as JSON, quizzes and adaptations included, is longer than

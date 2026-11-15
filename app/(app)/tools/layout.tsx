@@ -8,6 +8,7 @@ import { JoActivityProvider } from "@/app/lib/JoActivityContext";
 import { RestoredRunProvider } from "@/app/lib/RestoredRunContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 import DesktopHintPill from "@/app/components/jo/DesktopHintPill";
+import UkOnlyToolNote from "@/app/components/UkOnlyToolNote";
 
 const ROUTE_LABELS: Record<string, string> = {
   "/tools/lesson-planner": "Lesson Planner",
@@ -100,6 +101,7 @@ function ToolPageChrome({
           listener has nothing to scope itself to and would have to watch the
           whole document — which is exactly the bug that let one click anywhere
           in the app cancel a fill. */}
+      <UkOnlyToolNote pathname={pathname} />
       <div className="grow" data-jo-form="">
         <RestoredRunProvider>{children}</RestoredRunProvider>
       </div>

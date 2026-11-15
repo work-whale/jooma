@@ -17,6 +17,8 @@ import {
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { ToolTile } from "@/app/components/v2/Squircle";
 import { minutesSavedFor, V2_TOOLS, v2ToolForSlug, toolSolid } from "@/app/lib/tools";
+import { isToolHiddenFor } from "@/app/lib/curricula/tool-scope";
+import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import { createChat, saveMessage } from "@/app/lib/assistantChats";
 import { createClient } from "@/app/lib/auth/client";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
@@ -237,6 +239,11 @@ export default function TodayView({
    * window is left open rather than clamped shut — a ranking over all history
    * is a reasonable thing to show for one frame; an empty row is not.
    */
+  // Tools built only for UK schools are never suggested to a teacher on
+  // another school system. Ones they have actually used still rank.
+  const { id: curriculumId } = useTeacherCurriculum();
+  const offeredTools = useMemo(() => V2_TOOLS.filter((t) => !isToolHiddenFor(t.href.replace("/tools/", ""), curriculumId)), [curriculumId]);
+
   const mostUsed = useMemo(() => {
     const cutoff = now ? now.getTime() - THIRTY_DAYS_MS : 0;
     const counts = new Map<string, number>();
@@ -259,14 +266,15 @@ export default function TodayView({
     // would render twice under the same key.
     const seen = new Set(ranked.map((t) => t.href));
     const out = [...ranked];
-    for (const tool of [...STARTER_SLUGS.flatMap((s) => v2ToolForSlug(s) ?? []), ...V2_TOOLS]) {
+    for (const tool of [...STARTER_SLUGS.flatMap((s) => v2ToolForSlug(s) ?? []), ...offeredTools]) {
       if (out.length >= 6) break;
       if (seen.has(tool.href)) continue;
+      if (isToolHiddenFor(tool.href.replace("/tools/", ""), curriculumId)) continue;
       seen.add(tool.href);
       out.push(tool);
     }
     return out.slice(0, 6);
-  }, [runs, now]);
+  }, [runs, now, offeredTools, curriculumId]);
 
   const recent = runs.slice(0, 5);
 
@@ -531,7 +539,7 @@ export default function TodayView({
           <span className={app.shSub}>based on the last month</span>
         </div>
         <Link href="/tools" className={app.shLink}>
-          All {V2_TOOLS.length}
+          All {offeredTools.length}
         </Link>
       </div>
 

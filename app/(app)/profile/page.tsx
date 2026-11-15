@@ -9,6 +9,7 @@ import { asSection } from "./sections-shared";
 import { SectionSkeleton } from "./Skeletons";
 import ProfileHeader from "./ProfileHeader";
 import PersonalInfoSection from "./PersonalInfoSection";
+import CurriculumSection from "./CurriculumSection";
 import SubscriptionSection from "./SubscriptionSection";
 import BadgesSection from "./BadgesSection";
 import ChangePasswordSection from "./ChangePasswordSection";
@@ -72,6 +73,7 @@ export default async function ProfilePage({
           */}
           <Suspense key={section} fallback={<SectionSkeleton section={section} />}>
             {section === "personal" && <PersonalInfoSection />}
+            {section === "curriculum" && <CurriculumSection />}
             {section === "subscription" && (
               <SubscriptionSection tab={tab} checkout={checkout} topup={topup} switchTo={switchTo} />
             )}

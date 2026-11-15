@@ -31,8 +31,7 @@ import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-opti
 import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
 import type { ComprehensionGuestMode } from "@/app/components/forms/ComprehensionForm";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "@/app/components/slideshow/CurriculumAlignment";
-import type { NcStatement } from "@/app/lib/national-curriculum";
-import { curriculumAlignParam } from "@/app/lib/national-curriculum/prompt";
+import { alignParamFor, type AlignStatement } from "@/app/lib/standards/align";
 import { DEFAULT_TEMPLATE_ID, isTemplateId, templateById, type WorksheetTemplate } from "@/app/lib/sheets/worksheet-templates";
 import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageField";
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
@@ -74,7 +73,7 @@ export default function WorksheetGeneratorForm({
   // selection so their text can be sent without loading the data again.
   const [alignCurriculum, setAlignCurriculum] = useState(false);
   const [curSelection, setCurSelection] = useState<CurriculumSelection>(EMPTY_SELECTION);
-  const [curStatements, setCurStatements] = useState<NcStatement[]>([]);
+  const [curStatements, setCurStatements] = useState<AlignStatement[]>([]);
   const curYear = curSelection.year || (mixed ? "" : yearGroup);
 
   const [result, setResult] = useState<string | null>(null);
@@ -171,7 +170,7 @@ export default function WorksheetGeneratorForm({
     setIsGenerating(true);
     setLastGenerated(formSnapshot);
     const info = { yearGroup: mixed ? "Mixed" : yearGroup, subject: toTitleCase(subject), template };
-    const curriculumAlign = guest ? undefined : curriculumAlignParam(alignCurriculum, curYear, curSelection, curStatements);
+    const curriculumAlign = guest ? undefined : alignParamFor(curriculum, alignCurriculum, curYear, curSelection, curStatements);
     const send = (extra: Record<string, unknown> = {}) =>
       fetch(guest?.endpoint ?? "/api/worksheet-generator", {
         method: "POST",
@@ -271,6 +270,7 @@ export default function WorksheetGeneratorForm({
             {!guest && (
               <CurriculumAlignment
                 noun="worksheet"
+                curriculum={curriculum}
                 checked={alignCurriculum}
                 onCheckedChange={setAlignCurriculum}
                 topic={learningObjective}

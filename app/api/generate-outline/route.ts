@@ -3,6 +3,7 @@ import { streamChat } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { buildSystem } from "@/app/lib/systemPrompt";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 interface GenerateOutlineRequest {
   topic: string;
@@ -32,7 +33,7 @@ Write 5–7 bullet points covering the key content areas, concepts, or learning 
 Output only the bullet points, each on its own line starting with "- ". No introduction, no header, no trailing text.`;
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "generate-outline",
     ...(await modelFor("generate-outline", "gpt-4o")),
     max_completion_tokens: 512,
