@@ -25,6 +25,8 @@ import { isStaffDeck } from "@/app/lib/staff-deck-prompt";
 const STAFF_DECK_SYSTEM =
   "You are an experienced UK school leader and teacher educator designing slides for a staff training session or a school assembly. Your output is structured JSON. Slides carry few words and strong pictures; the speaker notes carry the explanation. You never invent statistics, quotes or research findings.";
 import { withLanguage } from "@/app/lib/languages";
+import { requestCurriculum, withCurriculum } from "@/app/lib/curricula";
+import { resolveCurriculum } from "@/app/lib/curricula/server";
 import type OpenAI from "openai";
 
 type ImageSource = "auto" | "ai" | "web";
@@ -760,16 +762,18 @@ export function slideshowStream({
         };
 
         const client = getOpenAI();
+        const curriculumId = await resolveCurriculum(requestCurriculum(body));
         // Resolved once and reused for the cost rollup below, so the deck is
         // priced with the model that actually ran.
         const deckModel = await modelFor("generate-slideshow", "gpt-4o-2024-08-06");
         const stream = await client.chat.completions.create({
           ...forSdk(deckModel),
-          // UK English (the default) adds nothing: same messages as ever.
-          messages: withLanguage<OpenAI.Chat.Completions.ChatCompletionMessageParam>([
+          // UK English and a UK curriculum (the defaults) add nothing: same
+          // messages as ever.
+          messages: withCurriculum(withLanguage<OpenAI.Chat.Completions.ChatCompletionMessageParam>([
             { role: "system", content: isStaffDeck(body) ? STAFF_DECK_SYSTEM : "You are a senior pedagogical lesson designer creating UK classroom slideshows. Your output is structured JSON. Your style is vivid, specific, and memorable — every slide should feel like it was designed by a thoughtful teacher who understands their audience." },
             { role: "user", content: buildPrompt(body) },
-          ], body.language),
+          ], body.language, curriculumId), curriculumId),
           response_format: { type: "json_schema", json_schema: schemaFor(body) },
           stream: true,
           // Ask for token usage in the final stream chunk so we can log the

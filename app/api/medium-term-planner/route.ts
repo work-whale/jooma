@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { unitRequest, type UnitPlanRequest } from "@/app/lib/unit-prompt";
 
 export type MediumTermPlannerRequest = UnitPlanRequest;
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "medium-term-planner",
     ...(await labModelFor(body, "medium-term-planner", "gpt-4o")),
     // Every field of every lesson, up to 30 lessons, as JSON.

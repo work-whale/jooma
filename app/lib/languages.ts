@@ -17,6 +17,8 @@
  * Shared by client and server: no server-only imports.
  */
 
+import { getCurriculum, isUkCurriculum } from "./curricula";
+
 export interface Language {
   /** BCP 47 code. Also what is stored in localStorage and sent to the API. */
   code: string;
@@ -75,7 +77,7 @@ export function isNonDefaultLanguage(value: unknown): boolean {
  * system message so it outranks the "UK English" lines in the tool prompts.
  * Empty for UK English: nothing is added, the prompt is unchanged.
  */
-export function languageInstruction(value: unknown): string {
+export function languageInstruction(value: unknown, curriculum?: unknown): string {
   const lang = getLanguage(value);
   if (lang.code === DEFAULT_LANGUAGE) return "";
 
@@ -92,10 +94,20 @@ export function languageInstruction(value: unknown): string {
     `Write every word a teacher or pupil will read in ${lang.promptName}: titles, instructions, questions, answers, passages, notes, labels and speaker notes. This overrides any earlier instruction to write in UK or British English.`,
     "Keep JSON keys, schema field names and enum values exactly as specified, in English.",
     "Any image search query or image description field stays in English, because the image search only understands English.",
-    `Keep the UK school context (year groups, key stages, GCSE and the named curriculum) and express it naturally in ${lang.promptName}.`,
+    schoolContextLine(lang.promptName, curriculum),
     `Where the instructions above quote English wording for you to use, such as starting an objective with "I am learning to", that is the pattern, not the words: write its natural ${lang.promptName} equivalent instead.`,
     `Quoted text the teacher supplied stays as they wrote it; write everything around it in ${lang.promptName}.`,
   ].join(" ");
+}
+
+/** Which school context a translated prompt keeps. A UK curriculum (or none)
+ *  gets exactly the line it always has; another system keeps its own. */
+function schoolContextLine(promptName: string, curriculum: unknown): string {
+  const c = getCurriculum(curriculum);
+  if (!c || isUkCurriculum(c.id)) {
+    return `Keep the UK school context (year groups, key stages, GCSE and the named curriculum) and express it naturally in ${promptName}.`;
+  }
+  return `Keep the school context of the ${c.name} (its year or grade names, its assessments and its standards) and express it naturally in ${promptName}.`;
 }
 
 /** For a spoken voice: the accent line used in place of the British one. */
@@ -111,8 +123,8 @@ export function voiceAccent(value: unknown): string {
  * untouched, which is what keeps every existing generation byte for byte as
  * it was.
  */
-export function withLanguage<M extends { role: string }>(messages: M[], value: unknown): M[] {
-  const instruction = languageInstruction(value);
+export function withLanguage<M extends { role: string }>(messages: M[], value: unknown, curriculum?: unknown): M[] {
+  const instruction = languageInstruction(value, curriculum);
   if (!instruction) return messages;
   return [...messages, { role: "system", content: instruction } as unknown as M];
 }

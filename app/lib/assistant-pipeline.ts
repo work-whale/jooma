@@ -31,6 +31,9 @@
 import { NextResponse } from "next/server";
 import { streamChat, createCompletion, currentUserId } from "@/app/lib/usage";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
+import { fitPrefillToCurriculum } from "@/app/lib/curricula/jo";
+import { resolveCurriculum } from "@/app/lib/curricula/server";
 import { labModelFor } from "@/app/lib/model-lab";
 import { modelFor } from "@/app/lib/tool-model";
 import {
@@ -238,7 +241,7 @@ export async function runAssistantTurn(
         : "";
 
   const response = await streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "assistant",
     // Guests never get the admin model lab, whatever their body says.
     ...(opts.guest
@@ -572,6 +575,13 @@ ${toolSchemaDigest()}${forcedInstruction(forced)}`,
       if (forced) (raw as { slug?: string }).slug = forced.slug;
 
       const prefill = validatePrefill(raw);
+      // Jo defaults to England's curriculum and year names; fit them to the
+      // teacher's own school system (their curriculum unless they named
+      // England's, and the year at the same age). A no-op for England.
+      if (prefill && userId) {
+        const said = [...history].reverse().find((m) => m.role === "user")?.content ?? "";
+        fitPrefillToCurriculum(prefill.fields, await resolveCurriculum(null), said);
+      }
 
       // Diagnostic: what the model SENT beside what survived validation.
       //

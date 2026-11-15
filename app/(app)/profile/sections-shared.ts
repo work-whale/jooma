@@ -8,6 +8,7 @@
 
 export const SECTIONS = [
   { id: "personal", label: "Personal info" },
+  { id: "curriculum", label: "Curriculum" },
   { id: "subscription", label: "Plan and usage" },
   { id: "badges", label: "Badges" },
   { id: "password", label: "Change password" },

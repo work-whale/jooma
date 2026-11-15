@@ -4,6 +4,7 @@ import { modelFor } from "@/app/lib/tool-model";
 import { bandUsageStep } from "@/app/lib/differentiation";
 import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { homeworkRequest, type HomeworkRequest } from "@/app/lib/homework-prompt";
 
 export type { HomeworkRequest };
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "homework-generator",
     step: await confirmFollowOn("homework-generator", bandUsageStep(body.band, body.bandIndex)),
     ...(await modelFor("homework-generator", "gpt-4o")),

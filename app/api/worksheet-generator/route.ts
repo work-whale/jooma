@@ -5,6 +5,7 @@ import { worksheetRequest, type WorksheetRequest } from "@/app/lib/worksheet-pro
 import { bandUsageStep } from "@/app/lib/differentiation";
 import { confirmFollowOn } from "@/app/lib/follow-on-server";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 export type { WorksheetRequest };
 
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "worksheet-generator",
     step: await confirmFollowOn("worksheet-generator", bandUsageStep(body.band, body.bandIndex)),
     ...(await modelFor("worksheet-generator", "gpt-4o")),

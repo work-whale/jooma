@@ -10,8 +10,9 @@ import ResourceLibraryModal from "./ResourceLibraryModal";
 import { DEFAULT_THEME_ID, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme } from "@/app/lib/slideshowThemes";
 import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
-import type { NcStatement } from "@/app/lib/national-curriculum";
-import { curriculumAlignParam } from "@/app/lib/national-curriculum/prompt";
+import { alignParamFor, type AlignStatement } from "@/app/lib/standards/align";
+import { alignmentMode } from "@/app/lib/standards";
+import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
 import { SLIDESHOW_YEARS } from "@/app/lib/assistant-tools";
@@ -185,6 +186,15 @@ export default function GenerateModal({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const inline = variant === "page";
 
+  // The year list follows the teacher's school system: today's list for the
+  // UK and the islands, their own year names (plus adult learners) elsewhere.
+  // A guest has no curriculum and gets the UK list.
+  const teacherCurriculum = useTeacherCurriculum();
+  const yearOptions =
+    guest || alignmentMode(teacherCurriculum.id) === "england"
+      ? YEARS
+      : [...teacherCurriculum.curriculum.years.map((y) => y.label), "Adult learners"];
+
   // Each step opens at its top. The body is one scroll box shared by all
   // three steps (and on the page variant the window is), so without this the
   // theme step opened where the long Refine step had been scrolled to: the
@@ -288,7 +298,7 @@ export default function GenerateModal({
   // ticked statements in full, to send with the deck.
   const [alignCurriculum, setAlignCurriculum] = useState(false);
   const [curSelection, setCurSelection] = useState<CurriculumSelection>(EMPTY_SELECTION);
-  const [curStatements, setCurStatements] = useState<NcStatement[]>([]);
+  const [curStatements, setCurStatements] = useState<AlignStatement[]>([]);
   const curYear = curSelection.year || year;
   // Resource attached in Step 1 — always available (no toggle).
   // When attached, the extracted text gets sent to the AI as base material.
@@ -327,7 +337,7 @@ export default function GenerateModal({
    *  where they come from. Undefined when the card is off, the year is not
    *  covered, or nothing is ticked. */
   const curriculumParam = (): GenerationParams["curriculum"] =>
-    curriculumAlignParam(alignCurriculum, curYear, curSelection, curStatements);
+    alignParamFor(teacherCurriculum.id, alignCurriculum, curYear, curSelection, curStatements);
 
   // Resolve the pasted YouTube link: parse the id locally, then confirm with
   // YouTube that it exists and will actually play in an embed. Catching a dead
@@ -645,7 +655,7 @@ export default function GenerateModal({
                   icon={<GraduationCap className="w-3.5 h-3.5" />}
                   value={year}
                   placeholder="Year group"
-                  options={[{ value: "", label: "Any year" }, ...YEARS.map((y) => ({ value: y, label: y }))]}
+                  options={[{ value: "", label: "Any year" }, ...yearOptions.map((y) => ({ value: y, label: y }))]}
                   onChange={setYear}
                   disabled={busy}
                 />

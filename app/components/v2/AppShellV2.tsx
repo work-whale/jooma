@@ -10,6 +10,7 @@ import AnnouncementBanner from "@/app/components/AnnouncementBanner";
 import TrialBanner from "./TrialBanner";
 import TrialEndedModal from "./TrialEndedModal";
 import DeletionBanner from "@/app/components/v2/DeletionBanner";
+import CurriculumBanner from "@/app/components/v2/CurriculumBanner";
 import { SquircleDefs } from "@/app/components/v2/Squircle";
 import { useAppShellSettings } from "@/app/components/v2/AppShellContext";
 import styles from "./AppShellV2.module.css";
@@ -232,6 +233,7 @@ export default function AppShellV2({
             account, not an announcement, so it shows on every screen that
             carries the chrome including the ones that opt out of banners. */}
         <DeletionBanner />
+        <CurriculumBanner />
         <TrialBanner />
         <TrialEndedModal />
         {shellBanner && <AnnouncementBanner />}

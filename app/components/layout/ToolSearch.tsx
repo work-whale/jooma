@@ -4,6 +4,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CiSearch } from "react-icons/ci";
 import { TOOLS } from "@/app/lib/tools";
+import { isToolHiddenFor } from "@/app/lib/curricula/tool-scope";
+import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 
 const TAG_COLORS: Record<string, string> = {
   Planning: "bg-blue-100 text-blue-700",
@@ -44,13 +46,15 @@ export default function ToolSearch({ variant, onNavigate }: ToolSearchProps) {
   const inputId = useId();
   const listId = useId();
 
+  const { id: curriculumId } = useTeacherCurriculum();
   const trimmed = query.trim().toLowerCase();
   const results = trimmed
     ? TOOLS.filter(
         (t) =>
-          t.label.toLowerCase().includes(trimmed) ||
+          !isToolHiddenFor(t.href.replace("/tools/", ""), curriculumId) &&
+          (t.label.toLowerCase().includes(trimmed) ||
           t.description.toLowerCase().includes(trimmed) ||
-          t.tag.toLowerCase().includes(trimmed)
+          t.tag.toLowerCase().includes(trimmed))
       ).slice(0, 6)
     : [];
 

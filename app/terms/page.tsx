@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Wordmark from "@/app/components/v2/Wordmark";
+import { FRAMEWORK_CREDIT } from "@/app/lib/standards/credits";
 
 /* Without this the page inherited the root layout's title and description, so
  * it announced itself as the home page. The canonical is the same apex/www
@@ -96,6 +97,23 @@ export default function TermsPage() {
             <p>
               Jooma Ltd<br />
               Email: <a href="mailto:info@jooma.ai" className="underline">info@jooma.ai</a>
+            </p>
+          </Section>
+
+          {/* Credits for the curriculum text Jooma shows. The same lines appear
+              under the "Align to curriculum" card wherever that text is listed
+              (app/lib/standards FRAMEWORK_CREDIT). */}
+          <Section id="credits" title="13. Curriculum and Standards Credits">
+            <p>Jooma shows curriculum statements from these sources, credited as their licences require:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>National Curriculum in England and the EYFS: contains public sector information licensed under the Open Government Licence v3.0.</li>
+              <li>{FRAMEWORK_CREDIT["ccss-math"]}</li>
+              <li>{FRAMEWORK_CREDIT.ngss}</li>
+              <li>{FRAMEWORK_CREDIT.ac9}</li>
+            </ul>
+            <p>
+              The International Baccalaureate, Cambridge International and Pearson Edexcel programmes are named so that teachers can choose
+              them. Their names are trademarks of their owners, Jooma does not reproduce their guides or syllabuses, and they do not endorse Jooma.
             </p>
           </Section>
 

@@ -18,7 +18,8 @@ import LanguageField, { useGenerationLanguage } from "@/app/components/LanguageF
 import { languageFormState, parseLanguage } from "@/app/lib/languages";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parseSheet } from "@/app/lib/sheets/normalize";
-import { EXAM_STYLES, isExamStyle } from "@/app/lib/sheets/exam-styles";
+import { isExamStyle } from "@/app/lib/sheets/exam-styles";
+import { examStylesFor } from "@/app/lib/curricula/tool-scope";
 import { EXEMPLAR_LEVELS, isExemplarLevel, type ExemplarLevel } from "@/app/lib/sheets/model-answers";
 import { MAX_MODEL_QUESTIONS, paperQuestions, type ModelAnswerQuestion, type PaperQuestion } from "@/app/lib/model-answer-prompt";
 
@@ -200,7 +201,7 @@ export default function ModelAnswerForm({
                 </label>
                 <select id={`${fieldId}-style`} value={styleId} onChange={(e) => setStyleId(e.target.value)} className={inputClass}>
                   <option value="">No particular paper</option>
-                  {EXAM_STYLES.filter((s) => s.phase !== "school").map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                  {examStylesFor(curriculum).filter((s) => s.phase !== "school").map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
                 </select>
               </div>
             </div>

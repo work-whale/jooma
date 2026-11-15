@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 export const maxDuration = 30;
 
@@ -41,7 +42,7 @@ ${text}
 
   try {
     const completion = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "edit-text",
       ...(await modelFor("edit-text", "gpt-4o-mini")),
       messages: [

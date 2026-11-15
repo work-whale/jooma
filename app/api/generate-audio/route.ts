@@ -12,6 +12,7 @@ import { recordUsage, recordAssetCost, createCompletion, costUsd, type Usage } f
 import { modelFor } from "@/app/lib/tool-model";
 import { CLIP_VOICE, saidVerbatim, synthesize } from "@/app/lib/speech";
 import { isNonDefaultLanguage, requestLanguage, voiceAccent } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 export const maxDuration = 120;
 
@@ -116,7 +117,7 @@ ${activityInstruction}${extraInstr}
 
 Return the questions array, plus an "answers" array with ONE model answer per question in the same order, plus a brief title and one-sentence description for the activity.`;
     const completion = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "generate-audio",
       ...scriptModel,
       messages: [
@@ -159,7 +160,7 @@ Write:
 Do NOT rewrite the script — leave the "script" field equal to the supplied text. Use British English in everything you write.`;
 
     const completion = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "generate-audio",
       ...scriptModel,
       messages: [
@@ -204,7 +205,7 @@ The "script" must be plain spoken text only — no stage directions, sound effec
     // slideshow's step/runId when nested). Recording it here as well would
     // double-count it — and token_usage feeds the spend ceiling.
     const completion = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "generate-audio",
       skipUsage: true,
       ...scriptModel,

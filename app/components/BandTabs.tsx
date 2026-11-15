@@ -2,7 +2,9 @@
 
 import { useRef } from "react";
 import { Loader2 } from "lucide-react";
-import { bandTitle, type BandVersion } from "@/app/lib/bands";
+import { type BandVersion } from "@/app/lib/bands";
+import { bandsFor } from "@/app/lib/curricula/tool-scope";
+import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import type { DifferentiationBand } from "@/app/lib/differentiation";
 
 interface Props {
@@ -23,6 +25,8 @@ interface Props {
  * the panel below never jumps when a fourth tab appears.
  */
 export default function BandTabs({ bands, active, onSelect, disabled = false }: Props) {
+  // Tab names follow the teacher's system: KS codes in the UK, plain words elsewhere.
+  const names = bandsFor(useTeacherCurriculum().id);
   const listRef = useRef<HTMLDivElement>(null);
 
   // Arrow keys move between tabs, as a tablist should.
@@ -47,7 +51,7 @@ export default function BandTabs({ bands, active, onSelect, disabled = false }: 
       >
         {bands.map((b) => {
           const selected = b.band === active;
-          const { label, detail } = bandTitle(b.band);
+          const { label, detail } = names.find((n) => n.value === b.band)!;
           return (
             <button
               key={b.band}

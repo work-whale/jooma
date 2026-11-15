@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 
 export const maxDuration = 60;
 
@@ -148,7 +149,7 @@ Use British English. Body should be tight and concrete — the kind of writing a
 
   try {
     const completion = await createCompletion({
-      language: requestLanguage(body),
+      language: requestLanguage(body), curriculum: requestCurriculum(body),
       toolSlug: "generate-activity",
       ...(await modelFor("generate-activity", "gpt-4o-2024-08-06")),
       messages: [

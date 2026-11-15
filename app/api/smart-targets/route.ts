@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamChat } from "@/app/lib/usage";
 import { labModelFor } from "@/app/lib/model-lab";
 import { requestLanguage } from "@/app/lib/languages";
+import { requestCurriculum } from "@/app/lib/curricula";
 import { targetsRequest, type SmartTargetsRequest } from "@/app/lib/targets-prompt";
 
 export type { SmartTargetsRequest };
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   return streamChat({
-    language: requestLanguage(body),
+    language: requestLanguage(body), curriculum: requestCurriculum(body),
     toolSlug: "smart-targets",
     ...(await labModelFor(body, "smart-targets", "gpt-4o")),
     max_completion_tokens: 6000,

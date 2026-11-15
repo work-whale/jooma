@@ -3,6 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, ChevronDown, HelpCircle, Loader2, Search, X } from "lucide-react";
 import { COUNTRIES } from "@/app/lib/curriculum";
+import { getCurriculum } from "@/app/lib/curricula";
+import {
+  FRAMEWORK_CREDIT,
+  alignmentMode,
+  alignmentYears,
+  frameworkOf,
+  loadStandardsFor,
+  shortCode,
+  type FrameworkId,
+} from "@/app/lib/standards";
+import type { AlignStatement } from "@/app/lib/standards/align";
+import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import {
   CURRICULUM_YEARS,
   STAGE_LABEL,
@@ -14,7 +26,6 @@ import {
   strandsIn,
   subjectsIn,
   type CurriculumYear,
-  type NcStatement,
 } from "@/app/lib/national-curriculum";
 
 /**
@@ -27,8 +38,12 @@ import {
  * teach, and pre-ticks the best matches for the topic, the way Chalkie does.
  * The ticked statements go to the deck prompt verbatim.
  *
- * Covers Nursery to Year 6. Any later year shows a short note instead of the
- * dropdowns: an empty or wrong list would be worse than an honest "not yet".
+ * England (and the islands that teach its curriculum) covers Nursery to Year
+ * 6 from app/lib/national-curriculum. A curriculum with published standards
+ * (Common Core and NGSS states, Australia) lists those, by year, from
+ * app/lib/standards, with each framework's credit under the list. Anything
+ * else shows a short note instead of the dropdowns: an empty or wrong list
+ * would be worse than an honest "not yet".
  */
 
 export interface CurriculumSelection {
@@ -51,11 +66,16 @@ interface Props {
   value: CurriculumSelection;
   /** The selection, and the ticked statements in full so the wizard can send
    *  their text without loading the data itself. */
-  onChange: (next: CurriculumSelection, selected: NcStatement[]) => void;
+  onChange: (next: CurriculumSelection, selected: AlignStatement[]) => void;
   disabled?: boolean;
   /** What is being made, for the card's wording. */
   noun?: "deck" | "worksheet";
+  /** The curriculum to align to (id or label). Defaults to the teacher's. */
+  curriculum?: string;
 }
+
+/** Subjects in the order the data first lists them. */
+const subjectsOf = (list: AlignStatement[]) => [...new Set(list.map((s) => s.subject))];
 
 const selectCls =
   "w-full appearance-none pl-2.5 pr-7 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 truncate";
@@ -69,12 +89,20 @@ export default function CurriculumAlignment({
   onChange,
   disabled,
   noun = "deck",
+  curriculum,
 }: Props) {
-  const year = value.year || stepYear;
-  const covered = isCurriculumYear(year);
-  const stage = stageForYear(year);
+  const teacher = useTeacherCurriculum();
+  const curriculumId = curriculum || teacher.id;
+  const cur = getCurriculum(curriculumId);
+  const mode = alignmentMode(curriculumId);
+  const england = mode === "england";
+  const standardYears = useMemo(() => (cur && mode === "standards" ? alignmentYears(cur).map((y) => y.label) : []), [cur, mode]);
 
-  const [statements, setStatements] = useState<NcStatement[] | null>(null);
+  const year = value.year || stepYear;
+  const covered = england ? isCurriculumYear(year) : standardYears.includes(year);
+  const stage = england ? stageForYear(year) : null;
+
+  const [statements, setStatements] = useState<AlignStatement[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [query, setQuery] = useState("");
@@ -89,12 +117,15 @@ export default function CurriculumAlignment({
     }
     let cancelled = false;
     setLoading(true);
-    loadStatements(year as CurriculumYear)
+    const load: Promise<AlignStatement[]> = england
+      ? loadStatements(year as CurriculumYear)
+      : loadStandardsFor(curriculumId, year).then((r) => r.statements);
+    load
       .then((list) => { if (!cancelled) setStatements(list); })
       .catch(() => { if (!cancelled) setStatements([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [checked, covered, year]);
+  }, [checked, covered, year, england, curriculumId]);
 
   // A new year invalidates the subject and ticks, which belong to the old one.
   // Unless the selection was replaced in the same render: that is a saved run
@@ -139,7 +170,7 @@ export default function CurriculumAlignment({
         const res = await fetch("/api/suggest-subject", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic: topic.trim(), year }),
+          body: JSON.stringify({ topic: topic.trim(), year, curriculumId: england ? undefined : cur?.id }),
         });
         if (!res.ok || cancelled) return;
         const pick = (await res.json()) as { subject: string; strand: string; statementIds: string[] };
@@ -159,14 +190,23 @@ export default function CurriculumAlignment({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checked, covered, statements, topic, year]);
 
-  const subjects = useMemo(() => (statements ? subjectsIn(statements) : []), [statements]);
+  // England's helpers take its own statement type; the shape they read
+  // (subject, strand, text, id) is the same for every framework.
+  type Nc = Parameters<typeof subjectsIn>[0];
+  const subjects = useMemo(() => (statements ? (england ? subjectsIn(statements as Nc) : subjectsOf(statements)) : []), [statements, england]);
   const strands = useMemo(
-    () => (statements && value.subject ? strandsIn(statements, value.subject) : []),
+    () => (statements && value.subject ? strandsIn(statements as Nc, value.subject) : []),
     [statements, value.subject],
   );
+  // The frameworks on the list, for the credits under it.
+  const credits = useMemo(() => {
+    if (england || !statements) return [];
+    const ids = [...new Set(statements.map((s) => frameworkOf(s.id)).filter((f): f is FrameworkId => f !== null))];
+    return [...new Set(ids.map((f) => FRAMEWORK_CREDIT[f]))];
+  }, [statements, england]);
   const listed = useMemo(() => {
     if (!statements || !value.subject) return [];
-    const inStrand = statementsIn(statements, value.subject, value.strand || null);
+    const inStrand = statementsIn(statements as Nc, value.subject, value.strand || null) as AlignStatement[];
     const q = query.trim().toLowerCase();
     return q ? inStrand.filter((s) => s.text.toLowerCase().includes(q) || s.strand.toLowerCase().includes(q)) : inStrand;
   }, [statements, value.subject, value.strand, query]);
@@ -216,7 +256,41 @@ export default function CurriculumAlignment({
 
       {checked && (
         <div className="px-3 pb-3 pt-3 space-y-2.5" style={{ borderTop: "1px solid #F0EFE8" }}>
+          {/* A school system with no published standards yet: say so plainly. */}
+          {mode === "none" ? (
+            <p
+              data-testid="curriculum-not-available"
+              className="text-xs leading-relaxed rounded-lg px-3 py-2.5"
+              style={{ backgroundColor: "var(--j-tint)", color: "var(--j-body)" }}
+            >
+              Statement by statement alignment is not available for the {cur?.name ?? "chosen curriculum"} yet. This {noun} will still follow your curriculum, year and topic.
+            </p>
+          ) : (
+          <>
           {/* Country, curriculum and year */}
+          {!england && cur ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div
+                className="px-2.5 py-2 text-xs rounded-lg border truncate"
+                style={{ borderColor: "var(--j-line)", backgroundColor: "var(--j-tint)", color: "var(--j-body)" }}
+                title={cur.name}
+                data-testid="curriculum-alignment-name"
+              >
+                {cur.place ? `${cur.place}: ` : ""}{cur.name}
+              </div>
+              <Select
+                label="Year"
+                value={covered ? year : ""}
+                onChange={(y) => set({ year: y, subject: "", strand: "", statementIds: [] })}
+                disabled={disabled}
+              >
+                <option value="">Select year</option>
+                {standardYears.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </Select>
+            </div>
+          ) : (
           <div className="grid grid-cols-3 gap-2">
             <Select label="Country" value="england" onChange={() => {}} disabled={disabled}>
               {COUNTRIES.map((c) => (
@@ -246,6 +320,7 @@ export default function CurriculumAlignment({
               ))}
             </Select>
           </div>
+          )}
 
           {!covered ? (
             <p
@@ -253,9 +328,13 @@ export default function CurriculumAlignment({
               className="text-xs leading-relaxed rounded-lg px-3 py-2.5"
               style={{ backgroundColor: "var(--j-tint)", color: "var(--j-body)" }}
             >
-              {year
-                ? `Curriculum alignment covers Nursery to Year 6. ${year} is not covered yet, so this ${noun} will follow the topic and year you chose.`
-                : "Pick a year from Nursery to Year 6 to see its curriculum statements."}
+              {england
+                ? year
+                  ? `Curriculum alignment covers Nursery to Year 6. ${year} is not covered yet, so this ${noun} will follow the topic and year you chose.`
+                  : "Pick a year from Nursery to Year 6 to see its curriculum statements."
+                : year
+                  ? `There are no published standards to align to for ${year}, so this ${noun} will follow the topic and year you chose.`
+                  : "Pick a year to see its standards."}
             </p>
           ) : loading || !statements ? (
             <div className="flex items-center gap-2 text-xs text-gray-500 py-2">
@@ -367,7 +446,9 @@ export default function CurriculumAlignment({
                           style={{ borderColor: on ? "var(--j-purple)" : "var(--j-line)", backgroundColor: on ? "#FBFAFE" : "#fff" }}
                         >
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400">{s.strand}</span>
+                            <span className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                              {s.code ? `${shortCode(s.code)} · ` : ""}{s.strand}
+                            </span>
                             <span className="block text-xs text-gray-800 leading-snug">{s.text}</span>
                           </span>
                           <span
@@ -390,6 +471,23 @@ export default function CurriculumAlignment({
                 </div>
               )}
             </>
+          )}
+
+          {/* Licence credits for every framework on the list, where its text is
+              shown (the NGSS terms do not accept a Terms page alone). */}
+          {credits.length > 0 && (
+            <div data-testid="curriculum-credits" className="space-y-1">
+              {cur?.alignment?.adapted && (
+                <p className="text-[11px] text-gray-500 leading-snug">
+                  {cur.place ?? "Your state"} publishes its own version of these standards, so its wording may differ.
+                </p>
+              )}
+              {credits.map((c) => (
+                <p key={c} className="text-[10px] text-gray-400 leading-snug">{c}</p>
+              ))}
+            </div>
+          )}
+          </>
           )}
 
           {/* The answer opens in the card's own flow, under the button, so the
@@ -416,8 +514,10 @@ export default function CurriculumAlignment({
               >
                 <p className="text-xs font-semibold text-gray-900 mb-1">This is optional</p>
                 <p className="text-[11px] text-gray-600 leading-snug">
-                  The statements come straight from the National Curriculum in England and the EYFS. If none fits
-                  your topic, untick Align to curriculum and Jooma still builds an accurate {noun} for your year group.
+                  {england
+                    ? "The statements come straight from the National Curriculum in England and the EYFS."
+                    : "The statements come straight from the published standards your curriculum uses."}{" "}
+                  If none fits your topic, untick Align to curriculum and Jooma still builds an accurate {noun} for your year group.
                 </p>
               </div>
             )}
