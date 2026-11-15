@@ -24,7 +24,10 @@
 import { getCurriculum, type Curriculum, type FrameworkId, type YearOption } from "@/app/lib/curricula";
 
 export type { FrameworkId } from "@/app/lib/curricula";
+import { FRAMEWORK_PERMITTED } from "./permissions";
+
 export { FRAMEWORK_CREDIT } from "./credits";
+export { FRAMEWORK_PERMITTED } from "./permissions";
 
 export interface Statement {
   id: string;
@@ -77,15 +80,21 @@ export async function loadFramework(id: FrameworkId): Promise<FrameworkData> {
  *  standards, or not at all (yet). */
 export type AlignmentMode = "england" | "standards" | "none";
 
+/** The frameworks a curriculum uses that Jooma may show (see permissions.ts:
+ *  NGSS is off until written permission). */
+export function usableFrameworks(c: Curriculum | null | undefined): FrameworkId[] {
+  return (c?.alignment?.frameworks ?? []).filter((f) => FRAMEWORK_PERMITTED[f]);
+}
+
 export function alignmentMode(curriculum: unknown): AlignmentMode {
   const c = getCurriculum(curriculum);
   if (!c || c.region === "uk" || c.region === "british-isles") return "england";
-  return c.alignment?.frameworks.length ? "standards" : "none";
+  return usableFrameworks(c).length ? "standards" : "none";
 }
 
 /** The years of a curriculum the card can list statements for. */
 export function alignmentYears(c: Curriculum): YearOption[] {
-  const ages = new Set((c.alignment?.frameworks ?? []).flatMap((f) => FRAMEWORK_AGES[f]));
+  const ages = new Set(usableFrameworks(c).flatMap((f) => FRAMEWORK_AGES[f]));
   return c.years.filter((y) => ages.has(y.age));
 }
 
@@ -98,7 +107,7 @@ export function statementsForAge(data: FrameworkData[], age: number): Statement[
 export async function loadStandardsFor(curriculum: unknown, year: string): Promise<{ statements: Statement[]; frameworks: FrameworkId[] }> {
   const c = getCurriculum(curriculum);
   const age = c?.years.find((y) => y.label === year)?.age;
-  const frameworks = (c?.alignment?.frameworks ?? []).filter((f) => age !== undefined && FRAMEWORK_AGES[f].includes(age));
+  const frameworks = usableFrameworks(c).filter((f) => age !== undefined && FRAMEWORK_AGES[f].includes(age));
   if (!c || age === undefined || frameworks.length === 0) return { statements: [], frameworks: [] };
   const data = await Promise.all(frameworks.map(loadFramework));
   return { statements: statementsForAge(data, age), frameworks };

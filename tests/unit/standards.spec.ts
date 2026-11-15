@@ -298,3 +298,74 @@ test.describe("what the card sends", () => {
     expect(alignParamFor("ireland", true, "3rd Class", sel, picked)).toBeUndefined();
   });
 });
+
+// ── NGSS stays off until written permission ────────────────────────────────
+// A paid product needs WestEd's approval to use the NGSS name and the National
+// Academies Press's permission to copy the standards text. Until both arrive,
+// the data stays in the repo but no teacher sees it and no output names it.
+
+import { FRAMEWORK_PERMITTED } from "@/app/lib/standards/permissions";
+import { loadStandardsFor, usableFrameworks } from "@/app/lib/standards";
+import { curriculumInstruction } from "@/app/lib/curricula";
+
+test.describe("NGSS stays off until permission", () => {
+  const sel = { subject: "", strand: "" };
+
+  test("NGSS is switched off; Common Core and the Australian Curriculum are on", () => {
+    expect(FRAMEWORK_PERMITTED).toEqual({ "ccss-math": true, "ccss-ela": true, ngss: false, ac9: true });
+  });
+
+  test("the registry still records that California uses NGSS, but only Common Core is usable", () => {
+    expect(getCurriculum("us-ca")?.alignment?.frameworks).toContain("ngss");
+    expect(usableFrameworks(getCurriculum("us-ca"))).toEqual(["ccss-ela", "ccss-math"]);
+  });
+
+  test("a Common Core state's year lists no science statements", () => {
+    // loadStandardsFor's lazy JSON import needs the bundler, so the same steps
+    // run here on the data already loaded: usable frameworks, then the year.
+    const frameworks = usableFrameworks(getCurriculum("us-ca"));
+    const grade3 = statementsForAge(frameworks.map((f) => DATA[f]), 8);
+    expect(grade3.length).toBeGreaterThan(0);
+    expect(grade3.some((s) => s.id.startsWith("ngss-") || s.subject === "Science")).toBe(false);
+  });
+
+  test("a state whose only data is NGSS is told alignment is not available", async () => {
+    expect(getCurriculum("us-ak")?.alignment?.frameworks).toEqual(["ngss"]);
+    expect(alignmentMode("us-ak")).toBe("none");
+    expect(alignmentYears(getCurriculum("us-ak")!)).toEqual([]);
+    expect((await loadStandardsFor("us-ak", "Grade 3")).statements).toEqual([]);
+  });
+
+  test("an NGSS statement is never sent, alone or mixed in", () => {
+    const n = DATA.ngss.statements.filter((s) => s.ages.includes(8)).slice(0, 1);
+    const m = DATA["ccss-math"].statements.filter((s) => s.ages.includes(8)).slice(0, 1);
+    expect(alignParamFor("us-ca", true, "Grade 3", sel, n)).toBeUndefined();
+    const mixed = alignParamFor("us-ca", true, "Grade 3", sel, [...n, ...m])!;
+    expect(mixed.statements.map((s) => s.id)).toEqual([m[0].id]);
+    expect(mixed.curriculumName).not.toMatch(/NGSS|Next Generation/);
+  });
+
+  test("the model is told not to write the NGSS name for a state that uses it", () => {
+    for (const id of ["us-ca", "us-ak", "us-mi"]) {
+      expect(curriculumInstruction(id), id).toMatch(/Do not write "NGSS" or "Next Generation Science Standards"/);
+    }
+  });
+
+  test("no curriculum a teacher can pick shows the NGSS name", () => {
+    const named = CURRICULA_REGISTRY.filter((c) =>
+      [c.name, c.promptLabel, ...c.versions.map((v) => v.label)].some((s) => /NGSS|Next Generation Science/i.test(s)),
+    ).map((c) => c.id);
+    expect(named).toEqual([]);
+  });
+
+  test("California's old label, saved on earlier runs, still reads as California", () => {
+    expect(getCurriculum("California: California Common Core State Standards; CA NGSS")?.id).toBe("us-ca");
+  });
+
+  test("states with no NGSS link, other systems and the UK get no such line", () => {
+    for (const id of ["us-tx", "au-qld", "ireland", "ib-myp"]) {
+      expect(curriculumInstruction(id), id).not.toMatch(/NGSS|Next Generation/);
+    }
+    expect(curriculumInstruction("england")).toBe("");
+  });
+});
