@@ -73,13 +73,15 @@ test("a California teacher aligns a worksheet to Common Core, with codes and cre
   await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
   expect(asked[0]).toMatchObject({ year: "Grade 3", curriculumId: "us-ca" });
 
-  // Grade 3 lists Common Core ELA and maths and NGSS, each credited.
+  // Grade 3 lists Common Core ELA and maths, credited. NGSS science stays off
+  // until permission (app/lib/standards/permissions.ts), so no Science and no
+  // NGSS name anywhere on the card.
   const subject = card.getByLabel("Subject");
-  await expect(subject.locator("option")).toContainText(["English Language Arts", "Mathematics", "Science"], NAV);
+  await expect(subject.locator("option")).toHaveText(["Select subject", "English Language Arts", "Mathematics"], NAV);
   await subject.selectOption("Mathematics");
   const credits = card.getByTestId("curriculum-credits");
   await expect(credits).toContainText("National Governors Association Center for Best Practices");
-  await expect(credits).toContainText("NGSS is a registered trademark of WestEd");
+  await expect(card).not.toContainText(/NGSS|Next Generation Science/);
 
   const round = card.getByRole("checkbox", { name: /Use place value understanding to round whole numbers/ });
   await expect(round).toContainText("3.NBT.A.1");

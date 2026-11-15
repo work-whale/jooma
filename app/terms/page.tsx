@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Wordmark from "@/app/components/v2/Wordmark";
 import { FRAMEWORK_CREDIT } from "@/app/lib/standards/credits";
+import { FRAMEWORK_PERMITTED } from "@/app/lib/standards/permissions";
 
 /* Without this the page inherited the root layout's title and description, so
  * it announced itself as the home page. The canonical is the same apex/www
@@ -108,7 +109,8 @@ export default function TermsPage() {
             <ul className="list-disc pl-5 space-y-2">
               <li>National Curriculum in England and the EYFS: contains public sector information licensed under the Open Government Licence v3.0.</li>
               <li>{FRAMEWORK_CREDIT["ccss-math"]}</li>
-              <li>{FRAMEWORK_CREDIT.ngss}</li>
+              {/* NGSS is off until permission (app/lib/standards/permissions.ts). */}
+              {FRAMEWORK_PERMITTED.ngss && <li>{FRAMEWORK_CREDIT.ngss}</li>}
               <li>{FRAMEWORK_CREDIT.ac9}</li>
             </ul>
             <p>

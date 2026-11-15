@@ -14,7 +14,7 @@ import { getCurriculum } from "@/app/lib/curricula";
 import type { NcStatement } from "@/app/lib/national-curriculum";
 import { curriculumAlignParam, type CurriculumAlign } from "@/app/lib/national-curriculum/prompt";
 
-import { FRAMEWORK_NAME, alignmentMode, frameworkOf, shortCode, type FrameworkId } from "./index";
+import { FRAMEWORK_NAME, alignmentMode, frameworkOf, shortCode, usableFrameworks, type FrameworkId } from "./index";
 
 /** A statement as the card holds it: England's have no code. */
 export interface AlignStatement {
@@ -35,6 +35,12 @@ export function alignParamFor(
   const mode = alignmentMode(curriculum);
   if (mode === "england") return curriculumAlignParam(on, year, selection, statements as NcStatement[]);
   const c = getCurriculum(curriculum);
+  // Only statements from a framework this curriculum may use (NGSS is off).
+  const usable = new Set(usableFrameworks(c));
+  statements = statements.filter((s) => {
+    const f = frameworkOf(s.id);
+    return f !== null && usable.has(f);
+  });
   if (mode === "none" || !c || !on || statements.length === 0 || !c.years.some((y) => y.label === year)) return undefined;
 
   const frameworks = [...new Set(statements.map((s) => frameworkOf(s.id)).filter((f): f is FrameworkId => f !== null))];

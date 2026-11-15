@@ -23,6 +23,8 @@ import { INTERNATIONAL_CURRICULA } from "./international";
 import { IRELAND_CURRICULA } from "./ireland";
 import { UK_CURRICULA } from "./uk";
 import { USA_CURRICULA } from "./usa";
+// Relative, so scripts/curricula-status.mjs can load the registry in plain Node.
+import { NGSS_NAME_BLOCKED } from "../standards/permissions";
 
 export type { Curriculum, CurriculumVersion, FrameworkId, LocalTerms, Region, RegionId, YearOption } from "./types";
 
@@ -139,6 +141,11 @@ export function curriculumInstruction(value: unknown, now: Date = new Date()): s
     `This teacher works ${where ? `in ${where} ` : ""}under the ${c.name}. Write for that system: use its year or grade names, its standards and its assessments exactly as its teachers and pupils know them. This overrides any earlier instruction that assumes a school in England or the UK.`,
   ];
   if (c.context) lines.push(c.context);
+  // NGSS is a trademark Jooma has no permission to use yet (see
+  // app/lib/standards/permissions.ts), so the output must not name it.
+  if (NGSS_NAME_BLOCKED && (c.alignment?.frameworks.includes("ngss") || /NGSS|Next Generation Science/i.test(c.context ?? ""))) {
+    lines.push(`Do not write "NGSS" or "Next Generation Science Standards" anywhere in the output. Call them "${c.place ?? "the state"}'s science standards" instead, and cite performance expectations by code only (for example 3-PS2-1).`);
+  }
 
   const terms = TERM_LINES.filter(([key]) => c.terms?.[key]);
   if (terms.length) {
