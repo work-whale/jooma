@@ -8,10 +8,8 @@
   padding: env(safe-area-inset-top) max(28px, env(safe-area-inset-right)) 0
     max(28px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--j-line);
-  /* Translucent over the page background, so content scrolling underneath
-     blurs rather than showing through sharply. */
-  background: rgba(247, 245, 252, 0.88);
-  backdrop-filter: blur(12px);
+  /* v4: a white bar over the light canvas. */
+  background: var(--j-card);
   position: sticky;
   top: 0;
   /* Above a tool's sticky result header (z-30), so this bar's menus are never
@@ -38,7 +36,7 @@
 }
 
 .title {
-  font-size: 1.15rem;
+  font-size: 0.94rem;
   font-weight: 800;
   letter-spacing: -0.025em;
   color: var(--j-ink);
@@ -62,6 +60,37 @@
 
 .search {
   display: block;
+  min-width: 0;
+}
+
+.gear {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--j-muted);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+@media (hover: hover) {
+  .gear:hover {
+    background: var(--j-bg);
+    color: var(--j-ink);
+  }
+}
+
+.gearIcon {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 900px) {
+  .gear {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {

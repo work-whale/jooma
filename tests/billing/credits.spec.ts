@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
 
 /*
- * The sidebar credit meter.
+ * The sidebar resources meter (credits, before v4).
  *
  * The bug this pins: useCreditMeter used `metered: false` for two different
  * things — "this plan has no credit ceiling" and "the lookup failed" — and the
@@ -30,7 +30,9 @@ test.describe("Credits", () => {
     await page.goto("/dashboard");
 
     const nav = page.locator("#app-sidenav-v2");
-    const meter = nav.locator('[class*="meterVal"]').filter({ hasText: /left/ });
+    // v4: a calm meter reads "1,000 a month", a busy one "92 left". Either way
+    // it is the value in the resources meter that must hold.
+    const meter = nav.getByTestId("sidebar-resources").locator('[class*="meterVal"]').filter({ hasText: /a month|left/ });
 
     // The meter loads async, so it must be waited for rather than counted:
     // count() on a not-yet-rendered node reads zero and would skip a real test.
@@ -53,7 +55,7 @@ test.describe("Credits", () => {
     await page.goto("/dashboard");
 
     const nav = page.locator("#app-sidenav-v2");
-    const credits = nav.getByText("Credits", { exact: true });
+    const credits = nav.getByText("Resources", { exact: true });
     await expect(credits).toBeVisible();
 
     await nav.getByRole("link", { name: /^ask jo$/i }).first().click();

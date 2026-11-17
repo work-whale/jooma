@@ -636,9 +636,18 @@ test.describe("What the timetable puts on Today", () => {
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
-    await expect(page.getByRole("heading", { name: "This week" })).toBeVisible();
-    await expect(page.getByText("Your week goes here")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Set up your timetable" })).toBeVisible();
+    // v4: no empty week panel. One dismissible line at the foot of Today.
+    const offer = page.getByTestId("today-tt-offer");
+    await expect(offer).toBeVisible();
+    await expect(offer.getByRole("link", { name: "Set it up" })).toHaveAttribute("href", "/timetable");
+    await expect(page.getByRole("heading", { name: "This week" })).toHaveCount(0);
+
+    // Not now hides it, and it stays hidden on the next visit.
+    await offer.getByRole("button", { name: "Not now" }).click();
+    await expect(offer).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Make something" })).toBeVisible();
+    await expect(page.getByTestId("today-tt-offer")).toHaveCount(0);
   });
 
   test("a lesson with nothing made offers Make it, and Today never writes", async ({ page }) => {
@@ -660,9 +669,11 @@ test.describe("What the timetable puts on Today", () => {
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
-    await expect(page.getByRole("heading", { name: "This week" })).toBeVisible();
-    await expect(page.getByText("Year 4 Maths, Fractions")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText("Nothing made yet", { exact: true }).first()).toBeVisible();
+    const strip = page.getByTestId("today-week");
+    await expect(strip.getByRole("heading", { name: "Fractions" })).toBeVisible({ timeout: 30_000 });
+    await expect(strip.getByText("Maths, Year 4")).toBeVisible();
+    // With a timetable there is no offer to set one up.
+    await expect(page.getByTestId("today-tt-offer")).toHaveCount(0);
     // A topic is present, so the honest offer is Make it rather than Add a topic.
     await expect(page.getByRole("link", { name: "Make it" }).first()).toBeVisible();
 

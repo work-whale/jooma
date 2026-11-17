@@ -3,7 +3,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
-import { Crown, List, X } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { Crown, Gear, List, X } from "@phosphor-icons/react/dist/ssr";
 import ToolSearch from "@/app/components/layout/ToolSearch";
 import NotificationBell from "@/app/components/layout/NotificationBell";
 import Avatar from "@/app/components/ui/Avatar";
@@ -81,11 +82,13 @@ export default function TopBarV2({
           next to this many controls is what pushed the row off a phone. */}
       <h2 className={styles.title}>{title}</h2>
 
+      {/* Search: library and tools. Hidden below 900px, where it lives in the
+          nav drawer. */}
+      <div className={styles.search}>
+        <ToolSearch variant="bar" />
+      </div>
+
       <div className={styles.right}>
-        {/* Search. Hidden below 900px, where it lives in the nav drawer. */}
-        <div className={styles.search}>
-          <ToolSearch variant="bar" />
-        </div>
 
         {/* A bell reads as "news for you", so it goes where the notifications
             are. Support replies badge the Help link in the sidebar instead,
@@ -95,6 +98,10 @@ export default function TopBarV2({
         <TrialChip />
 
         <NotificationBell />
+
+        <Link href="/profile" className={styles.gear} aria-label="Settings">
+          <Gear className={styles.gearIcon} />
+        </Link>
 
         <div className={styles.profile} ref={profileRef}>
           <button

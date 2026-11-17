@@ -1,11 +1,10 @@
-/* Rendered through a portal to document.body, so it sits outside the
-   .jooma-v2 wrapper and cannot inherit the tokens. Every value here is
-   therefore literal rather than a var(--j-*). */
+/* The top-up sheet, v4. Portalled to document.body; the --j-* tokens live on
+   :root, so they resolve there too. */
 
 .scrim {
   position: fixed;
   inset: 0;
-  background: rgba(29, 23, 48, 0.45);
+  background: rgba(20, 12, 40, 0.5);
   display: grid;
   place-items: center;
   z-index: 80;
@@ -15,13 +14,14 @@
 }
 
 .modal {
-  background: #fff;
-  border-radius: 28px;
+  background: var(--j-card);
+  border-radius: var(--j-r-xl);
   padding: 28px;
   width: 100%;
-  max-width: 460px;
-  /* A long pack list on a short or landscape phone scrolls inside the card
-     rather than pushing Continue off the screen. */
+  max-width: 430px;
+  box-shadow: 0 30px 70px -30px rgba(20, 12, 40, 0.6);
+  /* A long pack list on a short phone scrolls inside the card rather than
+     pushing Continue off the screen. */
   max-height: calc(100vh - 40px);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
@@ -29,144 +29,131 @@
 }
 
 .title {
-  font-size: 1.35rem;
+  font-size: 1.19rem;
   font-weight: 800;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.028em;
   line-height: 1.2;
-  color: #1d1730;
-  margin: 0 0 6px;
+  color: var(--j-ink);
+  margin: 0;
 }
 
 .sub {
-  font-size: 0.88rem;
-  color: #6d6683;
-  margin: 0 0 20px;
+  font-size: 0.84rem;
+  color: var(--j-muted);
+  margin: 7px 0 18px;
 }
 
 .packs {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  gap: 9px;
 }
 
-/* The SELECTED pack. A single pack is always selected, so one pack looks
-   exactly as it did before packs could be chosen. */
+/* The selected pack: purple, because a pack is resources. */
 .pack {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: #f1ecfc;
-  border: 1px solid #5b2ed6;
-  border-radius: 14px;
-  padding: 14px 16px;
+  gap: 13px;
   width: 100%;
-  font-family: inherit;
+  border: 1px solid var(--j-res);
+  background: var(--j-res-soft);
+  border-radius: var(--j-r);
+  padding: 14px 16px;
   text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
-/* Offered but not chosen. Same box, muted, so the selected one is obvious at a
-   glance without the row moving. */
 .packIdle {
-  background: #fff;
-  border-color: #ddd6ee;
-  cursor: pointer;
+  border-color: var(--j-line-2);
+  background: var(--j-card);
 }
 
 @media (hover: hover) {
   .packIdle:hover {
-    border-color: #b7a6ec;
+    border-color: var(--j-res);
+    background: var(--j-res-soft);
   }
 }
 
-.packIdle:active {
-  border-color: #b7a6ec;
+.pack:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
-.packName,
-.packPrice {
-  color: #3a1c8f;
+.packName {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
   font-weight: 800;
-  font-size: 0.95rem;
-}
-
-.packIdle .packName,
-.packIdle .packPrice {
-  color: #3c3552;
+  color: var(--j-ink);
 }
 
 .packSub {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6d6683;
-  margin-top: 2px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--j-muted);
 }
 
-.save:disabled,
-.cancel:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.packPrice {
+  margin-left: auto;
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--j-ink);
 }
 
 .note {
   font-size: 0.78rem;
-  color: #9a93ad;
-  margin: 12px 0 0;
+  color: var(--j-muted);
+  margin: 14px 0 0;
+  line-height: 1.5;
 }
 
 .foot {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .cancel,
 .save {
-  flex: 1;
-  border-radius: 999px;
-  padding: 12px;
-  font-size: 0.9rem;
+  border: 0;
+  border-radius: var(--j-pill);
+  padding: 11px 20px;
+  font: inherit;
+  font-size: 0.84rem;
   font-weight: 800;
-  font-family: inherit;
   cursor: pointer;
+  min-height: 44px;
 }
 
 .cancel {
-  background: #f7f5fc;
-  color: #3c3552;
-  border: 1px solid #ddd6ee;
+  background: none;
+  color: var(--j-muted);
 }
 
 @media (hover: hover) {
-  .cancel:hover {
-    border-color: #b7a6ec;
+  .cancel:hover:not(:disabled) {
+    color: var(--j-ink);
   }
-}
-
-.cancel:active {
-  border-color: #b7a6ec;
 }
 
 .save {
-  background: #5b2ed6;
+  background: var(--j-res);
   color: #fff;
-  border: 1px solid #5b2ed6;
 }
 
 @media (hover: hover) {
-  .save:hover {
-    background: #3a1c8f;
-    border-color: #3a1c8f;
+  .save:hover:not(:disabled) {
+    filter: brightness(1.08);
   }
 }
 
-.save:active {
-  background: #3a1c8f;
-  border-color: #3a1c8f;
-}
-
-.modal :focus-visible {
-  outline: 2.5px solid #8b6ae8;
-  outline-offset: 2px;
-  border-radius: 8px;
+.save:disabled,
+.cancel:disabled {
+  opacity: 0.55;
+  cursor: default;
 }

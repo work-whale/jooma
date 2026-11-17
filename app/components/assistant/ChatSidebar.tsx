@@ -191,7 +191,7 @@ export default function ChatSidebar({
         style={{ backgroundColor: "var(--j-card)" }}
       >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg lg:text-[22px] font-medium text-dark min-w-0" style={{ letterSpacing: "-0.45px" }}>
+          <h2 className="text-base lg:text-[15px] font-extrabold text-dark min-w-0">
             {/* No count until there is one to show. "(0)" during a load is a
                 statement that the teacher has no chats, and it is usually wrong. */}
             Chats {!loading && <span className="text-muted">({chats.length})</span>}

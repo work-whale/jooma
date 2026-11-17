@@ -169,3 +169,16 @@ export function planBadgeFor(
     countdown: null,
   };
 }
+
+/**
+ * The chip beside the sidebar wordmark. An active ambassador's gold wordmark
+ * already says "Ambassador", so their chip names the plan alone, and is left
+ * out when they have none: ambassadors are on Pro by default, and a stale row
+ * should not put "No plan" next to the ambassador lockup. Everyone else gets
+ * the badge's label as it is.
+ */
+export function chipLabel(badge: PlanBadge): string | null {
+  if (!badge.ambassador) return badge.label;
+  if (badge.label === SHORT_NAME.free) return null;
+  return badge.label.replace(/^Ambassador · /, "");
+}

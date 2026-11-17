@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import {
   AMBASSADOR_ENDING_DAYS,
+  chipLabel,
   daysUntil,
   onAmbassadorPro,
   planBadgeFor,
@@ -104,5 +105,39 @@ test.describe("planBadgeFor, ambassadors", () => {
     expect(onAmbassadorPro("max", term(days(100)), NOW)).toBe(false);
     expect(onAmbassadorPro("pro", term(null), NOW)).toBe(false);
     expect(onAmbassadorPro("pro", null, NOW)).toBe(false);
+  });
+});
+
+/*
+ * The chip beside the sidebar wordmark. An ambassador's gold wordmark already
+ * says "Ambassador", so the chip names only the plan, and never "No plan":
+ * ambassadors are on Pro by default, and a stale row must not show otherwise.
+ */
+test.describe("the chip beside the wordmark", () => {
+  const term = (proUntil: Date | null, status = "active") => ({ status, proUntil });
+
+  test("an ambassador on the free year: Pro, not Ambassador · Pro", () => {
+    expect(chipLabel(planBadgeFor("pro", term(days(100)), NOW))).toBe("Pro");
+  });
+
+  test("an ambassador who pays for Max: Max", () => {
+    expect(chipLabel(planBadgeFor("max", term(null), NOW))).toBe("Max");
+  });
+
+  test("an ambassador with no plan shows no chip at all", () => {
+    expect(chipLabel(planBadgeFor("free", term(null), NOW))).toBeNull();
+  });
+
+  test("an ambassador applicant on the review trial still sees Free trial", () => {
+    const trial = { trialEndsAt: days(2), trialStartedAt: days(-1), offerEndsAt: null };
+    expect(chipLabel(planBadgeFor("standard", term(null), NOW, trial))).toBe("Free trial");
+  });
+
+  test("a teacher who is not an ambassador keeps No plan", () => {
+    expect(chipLabel(planBadgeFor("free", null, NOW))).toBe("No plan");
+  });
+
+  test("a paused ambassador is not dressed as one, so keeps No plan", () => {
+    expect(chipLabel(planBadgeFor("free", term(null, "paused"), NOW))).toBe("No plan");
   });
 });

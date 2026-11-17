@@ -35,15 +35,15 @@ test.describe("Sidebar plan", () => {
       await signIn(page, teacher);
       await page.goto("/dashboard");
 
+      // v4: the plan's name is the chip at the head of the sidebar, and the
+      // plan block with its button sits below the resources meter.
       const block = planBlock(page);
-      await expect(block.getByText("Your plan")).toBeVisible();
-      await expect(block.getByText(label, { exact: true })).toBeVisible();
+      await expect(page.getByTestId("sidebar-plan-chip")).toHaveText(label);
 
-      // Above the credit meter, in the foot of the rail.
-      const meter = page.locator("#app-sidenav-v2").getByText("Credits", { exact: true });
+      const meter = page.locator("#app-sidenav-v2").getByTestId("sidebar-resources");
       const blockBox = await block.boundingBox();
       const meterBox = await meter.boundingBox();
-      expect(blockBox && meterBox && blockBox.y < meterBox.y).toBe(true);
+      expect(blockBox && meterBox && blockBox.y > meterBox.y).toBe(true);
 
       await block.getByRole("link", { name: cta }).click();
       await expect(page).toHaveURL(/\/pricing$/);
@@ -56,7 +56,7 @@ test.describe("Sidebar plan", () => {
     await page.goto("/dashboard");
 
     const block = planBlock(page);
-    await expect(block.getByText("No plan", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("sidebar-plan-chip")).toHaveText("No plan");
     await expect(block.getByRole("link", { name: "Choose a plan" })).toHaveAttribute(
       "href",
       "/pricing",
@@ -69,7 +69,7 @@ test.describe("Sidebar plan", () => {
     await page.goto("/dashboard");
 
     const nav = page.locator("#app-sidenav-v2");
-    await expect(planBlock(page).getByText("Pro", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("sidebar-plan-chip")).toHaveText("Pro");
     await expect(nav.getByRole("img", { name: "Jooma", exact: true })).toBeVisible();
     await expect(nav.getByRole("img", { name: "Jooma Ambassador" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "Ambassador", exact: true })).toHaveCount(0);

@@ -130,3 +130,45 @@
   color: var(--j-deep);
   white-space: nowrap;
 }
+
+/* ── In the v4 drawer, which is dark chrome ──────────────────────────────── */
+
+.whoDrawer .whoName {
+  color: #fff;
+}
+
+.whoDrawer .whoLabel,
+.whoDrawer .whoEmail {
+  color: var(--j-on-chrome-dim);
+}
+
+.itemDrawer {
+  color: var(--j-on-chrome-mid);
+}
+
+@media (hover: hover) {
+  .itemDrawer:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+  }
+}
+
+.itemDrawer:active {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.itemDrawer:focus-visible {
+  outline-color: #fff;
+}
+
+/* The ambassador rows keep their own ink on their own backgrounds. */
+.itemDrawer.ambassador,
+.itemDrawer.ambassador:hover {
+  color: #2b1d02;
+}
+
+.itemDrawer.ambassadorPending,
+.itemDrawer.ambassadorPending:hover {
+  color: var(--j-deep);
+}

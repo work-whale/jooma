@@ -113,7 +113,7 @@ export default function TopUpModal({
         className={styles.modal}
       >
         <h2 id="topup-title" className={styles.title}>
-          Top up credits
+          Top up your resources
         </h2>
         <p className={styles.sub}>
           A top up sits on top of your monthly refill and is used first.
@@ -144,7 +144,7 @@ export default function TopUpModal({
                   className={`${styles.pack} ${isSelected ? "" : styles.packIdle}`}
                 >
                   <span className={styles.packName}>
-                    {nf.format(packCredits(pack))} credits
+                    {nf.format(packCredits(pack))} resources
                     {/* The pack's own name, when it says more than the size
                         does. Skipped when it is the generic seeded label. */}
                     {pack.name && !/^AI credit top-up$/i.test(pack.name) && (

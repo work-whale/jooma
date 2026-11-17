@@ -18,6 +18,24 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* The collapsed rail. Desktop only: below 900px the rail is a drawer and the
+   grid is one column, so the narrower width must not leak into it. */
+@media (min-width: 901px) {
+  .appMini {
+    --j-nav: var(--j-nav-mini);
+  }
+
+  .app {
+    transition: grid-template-columns 0.26s var(--j-ease);
+  }
+}
+
+@media (min-width: 901px) and (prefers-reduced-motion: reduce) {
+  .app {
+    transition: none;
+  }
+}
+
 /* Below the prototype's 900px breakpoint the rail becomes an off-canvas drawer
    and the grid collapses to a single column. */
 @media (max-width: 900px) {

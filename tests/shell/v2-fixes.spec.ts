@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createTeacher, deleteTeacher, seedResource, signIn, type TestTeacher } from "../support/users";
+import { createTeacher, deleteTeacher, seedResource, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
  * The V2 audit fixes, through the interface.
@@ -140,79 +140,61 @@ test.describe("V2 fixes", () => {
 
   /* ── Today ───────────────────────────────────────────────────────────── */
 
-  test("the metrics read in the handover's order", async ({ page }) => {
+  test("Today reads in the v4 order: greeting, Ask Jo, tools, then recent", async ({ page }) => {
+    await seedResource(teacher, "A seeded lesson");
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
-    const labels = page.locator('[class*="metricLabel"]');
-    await expect(labels).toHaveCount(4);
-    await expect(labels).toHaveText([
-      "Day streak",
-      "Resources made",
-      "Badges earned",
-      "Time saved",
-    ]);
+    const order = [
+      page.locator("main h1"),
+      page.getByRole("textbox", { name: "Ask Jo" }),
+      page.getByRole("heading", { name: "Make something" }),
+      page.getByRole("heading", { name: "Pick up where you left off" }),
+    ];
+    const ys: number[] = [];
+    for (const el of order) {
+      await expect(el).toBeVisible();
+      ys.push((await el.boundingBox())!.y);
+    }
+    expect(ys).toEqual([...ys].sort((a, b) => a - b));
+
+    // The four metric tiles and the badge strip are gone from v4 Today.
+    await expect(page.locator('[class*="metricLabel"]')).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Badges" })).toHaveCount(0);
   });
 
-  test("metric icons are centred in their tiles", async ({ page }) => {
+  test("each tool card says what it typically costs, in resources", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/dashboard");
-
-    const tile = page.locator('[class*="metricIcon"]').first();
-    await expect(tile).toBeVisible();
-
-    // The bug: `.metric span` also matched the icon tile and its display:block
-    // beat display:grid, which killed place-items:center and dropped every
-    // glyph to the top left.
-    await expect(tile).toHaveCSS("display", "grid");
-
-    // The glyph must actually sit in the middle of the tile, not just inherit a
-    // rule that says it should.
-    const offset = await tile.evaluate((el) => {
-      const svg = el.querySelector("svg");
-      if (!svg) return null;
-      const t = el.getBoundingClientRect();
-      const g = svg.getBoundingClientRect();
-      return {
-        x: Math.abs((g.left + g.right) / 2 - (t.left + t.right) / 2),
-        y: Math.abs((g.top + g.bottom) / 2 - (t.top + t.bottom) / 2),
-      };
-    });
-    expect(offset, "the tile has no glyph").not.toBeNull();
-    expect(offset!.x).toBeLessThan(1.5);
-    expect(offset!.y).toBeLessThan(1.5);
+    const chips = page.locator("main a").filter({ hasText: /about \d+ resources?/ });
+    await expect(chips).toHaveCount(6);
   });
 
-  test("no em dash is shown while the metrics load", async ({ page }) => {
+  test("no em dash is shown on Today while it loads", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/dashboard");
-    await expect(page.locator('[class*="metricLabel"]').first()).toBeVisible();
-
-    // The brand bans em and en dashes in anything a teacher can see, and these
-    // were the loading placeholder.
-    const metrics = page.locator('[class*="metrics"]').first();
-    expect(await metrics.innerText()).not.toMatch(/[\u2014\u2013]/);
+    await expect(page.locator("main h1")).toBeVisible();
+    // The brand bans em and en dashes in anything a teacher can see.
+    expect(await page.locator("main").innerText()).not.toMatch(/[\u2014\u2013]/);
   });
 
   /* ── The sidebar ─────────────────────────────────────────────────────── */
 
-  test("the level box sits under the nav, above the credits block", async ({ page }) => {
+  test("the level sits in the sidebar footer, below the resources meter", async ({ page }) => {
+    // The meter belongs to a plan with an allowance; a locked account has none.
+    await setPlan(teacher, "standard", "paying");
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
-    // Badge progress loads async, so wait for the box rather than counting it
-    // immediately — count() on a not-yet-rendered node reads zero and would
-    // skip a test that should run.
-    const level = page.locator('[class*="levelBox"]');
+    // Badge progress loads async, so wait for it rather than counting it.
+    const nav = page.locator("#app-sidenav-v2");
+    const level = nav.getByRole("link", { name: /^level \d+$/i });
     await expect(level).toBeVisible();
+    await expect(level).toHaveAttribute("href", "/profile?section=badges");
 
-    const nav = page.locator("#app-sidenav-v2 nav");
-    const navBottom = (await nav.boundingBox())!.y + (await nav.boundingBox())!.height;
-    const levelTop = (await level.boundingBox())!.y;
-
-    // Below the nav, and close to it rather than pushed to the bottom.
-    expect(levelTop).toBeGreaterThanOrEqual(navBottom - 1);
-    expect(levelTop - navBottom).toBeLessThan(80);
+    const meter = nav.getByTestId("sidebar-resources");
+    await expect(meter).toBeVisible();
+    expect((await level.boundingBox())!.y).toBeGreaterThan((await meter.boundingBox())!.y);
   });
 
   test("the library count is live", async ({ page }) => {

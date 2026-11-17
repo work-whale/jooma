@@ -29,6 +29,7 @@ import {
 import { SquircleDefs } from "@/app/components/v2/Squircle";
 import LandingNav from "@/app/components/landing/v2/LandingNav";
 import HeroV3 from "@/app/components/landing/v2/HeroV3";
+import InsideJooma from "@/app/components/landing/v2/InsideJooma";
 import ProblemStats from "@/app/components/landing/v2/ProblemStats";
 import Showcase from "@/app/components/landing/v2/Showcase";
 import {
@@ -213,6 +214,8 @@ export default async function LandingPage({
         />
 
         <ProblemStats />
+
+        <InsideJooma />
 
         <Showcase
           alt

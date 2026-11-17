@@ -4,15 +4,16 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  FileText,
-  Clock,
-  Fire,
-  Medal,
-  ChatTeardropDots,
-  ArrowRight,
   CalendarBlank,
-  ShareNetwork,
+  CheckCircle,
+  Clock,
   Crown,
+  FileText,
+  ImageSquare,
+  Lightning,
+  LockSimple,
+  ShareNetwork,
+  Sparkle,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { ToolTile } from "@/app/components/v2/Squircle";
@@ -24,75 +25,58 @@ import { createClient } from "@/app/lib/auth/client";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { usePlanBadge } from "@/app/lib/usePlanBadge";
 import { useAccountAccess } from "@/app/lib/useAccountAccess";
+import { useCreditMeter } from "@/app/lib/useCreditMeter";
+import { estimateFor, estimateLabel } from "@/app/lib/tool-estimates";
+import { whenLabel } from "@/app/lib/when-label";
+import { savedPill, planNudge } from "@/app/lib/today-copy";
+import { useStoredFlag } from "@/app/lib/useStoredFlag";
 import StartTrialButton from "@/app/components/billing/StartTrialButton";
-import { BADGE_LEVELS } from "@/app/lib/badges";
-import {
-  listWeek,
-  mondayOf,
-  nextUnplanned,
-  upcomingDays,
-  dayName,
-  makeItHref,
-  type LessonWithResource,
-} from "@/app/lib/timetable";
+import { listWeek, mondayOf, nextUnplanned, upcomingDays, dayName, makeItHref, type LessonWithResource } from "@/app/lib/timetable";
 import ShareModal from "@/app/components/v2/ShareModal";
 import type { ToolRun } from "@/app/lib/toolRuns";
-import EarnedBadgesCard from "./EarnedBadgesCard";
-import BadgeMedallion from "@/app/components/v2/BadgeMedallion";
 import type { CopyMap } from "@/app/lib/copy";
-import app from "@/app/components/v2/app.module.css";
 import styles from "./TodayView.module.css";
 
 /*
- * Today.
+ * Today, v4 (docs/Jooma version 4.5/15-jooma-dashboard-v4.html).
  *
- * The order here is the one the handover specifies, and it matters: this screen
- * starts work rather than reporting on it. Ask Jo and the tools come before the
- * numbers.
+ * This screen starts work rather than reporting on it. In order: the greeting
+ * with the date and the time saved, Ask Jo with three hints, the week (only
+ * when a timetable exists: almost nobody sets one up, so there is no empty
+ * state for it here), the six most used tools with what each typically costs,
+ * where you left off, a plan nudge where there is one, and last a one-line
+ * offer to add the timetable, which goes away when dismissed.
  *
- * The week panel is the last one with no data behind it: the timetable does not
- * exist, so it says so rather than rendering a zero. A zero reads as "you have
- * achieved nothing", which is discouraging and, for a feature that has not been
- * built, untrue.
- *
- * The same rule survives into the metrics now that they are real. A teacher with
- * no streak yet reads "Starts today", not "0", because making one thing in the
- * next hour genuinely does start one. The streak rule itself (weekdays,
- * weekends skipped, one weekday of grace) lives in badgeCriteria.ts.
+ * Badges live on the profile page; the sidebar shows the level.
  */
 
 /** Six sensible starting tools for a teacher with no history yet. */
 const STARTER_SLUGS = [
-  "lesson-planner",
+  "slideshow",
   "worksheet-generator",
   "comprehension-generator",
-  "quiz-generator",
-  // "slideshow", not "lesson-slideshow": the latter is not a route, so
-  // v2ToolForSlug dropped it and this row only ever topped up to five.
-  "slideshow",
   "cover-lesson",
+  "lesson-planner",
+  "quiz-generator",
 ];
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+/** The hints under Ask Jo. Each one starts the chat as written. */
+const HINTS = [
+  "Year 4 fractions worksheet",
+  "Comprehension on The Highwayman",
+  "Cover lesson for Year 6 science",
+];
 
-/**
- * The metric placeholder while the figures are still loading.
- *
- * An ellipsis, not an em dash: the brand bans em and en dashes in anything a
- * teacher can see, and this is on screen every time Today opens. It also reads
- * as "still coming" rather than as "nothing", which is what a dash implies.
- */
-const PENDING = "…";
+/** Tools whose decks can carry generated pictures: the orange chip. */
+const PICTURE_TOOLS = new Set(["/tools/slideshow"]);
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const TT_OFFER_KEY = "jooma.today.ttOfferDismissed";
 
 /*
- * The mount-time clock, as an external store.
- *
- * getSnapshot MUST return a stable reference. Handing back a fresh Date on
- * every call would make React see a changed store on every render and loop
- * forever, so the value is created once, lazily, and cached.
- *
- * The clock is only read for the greeting and the 30 day ranking window, so
- * there is nothing to subscribe to: it never changes within a visit.
+ * The mount-time clock, as an external store. getSnapshot returns a stable
+ * reference, created once; null on the server so nothing renders in the
+ * server's timezone and then changes on hydration.
  */
 let clock: Date | null = null;
 const subscribeToClock = () => () => {};
@@ -100,8 +84,6 @@ function getClock(): Date {
   if (!clock) clock = new Date();
   return clock;
 }
-/** null on the server, so the greeting renders blank rather than in the
- *  server's timezone and then changing under the teacher on hydration. */
 const getServerClock = (): Date | null => null;
 
 function greetingFor(hour: number): string {
@@ -125,42 +107,24 @@ export default function TodayView({
   useAppShell({ title: "Today" });
 
   const router = useRouter();
-  // Active ambassadors get the gold trim. Fails quiet: no row reads as false.
-  const { ambassador } = usePlanBadge();
+  const plan = usePlanBadge();
+  const credits = useCreditMeter();
   const [firstName, setFirstName] = useState<string | null>(null);
   const access = useAccountAccess();
   const locked = access?.state === "locked";
   const [ask, setAsk] = useState("");
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState<string | null>(null);
-
-  /*
-   * This week's lessons, for the week panel and the greeting.
-   *
-   * `listWeek`, never `openWeek`. Opening a week WRITES: it materialises the
-   * lessons from the pattern or the week before. A teacher who has not been to
-   * the Timetable yet must not quietly acquire a week of them by looking at the
-   * dashboard, so materialising stays on the screen that owns it.
-   *
-   * A failure here leaves the array empty and the panel keeps its empty state.
-   * The week is a prompt to go and plan, not something worth an error on a
-   * screen that has six other things on it.
-   */
   const [sharing, setSharing] = useState<ToolRun | null>(null);
   const [lessons, setLessons] = useState<LessonWithResource[]>([]);
   const [weekLoading, setWeekLoading] = useState(true);
   const [weekStart, setWeekStart] = useState<string | null>(null);
+  // Server snapshot "dismissed", so the offer never flashes in and out.
+  const [ttDismissed, setTtDismissed] = useStoredFlag(TT_OFFER_KEY, false, true);
 
-  /*
-   * One fetch for the whole screen, shared with the sidebar and the profile.
-   *
-   * The run history used to be fetched here and again in ProfileHeader; the
-   * badge store owns it now (1,000 rows, the same ceiling /analytics uses,
-   * which covers both the 30 day ranking window and every volume badge). So
-   * the streak and the badges arrive without a second query rather than a third.
-   */
+  // One fetch for the whole screen, shared with the sidebar and the profile.
   const progress = useBadgeProgress();
-  const { runs, earned, earnedCount } = progress;
+  const { runs } = progress;
   const loading = progress.loading;
 
   useEffect(() => {
@@ -170,11 +134,7 @@ export default function TodayView({
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("first_name")
-        .eq("id", uid)
-        .maybeSingle();
+      const { data } = await supabase.from("profiles").select("first_name").eq("id", uid).maybeSingle();
       if (!cancelled) setFirstName(data?.first_name ?? null);
     })();
     return () => {
@@ -182,8 +142,8 @@ export default function TodayView({
     };
   }, []);
 
-  // The week. Resolved from the browser's clock in an effect for the same
-  // reason as the greeting: the server's Monday can differ from the teacher's.
+  // `listWeek`, never `openWeek`: opening a week WRITES lessons, and looking at
+  // Today must not quietly create a week of them.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -195,7 +155,7 @@ export default function TodayView({
           setWeekStart(week);
         }
       } catch {
-        // Left empty on purpose. See the state declaration above.
+        // Left empty: the week strip simply does not show.
       } finally {
         if (!cancelled) setWeekLoading(false);
       }
@@ -205,45 +165,21 @@ export default function TodayView({
     };
   }, []);
 
-  // The clock, read on the client only.
-  //
-  // `new Date()` on the server is the server's clock in its own timezone, which
-  // for a teacher in the evening can differ by a whole greeting, and a mismatch
-  // between the server and client renders is a hydration error.
-  //
-  // A store rather than a setState in an effect: this hook exists precisely for
-  // "external value that differs between server and client", and it gives the
-  // server snapshot (null) for free without a second render. Same shape as the
-  // collapse preference in the sidebar.
   const now = useSyncExternalStore(subscribeToClock, getClock, getServerClock);
 
-  const stats = useMemo(() => {
-    const minutes = runs.reduce((sum, r) => sum + minutesSavedFor(r.tool_slug), 0);
-    return {
-      resources: runs.length,
-      // Rounded to the nearest hour. Below an hour this reads "under an hour"
-      // rather than "0h", which is the same rule as the empty case.
-      hours: Math.round(minutes / 60),
-      minutes,
-    };
-  }, [runs]);
+  const minutes = useMemo(() => runs.reduce((sum, r) => sum + minutesSavedFor(r.tool_slug), 0), [runs]);
+  const pill = loading ? null : savedPill(minutes, runs.length);
 
-  /**
-   * Six tools, ranked by this teacher's own use over the last 30 days.
-   *
-   * The window is measured from `now`, the mount-time clock, rather than a
-   * fresh Date.now(): reading the clock during render is impure, and would give
-   * this memo a different answer on every render for no benefit.
-   *
-   * Before `now` is set, on the server render and the first client one, the
-   * window is left open rather than clamped shut — a ranking over all history
-   * is a reasonable thing to show for one frame; an empty row is not.
-   */
   // Tools built only for UK schools are never suggested to a teacher on
   // another school system. Ones they have actually used still rank.
   const { id: curriculumId } = useTeacherCurriculum();
-  const offeredTools = useMemo(() => V2_TOOLS.filter((t) => !isToolHiddenFor(t.href.replace("/tools/", ""), curriculumId)), [curriculumId]);
+  const offeredTools = useMemo(
+    () => V2_TOOLS.filter((t) => !isToolHiddenFor(t.href.replace("/tools/", ""), curriculumId)),
+    [curriculumId],
+  );
 
+  /** Six tools, ranked by this teacher's own use over the last 30 days, topped
+   *  up from the starters and then the catalogue, deduplicated by href. */
   const mostUsed = useMemo(() => {
     const cutoff = now ? now.getTime() - THIRTY_DAYS_MS : 0;
     const counts = new Map<string, number>();
@@ -251,19 +187,9 @@ export default function TodayView({
       if (new Date(run.created_at).getTime() < cutoff) continue;
       counts.set(run.tool_slug, (counts.get(run.tool_slug) ?? 0) + 1);
     }
-
     const ranked = [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
-      .flatMap(([slug]) => {
-        const tool = v2ToolForSlug(slug);
-        return tool ? [tool] : [];
-      });
-
-    // Top up to six: first from the starters, then from the catalogue at large,
-    // so a teacher who has used two tools still gets a full row rather than a
-    // gap. Deduplicated against everything already chosen — the href is the
-    // React key below, and a tool appearing in both the ranking and the filler
-    // would render twice under the same key.
+      .flatMap(([slug]) => v2ToolForSlug(slug) ?? []);
     const seen = new Set(ranked.map((t) => t.href));
     const out = [...ranked];
     for (const tool of [...STARTER_SLUGS.flatMap((s) => v2ToolForSlug(s) ?? []), ...offeredTools]) {
@@ -278,14 +204,6 @@ export default function TodayView({
 
   const recent = runs.slice(0, 5);
 
-  // The strip shows the level being worked on. Level 1 with everything locked
-  // is still worth showing: it is what there is to collect, which is the
-  // question a teacher who has just arrived is actually asking.
-  const currentLevel = BADGE_LEVELS[progress.level - 1] ?? BADGE_LEVELS[0]!;
-  const showStrip = progress.available && !loading;
-
-  /* The four rows of the week panel, and the lesson the greeting names.
-     Both from the one fetch above. */
   const week = useMemo(
     () => (weekStart && now ? upcomingDays(lessons, weekStart, now) : []),
     [lessons, weekStart, now],
@@ -294,45 +212,32 @@ export default function TodayView({
     () => (weekStart && now ? nextUnplanned(lessons, weekStart, now) : null),
     [lessons, weekStart, now],
   );
+  const hasTimetable = lessons.length > 0;
 
-  /*
-   * The line under the greeting.
-   *
-   * The handover asks for the next unplanned lesson here, which is the most
-   * useful thing this screen can say: it names the work rather than reporting
-   * on it. When the timetable has nothing to offer, either because it is empty
-   * or because the week is fully planned, it falls back to the most recent
-   * thing made, which is what this line said before the timetable existed.
-   */
-  const subline = (() => {
+  /* The line under the greeting: the next unplanned lesson when the timetable
+     has one, otherwise where the work is. */
+  const subline: React.ReactNode = (() => {
     if (loading || weekLoading) return "Getting your week together.";
     if (nextGap) {
       const what = nextGap.topic ? `${nextGap.subject}, ${nextGap.topic}` : nextGap.subject;
       return `${dayName(nextGap.day)}'s ${what} has nothing made for it yet.`;
     }
-    if (lessons.length > 0) return "Every lesson left this week has something ready.";
-    if (runs.length === 0) return "Nothing made yet. Pick a tool and see what it does.";
-    const latest = v2ToolForSlug(runs[0]!.tool_slug);
-    const title = runs[0]!.title?.trim();
-    if (title) return `Last up: ${title}.`;
-    return latest ? `Last up: a ${latest.name.toLowerCase()}.` : "Ready when you are.";
+    if (hasTimetable) return <>Every lesson left this week <b>has something ready.</b></>;
+    if (runs.length === 0) return <>Nothing made yet. <b>Pick a tool and see what it does.</b></>;
+    return <>Everything you made this week is in your library. <b>What next?</b></>;
   })();
 
+  const nudge = plan.loading || locked ? null : planNudge(plan.plan);
+  // Stage 1: pictures are on every plan that has resources. Stage 2 gates them.
+  const picturesOn = credits.metered;
+
   /*
-   * Hand off to Ask Jo.
-   *
-   * Deliberately not a second chat implementation: this creates the chat,
-   * stores the opening message, and navigates to /assistant/[id], which owns
-   * streaming and history. AssistantView notices a conversation that ends on a
-   * user turn and answers it, so a refresh mid-answer resumes correctly too.
-   *
-   * Jo never generates straight from free text. It parses the intent, opens the
-   * matched tool with the fields filled, and lets the teacher confirm, so a
-   * misread costs nothing. That routing lives in the assistant; this is only the
-   * way in.
+   * Hand off to Ask Jo: create the chat, store the opening message, and go to
+   * /assistant/[id], which owns streaming and history. Jo never generates
+   * straight from free text; it opens the matched tool, filled in.
    */
-  const submitAsk = async () => {
-    const q = ask.trim();
+  const startChat = async (text: string) => {
+    const q = text.trim();
     if (!q || asking) return;
     setAsking(true);
     setAskError(null);
@@ -346,35 +251,41 @@ export default function TodayView({
     }
   };
 
+  const dismissOffer = () => setTtDismissed(true);
+
   return (
-    <>
-      <div className={`${app.hello} ${ambassador ? styles.helloAmbassador : ""}`}>
-        {/* An ambassador's Today gains the verified strip and a gold hairline
-            (docs/JOOMA VERSION 4/13-jooma-ambassador v2.html, screen 12). The
-            gold is a trim, not a different product: everything else on the
-            page is the same as every other teacher's. */}
-        {ambassador && (
+    <div className={styles.today}>
+      <div className={`${styles.hello} ${plan.ambassador ? styles.helloAmbassador : ""}`}>
+        {/* An ambassador's Today keeps the verified strip: a trim, not a
+            different product. */}
+        {plan.ambassador && (
           <Link href="/ambassador" className={styles.verifiedStrip} data-testid="today-ambassador-strip">
             <Crown weight="fill" className={styles.verifiedIcon} />
             Verified Jooma Ambassador
           </Link>
         )}
-        <p className={app.helloWhen}>
-          {now
-            ? now.toLocaleDateString("en-GB", { weekday: "long" }) +
-              " " +
-              greetingFor(now.getHours()).toLowerCase()
-            : " "}
-        </p>
         <h1>
           {now ? greetingFor(now.getHours()) : "Hello"}
           {firstName ? `, ${firstName}.` : "."}
         </h1>
-        <p className={app.helloSub}>{subline}</p>
+        <p className={styles.sub} data-testid="today-subline">
+          {subline}
+        </p>
+        <p className={styles.date}>
+          {now ? now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) : " "}
+        </p>
+        {pill && (
+          <p className={styles.saved} data-testid="today-saved">
+            <Clock weight="fill" aria-hidden />
+            <span>
+              <b>{pill.lead}</b>
+              {pill.rest}
+            </span>
+          </p>
+        )}
       </div>
 
-      {/* In place of Ask Jo, which cannot run without a plan: what can still be
-          made here, and the way back to everything else. */}
+      {/* In place of Ask Jo, which cannot run without a plan. */}
       {locked && access && (
         <section className={styles.lockedCard} data-testid="locked-card">
           <div className={styles.lockedHead}>
@@ -382,8 +293,8 @@ export default function TodayView({
               <h2>{access.canStartTrial ? "Try everything free for 3 days" : "Choose a plan to carry on"}</h2>
               <p>
                 {access.canStartTrial
-                  ? "No card needed. All 35 tools, exports and credits."
-                  : "All 35 tools, your exports and your credits, from £4.99 a month."}
+                  ? "No card needed. All 35 tools, exports and resources."
+                  : "All 35 tools, your exports and your resources, from £4.99 a month."}
               </p>
             </div>
             {access.canStartTrial ? (
@@ -396,9 +307,7 @@ export default function TodayView({
           </div>
           <p className={styles.lockedTries} data-testid="free-tries-left">
             You can still make these for free, but not export them.{" "}
-            <b>
-              {access.freeTriesLeft} of 3 free tries left today.
-            </b>
+            <b>{access.freeTriesLeft} of 3 free tries left today.</b>
           </p>
           <ul className={styles.lockedTools}>
             {FREE_TOOLS.map(({ hero, label, slug }) => {
@@ -416,345 +325,210 @@ export default function TodayView({
         </section>
       )}
 
-      {/* Namespaced `moAsk`, never `mo`: in the prototype a bare `.mo` also
-          matched `.msg.mo` in the chat and painted every message as a purple
-          card. */}
       {!locked && (
-      <div className={styles.moAsk}>
-        <span className={styles.moFace}>
-          <ChatTeardropDots weight="fill" className={styles.moFaceIcon} />
-        </span>
-        <div className={styles.moText}>
-          <b>Ask Jo</b>
-          <p>Tell it what you need and it opens the right tool, filled in.</p>
-        </div>
-        <form
-          className={styles.moIn}
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submitAsk();
-          }}
-        >
-          <input
-            value={ask}
-            onChange={(e) => setAsk(e.target.value)}
-            placeholder="Year 4 fractions lesson with a worksheet"
-            aria-label="Ask Jo"
-            disabled={asking}
-            className={styles.moInput}
-          />
-          <button type="submit" disabled={asking || !ask.trim()} className={styles.moGo}>
-            {asking ? "Starting…" : "Ask Jo"}
-          </button>
-        </form>
-      </div>
+        <>
+          <form
+            className={styles.jo}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void startChat(ask);
+            }}
+          >
+            <span className={styles.joIcon} aria-hidden>
+              <Sparkle weight="fill" />
+            </span>
+            <input
+              value={ask}
+              onChange={(e) => setAsk(e.target.value)}
+              placeholder="Tell Jo what you need"
+              aria-label="Ask Jo"
+              disabled={asking}
+              className={styles.joInput}
+            />
+            <button type="submit" disabled={asking || !ask.trim()} className={styles.joGo}>
+              {asking ? "Starting…" : "Ask Jo"}
+            </button>
+          </form>
+          <div className={styles.hints}>
+            {HINTS.map((h) => (
+              <button key={h} type="button" onClick={() => void startChat(h)} disabled={asking}>
+                {h}
+              </button>
+            ))}
+          </div>
+          {askError && (
+            <p className={styles.joError} role="alert">
+              {askError}
+            </p>
+          )}
+        </>
       )}
 
-      {askError && (
-        <p className={styles.moError} role="alert">
-          {askError}
-        </p>
-      )}
-
-      {/* Order is the handover's: day streak, resources made, badges earned,
-          time saved. The streak leads because it is the one that changes today.
-
-          On a phone they are four square tiles in a 2x2 grid: the icon and a
-          bare number. The sentence values ("Starts today") and the labels give
-          way there; the label stays for screen readers and as the tile's
-          title. */}
-      <div className={styles.metrics}>
-        <div className={styles.metric} title="Day streak">
-          <span className={styles.metricIcon} data-tone="orange">
-            <Fire weight="fill" />
-          </span>
-          <div>
-            {/* Never a zero. "Starts today" is true rather than consoling: the
-                day is not over, and one resource in the next hour begins one. */}
-            <b className={styles.metricFull}>
-              {loading
-                ? PENDING
-                : progress.currentStreak === 0
-                  ? "Starts today"
-                  : progress.currentStreak === 1
-                    ? "1 day"
-                    : `${progress.currentStreak} days`}
-            </b>
-            <b className={styles.metricShort}>{loading ? PENDING : progress.currentStreak}</b>
-            <span className={styles.metricLabel}>Day streak</span>
-          </div>
-        </div>
-
-        <div className={styles.metric} title="Resources made">
-          <span className={styles.metricIcon} data-tone="violet">
-            <FileText weight="fill" />
-          </span>
-          <div>
-            <b>{loading ? PENDING : stats.resources}</b>
-            <span className={styles.metricLabel}>Resources made</span>
-          </div>
-        </div>
-
-        <div className={`${styles.metric} ${!progress.available ? styles.metricSoon : ""}`} title="Badges earned">
-          <span className={styles.metricIcon} data-tone="amber">
-            <Medal weight="fill" />
-          </span>
-          <div>
-            <b className={`${styles.metricFull} ${!progress.available ? styles.metricSoonValue : ""}`}>
-              {loading ? PENDING : !progress.available ? "Not yet" : earnedCount || "None yet"}
-            </b>
-            <b className={styles.metricShort}>{loading ? PENDING : progress.available ? earnedCount : 0}</b>
-            <span className={styles.metricLabel}>Badges earned</span>
-          </div>
-        </div>
-
-        <div className={styles.metric} title="Time saved">
-          <span className={styles.metricIcon} data-tone="green">
-            <Clock weight="fill" />
-          </span>
-          <div>
-            {/* Never a zero headline. Before the first resource there is no
-                figure worth showing, and under an hour rounds to 0h, which
-                reads as "this saved you nothing". */}
-            <b className={styles.metricFull}>
-              {loading
-                ? PENDING
-                : stats.resources === 0
-                  ? "Let us find out"
-                  : stats.hours === 0
-                    ? "Under an hour"
-                    : `${stats.hours}h`}
-            </b>
-            <b className={styles.metricShort}>
-              {loading ? PENDING : stats.resources > 0 && stats.hours === 0 ? "<1h" : `${stats.hours}h`}
-            </b>
-            <span className={styles.metricLabel}>Time saved</span>
-          </div>
-        </div>
-      </div>
-
-      <div className={app.sh}>
-        <div className={app.shTitle}>
-          <h2>Your most used</h2>
-          <span className={app.shSub}>based on the last month</span>
-        </div>
-        <Link href="/tools" className={app.shLink}>
-          All {offeredTools.length}
-        </Link>
-      </div>
-
-      {/* No credit costs on these cards. Credits live in the sidebar meter and
-          the account page only. */}
-      <div className={styles.quick}>
-        {mostUsed.map((tool) => (
-          <Link key={tool.href} href={tool.href} className={styles.qt}>
-            <ToolTile icon={tool.icon} solid={toolSolid(tool)} size="md" />
-            <h3>{tool.name}</h3>
-            <span>{tool.description}</span>
-          </Link>
-        ))}
-      </div>
-
-      <div className={styles.bento}>
-        <section className={app.panel}>
-          <div className={`${app.sh} ${styles.shFlush}`}>
-            <div className={app.shTitle}>
-              <h2>Pick up where you left off</h2>
-            </div>
-            <Link href="/folders" className={app.shLink}>
-              Library
+      {/* The week, only when there is one. */}
+      {week.length > 0 && (
+        <section className={styles.sec} data-testid="today-week">
+          <div className={styles.sech}>
+            <h2>This week</h2>
+            <span className={styles.note}>From your timetable</span>
+            <Link href="/timetable" className={styles.link}>
+              Open timetable
             </Link>
           </div>
-
-          {loading ? (
-            <p className={styles.quiet}>Loading…</p>
-          ) : recent.length === 0 ? (
-            <div className={app.empty}>
-              <span className={app.emptyIcon}>
-                <FileText weight="fill" />
-              </span>
-              <p className={app.emptyTitle}>{copy["dash.empty.title"]}</p>
-              <p className={app.emptyBody}>{copy["dash.empty.body"]}</p>
-            </div>
-          ) : (
-            <div className={app.rows}>
-              {/* A div, not a button, because the row now carries two actions.
-                  The title is the button that opens the run; Share sits beside
-                  it. Nesting a button inside a button is invalid markup and
-                  browsers resolve it by dropping one of them. */}
-              {recent.map((run) => {
-                const tool = v2ToolForSlug(run.tool_slug);
-                return (
-                  <div key={run.id} className={styles.recentRow}>
-                    <button
-                      type="button"
-                      className={styles.recentOpen}
-                      // ?run= reopens THIS run. Without it the row opened an empty
-                      // tool and silently discarded what was clicked.
-                      onClick={() => tool && router.push(`${tool.href}?run=${run.id}`)}
-                    >
-                      <ToolTile
-                        icon={tool?.icon ?? "file-text"}
-                        solid={toolSolid(tool)}
-                        size="sm"
-                      />
-                      <span className={app.rowMain}>
-                        <span className={`${app.rowTitle} ${styles.recentTitle}`}>
-                          {run.title?.trim() || "Untitled"}
-                        </span>
-                        <span className={app.rowMeta}>{tool?.name ?? run.tool_slug}</span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.recentShare}
-                      onClick={() => setSharing(run)}
-                      aria-label={`Share ${run.title?.trim() || "Untitled"} with colleagues`}
-                    >
-                      <ShareNetwork className={styles.rowGo} />
-                    </button>
-                    <ArrowRight className={styles.rowGo} aria-hidden="true" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <section className={app.panel}>
-          <div className={`${app.sh} ${styles.shFlush}`}>
-            <div className={app.shTitle}>
-              <h2>This week</h2>
-            </div>
-            {week.length > 0 && (
-              <Link href="/timetable" className={app.shLink}>
-                Timetable
-              </Link>
-            )}
+          <div className={styles.lessons}>
+            {week.map((d) => {
+              const { lesson } = d;
+              const href = makeItHref(lesson);
+              const ready = Boolean(lesson.resource);
+              return (
+                <div key={d.day} className={`${styles.les} ${ready ? "" : styles.lesTodo}`}>
+                  <p className={styles.when}>
+                    {d.isToday ? "Today" : d.date.toLocaleDateString("en-GB", { weekday: "long" })}
+                    {d.others > 0 ? `, and ${d.others} more` : ""}
+                  </p>
+                  <h3>{lesson.topic || lesson.subject || "A lesson"}</h3>
+                  <p className={styles.meta}>{[lesson.subject, lesson.year_group].filter(Boolean).join(", ")}</p>
+                  {ready ? (
+                    <p className={styles.state}>
+                      <CheckCircle weight="fill" aria-hidden />
+                      Ready
+                    </p>
+                  ) : (
+                    <Link href={href ?? "/timetable"} className={styles.mk}>
+                      {href ? "Make it" : "Add a topic"}
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
-
-          {/* No rows keeps the empty state rather than printing a zero. It is
-              true for a teacher who has not set a timetable up and for one whose
-              week is behind them, and it points at the thing to do next. */}
-          {week.length === 0 ? (
-            <div className={app.empty}>
-              <span className={app.emptyIcon}>
-                <CalendarBlank weight="fill" />
-              </span>
-              <p className={app.emptyTitle}>Your week goes here</p>
-              <p className={app.emptyBody}>
-                Tell Jooma what you teach and when, and this shows the lessons coming up
-                and what still needs making.
-              </p>
-              <Link href="/timetable" className={styles.weekSetUp}>
-                Set up your timetable
-              </Link>
-            </div>
-          ) : (
-            <div className={styles.week}>
-              {week.map((d) => {
-                const { lesson } = d;
-                const tool = lesson.resource
-                  ? v2ToolForSlug(lesson.resource.tool_slug)
-                  : undefined;
-                const href = makeItHref(lesson);
-                return (
-                  <div
-                    key={d.day}
-                    className={`${styles.day} ${d.isToday ? styles.dayNow : ""} ${
-                      lesson.resource ? "" : styles.dayEmpty
-                    }`}
-                  >
-                    <span className={styles.dayD}>
-                      {d.date.toLocaleDateString("en-GB", { weekday: "short" })}
-                      <b className={styles.dayDate}>{d.date.getDate()}</b>
-                    </span>
-                    <div className={styles.dayInfo}>
-                      <p className={styles.dayTitle}>
-                        {[lesson.year_group, lesson.subject].filter(Boolean).join(" ")}
-                        {lesson.topic ? `, ${lesson.topic}` : ""}
-                      </p>
-                      <span className={styles.dayMeta}>
-                        {lesson.resource
-                          ? `${tool?.name ?? "Something"} ready`
-                          : "Nothing made yet"}
-                        {d.others > 0 ? `, and ${d.others} more` : ""}
-                      </span>
-                    </div>
-
-                    {/* Make it needs a topic to fill the tool's required
-                        fields. Without one the honest offer is the topic, not a
-                        link that opens a form claiming to be prefilled. */}
-                    {!lesson.resource &&
-                      (href ? (
-                        <Link href={href} className={styles.gap}>
-                          Make it
-                        </Link>
-                      ) : (
-                        <Link href="/timetable" className={styles.gap}>
-                          Add a topic
-                        </Link>
-                      ))}
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </section>
-      </div>
+      )}
 
-      <EarnedBadgesCard ids={progress.justEarned} />
-
-      <div className={app.sh}>
-        <div className={app.shTitle}>
-          <h2>Badges</h2>
-          {showStrip && (
-            <span className={app.shSub}>
-              Level {progress.level}, {currentLevel.title.toLowerCase()}
-            </span>
-          )}
-        </div>
-        {showStrip && (
-          <Link href="/profile?section=badges" className={app.shLink}>
-            See all {progress.total}
+      <section className={styles.sec}>
+        <div className={styles.sech}>
+          <h2>Make something</h2>
+          <span className={styles.note}>Your most used</span>
+          <Link href="/tools" className={styles.link}>
+            All {offeredTools.length} tools
           </Link>
-        )}
-      </div>
-      <section className={app.panel}>
-        {/* Ten grey medallions is the discouraging zero this screen avoids
-            everywhere else, so a teacher with nothing yet gets the invitation
-            instead. Same branch covers the migration not being applied. */}
-        {!showStrip ? (
-          <div className={app.empty}>
-            <span className={app.emptyIcon}>
-              <Medal weight="fill" />
+        </div>
+        <div className={styles.tools}>
+          {mostUsed.map((tool) => {
+            const slug = tool.href.replace("/tools/", "");
+            return (
+              <Link key={tool.href} href={tool.href} className={styles.tool}>
+                <ToolTile icon={tool.icon} solid={toolSolid(tool)} size="md" />
+                <h3>{tool.name}</h3>
+                <p>{tool.description}</p>
+                <span className={styles.cost}>
+                  <span className={`${styles.chip} ${styles.chipRes}`}>
+                    <Lightning weight="fill" aria-hidden />
+                    {estimateLabel(estimateFor(slug))}
+                  </span>
+                  {PICTURE_TOOLS.has(tool.href) &&
+                    (picturesOn ? (
+                      <span className={`${styles.chip} ${styles.chipPic}`}>
+                        <ImageSquare weight="fill" aria-hidden />
+                        Picture slides
+                      </span>
+                    ) : (
+                      <span className={`${styles.chip} ${styles.chipGate}`}>
+                        <LockSimple weight="fill" aria-hidden />
+                        Pictures on paid plans
+                      </span>
+                    ))}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className={styles.sec}>
+        <div className={styles.sech}>
+          <h2>Pick up where you left off</h2>
+          <Link href="/folders" className={styles.link}>
+            Library
+          </Link>
+        </div>
+        {loading ? (
+          <p className={styles.quiet}>Loading…</p>
+        ) : recent.length === 0 ? (
+          <div className={styles.empty}>
+            <span className={styles.emptyIcon}>
+              <FileText weight="fill" />
             </span>
-            <p className={app.emptyTitle}>Badges are on the way</p>
-            <p className={app.emptyBody}>
-              Ten levels of them, earned for the teaching habits worth building.
-              Make something and the first will be along shortly.
-            </p>
+            <h3>{copy["dash.empty.title"]}</h3>
+            <p>{copy["dash.empty.body"]}</p>
           </div>
         ) : (
-          <ul className={styles.badgeStrip}>
-            {currentLevel.badges.map((badge) => (
-              <li key={badge.id} className={styles.stripItem}>
-                <BadgeMedallion
-                  icon={badge.icon}
-                  tier={currentLevel.tier}
-                  locked={!earned.has(badge.id)}
-                  /* Unique per medallion: two sharing a uid means the second
-                     inherits the first's gradient. */
-                  uid={`strip-${badge.id}`}
-                />
-                <span className={styles.stripName} data-locked={!earned.has(badge.id)}>
-                  {badge.name}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.recent}>
+            {/* A div, not a button: the row carries two actions, and a button
+                inside a button is invalid markup. */}
+            {recent.map((run) => {
+              const tool = v2ToolForSlug(run.tool_slug);
+              const title = run.title?.trim() || "Untitled";
+              return (
+                <div key={run.id} className={styles.row}>
+                  <button
+                    type="button"
+                    className={styles.rowOpen}
+                    // ?run= reopens THIS run, not an empty tool.
+                    onClick={() => tool && router.push(`${tool.href}?run=${run.id}`)}
+                  >
+                    <ToolTile icon={tool?.icon ?? "file-text"} solid={toolSolid(tool)} size="sm" />
+                    <span className={styles.rowMain}>
+                      <b>{title}</b>
+                      <span>{tool?.name ?? run.tool_slug}</span>
+                    </span>
+                  </button>
+                  <span className={styles.rowWhen}>{now ? whenLabel(new Date(run.created_at), now) : ""}</span>
+                  <button
+                    type="button"
+                    className={styles.rowShare}
+                    onClick={() => setSharing(run)}
+                    aria-label={`Share ${title} with colleagues`}
+                  >
+                    <ShareNetwork />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         )}
       </section>
+
+      {nudge && (
+        <div className={styles.nudge} data-testid="today-nudge">
+          <div className={styles.nudgeText}>
+            <h2>{nudge.title}</h2>
+            <p>{nudge.body}</p>
+          </div>
+          <div className={styles.nudgeAct}>
+            <Link href="/pricing" className={styles.nudgeBtn}>
+              {nudge.cta}
+            </Link>
+            <p>{nudge.price}</p>
+          </div>
+        </div>
+      )}
+
+      {/* One line, last thing on the page, gone once dismissed. */}
+      {!weekLoading && !hasTimetable && !ttDismissed && (
+        <div className={styles.ttOffer} data-testid="today-tt-offer">
+          <CalendarBlank aria-hidden />
+          <span className={styles.ttText}>
+            <b>Add your timetable and this page knows your week.</b> Tell Jo what you teach and when, and
+            anything you have not made yet shows up here.
+          </span>
+          <Link href="/timetable" className={styles.ttGo}>
+            Set it up
+          </Link>
+          <button type="button" className={styles.ttNo} onClick={dismissOffer}>
+            Not now
+          </button>
+        </div>
+      )}
 
       <ShareModal
         open={sharing !== null}
@@ -762,6 +536,6 @@ export default function TodayView({
         runId={sharing?.id}
         runTitle={sharing?.title?.trim() || "Untitled"}
       />
-    </>
+    </div>
   );
 }
