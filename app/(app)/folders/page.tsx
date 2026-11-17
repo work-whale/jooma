@@ -446,9 +446,6 @@ function Library() {
     // Marks the well wide: see .wrap:has() in app.module.css.
     <div data-well="wide">
       <div className={app.hello}>
-        <p className={app.helloWhen}>
-          {loading ? " " : `${total} ${total === 1 ? "resource" : "resources"}`}
-        </p>
         <h1>Library</h1>
         <p className={app.helloSub}>
           Everything you make is filed here. Drag a resource onto a folder to

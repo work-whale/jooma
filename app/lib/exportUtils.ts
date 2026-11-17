@@ -1,3 +1,4 @@
+import { currentExportMark, withExportMark } from "./export-mark";
 import {
   Document,
   Packer,
@@ -44,7 +45,8 @@ function parseInlineRuns(text: string): TextRun[] {
 
 // --- DOCX export ---
 export async function exportToDocx(text: string, filename: string) {
-  const lines = cleanMathText(text).split("\n");
+  // Jooma 4.5: the mark follows the plan in force at export time.
+  const lines = cleanMathText(withExportMark(text, currentExportMark())).split("\n");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const children: any[] = [];
   let i = 0;
@@ -334,7 +336,7 @@ function sliceCanvasToPages(
 
 // --- Build the full PDF HTML string ---
 export function buildPdfHtml(markdown: string, filename: string, docTitle?: string): string {
-  const html = markdownToHtml(markdown);
+  const html = markdownToHtml(withExportMark(markdown, currentExportMark()));
   const title = docTitle ?? friendlyTitle(filename);
   const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
   return buildPdfDocument(html, title, date);

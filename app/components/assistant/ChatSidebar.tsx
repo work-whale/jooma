@@ -187,7 +187,7 @@ export default function ChatSidebar({
           // Visible at once on open, so focus can move in on the first frame;
           // hidden only once the slide out has finished on close.
           open ? "translate-x-0 visible transition-[translate]" : "-translate-x-full invisible transition-[translate,visibility]"
-        } lg:static lg:z-auto lg:translate-x-0 lg:visible lg:transition-none lg:w-[292px] lg:rounded-2xl lg:shadow-none lg:p-6 shrink-0 flex flex-col gap-4 lg:gap-5 overflow-hidden`}
+        } lg:static lg:z-auto lg:translate-x-0 lg:visible lg:transition-none lg:w-[268px] lg:rounded-2xl lg:border lg:border-(--j-line) lg:shadow-none lg:px-[15px] lg:py-[17px] shrink-0 flex flex-col gap-4 lg:gap-5 overflow-hidden`}
         style={{ backgroundColor: "var(--j-card)" }}
       >
         <div className="flex items-center justify-between gap-3">
@@ -264,7 +264,7 @@ export default function ChatSidebar({
             {chats.length === 0 ? "No chats yet." : "No chats match that search."}
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-[3px]">
             {filtered.map((chat) => {
               const active = chat.id === activeId;
               return (
@@ -289,11 +289,13 @@ export default function ChatSidebar({
                         setPanelOpen(false);
                         onSelect(chat.id);
                       }}
-                      className="w-full rounded-xl px-4 py-3 pr-12 text-left text-[13px] transition-colors cursor-pointer"
-                      style={{
-                        backgroundColor: active ? "var(--j-purple)" : "var(--j-tint)",
-                        color: active ? "#fff" : "var(--j-ink)",
-                      }}
+                      // v4: quiet rows, the open chat lifted in the soft
+                      // resource tint (prototype .chatlist).
+                      className={`w-full rounded-[9px] px-3 py-2.5 pr-12 text-left text-[13px] transition-colors cursor-pointer ${
+                        active
+                          ? "bg-(--j-res-soft) text-(--j-res) font-bold"
+                          : "text-(--j-body) hover:bg-(--j-bg) active:bg-(--j-bg)"
+                      }`}
                     >
                       <span className="block truncate">{chat.title}</span>
                     </button>
@@ -316,7 +318,7 @@ export default function ChatSidebar({
                           : "opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:opacity-100"
                       }`}
                     >
-                      <MoreHorizontal className={`w-4 h-4 ${active ? "text-white" : "text-muted"}`} />
+                      <MoreHorizontal className={`w-4 h-4 ${active ? "text-(--j-res)" : "text-muted"}`} />
                     </button>
                   )}
 

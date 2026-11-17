@@ -32,14 +32,15 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 0.86rem;
-  font-weight: 800;
+  font-size: 0.81rem;
+  font-weight: 600;
   color: var(--j-faint);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .crumbLink {
-  color: var(--j-purple);
+  color: var(--j-ink);
+  font-weight: 800;
   background: none;
   border: 0;
   padding: 0;
@@ -76,8 +77,9 @@
   gap: 3px;
   border: 1px solid var(--j-line-2);
   background: var(--j-card);
-  border-radius: var(--j-pill);
+  border-radius: 10px;
   padding: 3px;
+  gap: 2px;
   margin-left: auto;
 }
 
@@ -91,13 +93,13 @@
 
 .viewBtn {
   width: 30px;
-  height: 30px;
+  height: 28px;
   display: grid;
   place-items: center;
   border: 0;
   background: none;
-  border-radius: var(--j-pill);
-  color: var(--j-muted);
+  border-radius: 7px;
+  color: var(--j-faint);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -126,25 +128,25 @@
 }
 
 .viewBtnOn {
-  background: var(--j-purple);
-  color: #fff;
+  background: var(--j-res-soft);
+  color: var(--j-res);
 }
 
 @media (hover: hover) {
   .viewBtnOn:hover {
-    background: var(--j-purple);
-    color: #fff;
+    background: var(--j-res-soft);
+    color: var(--j-res);
   }
 }
 
 .viewBtnOn:active {
-  background: var(--j-purple);
-  color: #fff;
+  background: var(--j-res-soft);
+  color: var(--j-res);
 }
 
 .viewIcon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 /* ── Folder grid ─────────────────────────────────────────────────────────── */
@@ -165,7 +167,7 @@
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r-lg);
-  padding: 16px;
+  padding: 16px 17px;
   text-align: left;
   cursor: pointer;
   font-family: inherit;
@@ -179,16 +181,14 @@
 
 @media (hover: hover) {
   .folder:hover {
-    transform: translateY(-3px);
-    border-color: var(--j-lilac-2);
-    box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
+    transform: translateY(-1px);
+    border-color: var(--j-line-2);
   }
 }
 
 .folder:active {
-  transform: translateY(-3px);
-  border-color: var(--j-lilac-2);
-  box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
+  transform: translateY(-1px);
+  border-color: var(--j-line-2);
 }
 
 /* The folder is a live drop target and the row is over it. Distinct from
@@ -238,17 +238,17 @@
    selector here is trap 1 in the handover, and it would also capture the
    resource count below. */
 .folderChip {
-  width: 38px;
-  height: 38px;
-  border-radius: 11px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 11px;
 }
 
 .folderChip svg {
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
 }
 
 .folderName {
@@ -274,8 +274,9 @@
   gap: 6px;
   color: var(--j-purple);
   font-weight: 800;
-  font-size: 0.87rem;
-  min-height: 130px;
+  font-size: 0.84rem;
+  min-height: 108px;
+  background: transparent;
   text-align: center;
 }
 
@@ -342,12 +343,12 @@
 
 @media (hover: hover) {
   .filerow:hover .fileTitle {
-    color: var(--j-purple);
+    color: var(--j-ink);
   }
 }
 
 .filerow:active .fileTitle {
-  color: var(--j-purple);
+  color: var(--j-ink);
 }
 
 /* app.rowTitle supplies the type; this adds the block context ellipsis needs
@@ -400,7 +401,7 @@
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r-lg);
-  padding: 16px;
+  padding: 15px 16px;
   cursor: grab;
   transition:
     transform 0.18s var(--j-ease),
@@ -410,16 +411,14 @@
 
 @media (hover: hover) {
   .filecard:hover {
-    transform: translateY(-3px);
-    border-color: var(--j-lilac-2);
-    box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
+    transform: translateY(-1px);
+    border-color: var(--j-line-2);
   }
 }
 
 .filecard:active {
-  transform: translateY(-3px);
-  border-color: var(--j-lilac-2);
-  box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
+  transform: translateY(-1px);
+  border-color: var(--j-line-2);
 }
 
 .filecardMenu {
@@ -457,12 +456,12 @@
 
 @media (hover: hover) {
   .filecard:hover .filecardTitle {
-    color: var(--j-purple);
+    color: var(--j-ink);
   }
 }
 
 .filecard:active .filecardTitle {
-  color: var(--j-purple);
+  color: var(--j-ink);
 }
 
 .filecardMeta {

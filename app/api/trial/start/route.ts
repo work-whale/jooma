@@ -2,19 +2,35 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
-import { eligibleForTrial, type AccessRow } from "@/app/lib/account-access";
+import { type AccessRow } from "@/app/lib/account-access";
+import { canStartProTrial } from "@/app/lib/account-plan";
+import { trialEmailKey, isDisposableEmail } from "@/app/lib/trial-guard";
+import { trialEndsAt } from "@/app/lib/resource-periods";
+import { recordAppEvent } from "@/app/lib/app-events";
+import { randomUUID } from "node:crypto";
 import { sendStartTrialEvent } from "@/app/lib/meta-capi";
 import { TRIAL_DAYS } from "@/app/lib/plans";
 import { clientIp } from "@/app/lib/guest";
 
-// Start the no-card trial: Standard for TRIAL_DAYS, with nothing in Stripe.
+// Start the Jooma 4.5 Pro trial: 10 days of Pro, 300 resources, no card,
+// ending 23:59:59 UK time on the signup date plus 10 days. Nothing in Stripe.
 //
-// Called by /complete-profile when a teacher finishes signing up, and by the
-// "Start your free trial" button for an account that signed up before the card
-// was dropped. The session decides who; no plan or date comes from the request.
+// Called by /complete-profile when a teacher finishes signing up, by the
+// "Start your free trial" button, and at login for a launch-day account with
+// trial_pending. The session decides who; no plan or date comes from the
+// request.
 //
-// The row has the shape my_generation_gate() and the ambassador-terms cron
-// already end on time: status 'trialing' with no subscription id.
+// Refused (the account simply stays on Free, which is never locked) when:
+//   - the email, normalised and hashed, has had a trial before (ever);
+//   - the email is on a disposable domain;
+//   - the account has paid, held an ambassador's Pro, or is not on Free.
+// More than 2 accounts from one device in 24 hours is FLAGGED for admin
+// review (admin_flagged_devices), never refused.
+//
+// Needs migration 20261118000000_plans_engine.sql (plan 'pro_trial',
+// trial_ends_at, claim_trial_email). Ship the two together.
+const DEVICE_COOKIE = "jooma_device";
+
 export async function POST(req: Request) {
   const supabase = await createClient();
   const {
@@ -27,43 +43,96 @@ export async function POST(req: Request) {
     console.error("[trial/start] could not read account", error);
     return NextResponse.json({ error: "Could not start your trial." }, { status: 500 });
   }
-  const row = (Array.isArray(data) ? data[0] : data) as AccessRow | undefined;
-  if (!row || !eligibleForTrial(row)) {
-    return NextResponse.json({ error: "A free trial is not available on this account." }, { status: 409 });
+  const row = (Array.isArray(data) ? data[0] : data) as (AccessRow & { trial_pending?: boolean }) | undefined;
+  const refused = NextResponse.json(
+    { error: "A free trial is not available on this account. You're on Free, with 50 resources every Sunday." },
+    { status: 409 },
+  );
+  if (!row || !user.email) return refused;
+  if (isDisposableEmail(user.email)) return refused;
+
+  const key = trialEmailKey(user.email);
+  const { data: seen } = await supabaseAdmin.rpc("trial_email_seen", { p_key: key });
+  const eligible = canStartProTrial({
+    emailSeen: Boolean(seen),
+    isAdmin: Boolean(row.is_admin),
+    hasPaid: Boolean(row.has_paid || row.had_ambassador_pro || row.stripe_subscription_id),
+    plan: row.plan,
+  });
+  if (!eligible) return refused;
+
+  // The atomic "one per email" gate: only one caller can insert the key.
+  const { data: claimed, error: claimError } = await supabaseAdmin.rpc("claim_trial_email", { p_key: key });
+  if (claimError) {
+    console.error("[trial/start] claim failed", claimError);
+    return NextResponse.json({ error: "Could not start your trial." }, { status: 500 });
   }
+  if (!claimed) return refused;
 
   const now = new Date();
-  const until = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+  const until = trialEndsAt(now, TRIAL_DAYS);
 
-  // The guard is repeated in the WHERE: two tabs both pass the check above, and
-  // a subscription can land in between. Only one update can match.
+  // The guard is repeated in the WHERE: a subscription can land in between.
   const { data: granted, error: grantError } = await supabaseAdmin
     .from("profiles")
     .update({
-      plan: "standard",
-      subscription_status: "trialing",
+      plan: "pro_trial",
+      trial_ends_at: until.toISOString(),
+      trial_pending: false,
+      subscription_status: null,
+      current_period_end: null,
       cancel_at_period_end: false,
-      current_period_end: until.toISOString(),
+      // Kept as the "has had a trial" marker the older screens read.
       free_trial_started_at: now.toISOString(),
       updated_at: now.toISOString(),
     })
     .eq("id", user.id)
     .eq("plan", "free")
     .is("stripe_subscription_id", null)
-    .is("stripe_customer_id", null)
-    .is("free_trial_started_at", null)
     .select("id");
   if (grantError) {
     console.error("[trial/start] grant failed", grantError);
     return NextResponse.json({ error: "Could not start your trial." }, { status: 500 });
   }
-  if (!granted || granted.length === 0) {
-    return NextResponse.json({ error: "A free trial is not available on this account." }, { status: 409 });
-  }
+  if (!granted || granted.length === 0) return refused;
 
+  const { error: startError } = await supabaseAdmin.rpc("resources_start", {
+    p_uid: user.id,
+    p_plan: "pro_trial",
+  });
+  if (startError) console.error("[trial/start] resources_start failed", startError);
+
+  await recordAppEvent(user.id, "trial_started", { trial_ends_at: until.toISOString() });
   await reportStart(user.id, user.email ?? null, req);
 
-  return NextResponse.json({ trialEndsAt: until.toISOString() });
+  const res = NextResponse.json({ trialEndsAt: until.toISOString() });
+  await flagDevice(user.id, res);
+  return res;
+}
+
+/** Record this signup's device and flag (never block) a busy one. */
+async function flagDevice(userId: string, res: NextResponse) {
+  try {
+    const store = await cookies();
+    let device = store.get(DEVICE_COOKIE)?.value ?? null;
+    if (!device || device.length < 8 || device.length > 80) {
+      device = randomUUID();
+      res.cookies.set(DEVICE_COOKIE, device, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: true,
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+      });
+    }
+    const { data: flagged } = await supabaseAdmin.rpc("record_signup_device", {
+      p_device: device,
+      p_uid: userId,
+    });
+    if (flagged) console.warn("[trial/start] device flagged for review", userId);
+  } catch (err) {
+    console.warn("[trial/start] device record failed", err);
+  }
 }
 
 /**

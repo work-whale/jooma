@@ -17,6 +17,7 @@ import { TOOLS, V2_TOOLS, toolSolid } from "@/app/lib/tools";
 import { useCreditMeter } from "@/app/lib/useCreditMeter";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { usePlanBadge } from "@/app/lib/usePlanBadge";
+import { useAccountAccess } from "@/app/lib/useAccountAccess";
 import { chipLabel } from "@/app/lib/plan-badge";
 import { usePinnedTools } from "@/app/lib/usePinnedTools";
 import { isNavActive } from "@/app/lib/navActive";
@@ -71,7 +72,11 @@ export default function SideNavV2({
   const credits = useCreditMeter();
   const badges = useBadgeProgress();
   const plan = usePlanBadge();
-  const chip = chipLabel(plan);
+  const access = useAccountAccess();
+  const chip = chipLabel(
+    plan,
+    access?.accountPlan === "pro_trial" && access.state === "trial" ? "pro_trial" : access?.state === "free" ? "free" : null,
+  );
   const nav = plan.ambassador ? [...NAV, AMBASSADOR_NAV] : NAV;
   const [topUpOpen, setTopUpOpen] = useState(false);
 

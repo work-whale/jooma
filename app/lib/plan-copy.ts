@@ -98,7 +98,8 @@ export const TRIAL_CTA = "Start free trial";
 
 /**
  * The line that explains the trial on a plan's card for someone who has not
- * signed up: "3 days free, no card needed. £4.99 a month if you subscribe".
+ * signed up: "10 days of Pro free, no card needed. £4.99 a month if you subscribe".
+ * Jooma 4.5: the trial is always Pro, whichever card it sits on.
  * Derived from PLANS and TRIAL_DAYS so it can never quote a price Checkout will
  * not charge. Null for a plan with no self-serve price.
  */
@@ -110,7 +111,7 @@ export function planTrialLine(
   const price = yearly ?? PLANS[plan].priceMonthly;
   if (!price) return null;
   const per = yearly ? "a year" : "a month";
-  return `${TRIAL_DAYS} days free, no card needed. ${gbp(price)} ${per} if you subscribe`;
+  return `${TRIAL_DAYS} days of Pro free, no card needed. ${gbp(price)} ${per} if you subscribe`;
 }
 
 /**

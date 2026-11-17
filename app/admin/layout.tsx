@@ -49,7 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: "#F7F5FC" }}>
+    <div className="flex min-h-screen" style={{ backgroundColor: "#FAF9FC" }}>
       <AdminSidebar badges={badges} permissions={access.permissions} />
       <main className="flex-1 min-w-0 px-8 py-10">
         <div className="w-full">{children}</div>

@@ -584,7 +584,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
   return (
     <section
-      className="flex flex-1 flex-col overflow-hidden rounded-2xl"
+      className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-(--j-line)"
       style={{ backgroundColor: "var(--j-card)" }}
     >
       {locked ? (
@@ -665,8 +665,8 @@ function EmptyState() {
     <div className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 sm:px-6 lg:px-10 text-center" data-testid="assistant-splash">
       <div className="my-auto flex flex-col items-center py-6">
         <h2
-          className="text-2xl sm:text-[32px] font-semibold text-dark"
-          style={{ letterSpacing: "0.38px" }}
+          className="text-2xl sm:text-[23px] font-extrabold text-dark"
+          style={{ letterSpacing: "-0.028em" }}
         >
           How can I help you?
         </h2>

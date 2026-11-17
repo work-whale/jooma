@@ -298,7 +298,8 @@ test.describe("Ask Jo's chats on a desktop", () => {
     await expect(column).not.toHaveAttribute("role", "dialog");
     await expect(page.getByRole("button", { name: "Open chats" })).toBeHidden();
     const b = await box(column);
-    expect(Math.round(b.width)).toBe(292);
+    // The v4 prototype's chats column (.jowrap 268px).
+    expect(Math.round(b.width)).toBe(268);
     // In the page's flow beside the rail, not over it.
     expect(b.x).toBeGreaterThan(250);
   });

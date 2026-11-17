@@ -141,3 +141,18 @@ test.describe("the chip beside the wordmark", () => {
     expect(chipLabel(planBadgeFor("free", term(null, "paused"), NOW))).toBe("No plan");
   });
 });
+
+test.describe("Jooma 4.5 chip", () => {
+  test("PRO TRIAL during the 10-day trial (owner's decision, 17 Nov)", () => {
+    expect(chipLabel(planBadgeFor("pro", null, NOW), "pro_trial")).toBe("PRO TRIAL");
+  });
+  test("4.5 Free reads Free, never No plan", () => {
+    expect(chipLabel(planBadgeFor("free", null, NOW), "free")).toBe("Free");
+  });
+  test("an ambassador on 4.5 Free still shows no chip", () => {
+    expect(chipLabel(planBadgeFor("free", { status: "active", proUntil: null }, NOW), "free")).toBeNull();
+  });
+  test("without a 4.5 state the old labels stand", () => {
+    expect(chipLabel(planBadgeFor("free", null, NOW))).toBe("No plan");
+  });
+});

@@ -7,6 +7,8 @@
 import { effectivePlan, hasActivePlan, reviewTrialEnd } from "./plans";
 import { FREE_TRIES_PER_DAY } from "./free-tries";
 import { trialOfferExpiredAt, trialOfferFor, type TrialOffer } from "./trial-offer";
+import { planInForce } from "./account-plan";
+import type { AccountPlan } from "./plan-config";
 
 /** The columns my_account_access() returns. */
 export interface AccessRow {
@@ -25,17 +27,28 @@ export interface AccessRow {
   trial_ends_at?: string | null;
   /** When its 50% offer runs out, only for someone it could apply to. */
   trial_offer_ends_at?: string | null;
+  /** Jooma 4.5 (20261118000000). Present only once that migration is pushed,
+   *  which is how this file knows to apply the new rules. */
+  resources_made?: number | null;
+  trial_pending?: boolean | null;
+  payment_failed_at?: string | null;
+  marketing_consent?: boolean | null;
+  sunday_emails?: boolean | null;
 }
 
 /**
  *   subscribed  a plan in force: paid for, comped, or a Stripe trial with a card
  *   trial       the no-card trial, still running
  *   locked      nothing in force, so only the three free tools work
+ *               (before Jooma 4.5 only)
+ *   free        Jooma 4.5 Free: 50 resources a week, never locked out
  */
-export type AccountState = "subscribed" | "trial" | "locked";
+export type AccountState = "subscribed" | "trial" | "locked" | "free";
 
 export interface AccountAccess {
   state: AccountState;
+  /** Jooma 4.5: which of the five account states is in force. */
+  accountPlan: AccountPlan;
   /** When the no-card trial ends. Null in every other state. */
   trialEndsAt: Date | null;
   /** Whole days left, rounded up, so the last hours read as "1 day". */
@@ -79,6 +92,49 @@ export function eligibleForTrial(row: AccessRow): boolean {
 }
 
 export function accountAccess(row: AccessRow, now = new Date()): AccountAccess {
+  const accountPlan = planInForce(row, now);
+  return { accountPlan, ...(isV45(row) ? accessV45(row, accountPlan, now) : legacyAccess(row, now)) };
+}
+
+/** A row from the 4.5 my_account_access(). */
+function isV45(row: AccessRow): boolean {
+  return row.resources_made !== undefined;
+}
+
+/** Jooma 4.5: nobody is locked out. Free is a plan; the trial is pro_trial. */
+function accessV45(row: AccessRow, plan: AccountPlan, now: Date): Omit<AccountAccess, "accountPlan"> {
+  const hadTrial = Boolean(row.free_trial_started_at);
+  const trialStartedAt = row.free_trial_started_at ? new Date(row.free_trial_started_at) : null;
+  const freeTriesLeft = Math.max(0, FREE_TRIES_PER_DAY - (row.free_tries_used ?? 0));
+  const common = {
+    canStartTrial: false,
+    canExportLibrary: true,
+    lapsed: false,
+    freeTriesLeft,
+    hadTrial,
+    trialStartedAt,
+    trialOffer: null,
+    trialOfferExpiredAt: null,
+  };
+  if (plan === "pro_trial" && row.trial_ends_at) {
+    const end = new Date(row.trial_ends_at);
+    return {
+      ...common,
+      state: "trial",
+      trialEndsAt: end,
+      trialDaysLeft: Math.ceil((end.getTime() - now.getTime()) / DAY_MS),
+    };
+  }
+  return {
+    ...common,
+    state: plan === "free" ? "free" : "subscribed",
+    trialEndsAt: null,
+    trialDaysLeft: null,
+    canStartTrial: plan === "free" && Boolean(row.trial_pending),
+  };
+}
+
+function legacyAccess(row: AccessRow, now: Date): Omit<AccountAccess, "accountPlan"> {
   const paidEra = Boolean(row.has_paid || row.had_ambassador_pro);
   const freeTriesLeft = Math.max(0, FREE_TRIES_PER_DAY - (row.free_tries_used ?? 0));
 

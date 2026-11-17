@@ -30,10 +30,11 @@ test.describe("what is on sale", () => {
     expect(PRICEABLE_PLAN_IDS).toEqual(["standard", "pro", "max"]);
   });
 
-  test("Standard is £4.99 for 500 credits, watermarked, with every tool", () => {
+  test("Standard is £4.99 for 500 credits, clean exports, with every tool", () => {
     expect(PLANS.standard.priceMonthly).toBe(4.99);
     expect(planCredits("standard")).toBe(500);
-    expect(PLANS.standard.limits.watermark).toBe(true);
+    // Jooma 4.5 red note: Standard exports are clean.
+    expect(PLANS.standard.limits.watermark).toBe(false);
     expect(PLANS.standard.limits.assistant).toBe(true);
     expect(PLANS.standard.limits.monthlyGenerations).toBeNull();
   });
@@ -110,12 +111,13 @@ test.describe("planLosses", () => {
     expect(losses).not.toContain("curriculum");
   });
 
-  test("Pro to Standard names credits, the watermark and support, and keeps the assistant", () => {
+  test("Pro to Standard names credits and support, and keeps the assistant", () => {
     const losses = planLosses("pro", "standard");
     const joined = losses.join(" | ");
 
     expect(losses[0]).toContain(planCredits("standard")!.toLocaleString("en-GB"));
-    expect(joined).toContain("watermark");
+    // Jooma 4.5 red note: Standard exports are clean too, so no watermark loss.
+    expect(joined).not.toContain("watermark");
     expect(joined.toLowerCase()).toContain("priority support");
     expect(joined).toContain(String(PLANS.standard.limits.aiImageSlideshows));
     // Standard keeps these, so they are not losses.
@@ -159,8 +161,8 @@ test.describe("planFeatures", () => {
 
 test.describe("planTrialLine", () => {
   test("quotes the trial and what subscribing costs", () => {
-    expect(planTrialLine("standard")).toBe("3 days free, no card needed. £4.99 a month if you subscribe");
-    expect(planTrialLine("pro")).toBe("3 days free, no card needed. £7.99 a month if you subscribe");
+    expect(planTrialLine("standard")).toBe("10 days of Pro free, no card needed. £4.99 a month if you subscribe");
+    expect(planTrialLine("pro")).toBe("10 days of Pro free, no card needed. £7.99 a month if you subscribe");
   });
 
   test("is null for anything without a self-serve price", () => {

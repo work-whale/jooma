@@ -1,5 +1,6 @@
 "use client";
 
+import { discountCodeFrom } from "@/app/lib/billing-rules";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,8 +51,9 @@ export default function SignupPage() {
   // /api/ambassadors/claim does that once there is an account to attach it to.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    if (code) sessionStorage.setItem("jooma:ambassador-code", code.trim().toUpperCase());
+    // Jooma 4.5: ?ref=CODE is an alias of ?code=CODE (spec Step 4).
+    const code = discountCodeFrom(params);
+    if (code) sessionStorage.setItem("jooma:ambassador-code", code);
     // Where to go once the account exists: an ambassador invite's application.
     // Stashed for /complete-profile, the page every new account passes through.
     const next = honouredNextPath(params.get("next"));

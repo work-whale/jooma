@@ -63,7 +63,7 @@ test.describe("plan cards with a code", () => {
   test("yearly and no code are unchanged", () => {
     expect(planCardPricing("pro", "year", HALF)).toEqual(planCardPricing("pro", "year"));
     expect(planCardPricing("pro", "month", null)).toEqual({ price: "£7.99", per: "a month" });
-    expect(planTrialLine("pro", "month")).toBe("3 days free, no card needed. £7.99 a month if you subscribe");
+    expect(planTrialLine("pro", "month")).toBe("10 days of Pro free, no card needed. £7.99 a month if you subscribe");
   });
 });
 

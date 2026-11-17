@@ -1,8 +1,11 @@
-/* Skeleton shapes for Today. Sizes mirror TodayView.module.css so the real
-   content lands in the same places and nothing jumps. */
+/* Skeleton shapes for the v4 Today. Sizes mirror TodayView.module.css so the
+   real content lands in the same places and nothing jumps. */
 
-.hello {
-  margin-bottom: 22px;
+.page {
+  min-width: 0;
+  /* One shared pulse, on the container, so every shape breathes in time
+     rather than each starting its own animation at mount. */
+  animation: skeleton 1.6s ease-in-out infinite;
 }
 
 .bar {
@@ -12,85 +15,128 @@
 
 /* Widths cap against the viewport so the skeleton does not overflow a phone
    before the real content has even arrived. */
-.eyebrow {
-  height: 12px;
-  width: min(140px, 60%);
-  margin-bottom: 12px;
-}
-
 .title {
-  height: 30px;
-  width: min(280px, 80%);
-  margin-bottom: 10px;
+  height: 34px;
+  width: min(260px, 80%);
 }
 
 .sub {
-  height: 16px;
-  width: min(360px, 90%);
+  height: 18px;
+  width: min(420px, 90%);
+  margin-top: 9px;
 }
 
-.mo {
-  height: 96px;
+.date {
+  height: 12px;
+  width: min(150px, 50%);
+  margin-top: 15px;
+}
+
+.saved {
+  height: 34px;
+  width: min(230px, 70%);
+  margin-top: 14px;
+  border-radius: var(--j-pill);
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+}
+
+.jo {
+  margin-top: 20px;
+  height: 60px;
   border-radius: var(--j-r-xl);
-  background: var(--j-tint);
-  margin-bottom: 20px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line-2);
 }
 
-.metrics {
+.hints {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+  padding-left: 4px;
+}
+
+.hint {
+  height: 29px;
+  width: 150px;
+  border-radius: var(--j-pill);
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+}
+
+.sech {
+  margin: 32px 0 13px;
+}
+
+.h2 {
+  height: 18px;
+  width: 170px;
+}
+
+.tools {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
 }
 
-.metric {
-  height: 72px;
+.tool {
+  height: 168px;
   border-radius: var(--j-r-lg);
-  background: var(--j-tint);
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
 }
 
-.quick {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 39px;
-}
-
-.card {
-  height: 148px;
+.recent {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
   border-radius: var(--j-r-lg);
-  background: var(--j-tint);
+  overflow: hidden;
 }
 
-@media (max-width: 1240px) {
-  .metrics {
+.row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 17px;
+  border-bottom: 1px solid var(--j-line);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.ri {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--j-tint);
+  flex: none;
+}
+
+.rn {
+  height: 14px;
+  width: min(320px, 70%);
+}
+
+@media (max-width: 1080px) {
+  .tools {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .quick {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
-@media (max-width: 900px) {
-  .quick {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 860px) {
+  .title {
+    height: 29px;
   }
-}
 
-@media (max-width: 560px) {
-  .metrics,
-  .quick {
+  .tools {
     grid-template-columns: minmax(0, 1fr);
   }
-}
 
-/* One shared pulse, on the container, so every shape breathes in time rather
-   than each starting its own animation at mount. */
-.hello,
-.mo,
-.metrics,
-.quick {
-  animation: skeleton 1.6s ease-in-out infinite;
+  .tool {
+    height: 150px;
+  }
 }
 
 @keyframes skeleton {
@@ -104,10 +150,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hello,
-  .mo,
-  .metrics,
-  .quick {
+  .page {
     animation: none;
   }
 }

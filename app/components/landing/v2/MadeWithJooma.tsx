@@ -22,9 +22,9 @@ export interface ShowcaseCard {
 }
 
 const KIND = {
-  slides: { label: "Slides", icon: "presentation-chart", solid: "#5B2ED6" },
-  comprehension: { label: "Comprehension", icon: "book-open-text", solid: "#1D6FD0" },
-  worksheet: { label: "Worksheet", icon: "file-text", solid: "#0F8A63" },
+  slides: { label: "Slides", icon: "presentation-chart", solid: "var(--j-cat-make)" },
+  comprehension: { label: "Comprehension", icon: "book-open-text", solid: "var(--j-cat-pupil)" },
+  worksheet: { label: "Worksheet", icon: "file-text", solid: "var(--j-cat-pupil)" },
 } as const;
 
 function initials(name: string): string {

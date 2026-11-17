@@ -1,4 +1,7 @@
 // ── Plan gates — single source of truth ──────────────────────────────────────
+// Jooma 4.5: prices, allowances and the trial now come from plan-config.ts
+// (the spec's one config file). This file keeps the older per-plan shape that
+// the admin console, billing pages and the legacy gates read.
 // Every feature limit and entitlement is defined here. The pricing page, the
 // usage counters, and the runtime gates all read from this config so a plan
 // change in one place propagates everywhere.
@@ -10,6 +13,13 @@
 // every audience filter already read 'free' as "not paying", which is exactly
 // what it still means. Teachers see it as "No plan".
 export type PlanId = "free" | "standard" | "pro" | "max" | "school";
+
+import { PLAN_CONFIG, TRIAL } from "./plan-config";
+
+/** £71.99 a year shown as £5.99 a month: truncated, as the spec prints it. */
+function perMonth(yearly: number): number {
+  return Math.floor((yearly * 100) / 12) / 100;
+}
 
 // "gdocs" is offered in the export menu but rendered disabled ("coming soon") —
 // a real Google Docs export needs OAuth, a Drive client and consent-screen
@@ -118,12 +128,15 @@ export const PLANS: Record<PlanId, Plan> = {
     //
     // `retired` keeps it out of SELECTABLE_PLANS, PRICEABLE_PLAN_IDS and every
     // plan picker, while existing accounts still resolve real limits.
-    name: "No plan",
+    // Jooma 4.5: Free is a real plan again (50 resources a week, never locked
+    // out) once the plans engine migration is pushed. `retired` still keeps it
+    // out of the paid lists and pickers; it has nothing to sell.
+    name: "Free",
     priceMonthly: 0,
     priceYearlyPerMonth: 0,
     priceYearly: 0,
     audience: "teacher",
-    description: "No active subscription",
+    description: `${PLAN_CONFIG.free.resources} resources a week, every tool`,
     interval: "month",
     retired: true,
     limits: {
@@ -154,18 +167,20 @@ export const PLANS: Record<PlanId, Plan> = {
     // £4.99/mo, £47.99/yr, matching the Stripe prices configured for
     // STRIPE_PRICE_STANDARD_MONTHLY / STRIPE_PRICE_STANDARD_YEARLY (or the
     // plan_config.stripe_price_* columns).
-    priceMonthly: 4.99,
-    priceYearlyPerMonth: 3.99,
-    priceYearly: 47.99,
+    priceMonthly: PLAN_CONFIG.standard.monthly,
+    priceYearlyPerMonth: perMonth(PLAN_CONFIG.standard.yearly),
+    priceYearly: PLAN_CONFIG.standard.yearly,
     audience: "teacher",
-    description: "Every tool, 500 credits, watermarked exports",
+    // Red note: Standard exports are clean.
+    description: `Every tool, ${PLAN_CONFIG.standard.resources} resources a month, clean exports`,
     interval: "month",
     limits: {
       dailyGenerations: null,
       monthlyGenerations: null,
       aiImageSlideshows: 5,
-      // Beyond the allowance, the one thing that separates it from Pro.
-      watermark: true,
+      // Jooma 4.5 red note: Standard exports are clean. Generated pictures
+      // are what separates it from Pro (plan-config `pictures`).
+      watermark: PLAN_CONFIG.standard.exportMark,
       exportFormats: ["pdf", "docx", "pptx", "gdocs"],
       curriculumAlignment: "full",
       editableOutputs: true,
@@ -185,11 +200,11 @@ export const PLANS: Record<PlanId, Plan> = {
     name: "Pro Teacher",
     // £7.99/mo, £71.99/yr, matching the Stripe prices configured for
     // STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_YEARLY.
-    priceMonthly: 7.99,
-    priceYearlyPerMonth: 5.99,
-    priceYearly: 71.99,
+    priceMonthly: PLAN_CONFIG.pro.monthly,
+    priceYearlyPerMonth: perMonth(PLAN_CONFIG.pro.yearly),
+    priceYearly: PLAN_CONFIG.pro.yearly,
     audience: "teacher",
-    description: "Everything, fair use. For one teacher.",
+    description: `${PLAN_CONFIG.pro.resources.toLocaleString("en-GB")} resources a month and generated pictures`,
     interval: "month",
     limits: {
       dailyGenerations: null,
@@ -222,14 +237,17 @@ export const PLANS: Record<PlanId, Plan> = {
     // production. If neither exists, priceIdFor('max') throws rather than
     // silently charging the wrong thing. Yearly is £143.99, from
     // plan_config.stripe_price_yearly or STRIPE_PRICE_MAX_YEARLY.
-    priceMonthly: 14.99,
-    priceYearlyPerMonth: 11.99,
-    priceYearly: 143.99,
+    // Jooma 4.5: £13.99 for NEW monthly payers. Anyone already paying £14.99
+    // keeps it (their Stripe price is unchanged; MRR reads plan_config).
+    priceMonthly: PLAN_CONFIG.max.monthly,
+    priceYearlyPerMonth: perMonth(PLAN_CONFIG.max.yearly),
+    priceYearly: PLAN_CONFIG.max.yearly,
     audience: "teacher",
     // Every plan has every tool (nothing in limits restricts one); what Max
     // adds is credits and priority. This line once said it added leadership,
     // inspection and CPD tools, which was never true.
-    description: "2,500 credits a month and priority building",
+    // "Priority building" was dropped (owner, 17 Nov): it was never built.
+    description: `${PLAN_CONFIG.max.resources.toLocaleString("en-GB")} resources a month and generated pictures`,
     interval: "month",
     limits: {
       dailyGenerations: null,
@@ -311,7 +329,7 @@ export function isBillingInterval(value: unknown): value is BillingInterval {
 
 /** Every new account gets this many days free, with no card: see
  *  app/api/trial/start. Checkout charges straight away. */
-export const TRIAL_DAYS = 3;
+export const TRIAL_DAYS: number = TRIAL.days;
 
 /** True when the account is on a plan that can generate at all. */
 export function hasActivePlan(plan: PlanId): boolean {

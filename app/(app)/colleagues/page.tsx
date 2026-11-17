@@ -264,16 +264,12 @@ export default function ColleaguesPage() {
   /* ── Render ──────────────────────────────────────────────────────────── */
 
   const count = colleagues.length;
-  const eyebrow =
-    count === 0 ? "Your staffroom" : count === 1 ? "1 colleague" : `${count} colleagues`;
-
   const newCount = newThisWeek(shares, new Date());
 
   return (
     <>
       <div className={app.wrap}>
         <div className={app.hello}>
-          <p className={app.helloWhen}>{eyebrow}</p>
           <h1>Colleagues</h1>
           <p className={app.helloSub}>
             Share resources, compare progress and keep each other going.

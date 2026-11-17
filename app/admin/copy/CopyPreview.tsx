@@ -124,7 +124,7 @@ function DashEmpty({ region, children }: WireframeProps) {
   return (
     <div
       className="rounded-xl border p-4"
-      style={{ borderColor: C.border, backgroundColor: "#F7F5FC" }}
+      style={{ borderColor: C.border, backgroundColor: "#FAF9FC" }}
     >
       <div
         className="rounded-lg border p-4"

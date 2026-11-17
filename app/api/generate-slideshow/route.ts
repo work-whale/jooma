@@ -4,12 +4,15 @@ import { isToolEnabled } from "@/app/lib/tool-availability";
 import { hasProfile, profileGateBody } from "@/app/lib/profile-gate";
 import {
   checkAllGates,
+  planFromResources,
   quotaBlockBody,
   quotaBlockHeaders,
   quotaBlockStatus,
 } from "@/app/lib/generation-guard";
 import { slideshowStream, SSE_HEADERS, type RequestBody } from "@/app/lib/slideshow-pipeline";
 import { deckKindOf, deckToolSlug } from "@/app/lib/deck-kind";
+import { deckImageOptions } from "@/app/lib/plan-features";
+import type { AccountPlan } from "@/app/lib/plan-config";
 
 export const maxDuration = 120; // AI image gen can push past the default
 
@@ -57,7 +60,10 @@ export async function POST(req: NextRequest) {
   // can no longer return a status code the client can act on. A deck is the
   // most expensive thing the product makes, so leaving it ungated would let a
   // capped account spend freely.
-  const quota = await checkAllGates(supabase, { countsAsGeneration: true });
+  // Jooma 4.5: the estimate is the deck's text (the "slideshow" figure); the
+  // pictures are not known until the body is read, and a deck that has
+  // started always finishes.
+  const quota = await checkAllGates(supabase, { countsAsGeneration: true, path: "/api/slideshow" });
   if (quota) {
     return NextResponse.json(quotaBlockBody(quota), {
       status: quotaBlockStatus(quota),
@@ -73,6 +79,16 @@ export async function POST(req: NextRequest) {
   }
   if (!body.topic?.trim()) {
     return NextResponse.json({ error: "Missing topic" }, { status: 400 });
+  }
+
+  // Jooma 4.5 (P5): generated pictures are Pro, Max and the trial only. On
+  // Free and Standard the server turns any generated share into library
+  // photos, so the deck is still made. Unchanged before the migration.
+  const plan = await planFromResources(supabase);
+  if (plan) {
+    const images = deckImageOptions(plan as AccountPlan, body);
+    body.imageSource = images.imageSource;
+    body.imageMixWeb = images.imageMixWeb;
   }
 
   // A Staff Slides or assembly deck is that tool's spend too: when either is

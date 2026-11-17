@@ -155,8 +155,7 @@ export default function AssistantComposer({
       {uploadError && <p className="mb-2 text-xs text-red-600">{uploadError}</p>}
 
       <div
-        className="rounded-2xl border bg-white px-3 sm:px-5 py-3"
-        style={{ borderColor: "var(--j-line-2)" }}
+        className="rounded-2xl border border-(--j-line-2) bg-white px-3 sm:px-5 py-3 transition-shadow focus-within:border-(--j-res) focus-within:shadow-[0_0_0_3px_var(--j-res-soft)]"
       >
         {/* A persistent label, so what the box is for does not vanish with the
             placeholder the moment someone starts typing. */}
@@ -254,7 +253,7 @@ export default function AssistantComposer({
               onClick={() => submit()}
               disabled={blocked || !value.trim()}
               aria-label="Send"
-              className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-xl bg-(--j-purple) text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="w-9 h-9 pointer-coarse:w-12 pointer-coarse:h-12 shrink-0 flex items-center justify-center rounded-full bg-(--j-res) text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUp className="w-4 h-4" />}
             </button>

@@ -70,8 +70,10 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
     // Marks the well wide: see .wrap:has() in app.module.css.
     <div data-well="wide">
       <div className={app.hello}>
-        <p className={app.helloWhen}>{available.length} tools</p>
         <h1>What would you like to make?</h1>
+        <p className={app.helloSub}>
+          {available.length} tools, grouped by what they are for. Pin the ones you use most.
+        </p>
       </div>
 
       <div className={styles.searchRow}>

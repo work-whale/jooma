@@ -3,6 +3,10 @@ import type Stripe from "stripe";
 import { stripe, planForPriceId, isPaidPlanId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { DEFAULT_PLAN, TOPUP_PENCE, type BillingInterval } from "@/app/lib/plans";
+import { planInForce } from "@/app/lib/account-plan";
+import { planChangeKind } from "@/app/lib/billing-rules";
+import { recordAppEvent } from "@/app/lib/app-events";
+import type { AccountPlan } from "@/app/lib/plan-config";
 import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
@@ -84,10 +88,22 @@ async function syncSubscription(sub: Stripe.Subscription) {
   const isActive = ACTIVE_STATUSES.has(sub.status);
   const plan = isActive && paidPlan ? paidPlan : DEFAULT_PLAN;
 
+  // Jooma 4.5: what the plan was, so the resources balance can follow the
+  // change (upgrade adds the difference now, downgrade waits for the refill,
+  // a move to Free gives a fresh 50) and the change is recorded as an event.
+  const { data: before } = await supabaseAdmin
+    .from("profiles")
+    .select("plan, trial_ends_at, subscription_status, stripe_subscription_id, current_period_end")
+    .eq("id", userId)
+    .maybeSingle();
+  const fromPlan = planInForce(before ?? null, new Date());
+
   const { error } = await supabaseAdmin
     .from("profiles")
     .update({
       plan,
+      // Paying during the Pro trial ends it: the paid plan starts now.
+      ...(plan !== DEFAULT_PLAN ? { trial_ends_at: null } : {}),
       stripe_customer_id: customerId,
       stripe_subscription_id: sub.id,
       subscription_status: sub.status,
@@ -103,7 +119,50 @@ async function syncSubscription(sub: Stripe.Subscription) {
     })
     .eq("id", userId);
 
-  if (error) console.error("[stripe/webhook] profile update failed", error);
+  if (error) {
+    console.error("[stripe/webhook] profile update failed", error);
+    return;
+  }
+  await followPlanChange(userId, fromPlan, plan as AccountPlan, sub);
+}
+
+/** Jooma 4.5: move the resources balance and log the event for a plan change.
+ *  Never throws; before the plans engine migration the RPC is simply missing. */
+async function followPlanChange(userId: string, from: AccountPlan, to: AccountPlan, sub: Stripe.Subscription) {
+  const kind = planChangeKind(from, to);
+  if (kind === "same") return;
+  try {
+    const { error } = await supabaseAdmin.rpc("resources_change_plan", { p_uid: userId, p_from: from, p_to: to });
+    if (error && error.code !== "PGRST202") console.error("[stripe/webhook] resources_change_plan", error);
+  } catch (err) {
+    console.error("[stripe/webhook] resources_change_plan", err);
+  }
+  const interval = sub.items.data[0]?.price?.recurring?.interval ?? null;
+  if (kind === "to_free") {
+    const why = sub.status === "unpaid" || sub.status === "incomplete_expired" ? "failed_payment" : "cancel";
+    await recordAppEvent(userId, "moved_to_free", { from: why, plan: from });
+  } else if (kind === "start") {
+    await recordAppEvent(userId, "subscribed", { plan: to, interval, from });
+  } else {
+    await recordAppEvent(userId, "plan_changed", { from, to });
+  }
+}
+
+/** invoice.payment_failed sets payment_failed_at (P12, E14); invoice.paid
+ *  clears it. Keyed on the Stripe customer. */
+async function markPaymentFailed(inv: Stripe.Invoice, failed: boolean) {
+  const customer = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
+  const userId = await userIdForCustomer(customer);
+  if (!userId) return;
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ payment_failed_at: failed ? new Date().toISOString() : null })
+    .eq("id", userId);
+  // 42703: the column arrives with the plans engine migration.
+  if (error && error.code !== "42703" && error.code !== "PGRST204") {
+    console.error("[stripe/webhook] payment_failed_at", error);
+  }
+  if (failed) await recordAppEvent(userId, "payment_failed", { invoice: inv.id ?? null });
 }
 
 // ── AI credit top-ups ────────────────────────────────────────────────────────
@@ -1304,6 +1363,7 @@ export async function POST(req: NextRequest) {
       case "invoice.payment_succeeded": {
         const inv = event.data.object as Stripe.Invoice;
         await syncInvoice(inv, "paid");
+        await markPaymentFailed(inv, false);
         // Money has actually arrived, which is the moment an ambassador becomes
         // owed for this teacher. Idempotent: only ever writes the FIRST payment.
         await markReferralPaid(inv);
@@ -1348,6 +1408,7 @@ export async function POST(req: NextRequest) {
       }
       case "invoice.payment_failed": {
         await syncInvoice(event.data.object as Stripe.Invoice, "failed");
+        await markPaymentFailed(event.data.object as Stripe.Invoice, true);
         break;
       }
       case "invoice.voided": {

@@ -165,7 +165,8 @@ test.describe("the saving on the button", () => {
   test("is twelve monthly payments less the yearly price", () => {
     expect(planYearlySavingAmount("standard")).toBe("£11.89");
     expect(planYearlySavingAmount("pro")).toBe("£23.89");
-    expect(planYearlySavingAmount("max")).toBe("£35.89");
+    // Jooma 4.5: 12 x £13.99 less £143.99.
+    expect(planYearlySavingAmount("max")).toBe("£23.89");
     expect(planYearlySavingAmount("school")).toBeNull();
   });
 });

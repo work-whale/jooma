@@ -133,8 +133,9 @@
 
 /* Two lines, then ellipsis. The full text is on the card's `title`. */
 .cardText p {
-  font-size: 0.81rem;
-  color: var(--j-faint);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--j-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -152,7 +153,7 @@
   border: 0;
   border-radius: 50%;
   background: none;
-  color: var(--j-faint);
+  color: var(--j-line-2);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -170,6 +171,10 @@
 }
 
 @media (hover: hover) {
+  .card:hover .pin {
+    color: var(--j-faint);
+  }
+
   .pin:hover {
     background: var(--j-tint);
     color: var(--j-ink);
@@ -181,7 +186,8 @@
   color: var(--j-ink);
 }
 
-.pinOn {
+.pinOn,
+.card:hover .pinOn {
   color: var(--j-ink);
 }
 
@@ -193,5 +199,13 @@
 @media (prefers-reduced-motion: reduce) {
   .card:hover {
     transform: none;
+  }
+}
+
+/* No hover on a touch screen, so the pin cannot wait for one: it shows at the
+   faint grey from the start. */
+@media (hover: none) {
+  .pin {
+    color: var(--j-faint);
   }
 }

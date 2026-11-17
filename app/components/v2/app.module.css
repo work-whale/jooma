@@ -56,8 +56,8 @@
 .wrap h4 {
   color: var(--j-ink);
   font-weight: 800;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
   margin: 0;
 }
 
@@ -454,23 +454,24 @@
   align-items: center;
   text-align: center;
   gap: 6px;
-  padding: 30px 20px;
+  padding: 44px 24px;
 }
 
+/* v4 prototype `.empty .ei`. */
 .emptyIcon {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 13px;
-  background: var(--j-tint);
-  color: var(--j-mid);
+  background: var(--j-res-soft);
+  color: var(--j-res);
   display: grid;
   place-items: center;
   margin-bottom: 4px;
 }
 
 .emptyIcon svg {
-  width: 19px;
-  height: 19px;
+  width: 21px;
+  height: 21px;
 }
 
 .emptyTitle {
@@ -481,9 +482,9 @@
 }
 
 .emptyBody {
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   color: var(--j-muted);
-  max-width: 42ch;
+  max-width: 46ch;
 }
 
 /* ── Focus ───────────────────────────────────────────────────────────────── */

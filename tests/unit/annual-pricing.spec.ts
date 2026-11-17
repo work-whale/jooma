@@ -42,7 +42,8 @@ test.describe("yearly prices", () => {
     // 4.99 * 12 is 59.879999… in floating point, which must not leak through.
     expect(planWasPrice("standard")).toBe("£59.88");
     expect(planWasPrice("pro")).toBe("£95.88");
-    expect(planWasPrice("max")).toBe("£179.88");
+    // Jooma 4.5: Max monthly is £13.99 for new payers.
+    expect(planWasPrice("max")).toBe("£167.88");
   });
 
   test("each works out at a .99 figure a month, rounded down", () => {
@@ -55,7 +56,7 @@ test.describe("yearly prices", () => {
   test("the saving is computed, never rounded up past what Stripe gives", () => {
     expect(yearlySavingPercent("standard")).toBe(20);
     expect(yearlySavingPercent("pro")).toBe(25);
-    expect(yearlySavingPercent("max")).toBe(20);
+    expect(yearlySavingPercent("max")).toBe(14);
     expect(planYearlySaving("pro")).toBe("Save 25%");
     expect(maxYearlySavingPercent(["standard", "pro", "max"])).toBe(25);
   });
@@ -73,7 +74,7 @@ test.describe("the card at each interval", () => {
   test("yearly leads with the monthly figure, the yearly total under it", () => {
     expect(planCardPrice("standard", "year")).toBe("£47.99");
     expect(planCardPer("standard", "year")).toBe("a year");
-    expect(planTrialLine("standard", "year")).toBe("3 days free, no card needed. £47.99 a year if you subscribe");
+    expect(planTrialLine("standard", "year")).toBe("10 days of Pro free, no card needed. £47.99 a year if you subscribe");
     expect(planCardPricing("standard", "year")).toEqual({
       price: "£3.99",
       per: "a month",
@@ -86,7 +87,7 @@ test.describe("the card at each interval", () => {
   test("monthly is exactly what it was before yearly existed", () => {
     expect(planCardPrice("pro")).toBe("£7.99");
     expect(planCardPer("pro")).toBe("a month");
-    expect(planTrialLine("pro")).toBe("3 days free, no card needed. £7.99 a month if you subscribe");
+    expect(planTrialLine("pro")).toBe("10 days of Pro free, no card needed. £7.99 a month if you subscribe");
     expect(planCardPricing("pro", "month")).toEqual({ price: "£7.99", per: "a month" });
   });
 

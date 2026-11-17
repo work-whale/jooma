@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { meterState, meterValue } from "@/app/lib/resource-meter";
 import { V2_CATEGORIES, V2_TOOLS, toolSolid } from "@/app/lib/tools";
+import { FOLDER_COLOURS, folderSwatch } from "@/app/lib/folders";
 
 /*
  * The v4 look's two rules that are logic rather than CSS.
@@ -66,5 +67,43 @@ test.describe("category colours", () => {
 
   test("an unknown tool gets the neutral adult slate", () => {
     expect(toolSolid(undefined)).toBe("var(--j-cat-adult)");
+  });
+});
+
+test.describe("folder colours", () => {
+  // The keys are whitelisted by folder_colours() in the database; renaming one
+  // would reject inserts. Only the values may move.
+  test("keys stay in step with the database whitelist", () => {
+    expect(FOLDER_COLOURS.map((c) => c.key)).toEqual([
+      "violet", "blue", "green", "amber", "pink",
+      "violet-deep", "blue-deep", "green-deep", "amber-deep", "pink-deep",
+    ]);
+  });
+
+  test("every value is a token, never a literal hex", () => {
+    for (const c of FOLDER_COLOURS) {
+      for (const v of [c.tint, c.solid]) {
+        if (v === "#fff") continue; // the white glyph on a deep folder
+        expect(v, c.key).toMatch(/^var\(--j-[a-z0-9-]+\)$/);
+      }
+    }
+  });
+
+  test("blue, green and pink share the category tokens", () => {
+    expect(folderSwatch("blue").solid).toBe("var(--j-cat-make)");
+    expect(folderSwatch("green").solid).toBe("var(--j-cat-pupil)");
+    expect(folderSwatch("pink").solid).toBe("var(--j-cat-support)");
+    expect(folderSwatch("blue-deep").tint).toBe("var(--j-cat-make)");
+  });
+
+  test("amber is gold, not the orange that means pictures", () => {
+    for (const key of ["amber", "amber-deep"]) {
+      const s = folderSwatch(key);
+      expect(`${s.tint} ${s.solid}`, key).not.toMatch(/orange|pic|#C2551F/i);
+    }
+  });
+
+  test("an unknown key falls back to violet", () => {
+    expect(folderSwatch("teal").key).toBe("violet");
   });
 });
