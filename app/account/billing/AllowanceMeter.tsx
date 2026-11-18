@@ -101,7 +101,7 @@ export default function AllowanceMeter({
 
         {justToppedUp && creditPence === 0 && (
           <p className="text-sm mt-3" style={{ color: "#b07a1e" }}>
-            Your credit is being applied — refresh in a moment.
+            Your top up is being applied. Refresh in a moment.
           </p>
         )}
 
@@ -153,7 +153,7 @@ export default function AllowanceMeter({
       {dailyGenerations !== null && (
         <p className="text-sm mb-1" style={{ color: "var(--j-body)" }}>
           {outOfDay
-            ? "You've used today's generation — the next unlocks at midnight UTC."
+            ? "You've used today's generation. The next unlocks at midnight UTC."
             : `${usedToday} of ${dailyGenerations} used today.`}
         </p>
       )}

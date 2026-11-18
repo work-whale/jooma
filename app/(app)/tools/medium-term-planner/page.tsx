@@ -19,7 +19,7 @@ export default async function MediumTermPlannerPage({
           icon={<LayoutList className="w-5 h-5 text-blue-600" />}
 
           title="Medium Term Topic Planner"
-          description="This tool generates a medium term plan for a sequence of lessons on a given topic. Provide the subject, topic and number of lessons and the AI will create a structured plan showing learning objectives, lesson summaries and key knowledge for each lesson."
+          description="This tool generates a medium term plan for a sequence of lessons on a given topic. Provide the subject, topic and number of lessons and Jooma will create a structured plan showing learning objectives, lesson summaries and key knowledge for each lesson."
           steps={[
             { label: "Be specific about your topic", detail: "Get the most relevant and targeted lesson sequence." },
             { label: "Set number of lessons", detail: "Match your actual teaching schedule for this unit." },

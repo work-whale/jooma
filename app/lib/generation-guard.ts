@@ -362,7 +362,7 @@ export async function checkAllGates(
         action: "wait",
         message:
           `You've generated ${hourLimit} times in the last hour. That's a fair-use limit ` +
-          "to keep Jooma quick for everyone — try again shortly.",
+          "to keep Jooma quick for everyone. Try again shortly.",
         used: usedHour,
         limit: hourLimit,
         // The window is rolling, so the true wait is until the oldest run ages
@@ -392,7 +392,7 @@ export async function checkAllGates(
         // poor value. The £1.50 top-up PRICE is fine to state — they pay it.
         message:
           `You've used this month's ${monthly.toLocaleString("en-GB")} credits. ` +
-          `Add ${PLAN_CREDITS.toLocaleString("en-GB")} more for £1.50 — they last ` +
+          `Add ${PLAN_CREDITS.toLocaleString("en-GB")} more for £1.50. They last ` +
           `until the end of the month.`,
         spendPence,
         ceilingPence: allowance,

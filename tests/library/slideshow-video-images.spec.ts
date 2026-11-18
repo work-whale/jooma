@@ -71,7 +71,8 @@ async function openStepTwo(page: Page, topic = "The water cycle"): Promise<void>
   await expect(cont).toBeEnabled();
   await cont.click();
 
-  await expect(page.getByText(/^Resources$/)).toBeVisible();
+  // Scoped: the 4.5 sidebar meter is also labelled "Resources".
+  await expect(page.getByTestId("generate-body").getByText(/^Resources$/)).toBeVisible();
 }
 
 /** Tick the YouTube card open. */
@@ -218,7 +219,7 @@ test.describe("Slideshow: pasted video and image source", () => {
     const notice = page.getByText(/generated images use more credits/i);
     await expect(notice, "web search is free, so no warning belongs here").toHaveCount(0);
 
-    await page.getByRole("button", { name: /^AI-generated$/ }).click();
+    await page.getByRole("button", { name: /^Generated$/ }).click();
     await expect(notice).toBeVisible();
 
     // The mix includes generated images unless the slider is all the way over,

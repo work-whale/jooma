@@ -139,10 +139,12 @@ test.describe("templates", () => {
     resources: 1000,
     refill: "12 December",
     planEnds: "3 December",
+    offerEnds: "Sunday 6 December",
+    offerEndsDay: "Sunday",
   };
 
-  test("every Phase 1 email renders, one button, copy rules kept", () => {
-    expect(LIFECYCLE_IDS).toEqual(["E1", "E5", "E6", "E7", "E8", "E12", "E13", "E14"]);
+  test("every email renders, one button, copy rules kept", () => {
+    expect(LIFECYCLE_IDS).toEqual(["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E12", "E13", "E14"]);
     for (const id of LIFECYCLE_IDS) {
       const e = renderLifecycleEmail(id, vars);
       expect(e.subject.length).toBeGreaterThan(5);
@@ -153,12 +155,20 @@ test.describe("templates", () => {
     }
   });
 
-  test("all Phase 1 emails are account emails, with the settings link", () => {
+  test("E9a and E9b are marketing; every other email is an account email; all link to settings", () => {
     for (const id of LIFECYCLE_IDS) {
       const e = renderLifecycleEmail(id, vars);
-      expect(e.kind).toBe("account");
+      expect(e.kind, id).toBe(id === "E9a" || id === "E9b" ? "marketing" : "account");
       expect(e.footerPath).toBe("/profile#email-settings");
     }
+  });
+
+  test("E9b names the offer price and its end date", () => {
+    const e = renderLifecycleEmail("E9b", vars);
+    expect(e.subject).toBe("Your first month of Pro for £3.99");
+    expect(e.body).toContain("ends on Sunday 6 December");
+    expect(e.body).toContain("£3.99 instead of £7.99");
+    expect(e.path).toBe("/pricing?plan=pro&interval=month");
   });
 
   test("E1 carries the real end date and the no-card line", () => {

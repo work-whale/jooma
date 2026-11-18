@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { recordAppEvent } from "@/app/lib/app-events";
-import { supabaseAdmin } from "@/app/lib/supabase-admin";
 
 // prompt_shown / prompt_clicked / prompt_dismissed (Jooma 4.5 spec Step 5,
 // rule 5), with the prompt id, so the admin console can see which prompts lead
 // to payment. Signed in only; the user comes from the session, never the body.
 // Never fails the page: a bad body is ignored with 204.
 
-const IDS = new Set(["P1", "P2", "P3", "P5", "P12"]);
+const IDS = new Set(["P1", "P2", "P3", "P3b", "P5", "P12"]);
 const KINDS = { shown: "prompt_shown", clicked: "prompt_clicked", dismissed: "prompt_dismissed" } as const;
 
 export async function POST(req: NextRequest) {
@@ -26,19 +25,7 @@ export async function POST(req: NextRequest) {
 
   await recordAppEvent(user.id, KINDS[kind], { prompt: id, ...(button ? { button } : {}) });
 
-  // credits_ran_out (Step 7): fires when P3 is shown, whether from opening a
-  // tool or a refused Make, with the plan and how many times so far.
-  if (id === "P3" && kind === "shown") {
-    const [{ data: account }, { count }] = await Promise.all([
-      supabase.rpc("my_resources"),
-      supabaseAdmin
-        .from("app_events")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("name", "credits_ran_out"),
-    ]);
-    const plan = (Array.isArray(account) ? account[0] : account)?.plan ?? null;
-    await recordAppEvent(user.id, "credits_ran_out", { plan, times_ran_out: (count ?? 0) + 1 });
-  }
+  // credits_ran_out (Step 7) is logged by /api/run-out, which the sheet calls
+  // as it opens and which also decides between P3 and P3b.
   return new NextResponse(null, { status: 204 });
 }

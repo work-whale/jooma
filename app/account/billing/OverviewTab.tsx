@@ -281,7 +281,7 @@ export default async function OverviewTab({
             page really is the only route back. */}
         {ending && (
           <p className="text-sm mt-4" style={{ color: "var(--j-faint)" }}>
-            Your plan is set to end. Renew to keep it — you won&apos;t be charged
+            Your plan is set to end. Renew to keep it. You won&apos;t be charged
             until {renews ?? "the next billing date"}.
           </p>
         )}

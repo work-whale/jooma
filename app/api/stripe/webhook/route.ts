@@ -4,7 +4,7 @@ import { stripe, planForPriceId, isPaidPlanId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { DEFAULT_PLAN, TOPUP_PENCE, type BillingInterval } from "@/app/lib/plans";
 import { planInForce } from "@/app/lib/account-plan";
-import { planChangeKind } from "@/app/lib/billing-rules";
+import { planAfterStripeEvent, planChangeKind } from "@/app/lib/billing-rules";
 import { recordAppEvent } from "@/app/lib/app-events";
 import { topUpGrant } from "@/app/lib/topups-v45";
 import type { AccountPlan } from "@/app/lib/plan-config";
@@ -20,11 +20,12 @@ import { claimGuestWork } from "@/app/lib/claimGuestWork";
 // must verify the signature on the raw body, so the request is never trusted
 // blindly. This route is exempted from auth in proxy.ts.
 
-// Statuses that should grant the paid plan. `trialing` is a Stripe trial, which
-// new checkouts only start for an ambassador's free year: the card is on file and
-// the teacher has the plan in full.
-// Anything else (canceled, unpaid, incomplete_expired, past_due…) falls back to
-// DEFAULT_PLAN, the locked "no plan" state.
+// Statuses of a subscription in good standing, used to decide whether a plan
+// being set to end is worth logging (E13). `trialing` is a Stripe trial, which
+// new checkouts only start for an ambassador's free year.
+// WHICH PLAN TO STORE is decided by planAfterStripeEvent (billing-rules.ts):
+// past_due keeps the plan while Stripe retries; canceled, unpaid and
+// incomplete_expired move the account to Free.
 const ACTIVE_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
   "active",
   "trialing",
@@ -87,7 +88,12 @@ async function syncSubscription(sub: Stripe.Subscription) {
   // dropped to Free just because the plan's price has since changed.
   const paidPlan = await planForPriceId(priceId);
   const isActive = ACTIVE_STATUSES.has(sub.status);
-  const plan = isActive && paidPlan ? paidPlan : DEFAULT_PLAN;
+  // Jooma 4.5 (Step 4): past_due keeps the paid plan while Stripe retries
+  // (P12 and E14 run in that window); only a subscription Stripe has given up
+  // on (canceled, unpaid, incomplete_expired) moves the account to Free.
+  const plan = paidPlan
+    ? planAfterStripeEvent({ type: "customer.subscription.updated", plan: paidPlan, status: sub.status })
+    : DEFAULT_PLAN;
 
   // Jooma 4.5: what the plan was, so the resources balance can follow the
   // change (upgrade adds the difference now, downgrade waits for the refill,
@@ -101,7 +107,19 @@ async function syncSubscription(sub: Stripe.Subscription) {
   // E13: the moment a paid plan is set to end (cancel in the portal or the
   // cancel flow). Logged once per flip, not on every later update.
   const nowEnding = isActive && Boolean(paidPlan) && endsAtPeriodEnd(sub);
-  const wasEnding = Boolean((before as { cancel_at_period_end?: boolean | null } | null)?.cancel_at_period_end);
+  // Claimed atomically: Stripe can deliver the same change twice at once, and
+  // reading the old flag first let both deliveries log it (two E13s). Only the
+  // delivery that actually flips the flag logs the event.
+  let flippedToEnding = false;
+  if (nowEnding) {
+    const { data: flipped } = await supabaseAdmin
+      .from("profiles")
+      .update({ cancel_at_period_end: true })
+      .eq("id", userId)
+      .or("cancel_at_period_end.is.null,cancel_at_period_end.eq.false")
+      .select("id");
+    flippedToEnding = (flipped ?? []).length > 0;
+  }
 
   const { error } = await supabaseAdmin
     .from("profiles")
@@ -129,7 +147,7 @@ async function syncSubscription(sub: Stripe.Subscription) {
     return;
   }
   await followPlanChange(userId, fromPlan, plan as AccountPlan, sub);
-  if (nowEnding && !wasEnding) {
+  if (nowEnding && flippedToEnding) {
     await recordAppEvent(userId, "cancelled", { plan, ends_at: periodEnd(sub) });
   }
 }

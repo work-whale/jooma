@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
             <FileText weight="fill" />
           </span>
           <div>
-            <b>{loading ? "—" : runs.length}</b>
+            <b>{loading ? "-" : runs.length}</b>
             <span>Resources made</span>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
             {/* Never a zero headline, the same rule as Today. */}
             <b>
               {loading
-                ? "—"
+                ? "-"
                 : runs.length === 0
                   ? "Let us find out"
                   : formatHours(totalMinutes)}
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
             <Wrench weight="fill" />
           </span>
           <div>
-            <b>{loading ? "—" : toolsUsed}</b>
+            <b>{loading ? "-" : toolsUsed}</b>
             <span>Tools used</span>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function AnalyticsPage() {
             <CalendarBlank weight="fill" />
           </span>
           <div>
-            <b>{loading ? "—" : thisWeek}</b>
+            <b>{loading ? "-" : thisWeek}</b>
             <span>This week</span>
           </div>
         </div>

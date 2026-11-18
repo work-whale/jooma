@@ -9,6 +9,8 @@ import { parseYouTubeId } from "@/app/components/editor/youtube";
 import ResourceLibraryModal from "./ResourceLibraryModal";
 import { useCreditMeter } from "@/app/lib/useCreditMeter";
 import { P5Sheet } from "@/app/components/v45/PlanSheets";
+import { deckPictureCount, PICTURE_ESTIMATE, roundEstimate } from "@/app/lib/tool-estimates";
+import { setDeckPictures } from "@/app/lib/deck-pictures-store";
 import { DEFAULT_THEME_ID, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme } from "@/app/lib/slideshowThemes";
 import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
@@ -234,7 +236,7 @@ export default function GenerateModal({
     "E.g. The French Revolution",
     "E.g. The Water Cycle",
     "E.g. Photosynthesis",
-    "E.g. World War One — Causes",
+    "E.g. World War One: Causes",
     "E.g. Fractions and Decimals",
   ]);
   const [year, setYear] = useState(prefill?.year ?? "");
@@ -327,8 +329,27 @@ export default function GenerateModal({
   const meter = useCreditMeter();
   const picturesLocked = meter.plan !== null && !meter.pictures;
   const [p5Open, setP5Open] = useState(false);
+  // Picked before the plan had loaded (Step 10 found this race): once it is
+  // known, a locked plan goes back to library photos and is shown P5.
+  useEffect(() => {
+    if (!picturesLocked || imageSource === "web") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a one-off correction once the plan loads
+    setImageSource("web");
+    setP5Open(true);
+  }, [picturesLocked, imageSource]);
   // Auto mode web:AI split (web parts out of 10). Default 8 → 8 web : 2 AI.
   const [imageMixWeb, setImageMixWeb] = useState(8);
+  // The generated pictures this deck will make, for the cost line above the
+  // form and the note below. A locked plan gets library photos whatever is set.
+  const deckPictures = deckPictureCount({
+    imageSource: picturesLocked ? "web" : imageSource,
+    imageMixWeb,
+    slideCount,
+  });
+  useEffect(() => {
+    setDeckPictures(deckPictures);
+  }, [deckPictures]);
+  useEffect(() => () => setDeckPictures(0), []);
   // Default to "illustration" — works better for classroom decks than realistic
   // photography (and DALL·E/gpt-image's safety filter rejects fewer prompts).
   const [imageStyle, setImageStyle] = useState<ImageStyle>("illustration");
@@ -735,7 +756,7 @@ export default function GenerateModal({
                     type="button"
                     onClick={handleGenerateOutline}
                     disabled={outlineBusy || busy || !topic.trim() || !year}
-                    title={!topic.trim() ? "Enter a lesson topic first" : !year ? "Select a year group first" : "Let AI sketch an outline for you"}
+                    title={!topic.trim() ? "Enter a lesson topic first" : !year ? "Select a year group first" : "Let Jooma sketch an outline for you"}
                     className="flex items-center gap-1 text-[12px] font-semibold transition-colors disabled:opacity-40"
                     style={{ color: "#0f5f3a" }}
                   >
@@ -833,7 +854,7 @@ export default function GenerateModal({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold" style={{ color: "var(--j-purple)" }}>Key vocabulary</p>
-                        <p className="text-xs text-gray-500 truncate">Add a slide with key terms — we&apos;ll suggest them for you</p>
+                        <p className="text-xs text-gray-500 truncate">Add a slide with key terms. We&apos;ll suggest them for you</p>
                       </div>
                       <div
                         className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
@@ -872,7 +893,7 @@ export default function GenerateModal({
                             </div>
                           ) : vocabTerms.length === 0 ? (
                             <p className="text-[11px] text-gray-400">
-                              {topic.trim() ? "No suggestions yet — tap Suggest." : "Enter a topic first."}
+                              {topic.trim() ? "No suggestions yet. Tap Suggest." : "Enter a topic first."}
                             </p>
                           ) : (
                             <div className="space-y-1">
@@ -1114,12 +1135,12 @@ export default function GenerateModal({
                       </div>
                       <p className="text-xs text-gray-500 truncate">
                         {imagesExpanded
-                          ? "Choose between AI-generated, web search, or a mix"
+                          ? "Choose between generated pictures, web search, or a mix"
                           : imageSource === "web"
                           ? "Web search images"
                           : imageSource === "ai"
-                          ? `AI-generated · ${IMAGE_STYLES.find((s) => s.id === imageStyle)?.label ?? ""}`
-                          : `Auto · ${imageMixWeb} web / ${10 - imageMixWeb} AI · ${IMAGE_STYLES.find((s) => s.id === imageStyle)?.label ?? ""}`}
+                          ? `Generated · ${IMAGE_STYLES.find((s) => s.id === imageStyle)?.label ?? ""}`
+                          : `Auto · ${imageMixWeb} web / ${10 - imageMixWeb} generated · ${IMAGE_STYLES.find((s) => s.id === imageStyle)?.label ?? ""}`}
                       </p>
                     </div>
                     <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform${imagesExpanded ? " rotate-180" : ""}`} />
@@ -1130,7 +1151,7 @@ export default function GenerateModal({
                   <div className="flex gap-1.5 flex-wrap">
                     {([
                       { id: "auto", label: "Auto (mix)" },
-                      { id: "ai", label: "AI-generated" },
+                      { id: "ai", label: "Generated" },
                       { id: "web", label: "Web search" },
                     ] as const).map((opt) => {
                       const selected = imageSource === opt.id;
@@ -1159,18 +1180,21 @@ export default function GenerateModal({
                     })}
                   </div>
 
-                  {/* Generated images cost real money per image; web search is
-                      free. No number here: there isn't enough usage data yet to
-                      quote one honestly. */}
-                  {(imageSource === "ai" || (imageSource === "auto" && imageMixWeb < 10)) && (
+                  {/* Each generated picture costs about PICTURE_ESTIMATE
+                      resources (production average); library photos cost
+                      nothing. The cost line above the form shows the total. */}
+                  {deckPictures > 0 && (
                     <div
                       className="flex gap-2 p-2.5 rounded-lg"
                       style={{ backgroundColor: "var(--j-orange-bg)" }}
                     >
                       <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "var(--j-orange-ink)" }} />
                       <p className="text-[11px] leading-relaxed" style={{ color: "var(--j-orange-ink)" }}>
-                        <span className="font-semibold">Generated images use more credits.</span>{" "}
-                        Web search images are free, and are the default.
+                        <span className="font-semibold" data-testid="deck-picture-cost">
+                          {deckPictures} generated {deckPictures === 1 ? "picture adds" : "pictures add"} about{" "}
+                          {roundEstimate(deckPictures * PICTURE_ESTIMATE)} resources.
+                        </span>{" "}
+                        Web search images use none, and are the default.
                       </p>
                     </div>
                   )}
@@ -1178,11 +1202,11 @@ export default function GenerateModal({
                   {imageSource === "auto" && (
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-xs font-semibold text-gray-700">Web / AI mix</p>
+                        <p className="text-xs font-semibold text-gray-700">Web / generated mix</p>
                         <p className="text-[11px] text-gray-500">
                           <span className="font-semibold text-gray-700">{imageMixWeb}</span> web
                           {" · "}
-                          <span className="font-semibold text-gray-700">{10 - imageMixWeb}</span> AI
+                          <span className="font-semibold text-gray-700">{10 - imageMixWeb}</span> generated
                         </p>
                       </div>
                       <input
@@ -1196,7 +1220,7 @@ export default function GenerateModal({
                         className="w-full accent-gray-900 disabled:opacity-60"
                       />
                       <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
-                        <span>All AI</span>
+                        <span>All generated</span>
                         <span>All web</span>
                       </div>
                     </div>
@@ -1204,7 +1228,7 @@ export default function GenerateModal({
 
                   {imageSource !== "web" && (
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 mb-2">AI image style</p>
+                      <p className="text-xs font-semibold text-gray-700 mb-2">Picture style</p>
                       <div className="grid grid-cols-3 gap-2">
                         {IMAGE_STYLES.map((s) => {
                           const selected = imageStyle === s.id;
@@ -1554,7 +1578,7 @@ function InlineUploadZone({
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-gray-900 truncate">{source}</p>
             <p className="text-[10px] text-gray-500">
-              {text.length.toLocaleString()} chars extracted — will be used as lesson material
+              {text.length.toLocaleString()} chars extracted. They will be used as lesson material
             </p>
           </div>
           <button
@@ -1779,7 +1803,7 @@ function ResourceAttachmentCard({
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-gray-900 truncate">{source}</p>
                 <p className="text-[10px] text-gray-500">
-                  {text.length.toLocaleString()} characters extracted — will be used as lesson material
+                  {text.length.toLocaleString()} characters extracted. They will be used as lesson material
                 </p>
               </div>
               <button

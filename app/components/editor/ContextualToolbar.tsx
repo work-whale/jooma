@@ -498,7 +498,7 @@ function stripListPrefixes(text: string): string {
 // ────────────────────────────────────────────────────────────────────────────
 
 const AI_QUICK_ACTIONS = [
-  { label: "Simplify", emoji: "🔍", instruction: "Simplify this so it's easier to read — shorter words and sentences, same meaning." },
+  { label: "Simplify", emoji: "🔍", instruction: "Simplify this so it's easier to read: shorter words and sentences, same meaning." },
   { label: "Make it more fun", emoji: "🎉", instruction: "Make this more fun and engaging for students, while staying accurate and concise." },
   { label: "Add detail", emoji: "📝", instruction: "Add a little more relevant detail or explanation, keeping it concise and slide-appropriate." },
   { label: "Add structure", emoji: "📋", instruction: "Reformat this into a clear, structured set of concise bullet points." },

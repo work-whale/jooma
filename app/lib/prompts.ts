@@ -21,10 +21,10 @@
  */
 
 import type { AccountPlan } from "@/app/lib/plan-config";
-import { PLAN_CONFIG, TRIAL } from "@/app/lib/plan-config";
+import { OFFER, PLAN_CONFIG, TRIAL } from "@/app/lib/plan-config";
 import { nextLondonMidnight } from "@/app/lib/resource-periods";
 
-export type PromptId = "P1" | "P2" | "P3" | "P5" | "P12";
+export type PromptId = "P1" | "P2" | "P3" | "P3b" | "P5" | "P12";
 export type PromptKind = "chip" | "banner" | "popup" | "sheet";
 
 interface PromptRule {
@@ -40,6 +40,9 @@ const RULES: Record<PromptId, PromptRule> = {
   P1: { kind: "banner", audience: ["pro_trial"], snooze: "day" },
   P2: { kind: "popup", audience: ["free"], snooze: 7, once: true },
   P3: { kind: "sheet", audience: ["free", "pro_trial"], snooze: null },
+  // Phase 2. The server decides when (the second run-out in a different UK
+  // week, see run-out-offer.ts); here it is a pop-up, once per account.
+  P3b: { kind: "popup", audience: ["free"], snooze: null, once: true },
   P5: { kind: "sheet", audience: ["free", "standard"], snooze: null },
   P12: { kind: "banner", audience: ["standard", "pro", "max"], snooze: 7 },
 };
@@ -114,6 +117,13 @@ export const PROMPT_COPY = {
       body: `Keep going with Pro now, or switch to Free and get ${FREE.resources} resources today and every Sunday.`,
       buttons: ["Keep Pro", "Switch to Free now"],
     },
+  },
+  P3b: {
+    title: `Your first month of Pro for £${OFFER.firstMonthPrice}.`,
+    body: (v: { ends: string }) =>
+      "You've run out twice now, so Free isn't keeping up with your planning. " +
+      `Your first month of Pro is half price. This offer ends on ${v.ends}.`,
+    buttons: [`Get Pro for £${OFFER.firstMonthPrice}`, "Wait for Sunday"],
   },
   P5: {
     title: "Generated pictures come with Pro.",

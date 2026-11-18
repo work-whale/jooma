@@ -52,7 +52,7 @@ export function supportReplyTemplate(
 
     <p ${SMALL}>
       Reply from your Jooma account so the whole conversation stays in one
-      place${reference ? ` — this is ${reference}` : ""}.
+      place${reference ? `, reference ${reference}` : ""}.
     </p>
   `,
   };

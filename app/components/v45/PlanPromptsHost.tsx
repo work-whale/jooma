@@ -250,17 +250,24 @@ function P2Popup({ from, to, onDone }: { from: Date; to: Date; onDone: () => voi
     };
   }, [from, to]);
 
-  // Shown, and remembered, once the numbers are in.
+  // Logged as shown once the numbers are in, but REMEMBERED as shown only when
+  // the teacher closes it or presses a button. Marking it on open lost it for
+  // good whenever the host remounted straight after (the first Today visit
+  // after the trial): it never showed, yet counted as seen (Step 10, test 3).
   useEffect(() => {
     if (!made) return;
+    logPrompt("P2", "shown");
+  }, [made]);
+  const seen = () => {
     markShown("P2");
     markPopupShown();
-  }, [made]);
+  };
 
   const view = useMemo(() => (made ? p2View({ made: made.count, minutes: made.minutes }) : null), [made]);
   if (!view) return null;
 
   const close = () => {
+    seen();
     dismissPrompt("P2");
     onDone();
   };
@@ -274,6 +281,7 @@ function P2Popup({ from, to, onDone }: { from: Date; to: Date; onDone: () => voi
         {
           label: view.buttons[0],
           onClick: () => {
+            seen();
             logPrompt("P2", "clicked", "keep_pro");
             onDone();
             router.push("/pricing?plan=pro&from=P2");
@@ -283,6 +291,7 @@ function P2Popup({ from, to, onDone }: { from: Date; to: Date; onDone: () => voi
           label: view.buttons[1],
           kind: "link",
           onClick: () => {
+            seen();
             logPrompt("P2", "clicked", "standard");
             onDone();
             router.push("/pricing?plan=standard&from=P2");

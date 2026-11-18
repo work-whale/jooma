@@ -26,7 +26,9 @@ export type AppEventName =
   | "topup_bought"
   | "prompt_shown"
   | "prompt_clicked"
-  | "prompt_dismissed";
+  | "prompt_dismissed"
+  // Phase 2: the second run-out offer opened (P3b, E9b), with ends_at.
+  | "offer_opened";
 
 export async function recordAppEvent(
   userId: string | null,

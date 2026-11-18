@@ -64,14 +64,17 @@ const CARD_CTA: Record<PlanId, string> = {
  */
 const HIGHLIGHTS: Record<PlanId, string[]> = {
   free: [],
-  standard: ["All 35 tools", "Full curriculum alignment", "Watermarked exports", "Top up any time"],
+  // Jooma 4.5 red notes: Standard exports are clean too, the product word is
+  // "the Jooma mark", and Max's "Priority building" was never built.
+  standard: ["All 35 tools", "Full curriculum alignment", "Clean exports, no Jooma mark", "Top up any time"],
   pro: [
+    "Generated pictures",
     "Full curriculum alignment",
-    "Clean exports, no watermark",
+    "Clean exports, no Jooma mark",
     "Refining is always free",
     "Top up any time",
   ],
-  max: ["Priority building", "Everything in Pro"],
+  max: ["Everything in Pro"],
   school: [
     "Resources pooled across staff",
     "Admin dashboard and usage",

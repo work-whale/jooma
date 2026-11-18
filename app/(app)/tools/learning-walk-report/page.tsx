@@ -19,7 +19,7 @@ export default async function LearningWalkReportPage({
           icon={<Footprints className="w-5 h-5 text-rose-600" />}
 
           title="Learning Walk Report"
-          description="This tool can be used to draft a report from a learning walk. Simply enter the focus of the walk, the strengths and areas for development you observed, and the AI will draft the report."
+          description="This tool can be used to draft a report from a learning walk. Simply enter the focus of the walk, the strengths and areas for development you observed, and Jooma will draft the report."
           steps={[
             { label: "Enter your observations", detail: "Be specific and detailed when entering notes on strengths and areas for development." },
             { label: "Add optional elements", detail: "Include professional recommendations and a next steps timeline if needed.", optional: true },

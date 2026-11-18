@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import PromptSheet, { promptStyles as styles } from "./PromptSheet";
 import { p3View } from "@/app/lib/prompt-views";
 import { PROMPT_COPY } from "@/app/lib/prompts";
-import { logPrompt } from "@/app/lib/prompt-client";
+import { logPrompt, markPopupShown, markShown, popupShownThisVisit } from "@/app/lib/prompt-client";
+import { trialDateLong } from "@/app/lib/account-plan";
 import { usePresenting } from "@/app/lib/presenting";
 import { refreshResources } from "@/app/lib/useResources";
 import type { OutOfResources } from "@/app/lib/resources";
@@ -29,14 +30,69 @@ export function P3Sheet({ payload, onClose }: { payload: OutOfResources; onClose
   const view = p3View(payload);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The server says P3 or P3b (Phase 2): a second run-out on Free, in a
+  // different week, opens the half-price first month once per account. Until
+  // it answers nothing shows; if it cannot answer, P3.
+  const [decided, setDecided] = useState<{ prompt: "P3" | "P3b"; offerEndsAt?: string } | null>(null);
 
   useEffect(() => {
-    if (view && !presenting) logPrompt("P3", "shown");
+    if (!view || presenting) return;
+    let live = true;
+    fetch("/api/run-out", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ popupAllowed: !popupShownThisVisit() }),
+    })
+      .then((r) => (r.ok ? r.json() : { prompt: "P3" }))
+      .catch(() => ({ prompt: "P3" }))
+      .then((d: { prompt?: string; offerEndsAt?: string }) => {
+        if (!live) return;
+        const p3b = d.prompt === "P3b" && typeof d.offerEndsAt === "string";
+        if (p3b) {
+          markShown("P3b");
+          markPopupShown();
+        }
+        logPrompt(p3b ? "P3b" : "P3", "shown");
+        setDecided(p3b ? { prompt: "P3b", offerEndsAt: d.offerEndsAt } : { prompt: "P3" });
+      });
+    return () => {
+      live = false;
+    };
     // Once per opening.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!view || presenting) return null;
+  if (!view || presenting || !decided) return null;
+
+  if (decided.prompt === "P3b" && decided.offerEndsAt) {
+    const c = PROMPT_COPY.P3b;
+    const dismiss = () => {
+      logPrompt("P3b", "dismissed");
+      onClose();
+    };
+    return (
+      <PromptSheet
+        id="P3b"
+        kicker="Free plan"
+        title={c.title}
+        onClose={dismiss}
+        buttons={[
+          {
+            label: c.buttons[0],
+            onClick: () => {
+              logPrompt("P3b", "clicked", "picker");
+              onClose();
+              router.push("/pricing?plan=pro&interval=month&from=P3b");
+            },
+          },
+          { label: c.buttons[1], kind: "link", onClick: dismiss },
+        ]}
+      >
+        <p className={styles.need}>{view.need}</p>
+        <p className={styles.body}>{c.body({ ends: trialDateLong(new Date(decided.offerEndsAt)) })}</p>
+      </PromptSheet>
+    );
+  }
 
   const close = () => {
     logPrompt("P3", "dismissed");

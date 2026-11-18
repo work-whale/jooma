@@ -14,8 +14,8 @@ export interface SheetPictures {
 
 export const PICTURE_SOURCES: { id: PictureSource; label: string; hint: string }[] = [
   { id: "web", label: "Web search", hint: "Free stock photos" },
-  { id: "ai", label: "AI-generated", hint: "Made for your topic" },
-  { id: "auto", label: "Auto", hint: "A photo, or AI when none fits" },
+  { id: "ai", label: "Generated", hint: "Made for your topic" },
+  { id: "auto", label: "Auto", hint: "A photo, or a generated picture when none fits" },
 ];
 
 export const PICTURE_STYLES: { id: ImageStyle; label: string }[] = [

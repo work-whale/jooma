@@ -12,6 +12,7 @@ import {
 import { slideshowStream, SSE_HEADERS, type RequestBody } from "@/app/lib/slideshow-pipeline";
 import { deckKindOf, deckToolSlug } from "@/app/lib/deck-kind";
 import { deckImageOptions } from "@/app/lib/plan-features";
+import { deckPictureCount } from "@/app/lib/tool-estimates";
 import type { AccountPlan } from "@/app/lib/plan-config";
 
 export const maxDuration = 120; // AI image gen can push past the default
@@ -60,17 +61,6 @@ export async function POST(req: NextRequest) {
   // can no longer return a status code the client can act on. A deck is the
   // most expensive thing the product makes, so leaving it ungated would let a
   // capped account spend freely.
-  // Jooma 4.5: the estimate is the deck's text (the "slideshow" figure); the
-  // pictures are not known until the body is read, and a deck that has
-  // started always finishes.
-  const quota = await checkAllGates(supabase, { countsAsGeneration: true, path: "/api/slideshow" });
-  if (quota) {
-    return NextResponse.json(quotaBlockBody(quota), {
-      status: quotaBlockStatus(quota),
-      headers: quotaBlockHeaders(quota),
-    });
-  }
-
   let body: RequestBody;
   try {
     body = await req.json();
@@ -89,6 +79,21 @@ export async function POST(req: NextRequest) {
     const images = deckImageOptions(plan as AccountPlan, body);
     body.imageSource = images.imageSource;
     body.imageMixWeb = images.imageMixWeb;
+  }
+
+  // Jooma 4.5: the estimate is the deck's text (the "slideshow" figure) plus
+  // the generated pictures it will make, the same sum the form's cost line
+  // shows. A deck that has started always finishes.
+  const quota = await checkAllGates(supabase, {
+    countsAsGeneration: true,
+    path: "/api/slideshow",
+    pictures: deckPictureCount(body),
+  });
+  if (quota) {
+    return NextResponse.json(quotaBlockBody(quota), {
+      status: quotaBlockStatus(quota),
+      headers: quotaBlockHeaders(quota),
+    });
   }
 
   // A Staff Slides or assembly deck is that tool's spend too: when either is

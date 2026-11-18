@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "./auth/client";
 import { accountAccess, type AccessRow, type AccountAccess } from "./account-access";
-import { setExportMark } from "./export-mark";
+import { registerExportMarkLoader, setExportMark } from "./export-mark";
 import { exportMark } from "./plan-features";
 
 /*
@@ -45,6 +45,7 @@ function load(): Promise<AccountAccess | null> {
   })().catch(() => null);
   return cached;
 }
+registerExportMarkLoader(load);
 
 export function useAccountAccess(): AccountAccess | null {
   const [access, setAccess] = useState<AccountAccess | null>(null);

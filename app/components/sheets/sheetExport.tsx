@@ -2,7 +2,7 @@
 
 import { createRoot } from "react-dom/client";
 import { triggerDownload } from "@/app/lib/exportUtils";
-import { currentExportMark } from "@/app/lib/export-mark";
+import { exportMarkNow } from "@/app/lib/export-mark";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, pagePx } from "@/app/lib/sheets/themes";
 import type { SheetDoc } from "@/app/lib/sheets/types";
@@ -72,7 +72,7 @@ export async function exportSheetPdf(doc: SheetDoc, filename: string): Promise<v
     const w = pdf.internal.pageSize.getWidth();
     const h = pdf.internal.pageSize.getHeight();
     const pages = [...root.querySelectorAll<HTMLElement>(".js-pages > .js-page")];
-    const mark = currentExportMark();
+    const mark = await exportMarkNow();
     const background = getSheetTheme(doc.design.themeId).colors.paper;
     for (let i = 0; i < pages.length; i++) {
       const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: background, width: paper.w, height: paper.h, windowWidth: paper.w });
@@ -99,7 +99,7 @@ export async function printSheet(doc: SheetDoc, title: string): Promise<void> {
     const clone = root.cloneNode(true) as HTMLElement;
     clone.querySelector(".js-measure")?.remove();
     clone.querySelectorAll("style").forEach((s) => s.remove());
-    const mark = currentExportMark();
+    const mark = await exportMarkNow();
     if (mark) {
       for (const page of clone.querySelectorAll<HTMLElement>(".js-page")) {
         page.style.position = "relative";

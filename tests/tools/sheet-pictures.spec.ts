@@ -261,7 +261,7 @@ test.describe("signed in", () => {
     await waitForJoFill(page);
     const field = page.getByTestId("pictures-field");
     await field.getByRole("checkbox").check(NAV);
-    await field.getByRole("radio", { name: "AI-generated" }).click();
+    await field.getByRole("radio", { name: /^Generated/ }).click();
     await field.getByRole("radio", { name: "Storybook" }).click();
     // Generated pictures cost credits, and the form says so.
     await expect(field).toContainText("Generated pictures use more credits.");
@@ -274,13 +274,15 @@ test.describe("signed in", () => {
     expect(asked[0]).toMatchObject({ source: "ai", style: "storybook", tool: "comprehension", query: "honeybee flower pollen" });
   });
 
-  test("the picture route needs a plan, and refuses a request with nothing to look for", async ({ page }) => {
+  test("on Free a generated picture becomes a library photo; a request with nothing to look for is refused", async ({ page }) => {
     const planned = await createTeacher("Picplan");
     try {
-      // No plan: refused by the spend gate before anything is searched or made.
+      // Jooma 4.5: nobody is planless. A Free teacher asking for a generated
+      // picture is given a library photo instead (sheetPictureSource).
       await signIn(page, planned);
       const free = await page.request.post("/api/sheet-picture", { data: { query: "volcano", source: "ai", tool: "worksheet" } });
-      expect(free.status()).toBe(402);
+      expect(free.status()).toBe(200);
+      expect(JSON.stringify(await free.json())).not.toMatch(/"source":"ai"/);
 
       await setPlan(planned, "pro", "comped");
       const empty = await page.request.post("/api/sheet-picture", { data: { query: "", source: "web", tool: "worksheet" } });
@@ -342,7 +344,7 @@ test.describe("signed out", () => {
 
     // Made-for-you pictures are shown, locked: choosing one asks them to sign
     // up and leaves the free web search chosen.
-    const ai = field.getByRole("radio", { name: /AI-generated/ });
+    const ai = field.getByRole("radio", { name: /^Generated/ });
     await expect(ai).toHaveAttribute("data-locked", "true");
     await ai.click();
     const gate = page.getByTestId("auth-gate");
@@ -365,11 +367,11 @@ test.describe("signed out", () => {
     await result.locator(".js-pages .js-photo").nth(1).locator(".js-photo-change").click();
     const dialog = page.getByTestId("sheet-picture-dialog");
     await expect(dialog).toContainText("Made-for-you pictures and uploads come with a subscription.");
-    for (const name of [/AI picture/, /Upload/]) {
+    for (const name of [/Generated picture/, /Upload/]) {
       const tab = dialog.getByRole("tab", { name });
       await expect(tab).toHaveAttribute("data-locked", "true");
     }
-    await dialog.getByRole("tab", { name: /AI picture/ }).click();
+    await dialog.getByRole("tab", { name: /Generated picture/ }).click();
     await expect(page.getByTestId("auth-gate").getByRole("heading")).toHaveText("Sign up for free to unlock every editor tool");
     await page.getByTestId("auth-gate").getByRole("button", { name: "Close" }).click();
     await expect(dialog.getByRole("tab", { name: /Search/ })).toHaveAttribute("aria-selected", "true");

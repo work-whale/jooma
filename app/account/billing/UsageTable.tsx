@@ -42,11 +42,11 @@ const nf = new Intl.NumberFormat("en-GB");
  * The "<1" case earns its keep: a tool with a genuine but tiny cost would
  * otherwise render "0", which reads as "this one is free" and invites a teacher
  * to hammer it. "<1" is honest that there is a cost without inventing
- * precision. Exact zero stays "—", the existing convention for no data.
+ * precision. Exact zero stays "-", the existing convention for no data.
  */
 const credits = (n: number) => {
   const v = Number(n) || 0;
-  if (v <= 0) return "—";
+  if (v <= 0) return "-";
   if (v < 1) return "<1";
   return nf.format(Math.round(v));
 };

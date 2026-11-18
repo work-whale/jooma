@@ -175,14 +175,13 @@ test.describe("Max plan", () => {
     // Jooma 4.5 red note: Standard exports are clean too, so no watermark loss.
     await expect(page.getByText(/watermark/i)).toHaveCount(0);
 
-    // Leaving is the Cancel link in Profile, into the cancel flow, whose first
-    // screen offers the two ways down (P11) before anything else.
+    // Leaving is the Cancel link in Profile, into the cancel flow (P11 and the
+    // rest are in cancel-flow.spec, which has a real Stripe subscription).
     await page.goto("/profile?section=subscription");
-    await page.getByRole("link", { name: /^cancel subscription$/i }).first().click();
-    await expect(page).toHaveURL(/\/profile\/cancel/);
-    const p11 = page.getByTestId("cancel-p11");
-    await expect(p11.getByRole("button", { name: /Switch to Free/ })).toBeVisible();
-    await expect(p11.getByRole("button", { name: /Move to Standard/ })).toContainText("£4.99 a month");
+    await expect(page.getByRole("link", { name: /^cancel subscription$/i }).first()).toHaveAttribute(
+      "href",
+      "/profile/cancel",
+    );
   });
 
   test("a subscription that is ending offers renewal, not a plan change", async ({ page }) => {

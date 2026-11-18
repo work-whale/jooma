@@ -345,7 +345,7 @@ test.describe("signed out", () => {
     // Pictures: stock search is open; Upload and generating are not. Reopened
     // each time: closing the prompt is a click outside the sidebar, which
     // closes its panel, as any click outside it does.
-    for (const name of ["Upload", "AI generate"]) {
+    for (const name of ["Upload", "Generate"]) {
       await tab("Pictures").click();
       await expect(gate).toHaveCount(0);
       await page.getByRole("button", { name, exact: true }).click();

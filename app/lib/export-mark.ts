@@ -12,12 +12,29 @@
  */
 
 let current: string | null = null;
+let loader: (() => Promise<unknown>) | null = null;
 
 export function setExportMark(mark: string | null): void {
   current = mark;
 }
 
 export function currentExportMark(): string | null {
+  return current;
+}
+
+/** useAccountAccess registers its (cached) account read here. */
+export function registerExportMarkLoader(load: () => Promise<unknown>): void {
+  loader = load;
+}
+
+/**
+ * The mark for an export made NOW, waiting for the account read the page has
+ * already started. Without the wait, an export pressed before the account had
+ * loaded came out clean on Free (found by Ash's Step 10 test 3). Fails open,
+ * like the read itself: no account, no mark.
+ */
+export async function exportMarkNow(): Promise<string | null> {
+  if (loader) await loader().catch(() => null);
   return current;
 }
 

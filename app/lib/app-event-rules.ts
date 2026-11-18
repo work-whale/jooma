@@ -7,7 +7,7 @@ const DAY_MS = 86_400_000;
 export const FRESH_RUN_MS = 10 * 60_000;
 
 /** Prompts that can lead to a checkout (spec Step 5). */
-const PROMPT_IDS = new Set(["P1", "P2", "P3", "P3b", "P5", "P12"]);
+const PROMPT_IDS = new Set(["P1", "P2", "P3", "P3b", "P4", "P5", "P12"]);
 
 /**
  * "activated": the second resource made within 7 days of signup, once ever.

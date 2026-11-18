@@ -1,7 +1,7 @@
 "use client";
 
 import { useExportLock } from "@/app/components/guest/useExportLock";
-import { currentExportMark } from "@/app/lib/export-mark";
+import { exportMarkNow } from "@/app/lib/export-mark";
 import { useMarkPresenting } from "@/app/lib/presenting";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Check, Loader2 } from "lucide-react";
@@ -1544,7 +1544,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       console.error("Remove background error:", err);
       setRemoveBgError(
         err instanceof Error && err.message === "bg-timeout"
-          ? "Background removal timed out. The first run downloads a ~80MB model — check your connection and try again."
+          ? "Background removal timed out. The first run downloads a ~80MB model. Check your connection and try again."
           : "Background removal failed. Please try again.",
       );
     } finally {
@@ -2137,7 +2137,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         texts: [
           {
             id: newId("t"), x: 80, y: 80, width: SLIDE_W - 240,
-            text: `${data?.title || "Audio activity"} — answers`,
+            text: `${data?.title || "Audio activity"}: answers`,
             fontSize: 44, fontWeight: "800", fontStyle: "normal", underline: false,
             fontFamily: theme.fonts.heading, color: titleColor, textAlign: "left",
           },
@@ -2571,7 +2571,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       document.body.appendChild(host);
       const root = createRoot(host);
 
-      const mark = currentExportMark();
+      const mark = await exportMarkNow();
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "px",
@@ -2675,7 +2675,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
       // Jooma 4.5: the mark on Free and trial exports, added last on each
       // slide so it sits above the content.
-      const mark = currentExportMark();
+      const mark = await exportMarkNow();
       const madeSlides: ReturnType<typeof pptx.addSlide>[] = [];
       for (const s of slidesRef.current) {
         const slide = pptx.addSlide();
@@ -4032,7 +4032,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
                 style={{ backgroundColor: "#1f6b3b", color: "#fff", borderColor: "#1f6b3b" }}
               >
                 <Check className="w-4 h-4" />
-                <span className="font-medium">Deck ready — click any slide to edit</span>
+                <span className="font-medium">Deck ready. Click any slide to edit</span>
               </button>
             </div>
           )}

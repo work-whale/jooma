@@ -10,6 +10,15 @@
  *   E13  teacher cancels                   (event)
  *   E14  payment fails                     (event)
  *
+ * Phase 2 (built 19 Nov):
+ *   E2a  day 1, 16:30, nothing made yet    Pro trial
+ *   E2b  day 1, 16:30, something made      Pro trial (never both)
+ *   E3   day 3, 16:30                      Pro trial
+ *   E4   day 5, 16:30                      Pro trial
+ *   E9a  1 hour after running out, at most once a UK week     Free (marketing)
+ *   E9b  1 hour after the second run-out opened the offer, once  Free (marketing)
+ *   Still to build: E10 (14 days away), E11 (80% used, paid plans).
+ *
  * Rules for every email:
  *   - Nothing between 21:00 and 07:00 UK time.
  *   - The moment a teacher pays, every trial and Free email stops.
@@ -28,8 +37,9 @@
 import type { AccountPlan } from "@/app/lib/plan-config";
 import { PLAN_TIMEZONE } from "@/app/lib/plan-config";
 import { londonDate, londonTime, type CalendarDate } from "@/app/lib/resource-periods";
+import { ukWeekKey } from "@/app/lib/run-out-offer";
 
-export type LifecycleId = "E1" | "E5" | "E6" | "E7" | "E8" | "E12" | "E13" | "E14";
+export type LifecycleId = "E1" | "E2a" | "E2b" | "E3" | "E4" | "E5" | "E6" | "E7" | "E8" | "E9a" | "E9b" | "E12" | "E13" | "E14";
 export type EmailKind = "account" | "marketing";
 
 export interface LifecycleTeacher {
@@ -46,6 +56,13 @@ export interface LifecycleTeacher {
   sundayEmails: boolean;
   /** A marketing email already went to them today (UK date). */
   marketingSentToday?: boolean;
+  /** Resources made so far (E2a when none, E2b when some). */
+  made?: number;
+  /** Run-outs ON FREE (credits_ran_out with plan free), for E9a. */
+  ranOutAt?: Date[];
+  /** The second run-out offer (P3b, E9b): when it opened and ends. */
+  offerOpenedAt?: Date | null;
+  offerEndsAt?: Date | null;
 }
 
 export interface DueEmail {
@@ -56,6 +73,7 @@ export interface DueEmail {
 }
 
 const LATE_LIMIT_MS = 12 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
 
 function hourMinute(at: Date): number {
   const p: Record<string, string> = {};
@@ -115,6 +133,14 @@ export function dueEmails(t: LifecycleTeacher, sent: ReadonlySet<string>, now: D
   const day0 = londonDate(t.signupAt);
   if (t.plan === "pro_trial") {
     add("E1", "E1", t.signupAt);
+    // Phase 2 onboarding tips, 16:30 UK time: E2a or E2b on day 1 (never
+    // both), E3 on day 3, E4 on day 5.
+    if (!sent.has("E2a") && !sent.has("E2b")) {
+      const id = (t.made ?? 0) > 0 ? "E2b" : "E2a";
+      add(id, id, londonTime(addDays(day0, 1), 16, 30));
+    }
+    add("E3", "E3", londonTime(addDays(day0, 3), 16, 30));
+    add("E4", "E4", londonTime(addDays(day0, 5), 16, 30));
     add("E5", "E5", londonTime(addDays(day0, 8), 16, 30));
     add("E6", "E6", londonTime(addDays(day0, 10), 7, 30));
   }
@@ -128,8 +154,30 @@ export function dueEmails(t: LifecycleTeacher, sent: ReadonlySet<string>, now: D
     if (weekday === 0 && afterTrial && t.sundayEmails) {
       add("E8", `E8:${iso(today)}`, londonTime(today, 16, 0));
     }
+
+    // E9b: an hour after the second run-out opened the offer, once, while it
+    // is open. It stands in for that week's E9a.
+    const offerWeek = t.offerOpenedAt ? ukWeekKey(t.offerOpenedAt) : null;
+    if (t.offerOpenedAt && t.offerEndsAt && now.getTime() < t.offerEndsAt.getTime()) {
+      add("E9b", "E9b", new Date(t.offerOpenedAt.getTime() + HOUR_MS), "marketing");
+    }
+    // E9a: an hour after running out, at most once a UK week.
+    for (const ran of t.ranOutAt ?? []) {
+      const week = ukWeekKey(ran);
+      if (week === offerWeek) continue;
+      add("E9a", `E9a:${week}`, new Date(ran.getTime() + HOUR_MS), "marketing");
+    }
   }
-  return out;
+  // At most one marketing email a day, and one per week key.
+  const seen = new Set<string>();
+  let marketing = 0;
+  return out.filter((e) => {
+    if (seen.has(e.key)) return false;
+    seen.add(e.key);
+    if (e.kind !== "marketing") return true;
+    marketing += 1;
+    return marketing === 1;
+  });
 }
 
 /** The event that sends an email at once. */

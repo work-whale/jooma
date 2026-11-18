@@ -652,7 +652,7 @@ export function slideshowStream({
 
         const expectedFinalTotal = expectedTotalAi + reserved.length;
         const extraTitles: string[] = [];
-        if (body.includeAudio) extraTitles.push("Audio activity", "Audio activity — answers");
+        if (body.includeAudio) extraTitles.push("Audio activity", "Audio activity: answers");
         if (body.includeYouTube) extraTitles.push("YouTube video");
 
         // Running tally of AI image spend for this deck. Filled by slideJob as
@@ -1181,7 +1181,7 @@ export function slideshowStream({
               if (answerIndex !== undefined) {
                 send("audio-answers", {
                   index: answerIndex,
-                  title: `${audioData.title ?? "Audio activity"} — answers`,
+                  title: `${audioData.title ?? "Audio activity"}: answers`,
                   questions: audioData.questions ?? [],
                   answers: audioData.answers ?? [],
                   slideBg: palette.background,

@@ -8,7 +8,7 @@ import { renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-em
 import { planInForce, trialDateLong } from "@/app/lib/account-plan";
 import { MINUTES_SAVED_PER_BAND, allowanceFor, type AccountPlan } from "@/app/lib/plan-config";
 
-// Jooma 4.5 lifecycle emails (spec Step 6), Phase 1: the scheduled E1, E5,
+// Jooma 4.5 lifecycle emails (spec Step 6). Phase 1: the scheduled E1, E5,
 // E6, E7 and E8, and the event emails E12, E13 and E14, which the Stripe
 // webhook logs as app_events (subscribed, cancelled, payment_failed) and this
 // sends within 15 minutes, outside quiet hours. Meant to run every 15 minutes; the rules are in lib/lifecycle.ts.
@@ -52,6 +52,7 @@ interface Row {
 }
 
 const html = lifecycleHtml;
+const DAY_KEY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" });
 
 async function run(): Promise<{ enabled: boolean; due: number; sent: number; failed: number }> {
   const enabled = sendingEnabled(process.env);
@@ -78,7 +79,48 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
     if (rows.length === 0) break;
 
     const ids = rows.map((r) => r.id);
-    const { data: log } = await supabaseAdmin.from("lifecycle_email_log").select("user_id, key").in("user_id", ids);
+    const { data: log } = await supabaseAdmin.from("lifecycle_email_log").select("user_id, key, sent_at").in("user_id", ids);
+    // E9a and E9b (Phase 2): run-outs on Free in the last 13 days (E9a is at
+    // most 12 hours late), and the second run-out offer if one opened.
+    const { data: runOuts } = await supabaseAdmin
+      .from("app_events")
+      .select("user_id, name, props, created_at")
+      .in("user_id", ids)
+      .in("name", ["credits_ran_out", "offer_opened"])
+      .gte("created_at", new Date(now.getTime() - 13 * 86_400_000).toISOString())
+      .order("created_at");
+    const ranOut = new Map<string, Date[]>();
+    const offers = new Map<string, { opened: Date; ends: Date }>();
+    for (const e of runOuts ?? []) {
+      const p = (e.props ?? {}) as { plan?: string; ends_at?: string };
+      if (e.name === "credits_ran_out" && p.plan === "free") {
+        ranOut.set(e.user_id, [...(ranOut.get(e.user_id) ?? []), new Date(e.created_at)]);
+      } else if (e.name === "offer_opened" && p.ends_at && !offers.has(e.user_id)) {
+        offers.set(e.user_id, { opened: new Date(e.created_at), ends: new Date(p.ends_at) });
+      }
+    }
+    // E2a or E2b (Phase 2): what each trial teacher has made, and the first
+    // title for E2b. One read per page, trial teachers only.
+    const trialIds = rows.filter((r) => r.plan === "pro_trial").map((r) => r.id);
+    const madeBy = new Map<string, { count: number; first: string | null }>();
+    if (trialIds.length) {
+      const { data: runs } = await supabaseAdmin
+        .from("tool_runs")
+        .select("user_id, title, created_at")
+        .in("user_id", trialIds)
+        .order("created_at")
+        .limit(5000);
+      for (const run of runs ?? []) {
+        const m = madeBy.get(run.user_id) ?? { count: 0, first: null };
+        m.count += 1;
+        m.first ??= typeof run.title === "string" && run.title.trim() ? run.title.trim().slice(0, 80) : null;
+        madeBy.set(run.user_id, m);
+      }
+    }
+    const today = DAY_KEY.format(now);
+    const marketingToday = new Set(
+      (log ?? []).filter((l) => /^E9[ab]/.test(l.key) && l.sent_at && DAY_KEY.format(new Date(l.sent_at)) === today).map((l) => l.user_id),
+    );
     const sentKeys = new Map<string, Set<string>>();
     for (const l of log ?? []) {
       if (!sentKeys.has(l.user_id)) sentKeys.set(l.user_id, new Set());
@@ -95,6 +137,11 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
         hasPaid: Boolean(r.stripe_subscription_id),
         marketingConsent: Boolean(r.marketing_consent),
         sundayEmails: r.sunday_emails !== false,
+        marketingSentToday: marketingToday.has(r.id),
+        made: madeBy.get(r.id)?.count ?? 0,
+        ranOutAt: ranOut.get(r.id) ?? [],
+        offerOpenedAt: offers.get(r.id)?.opened ?? null,
+        offerEndsAt: offers.get(r.id)?.ends ?? null,
       };
       const emails = dueEmails(t, sentKeys.get(r.id) ?? new Set(), now);
       due += emails.length;
@@ -121,6 +168,9 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
         resources: 0,
         refill: "",
         planEnds: "",
+        offerEnds: t.offerEndsAt ? trialDateLong(t.offerEndsAt) : undefined,
+        firstTitle: madeBy.get(r.id)?.first ?? undefined,
+        offerEndsDay: t.offerEndsAt ? trialDateLong(t.offerEndsAt).split(" ")[0] : undefined,
       };
 
       for (const e of emails) {

@@ -316,3 +316,88 @@ New test files and results (`pnpm test:unit`):
 
      Old £14.99 subscribers stay on Max: their price `price_1UAONiQzprauRkjWgeyoErKm` is already in prod `plan_price_history`.
 3. Decide `terms/page.tsx`, E16 consent, and the Vercel cron (needs Pro).
+
+---
+
+## 10. Third session (18 Nov, afternoon): Steps 1 to 8 finished, now at Step 10
+
+Committed by the owner's request as `ad73168` on `staging` (not pushed). From here on progress is named by the spec's Steps 1 to 10.
+
+### Built this session
+
+- **Step 5, P11 cancel options:** "Switch to Free" and, on Pro and Max, "Move to Standard" above the reasons. The "what you lose" tiles, timeline and loss lines say leaving lands on Free (`lossInventory` and `cancelTimeline` on a 4.5 database, `planLosses(..., { v45 })`).
+- **Step 7 events:** `signup_completed` (in `/api/trial/start`, new accounts only, with `ref_code` from the browser), `resource_made` and `activated` (`/api/resource-made`, called by `saveToolRun`; own fresh runs only, once per run), `credits_ran_out` (when P3 is shown), `checkout_started` (with `source_prompt` carried as `?from=` through the picker). Rules in `app/lib/app-event-rules.ts`.
+- **Step 8, E16:** a service notice to every account, one version per launch group, read back from the profile after the move (`e16Group`, `e16Notice`). Sent from Admin, Plans with SEND through `/api/admin/launch-notice`; the `lifecycle_email_log` row (key `E16`) means once per account; it stops for time and continues on the next press.
+- **"Credits" to "resources"** everywhere a teacher reads it (FAQ, plan cards, billing history, Live, cancel flow, llms.txt).
+- **Lifecycle cron** scheduled every 15 minutes in `vercel.json` (still sends nothing unless `LIFECYCLE_EMAILS=on`).
+- **Terms:** draft in `terms-draft.md`, not applied.
+- **Tests:** old 3-day trial specs deleted; `annual-plan`, `max-plan`, `topup-packs`, `sidebar-plan` rewritten; event checks added to `v45-plans`. Unit: all green.
+- **`scripts/with-staging-env.sh`:** `.env.production.local` (the owner's, for the production picture cleanup) outranks `.env.local` in `next build` and `next start`. Always build and serve through this script. One test build hit production before this was found; production showed zero rows written.
+
+### Production state (read-only check, 18 Nov)
+
+All five migrations `20261118000000` to `000400` are on production; production still runs the pre-4.5 code. Live Stripe has the Max £13.99 price (`price_1Ud7iuQzprauRkjWu5t0Pz1U`); the coupon and three top-up prices are still to create.
+
+### Next
+
+1. Finish testing what is built. **Billing E2E is green** (full run 82 passed, then the 3 failures fixed and rerun: 41 passed in max-plan and cancel-flow, plus interval-switch and v45-plans; the P5 picture test was flaky once). The fixes: the plan cards still said "Watermarked exports" on Standard and "Priority building" on Max (now clean, and gone), and P11 is tested in cancel-flow.spec with a real sandbox subscription. Still to run: `tests/tools`, `tests/profile`, `tests/shell`, then signed-in before and after screenshots.
+2. Step 10: run Ash's checklist on staging, moving the clock by editing dates, and send the ticked list. Two items need P3b and E9b (or Ash's OK to move them).
+3. The later items of Steps 5, 6 and 7 (due 10 Dec): P3b, P4, P6 to P10; E2a, E2b, E3, E4, E9a, E9b, E10, E11; Meta Conversions API events; signup questions; admin console reports.
+
+---
+
+## 11. Fourth session (night of 18 to 19 Nov, owner asleep): Step 10 run, five bugs fixed, first later items
+
+Nothing committed or pushed. One migration applied to STAGING only (below).
+
+### Screen tests, on a fresh staging build
+
+| Suite | Result |
+|---|---|
+| `tests/profile` | 17 of 17 passed. |
+| `tests/shell` | 82 passed, 14 failed, then fixed (all test-side): 6 landing demo tests retired (the hero demo was replaced by real free tries on 5 Oct, `b5073cf`); 5 pricing tests rewritten for the 4.5 four cards; 2 strict selectors; 1 sub-pixel 48px check. Rerun green. |
+| `tests/tools` | 174 passed, 34 skipped (`LIVE_MODEL`), 3 failed: `sheet-pictures` expected a 402 for a planless account (rewritten: Free gets a library photo); the landing hero topic box never shrank back (fixed in `HeroTry.tsx`, the card's padding was counted as a line); the Ask Jo box test still fails (see Open). |
+| Also touched | `slideshow-video-images` 8 of 8 after scoping a selector the 4.5 sidebar's "Resources" now clashes with; `auth/signup-product-emails` 2 of 2. |
+| Unit | 2037 passed. Language check passed. |
+
+### Step 10, as a spec
+
+`tests/billing/step10.spec.ts`: one test per checklist line, real throwaway accounts on staging, sandbox Stripe with signed events to the local webhook, the clock moved by editing dates. 13 of 13 green on the final build.
+
+### Bugs Step 10 found, all fixed with a test seen failing first
+
+1. **A failed payment dropped Pro straight to Free.** The webhook ignored `planAfterStripeEvent` and treated `past_due` as no plan. Now Pro stays while Stripe retries (P12, E14), and Free comes when Stripe gives up.
+2. **E13 could send twice.** Two deliveries of one "set to cancel" change both logged `cancelled`. The flag flip is now atomic; only the delivery that flips it logs.
+3. **Standard to Pro added 1,000, not 500.** The billing page's balance read raced the webhook and both applied the change. Migration `20261119000000_resources_change_plan_once.sql` makes the change once (applied to staging).
+4. **An early export on Free had no Jooma mark.** Exports now wait for the account read (`exportMarkNow`): deck PDF and PowerPoint, sheet PDF, print and Word.
+5. **P2 never showed.** It marked itself seen on open, and the host remounts on the first Today visit. Now it is remembered only once the teacher closes it or presses a button.
+6. Also: the phone top bar said "8d left" in the 4.5 trial (now P1's "Pro trial until Wed 25 Nov"), and P5 was missed if "Generated" was picked before the plan had loaded (now it reverts and opens P5 once the plan is known).
+
+### Copy (Step 10, last line)
+
+"AI" and long dashes taken out of about 50 teacher-facing files (tool descriptions, slide editor, deck picture options, worksheet pictures, form examples, billing, help, error messages). Left on purpose: terms, privacy, the trust page and sub-processors (factual), model prompts, logs and admin; the SEO tool pages ("AI lesson planner", owner's search choice); the dash before a quote's author inside generated slides.
+
+### Later items built (Steps 5 and 6)
+
+- **P3b and the offer.** `/api/run-out` logs `credits_ran_out` and decides on the server: the second run-out on Free in a different UK week opens `offer_opened` (half the first month of Pro, monthly only, once per account, ends 23:59 UK on day 7). Checkout reads that event and applies `PRO-HALF-FIRST-MONTH`; an ambassador code wins a tie, one discount only. Rules: `app/lib/run-out-offer.ts`.
+- **P4.** The low line on Free under 20, in the tool's cost line.
+- **E2a, E2b, E3, E4** (trial tips, 16:30 UK) and **E9a, E9b** (marketing, consent only, at most one a day). In the cron, which still sends nothing unless `LIFECYCLE_EMAILS=on`.
+
+### Screenshots
+
+`docs/screenshots/2026-11-19-v45-signed-in/after/`: 20 signed-in shots, desktop and phone. Remake them with `SCREENSHOTS=1 npx playwright test tests/screens/v45-signed-in.spec.ts`. There are no "before" shots: the pre-4.5 code cannot run on a 4.5 database.
+
+### Open
+
+- **Before `LIFECYCLE_EMAILS=on`:** E9a and E9b are marketing, and they link to email settings rather than a one-click unsubscribe. The unsubscribe needs per-teacher tokens (a small migration).
+- `tests/tools/input-grow` Ask Jo on a phone: the test sentence now needs 7 lines in the 150px ceiling (the mic button narrowed the box). Decide: a taller ceiling or a shorter test sentence.
+- `tests/growth/try-free` "a finished sheet is left in view" (phone): the "Jo filled this in" panel now starts as a collapsed pill, so "Yes, generate" is not on screen. Not touched tonight; the growth suite was not in this round.
+- Phone top bar: the trial chip squeezes the page title to "To...".
+- Still to build (due 10 Dec): P6 to P10; E10, E11; Meta Conversions API events; signup questions; admin console reports.
+- Production, when deploying: push `20261119000000_resources_change_plan_once.sql` with the code.
+
+### 11.x Tool cost estimates re-measured (19 Nov, later)
+
+- `app/lib/tool-estimates.ts` now has a figure for every tool, and none falls back to the guessed 5. Six well-used tools (Slides, Worksheet, Comprehension, Lesson Plan, Quiz, Exam Questions) keep the production average (15 or more saved runs). The other 28 are the median of 5 real runs on staging on the uplifted prompts (`tests/tools/measure-tool-costs.spec.ts`, run with `MEASURE_COSTS=1`; staging `tool_settings` matched production). Raw results are in `docs/tool-costs/tool-costs.jsonl`.
+- Biggest changes: EYFS Plan 58 to 21; Topic Map 16 to 21; Reports 0.1 to 4.4 (a class of 30); Behaviour plan 19 to 14; Homework 4 to 7. Risk Assessment 11, Inspection Prep 13 and EYFS Action Plan 11 were the guessed 5. A CPD deck now uses the slideshow figure.
+- Slides: production split by picture source. 122 of 162 decks use library photos (about 17); Generated decks averaged 11 pictures (about 75); Auto averaged 2. The cost line and the server check now add the deck's generated pictures (`deckPictureCount`: one a slide plus the title, with Auto split by the pipeline's own counter). On library photos it reads about 15, and an all-generated 8-slide deck about 65. The deck form's note now gives the number instead of "use more credits".

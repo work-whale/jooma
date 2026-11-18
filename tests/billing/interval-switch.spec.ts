@@ -280,7 +280,7 @@ test.describe("Switching between monthly and yearly", () => {
     await page.getByRole("button", { name: "Switch to Pro" }).click();
 
     await expect(page.getByText("Switch to Pro, billed yearly?")).toBeVisible();
-    await expect(page.getByText(/credits go up to 1,000 straight away/)).toBeVisible();
+    await expect(page.getByText(/resources go up to 1,000 straight away/)).toBeVisible();
     const pay = page.getByRole("button", { name: /^Pay £\d+\.\d{2} and switch$/ });
     await expect(pay).toBeVisible();
     // £71.99 less the unused part of a £4.99 month.

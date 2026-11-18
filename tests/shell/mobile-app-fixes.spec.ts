@@ -245,7 +245,7 @@ test.describe("Ask Jo's chats on a phone", () => {
       await expect(toggle).toBeVisible(NAV);
       await expect(page.getByTestId("assistant-chat-title")).toHaveText("New chat");
       // Closed, the list is out of sight and out of reach.
-      await expect(page.getByRole("button", { name: "Rainforest plan" })).toBeHidden();
+      await expect(page.getByRole("button", { name: "Rainforest plan", exact: true })).toBeHidden();
 
       await toggle.click();
       const panel = page.getByRole("dialog", { name: "Chats" });
@@ -255,12 +255,12 @@ test.describe("Ask Jo's chats on a phone", () => {
       await expect.poll(async () => Math.round((await box(panel)).x)).toBe(0);
       expect((await box(panel)).height).toBeGreaterThanOrEqual(843);
       await expect(page.getByTestId("assistant-chats-backdrop")).toBeVisible();
-      await expect(panel.getByRole("button", { name: "Rainforest plan" })).toBeVisible();
+      await expect(panel.getByRole("button", { name: "Rainforest plan", exact: true })).toBeVisible();
       await page.screenshot({ path: "test-results/app-ask-jo-chats-phone.png" });
 
       // Search narrows it.
       await panel.getByLabel("Search chats").fill("fraction");
-      await expect(panel.getByRole("button", { name: "Rainforest plan" })).toBeHidden();
+      await expect(panel.getByRole("button", { name: "Rainforest plan", exact: true })).toBeHidden();
       await panel.getByLabel("Search chats").fill("");
 
       // Escape puts it away and gives focus back.
@@ -276,7 +276,7 @@ test.describe("Ask Jo's chats on a phone", () => {
 
       // Choosing a chat opens it, closes the panel and names it in the bar.
       await toggle.click();
-      await page.getByRole("dialog", { name: "Chats" }).getByRole("button", { name: "Rainforest plan" }).click();
+      await page.getByRole("dialog", { name: "Chats" }).getByRole("button", { name: "Rainforest plan", exact: true }).click();
       const rainforest = data!.find((c) => c.title === "Rainforest plan")!;
       await page.waitForURL(`**/assistant/${rainforest.id}`, NAV);
       await expect(page.getByRole("dialog", { name: "Chats" })).toHaveCount(0);

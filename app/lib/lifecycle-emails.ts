@@ -14,10 +14,10 @@
  * Pure.
  */
 
-import { PLAN_CONFIG, TRIAL } from "@/app/lib/plan-config";
+import { OFFER, PLAN_CONFIG, TRIAL } from "@/app/lib/plan-config";
 import type { EmailKind, LifecycleId } from "@/app/lib/lifecycle";
 
-export const LIFECYCLE_IDS: LifecycleId[] = ["E1", "E5", "E6", "E7", "E8", "E12", "E13", "E14"];
+export const LIFECYCLE_IDS: LifecycleId[] = ["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E12", "E13", "E14"];
 
 export interface LifecycleVars {
   firstName: string;
@@ -35,6 +35,12 @@ export interface LifecycleVars {
   refill: string;
   /** "3 December": when a cancelled plan ends. */
   planEnds: string;
+  /** The first resource's title, for E2b. */
+  firstTitle?: string;
+  /** "Sunday 6 December": when the second run-out offer ends (E9b). */
+  offerEnds?: string;
+  /** "Sunday" */
+  offerEndsDay?: string;
 }
 
 export interface RenderedEmail {
@@ -58,6 +64,8 @@ const TOOLS = 35;
 
 type Draft = Omit<RenderedEmail, "kind" | "footerPath" | "heading"> & { heading?: string };
 
+const MARKETING: ReadonlySet<LifecycleId> = new Set(["E9a", "E9b"]);
+
 function draft(id: LifecycleId, v: LifecycleVars): Draft {
   const hi = v.firstName ? `Hi ${v.firstName}, ` : "";
   switch (id) {
@@ -69,6 +77,46 @@ function draft(id: LifecycleId, v: LifecycleVars): Draft {
           `${hi}Pro is yours free until ${v.trialEnds}. Tell Jooma what you're teaching in one sentence ` +
           "and you'll get a full deck, ready to edit and present. There's no card on your account, so there's nothing to cancel.",
         button: "Make your first deck",
+        path: "/tools/slideshow",
+      };
+    case "E2a":
+      return {
+        subject: "Type one sentence. Get a whole lesson.",
+        preheader: 'Try "Year 4, states of matter, 45 minutes".',
+        body:
+          "Most teachers start with a deck. Type the year group, the topic and how long the lesson is, " +
+          "press Make, and you'll get slides, activities and questions you can edit.",
+        button: "Try it now",
+        path: "/tools/slideshow",
+      };
+    case "E2b":
+      return {
+        subject: "Now make the worksheet to match",
+        preheader: "Same topic, three levels, answers included.",
+        body:
+          `You've made ${v.firstTitle ? v.firstTitle : "your first resource"}. Open Worksheets and pick the same topic. ` +
+          "Jooma makes it at three levels, with the answers.",
+        button: "Make the worksheet",
+        path: "/tools/worksheet-generator",
+      };
+    case "E3":
+      return {
+        subject: "One worksheet, three levels",
+        preheader: "And refining is free.",
+        body:
+          "Every worksheet comes at three levels, with the answers. Not quite right? Ask Jo to change it: " +
+          "'make the middle level easier' or 'add a challenge question'. On Pro, refining never uses resources.",
+        button: "Make a worksheet",
+        path: "/tools/worksheet-generator",
+      };
+    case "E4":
+      return {
+        subject: "Pictures that fit the lesson",
+        preheader: `A Pro feature you have until ${v.trialEnds.split(" ").slice(1).join(" ")}.`,
+        body:
+          "In Slides, switch on generated pictures and every image is made for your topic instead of coming from a stock library. " +
+          `It's part of Pro, and it's yours free until ${v.trialEnds}.`,
+        button: "Make a deck with pictures",
         path: "/tools/slideshow",
       };
     case "E5":
@@ -111,6 +159,28 @@ function draft(id: LifecycleId, v: LifecycleVars): Draft {
         button: "Plan this week",
         path: "/dashboard",
       };
+    case "E9a":
+      return {
+        subject: "Ran out mid-plan?",
+        preheader: "Your resources come back on Sunday.",
+        body:
+          `You've used this week's free resources, and they'll be back to ${FREE} on Sunday. ` +
+          `If you plan more than one lesson a week, Pro gives you ${n(PRO.resources)} resources a month, ` +
+          "plus generated pictures and exports with no Jooma mark.",
+        button: "See Pro",
+        path: "/pricing?plan=pro",
+      };
+    case "E9b":
+      return {
+        subject: `Your first month of Pro for £${OFFER.firstMonthPrice}`,
+        preheader: `Half price until ${v.offerEndsDay ?? "Sunday"}.`,
+        body:
+          "You've run out of free resources twice now, so Free isn't keeping up with your planning. " +
+          `Your first month of Pro is £${OFFER.firstMonthPrice} instead of £${PRO.monthly}. ` +
+          `The offer ends on ${v.offerEnds ?? "Sunday"}.`,
+        button: `Get Pro for £${OFFER.firstMonthPrice}`,
+        path: "/pricing?plan=pro&interval=month",
+      };
     case "E12":
       return {
         subject: `Welcome to ${v.plan}`,
@@ -147,5 +217,9 @@ function draft(id: LifecycleId, v: LifecycleVars): Draft {
 
 export function renderLifecycleEmail(id: LifecycleId, v: LifecycleVars): RenderedEmail {
   const d = draft(id, v);
-  return { heading: d.subject, ...d, kind: "account", footerPath: "/profile#email-settings" };
+  // E9a and E9b are marketing (spec Step 6): sent only with consent. Their
+  // footer goes to email settings, where product news can be switched off.
+  // TODO before LIFECYCLE_EMAILS=on: a one-click unsubscribe link for these.
+  const kind: EmailKind = MARKETING.has(id) ? "marketing" : "account";
+  return { heading: d.subject, ...d, kind, footerPath: "/profile#email-settings" };
 }

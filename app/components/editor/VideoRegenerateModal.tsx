@@ -20,7 +20,7 @@ export type VideoLength = "short" | "medium" | "long" | "any";
 
 const LENGTH_OPTIONS: { id: VideoLength; label: string }[] = [
   { id: "short",  label: "Under 5 mins" },
-  { id: "medium", label: "5 – 20 mins" },
+  { id: "medium", label: "5 to 20 mins" },
   { id: "long",   label: "20+ mins" },
   { id: "any",    label: "Any length" },
 ];
@@ -278,7 +278,7 @@ export default function VideoEditPanel({ open, onClose, context, defaults, onApp
           {candidates && candidates.length > 0 && (
             <div className="pt-2 border-t" style={{ borderColor: "#F1ECFC" }}>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Results — click one to use it
+                Results. Click one to use it
               </p>
               <div className="space-y-2">
                 {candidates.map((c) => (

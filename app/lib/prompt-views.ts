@@ -23,8 +23,8 @@ export interface CostLine {
 
 /** Same rounding and check as the server's gate, so the line never says
  *  "enough" and then the Make button is refused. */
-export function costLine(slug: string, left: number): CostLine {
-  const estimate = estimateFor(slug);
+export function costLine(slug: string, left: number, opts: { pictures?: number } = {}): CostLine {
+  const estimate = estimateFor(slug, opts);
   const check = estimateCheck(estimate, left);
   if (!check.ok) return { enough: false, text: check.message };
   const need = roundEstimate(estimate);
@@ -32,6 +32,16 @@ export function costLine(slug: string, left: number): CostLine {
     enough: true,
     text: `Usually about ${need} ${need === 1 ? "resource" : "resources"}. You have ${n(Math.max(0, Math.floor(left)))}.`,
   };
+}
+
+/* ── P4, low resources (Phase 2) ─────────────────────────────────────────── */
+
+/** Free with under 20 left, while the tool is still affordable: one line in
+ *  the form, every time. Null otherwise (P3 covers not enough). */
+export function p4Line(plan: AccountPlan | string, left: number, affordable: boolean): string | null {
+  if (plan !== "free" || !affordable || !(left < 20)) return null;
+  const have = Math.max(0, Math.floor(left));
+  return `${n(have)} ${have === 1 ? "resource" : "resources"} left this week. You'll be back to ${PLAN_CONFIG.free.resources} on Sunday.`;
 }
 
 /* ── P3, out of resources ───────────────────────────────────────────────── */

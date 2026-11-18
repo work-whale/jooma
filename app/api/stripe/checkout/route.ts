@@ -1,3 +1,6 @@
+import { offerIsOpen } from "@/app/lib/run-out-offer";
+import { offerAppliesTo } from "@/app/lib/billing-rules";
+import { OFFER } from "@/app/lib/plan-config";
 import { NextRequest, NextResponse } from "next/server";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { createClient } from "@/app/lib/auth/server";
@@ -139,8 +142,34 @@ export async function POST(req: NextRequest) {
   const accessRow = (Array.isArray(accessData) ? accessData[0] : accessData) as
     | TrialOfferRow
     | undefined;
-  const offer = accessRow ? trialOfferFor(accessRow) : null;
-  const offerApplies = trialOfferApplies(offer, interval);
+  const oldOffer = accessRow ? trialOfferFor(accessRow) : null;
+
+  // Jooma 4.5 (Phase 2): the second run-out offer, half the first month of Pro
+  // monthly and nothing else, opened by /api/run-out as an offer_opened event.
+  // Read from the server's own log, never the body; once paid, it is closed.
+  const { data: openedRow } = await supabaseAdmin
+    .from("app_events")
+    .select("props")
+    .eq("user_id", user.id)
+    .eq("name", "offer_opened")
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+  const runOutEndsRaw = (openedRow?.props as { ends_at?: string } | null)?.ends_at ?? null;
+  const runOutEnds = runOutEndsRaw ? new Date(runOutEndsRaw) : null;
+  const runOutOpen = offerIsOpen(
+    {
+      offerEndsAt: runOutEnds && !Number.isNaN(runOutEnds.getTime()) ? runOutEnds : null,
+      hasPaid: Boolean(accessRow?.has_paid),
+      hasSubscription: Boolean(profile?.stripe_subscription_id),
+    },
+    new Date(),
+  );
+  const offer =
+    runOutOpen && runOutEnds
+      ? { endsAt: runOutEnds, msLeft: runOutEnds.getTime() - Date.now() }
+      : oldOffer;
+  const offerApplies = runOutOpen ? offerAppliesTo(plan, interval) : trialOfferApplies(oldOffer, interval);
 
   try {
     // Resolved from plan_config (falling back to the env var), so a price
@@ -236,7 +265,9 @@ export async function POST(req: NextRequest) {
 
     if (useOffer && offer) {
       try {
-        const coupon = await ensureTrialOfferCoupon(stripe);
+        // The 4.5 offer is the sandbox/live coupon PRO-HALF-FIRST-MONTH (Pro
+        // product only, so Stripe itself refuses it on anything else).
+        const coupon = runOutOpen ? OFFER.code : await ensureTrialOfferCoupon(stripe);
         // A session left open must not outlive the window by much. Stripe
         // allows 30 minutes to 24 hours; inside that, close it with the offer.
         const nowSec = Math.floor(Date.now() / 1000);

@@ -129,6 +129,19 @@ test.describe("Free, running out", () => {
       .toContainEqual({ plan: "free", times_ran_out: 1 });
   });
 
+  test("P4: with 12 left, a tool that still fits shows the low line, and no P3", async ({ page }) => {
+    await signIn(page, t);
+    await page.goto("/tools/quiz-generator");
+    const p4 = page.getByTestId("prompt-P4");
+    await expect(p4).toHaveText(/12 resources left this week\. You'll be back to 50 on Sunday\./, { timeout: 60_000 });
+    await expect(p4.getByRole("link", { name: "See plans" })).toHaveAttribute("href", "/pricing?plan=pro&from=P4");
+    await expect(page.getByTestId("tool-cost-line")).not.toContainText("See options");
+    // A tool that does not fit gets the cost line and P3 instead, not P4.
+    await page.goto("/tools/lesson-planner");
+    await expect(page.getByTestId("tool-cost-line")).toContainText("This usually needs about 30. You have 12.");
+    await expect(page.getByTestId("prompt-P4")).toHaveCount(0);
+  });
+
   test("Make is refused before it starts, with the P3 payload", async ({ page }) => {
     await signIn(page, t);
     const res = await page.request.post("/api/lesson-planner", { data: {} });
@@ -161,11 +174,57 @@ test.describe("pictures on Free", () => {
     const wizard = page.getByRole("dialog");
     await wizard.getByRole("button", { name: /^Continue$/ }).click();
     await wizard.getByRole("button", { name: /Image source/ }).click();
-    await wizard.getByRole("button", { name: "AI-generated", exact: true }).click();
+    await wizard.getByRole("button", { name: "Generated", exact: true }).click();
     const sheet = page.getByTestId("prompt-P5");
     await expect(sheet).toContainText("Generated pictures come with Pro.");
     await sheet.getByRole("button", { name: "Use library photos" }).click();
     await expect(sheet).toBeHidden();
+  });
+});
+
+test.describe("deck pictures on Pro", () => {
+  let t: TestTeacher;
+  test.beforeEach(async () => {
+    t = await createTeacher("Pablo");
+    await setPlan(t, "pro", "comped");
+    const start = await admin.rpc("resources_start", { p_uid: t.id, p_plan: "pro" });
+    if (start.error) throw start.error;
+    // Spend down to 40 left.
+    const { data: fx } = await admin.rpc("fx_usd_to_gbp");
+    const ins = await admin.from("token_usage").insert({
+      user_id: t.id, tool_slug: "worksheet-generator", model: "e2e", prompt_tokens: 0, completion_tokens: 0,
+      cost_usd: (960 * RESOURCE_GBP) / Number(fx ?? 0.79),
+    });
+    if (ins.error) throw ins.error;
+  });
+  test.afterEach(async () => deleteTeacher(t));
+
+  test("the cost line follows the picture choice, and the server checks the same sum", async ({ page }) => {
+    await signIn(page, t);
+    const prefill = Buffer.from(JSON.stringify({ slug: "slideshow", fields: { topic: "Volcanoes" } }), "utf8")
+      .toString("base64url");
+    await page.goto(`/tools/slideshow?prefill=${prefill}`);
+    const line = page.getByTestId("tool-cost-line");
+    // Library photos by default: the deck's text only.
+    await expect(line).toContainText("Usually about 15 resources. You have 40.");
+    const wizard = page.getByRole("dialog");
+    await wizard.getByRole("button", { name: /^Continue$/ }).click();
+    await wizard.getByRole("button", { name: /Image source/ }).click();
+    await wizard.getByRole("button", { name: "Generated", exact: true }).click();
+    // 8 slides: 9 generated pictures at about 5.3 each.
+    await expect(wizard.getByTestId("deck-picture-cost")).toHaveText("9 generated pictures add about 50 resources.");
+    await expect(line).toContainText("This usually needs about 65. You have 40.");
+    await wizard.getByRole("button", { name: "Web search", exact: true }).click();
+    await expect(line).toContainText("Usually about 15 resources. You have 40.");
+    await expect(wizard.getByTestId("deck-picture-cost")).toHaveCount(0);
+
+    // The server refuses an all-generated deck with the same numbers, before
+    // any model is called.
+    const res = await page.request.post("/api/generate-slideshow", {
+      data: { topic: "Volcanoes", yearGroup: "Year 4", slideCount: 8, imageSource: "ai" },
+    });
+    expect(res.status()).toBe(402);
+    expect(await res.text()).toContain("about 65");
   });
 });
 

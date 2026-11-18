@@ -152,10 +152,21 @@ test.describe("planFeatures", () => {
     }
   });
 
-  test("Standard sells every tool and says the exports are watermarked", () => {
+  test("Standard sells every tool and clean exports (Jooma 4.5 red note)", () => {
     const features = planFeatures("standard");
     expect(features).toContain("All 35 tools");
-    expect(features).toContain("Watermarked exports");
+    expect(features).toContain("Clean exports, no Jooma mark");
+  });
+
+  test("Pro sells generated pictures; Max claims nothing that was never built", () => {
+    expect(planFeatures("pro")).toContain("Generated pictures");
+    expect(planFeatures("max")).not.toContain("Priority building");
+  });
+
+  test("no card says watermark: the product word is the Jooma mark", () => {
+    for (const id of ["standard", "pro", "max"] as const) {
+      expect(planFeatures(id).join(" ")).not.toMatch(/watermark/i);
+    }
   });
 });
 

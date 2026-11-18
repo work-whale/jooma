@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useResourcesRow } from "@/app/lib/useResources";
-import { costLine } from "@/app/lib/prompt-views";
+import Link from "next/link";
+import { costLine, p4Line } from "@/app/lib/prompt-views";
 import { outOfResourcesPayload } from "@/app/lib/resources";
 import { estimateFor, roundEstimate } from "@/app/lib/tool-estimates";
+import { useDeckPictures } from "@/app/lib/deck-pictures-store";
 import type { AccountPlan } from "@/app/lib/plan-config";
 import { P3Sheet } from "./PlanSheets";
 import styles from "./PromptSheet.module.css";
@@ -30,11 +32,15 @@ export default function ToolCostLine({ slug: page }: { slug: string }) {
   const slug = GATED_AS[page] ?? page;
   const { meter, row } = useResourcesRow();
   const [open, setOpen] = useState(false);
+  // A deck's generated pictures, as its form currently has them set.
+  const deckPictures = useDeckPictures();
+  const pictures = slug === "slideshow" ? deckPictures : 0;
   if (!meter || meter === "missing" || !meter.metered) return null;
 
-  const line = costLine(slug, meter.remaining);
+  const line = costLine(slug, meter.remaining, { pictures });
   const plan = meter.plan as AccountPlan;
   const p3 = !line.enough && (plan === "free" || plan === "pro_trial");
+  const p4 = p4Line(plan, meter.remaining, line.enough);
 
   return (
     <>
@@ -46,10 +52,18 @@ export default function ToolCostLine({ slug: page }: { slug: string }) {
           </button>
         )}
       </p>
+      {p4 && (
+        <p className={styles.cost} data-testid="prompt-P4">
+          <span>{p4}</span>
+          <Link href="/pricing?plan=pro&from=P4" className={styles.costBtn}>
+            See plans
+          </Link>
+        </p>
+      )}
       {open && p3 && (
         <P3Sheet
           payload={outOfResourcesPayload(plan, {
-            needed: roundEstimate(estimateFor(slug)),
+            needed: roundEstimate(estimateFor(slug, { pictures })),
             left: meter.remaining,
             refillAt: row?.next_refill_at ? new Date(row.next_refill_at) : null,
           })}

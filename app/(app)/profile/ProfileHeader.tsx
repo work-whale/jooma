@@ -100,7 +100,7 @@ export default function ProfileHeader() {
       <dl className={styles.stats}>
         <div className={styles.stat}>
           <dt>Resources</dt>
-          <dd>{stats ? stats.resources : "—"}</dd>
+          <dd>{stats ? stats.resources : "-"}</dd>
         </div>
         <div className={styles.stat}>
           <dt>Time saved</dt>
@@ -108,7 +108,7 @@ export default function ProfileHeader() {
               worth showing, and under an hour rounds to 0h. */}
           <dd>
             {!stats
-              ? "—"
+              ? "-"
               : stats.resources === 0
                 ? "Not yet"
                 : stats.hours === 0
@@ -125,7 +125,7 @@ export default function ProfileHeader() {
           <dt>Level</dt>
           <dd>
             {progress.loading
-              ? "—"
+              ? "-"
               : !progress.available
                 ? "Not yet"
                 : `Level ${progress.level}`}
@@ -137,7 +137,7 @@ export default function ProfileHeader() {
           <dt>Badges</dt>
           <dd>
             {progress.loading
-              ? "—"
+              ? "-"
               : !progress.available
                 ? "Not yet"
                 : progress.earnedCount === 0

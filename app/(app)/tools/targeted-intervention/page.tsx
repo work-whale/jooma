@@ -19,7 +19,7 @@ export default async function TargetedInterventionPage({
           icon={<Target className="w-5 h-5 text-orange-500" />}
 
           title="Targeted Intervention Ideas"
-          description="Generate personalised, evidence-based intervention strategies to close the gap for individual students — based on the attitudinal, aptitudinal, and attainment data you have."
+          description="Generate personalised, evidence-based intervention strategies to close the gap for individual students, based on the attitudinal, aptitudinal, and attainment data you have."
           steps={[
             { label: "Describe the pupil", detail: "Give attitudes, scores and needs, never surnames or other children's names. A first name, if you add one, stays on your device." },
             { label: "Generate strategies", detail: "Get 8 to 10 practical strategies, each with steps, who runs it, how often and how you will know it is working." },

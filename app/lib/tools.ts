@@ -383,7 +383,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/exam-question-generator",
     icon: "exam",
     label: "Exam Question Generator",
-    description: "Generate a complete examination paper for any subject, topic, and exam type — with questions scaled by marks and an optional mark scheme.",
+    description: "Generate a complete examination paper for any subject, topic, and exam type, with questions scaled by marks and an optional mark scheme.",
     tag: "Assessment",
   },
   {
@@ -411,14 +411,14 @@ export const TOOLS: Tool[] = [
     href: "/tools/homework-generator",
     icon: "homework",
     label: "Homework Generator",
-    description: "Generate a structured, differentiated homework task for any year group, subject, and learning objective — with optional answers.",
+    description: "Generate a structured, differentiated homework task for any year group, subject, and learning objective, with optional answers.",
     tag: "Assessment",
   },
   {
     href: "/tools/smart-targets",
     icon: "smart-targets",
     label: "SMART Targets",
-    description: "Turn raw targets into a fully structured SMART table — specific, measurable, achievable, relevant, and time-bound.",
+    description: "Turn raw targets into a fully structured SMART table: specific, measurable, achievable, relevant, and time-bound.",
     tag: "SEND",
   },
   {
@@ -509,7 +509,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/cover-lesson",
     icon: "cover-lesson",
     label: "Cover Lesson Generator",
-    description: "Generate a fully self-contained cover lesson any non-specialist can deliver — complete with a cover teacher script, timed activities, and end-of-lesson checklist.",
+    description: "Generate a fully self-contained cover lesson any non-specialist can deliver, complete with a cover teacher script, timed activities, and end-of-lesson checklist.",
     tag: "Planning",
   },
   {

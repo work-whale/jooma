@@ -220,7 +220,7 @@ export default function ComprehensionForm({
           passageWordCount: textSource === "generate" ? parseInt(passageWordCount, 10) : undefined,
           contentDomains: contentDomains.map((code) => {
             const d = currentDomains.find((d) => d.code === code);
-            return d ? `${d.code} – ${d.description}` : code;
+            return d ? `${d.code}: ${d.description}` : code;
           }),
           questionTypes,
           numQuestions,
@@ -411,7 +411,7 @@ export default function ComprehensionForm({
               <label className="block text-sm font-semibold text-gray-800">
                 Content domain
                 <span className="ml-2 text-xs font-normal text-gray-400">
-                  {ks === "ks1" ? "KS1 (1a–1e)" : "KS2 (2a–2h)"}
+                  {ks === "ks1" ? "KS1 (1a to 1e)" : "KS2 (2a to 2h)"}
                 </span>
               </label>
               <div className="flex flex-wrap gap-2">

@@ -22,7 +22,7 @@ export default async function NewsletterWriterPage({
           description="This tool will allow you to write a newsletter with the tone of your choice, including multiple different sections."
           steps={[
             { label: "Enter your sections", detail: "Be specific with the content you'd like in each section for the best output." },
-            { label: "Choose your tone", detail: "Select the tone that suits your audience — parents, staff, or the whole community." },
+            { label: "Choose your tone", detail: "Select the tone that suits your audience: parents, staff, or the whole community." },
             { label: "Generate", detail: "Get a complete newsletter for your whole school or department." },
           ]}
         />

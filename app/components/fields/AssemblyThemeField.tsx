@@ -19,7 +19,7 @@ export default function AssemblyThemeField({ value, onChange }: Props) {
     "e.g. Anti-bullying and kindness",
     "e.g. Using social media responsibly",
     "e.g. Resilience and growth mindset",
-    "e.g. Black History Month — trailblazers and changemakers",
+    "e.g. Black History Month: trailblazers and changemakers",
   ]);
   return (
     <div className="space-y-1.5">

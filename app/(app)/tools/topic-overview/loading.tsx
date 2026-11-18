@@ -26,7 +26,7 @@ export default function Loading() {
                 <h2 className="text-sm font-semibold text-gray-700 mb-3">Guidance</h2>
                 <ol className="space-y-3">
                   {[
-                    "Be specific with the topic name — use the language from your curriculum documentation.",
+                    "Be specific with the topic name. Use the language from your curriculum documentation.",
                     "Set the number of lessons to match your actual scheme of work.",
                     "Ideas for use: planning a new unit, sharing an overview with students or parents.",
                   ].map((tip, i) => (
