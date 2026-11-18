@@ -1,219 +1,312 @@
-.plans {
+/* The pricing page, Jooma 4.5 (screenshot 2). Purple is resources, orange is
+   picture slides and nothing else, Pro is the one dark card. */
+
+.sub {
+  max-width: 640px;
+  margin: 14px auto 0;
+  color: var(--j-muted);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
+  margin-top: 26px;
 }
 
-.plan {
+.card {
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r-xl);
-  padding: 30px 26px;
+  padding: 28px 26px;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.featured {
-  background: var(--j-purple);
-  border-color: var(--j-purple);
-  box-shadow: 0 30px 60px -34px rgba(91, 46, 214, 0.8);
+/* Free reads lighter than the paid cards: a dashed edge on the canvas. */
+.cardFree {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--j-line-2);
 }
 
-.featured h3,
-.featured .price {
+.cardPro {
+  background: var(--j-deep);
+  border-color: var(--j-deep);
   color: #fff;
-}
-
-.featured .features li {
-  color: #ede7fb;
-}
-
-.featured .per {
-  color: var(--j-lilac);
-}
-
-/* The tick is purple on white, which would vanish on the purple card. */
-.featured .features li > span {
-  color: var(--j-lilac);
+  box-shadow: 0 30px 60px -34px rgba(58, 28, 143, 0.75);
 }
 
 .badge {
-  align-self: flex-start;
-  font-size: 0.66rem;
+  align-self: stretch;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.16);
   color: #fff;
-  padding: 5px 11px;
+  padding: 6px 12px;
   border-radius: var(--j-pill);
-  margin-bottom: 14px;
-}
-
-.plan h3 {
-  font-size: 1rem;
-  letter-spacing: 0.02em;
   margin-bottom: 12px;
 }
 
-.price {
-  font-size: 2.2rem;
+.name {
+  font-size: 1.15rem;
   font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--j-ink);
-  letter-spacing: -0.045em;
-  line-height: 1;
+  margin: 0;
+}
+.cardPro .name {
+  color: #fff;
 }
 
-/* Reserved height so the four cards' feature lists start on the same line
-   whether or not a plan has a second pricing line. */
-.per {
-  font-size: 0.85rem;
+.tagline {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--j-faint);
+  margin: 4px 0 0;
+  min-height: 2.8em;
+}
+.cardPro .tagline {
+  color: var(--j-lilac);
+}
+
+.price {
+  margin: 18px 0 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--j-ink);
+}
+.price small {
+  font-size: 0.86rem;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--j-muted);
-  margin-top: 7px;
-  min-height: 22px;
+}
+.cardPro .price {
+  color: #fff;
+}
+.cardPro .price small {
+  color: var(--j-lilac);
+}
+
+.note {
+  font-size: 0.84rem;
+  color: var(--j-faint);
+  margin: 12px 0 0;
+  min-height: 1.3em;
+}
+.cardPro .note {
+  color: var(--j-lilac);
+}
+
+.cta {
+  margin: 22px 0 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  border: 0;
+  border-radius: var(--j-pill);
+  padding: 15px 18px;
+  background: var(--j-purple);
+  color: #fff;
+  cursor: pointer;
+}
+.cta:hover {
+  filter: brightness(1.06);
+}
+.cta:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+.ctaGhost {
+  background: transparent;
+  color: var(--j-ink);
+  border: 1px solid var(--j-line-2);
+}
+.ctaWhite {
+  background: #fff;
+  color: var(--j-deep);
 }
 
 .features {
   list-style: none;
-  margin: 22px 0 24px;
-  padding: 0;
+  margin: 22px 0 0;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--j-line);
+  display: grid;
+  gap: 12px;
 }
-
+.cardPro .features {
+  border-top-color: rgba(255, 255, 255, 0.16);
+}
 .features li {
-  font-size: 0.92rem;
   display: flex;
   gap: 10px;
-  padding: 6px 0;
+  align-items: flex-start;
+  font-size: 0.94rem;
+  line-height: 1.4;
+  color: var(--j-body);
+}
+.cardPro .features li {
+  color: #f1edfb;
+}
+.features li.off {
+  color: var(--j-faint);
 }
 
-/* margin-top:auto pins every button to the bottom, so cards with different
-   numbers of features still line up. */
-.action {
-  width: 100%;
-  margin-top: auto;
-  padding: 13px;
-  font-size: 0.92rem;
+.iconOn,
+.iconPic,
+.iconOff {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+.iconOn {
+  color: var(--j-purple);
+}
+.cardPro .iconOn {
+  color: var(--j-lilac);
+}
+.iconPic {
+  color: var(--j-pic);
+}
+.cardPro .iconPic {
+  color: var(--j-pic-on-dark);
+}
+.iconOff {
+  color: var(--j-line-2);
 }
 
-.action:disabled {
-  opacity: 0.65;
-  cursor: default;
-  transform: none;
-}
-
-/* Schools: a full width band under the three paid cards. Name and pricing on
-   the left, what it includes in the middle, the enquiry on the right. */
+/* Schools: one band under the four cards. */
 .school {
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: minmax(160px, auto) 1fr auto;
-  align-items: center;
-  gap: 18px 32px;
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r-xl);
-  padding: 26px clamp(18px, 3%, 30px);
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
 }
-
 .schoolHead h3 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 0.01em;
   color: var(--j-ink);
+  margin: 0;
 }
-
 .schoolHead p {
-  margin-top: 4px;
-  font-size: 0.85rem;
-  color: var(--j-muted);
+  font-size: 0.86rem;
+  color: var(--j-faint);
+  margin: 3px 0 0;
 }
-
 .schoolFeatures {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
+  gap: 10px 24px;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  flex: 1 1 0;
+  min-width: 0;
 }
-
 .schoolFeatures li {
   display: flex;
   gap: 8px;
-  font-size: 0.92rem;
+  align-items: center;
+  font-size: 0.94rem;
   color: var(--j-body);
 }
-
-.schoolFeatures li > span {
-  color: var(--j-purple);
-  font-weight: 800;
-}
-
 .schoolAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 13px 28px;
-  font-size: 0.92rem;
+  margin-left: auto;
   font-weight: 800;
-  white-space: nowrap;
-  border-radius: var(--j-pill);
-  background: var(--j-card);
   color: var(--j-ink);
   border: 1px solid var(--j-line-2);
+  border-radius: var(--j-pill);
+  padding: 13px 26px;
   text-decoration: none;
-  transition:
-    transform 0.18s var(--j-ease),
-    border-color 0.18s;
+  white-space: nowrap;
+}
+.schoolAction:hover {
+  background: var(--j-bg);
 }
 
-@media (hover: hover) {
-  .schoolAction:hover {
-    border-color: var(--j-lilac-2);
-    transform: translateY(-2px);
-  }
+.vat {
+  margin: 16px 0 0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-xl);
+  padding: 20px 26px;
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: var(--j-body);
+}
+.vat b {
+  color: var(--j-ink);
+}
+.vatIcon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  color: var(--j-purple);
 }
 
-.schoolAction:active {
-  border-color: var(--j-lilac-2);
-  transform: translateY(-2px);
-}
-
-@media (max-width: 860px) {
-  .school {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .schoolAction {
-    width: 100%;
-  }
-}
-
-.note {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 0.9rem;
-  color: var(--j-faint);
-}
-
-.error {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--j-orange-ink);
-}
-
-@media (max-width: 1000px) {
-  .plans {
+@media (max-width: 1080px) {
+  .cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 620px) {
-  .plans {
+/* Phones: Pro first, then Standard, Max and Free (spec Step 4, rule 2). */
+@media (max-width: 640px) {
+  .cards {
     grid-template-columns: minmax(0, 1fr);
   }
+  .card[data-plan="pro"] {
+    order: 1;
+  }
+  .card[data-plan="standard"] {
+    order: 2;
+  }
+  .card[data-plan="max"] {
+    order: 3;
+  }
+  .card[data-plan="free"] {
+    order: 4;
+  }
+  .tagline {
+    min-height: 0;
+  }
+  .school,
+  .vat {
+    padding: 20px;
+  }
+}
+
+/* "Start with 10 days of Pro free. No card." (spec Step 4, rule 1). */
+.headerCta {
+  display: inline-block;
+  margin-top: 18px;
+  background: var(--j-purple);
+  color: #fff;
+  font-weight: 800;
+  border-radius: var(--j-pill);
+  padding: 13px 24px;
+  text-decoration: none;
+}
+.headerCta:hover {
+  filter: brightness(1.06);
 }

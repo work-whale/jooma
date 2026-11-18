@@ -2,7 +2,7 @@
 // service role: the table has no client grants at all. Never throws, because
 // an analytics write must never fail the action it describes.
 //
-// Phase 1 events: signup_completed, trial_started, resource_made,
+// Phase 1 events: signup_completed, trial_started, resource_made, activated,
 // credits_ran_out, trial_ended, checkout_started, subscribed, moved_to_free,
 // plan_changed, cancelled, payment_failed, prompt_shown, prompt_clicked,
 // prompt_dismissed. (The spec's name "credits_ran_out" is kept as an event id
@@ -14,6 +14,7 @@ export type AppEventName =
   | "signup_completed"
   | "trial_started"
   | "resource_made"
+  | "activated"
   | "credits_ran_out"
   | "trial_ended"
   | "checkout_started"

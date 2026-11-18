@@ -69,6 +69,14 @@ export interface AccountAccess {
   trialOffer: TrialOffer | null;
   /** When an offer they had ran out. Null if none, or still open. */
   trialOfferExpiredAt: Date | null;
+  /** Jooma 4.5: when a Pro trial that is over ended (P2). Null otherwise. */
+  trialEndedAt?: Date | null;
+  /** Jooma 4.5: the last payment failed (P12). Null when it is fine. */
+  paymentFailedAt?: Date | null;
+  /** Jooma 4.5: the launch-day trial waits to start at next login. */
+  trialPending?: boolean;
+  /** True when this came from a 4.5 row (the plans engine migration is in). */
+  resourcesV45?: boolean;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -106,6 +114,7 @@ function accessV45(row: AccessRow, plan: AccountPlan, now: Date): Omit<AccountAc
   const hadTrial = Boolean(row.free_trial_started_at);
   const trialStartedAt = row.free_trial_started_at ? new Date(row.free_trial_started_at) : null;
   const freeTriesLeft = Math.max(0, FREE_TRIES_PER_DAY - (row.free_tries_used ?? 0));
+  const ended = row.trial_ends_at ? new Date(row.trial_ends_at) : null;
   const common = {
     canStartTrial: false,
     canExportLibrary: true,
@@ -115,6 +124,10 @@ function accessV45(row: AccessRow, plan: AccountPlan, now: Date): Omit<AccountAc
     trialStartedAt,
     trialOffer: null,
     trialOfferExpiredAt: null,
+    trialEndedAt: ended && ended.getTime() <= now.getTime() ? ended : null,
+    paymentFailedAt: row.payment_failed_at ? new Date(row.payment_failed_at) : null,
+    trialPending: Boolean(row.trial_pending),
+    resourcesV45: true,
   };
   if (plan === "pro_trial" && row.trial_ends_at) {
     const end = new Date(row.trial_ends_at);

@@ -108,7 +108,7 @@ export default async function OverviewTab({
           className="rounded-xl px-4 py-3 mb-5 text-sm font-medium"
           style={{ backgroundColor: "#DDF0E2", color: "#1f6b3b" }}
         >
-          Payment received — {PLAN_CREDITS.toLocaleString("en-GB")} credits have been added
+          Payment received — {PLAN_CREDITS.toLocaleString("en-GB")} resources have been added
           to this month.
         </div>
       )}

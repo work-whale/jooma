@@ -217,3 +217,102 @@ New test files and results (`pnpm test:unit`):
 
    The 3-day mentions in `process-deletions` and `accountDeletionReminder` are about account deletion, not the trial.
 5. Then write the slim E2E (`tests/billing/`) and the staging screenshots before and after.
+
+---
+
+## 8. After the handover (18 Nov, with the owner)
+
+- **Migration pushed to staging** by the owner. `verify-resources.mjs` then failed 3 of 20 checks.
+- **The bug:** `my_resources()` ends an expired trial with an update to `profiles.plan`. That update runs in the teacher's own session, so the privileged-columns guard refused it. A trial could never end, and every balance read and refine for that teacher raised an error.
+- **The fix:** `supabase/migrations/20261118000100_trial_expiry_guard.sql`. The guard now lets exactly one move through: an already-expired `pro_trial` going to `free`. Teachers still cannot change `trial_ends_at`, so it cannot be triggered early.
+  - Applied to **staging only**, by Claude, with the owner's permission.
+  - The staging migration history row was renumbered to `20261118000100`, so it sorts after `plans_engine`, as it will on production.
+- **Script fix:** `verify-resources.mjs` now seeds `surname` and `username`, as `createTeacher()` does. It also gained a check that a running trial cannot move itself to Free.
+- **Result on staging:** 21 passed, 0 failed.
+- **Production:** push both migrations, in order (`20261118000000`, then `20261118000100`), before deploying this code.
+
+---
+
+## 9. Second session (18 Nov, while you were at work): the rest of Stage 2
+
+### Stop first: Supabase has restricted BOTH projects
+
+- From about **22:00 UTC on 17 Nov**, every API call to production and staging returns **402 "exceed_storage_size_quota"**. Teachers cannot sign in to jooma.ai.
+- **Cause:** the Jooma organisation is on Supabase **Free**, which allows 1 GB of file storage for the whole organisation. Production holds 992 MB and staging about 104 MB.
+- **Fix (owner only):** upgrade the organisation to Pro, or lift its spend cap, in the Supabase dashboard.
+- **Not done by Claude:** deleting staging's test images and audio (about 104 MB) might bring the organisation just under 1 GB. It destroys staging data, may not lift the block at once, and production keeps growing, so it waits for your say.
+- **Knock-on:** the E2E specs and `verify-resources.mjs` could not run, because they sign in through the blocked auth API.
+
+### Done this session
+
+| Item | What |
+|---|---|
+| Stripe sandbox | Created Max monthly £13.99 (`price_1Ucv3wJLX6Udtw9TL5nBLIEl`), coupon `PRO-HALF-FIRST-MONTH` (50% once, Pro product only), and three top-up prices: 500 £2.49 `price_1Ucv3xJLX6Udtw9T1YhUl8vF`, 1,500 £5.99 `price_1Ucv3yJLX6Udtw9T81ldCcV3`, 4,000 £12.99 `price_1Ucv3zJLX6Udtw9T8ctavv1a`. Staging `plan_config.max` points at the new price, recorded in `plan_price_history`; the £14.99 price is still active and still maps to Max. |
+| Migration `20261118000200_resource_topups` | **Applied to staging.** The kind checks now allow `resources_topup` (the plans engine counted that kind, but nothing could insert it). Adds `topup_packs.pack_key` and the three packs with no price; staging's prices are set. `admin_grant_allowance` can give never-expiring goodwill resources. |
+| Migration `20261118000300_v45_hero_copy` | **Applied to staging.** The `copy_blocks` hero line on both databases still said "Three days free on every plan". It now says "Ten days of Pro free. No card, nothing to cancel." Only rows still holding the old text are changed. |
+| Meter | `useCreditMeter` reads `my_resources()` (`useResources`, one cached read, `refreshResources()`), with the old meter as the fallback. Sidebar: per week on Free ("Back to 50 on Sunday."), "in your trial" with the trial's end date, top up only on Standard, Pro and Max, and the picture row locked ("Pro and Max only") on Free and Standard. Today's "Picture slides" chip follows the plan. Live mode says "resources". |
+| Top-ups | `/api/stripe/topup` sells config packs (`pack-*`), refused on Free and the trial (403). The webhook grants `resources_topup` from the config pack (never the amount paid), with no expiry. The top-up sheet lists the config packs and a "Worth knowing" box. |
+| Jooma mark | Sheet PDF, Print and Word (footer) exports; deck PDF and PowerPoint (bottom right of every slide). |
+| Sheet pictures | `/api/sheet-picture` turns any `ai`/`auto` request into a library photo on Free and Standard. |
+| Prompts | P1 (sidebar block with the real date, never "days left"; banner on Today on days 7 to 10, hidden for the rest of the UK day once closed), P2 (once, with what was made and the hours saved), P3 (Free and trial versions; "Switch to Free now" ends the trial through `/api/trial/end`), P5 (slides image source and the server's P5 402), P12 (every screen; "Update card" opens the Stripe portal). Nothing shows while presenting (`useMarkPresenting` in Editor present mode and QuizPresenter). `prompt_shown`, `prompt_clicked` and `prompt_dismissed` are logged through `/api/prompt-event`. |
+| Cost line | Every tool page shows "Usually about N resources. You have M." or "This usually needs about 30. You have 12." with "See options" (P3). Make is refused by the same check, and `UpgradeGate` opens P3. The form is never touched. |
+| Pricing page | Rebuilt to screenshot 2, with the red notes: Standard clean, no "Priority building" on Max. Pro is the dark "Recommended" card and comes first on phones. Header button "Start with 10 days of Pro free. No card." A signed-out "Choose X" goes signup, then `/pricing?chosen=X` ("Your 10 free days of Pro are already on." with "Pay for Pro now" and "Use my free days first"). |
+| Plan picker (`/pricing`) | With no subscription: Pro preselected (or `?plan=`), selectable cards, the one-line diff, one "Continue with Pro". Subscribers keep the existing switch flow with its confirmations. Every upgrade button already lands here; the 4.5 ones pass `?plan=pro`. |
+| Emails E12 to E14 | The webhook logs `subscribed`, `cancelled` (new, logged once when a plan is set to end) and `payment_failed`. The 15-minute cron sends E12, E13 and E14 from those events: never in quiet hours, at most 12 hours late, one per event, and E14 only while the payment is still failing. Still off unless `LIFECYCLE_EMAILS=on`. |
+| Signup consent | **Now opt-in**, as in the approved plan: one unticked "Send me ideas and offers" box on /signup and /complete-profile. Unticked means product email off (`email_opt_outs`) and `marketing_consent` false; ticked means both on. The product-news switch in Profile keeps `marketing_consent` in step. |
+| E8 switch | "The Sunday email" switch in Profile, Emails (`sunday_emails`). The card has the `#email-settings` anchor the email footers link to. |
+| Launch day | Admin, Plans: a "Jooma 4.5 launch day" card. It previews `launch_v45_move_accounts` and runs it only once MOVE is typed. Launch-day accounts with `trial_pending` start their 10 days of Pro at their next visit. E16 is NOT sent: it waits for the consent sign-off. |
+| "3 days" copy | Changed on Today, StartTrialButton, `copy.ts`, /welcome, the hero copy block and the landing pricing. **Not changed: `terms/page.tsx`** (legal text, your call; it still says "3 day free trial"). |
+| `?next=` | `/pricing` is now honoured after signup (query allowed; look-alikes such as `/pricingevil` refused). |
+
+### Choices made without you (all easy to change)
+
+1. **The picker is the `/pricing` page**, not a pop-up. Every upgrade button already went there, so "opens the picker" holds without a second component.
+2. **E12 to E14 go out through the cron, not straight from the webhook.** This keeps the quiet hours, the duplicate lock and the `LIFECYCLE_EMAILS` switch in one place, at the cost of up to 15 minutes' delay.
+3. **CPD decks** are checked against the slideshow estimate (about 15), because every deck is gated as `/api/slideshow`. The CPD cost line uses the same figure, so it never says "enough" and then refuses.
+4. **Unticked consent also turns product email off**, so the box means one thing everywhere. This shrinks the audience for new signups, as the spec says. Reverse it in `complete-profile` if the solicitor says otherwise.
+5. **Legacy locked-state code is still there** (`noPlanBlock`, `eligibleForTrial`, `TrialBanner`, `TrialEndedModal`, `/free-tools`). It cannot run on a 4.5 database: nobody is "locked", so `/free-tools` already forwards to the real tool. Delete it once production has the migrations.
+
+### Tests
+
+- **Unit:** 1945 passed, 0 failed. New files, each seen failing first:
+  - `resource-meter-v45` (8)
+  - `topups-v45` (6)
+  - `sheet-picture-source` (3)
+  - `prompt-views` (16)
+  - `honoured-next` (4)
+  - `pricing-cards` (9)
+  - `lifecycle-events` (6)
+- **Typecheck and lint:**
+  - `tsc` is clean, and the language check passed.
+  - eslint shows **0 errors in every changed file**.
+  - `pnpm lint` still exits 1, on 17 errors in files this work did not touch (for example `app/verify/page.tsx`).
+- **E2E written, NOT run** (staging auth is blocked):
+  - `tests/billing/v45-plans.spec.ts` (new).
+  - `tests/auth/signup-product-emails.spec.ts` (updated for opt-in).
+  - `tests/tools/jo-live.spec.ts` and `tests/billing/no-card-trial.spec.ts` (wording).
+- **Old billing specs written for the 3-day Standard trial** will fail on a 4.5 database by design: `no-card-trial`, `trial-offer`, `standard-plan`, and likely `sidebar-plan`, `credits` and `topup-packs`. Retire or rewrite them when staging is back.
+- **Screenshots:** `docs/screenshots/2026-11-18-plans/after/pricing-desktop.png` and `pricing-phone.png` (signed out, from a temporary dev server on :3100, now stopped). There are no signed-in screenshots, because sign-in is blocked.
+
+### When Supabase is back
+
+1. Run `node scripts/verify-resources.mjs`, then `pnpm test:billing` and `pnpm test:auth`, against a fresh build (the :3000 `next start` is an old build).
+2. Production, in this order:
+   - push migrations `20261118000000`, `000100`, `000200` and `000300`;
+   - in **live** Stripe, create the coupon and the three top-up prices. **Done 18 Nov:** Max £13.99 monthly, `price_1Ud7iuQzprauRkjWu5t0Pz1U`. Vercel `STRIPE_PRICE_MAX_MONTHLY` already points at it. That is safe early, because checkout reads `plan_config` first.
+   - set the three `topup_packs.stripe_price_id` values;
+   - deploy, and **at the same time** switch prod Max to £13.99. Not before: checkout would charge £13.99 while the live site still says £14.99. It does not depend on the migrations. Check `plan_price_history` for other required columns first.
+
+     ```sql
+     update plan_config
+     set price_monthly = 13.99,
+         stripe_price_monthly = 'price_1Ud7iuQzprauRkjWu5t0Pz1U',
+         description = '2,500 resources a month and generated pictures.'
+     where plan_id = 'max';
+
+     insert into plan_price_history (plan_id, stripe_price_id)
+     values ('max', 'price_1Ud7iuQzprauRkjWu5t0Pz1U');
+     ```
+
+     Old £14.99 subscribers stay on Max: their price `price_1UAONiQzprauRkjWgeyoErKm` is already in prod `plan_price_history`.
+3. Decide `terms/page.tsx`, E16 consent, and the Vercel cron (needs Pro).

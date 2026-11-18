@@ -23,6 +23,9 @@ import { usePinnedTools } from "@/app/lib/usePinnedTools";
 import { isNavActive } from "@/app/lib/navActive";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
 import { meterState, meterValue } from "@/app/lib/resource-meter";
+import { PLAN_CONFIG, topUpsAllowed, type AccountPlan } from "@/app/lib/plan-config";
+import { trialDateShort } from "@/app/lib/account-plan";
+import { planBlockV45 } from "@/app/lib/prompt-views";
 import { NAV, AMBASSADOR_NAV, type NavItem } from "@/app/components/v2/navItems";
 import Wordmark from "@/app/components/v2/Wordmark";
 import AmbassadorWordmark from "@/app/components/v2/AmbassadorWordmark";
@@ -78,6 +81,13 @@ export default function SideNavV2({
     access?.accountPlan === "pro_trial" && access.state === "trial" ? "pro_trial" : access?.state === "free" ? "free" : null,
   );
   const nav = plan.ambassador ? [...NAV, AMBASSADOR_NAV] : NAV;
+  // Jooma 4.5: the plan block from the plan in force. The trial shows its real
+  // end date (P1's chip) and no ticking countdown. An ambassador's free Pro
+  // keeps its own block. Null before the migration (no 4.5 row).
+  const v45Block =
+    access && (access.state === "free" || access.accountPlan === "pro_trial" || access.resourcesV45) && !plan.ambassador
+      ? planBlockV45(access.accountPlan, access.trialEndsAt)
+      : null;
   const [topUpOpen, setTopUpOpen] = useState(false);
 
   // Pinned tools — a shared store, kept in sync with the Library page live.
@@ -153,7 +163,24 @@ export default function SideNavV2({
   // The meter. Calm states the allowance; watch and low show what is left.
   const state = credits.loading ? "calm" : meterState(credits.remaining, credits.allowance);
   const showRailWarn = credits.metered && !credits.loading && state !== "calm";
-  const refill = credits.refillsOn.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+  const refill = credits.refillsOn
+    ? credits.refillsOn.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Europe/London" })
+    : null;
+  // The line under the meter: when it refills, or when the trial ends.
+  const refillLine =
+    credits.period === "trial"
+      ? credits.endsOn
+        ? `Trial ends ${trialDateShort(credits.endsOn)}.`
+        : ""
+      : refill
+        ? credits.period === "week"
+          ? `Back to ${PLAN_CONFIG.free.resources} on Sunday.`
+          : `Refills ${refill}.`
+        : "";
+  // 4.5: only plans that can buy a pack are offered one. Before 4.5 (plan
+  // null) the meter only ever shows for paid plans, which could.
+  const canTopUp = credits.plan === null || topUpsAllowed(credits.plan as AccountPlan);
+  const per = credits.period === "trial" ? "in your trial" : `a ${credits.period}`;
 
   // Desktop only: the drawer is never a rail.
   const mini = collapsed && !mobileOpen;
@@ -299,14 +326,14 @@ export default function SideNavV2({
                   <span className={styles.meterVal}>
                     {credits.loading
                       ? "…"
-                      : meterValue({ left: credits.remaining, allowance: credits.allowance, period: "month" })}
+                      : meterValue({ left: credits.remaining, allowance: credits.allowance, period: credits.period })}
                   </span>
                 </div>
                 {!credits.loading && state !== "calm" && (
                   <div
                     className={styles.track}
                     role="progressbar"
-                    aria-label="Resources left this month"
+                    aria-label={`Resources left ${credits.period === "week" ? "this week" : credits.period === "trial" ? "in your trial" : "this month"}`}
                     aria-valuemin={0}
                     aria-valuemax={credits.allowance}
                     aria-valuenow={credits.remaining}
@@ -316,29 +343,43 @@ export default function SideNavV2({
                 )}
                 <p className={styles.meterNote}>
                   {state === "calm"
-                    ? `Refills ${refill}.`
-                    : `of ${credits.allowance.toLocaleString("en-GB")} a month. Refills ${refill}.`}
+                    ? refillLine
+                    : `of ${credits.allowance.toLocaleString("en-GB")} ${per}. ${refillLine}`.trim()}
                 </p>
                 {/* Offered only once it is actually low: selling more to someone
                     with most of the month left is a nag. Suppressed while
                     loading so it cannot flash on against the initial zero. */}
-                {!credits.loading && state === "low" && (
+                {!credits.loading && state === "low" && canTopUp && (
                   <button type="button" className={styles.topup} onClick={() => setTopUpOpen(true)}>
                     Top up
                   </button>
                 )}
               </div>
 
-              {/* Orange is picture slides and nothing else. */}
-              <div className={styles.meter} data-testid="sidebar-pictures">
-                <div className={styles.meterTop}>
-                  <span className={styles.meterName}>
-                    <ImageSquare weight="fill" className={styles.picIcon} aria-hidden />
-                    Picture slides
-                  </span>
-                  <span className={styles.meterVal}>Included</span>
+              {/* Orange is picture slides and nothing else. Free and Standard
+                  get library photos, so the row is locked there. */}
+              {credits.pictures ? (
+                <div className={styles.meter} data-testid="sidebar-pictures">
+                  <div className={styles.meterTop}>
+                    <span className={styles.meterName}>
+                      <ImageSquare weight="fill" className={styles.picIcon} aria-hidden />
+                      Picture slides
+                    </span>
+                    <span className={styles.meterVal}>Included</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className={`${styles.meter} ${styles.meterLocked}`} data-testid="sidebar-pictures">
+                  <div className={styles.meterTop}>
+                    <span className={styles.meterName}>Picture slides</span>
+                    <span className={styles.meterVal}>Library photos</span>
+                  </div>
+                  <p className={styles.lockRow}>
+                    <LockSimple weight="fill" aria-hidden />
+                    <span>Pro and Max only</span>
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -365,15 +406,30 @@ export default function SideNavV2({
             data-testid="sidebar-plan"
           >
             <span className={styles.srOnly}>Your plan: {plan.loading ? "" : plan.label}</span>
-            {!plan.loading && plan.countdown ? (
-              <PlanCountdown countdown={plan.countdown} note={plan.note} />
+            {v45Block ? (
+              <>
+                {v45Block.note && (
+                  <p className={styles.planNote} data-testid="sidebar-plan-note">
+                    {v45Block.note}
+                  </p>
+                )}
+                <Link href={v45Block.cta.href} className={styles.upgrade} onClick={onMobileClose}>
+                  {v45Block.cta.label}
+                </Link>
+              </>
             ) : (
-              !plan.loading && plan.note && <p className={styles.planNote}>{plan.note}</p>
-            )}
-            {!plan.loading && (
-              <Link href={plan.cta.href} className={styles.upgrade} onClick={onMobileClose}>
-                {plan.cta.label}
-              </Link>
+              <>
+                {!plan.loading && plan.countdown ? (
+                  <PlanCountdown countdown={plan.countdown} note={plan.note} />
+                ) : (
+                  !plan.loading && plan.note && <p className={styles.planNote}>{plan.note}</p>
+                )}
+                {!plan.loading && (
+                  <Link href={plan.cta.href} className={styles.upgrade} onClick={onMobileClose}>
+                    {plan.cta.label}
+                  </Link>
+                )}
+              </>
             )}
           </div>
 

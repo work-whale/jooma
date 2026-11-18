@@ -185,7 +185,7 @@ export default function BillingChangePanel({
             </>
           )}
           {dearer && preview.kind !== "at_renewal" && credits !== null && (
-            <li>Your monthly credits go up to {credits.toLocaleString("en-GB")} straight away.</li>
+            <li>Your monthly resources go up to {credits.toLocaleString("en-GB")} straight away.</li>
           )}
           {preview.losesDiscount && (
             <li>
@@ -193,7 +193,7 @@ export default function BillingChangePanel({
               yearly.
             </li>
           )}
-          <li>Your credits still reset on the 1st of every month.</li>
+          <li>Your resources still refill on the same day each month.</li>
         </ul>
       )}
 

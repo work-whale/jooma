@@ -2,22 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { sendBroadcastEmail } from "@/app/lib/email";
-import { dueEmails, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
+import { lifecycleHtml } from "@/app/lib/lifecycle-html";
+import { dueEmails, eventEmails, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
 import { renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-emails";
 import { planInForce, trialDateLong } from "@/app/lib/account-plan";
-import { MINUTES_SAVED_PER_BAND } from "@/app/lib/plan-config";
+import { MINUTES_SAVED_PER_BAND, allowanceFor, type AccountPlan } from "@/app/lib/plan-config";
 
-// Jooma 4.5 lifecycle emails (spec Step 6), Phase 1 scheduled ones: E1, E5,
-// E6, E7, E8. Meant to run every 15 minutes; the rules are in lib/lifecycle.ts.
+// Jooma 4.5 lifecycle emails (spec Step 6), Phase 1: the scheduled E1, E5,
+// E6, E7 and E8, and the event emails E12, E13 and E14, which the Stripe
+// webhook logs as app_events (subscribed, cancelled, payment_failed) and this
+// sends within 15 minutes, outside quiet hours. Meant to run every 15 minutes; the rules are in lib/lifecycle.ts.
 //
 // SAFE BY DEFAULT. Unless LIFECYCLE_EMAILS=on, this is a dry run: it works out
 // who is due and returns the count, and sends and records nothing. The owner
 // turns it on after approving the wording.
 //
-// NOT SCHEDULED YET: a 15 minute cron needs Vercel Pro (Hobby allows daily
-// crons only, and a sub-daily entry in vercel.json fails the deploy). Add
-//   { "path": "/api/cron/lifecycle", "schedule": "*/15 * * * *" }
-// to vercel.json once the plan is confirmed.
+// Scheduled every 15 minutes in vercel.json (the team is on Vercel Pro, which
+// allows sub-daily crons).
 //
 // Needs migration 20261118000000_plans_engine.sql (lifecycle_email_log and
 // the 4.5 profile columns).
@@ -50,13 +51,7 @@ interface Row {
   sunday_emails: boolean | null;
 }
 
-function html(subject: string, body: string, button: string, url: string, footerUrl: string): string {
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#1D1730;max-width:560px;margin:0 auto;padding:24px">
-<h1 style="font-size:22px">${esc(subject)}</h1><p style="font-size:16px;line-height:1.5">${esc(body)}</p>
-<p><a href="${url}" style="display:inline-block;background:#1E1138;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none">${esc(button)}</a></p>
-<p style="font-size:12px;color:#8E87A4"><a href="${footerUrl}" style="color:#8E87A4">Email settings</a></p></body></html>`;
-}
+const html = lifecycleHtml;
 
 async function run(): Promise<{ enabled: boolean; due: number; sent: number; failed: number }> {
   const enabled = sendingEnabled(process.env);
@@ -153,7 +148,109 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
     }
     if (rows.length < PAGE) break;
   }
-  return { enabled, due, sent, failed };
+
+  const events = await sendEventEmails(enabled, site, now);
+  return { enabled, due: due + events.due, sent: sent + events.sent, failed: failed + events.failed };
+}
+
+const PLAN_NAMES: Record<string, string> = { standard: "Standard", pro: "Pro", max: "Max" };
+const DATE = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", day: "numeric", month: "long" });
+
+/** E12 to E14: one email per logged event, at most 12 hours late. */
+async function sendEventEmails(
+  enabled: boolean,
+  site: string,
+  now: Date,
+): Promise<{ due: number; sent: number; failed: number }> {
+  let due = 0;
+  let sent = 0;
+  let failed = 0;
+  const since = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString();
+  const { data: rows, error } = await supabaseAdmin
+    .from("app_events")
+    .select("id, user_id, name, created_at")
+    .in("name", ["subscribed", "cancelled", "payment_failed"])
+    .gte("created_at", since)
+    .not("user_id", "is", null)
+    .order("id")
+    .limit(1000);
+  if (error) throw new Error(error.message);
+  const byUser = new Map<string, { id: number; name: string; createdAt: Date }[]>();
+  for (const r of rows ?? []) {
+    const list = byUser.get(r.user_id) ?? [];
+    list.push({ id: Number(r.id), name: r.name, createdAt: new Date(r.created_at) });
+    byUser.set(r.user_id, list);
+  }
+
+  for (const [userId, list] of byUser) {
+    const [{ data: profile }, { data: log }, { data: account }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("first_name, plan, payment_failed_at, current_period_end, deletion_scheduled_for")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabaseAdmin.from("lifecycle_email_log").select("key").eq("user_id", userId),
+      supabaseAdmin.from("resource_accounts").select("next_refill_at").eq("user_id", userId).maybeSingle(),
+    ]);
+    if (!profile || profile.deletion_scheduled_for) continue;
+    const emails = eventEmails(list, new Set((log ?? []).map((l) => l.key)), now, {
+      paymentFailing: Boolean(profile.payment_failed_at),
+    });
+    due += emails.length;
+    if (!enabled || emails.length === 0) continue;
+
+    const { data: auth } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const to = auth?.user?.email;
+    if (!to) continue;
+    const plan = (profile.plan ?? "free") as AccountPlan;
+    const vars: LifecycleVars = {
+      firstName: profile.first_name ?? "",
+      trialEnds: "",
+      trialEndsDay: "",
+      made: 0,
+      hours: 0,
+      plan: PLAN_NAMES[plan] ?? "your plan",
+      resources: allowanceFor(plan) ?? 0,
+      refill: account?.next_refill_at ? DATE.format(new Date(account.next_refill_at)) : "your next billing date",
+      planEnds: profile.current_period_end ? DATE.format(new Date(profile.current_period_end)) : "the end of this period",
+    };
+    for (const e of emails) {
+      const result = await sendOne(userId, to, e.key, renderLifecycleEmail(e.id, vars), site);
+      if (result === "sent") sent += 1;
+      else if (result === "failed") failed += 1;
+    }
+  }
+  return { due, sent, failed };
+}
+
+/** Lock, send and record one email. The log row is the lock. */
+async function sendOne(
+  userId: string,
+  to: string,
+  key: string,
+  m: ReturnType<typeof renderLifecycleEmail>,
+  site: string,
+): Promise<"sent" | "failed" | "locked"> {
+  const { error: lockError } = await supabaseAdmin
+    .from("lifecycle_email_log")
+    .insert({ user_id: userId, key, status: "sent" });
+  if (lockError) return "locked";
+  const result = await sendBroadcastEmail(
+    to,
+    {
+      subject: m.subject,
+      html: html(m.subject, m.body, m.button, site + m.path, site + m.footerPath),
+      text: `${m.body}\n\n${m.button}: ${site}${m.path}`,
+    },
+    { purpose: "lifecycle", oneClickUrl: null },
+  );
+  if (result.status === "sent") return "sent";
+  await supabaseAdmin
+    .from("lifecycle_email_log")
+    .update({ status: result.status === "skipped" ? "skipped" : "failed" })
+    .eq("user_id", userId)
+    .eq("key", key);
+  return "failed";
 }
 
 async function handle(req: NextRequest) {

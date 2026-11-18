@@ -21,6 +21,8 @@ import DowngradeButton from "./DowngradeButton";
 import UpgradeButton from "./UpgradeButton";
 import CancelDowngradeButton from "./CancelDowngradeButton";
 import BillingChangePanel from "./BillingChangePanel";
+import { pickerDiffLine } from "@/app/lib/pricing-view";
+import type { AccountPlan } from "@/app/lib/plan-config";
 
 /*
  * Every plan a teacher can be on, and the way to get to each one.
@@ -84,6 +86,15 @@ export default function PlanPicker({
    *  server). Monthly checkouts get 50% off the first month; the cards show it
    *  and a banner counts down. Checkout re-checks it, so this is display only. */
   trialOfferEndsAt = null,
+  /** Jooma 4.5: the plan in force (Free, the trial or a paid plan), for the
+   *  one-line diff. Null before the plans engine migration. */
+  accountPlan = null,
+  /** Jooma 4.5: the card to open selected (?plan=). Pro by default. */
+  initialPlan = null,
+  /** Jooma 4.5: the interval to open on (?interval=). Monthly by default. */
+  initialInterval = null,
+  /** Jooma 4.5 Step 7: the prompt that opened the picker (?from=). */
+  sourcePrompt = null,
 }: {
   plans: PlanId[];
   current: PlanId;
@@ -98,7 +109,21 @@ export default function PlanPicker({
   hasUnusedCode?: boolean;
   codeDiscount?: Discount | null;
   trialOfferEndsAt?: string | null;
+  accountPlan?: AccountPlan | null;
+  initialPlan?: PlanId | null;
+  initialInterval?: BillingInterval | null;
+  sourcePrompt?: string | null;
 }) {
+  /*
+   * Jooma 4.5 picker (spec Step 4): with no subscription to change, the cards
+   * are a choice, Pro selected, and one Continue opens Checkout. A subscriber
+   * keeps the per-card switch and its confirmation panel, because moving a
+   * live plan needs those consequences spelled out.
+   */
+  const selecting = accountPlan !== null && !hasSubscription;
+  const [selected, setSelected] = useState<PlanId>(
+    initialPlan && plans.includes(initialPlan) ? initialPlan : plans.includes("pro") ? "pro" : plans[0],
+  );
   /** Open until the countdown reaches zero on this page, then the cards go
    *  back to full price without a reload. */
   const [offerOpen, setOfferOpen] = useState(Boolean(trialOfferEndsAt));
@@ -114,7 +139,11 @@ export default function PlanPicker({
    * this component on the code, so applying one remounts it on Monthly.
    */
   const [interval, setIntervalChoice] = useState<BillingInterval>(
-    hasSubscription ? subscriptionInterval : hasUnusedCode ? "month" : DEFAULT_INTERVAL,
+    hasSubscription
+      ? subscriptionInterval
+      : hasUnusedCode
+        ? "month"
+        : (initialInterval ?? DEFAULT_INTERVAL),
   );
   /** True when the cards show the interval a subscriber is NOT billed at, so
    *  every card there, their own plan's included, is a billing change. */
@@ -157,7 +186,7 @@ export default function PlanPicker({
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, interval }),
+        body: JSON.stringify(sourcePrompt ? { plan, interval, sourcePrompt } : { plan, interval }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
@@ -211,6 +240,15 @@ export default function PlanPicker({
 
     const move = moveFor(id);
     if (!move) return { kind: "none" };
+
+    if (move === "buy" && selecting) {
+      return {
+        kind: "button",
+        label: selected === id ? "Selected" : `Choose ${planCardName(id)}`,
+        onClick: () => setSelected(id),
+        disabled: pending !== null,
+      };
+    }
 
     if (move === "buy") {
       return {
@@ -321,14 +359,32 @@ export default function PlanPicker({
               {...planCardPricing(id, interval, discountFor(id))}
               features={planFeatures(id)}
               featured={id === FEATURED}
-              badge={id === FEATURED ? "Most popular" : undefined}
-              current={isCurrent}
+              badge={id === FEATURED ? (accountPlan !== null ? "Recommended" : "Most popular") : undefined}
+              current={isCurrent || (selecting && selected === id && moveFor(id) === "buy")}
               action={actionFor(id)}
               footer={footer}
             />
           );
         })}
       </PlanCardGrid>
+
+      {/* Jooma 4.5: what changes, and the one Continue. */}
+      {selecting && moveFor(selected) === "buy" && (
+        <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3" data-testid="picker-continue">
+          <p className="text-sm flex-1" style={{ color: "var(--j-body)" }} data-testid="picker-diff">
+            {pickerDiffLine(accountPlan, selected as "standard" | "pro" | "max")}
+          </p>
+          <button
+            type="button"
+            onClick={() => void subscribe(selected)}
+            disabled={pending !== null}
+            className="rounded-full px-7 py-3 text-sm font-extrabold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ backgroundColor: "var(--j-res)" }}
+          >
+            {pending ? "Starting checkout…" : `Continue with ${planCardName(selected)}`}
+          </button>
+        </div>
+      )}
 
       {/* The confirmation, full width beneath the cards rather than inside the
           one that was clicked. It carries a list of consequences and a pair of

@@ -96,7 +96,7 @@ export default function UsageTable({ rows }: { rows: ReportRow[] }) {
             <tr style={{ color: "var(--j-faint)" }} className="text-left">
               <th className="font-semibold px-4 py-3">Tool</th>
               <th className="font-semibold px-4 py-3 text-right">Generations</th>
-              <th className="font-semibold px-4 py-3 text-right">Credits used</th>
+              <th className="font-semibold px-4 py-3 text-right">Resources used</th>
               <th className="font-semibold px-4 py-3 text-right">Per generation</th>
               {/* "Next 10" rather than "Average per 10": these are forward
                   projections at the current average, and the old label read

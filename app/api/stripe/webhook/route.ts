@@ -6,6 +6,7 @@ import { DEFAULT_PLAN, TOPUP_PENCE, type BillingInterval } from "@/app/lib/plans
 import { planInForce } from "@/app/lib/account-plan";
 import { planChangeKind } from "@/app/lib/billing-rules";
 import { recordAppEvent } from "@/app/lib/app-events";
+import { topUpGrant } from "@/app/lib/topups-v45";
 import type { AccountPlan } from "@/app/lib/plan-config";
 import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
@@ -93,10 +94,14 @@ async function syncSubscription(sub: Stripe.Subscription) {
   // a move to Free gives a fresh 50) and the change is recorded as an event.
   const { data: before } = await supabaseAdmin
     .from("profiles")
-    .select("plan, trial_ends_at, subscription_status, stripe_subscription_id, current_period_end")
+    .select("plan, trial_ends_at, subscription_status, stripe_subscription_id, current_period_end, cancel_at_period_end")
     .eq("id", userId)
     .maybeSingle();
   const fromPlan = planInForce(before ?? null, new Date());
+  // E13: the moment a paid plan is set to end (cancel in the portal or the
+  // cancel flow). Logged once per flip, not on every later update.
+  const nowEnding = isActive && Boolean(paidPlan) && endsAtPeriodEnd(sub);
+  const wasEnding = Boolean((before as { cancel_at_period_end?: boolean | null } | null)?.cancel_at_period_end);
 
   const { error } = await supabaseAdmin
     .from("profiles")
@@ -124,6 +129,9 @@ async function syncSubscription(sub: Stripe.Subscription) {
     return;
   }
   await followPlanChange(userId, fromPlan, plan as AccountPlan, sub);
+  if (nowEnding && !wasEnding) {
+    await recordAppEvent(userId, "cancelled", { plan, ends_at: periodEnd(sub) });
+  }
 }
 
 /** Jooma 4.5: move the resources balance and log the event for a plan change.
@@ -274,7 +282,7 @@ async function grantTopUpCredit(session: Stripe.Checkout.Session) {
     user_id: userId,
     kind: "credit_gbp",
     amount: amountPence,
-    reason: "Purchased AI credit top-up",
+    reason: "Purchased top up",
     granted_by: null, // bought, not granted by an admin
     expires_at: endOfMonthIso(),
   });
@@ -299,7 +307,7 @@ async function grantTopUpCredit(session: Stripe.Checkout.Session) {
     amount_gbp: toMajor(paidPence),
     status: "paid",
     paid_at: new Date().toISOString(),
-    method: "Card · AI credit top-up",
+    method: "Card · top up",
     stripe_charge_id: chargeId,
   });
   if (invoiceErr) {
@@ -308,6 +316,77 @@ async function grantTopUpCredit(session: Stripe.Checkout.Session) {
     // leaving this row missing anyway. Log it for manual reconciliation.
     console.error("[stripe/webhook] top-up invoice mirror failed", invoiceErr);
   }
+}
+
+/**
+ * Jooma 4.5: grant a bought resources pack (allowance_grants kind
+ * 'resources_topup', never expiring; my_resources() spends it after the
+ * allowance).
+ *
+ * The amount comes from the CONFIG pack named in metadata, never from what
+ * was paid. An unknown pack id grants nothing (logged): inventing resources is
+ * worse than a support ticket. Same idempotency gate and write order as
+ * grantTopUpCredit above: purchase row (unique payment intent) first.
+ */
+async function grantResourcesTopUp(session: Stripe.Checkout.Session) {
+  const paymentIntentId =
+    typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+  if (!paymentIntentId) {
+    console.warn("[stripe/webhook] resources top-up has no payment_intent", session.id);
+    return;
+  }
+  const userId = session.metadata?.userId ?? session.client_reference_id;
+  const packKey = session.metadata?.packId ?? null;
+  const resources = topUpGrant(packKey);
+  if (!userId || resources === null) {
+    console.error("[stripe/webhook] resources top-up with no user or unknown pack", session.id, packKey);
+    return;
+  }
+  const paidPence = session.amount_total ?? 0;
+
+  const { data: packRow } = await supabaseAdmin
+    .from("topup_packs")
+    .select("id")
+    .eq("pack_key", packKey)
+    .maybeSingle();
+
+  const { error: purchaseErr } = await supabaseAdmin.from("topup_purchases").insert({
+    user_id: userId,
+    pack_id: packRow?.id ?? null,
+    kind: "resources_topup",
+    units: resources,
+    price_gbp: toMajor(paidPence),
+    stripe_payment_intent_id: paymentIntentId,
+  });
+  if (purchaseErr) {
+    if (purchaseErr.code === "23505") return;
+    throw purchaseErr;
+  }
+
+  const { error: grantErr } = await supabaseAdmin.from("allowance_grants").insert({
+    user_id: userId,
+    kind: "resources_topup",
+    amount: resources,
+    reason: `Bought ${resources.toLocaleString("en-GB")} resources`,
+    granted_by: null,
+    expires_at: null,
+  });
+  if (grantErr) throw grantErr;
+
+  await recordAppEvent(userId, "topup_bought", { pack: packKey, resources });
+
+  const chargeId = await chargeIdForPaymentIntent(paymentIntentId);
+  const { error: invoiceErr } = await supabaseAdmin.from("invoices").insert({
+    reference: session.id,
+    user_id: userId,
+    type: "topup",
+    amount_gbp: toMajor(paidPence),
+    status: "paid",
+    paid_at: new Date().toISOString(),
+    method: `Card · ${resources.toLocaleString("en-GB")} resources`,
+    stripe_charge_id: chargeId,
+  });
+  if (invoiceErr) console.error("[stripe/webhook] resources top-up invoice mirror failed", invoiceErr);
 }
 
 // ── Ambassador referrals ─────────────────────────────────────────────────────
@@ -1336,6 +1415,9 @@ export async function POST(req: NextRequest) {
           if (startsAnnualTrial(sub)) {
             await sendAnnualTrialEmail(sub, sub.metadata?.userId ?? null);
           }
+        } else if (session.mode === "payment" && session.metadata?.kind === "resources_topup") {
+          // Jooma 4.5: a resources pack, never expiring.
+          await grantResourcesTopUp(session);
         } else if (session.mode === "payment" && session.metadata?.kind === "credit_topup") {
           // One-off £1.50 AI credit. No subscription is involved, so this grants
           // an allowance row rather than changing the plan.

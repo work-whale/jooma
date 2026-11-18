@@ -157,3 +157,23 @@
   opacity: 0.55;
   cursor: default;
 }
+
+/* Jooma 4.5: the "Worth knowing" box under the packs. */
+.worth {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--j-res-soft, #f1ecfd);
+  color: var(--j-body);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.worth b {
+  display: block;
+  color: var(--j-ink);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.worth p {
+  margin: 0;
+}

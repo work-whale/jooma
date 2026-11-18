@@ -9,7 +9,7 @@ import { LockKey } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import { honouredNextPath } from "@/app/lib/safe-next";
 import { usePublicSettings } from "@/app/lib/usePublicSettings";
-import { OPT_OUT_LABEL, saveProductEmailsChoice } from "@/app/lib/product-emails";
+import { CONSENT_LABEL, saveProductEmailsChoice } from "@/app/lib/product-emails";
 import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
 
@@ -18,9 +18,9 @@ export default function SignupPage() {
   const settings = usePublicSettings();
   const [email, setEmail] = useState("");
   const [agreed, setAgreed] = useState(false);
-  // The soft opt-in: unticked means product email is on. See
-  // app/lib/product-emails.ts.
-  const [ratherNot, setRatherNot] = useState(false);
+  // Jooma 4.5: opt-in. The box starts unticked, and unticked means no
+  // marketing or product email ("rather not"). See app/lib/product-emails.ts.
+  const [ratherNot, setRatherNot] = useState(true);
   // Honeypot for /api/signup/lead. A person never sees or fills it.
   const [website, setWebsite] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -251,12 +251,12 @@ export default function SignupPage() {
         <label className={auth.check}>
           <input
             type="checkbox"
-            checked={ratherNot}
-            onChange={(e) => setRatherNot(e.target.checked)}
+            checked={!ratherNot}
+            onChange={(e) => setRatherNot(!e.target.checked)}
             className={auth.checkBox}
-            data-testid="signup-product-emails-opt-out"
+            data-testid="signup-marketing-consent"
           />
-          <span>{OPT_OUT_LABEL}</span>
+          <span>{CONSENT_LABEL}</span>
         </label>
 
         {/* Honeypot for /api/signup/lead. Off-screen rather than display:none,

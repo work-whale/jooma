@@ -23,7 +23,7 @@ export default function ValueBand() {
           <div className={styles.row}>
             <div className={styles.cell}>
               <p className={styles.figure}>{credits?.toLocaleString("en-GB")}</p>
-              <p className={styles.caption}>credits a month, spent however you like</p>
+              <p className={styles.caption}>resources a month, spent however you like</p>
             </div>
             <div className={styles.cell}>
               <p className={styles.figure}>{toolCount}</p>

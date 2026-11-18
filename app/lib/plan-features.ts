@@ -21,6 +21,14 @@ export function pictureMode(plan: AccountPlan, requested: PictureMode): PictureM
   return requested;
 }
 
+/** A worksheet picture: on Free and Standard it is always a library photo
+ *  ("auto" could otherwise fall through to a generated one). No plan known
+ *  (before the migration) changes nothing. */
+export function sheetPictureSource<S extends "web" | "ai" | "auto">(plan: AccountPlan | null, source: S): S | "web" {
+  if (plan && !picturesAllowed(plan)) return "web";
+  return source;
+}
+
 export const EXPORT_MARK_TEXT = "Made with Jooma";
 
 /** The footer line for an export made now, or null for a clean one. */

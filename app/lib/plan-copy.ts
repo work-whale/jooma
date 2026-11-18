@@ -21,6 +21,7 @@ import {
   type PlanLimits,
 } from "./plans";
 import { discountedPence, type Discount } from "./ambassador-discount";
+import { PLAN_CONFIG } from "./plan-config";
 
 /** The short name on a card. PLANS holds "Pro Teacher" / "Standard Teacher",
  *  which is right for an admin console and too long for a pricing card. "free"
@@ -72,7 +73,7 @@ const HIGHLIGHTS: Record<PlanId, string[]> = {
   ],
   max: ["Priority building", "Everything in Pro"],
   school: [
-    "Credits pooled across staff",
+    "Resources pooled across staff",
     "Admin dashboard and usage",
     "One invoice, one renewal",
   ],
@@ -292,7 +293,7 @@ export function planFeatures(plan: PlanId): string[] {
 
   const credits = planCredits(plan);
   if (credits !== null) {
-    lines.push(`${credits.toLocaleString("en-GB")} credits a month`);
+    lines.push(`${credits.toLocaleString("en-GB")} resources a month`);
   }
 
   return [...lines, ...HIGHLIGHTS[plan]];
@@ -405,8 +406,20 @@ const LOSS_RULES: LossRule[] = [
  * The credit drop is prepended separately because it comes from the spend
  * ceiling rather than from PlanLimits — see AI_SPEND_CEILING_PENCE.
  */
-export function planLosses(from: PlanId, to: PlanId): string[] {
+export function planLosses(from: PlanId, to: PlanId, opts: { v45?: boolean } = {}): string[] {
   if (from === to) return [];
+
+  // Jooma 4.5: leaving lands on Free, which is a real plan. Say what it is,
+  // allowance first, from PLAN_CONFIG so it cannot drift from what Free gets.
+  if (to === "free" && opts.v45 && from in PLAN_CONFIG) {
+    const f = PLAN_CONFIG.free;
+    const p = PLAN_CONFIG[from as keyof typeof PLAN_CONFIG];
+    const lines = [`${f.resources} resources a week instead of ${p.resources.toLocaleString("en-GB")} a month`];
+    if (p.pictures && !f.pictures) lines.push("Library photos instead of generated pictures");
+    if (!p.exportMark && f.exportMark) lines.push("The Jooma mark on your exports");
+    if (p.refinesPerWeek === null && f.refinesPerWeek !== null) lines.push(`${f.refinesPerWeek} refines a week`);
+    return lines;
+  }
 
   // Leaving every plan. Without a subscription nothing can be generated at all,
   // which makes every finer loss below beside the point, and listing "no
@@ -417,12 +430,12 @@ export function planLosses(from: PlanId, to: PlanId): string[] {
 
   const lines: string[] = [];
 
-  // Credits first: it is the number they actually feel, every month.
+  // Resources first: it is the number they actually feel, every month.
   const fromCredits = planCredits(from);
   const toCredits = planCredits(to);
   if (fromCredits !== null && toCredits !== null && toCredits < fromCredits) {
     lines.push(
-      `${(fromCredits - toCredits).toLocaleString("en-GB")} fewer credits a month, ` +
+      `${(fromCredits - toCredits).toLocaleString("en-GB")} fewer resources a month, ` +
         `${fromCredits.toLocaleString("en-GB")} down to ${toCredits.toLocaleString("en-GB")}`,
     );
   }

@@ -8,9 +8,11 @@ import {
 } from "../support/users";
 
 /*
- * The soft opt-in at signup, and the signup lead.
+ * Consent at signup, and the signup lead. Jooma 4.5 (spec Step 6, rule 3):
+ * OPT-IN. One unticked "Send me ideas and offers" box; left unticked, product
+ * email is off and marketing_consent is false; ticked, both are on.
  *
- * /signup offers "I'd rather not get product news" under the Terms box, and
+ * /signup shows the box under the Terms box, and
  * remembers the typed address as a signup lead the moment Continue is pressed,
  * before any account exists. /complete-profile records the answer against the
  * new account, and asks again only when /signup never did (a new Google account
@@ -39,7 +41,7 @@ test.afterAll(async () => {
   await deleteTeacher(googleLike);
 });
 
-test("ticking 'rather not' at signup is remembered through to the account", async ({ page }) => {
+test("leaving the box unticked at signup is remembered through to the account", async ({ page }) => {
   await page.goto("/signup");
   const cont = page.getByRole("button", { name: "Continue", exact: true });
   await cont.waitFor({ state: "visible" });
@@ -48,7 +50,8 @@ test("ticking 'rather not' at signup is remembered through to the account", asyn
   await email.fill(EMAIL);
   await expect(email).toHaveValue(EMAIL);
   await page.getByRole("checkbox", { name: /Terms of Service/ }).check();
-  await page.getByTestId("signup-product-emails-opt-out").check();
+  // Unticked to start: consent is never assumed.
+  await expect(page.getByTestId("signup-marketing-consent")).not.toBeChecked();
   await cont.click();
   await expect(page).toHaveURL(/\/create-password$/);
 
@@ -67,7 +70,7 @@ test("ticking 'rather not' at signup is remembered through to the account", asyn
 
   // Already answered on /signup, so not asked twice.
   await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
-  await expect(page.getByTestId("profile-product-emails-opt-out")).toHaveCount(0);
+  await expect(page.getByTestId("profile-marketing-consent")).toHaveCount(0);
 
   await page.getByLabel("First name").fill("Signup");
   await page.getByLabel("Surname").fill("Testcase");
@@ -78,6 +81,10 @@ test("ticking 'rather not' at signup is remembered through to the account", asyn
   const { data: optOut } = await admin.from("email_opt_outs").select("source").eq("email", EMAIL).single();
   expect(optOut?.source).toBe("signup");
   expect(await page.evaluate(() => sessionStorage.getItem("jooma:product-emails"))).toBeNull();
+  const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const id = users?.users.find((u) => u.email === EMAIL)?.id;
+  const { data: profile } = await admin.from("profiles").select("marketing_consent").eq("id", id!).single();
+  expect(profile?.marketing_consent).toBe(false);
 });
 
 test("a new account that never saw /signup is asked on /complete-profile", async ({ page }) => {
@@ -87,7 +94,7 @@ test("a new account that never saw /signup is asked on /complete-profile", async
   await signIn(page, googleLike);
   await page.goto("/complete-profile");
 
-  const box = page.getByTestId("profile-product-emails-opt-out");
+  const box = page.getByTestId("profile-marketing-consent");
   await expect(box).toBeVisible();
   await expect(box).not.toBeChecked();
   await box.check();
@@ -98,6 +105,10 @@ test("a new account that never saw /signup is asked on /complete-profile", async
   await page.getByRole("button", { name: "Create account" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/complete-profile"), { timeout: 30_000 });
 
-  const { data } = await admin.from("email_opt_outs").select("source").eq("email", googleLike.email).single();
-  expect(data?.source).toBe("signup");
+  // Ticked: consent given, so no opt-out row and marketing_consent on.
+  const { data } = await admin.from("email_opt_outs").select("source").eq("email", googleLike.email).maybeSingle();
+  expect(data).toBeNull();
+  const { data: profile } = await admin.from("profiles").select("marketing_consent, marketing_consent_at").eq("id", googleLike.id).single();
+  expect(profile?.marketing_consent).toBe(true);
+  expect(profile?.marketing_consent_at).not.toBeNull();
 });

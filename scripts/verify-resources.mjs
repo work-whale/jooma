@@ -62,7 +62,15 @@ async function teacher(profile) {
   if (error) throw error;
   const id = data.user.id;
   made.push(id);
-  const { error: pErr } = await admin.from("profiles").upsert({ id, first_name: "Verify", ...profile });
+  // The same columns tests/support/users.ts createTeacher() seeds: surname is
+  // NOT NULL, and the username fits the 20 character constraint.
+  const { error: pErr } = await admin.from("profiles").upsert({
+    id,
+    first_name: "Verify",
+    surname: "Testcase",
+    username: `vr${randomUUID().replace(/-/g, "").slice(0, 18)}`,
+    ...profile,
+  });
   if (pErr) throw pErr;
   const client = createClient(URL, ANON, { auth: { persistSession: false } });
   const { error: sErr } = await client.auth.signInWithPassword({ email, password });
@@ -77,6 +85,11 @@ try {
   const t = await teacher({ plan: "pro_trial", trial_ends_at: soon });
   let r = await t.client.rpc("my_resources");
   check("trial shows 300", !r.error && one(r.data)?.total === 300 && one(r.data)?.plan === "pro_trial", r.error?.message);
+
+  // The guard lets an EXPIRED trial move to free (my_resources does that in the
+  // teacher's session). A running trial must not be able to do it to itself.
+  const { error: early } = await t.client.from("profiles").update({ plan: "free" }).eq("id", t.id);
+  check("a running trial cannot move itself to free", Boolean(early), "the update was allowed");
 
   await admin.from("profiles").update({ trial_ends_at: new Date(Date.now() - 1000).toISOString() }).eq("id", t.id);
   r = await t.client.rpc("my_resources");

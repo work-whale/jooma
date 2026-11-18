@@ -2,6 +2,7 @@
 
 import { createRoot } from "react-dom/client";
 import { triggerDownload } from "@/app/lib/exportUtils";
+import { currentExportMark } from "@/app/lib/export-mark";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, pagePx } from "@/app/lib/sheets/themes";
 import type { SheetDoc } from "@/app/lib/sheets/types";
@@ -71,11 +72,18 @@ export async function exportSheetPdf(doc: SheetDoc, filename: string): Promise<v
     const w = pdf.internal.pageSize.getWidth();
     const h = pdf.internal.pageSize.getHeight();
     const pages = [...root.querySelectorAll<HTMLElement>(".js-pages > .js-page")];
+    const mark = currentExportMark();
     const background = getSheetTheme(doc.design.themeId).colors.paper;
     for (let i = 0; i < pages.length; i++) {
       const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: background, width: paper.w, height: paper.h, windowWidth: paper.w });
       if (i > 0) pdf.addPage();
       pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, w, h);
+      // Jooma 4.5: the mark on Free and the trial, decided at export time.
+      if (mark) {
+        pdf.setFontSize(8);
+        pdf.setTextColor(142, 135, 164);
+        pdf.text(mark, w - 18, h - 10, { align: "right" });
+      }
     }
     pdf.save(`${filename}.pdf`);
   } finally {
@@ -91,6 +99,16 @@ export async function printSheet(doc: SheetDoc, title: string): Promise<void> {
     const clone = root.cloneNode(true) as HTMLElement;
     clone.querySelector(".js-measure")?.remove();
     clone.querySelectorAll("style").forEach((s) => s.remove());
+    const mark = currentExportMark();
+    if (mark) {
+      for (const page of clone.querySelectorAll<HTMLElement>(".js-page")) {
+        page.style.position = "relative";
+        const tag = document.createElement("div");
+        tag.textContent = mark;
+        tag.style.cssText = "position:absolute;right:14px;bottom:8px;font:italic 10px sans-serif;color:#8E87A4;";
+        page.appendChild(tag);
+      }
+    }
     html = clone.outerHTML;
   } finally {
     dispose();

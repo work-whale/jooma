@@ -1,6 +1,8 @@
 "use client";
 
 import { useExportLock } from "@/app/components/guest/useExportLock";
+import { currentExportMark } from "@/app/lib/export-mark";
+import { useMarkPresenting } from "@/app/lib/presenting";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Check, Loader2 } from "lucide-react";
 import EditorTopBar from "./EditorTopBar";
@@ -228,6 +230,8 @@ export default function Editor({ presentation, generationParams, guest }: Props)
   const [adjustingBackground, setAdjustingBackground] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  // Jooma 4.5: no prompt of any kind while slides are shown to a class.
+  useMarkPresenting(presenting);
   // Background removal is per-image (which image is processing), with download/
   // processing progress and an error message, so a slow first-run model download
   // can't look like an app-wide infinite hang.
@@ -2567,6 +2571,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
       document.body.appendChild(host);
       const root = createRoot(host);
 
+      const mark = currentExportMark();
       const pdf = new jsPDF({
         orientation: "landscape",
         unit: "px",
@@ -2597,6 +2602,11 @@ export default function Editor({ presentation, generationParams, guest }: Props)
 
           if (i > 0) pdf.addPage([SLIDE_W, SLIDE_H], "landscape");
           pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, SLIDE_W, SLIDE_H);
+          if (mark) {
+            pdf.setFontSize(14);
+            pdf.setTextColor(142, 135, 164);
+            pdf.text(mark, SLIDE_W - 24, SLIDE_H - 16, { align: "right" });
+          }
         }
 
         pdf.save(`${titleRef.current || "presentation"}.pdf`);
@@ -2663,8 +2673,13 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         return runs;
       };
 
+      // Jooma 4.5: the mark on Free and trial exports, added last on each
+      // slide so it sits above the content.
+      const mark = currentExportMark();
+      const madeSlides: ReturnType<typeof pptx.addSlide>[] = [];
       for (const s of slidesRef.current) {
         const slide = pptx.addSlide();
+        madeSlides.push(slide);
         // Speaker notes (staff and assembly decks) as PowerPoint's own notes.
         const notes = slideNotesText(s);
         if (notes) slide.addNotes(notes);
@@ -2809,6 +2824,20 @@ export default function Editor({ presentation, generationParams, guest }: Props)
           } catch (err) {
             console.warn("PPTX export: could not embed audio:", err);
           }
+        }
+      }
+      if (mark) {
+        for (const slide of madeSlides) {
+          slide.addText(mark, {
+            x: 10.1,
+            y: 7.1,
+            w: 3.1,
+            h: 0.3,
+            fontSize: 9,
+            italic: true,
+            color: "8E87A4",
+            align: "right",
+          });
         }
       }
       await pptx.writeFile({ fileName: `${titleRef.current || "presentation"}.pptx` });

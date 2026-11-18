@@ -144,11 +144,11 @@ test.describe("planLosses", () => {
 });
 
 test.describe("planFeatures", () => {
-  test("paid plans lead with their real credit allowance", () => {
+  test("paid plans lead with their real resource allowance", () => {
     // Derived from the spend ceiling, so a card can never advertise an
     // allowance the guard will not grant.
     for (const id of ["standard", "pro", "max"] as const) {
-      expect(planFeatures(id)[0]).toBe(`${planCredits(id)!.toLocaleString("en-GB")} credits a month`);
+      expect(planFeatures(id)[0]).toBe(`${planCredits(id)!.toLocaleString("en-GB")} resources a month`);
     }
   });
 

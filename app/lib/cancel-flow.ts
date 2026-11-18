@@ -21,7 +21,36 @@
 // cancellation_events. Discounts do not stack, so a subscription that already
 // carries one (an unspent ambassador code) is not offered another.
 import { discountedPence } from "./ambassador-discount";
+import { PLAN_CONFIG } from "./plan-config";
 import { PLANS, planCredits, type BillingInterval, type PlanId } from "./plans";
+
+// ── Jooma 4.5: P11, the two ways down ────────────────────────────────────────
+
+export interface P11Option {
+  id: "free" | "standard";
+  title: string;
+  body: string;
+}
+
+/**
+ * Spec P11: shown above the reasons on the first screen, before the save flow.
+ * Switch to Free always; Move to Standard from Pro and Max only, and only when
+ * no plan change is already booked. Standard is quoted at the interval they
+ * pay, because the step down keeps it.
+ */
+export function p11Options(plan: PlanId, interval: BillingInterval, canChange: boolean): P11Option[] {
+  const free = PLAN_CONFIG.free.resources;
+  const options: P11Option[] = [
+    { id: "free", title: "Switch to Free", body: `Keep your library and get ${free} resources every Sunday.` },
+  ];
+  if (canChange && (plan === "pro" || plan === "max")) {
+    const s = PLAN_CONFIG.standard;
+    const body =
+      interval === "year" && s.yearly !== null ? `£${s.yearly.toFixed(2)} a year` : `£${s.monthly.toFixed(2)} a month`;
+    options.push({ id: "standard", title: "Move to Standard", body });
+  }
+  return options;
+}
 
 // ── Reasons ──────────────────────────────────────────────────────────────────
 
@@ -379,6 +408,8 @@ export interface AccountSummary {
   minutesSaved: number;
   badges: number;
   streak: number;
+  /** Jooma 4.5 database: leaving lands on Free, not a locked account. */
+  v45?: boolean;
 }
 
 export interface InventoryTile {
@@ -404,6 +435,7 @@ function plural(n: number, one: string, many: string): string {
  * is. An empty account shows fewer tiles rather than "0 badges".
  */
 export function lossInventory(a: AccountSummary): InventoryTile[] {
+  if (a.v45) return lossInventoryV45(a);
   const locked = PLANS.free.limits;
   const until = a.periodEnd ? ` after ${a.periodEnd}` : "";
   const tiles: InventoryTile[] = [];
@@ -462,8 +494,8 @@ export function lossInventory(a: AccountSummary): InventoryTile[] {
     tiles.push({
       id: "credits",
       figure: credits.toLocaleString("en-GB"),
-      label: "credits a month",
-      fate: `Stop${until}. Unused credits don't roll over.`,
+      label: "resources a month",
+      fate: `Stop${until}. Unused resources don't roll over.`,
       tone: "lost",
     });
   }
@@ -481,6 +513,78 @@ export function lossInventory(a: AccountSummary): InventoryTile[] {
   return tiles;
 }
 
+/** Jooma 4.5: leaving lands on Free (PLAN_CONFIG.free), which can still make,
+ *  edit and export, with the mark and a weekly allowance. */
+function lossInventoryV45(a: AccountSummary): InventoryTile[] {
+  const free = PLAN_CONFIG.free;
+  const until = a.periodEnd ? ` after ${a.periodEnd}` : "";
+  const tiles: InventoryTile[] = [];
+
+  if (a.resources > 0) {
+    tiles.push({
+      id: "resources",
+      figure: a.resources.toLocaleString("en-GB"),
+      label: a.resources === 1 ? "resource you have made" : "resources you have made",
+      fate: `Kept. You can open, edit and export them on Free${free.exportMark ? ", with the Jooma mark" : ""}.`,
+      tone: "kept",
+    });
+  }
+
+  const hours = Math.round(a.minutesSaved / 60);
+  if (hours > 0) {
+    tiles.push({
+      id: "hours",
+      figure: plural(hours, "hour", "hours"),
+      label: "of planning saved",
+      fate: "Yours. That doesn't go anywhere.",
+      tone: "kept",
+    });
+  }
+
+  if (a.badges > 0) {
+    tiles.push({
+      id: "badges",
+      figure: plural(a.badges, "badge", "badges"),
+      label: "earned",
+      fate: "Kept. They stay on your profile.",
+      tone: "kept",
+    });
+  }
+
+  if (a.streak > 0) {
+    tiles.push({
+      id: "streak",
+      figure: plural(a.streak, "day", "days"),
+      label: "in your current streak",
+      fate: "Carries on while you keep making things.",
+      tone: "kept",
+    });
+  }
+
+  const plan = a.plan in PLAN_CONFIG ? PLAN_CONFIG[a.plan as keyof typeof PLAN_CONFIG] : null;
+  if (plan && plan.resources > 0 && a.plan !== "free") {
+    tiles.push({
+      id: "credits",
+      figure: plan.resources.toLocaleString("en-GB"),
+      label: "resources a month",
+      fate: `Back to ${free.resources} a week${until}. Unused resources don't roll over.`,
+      tone: "lost",
+    });
+  }
+
+  if (plan && !plan.exportMark && free.exportMark) {
+    tiles.push({
+      id: "exports",
+      figure: "Clean exports",
+      label: "PowerPoint, Word and PDF with no mark",
+      fate: "Back to the Jooma mark.",
+      tone: "lost",
+    });
+  }
+
+  return tiles;
+}
+
 export interface TimelineStep {
   when: string;
   what: string;
@@ -488,9 +592,31 @@ export interface TimelineStep {
 }
 
 /** "What happens, and when." Dated where we know the date. */
-export function cancelTimeline(a: Pick<AccountSummary, "plan" | "periodEnd" | "trialing">): TimelineStep[] {
+export function cancelTimeline(
+  a: Pick<AccountSummary, "plan" | "periodEnd" | "trialing" | "v45">,
+): TimelineStep[] {
   const planName = PLANS[a.plan].name;
   const end = a.periodEnd ?? "the end of your billing period";
+  if (a.v45) {
+    const free = PLAN_CONFIG.free;
+    return [
+      {
+        when: "Today",
+        what: `Nothing changes. You keep ${planName} until ${end}, the end of the period you have paid for.`,
+        tone: "now",
+      },
+      {
+        when: a.periodEnd ? `${a.periodEnd}, when your plan ends` : "When your plan ends",
+        what: `You move to Free: ${free.resources} resources every Sunday, your whole library, and exports with the Jooma mark.`,
+        tone: "later",
+      },
+      {
+        when: "Any time after that",
+        what: "Choose a plan again and everything you made is there, exactly as you left it. Nothing is deleted unless you delete your account.",
+        tone: "kept",
+      },
+    ];
+  }
   return [
     {
       when: "Today",

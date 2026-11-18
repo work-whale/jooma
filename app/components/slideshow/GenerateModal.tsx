@@ -7,6 +7,8 @@ import { Sparkles, Loader2, X, Target, Key, Image as ImageIcon, ChevronLeft, Che
 import { createPresentation } from "@/app/lib/presentations";
 import { parseYouTubeId } from "@/app/components/editor/youtube";
 import ResourceLibraryModal from "./ResourceLibraryModal";
+import { useCreditMeter } from "@/app/lib/useCreditMeter";
+import { P5Sheet } from "@/app/components/v45/PlanSheets";
 import { DEFAULT_THEME_ID, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTheme } from "@/app/lib/slideshowThemes";
 import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
@@ -319,6 +321,12 @@ export default function GenerateModal({
   const [youtubeError, setYoutubeError] = useState<string | null>(null);
   const [youtubeNote, setYoutubeNote] = useState("");
   const [imageSource, setImageSource] = useState<ImageSource>("web");
+  // Jooma 4.5: generated pictures are Pro, Max and the trial. On Free and
+  // Standard, turning them on opens P5 (every time) instead; the server forces
+  // library photos anyway. Before 4.5 (plan unknown) nothing changes.
+  const meter = useCreditMeter();
+  const picturesLocked = meter.plan !== null && !meter.pictures;
+  const [p5Open, setP5Open] = useState(false);
   // Auto mode web:AI split (web parts out of 10). Default 8 → 8 web : 2 AI.
   const [imageMixWeb, setImageMixWeb] = useState(8);
   // Default to "illustration" — works better for classroom decks than realistic
@@ -1130,7 +1138,13 @@ export default function GenerateModal({
                         <button
                           key={opt.id}
                           type="button"
-                          onClick={() => setImageSource(opt.id)}
+                          onClick={() => {
+                            if (picturesLocked && opt.id !== "web") {
+                              setP5Open(true);
+                              return;
+                            }
+                            setImageSource(opt.id);
+                          }}
                           disabled={busy}
                           className="px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors"
                           style={
@@ -1325,6 +1339,7 @@ export default function GenerateModal({
         />
       )}
       </div>
+      {p5Open && <P5Sheet onClose={() => setP5Open(false)} onLibrary={() => setImageSource("web")} />}
     </div>
   );
 }

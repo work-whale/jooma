@@ -83,6 +83,15 @@ export async function saveToolRun(run: {
   // place badge earning can hook without touching all five call sites.
   fireToolRunSaved();
 
+  // Jooma 4.5 Step 7: resource_made (and activated). The server checks the id
+  // is this teacher's and new. Fire and forget: analytics never blocks a save.
+  void fetch("/api/resource-made", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: (data as ToolRun).id }),
+    keepalive: true,
+  }).catch(() => {});
+
   return data as ToolRun;
 }
 

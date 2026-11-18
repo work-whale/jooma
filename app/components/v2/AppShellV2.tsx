@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import SideNavV2 from "@/app/components/v2/SideNavV2";
 import TopBarV2 from "@/app/components/v2/TopBarV2";
+import PlanPromptsHost from "@/app/components/v45/PlanPromptsHost";
 import { useAccount } from "@/app/components/v2/AccountLinks";
 import SupportLauncher from "@/app/components/SupportLauncher";
 import AnnouncementBanner from "@/app/components/AnnouncementBanner";
@@ -249,6 +250,8 @@ export default function AppShellV2({
         <CurriculumBanner />
         <TrialBanner />
         <TrialEndedModal />
+        {/* Jooma 4.5: launch-day trial start, P1, P2 and P12. */}
+        <PlanPromptsHost />
         {shellBanner && <AnnouncementBanner />}
         <div className={shellContentClassName ?? appStyles.wrap}>{children}</div>
       </main>

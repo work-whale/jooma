@@ -9,6 +9,7 @@ import { RestoredRunProvider } from "@/app/lib/RestoredRunContext";
 import JoActivityPanel from "@/app/components/assistant/JoActivityPanel";
 import DesktopHintPill from "@/app/components/jo/DesktopHintPill";
 import UkOnlyToolNote from "@/app/components/UkOnlyToolNote";
+import ToolCostLine from "@/app/components/v45/ToolCostLine";
 
 const ROUTE_LABELS: Record<string, string> = {
   "/tools/lesson-planner": "Lesson Planner",
@@ -102,6 +103,8 @@ function ToolPageChrome({
           whole document — which is exactly the bug that let one click anywhere
           in the app cancel a fill. */}
       <UkOnlyToolNote pathname={pathname} />
+      {/* Jooma 4.5: what this tool usually costs against what is left. */}
+      <ToolCostLine slug={pathname.replace(/^\/tools\//, "")} />
       <div className="grow" data-jo-form="">
         <RestoredRunProvider>{children}</RestoredRunProvider>
       </div>

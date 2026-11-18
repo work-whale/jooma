@@ -139,3 +139,35 @@ export function emailForEvent(event: string): LifecycleId | null {
   if (event === "payment_failed") return "E14";
   return null;
 }
+
+/** An app_events row the event emails are sent from. */
+export interface LoggedEvent {
+  id: number;
+  name: string;
+  createdAt: Date;
+}
+
+/**
+ * E12 to E14, from the events the webhook logged (subscribed, cancelled,
+ * payment_failed). One per event (the key carries the event id), never in
+ * quiet hours, never more than 12 hours late, and E14 only while the payment
+ * is still failing.
+ */
+export function eventEmails(
+  events: readonly LoggedEvent[],
+  sent: ReadonlySet<string>,
+  now: Date,
+  state: { paymentFailing: boolean },
+): (DueEmail & { eventId: number })[] {
+  if (inQuietHours(now)) return [];
+  const out: (DueEmail & { eventId: number })[] = [];
+  for (const e of events) {
+    const id = emailForEvent(e.name);
+    if (!id) continue;
+    if (id === "E14" && !state.paymentFailing) continue;
+    const key = `${id}:${e.id}`;
+    if (sent.has(key) || !isDue(e.createdAt, now)) continue;
+    out.push({ id, key, kind: "account", eventId: e.id });
+  }
+  return out;
+}

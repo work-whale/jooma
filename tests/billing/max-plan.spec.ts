@@ -16,7 +16,7 @@ import {
  *   1. A free teacher could not see Max anywhere in the app — the subscription
  *      section offered a link to /pricing, which sold only Pro.
  *   2. A Pro subscriber had no way to reach Max at all.
- *   3. The sidebar offered "Top up credits" at any balance, and the modal it
+ *   3. The sidebar offered a top up at any balance, and the modal it
  *      opened navigated to a page whose top-up button only appears above 80%
  *      used — so anyone below that hit a dead end.
  *
@@ -36,42 +36,34 @@ test.describe("Max plan", () => {
     await deleteTeacher(teacher);
   });
 
-  test("a teacher with no plan is offered every paid plan, with derived credits", async ({ page }) => {
+  test("a Free teacher is offered every paid plan, with its resources, Pro recommended", async ({ page }) => {
+    // Jooma 4.5: a teacher with no subscription is on Free, and the plans page
+    // is the picker: Standard, Pro and Max, monthly first, Pro preselected.
+    await admin
+      .from("profiles")
+      .update({ plan: "free", subscription_status: null, stripe_subscription_id: null, current_period_end: null })
+      .eq("id", teacher.id);
+    await admin.rpc("resources_start", { p_uid: teacher.id, p_plan: "free" });
     await signIn(page, teacher);
     await page.goto("/pricing");
 
     // .first() throughout: the section renders behind a Suspense boundary keyed
     // on the tab, so mid-transition a resolving and a resolved copy can both be
-    // in the DOM. See the note in the Pro subscriber test.
-    //
-    // The cards carry the SHORT name ("Pro"), not PLANS[].name ("Pro Teacher").
-    // The long form is right for an admin console and reads as a mouthful on a
-    // pricing card, which is what planCardName exists to separate.
+    // in the DOM.
     await expect(page.getByText("Standard", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Pro", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Max", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Recommended").first()).toBeVisible();
 
-    // The cards open on Yearly (see annual-plan.spec.ts). The figures below are
-    // the monthly ones.
-    await page.locator("label", { hasText: "Monthly" }).first().click();
     await expect(page.getByText("£4.99").first()).toBeVisible();
     await expect(page.getByText("£7.99").first()).toBeVisible();
-    await expect(page.getByText("£14.99").first()).toBeVisible();
+    await expect(page.getByText("£13.99").first()).toBeVisible();
 
-    // There is no Free card any more: "No plan" is a state, not something to
-    // choose, so nothing is marked as theirs.
-    await expect(page.getByText("£0", { exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /your plan/i })).toHaveCount(0);
-
-    // The credit figures are derived from AI_SPEND_CEILING_PENCE, not typed.
-    // These are the numbers the ceiling actually grants.
-    await expect(page.getByText("500 credits a month").first()).toBeVisible();
-    await expect(page.getByText("1,000 credits a month").first()).toBeVisible();
-    await expect(page.getByText("2,500 credits a month").first()).toBeVisible();
-
-    // All three are buyable from here, each saying what it charges today.
-    await expect(page.getByText(/You will be charged .* today/)).toHaveCount(3);
-    await expect(page.getByText("You will be charged £4.99 today, then £4.99 a month").first()).toBeVisible();
+    // The allowances are derived, never typed, and say resources.
+    await expect(page.getByText("500 resources a month").first()).toBeVisible();
+    await expect(page.getByText("1,000 resources a month").first()).toBeVisible();
+    await expect(page.getByText("2,500 resources a month").first()).toBeVisible();
+    await expect(page.getByText(/credits/i)).toHaveCount(0);
   });
 
   test("a Pro subscriber is offered Max, and told what the switch costs", async ({ page }) => {
@@ -133,7 +125,7 @@ test.describe("Max plan", () => {
     // than written out, so it cannot claim a loss that is not real.
     await expect(page.getByText(/what you.d miss out on/i).first()).toBeVisible();
     // 2,500 down to 1,000 is 1,500 fewer.
-    await expect(page.getByText(/1,500 fewer credits/i).first()).toBeVisible();
+    await expect(page.getByText(/1,500 fewer resources/i).first()).toBeVisible();
 
     // And the reassuring half: nothing is lost from the month already paid for.
     await expect(
@@ -180,14 +172,17 @@ test.describe("Max plan", () => {
     await expect(toStandard).toBeVisible();
     await toStandard.click();
     await expect(page.getByText(/what you.d miss out on/i).first()).toBeVisible();
-    await expect(page.getByText(/watermark/i).first()).toBeVisible();
+    // Jooma 4.5 red note: Standard exports are clean too, so no watermark loss.
+    await expect(page.getByText(/watermark/i)).toHaveCount(0);
 
-    // There is no Free card to drop to. Leaving is the Cancel button in
-    // Profile, which says what it costs before handing over to Stripe.
-    await expect(page.getByRole("button", { name: /^switch to free$/i })).toHaveCount(0);
+    // Leaving is the Cancel link in Profile, into the cancel flow, whose first
+    // screen offers the two ways down (P11) before anything else.
     await page.goto("/profile?section=subscription");
-    await page.getByRole("button", { name: /^cancel subscription$/i }).first().click();
-    await expect(page.getByText(/won.t be able to create new resources/i).first()).toBeVisible();
+    await page.getByRole("link", { name: /^cancel subscription$/i }).first().click();
+    await expect(page).toHaveURL(/\/profile\/cancel/);
+    const p11 = page.getByTestId("cancel-p11");
+    await expect(p11.getByRole("button", { name: /Switch to Free/ })).toBeVisible();
+    await expect(p11.getByRole("button", { name: /Move to Standard/ })).toContainText("£4.99 a month");
   });
 
   test("a subscription that is ending offers renewal, not a plan change", async ({ page }) => {
@@ -207,20 +202,17 @@ test.describe("Max plan", () => {
     await expect(page.getByRole("button", { name: /^switch to pro$/i })).toHaveCount(0);
   });
 
-  test("the sidebar offers a top up only when credits are low", async ({ page }) => {
-    await admin.from("profiles").update({ plan: "pro" }).eq("id", teacher.id);
+  test("a new Pro teacher sees a calm meter and no Top up", async ({ page }) => {
+    await setPlan(teacher, "pro", "paying");
+    await admin.rpc("resources_start", { p_uid: teacher.id, p_plan: "pro" });
 
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
     const nav = page.locator("#app-sidenav-v2");
-    const meter = nav.locator('[class*="meterVal"]').filter({ hasText: /left/ });
-
-    // The meter is always shown on a metered plan.
-    await expect(meter.first()).toBeVisible();
-
-    // A brand new Pro teacher has spent nothing, so the button must be absent:
-    // it used to render at every balance, which is a nag rather than an offer.
-    await expect(nav.getByRole("button", { name: /top up credits/i })).toHaveCount(0);
+    await expect(nav.getByTestId("sidebar-resources")).toContainText("1,000 a month");
+    // Nothing spent, so the button must be absent: offering more to someone
+    // with a full allowance is a nag rather than an offer.
+    await expect(nav.getByRole("button", { name: "Top up" })).toHaveCount(0);
   });
 });

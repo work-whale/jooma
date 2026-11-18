@@ -5,6 +5,7 @@ import { faqQuestions, inWords } from "@/app/lib/landing/faq";
 import { FREE_TRIES_PER_DAY } from "@/app/lib/trial-limits";
 import { TRIAL_DAYS } from "@/app/lib/plans";
 import { planCardPrice } from "@/app/lib/plan-copy";
+import { PLAN_CONFIG } from "@/app/lib/plan-config";
 
 /*
  * The facts the public site states about itself.
@@ -37,8 +38,16 @@ test("the FAQ states the free offer the product gives", () => {
   const free = faqQuestions().find((f) => f.q === "Is Jooma free to try?");
   expect(free).toBeDefined();
   expect(free!.a).toContain(`${inWords(FREE_TRIES_PER_DAY)} times a day`);
-  expect(free!.a).toContain(`${inWords(TRIAL_DAYS)} days free`);
+  expect(free!.a).toContain(`${inWords(TRIAL_DAYS)} days of Pro free`);
+  // Jooma 4.5: after the trial they stay on Free, which is a real plan.
+  expect(free!.a).toContain(`${PLAN_CONFIG.free.resources} resources every Sunday`);
   expect(free!.a).not.toMatch(/a month/);
+});
+
+test("the FAQ says resources, never credits", () => {
+  const text = faqQuestions().map((f) => `${f.q} ${f.a}`).join(" ");
+  expect(text).not.toMatch(/credit/i);
+  expect(faqQuestions().some((f) => f.q === "What is a resource?")).toBe(true);
 });
 
 test("the FAQ quotes prices from the plans, not typed figures", () => {

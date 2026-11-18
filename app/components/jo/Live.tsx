@@ -24,13 +24,13 @@ export function LiveConfirm({ onStart, onCancel }: { onStart: () => void; onCanc
       </b>
       <p>
         A real conversation: Jo answers as you speak, and you can interrupt. Live uses about{" "}
-        <strong>{perMinute} credits a minute</strong>, much more than typing.
+        <strong>{perMinute} resources a minute</strong>, much more than typing.
       </p>
       {meter.loading ? (
-        <p className={styles.muted}>Checking your credits</p>
+        <p className={styles.muted}>Checking your resources</p>
       ) : minutes !== null ? (
         <p className={styles.muted} data-testid="live-credits">
-          You have {meter.remaining.toLocaleString("en-GB")} credits left, about {minutes} {minutes === 1 ? "minute" : "minutes"} of Live.
+          You have {meter.remaining.toLocaleString("en-GB")} resources left, about {minutes} {minutes === 1 ? "minute" : "minutes"} of Live.
           Sessions end after 10 minutes.
         </p>
       ) : (

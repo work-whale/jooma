@@ -228,8 +228,9 @@ export default function TodayView({
   })();
 
   const nudge = plan.loading || locked ? null : planNudge(plan.plan);
-  // Stage 1: pictures are on every plan that has resources. Stage 2 gates them.
-  const picturesOn = credits.metered;
+  // Generated pictures: Pro, Max and the trial (Free and Standard get library
+  // photos). Before 4.5, any plan with a meter.
+  const picturesOn = credits.pictures;
 
   /*
    * Hand off to Ask Jo: create the chat, store the opening message, and go to
@@ -290,7 +291,7 @@ export default function TodayView({
         <section className={styles.lockedCard} data-testid="locked-card">
           <div className={styles.lockedHead}>
             <div>
-              <h2>{access.canStartTrial ? "Try everything free for 3 days" : "Choose a plan to carry on"}</h2>
+              <h2>{access.canStartTrial ? "Try 10 days of Pro free" : "Choose a plan to carry on"}</h2>
               <p>
                 {access.canStartTrial
                   ? "No card needed. All 35 tools, exports and resources."

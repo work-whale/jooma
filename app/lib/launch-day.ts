@@ -12,10 +12,7 @@
  * The SQL twin is launch_v45_move_accounts() in the plans engine migration,
  * which an admin runs on launch day. It is NOT run by the migration itself.
  *
- * E16 goes to the free_trial_pending group only, and only with consent. The
- * conservative reading, until the solicitor answers: "consented" means they
- * did not opt out under the soft opt-in Jooma used at signup before 4.5, and
- * the address is not on the opt-out list. The owner can narrow it further.
+ * E16 is a service notice to every group; see e16Group and e16Notice below.
  */
 
 export interface LaunchAccount {
@@ -49,16 +46,84 @@ export function launchMove(a: LaunchAccount, now: Date): LaunchMove {
   return "free_trial_pending";
 }
 
-export function e16Eligible(a: LaunchAccount, now: Date, opts: { consented: boolean }): boolean {
-  return launchMove(a, now) === "free_trial_pending" && opts.consented && !a.optedOut;
+/*
+ * E16, the launch-day notice. A SERVICE email (owner's decision, 18 Nov): each
+ * account is told what launch day did to it, so it goes to every group whatever
+ * their marketing consent, and it sells nothing. The group is read back from
+ * the profile after launch_v45_move_accounts has run.
+ */
+
+export interface LaunchNoticeRow {
+  plan: string | null;
+  isAdmin: boolean;
+  trialPending: boolean;
+  subscriptionStatus: string | null;
+  stripeSubscriptionId: string | null;
+  currentPeriodEnd: string | null;
+  deletionScheduled: boolean;
 }
 
-export const E16_COPY = {
-  subject: "Jooma now has a free plan",
-  preheader: "And 10 days of Pro, on us.",
-  body:
-    "You tried Jooma a while ago. It's now free to use: 50 resources every Sunday, all 35 tools, no card. " +
-    "Log in this week and you'll get 10 days of Pro first.",
-  button: "Log in",
-  path: "/login",
-} as const;
+/** Which notice an account gets, or null for none. */
+export function e16Group(r: LaunchNoticeRow, now: Date): LaunchMove | null {
+  if (r.isAdmin || r.deletionScheduled) return null;
+  if (r.trialPending) return "free_trial_pending";
+  const end = r.currentPeriodEnd ? new Date(r.currentPeriodEnd).getTime() : NaN;
+  if (r.subscriptionStatus === "trialing" && !r.stripeSubscriptionId && Number.isFinite(end) && end > now.getTime()) {
+    return "trial_runs_out";
+  }
+  if (PAID.has(r.plan ?? "")) return "keep";
+  // A 4.5 signup on its own trial needs no news about launch day.
+  if (r.plan === "pro_trial") return null;
+  return "free";
+}
+
+export interface LaunchNotice {
+  subject: string;
+  body: string;
+  button: string;
+  path: string;
+}
+
+const FREE_LINE = `50 resources every Sunday and all 35 tools, with no card`;
+
+export function e16Notice(group: LaunchMove, plan: string | null): LaunchNotice {
+  switch (group) {
+    case "free_trial_pending":
+      return {
+        subject: "Your Jooma account is now on Free",
+        body:
+          `Jooma has a Free plan now, and your account is on it: ${FREE_LINE}. ` +
+          "The next time you log in, you get 10 days of Pro first. Everything you made is still in your library.",
+        button: "Log in",
+        path: "/login",
+      };
+    case "free":
+      return {
+        subject: "Your Jooma account is now on Free",
+        body:
+          `Jooma has a Free plan now, and your account is on it: ${FREE_LINE}. ` +
+          "Everything you made is still in your library.",
+        button: "Open Jooma",
+        path: "/dashboard",
+      };
+    case "trial_runs_out":
+      return {
+        subject: "Your Jooma trial, and what comes after it",
+        body:
+          "Your free trial runs to its end, as promised. After that your account moves to Jooma's new Free plan: " +
+          `${FREE_LINE}. Nothing is charged.`,
+        button: "Open Jooma",
+        path: "/dashboard",
+      };
+    case "keep":
+      return {
+        subject: "Credits are now called resources",
+        body:
+          "Nothing changes about your plan or what you pay. What we used to call credits are now called resources, " +
+          "and your monthly allowance is the same number as before." +
+          (plan === "standard" ? " Your exports also no longer carry a watermark." : ""),
+        button: "Open Jooma",
+        path: "/dashboard",
+      };
+  }
+}

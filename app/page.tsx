@@ -14,17 +14,6 @@ import {
   website,
 } from "@/app/lib/seo/jsonld";
 import { faqQuestions } from "@/app/lib/landing/faq";
-import {
-  maxYearlySavingPercent,
-  planCardCta,
-  planCardName,
-  planCardPer,
-  planCardPrice,
-  planCardPricing,
-  planTrialLine,
-  TRIAL_CTA,
-  planFeatures,
-} from "@/app/lib/plan-copy";
 
 import { SquircleDefs } from "@/app/components/v2/Squircle";
 import LandingNav from "@/app/components/landing/v2/LandingNav";
@@ -40,7 +29,7 @@ import {
 import Staffroom from "@/app/components/landing/v2/Staffroom";
 import ToolsGrid from "@/app/components/landing/v2/ToolsGrid";
 import ValueBand from "@/app/components/landing/v2/ValueBand";
-import Pricing, { type PricingPlan } from "@/app/components/landing/v2/Pricing";
+import Pricing from "@/app/components/landing/v2/Pricing";
 import Faq from "@/app/components/landing/v2/Faq";
 import ClosingCta from "@/app/components/landing/v2/ClosingCta";
 import SiteFooter from "@/app/components/landing/v2/SiteFooter";
@@ -57,52 +46,6 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
 };
-
-/**
- * Standard, Pro and Max quote credits, derived from their spend ceilings rather
- * than typed here, so the page cannot advertise an allowance the guard does
- * not grant. Each starts with the free trial, stated under the button.
- *
- * Schools has no price: seats, pooled credits and central billing are not
- * built, so quoting a per teacher figure would be selling something that
- * cannot be bought. It is an enquiry card.
- */
-function pricingPlans(): PricingPlan[] {
-  // Names, prices, the per line and the feature lists all come from
-  // lib/plan-copy, which derives every figure from PLANS and the spend ceiling.
-  // They used to be written out here as well as in two other places, and
-  // /welcome still had "£7.99" typed as a literal string.
-  const card = (id: "standard" | "pro" | "max" | "school") => ({
-    id,
-    name: planCardName(id),
-    price: planCardPrice(id),
-    per: planCardPer(id),
-    features: planFeatures(id),
-    cta: planCardCta(id),
-  });
-  const paid = (id: "standard" | "pro" | "max") => ({
-    ...card(id),
-    cta: TRIAL_CTA,
-    trial: planTrialLine(id),
-    checkout: id,
-    // The same card billed yearly: the real price, twelve monthly payments
-    // struck through beside it, and what it works out at each month.
-    yearly: {
-      ...planCardPricing(id, "year"),
-      cta: TRIAL_CTA,
-      trial: planTrialLine(id, "year"),
-    },
-  });
-
-  return [
-    paid("standard"),
-    { ...paid("pro"), featured: true },
-    paid("max"),
-    // Rendered as a full width band under the three paid cards, not a fourth
-    // card beside them.
-    { ...card("school"), href: "/contact?type=school" },
-  ];
-}
 
 export default async function LandingPage({
   searchParams,
@@ -283,10 +226,8 @@ export default async function LandingPage({
 
         <ValueBand />
 
-        <Pricing
-          plans={pricingPlans()}
-          savePercent={maxYearlySavingPercent(["standard", "pro", "max"])}
-        />
+        {/* Jooma 4.5: four plans from plan-config (pricing-view). */}
+        <Pricing />
 
         <Faq />
 

@@ -7,6 +7,7 @@ import { canStartProTrial } from "@/app/lib/account-plan";
 import { trialEmailKey, isDisposableEmail } from "@/app/lib/trial-guard";
 import { trialEndsAt } from "@/app/lib/resource-periods";
 import { recordAppEvent } from "@/app/lib/app-events";
+import { cleanRefCode, isNewSignup } from "@/app/lib/app-event-rules";
 import { randomUUID } from "node:crypto";
 import { sendStartTrialEvent } from "@/app/lib/meta-capi";
 import { TRIAL_DAYS } from "@/app/lib/plans";
@@ -37,6 +38,13 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  // signup_completed (Step 7): /complete-profile calls this the moment a new
+  // account is finished. Recorded before the trial checks, so a refused trial
+  // still counts the signup. The ref code is whatever the browser kept from
+  // ?code= or ?ref=, cleaned; the rest is read from the profile.
+  const body = (await req.json().catch(() => null)) as { refCode?: unknown } | null;
+  await recordSignupCompleted(user.id, user.created_at, cleanRefCode(body?.refCode));
 
   const { data, error } = await supabase.rpc("my_account_access");
   if (error) {
@@ -155,5 +163,31 @@ async function reportStart(userId: string, email: string | null, req: Request) {
     });
   } catch (err) {
     console.error("[trial/start] StartTrial report failed", userId, err);
+  }
+}
+
+async function recordSignupCompleted(userId: string, createdAt: string | undefined, refCode: string | null) {
+  try {
+    const { count } = await supabaseAdmin
+      .from("app_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("name", "signup_completed");
+    if (!isNewSignup(createdAt, new Date(), (count ?? 0) > 0)) return;
+    const { data: p } = await supabaseAdmin
+      .from("profiles")
+      .select("utm_source, referrer_host, marketing_consent")
+      .eq("id", userId)
+      .maybeSingle();
+    await recordAppEvent(userId, "signup_completed", {
+      // Role and school are Phase 2 signup questions; not asked yet.
+      role: null,
+      school: null,
+      source: p?.utm_source ?? p?.referrer_host ?? null,
+      ref_code: refCode,
+      marketing_consent: Boolean(p?.marketing_consent),
+    });
+  } catch (err) {
+    console.warn("[trial/start] signup_completed not recorded", err);
   }
 }

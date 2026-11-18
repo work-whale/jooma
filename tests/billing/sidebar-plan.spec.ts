@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
+import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
- * The plan pill in the sidebar, above credits, and the button to /pricing.
+ * The plan pill in the sidebar, above resources, and the button to /pricing.
  *
  * Every teacher sees which plan they are on and has one obvious way to move
  * between plans, on every screen. The wording of the pill and the button is
@@ -25,10 +25,11 @@ test.describe("Sidebar plan", () => {
     await deleteTeacher(teacher);
   });
 
-  for (const [plan, label, cta] of [
-    ["standard", "Standard", "Upgrade"],
-    ["pro", "Pro", "Upgrade"],
-    ["max", "Max", "See plans"],
+  // Jooma 4.5 (planBlockV45): Standard is offered Pro; Pro and Max see all plans.
+  for (const [plan, label, cta, to] of [
+    ["standard", "Standard", "Upgrade", /\/pricing\?plan=pro$/],
+    ["pro", "Pro", "See plans", /\/pricing$/],
+    ["max", "Max", "See plans", /\/pricing$/],
   ] as const) {
     test(`a ${label} teacher sees ${label}, and ${cta} goes to the plans`, async ({ page }) => {
       await setPlan(teacher, plan, "paying");
@@ -46,21 +47,25 @@ test.describe("Sidebar plan", () => {
       expect(blockBox && meterBox && blockBox.y > meterBox.y).toBe(true);
 
       await block.getByRole("link", { name: cta }).click();
-      await expect(page).toHaveURL(/\/pricing$/);
+      await expect(page).toHaveURL(to);
       await expect(page.getByRole("button", { name: "Your plan" }).first()).toBeVisible();
     });
   }
 
-  test("a teacher with no plan is asked to choose one", async ({ page }) => {
+  test("a Free teacher sees Free, the weekly allowance, and Go Pro", async ({ page }) => {
+    // Jooma 4.5: nobody has "no plan". Free is a plan with 50 every Sunday.
+    await admin
+      .from("profiles")
+      .update({ plan: "free", subscription_status: null, stripe_subscription_id: null, current_period_end: null })
+      .eq("id", teacher.id);
+    await admin.rpc("resources_start", { p_uid: teacher.id, p_plan: "free" });
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
     const block = planBlock(page);
-    await expect(page.getByTestId("sidebar-plan-chip")).toHaveText("No plan");
-    await expect(block.getByRole("link", { name: "Choose a plan" })).toHaveAttribute(
-      "href",
-      "/pricing",
-    );
+    await expect(page.getByTestId("sidebar-plan-chip")).toHaveText("Free");
+    await expect(page.getByTestId("sidebar-plan-note")).toHaveText("50 resources every Sunday");
+    await expect(block.getByRole("link", { name: "Go Pro" })).toHaveAttribute("href", "/pricing?plan=pro");
   });
 
   test("a non ambassador sees the plain wordmark and no Ambassador item", async ({ page }) => {

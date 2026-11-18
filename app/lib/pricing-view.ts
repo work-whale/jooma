@@ -137,3 +137,104 @@ export function pickerDiffLine(from: AccountPlan, to: Paid): string {
   const lose = f.pictures && !t.pictures ? " and library photos instead of generated pictures" : "";
   return `${res}${lose}, from your next refill.`;
 }
+
+/* ── The pricing page cards (screenshot 2, with the red notes) ────────────── */
+
+export const PRICING_HEADLINE = "Start with ten days of Pro. No card, nothing to cancel.";
+export const PRICING_SUBHEAD =
+  "When the ten days are up your account moves to Free and keeps everything you made. Nobody gets locked out of their own work.";
+export const PRICING_NOTE = {
+  lead: "Prices include VAT.",
+  body:
+    `Every new account starts with ten days of Pro and ${n(TRIAL.resources)} resources, with no card needed. ` +
+    `When the ten days end your account moves to Free with ${PLAN_CONFIG.free.resources} resources a week, ` +
+    "and everything you have made stays in your library. Cancel a paid plan whenever you like.",
+} as const;
+export const SCHOOLS_ROW = {
+  name: "Schools",
+  per: "Priced by size, invoiced yearly",
+  features: ["Resources pooled across staff", "Admin dashboard and usage", "One invoice, one renewal"],
+  cta: "Talk to us",
+} as const;
+
+/** on: ticked. pic: ticked in orange (picture slides). off: a locked, greyed row. */
+export type FeatureKind = "on" | "pic" | "off";
+
+export interface PricingCard {
+  id: ColumnId;
+  name: string;
+  tagline: string;
+  price: string;
+  per: string;
+  note: string;
+  cta: string;
+  highlight: boolean;
+  badge: string | null;
+  features: { text: string; kind: FeatureKind }[];
+}
+
+const TAGLINES: Record<ColumnId, string> = {
+  free: "For trying it properly, with no deadline",
+  standard: "For one teacher, one class, every week",
+  pro: "For the planning that eats your evenings",
+  max: "For heads of department and heavy planners",
+};
+
+function cardFeatures(id: ColumnId): PricingCard["features"] {
+  const p = PLAN_CONFIG[id];
+  const on = (text: string) => ({ text, kind: "on" as const });
+  const off = (text: string) => ({ text, kind: "off" as const });
+  const pic = { text: "Picture slides in your decks", kind: "pic" as const };
+  const clean = on("Clean exports, no Jooma mark");
+  if (id === "free") {
+    return [
+      on(`${n(p.resources)} resources a week, refilled every Sunday`),
+      on(`All ${TOOL_COUNT} tools, nothing held back`),
+      on("Full curriculum alignment"),
+      on(`${p.refinesPerWeek} refines a week with Jo`),
+      off("Jooma mark on exports"),
+      off("No picture slides"),
+    ];
+  }
+  if (id === "max") return [on(`${n(p.resources)} resources a month`), pic, on("Everything in Pro")];
+  const rows: PricingCard["features"] = [on(`${n(p.resources)} resources a month`)];
+  if (id === "standard") rows.push(on(`All ${TOOL_COUNT} tools`), on("Full curriculum alignment"));
+  if (p.pictures) rows.push(pic);
+  rows.push(clean, on("Refining is always free"), on("Top up any time"));
+  if (!p.pictures) rows.push(off("No picture slides"));
+  return rows;
+}
+
+export function pricingCards(interval: Interval): PricingCard[] {
+  return (["free", "standard", "pro", "max"] as const).map((id) => {
+    const base = {
+      id,
+      name: NAMES[id],
+      tagline: TAGLINES[id],
+      highlight: id === "pro",
+      badge: id === "pro" ? "Recommended" : null,
+      features: cardFeatures(id),
+    };
+    if (id === "free") {
+      return { ...base, price: "£0", per: "a month", note: "No card, no end date", cta: "Start free" };
+    }
+    const p = PLAN_CONFIG[id];
+    const perMonth = yearlyPerMonth(p.yearly);
+    return {
+      ...base,
+      price: interval === "month" ? gbp(p.monthly) : gbp(perMonth),
+      per: "a month",
+      note: interval === "month" ? `or ${gbp(p.yearly)} a year, ${gbp(perMonth)} a month` : `${gbp(p.yearly)} billed yearly`,
+      cta: `Choose ${NAMES[id]}`,
+    };
+  });
+}
+
+/** The toggle's "Save up to N%": the best yearly saving, rounded. */
+export function maxYearlySaving(): number {
+  return Math.max(
+    ...(["standard", "pro", "max"] as const).map((id) =>
+      Math.round((yearlySaving(id) / (PLAN_CONFIG[id].monthly * 12)) * 100),
+    ),
+  );
+}

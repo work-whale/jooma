@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 // shimmer, for the same reason it bans the word "AI" in front of a teacher.
 import { Medal, Zap, Clock, X } from "lucide-react";
 import TopUpModal from "@/app/components/v2/TopUpModal";
+import { P3Sheet, P5Sheet } from "@/app/components/v45/PlanSheets";
+import { refreshResources } from "@/app/lib/useResources";
+import type { OutOfResources } from "@/app/lib/resources";
 
 // Centralised quota prompt. Rather than editing every tool form, this patches
 // window.fetch once and watches for the blocks the server returns when a gate
@@ -25,6 +28,10 @@ interface QuotaBlock {
   error?: string;
   action?: "upgrade" | "topup" | "wait";
   reason?: "plan_required" | "credit_exhausted" | "rate_limited";
+  /** Jooma 4.5: out of resources (P3 for Free and the trial, a top up for paid). */
+  prompt?: OutOfResources;
+  /** Jooma 4.5: generated pictures are locked on this plan. */
+  promptId?: "P5";
 }
 
 export default function UpgradeGate() {
@@ -48,6 +55,8 @@ export default function UpgradeGate() {
           .json()
           .catch(() => null);
         setBlock((body as QuotaBlock) ?? { action: "upgrade" });
+        // The balance the meter shows may be stale; read it again.
+        refreshResources();
       }
       return res;
     };
@@ -58,6 +67,11 @@ export default function UpgradeGate() {
 
   if (!block) return null;
 
+  // Jooma 4.5: the prompt sheets. The form underneath is never touched.
+  if (block.promptId === "P5") return <P5Sheet onClose={() => setBlock(null)} />;
+  if (block.prompt?.prompt === "P3") return <P3Sheet payload={block.prompt} onClose={() => setBlock(null)} />;
+  const v45 = block.prompt !== undefined;
+
   const isTopUp = block.action === "topup";
   const isWait = block.action === "wait" || block.reason === "rate_limited";
   const close = () => setBlock(null);
@@ -65,7 +79,9 @@ export default function UpgradeGate() {
   const title = isWait
     ? "Just a moment"
     : isTopUp
-      ? "You've used this month's AI allowance"
+      ? v45
+        ? "You've used this month's resources"
+        : "You've used this month's allowance"
       : "Choose a plan to start creating";
 
   // The server writes copy that already names the real numbers and reset time,
@@ -78,7 +94,7 @@ export default function UpgradeGate() {
     (isWait
       ? "You've hit the fair-use limit for this hour. Try again shortly."
       : isTopUp
-        ? "Top up to keep going. Extra credits last until the end of the month."
+        ? "Top up to keep going."
         : "You can still make slides, comprehensions and worksheets for free.");
 
   return (
@@ -154,7 +170,7 @@ export default function UpgradeGate() {
               className="flex-1 text-center py-2.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               style={{ backgroundColor: "var(--j-purple)", color: "#fff" }}
             >
-              Top up credits
+              Top up
             </button>
           ) : (
             /* "See plans", not "Upgrade to Pro": there is more than one plan to

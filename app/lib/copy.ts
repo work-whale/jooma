@@ -67,7 +67,7 @@ export const DEFAULTS: CopyMap = {
   "home.hero.sub":
     "Teaching resources for UK teachers. Type a topic and year group and Jooma makes the slides, worksheet, lesson plan or report. Try it free here, no sign up.",
   "home.hero.cta": "Start free trial",
-  "home.hero.reassure": "Three days free, no card needed.",
+  "home.hero.reassure": "Ten days of Pro free. No card, nothing to cancel.",
   "dash.empty.title": "Nothing here yet",
   "dash.empty.body": "Pick a tool and make your first resource. It takes about a minute.",
 };

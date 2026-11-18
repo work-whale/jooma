@@ -1,4 +1,5 @@
 import { PLANS, TRIAL_DAYS, planCredits } from "@/app/lib/plans";
+import { PLAN_CONFIG } from "@/app/lib/plan-config";
 import { maxYearlySavingPercent, planCardPrice } from "@/app/lib/plan-copy";
 import { FREE_TRIES_PER_DAY } from "@/app/lib/trial-limits";
 
@@ -38,15 +39,15 @@ export function faqQuestions(): FaqItem[] {
     },
     {
       q: "Is Jooma free to try?",
-      a: `Yes. You can make slides, a worksheet or a comprehension on this page with no account and no card, ${tries} times a day. Signing up then gives you ${trialDays} days free with every tool, and no card is needed. Nothing is charged unless you choose a plan.`,
+      a: `Yes. You can make slides, a worksheet or a comprehension on this page with no account and no card, ${tries} times a day. Signing up then gives you ${trialDays} days of Pro free, and no card is needed. After that you stay on Free, with ${PLAN_CONFIG.free.resources} resources every Sunday. Nothing is charged unless you choose a plan.`,
     },
     {
       q: "How much does Jooma cost?",
-      a: `Standard is ${planCardPrice("standard")} a month, Pro is ${planCardPrice("pro")} and Max is ${planCardPrice("max")}, with VAT included.${saving > 0 ? ` Paying yearly saves up to ${saving}%.` : ""} Every plan has all thirty five tools; the difference is how many credits you get each month. Schools and trusts are priced by size.`,
+      a: `Standard is ${planCardPrice("standard")} a month, Pro is ${planCardPrice("pro")} and Max is ${planCardPrice("max")}, with VAT included.${saving > 0 ? ` Paying yearly saves up to ${saving}%.` : ""} Every plan has all thirty five tools; the difference is how many resources you get each month. Schools and trusts are priced by size.`,
     },
     {
-      q: "What is a credit?",
-      a: `How we price the work. Bigger jobs such as a full teaching deck cost more than a single worksheet. Pro gives you ${proCredits} credits a month and you can top up any time. Editing or refining something you have already made never costs anything.`,
+      q: "What is a resource?",
+      a: `How we price the work. Bigger jobs such as a full teaching deck use more resources than a single worksheet. Pro gives you ${proCredits} resources a month and you can top up any time. Editing or refining something you have already made never uses any.`,
     },
     {
       q: "Is it aligned to the UK curriculum?",
@@ -70,7 +71,7 @@ export function faqQuestions(): FaqItem[] {
     },
     {
       q: "What if my school wants it for everyone?",
-      a: `Schools and trusts get pooled credits, an admin dashboard, usage reporting and one invoice. Get in touch and we will put a quote together. For a single teacher, Pro is £${proPrice} a month.`,
+      a: `Schools and trusts get pooled resources, an admin dashboard, usage reporting and one invoice. Get in touch and we will put a quote together. For a single teacher, Pro is £${proPrice} a month.`,
     },
   ];
 }

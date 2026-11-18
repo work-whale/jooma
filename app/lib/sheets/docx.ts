@@ -13,6 +13,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  Footer,
   HeightRule,
   ImageRun,
   Packer,
@@ -41,6 +42,7 @@ import { sequenceColumns } from "./markdown";
 import { LESSON_COLUMN_WEIGHT, lessonItems, lessonLabel } from "./unit";
 import { sheetImages } from "./normalize";
 import { clueText, crosswordCells, crosswordNumbers, placementCells, sortBank, sortRows } from "./puzzles";
+import { currentExportMark } from "../export-mark";
 import { isQuestion, type ImageBlock, type SheetBlock, type SheetDoc, type SheetQuestion } from "./types";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
@@ -123,7 +125,11 @@ export function fitPicture(size: ImageBlock["size"], width: number, height: numb
 const NONE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
 const noBorders = { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE };
 
-export async function buildSheetDocx(stored: SheetDoc): Promise<Blob> {
+/**
+ * `mark` is the Jooma mark for the plan in force at export time (Free and the
+ * Pro trial). It defaults to the one the account set when it loaded.
+ */
+export async function buildSheetDocx(stored: SheetDoc, mark: string | null = currentExportMark()): Promise<Blob> {
   // A document about one child goes out with the child's name in it.
   const doc = withPupilName(stored);
   const theme = getSheetTheme(doc.design.themeId);
@@ -760,6 +766,20 @@ export async function buildSheetDocx(stored: SheetDoc): Promise<Blob> {
             margin: { top: 1000, bottom: 1000, left: 1080, right: 1080 },
           },
         },
+        ...(mark
+          ? {
+              footers: {
+                default: new Footer({
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.RIGHT,
+                      children: [new TextRun({ text: mark, size: 16, italics: true, color: "8E87A4", font: FONT })],
+                    }),
+                  ],
+                }),
+              },
+            }
+          : {}),
         children,
       },
     ],

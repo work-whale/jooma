@@ -1,21 +1,22 @@
 import { test, expect, type Page } from "@playwright/test";
 import Stripe from "stripe";
-import { createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
+import { admin, createTeacher, deleteTeacher, signIn, type TestTeacher } from "../support/users";
 
 /*
- * Yearly billing.
+ * Yearly billing, Jooma 4.5.
  *
  * What this pins:
- *   1. Every plan chooser opens on Monthly, the price a teacher is charged.
- *      Yearly is one click away and shows the real yearly price with the
- *      monthly price struck through beside it and what it works out at each
- *      month. Switching back restores the monthly prices.
+ *   1. The pricing page and the plan picker open on Monthly, the price a
+ *      teacher is charged. Yearly is one click away and shows what it works out
+ *      at each month with the yearly total underneath. Switching back restores
+ *      the monthly prices.
  *   2. Checkout charges the yearly Stripe price when asked for it, and the
- *      monthly one when not. A caller that sends no interval (every caller
- *      written before yearly existed) must keep buying monthly.
+ *      monthly one when not. A caller that sends no interval, or a bad one,
+ *      must keep buying monthly.
  *
- * Reads the Stripe sandbox, so STRIPE_SECRET_KEY and the
- * STRIPE_PRICE_<PLAN>_MONTHLY / _YEARLY variables must be set.
+ * Prices are compared with plan_config (what checkout actually reads first),
+ * falling back to the env var, so a price change in the database does not
+ * break this test. Reads the Stripe sandbox, so STRIPE_SECRET_KEY must be set.
  */
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -31,78 +32,68 @@ async function checkoutPrice(page: Page, data: Record<string, unknown>): Promise
   return items.data[0]?.price?.id ?? "";
 }
 
+/** The price checkout should use: plan_config first, then the env var. */
+async function configuredPrice(plan: "standard" | "pro" | "max", interval: "month" | "year") {
+  const { data } = await admin
+    .from("plan_config")
+    .select("stripe_price_monthly, stripe_price_yearly")
+    .eq("plan_id", plan)
+    .single();
+  const fromDb = interval === "month" ? data?.stripe_price_monthly : data?.stripe_price_yearly;
+  const env = `STRIPE_PRICE_${plan.toUpperCase()}_${interval === "month" ? "MONTHLY" : "YEARLY"}`;
+  return (fromDb as string | null) ?? process.env[env];
+}
+
+/** A 4.5 Free teacher with no subscription: the picker's choosing mode. */
+async function onFree(t: TestTeacher) {
+  const { error } = await admin
+    .from("profiles")
+    .update({ plan: "free", subscription_status: null, stripe_subscription_id: null, current_period_end: null })
+    .eq("id", t.id);
+  if (error) throw error;
+  const start = await admin.rpc("resources_start", { p_uid: t.id, p_plan: "free" });
+  if (start.error) throw start.error;
+}
+
 test.describe("Yearly billing", () => {
   let teacher: TestTeacher;
 
   test.beforeEach(async () => {
     teacher = await createTeacher("Rowan");
+    await onFree(teacher);
   });
 
   test.afterEach(async () => {
     await deleteTeacher(teacher);
   });
 
-  test("the landing page opens on Monthly; Yearly strikes the monthly price through", async ({
+  test("the pricing page opens on Monthly; Yearly shows the per-month price and the yearly total", async ({
     page,
   }) => {
     await page.goto("/#pricing");
     const pricing = page.locator("#pricing");
+    const card = (id: string) => page.getByTestId(`pricing-${id}`);
 
-    // Monthly first: the price they will be charged, nothing struck through.
     await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
     await expect(pricing.getByRole("radio", { name: /Yearly/ })).not.toBeChecked();
-    await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();
-    await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
-    await expect(pricing.locator("s")).toHaveCount(0);
-    await expect(pricing.getByText(/billed yearly/)).toHaveCount(0);
-    // The saving still advertises Yearly from the toggle.
     await expect(pricing.getByText("Save up to 25%")).toBeVisible();
+    await expect(card("standard")).toContainText("£4.99");
+    await expect(card("pro")).toContainText("£7.99");
+    await expect(card("max")).toContainText("£13.99");
+    await expect(pricing.getByText(/billed yearly/)).toHaveCount(0);
 
     await pricing.locator("label", { hasText: "Yearly" }).click();
     await expect(pricing.getByRole("radio", { name: /Yearly/ })).toBeChecked();
+    await expect(card("standard")).toContainText("£47.99 billed yearly");
+    await expect(card("pro")).toContainText("£71.99 billed yearly");
+    await expect(card("max")).toContainText("£143.99 billed yearly");
+    // Free has no yearly price to show.
+    await expect(card("free")).toContainText("£0");
 
-    // Standard: the monthly price struck through, the yearly price per month
-    // beside it, and the yearly total underneath (the card layout since
-    // f93ef45, which replaced the struck yearly total).
-    await expect(pricing.locator("s", { hasText: "£4.99" })).toBeVisible();
-    await expect(pricing.getByText("£3.99", { exact: true })).toBeVisible();
-    await expect(pricing.getByText("£47.99 billed yearly")).toBeVisible();
-    await expect(pricing.getByText("3 days free, no card needed. £47.99 a year if you subscribe")).toBeVisible();
-
-    // Pro and Max, and the saving each one claims.
-    await expect(pricing.locator("s", { hasText: "£7.99" })).toBeVisible();
-    await expect(pricing.getByText("£71.99 billed yearly")).toBeVisible();
-    await expect(pricing.getByText("Save 25%", { exact: true })).toBeVisible();
-    await expect(pricing.locator("s", { hasText: "£14.99" })).toBeVisible();
-    await expect(pricing.getByText("£143.99 billed yearly")).toBeVisible();
-
-    // Back to Monthly: the prices as they always were, nothing struck through.
     await pricing.locator("label", { hasText: "Monthly" }).click();
     await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
-    await expect(pricing.getByText("£4.99", { exact: true })).toBeVisible();
-    await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
-    await expect(pricing.locator("s")).toHaveCount(0);
-  });
-
-  test("/welcome opens on Monthly too, with Yearly one click away", async ({ page }) => {
-    await signIn(page, teacher);
-    await page.goto("/welcome");
-
-    await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
-    await expect(page.getByText(/billed yearly/)).toHaveCount(0);
-
-    await page.locator("label", { hasText: "Yearly" }).click();
-    await expect(page.getByText("£71.99 billed yearly")).toBeVisible();
-    await expect(page.locator("s", { hasText: "£7.99" })).toBeVisible();
-  });
-
-  test("the plans page opens on Monthly for someone with no plan", async ({ page }) => {
-    await signIn(page, teacher);
-    await page.goto("/pricing");
-
-    await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
-    await expect(page.getByText("You will be charged £14.99 today, then £14.99 a month")).toBeVisible();
-    await expect(page.getByText("You will be charged £143.99 today, then £143.99 a year")).toHaveCount(0);
+    await expect(card("max")).toContainText("£13.99");
+    await expect(pricing.getByText(/billed yearly/)).toHaveCount(0);
   });
 
   test("before JavaScript runs, Monthly is the option painted checked", async ({ browser }) => {
@@ -113,46 +104,51 @@ test.describe("Yearly billing", () => {
       const pricing = page.locator("#pricing");
       await expect(pricing.getByRole("radio", { name: "Monthly" })).toBeChecked();
       await expect(pricing.getByRole("radio", { name: /Yearly/ })).not.toBeChecked();
-      await expect(pricing.getByText("3 days free, no card needed. £4.99 a month if you subscribe")).toBeVisible();
+      await expect(page.getByTestId("pricing-max")).toContainText("£13.99");
     } finally {
       await context.close();
     }
   });
 
-  test("choosing a plan from the default sends the monthly price to checkout", async ({ page }) => {
+  test("the picker opens on Monthly and sends the interval that is showing", async ({ page }) => {
     await signIn(page, teacher);
+    const sent: { plan?: string; interval?: string }[] = [];
+    await page.route("**/api/stripe/checkout", async (route) => {
+      sent.push(route.request().postDataJSON());
+      await route.fulfill({ json: { url: "/pricing?checkout=cancelled" } });
+    });
+
     await page.goto("/pricing");
     await expect(page.getByRole("radio", { name: "Monthly" })).toBeChecked();
-
-    // Catch the request the card makes rather than following it to Stripe.
-    const sent = page.waitForRequest(
-      (r) => r.url().endsWith("/api/stripe/checkout") && r.method() === "POST",
-    );
-    await page.getByRole("button", { name: /^(Choose|Get|Start) / }).first().click();
-    const body = (await sent).postDataJSON() as { interval?: string };
+    await page.getByRole("button", { name: "Continue with Pro" }).click();
+    await expect.poll(() => sent.length).toBe(1);
     // Strictly "month": a missing interval would also bill monthly, but would
-    // mean the card stopped saying what it was choosing.
-    expect(body.interval).toBe("month");
+    // mean the picker stopped saying what it was choosing.
+    expect(sent[0]).toEqual({ plan: "pro", interval: "month" });
+
+    await page.goto("/pricing");
+    await page.locator("label", { hasText: "Yearly" }).click();
+    await page.getByRole("button", { name: "Continue with Pro" }).click();
+    await expect.poll(() => sent.length).toBe(2);
+    expect(sent[1]).toEqual({ plan: "pro", interval: "year" });
   });
 
   test("checkout charges the yearly price when yearly is chosen", async ({ page }) => {
     await signIn(page, teacher);
-    expect(await checkoutPrice(page, { plan: "pro", interval: "year" })).toBe(
-      process.env.STRIPE_PRICE_PRO_YEARLY,
-    );
+    expect(await checkoutPrice(page, { plan: "pro", interval: "year" })).toBe(await configuredPrice("pro", "year"));
     expect(await checkoutPrice(page, { plan: "standard", interval: "year" })).toBe(
-      process.env.STRIPE_PRICE_STANDARD_YEARLY,
+      await configuredPrice("standard", "year"),
     );
   });
 
   test("checkout stays monthly when no interval, or a bad one, is sent", async ({ page }) => {
     await signIn(page, teacher);
-    expect(await checkoutPrice(page, { plan: "max" })).toBe(process.env.STRIPE_PRICE_MAX_MONTHLY);
-    expect(await checkoutPrice(page, { plan: "max", interval: "fortnight" })).toBe(
-      process.env.STRIPE_PRICE_MAX_MONTHLY,
-    );
+    const maxMonthly = await configuredPrice("max", "month");
+    expect(maxMonthly).toBeTruthy();
+    expect(await checkoutPrice(page, { plan: "max" })).toBe(maxMonthly);
+    expect(await checkoutPrice(page, { plan: "max", interval: "fortnight" })).toBe(maxMonthly);
     expect(await checkoutPrice(page, { plan: "standard", interval: "month" })).toBe(
-      process.env.STRIPE_PRICE_STANDARD_MONTHLY,
+      await configuredPrice("standard", "month"),
     );
   });
 });

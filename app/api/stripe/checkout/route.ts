@@ -4,6 +4,8 @@ import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe, priceIdFor, isPaidPlanId } from "@/app/lib/stripe";
 import { isBillingInterval } from "@/app/lib/plans";
+import { recordAppEvent } from "@/app/lib/app-events";
+import { sourcePrompt } from "@/app/lib/app-event-rules";
 import { discountOfPromotion } from "@/app/lib/ambassador-discount";
 import { PLANS } from "@/app/lib/plans";
 import {
@@ -49,6 +51,14 @@ export async function POST(req: NextRequest) {
   // sends them on into the product afterwards, and back to the plan choice if
   // they leave Stripe. Anything else keeps the billing page round trip.
   const fromWelcome = (body as { from?: unknown } | null)?.from === "welcome";
+  // Jooma 4.5 Step 7: which prompt led here, if any (allowlisted).
+  const fromPrompt = sourcePrompt((body as { sourcePrompt?: unknown } | null)?.sourcePrompt);
+
+  /** A session opened: record checkout_started, then hand back its URL. */
+  const opened = async (url: string | null) => {
+    await recordAppEvent(user.id, "checkout_started", { plan, interval, source_prompt: fromPrompt });
+    return NextResponse.json({ url });
+  };
 
   // Reuse the customer we already linked, so a returning subscriber doesn't get
   // a duplicate Stripe customer.
@@ -244,7 +254,7 @@ export async function POST(req: NextRequest) {
             metadata: { ...base.subscription_data.metadata, trialOffer: coupon },
           },
         });
-        return NextResponse.json({ url: session.url });
+        return opened(session.url);
       } catch (offerErr) {
         // Never block a sale over the discount: carry on to the normal paths.
         console.warn(
@@ -259,7 +269,7 @@ export async function POST(req: NextRequest) {
         ...base,
         allow_promotion_codes: promoBox,
       });
-      return NextResponse.json({ url: session.url });
+      return opened(session.url);
     }
 
     try {
@@ -267,7 +277,7 @@ export async function POST(req: NextRequest) {
         ...base,
         discounts: ambassadorDiscounts || undefined,
       });
-      return NextResponse.json({ url: session.url });
+      return opened(session.url);
     } catch (discountErr) {
       // THE DELAYED SUBSCRIBER.
       //
@@ -297,7 +307,7 @@ export async function POST(req: NextRequest) {
         ...base,
         allow_promotion_codes: promoBox,
       });
-      return NextResponse.json({ url: session.url });
+      return opened(session.url);
     }
   } catch (err) {
     console.error("[stripe/checkout]", err);

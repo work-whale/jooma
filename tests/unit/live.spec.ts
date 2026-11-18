@@ -95,7 +95,7 @@ test("a spent budget makes Jo say goodbye, then ends the call", async () => {
   const { socket, calls, done, reply } = harness(0.01);
   socket.emit("open");
   reply(600);
-  expect(socket.sent.some((m) => m.includes("response.create") && m.includes("credits"))).toBe(true);
+  expect(socket.sent.some((m) => m.includes("response.create") && m.includes("resources"))).toBe(true);
   expect(calls.hangUps).toBe(0);
   // The goodbye itself finishing ends the call.
   reply(50);
