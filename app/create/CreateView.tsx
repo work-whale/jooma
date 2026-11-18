@@ -318,7 +318,7 @@ export default function CreateView({
           {account ? (
             <p>
               Three free tries a day. Choose a plan to present, export and keep everything you make
-              here. It is kept for thirty days, and moves into your library when you do.
+              here. It is kept for fourteen days, and moves into your library when you do.
             </p>
           ) : (
             <p>

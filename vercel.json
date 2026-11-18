@@ -17,6 +17,10 @@
       "schedule": "15 3 * * *"
     },
     {
+      "path": "/api/cron/guest-cleanup",
+      "schedule": "45 3 * * *"
+    },
+    {
       "path": "/api/cron/lifecycle",
       "schedule": "*/15 * * * *"
     }

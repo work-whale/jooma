@@ -8,7 +8,7 @@
 //
 // Accepted only for the guest who started the run, only after the server itself
 // recorded that the run finished, only until it is claimed, and only for as
-// long as "Your creations" on /create lists it (thirty days, the same as the
+// long as "Your creations" on /create lists it (TRIAL_RETENTION_DAYS, the same as the
 // guest cookie and the purge), so a deck reopened from there can still be
 // edited. So the one thing a visitor can do with this is store their own deck,
 // which is no more than they could put in their own account by hand after

@@ -12,14 +12,16 @@
 // Pure: no cookies() call, no env read. The request-bound half is guest.ts,
 // which passes the secret in. That keeps these testable in tests/unit.
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { TRIAL_RETENTION_MS } from "./trial-retention";
 
 export const GUEST_COOKIE = "jooma_guest";
 /** Readable by the page, carries no identity: it only says "there is guest
  *  work waiting", so the signed in shell knows to call the claim route rather
  *  than calling it on every page load for every teacher. */
 export const GUEST_WORK_FLAG = "jooma_guest_has_work";
-/** As long as the work itself is kept. Unclaimed rows are purged at 30 days. */
-export const GUEST_MAX_AGE_S = 60 * 60 * 24 * 30;
+/** As long as the work itself is kept: TRIAL_RETENTION_DAYS, after which the
+ *  nightly guest cleanup clears the try and reclaims its pictures. */
+export const GUEST_MAX_AGE_S = TRIAL_RETENTION_MS / 1000;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 

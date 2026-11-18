@@ -36,6 +36,7 @@ import "server-only";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe } from "@/app/lib/stripe";
 import { extractStorageRefs, type StorageRef } from "@/app/lib/storageRefs";
+import { sweepablePaths } from "@/app/lib/storageSweep";
 import { sendTemplate } from "@/app/lib/email";
 
 /** Thrown when the deletion must not proceed. The message lands in failure_note. */
@@ -44,18 +45,10 @@ export class DeletionAbortedError extends Error {}
 /**
  * Every Storage object this account owns, across all four buckets.
  *
- * Deliberately NOT using the storage_paths_in_use RPC that /api/resources/delete
- * relies on. That function answers "is anything OTHER than this one resource
- * still pointing at these files", by excluding a single id. Here every resource
- * the account owns is going, so the honest exclusion list is all of them, and
- * the RPC cannot express that -- called with a single id it would report this
- * user's own other rows as live references and keep the files forever.
- *
- * Sweeping unconditionally is safe because resources are user-isolated
- * (20260601000000_presentations_user_isolation.sql): an object referenced only
- * by this user's rows is referenced by nobody else's. The one thing that would
- * break that is a share which copies a URL rather than the file, so if shares
- * ever start doing that, this function is where it has to be handled.
+ * These are only CANDIDATES. Files stopped being one user's property in Nov 2026
+ * (content-addressed uploads, merged duplicates), so sweepStorage() asks
+ * storage_paths_in_use(p_exclude_user) which of them anybody else still uses
+ * before removing anything.
  */
 async function collectStorageRefs(userId: string): Promise<StorageRef[]> {
   const refs: StorageRef[] = [];
@@ -113,15 +106,35 @@ async function collectStorageRefs(userId: string): Promise<StorageRef[]> {
  * asked for 30 days ago. A leaked file costs pennies; a deletion that silently
  * never completes is a broken promise and an ICO complaint.
  */
-async function sweepStorage(refs: StorageRef[]): Promise<number> {
+async function sweepStorage(refs: StorageRef[], userId: string): Promise<number> {
   if (refs.length === 0) return 0;
 
-  const byBucket = new Map<string, string[]>();
-  for (const ref of refs) {
-    const list = byBucket.get(ref.bucket) ?? [];
-    list.push(ref.path);
-    byBucket.set(ref.bucket, list);
+  // Since Nov 2026 one file can belong to many users: uploads are named by
+  // content and duplicates were merged, so a Pixabay photo on this teacher's
+  // slide may be the very same object on somebody else's. Ask which files
+  // anybody OTHER than this user still uses, and keep those. A failed check
+  // keeps everything (sweepablePaths(null)).
+  let inUse: Set<string> | null = null;
+  const candidates = refs.map((r) => r.path);
+  const live = new Set<string>();
+  let checkFailed = false;
+  for (let i = 0; i < candidates.length; i += 200) {
+    // In batches: each path is a LIKE scan over every deck, so one call with a
+    // heavy account's thousands of paths could hit the statement timeout.
+    const { data, error } = await supabaseAdmin.rpc("storage_paths_in_use", {
+      p_paths: candidates.slice(i, i + 200),
+      p_exclude_user: userId,
+    });
+    if (error) {
+      console.error("[account-deletion] reference check failed, keeping files", userId, error);
+      checkFailed = true;
+      break;
+    }
+    for (const row of (data ?? []) as { path: string }[]) live.add(row.path);
   }
+  if (!checkFailed) inUse = live;
+
+  const byBucket = sweepablePaths(refs, inUse);
 
   let removed = 0;
   for (const [bucket, paths] of byBucket) {
@@ -256,7 +269,7 @@ export async function hardDeleteAccount(
   // 3b. The files. Best effort, after the rows are gone.
   let filesRemoved = 0;
   try {
-    filesRemoved = await sweepStorage(refs);
+    filesRemoved = await sweepStorage(refs, userId);
   } catch (err) {
     console.error("[account-deletion] storage sweep failed", userId, err);
   }
