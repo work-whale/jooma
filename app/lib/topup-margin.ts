@@ -35,3 +35,18 @@ export function topupEconomics(
   const margin = Number.isFinite(price) && price > 0 ? (price - cost) / price : null;
   return { cost, margin };
 }
+
+/** Every topup_packs.kind the admin may save (the table's own check). */
+const TOPUP_KINDS: ReadonlySet<string> = new Set(["resources_topup", "credit_gbp", "resource", "ai_image"]);
+
+export function isTopupKind(kind: string): boolean {
+  return TOPUP_KINDS.has(kind);
+}
+
+/** What the editor offers for a NEW pack. "Resources" is the 4.5 kind; the old
+ *  per-generation "resource" packs can still be edited but not created. */
+export const NEW_PACK_KINDS: readonly { value: string; label: string }[] = [
+  { value: "resources_topup", label: "Resources" },
+  { value: "credit_gbp", label: "AI credit (£ of model spend)" },
+  { value: "ai_image", label: "AI-image slideshows" },
+];

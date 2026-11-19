@@ -39,3 +39,26 @@ test("resource packs show their real, positive margins", async ({ page }) => {
     await table.screenshot({ path: "docs/screenshots/2026-11-19-topup-margins/after.png" });
   }
 });
+
+test("a 4.5 resource pack can be saved from admin (regression)", async ({ page }) => {
+  // Saving used to fail with "Unknown pack type resources_topup", so the
+  // page could never give a 4.5 pack its Stripe price. Same name, price and
+  // units: the route skips Stripe when the price is unchanged and set.
+  const { data: pack, error } = await admin
+    .from("topup_packs")
+    .select("id, name, price_gbp, unit, stripe_price_id, available_to")
+    .eq("kind", "resources_topup")
+    .not("stripe_price_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  test.skip(!pack, "No priced resource pack on staging");
+
+  await signIn(page, owner!);
+  const res = await page.request.post("/api/admin/topups/pack", {
+    data: { id: pack!.id, name: pack!.name, priceGbp: Number(pack!.price_gbp), unit: pack!.unit, availableTo: pack!.available_to },
+  });
+  expect(res.status(), await res.text()).toBe(200);
+  const { data: after } = await admin.from("topup_packs").select("stripe_price_id").eq("id", pack!.id).single();
+  expect(after!.stripe_price_id).toBe(pack!.stripe_price_id);
+});

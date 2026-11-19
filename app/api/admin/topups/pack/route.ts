@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isTopupKind } from "@/app/lib/topup-margin";
 import { requireAdminRoute } from "@/app/lib/auth/admin-route";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { replacePrice, assertPriceUsable, assertSaneAmount } from "@/app/lib/stripe-prices";
@@ -13,8 +14,6 @@ import { SELECTABLE_PLAN_IDS } from "@/app/lib/plans";
 //
 // Runs through the service role, so requireAdminRoute IS the security boundary.
 
-/** Pools a pack can grant. Only credit_gbp has a live purchase path today. */
-const KINDS = new Set(["credit_gbp", "resource", "ai_image"]);
 
 export async function POST(req: NextRequest) {
   const gate = await requireAdminRoute("change_plan");
@@ -102,7 +101,7 @@ export async function POST(req: NextRequest) {
   }
 
   const kind = existing?.kind ?? String(body.kind ?? "credit_gbp");
-  if (!KINDS.has(kind)) {
+  if (!isTopupKind(kind)) {
     return NextResponse.json({ error: `Unknown pack type "${kind}".` }, { status: 400 });
   }
 

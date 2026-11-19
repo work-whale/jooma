@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/auth/client";
-import { topupEconomics } from "@/app/lib/topup-margin";
+import { NEW_PACK_KINDS, topupEconomics } from "@/app/lib/topup-margin";
 import {
   PLANS,
   PLAN_CREDITS,
@@ -441,9 +441,11 @@ function EditPackModal({
             className={fieldClass}
             style={fieldStyle}
           >
-            <option value="credit_gbp">AI credit (£ of model spend)</option>
-            <option value="resource">Resources</option>
-            <option value="ai_image">AI-image slideshows</option>
+            {NEW_PACK_KINDS.map((k) => (
+              <option key={k.value} value={k.value}>
+                {k.label}
+              </option>
+            ))}
           </select>
         </Field>
       )}

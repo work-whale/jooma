@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { topupEconomics } from "@/app/lib/topup-margin";
+import { NEW_PACK_KINDS, isTopupKind, topupEconomics } from "@/app/lib/topup-margin";
 
 /*
  * Regression (19 Nov): Admin, Top-ups showed every resource pack at a loss
@@ -45,4 +45,16 @@ test("the old generation-count pack keeps the per-generation cost", () => {
   const old = topupEconomics("resource", 100, 2);
   const fresh = topupEconomics("resources_topup", 100, 2);
   expect(old.cost!).toBeGreaterThan(fresh.cost!);
+});
+
+/*
+ * Regression (19 Nov): the admin save route only knew credit_gbp, resource
+ * and ai_image, so saving a 4.5 pack (resources_topup) failed with "Unknown
+ * pack type" and the admin page could never give it a Stripe price. A new
+ * pack from the editor's "Resources" option must also be the 4.5 kind.
+ */
+test("every pack kind on sale can be saved, and nothing else", () => {
+  for (const k of ["resources_topup", "credit_gbp", "resource", "ai_image"]) expect(isTopupKind(k), k).toBe(true);
+  for (const k of ["", "resources", "Resource", "credits"]) expect(isTopupKind(k), k).toBe(false);
+  expect(NEW_PACK_KINDS.find((k) => k.label === "Resources")?.value).toBe("resources_topup");
 });
