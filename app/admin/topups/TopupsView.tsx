@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/auth/client";
-import { COST } from "@/app/lib/costs";
+import { topupEconomics } from "@/app/lib/topup-margin";
 import {
   PLANS,
   PLAN_CREDITS,
@@ -76,20 +76,6 @@ export interface RecentTopup {
   status: string;
   stripe_payment_intent_id: string | null;
   created_at: string;
-}
-
-/**
- * What a pack costs Jooma to fulfil, from the modelled cost sheet.
- *
- * Returns null for credit packs: their unit is pence of AI spend, not a count of
- * anything, so multiplying it by a per-resource cost produces a number with no
- * meaning. A £1.50 credit buys £1.50 of model spend — the margin is zero by
- * construction, and inventing a percentage here would be worse than showing
- * nothing.
- */
-function packCost(pack: TopupPack): number | null {
-  if (pack.kind === "credit_gbp") return null;
-  return pack.kind === "ai_image" ? pack.unit * COST.deckAI : pack.unit * COST.text;
 }
 
 export default function TopupsView({
@@ -177,9 +163,8 @@ export default function TopupsView({
             </thead>
             <tbody>
               {packs.map((p) => {
-                const cost = packCost(p);
                 const price = Number(p.price_gbp);
-                const margin = cost != null && price > 0 ? (price - cost) / price : null;
+                const { cost, margin } = topupEconomics(p.kind, Number(p.unit), price);
                 return (
                   <Tr key={p.id}>
                     <Td>
@@ -227,7 +212,7 @@ export default function TopupsView({
                           —
                         </span>
                       ) : (
-                        <Tag tone={margin < 0.35 ? "warn" : "ok"}>
+                        <Tag tone={margin < 0 ? "danger" : margin < 0.35 ? "warn" : "ok"}>
                           {Math.round(margin * 100)}%
                         </Tag>
                       )}
@@ -260,6 +245,9 @@ export default function TopupsView({
           £1.50 of model spend, so it has no margin to report. It exists to stop heavy users
           hitting a wall mid-lesson, not to make money. Teachers see <b>credits</b>, never the
           pound figure. A pack needs a Stripe price before checkout can charge for it.
+          <br />
+          &quot;Costs us&quot; for a resource pack is the most it can cost: every resource used, at
+          0.15p each, plus Stripe&apos;s card fee (1.5% + 20p).
         </CardFooter>
       </Card>
 
@@ -389,13 +377,7 @@ function EditPackModal({
     }
   };
 
-  const cost = isCredit
-    ? null
-    : kind === "ai_image"
-      ? Number(unit) * COST.deckAI
-      : Number(unit) * COST.text;
-  const margin =
-    cost != null && Number(price) > 0 ? (Number(price) - cost) / Number(price) : null;
+  const { cost, margin } = topupEconomics(kind, Number(unit), Number(price));
 
   const priceChanged = !pack || Number(pack.price_gbp) !== Number(price);
 

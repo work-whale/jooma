@@ -474,7 +474,7 @@ export const TOPUP_PENCE = 150;
 // place the two units meet.
 
 /** Pence of AI spend per teacher-facing credit. */
-const PENCE_PER_CREDIT = 0.15;
+export const PENCE_PER_CREDIT = 0.15;
 
 /**
  * A month's Pro allowance in credits, and one top-up, both derived from the
