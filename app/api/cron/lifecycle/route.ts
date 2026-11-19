@@ -3,7 +3,9 @@ import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { sendBroadcastEmail } from "@/app/lib/email";
 import { lifecycleHtml } from "@/app/lib/lifecycle-html";
-import { dueEmails, eventEmails, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
+import { dropOptedOutMarketing, dueEmails, e11Due, eventEmails, isMarketingKey, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
+import { ideaFor, pickIdea, type Idea } from "@/app/lib/e10-ideas";
+import { signUnsubToken, unsubSecret } from "@/app/lib/unsub-link";
 import { renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-emails";
 import { planInForce, trialDateLong } from "@/app/lib/account-plan";
 import { MINUTES_SAVED_PER_BAND, allowanceFor, type AccountPlan } from "@/app/lib/plan-config";
@@ -49,6 +51,7 @@ interface Row {
   current_period_end: string | null;
   marketing_consent: boolean | null;
   sunday_emails: boolean | null;
+  last_seen_at: string | null;
 }
 
 const html = lifecycleHtml;
@@ -59,15 +62,27 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://jooma.ai";
   const started = Date.now();
   const now = new Date();
+  const unsubKey = unsubSecret(process.env);
+  if (!unsubKey) console.warn("[cron/lifecycle] no unsubscribe secret, marketing emails are skipped");
   let due = 0;
   let sent = 0;
   let failed = 0;
+  // E10: this UK week's idea, from the admin list (lifecycle_ideas), or the
+  // defaults in e10-ideas.ts when the list is empty or unreadable.
+  const { data: ideaRows } = await supabaseAdmin
+    .from("lifecycle_ideas")
+    .select("text, tool_slug")
+    .eq("kind", "e10")
+    .eq("active", true)
+    .order("sort");
+  const ideas: Idea[] = (ideaRows ?? []).map((r) => ({ text: r.text as string, toolSlug: r.tool_slug as string }));
+  const idea = ideaFor(pickIdea(ideas, now));
 
   for (let from = 0; Date.now() - started < BUDGET_MS; from += PAGE) {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select(
-        "id, first_name, plan, created_at, trial_ends_at, free_trial_started_at, subscription_status, stripe_subscription_id, current_period_end, marketing_consent, sunday_emails",
+        "id, first_name, plan, created_at, trial_ends_at, free_trial_started_at, subscription_status, stripe_subscription_id, current_period_end, marketing_consent, sunday_emails, last_seen_at",
       )
       .in("plan", ["pro_trial", "free"])
       .is("suspended_at", null)
@@ -119,7 +134,7 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
     }
     const today = DAY_KEY.format(now);
     const marketingToday = new Set(
-      (log ?? []).filter((l) => /^E9[ab]/.test(l.key) && l.sent_at && DAY_KEY.format(new Date(l.sent_at)) === today).map((l) => l.user_id),
+      (log ?? []).filter((l) => isMarketingKey(l.key) && l.sent_at && DAY_KEY.format(new Date(l.sent_at)) === today).map((l) => l.user_id),
     );
     const sentKeys = new Map<string, Set<string>>();
     for (const l of log ?? []) {
@@ -142,14 +157,26 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
         ranOutAt: ranOut.get(r.id) ?? [],
         offerOpenedAt: offers.get(r.id)?.opened ?? null,
         offerEndsAt: offers.get(r.id)?.ends ?? null,
+        lastSeenAt: r.last_seen_at ? new Date(r.last_seen_at) : null,
       };
-      const emails = dueEmails(t, sentKeys.get(r.id) ?? new Set(), now);
+      let emails = dueEmails(t, sentKeys.get(r.id) ?? new Set(), now);
       due += emails.length;
       if (!enabled || emails.length === 0) continue;
 
       const { data: auth } = await supabaseAdmin.auth.admin.getUserById(r.id);
       const to = auth?.user?.email;
       if (!to) continue;
+      // Marketing (E9a, E9b): never to an address on the opt-out list, and
+      // never without a signed unsubscribe link.
+      if (emails.some((e) => e.kind === "marketing")) {
+        const { data: optOut } = await supabaseAdmin
+          .from("email_opt_outs")
+          .select("email")
+          .eq("email", to.toLowerCase())
+          .maybeSingle();
+        emails = dropOptedOutMarketing(emails, Boolean(optOut) || !unsubKey);
+      }
+      const unsubToken = unsubKey ? signUnsubToken(r.id, unsubKey) : undefined;
       const { count } = await supabaseAdmin
         .from("tool_runs")
         .select("id", { count: "exact", head: true })
@@ -171,36 +198,113 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
         offerEnds: t.offerEndsAt ? trialDateLong(t.offerEndsAt) : undefined,
         firstTitle: madeBy.get(r.id)?.first ?? undefined,
         offerEndsDay: t.offerEndsAt ? trialDateLong(t.offerEndsAt).split(" ")[0] : undefined,
+        idea,
       };
 
       for (const e of emails) {
-        // The log row is the lock: a second run cannot insert the same key.
-        const { error: lockError } = await supabaseAdmin
-          .from("lifecycle_email_log")
-          .insert({ user_id: r.id, key: e.key, status: "sent" });
-        if (lockError) continue;
-        const m = renderLifecycleEmail(e.id, vars);
-        const result = await sendBroadcastEmail(
-          to,
-          { subject: m.subject, html: html(m.subject, m.body, m.button, site + m.path, site + m.footerPath), text: `${m.body}\n\n${m.button}: ${site}${m.path}` },
-          { purpose: "lifecycle", oneClickUrl: null },
-        );
-        if (result.status === "sent") sent += 1;
-        else {
-          failed += 1;
-          await supabaseAdmin
-            .from("lifecycle_email_log")
-            .update({ status: result.status === "skipped" ? "skipped" : "failed" })
-            .eq("user_id", r.id)
-            .eq("key", e.key);
-        }
+        const result = await sendOne(r.id, to, e.key, renderLifecycleEmail(e.id, vars, { unsubToken }), site);
+        if (result === "sent") sent += 1;
+        else if (result === "failed") failed += 1;
       }
     }
     if (rows.length < PAGE) break;
   }
 
   const events = await sendEventEmails(enabled, site, now);
-  return { enabled, due: due + events.due, sent: sent + events.sent, failed: failed + events.failed };
+  const standard = await sendStandardEmails(enabled, site, now);
+  return {
+    enabled,
+    due: due + events.due + standard.due,
+    sent: sent + events.sent + standard.sent,
+    failed: failed + events.failed + standard.failed,
+  };
+}
+
+/**
+ * E11 (Phase 2): Standard with 80% of the allowance used and more than 7 days
+ * to the refill, once per allowance period. An account email. The spend is
+ * read with resources_spent() under the service role, the same sum
+ * my_resources() uses; only accounts without this period's E11 are read.
+ */
+async function sendStandardEmails(
+  enabled: boolean,
+  site: string,
+  now: Date,
+): Promise<{ due: number; sent: number; failed: number }> {
+  let due = 0;
+  let sent = 0;
+  let failed = 0;
+  const { data: rows, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, first_name")
+    .eq("plan", "standard")
+    .is("suspended_at", null)
+    .is("deletion_scheduled_for", null)
+    .limit(5000);
+  if (error) throw new Error(error.message);
+  const ids = (rows ?? []).map((r) => r.id as string);
+  if (ids.length === 0) return { due, sent, failed };
+
+  const [{ data: accounts }, { data: log }] = await Promise.all([
+    supabaseAdmin.from("resource_accounts").select("user_id, plan, allowance, period_start, next_refill_at").in("user_id", ids),
+    supabaseAdmin.from("lifecycle_email_log").select("user_id, key").in("user_id", ids).like("key", "E11:%"),
+  ]);
+  const sentKeys = new Map<string, Set<string>>();
+  for (const l of log ?? []) {
+    if (!sentKeys.has(l.user_id)) sentKeys.set(l.user_id, new Set());
+    sentKeys.get(l.user_id)!.add(l.key);
+  }
+  const names = new Map((rows ?? []).map((r) => [r.id as string, (r.first_name as string | null) ?? ""]));
+
+  for (const a of accounts ?? []) {
+    if (a.plan !== "standard" || !a.period_start) continue;
+    const periodStart = new Date(a.period_start);
+    const sentForUser = sentKeys.get(a.user_id) ?? new Set<string>();
+    // This period's E11 already went: skip the spend read. Same key as e11Due.
+    if (sentForUser.has(`E11:${DAY_KEY.format(periodStart)}`)) continue;
+    const { data: spent, error: spentError } = await supabaseAdmin.rpc("resources_spent", {
+      p_uid: a.user_id,
+      p_since: a.period_start,
+    });
+    if (spentError) {
+      console.warn("[cron/lifecycle] resources_spent failed", a.user_id, spentError.message);
+      continue;
+    }
+    const e = e11Due(
+      {
+        plan: "standard",
+        allowance: Number(a.allowance ?? 0),
+        spent: Number(spent ?? 0),
+        periodStart,
+        nextRefillAt: a.next_refill_at ? new Date(a.next_refill_at) : null,
+      },
+      sentForUser,
+      now,
+    );
+    if (!e) continue;
+    due += 1;
+    if (!enabled) continue;
+    const { data: auth } = await supabaseAdmin.auth.admin.getUserById(a.user_id);
+    const to = auth?.user?.email;
+    if (!to) continue;
+    const allowance = Number(a.allowance ?? 0);
+    const vars: LifecycleVars = {
+      firstName: names.get(a.user_id) ?? "",
+      trialEnds: "",
+      trialEndsDay: "",
+      made: 0,
+      hours: 0,
+      plan: "Standard",
+      resources: allowance,
+      used: Math.min(allowance, Math.round(Number(spent ?? 0))),
+      refill: a.next_refill_at ? DATE.format(new Date(a.next_refill_at)) : "your next refill",
+      planEnds: "",
+    };
+    const result = await sendOne(a.user_id, to, e.key, renderLifecycleEmail(e.id, vars), site);
+    if (result === "sent") sent += 1;
+    else if (result === "failed") failed += 1;
+  }
+  return { due, sent, failed };
 }
 
 const PLAN_NAMES: Record<string, string> = { standard: "Standard", pro: "Pro", max: "Max" };

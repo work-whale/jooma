@@ -11,6 +11,7 @@ import {
 import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/next";
 import MetaPixel from "@/app/components/MetaPixel";
+import CookieBanner from "@/app/components/CookieBanner";
 import { SITE_DESCRIPTION } from "@/app/lib/seo/brand";
 import { isIndexable } from "@/app/lib/seo/indexable";
 import "./globals.css";
@@ -172,6 +173,7 @@ export default function RootLayout({
         {/* Renders nothing unless NEXT_PUBLIC_META_PIXEL_ID is set, so local
             and staging cannot report into the live pixel. */}
         <MetaPixel />
+        <CookieBanner />
       </body>
     </html>
   );

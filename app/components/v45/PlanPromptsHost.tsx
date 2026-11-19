@@ -20,6 +20,7 @@ import {
   shownBefore,
 } from "@/app/lib/prompt-client";
 import PromptSheet, { promptStyles as styles } from "./PromptSheet";
+import { P6Note, P9Banner } from "./PhaseTwoPrompts";
 
 /*
  * The Jooma 4.5 prompts that belong to the account rather than to an action,
@@ -33,6 +34,8 @@ import PromptSheet, { promptStyles as styles } from "./PromptSheet";
  *                     once ever
  *   P12 banner        a paid plan whose last payment failed, every screen
  *                     until fixed; "Not now" hides it for 7 days
+ *   P6 note           Phase 2: after an export on Free or the trial
+ *   P9 banner         Phase 2: Standard running low, on Today
  *
  * Nothing at all while presenting. All of it is null before the plans engine
  * migration, because only a 4.5 row carries these fields.
@@ -123,6 +126,8 @@ export default function PlanPromptsHost() {
   return (
     <>
       {showP12 && <P12Banner plan={access.accountPlan} onDone={rerender} />}
+      {pathname === "/dashboard" && !showP12 && <P9Banner />}
+      <P6Note />
       {showP1 && access.trialEndsAt && <P1Banner ends={access.trialEndsAt} onDone={rerender} />}
       {p2Open === "open" && ended && access.trialStartedAt && (
         <P2Popup from={access.trialStartedAt} to={ended} onDone={() => setP2Open("done")} />

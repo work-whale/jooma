@@ -55,6 +55,9 @@ export const PUBLIC_PATHS = [
   // The route checks a per-recipient token and throttles by IP itself.
   "/unsubscribe",
   "/api/email/unsubscribe",
+  // The cookie banner's choice. Signed out, the route saves nothing (there is
+  // no profile); signed in, it writes only the caller's own ads_consent.
+  "/api/consent",
   // SendGrid's delivery events, server-to-server. The route checks SendGrid's
   // signature itself, the same arrangement as the Stripe webhook below.
   "/api/email/sendgrid-events",

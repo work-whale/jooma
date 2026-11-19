@@ -10,6 +10,7 @@ import { useResources } from "@/app/lib/useResources";
 import { TOP_UP_PACKS } from "@/app/lib/plan-config";
 import type { TopUpPack } from "@/app/lib/topup-packs";
 import styles from "./TopUpModal.module.css";
+import { P10Line } from "@/app/components/v45/P10Line";
 
 /*
  * Top up credits.
@@ -135,6 +136,7 @@ export default function TopUpModal({
         <h2 id="topup-title" className={styles.title}>
           Top up your resources
         </h2>
+        {v45 && <P10Line onSwitch={onClose} />}
         <p className={styles.sub}>
           {v45
             ? "Extra resources for a busy month, on top of your plan."

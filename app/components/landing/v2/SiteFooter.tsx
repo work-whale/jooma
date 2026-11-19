@@ -48,6 +48,7 @@ const COLUMNS = [
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
       { href: "/terms#payment", label: "Refunds and cancellation" },
+      { href: "#cookie-settings", label: "Cookie settings" },
     ],
   },
 ];

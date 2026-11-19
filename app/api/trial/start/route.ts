@@ -9,7 +9,8 @@ import { trialEndsAt } from "@/app/lib/resource-periods";
 import { recordAppEvent } from "@/app/lib/app-events";
 import { cleanRefCode, isNewSignup } from "@/app/lib/app-event-rules";
 import { randomUUID } from "node:crypto";
-import { sendStartTrialEvent } from "@/app/lib/meta-capi";
+import { adsConsented, metaEventId, saveAdsConsent, sendMetaEvent, sendStartTrialEvent } from "@/app/lib/meta-capi";
+import { readConsent } from "@/app/lib/cookie-consent";
 import { TRIAL_DAYS } from "@/app/lib/plans";
 import { clientIp } from "@/app/lib/guest";
 
@@ -44,7 +45,15 @@ export async function POST(req: Request) {
   // still counts the signup. The ref code is whatever the browser kept from
   // ?code= or ?ref=, cleaned; the rest is read from the profile.
   const body = (await req.json().catch(() => null)) as { refCode?: unknown } | null;
-  await recordSignupCompleted(user.id, user.created_at, cleanRefCode(body?.refCode));
+  // The cookie banner's choice, made before the account existed, is kept on
+  // the profile so later webhooks follow it. No choice: no Meta events at all.
+  const cookieHeader = req.headers.get("cookie");
+  const choice = readConsent(cookieHeader);
+  if (choice !== "undecided") await saveAdsConsent(user.id, choice);
+  const metaOk = await adsConsented(user.id, cookieHeader);
+  if (await recordSignupCompleted(user.id, user.created_at, cleanRefCode(body?.refCode))) {
+    if (metaOk) await reportRegistration(user.id, user.email ?? null, req);
+  }
 
   const { data, error } = await supabase.rpc("my_account_access");
   if (error) {
@@ -111,7 +120,7 @@ export async function POST(req: Request) {
   if (startError) console.error("[trial/start] resources_start failed", startError);
 
   await recordAppEvent(user.id, "trial_started", { trial_ends_at: until.toISOString() });
-  await reportStart(user.id, user.email ?? null, req);
+  if (metaOk) await reportStart(user.id, user.email ?? null, req);
 
   const res = NextResponse.json({ trialEndsAt: until.toISOString() });
   await flagDevice(user.id, res);
@@ -166,28 +175,52 @@ async function reportStart(userId: string, email: string | null, req: Request) {
   }
 }
 
-async function recordSignupCompleted(userId: string, createdAt: string | undefined, refCode: string | null) {
+/** Meta's CompleteRegistration, once per account (event id reg:<user>),
+ *  with this request's cookies. Never throws. */
+async function reportRegistration(userId: string, email: string | null, req: Request) {
+  try {
+    const store = await cookies();
+    await sendMetaEvent({
+      eventName: "CompleteRegistration",
+      eventId: metaEventId("CompleteRegistration", userId),
+      email,
+      fbp: store.get("_fbp")?.value ?? null,
+      fbc: store.get("_fbc")?.value ?? null,
+      eventTimeUnix: Math.floor(Date.now() / 1000),
+      clientIpAddress: clientIp(req),
+      clientUserAgent: req.headers.get("user-agent"),
+    });
+  } catch (err) {
+    console.error("[trial/start] CompleteRegistration report failed", userId, err);
+  }
+}
+
+/** True when this call recorded the signup (the first, for a new account). */
+async function recordSignupCompleted(userId: string, createdAt: string | undefined, refCode: string | null): Promise<boolean> {
   try {
     const { count } = await supabaseAdmin
       .from("app_events")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("name", "signup_completed");
-    if (!isNewSignup(createdAt, new Date(), (count ?? 0) > 0)) return;
+    if (!isNewSignup(createdAt, new Date(), (count ?? 0) > 0)) return false;
     const { data: p } = await supabaseAdmin
       .from("profiles")
-      .select("utm_source, referrer_host, marketing_consent")
+      .select("utm_source, referrer_host, marketing_consent, job_role, school_name")
       .eq("id", userId)
       .maybeSingle();
     await recordAppEvent(userId, "signup_completed", {
-      // Role and school are Phase 2 signup questions; not asked yet.
-      role: null,
-      school: null,
+      // The Phase 2 signup questions, saved just before this by
+      // /complete-profile. Null when skipped.
+      role: p?.job_role ?? null,
+      school: p?.school_name ?? null,
       source: p?.utm_source ?? p?.referrer_host ?? null,
       ref_code: refCode,
       marketing_consent: Boolean(p?.marketing_consent),
     });
+    return true;
   } catch (err) {
     console.warn("[trial/start] signup_completed not recorded", err);
+    return false;
   }
 }

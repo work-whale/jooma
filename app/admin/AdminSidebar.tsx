@@ -93,6 +93,7 @@ const NAV: NavGroup[] = [
     perm: "see_money",
     items: [
       { href: "/admin/plans", label: "Plans & pricing", icon: PoundSterling },
+      { href: "/admin/funnel", label: "Plans results", icon: BarChart3 },
       { href: "/admin/revenue", label: "Payments & invoices", icon: CreditCard },
       { href: "/admin/topups", label: "Top-ups", icon: Zap },
       { href: "/admin/promos", label: "Promo codes", icon: Tag },

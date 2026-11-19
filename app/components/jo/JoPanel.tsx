@@ -29,6 +29,7 @@ import { nextSentences } from "@/app/lib/jo/speech-chunks";
 import type { JoAdapter, JoMessage, useJoSession } from "./useJoSession";
 import type { useJoVoice } from "./useJoVoice";
 import { LiveBar, LiveConfirm } from "./Live";
+import { RefinesLine } from "@/app/components/v45/PhaseTwoPrompts";
 import styles from "./jo.module.css";
 
 /** What read_resource hands Jo: enough to answer from, never a whole book. */
@@ -478,6 +479,7 @@ export default function JoPanel({
                     </button>
                   )}
                 </div>
+                {!guest && <RefinesLine busy={busy} className={styles.meta} />}
                 {guest && promptsLeft !== null && (
                   <div className={styles.meta} data-testid="jo-prompts-left">
                     <span>

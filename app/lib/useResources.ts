@@ -24,6 +24,10 @@ export type ResourcesState = ResourcesMeter | "missing" | null;
 /** The raw row as well, for the trial and refine fields the meter drops. */
 export interface ResourcesRow extends ResourcesMeterRow {
   refines_used?: number | null;
+  /** The allowance alone, without top-ups (P9, E11). */
+  allowance_left?: number | null;
+  /** When the current allowance period began: P9 and P10's "month". */
+  period_start?: string | null;
   trial_ended_now?: boolean | null;
 }
 

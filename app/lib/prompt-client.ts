@@ -78,3 +78,15 @@ export function markPopupShown(): void {
     /* ignore */
   }
 }
+
+/** For prompts with a limit (P6 once a day, P9 and P10 once per allowance
+ *  period): the day or period they last showed in. See limitKey in prompts.ts. */
+export function lastShownKey(id: PromptId): string | null {
+  return read(KEY(id, "key"));
+}
+
+/** Remember that a limited prompt showed in this day or period, and log it. */
+export function markShownIn(id: PromptId, key: string | null): void {
+  if (key) write(KEY(id, "key"), key);
+  logPrompt(id, "shown");
+}

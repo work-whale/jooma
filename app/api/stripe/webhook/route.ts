@@ -10,7 +10,7 @@ import { topUpGrant } from "@/app/lib/topups-v45";
 import type { AccountPlan } from "@/app/lib/plan-config";
 import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
-import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
+import { adsConsented, isReportablePurchase, metaIdentity, metaNameForInvoice, sendMetaEvent, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
 import { annualTrialEmailParams, isTrialInvoice, startsAnnualTrial, startsTrial } from "@/app/lib/trial";
 import { sendTemplate } from "@/app/lib/email";
 import { claimGuestWork } from "@/app/lib/claimGuestWork";
@@ -392,6 +392,23 @@ async function grantResourcesTopUp(session: Stripe.Checkout.Session) {
   if (grantErr) throw grantErr;
 
   await recordAppEvent(userId, "topup_bought", { pack: packKey, resources });
+  // Meta's Purchase for the top-up (spec Step 7), once per Checkout session:
+  // reached only past the topup_purchases insert above, which a retried
+  // webhook cannot pass twice. Never throws.
+  // Only on the cookie banner's Accept, as saved on the profile.
+  if (await adsConsented(userId)) {
+    const id = await metaIdentity(userId);
+    await sendMetaEvent({
+      eventName: "Purchase",
+      eventId: session.id,
+      email: session.customer_details?.email ?? id.email,
+      fbp: id.fbp,
+      fbc: id.fbc,
+      eventTimeUnix: session.created,
+      valueMinor: paidPence,
+      currency: session.currency ?? "gbp",
+    });
+  }
 
   const chargeId = await chargeIdForPaymentIntent(paymentIntentId);
   const { error: invoiceErr } = await supabaseAdmin.from("invoices").insert({
@@ -759,6 +776,8 @@ async function reverseAmbassadorCommissions(stripeInvoiceIds: string[]) {
  */
 async function reportTrialStart(userId: string | null) {
   if (!userId) return;
+  // Only on the cookie banner's Accept, as saved on the profile.
+  if (!(await adsConsented(userId))) return;
   try {
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -989,6 +1008,13 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       return;
     }
 
+    // Only on the cookie banner's Accept, as saved on the profile (privacy
+    // policy section 9). Release the claim: nothing was reported.
+    if (!(await adsConsented(userId))) {
+      await releaseMetaClaim(inv.id);
+      return;
+    }
+
     // The advertising cookies captured at signup, possibly weeks ago. This is
     // what links this payment back to the ad click that started the free trial,
     // and the whole reason those columns exist. Null for an organic signup, or
@@ -1025,6 +1051,9 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
     }
 
     const accepted = await sendPurchase({
+      // Jooma 4.5 Step 7: the first payment is Subscribe; renewals and
+      // upgrades stay Purchase (owner's choice, 19 Nov).
+      eventName: metaNameForInvoice(inv.billing_reason),
       eventId: inv.id ?? `invoice-${userId}-${inv.created}`,
       email,
       fbp: profile?.meta_fbp ?? null,

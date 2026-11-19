@@ -24,8 +24,8 @@ import type { AccountPlan } from "@/app/lib/plan-config";
 import { OFFER, PLAN_CONFIG, TRIAL } from "@/app/lib/plan-config";
 import { nextLondonMidnight } from "@/app/lib/resource-periods";
 
-export type PromptId = "P1" | "P2" | "P3" | "P3b" | "P5" | "P12";
-export type PromptKind = "chip" | "banner" | "popup" | "sheet";
+export type PromptId = "P1" | "P2" | "P3" | "P3b" | "P4" | "P5" | "P6" | "P7" | "P8" | "P9" | "P10" | "P12";
+export type PromptKind = "chip" | "banner" | "popup" | "sheet" | "line" | "note" | "card";
 
 interface PromptRule {
   kind: PromptKind;
@@ -34,6 +34,8 @@ interface PromptRule {
   snooze: number | "day" | null;
   /** Shows once per account, ever. */
   once?: boolean;
+  /** At most once a UK day (P6) or once per allowance period (P9, P10). */
+  limit?: "day" | "period";
 }
 
 const RULES: Record<PromptId, PromptRule> = {
@@ -43,7 +45,18 @@ const RULES: Record<PromptId, PromptRule> = {
   // Phase 2. The server decides when (the second run-out in a different UK
   // week, see run-out-offer.ts); here it is a pop-up, once per account.
   P3b: { kind: "popup", audience: ["free"], snooze: null, once: true },
+  P4: { kind: "line", audience: ["free"], snooze: null },
   P5: { kind: "sheet", audience: ["free", "standard"], snooze: null },
+  // Phase 2. P6: Standard exports are clean (red note), and the trial carries
+  // the mark, so Free and the trial. Once a UK day; closing it snoozes 7 days.
+  P6: { kind: "note", audience: ["free", "pro_trial"], snooze: 7, limit: "day" },
+  // P7's line and sheet answer what the teacher just did: every time.
+  P7: { kind: "sheet", audience: ["free"], snooze: null },
+  // P8 is always on, for everyone.
+  P8: { kind: "card", audience: ["pro_trial", "free", "standard", "pro", "max"], snooze: null },
+  // P9 and P10: once per allowance period ("once per month").
+  P9: { kind: "banner", audience: ["standard"], snooze: 7, limit: "period" },
+  P10: { kind: "line", audience: ["standard"], snooze: null, limit: "period" },
   P12: { kind: "banner", audience: ["standard", "pro", "max"], snooze: 7 },
 };
 
@@ -66,6 +79,10 @@ export interface PromptContext {
   /** This prompt has been shown to this account before. */
   shownBefore: boolean;
   now: Date;
+  /** For a prompt with a limit: the current day or period (limitKey), and
+   *  the one it last showed in. Equal means it already showed this time. */
+  limitKey?: string | null;
+  lastShownKey?: string | null;
 }
 
 export function canShowPrompt(id: PromptId, c: PromptContext): boolean {
@@ -75,7 +92,28 @@ export function canShowPrompt(id: PromptId, c: PromptContext): boolean {
   if (r.once && c.shownBefore) return false;
   if (r.kind === "popup" && c.popupShownThisVisit) return false;
   if (r.snooze !== null && c.dismissedUntil && c.now.getTime() < c.dismissedUntil.getTime()) return false;
+  if (r.limit && c.limitKey && c.lastShownKey === c.limitKey) return false;
   return true;
+}
+
+const UK_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** The UK calendar date, "2026-11-19". */
+export function ukDateKey(at: Date): string {
+  return UK_DAY.format(at);
+}
+
+/**
+ * Which "day" or "month" a limited prompt is in. P6: the UK date. P9 and P10:
+ * the allowance period, keyed by its start, so a refill opens a new month;
+ * with no period known, the UK calendar month. Null for unlimited prompts.
+ */
+export function limitKey(id: PromptId, now: Date, periodStart?: Date | null): string | null {
+  const l = RULES[id].limit;
+  if (!l) return null;
+  if (l === "day") return ukDateKey(now);
+  if (periodStart) return periodStart.toISOString();
+  return ukDateKey(now).slice(0, 7);
 }
 
 const DAY_MS = 86_400_000;
@@ -91,6 +129,9 @@ export function dismissUntil(id: PromptId, now: Date): Date | null {
 const n = (v: number) => v.toLocaleString("en-GB");
 const PRO = PLAN_CONFIG.pro;
 const FREE = PLAN_CONFIG.free;
+/** "£3": what Pro costs over Standard each month (P9, P10, E11). */
+const extra = Math.round((PRO.monthly - PLAN_CONFIG.standard.monthly) * 100) / 100;
+export const PRO_EXTRA = `£${Number.isInteger(extra) ? extra : extra.toFixed(2)}`;
 
 export const PROMPT_COPY = {
   P1: {
@@ -129,6 +170,33 @@ export const PROMPT_COPY = {
     title: "Generated pictures come with Pro.",
     body: "This deck will use library photos for now.",
     buttons: ["Go Pro", "Use library photos"],
+  },
+  P6: {
+    free: { text: "Exported. Pro exports don't have the Jooma mark.", button: "Go Pro" },
+    trial: { text: "Exported. Once you choose Pro, exports don't have the Jooma mark.", button: "Keep Pro" },
+  },
+  P7: {
+    title: "That's this week's 10 refines.",
+    body: "They come back on Sunday. Pro refines as often as you like.",
+    buttons: ["Go Pro", "OK"],
+  },
+  P8: {
+    line: (v: { made: number; hours: number }) =>
+      `This month: ${n(v.made)} ${v.made === 1 ? "resource" : "resources"}, about ${n(v.hours)} ${v.hours === 1 ? "hour" : "hours"} saved.`,
+    none: "Nothing made yet this month.",
+    link: "See what Pro adds",
+  },
+  P9: {
+    text: (v: { used: number; allowance: number; refill: string }) =>
+      `You've used ${n(v.used)} of your ${n(v.allowance)} resources, and they refill on ${v.refill}. ` +
+      `Pro gives you double the resources and generated pictures for ${PRO_EXTRA} more a month.`,
+    buttons: ["Switch to Pro", "Top up"],
+  },
+  P10: {
+    text:
+      `Pro gives you ${n(PRO.resources - PLAN_CONFIG.standard.resources)} more resources every month for ${PRO_EXTRA} more, ` +
+      "plus generated pictures.",
+    buttons: ["Switch to Pro instead", "Buy top-up"],
   },
   P12: {
     body: (v: { plan: string }) => `Your last payment didn't go through. Update your card to keep ${v.plan}.`,

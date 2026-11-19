@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { DropdownItem } from "@/app/components/ui/DropdownMenu";
 import { exportToDocx, exportToPdf, buildPdfHtml } from "@/app/lib/exportUtils";
+import { noteExported } from "@/app/lib/export-mark";
 import { useExportLock } from "@/app/components/guest/useExportLock";
 
 /*
@@ -95,6 +96,7 @@ export function useDocumentActions(
     document.body.appendChild(iframe);
     iframe.onload = () => {
       iframe.contentWindow?.print();
+      noteExported();
       setTimeout(() => document.body.removeChild(iframe), 1000);
     };
   };

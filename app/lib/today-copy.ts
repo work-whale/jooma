@@ -4,15 +4,6 @@ import { PLANS, planCredits, type PlanId } from "./plans";
  * Two lines on the v4 Today page, pure so they can be tested.
  */
 
-/** The time-saved pill. Always "about": it is an estimate. Null before the
- *  first resource, rather than a zero. */
-export function savedPill(minutes: number, resources: number): { lead: string; rest: string } | null {
-  if (resources === 0) return null;
-  const hours = Math.round(minutes / 60);
-  if (hours === 0) return { lead: "Under an hour", rest: " saved so far." };
-  return { lead: `About ${hours} ${hours === 1 ? "hour" : "hours"}`, rest: " you have not spent planning." };
-}
-
 export interface PlanNudge {
   title: string;
   body: string;

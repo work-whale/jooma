@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "jooma_consent",
+      "value": "rejected",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

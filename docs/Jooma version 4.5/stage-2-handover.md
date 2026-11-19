@@ -401,3 +401,82 @@ Nothing committed or pushed. One migration applied to STAGING only (below).
 - `app/lib/tool-estimates.ts` now has a figure for every tool, and none falls back to the guessed 5. Six well-used tools (Slides, Worksheet, Comprehension, Lesson Plan, Quiz, Exam Questions) keep the production average (15 or more saved runs). The other 28 are the median of 5 real runs on staging on the uplifted prompts (`tests/tools/measure-tool-costs.spec.ts`, run with `MEASURE_COSTS=1`; staging `tool_settings` matched production). Raw results are in `docs/tool-costs/tool-costs.jsonl`.
 - Biggest changes: EYFS Plan 58 to 21; Topic Map 16 to 21; Reports 0.1 to 4.4 (a class of 30); Behaviour plan 19 to 14; Homework 4 to 7. Risk Assessment 11, Inspection Prep 13 and EYFS Action Plan 11 were the guessed 5. A CPD deck now uses the slideshow figure.
 - Slides: production split by picture source. 122 of 162 decks use library photos (about 17); Generated decks averaged 11 pictures (about 75); Auto averaged 2. The cost line and the server check now add the deck's generated pictures (`deckPictureCount`: one a slide plus the title, with Auto split by the pipeline's own counter). On library photos it reads about 15, and an all-generated 8-slide deck about 65. The deck form's note now gives the number instead of "use more credits".
+
+## 12. Fifth session (19 Nov, day): the rest of Phase 2
+
+Nothing committed. One migration applied to STAGING only. Phase 2 is the spec's Step 9 list due 10 Dec.
+
+### Owner decisions this session
+
+- Meta: the spec's mapping, but renewals still go to Meta as Purchase.
+- There was no cookie banner. Built: Accept and Reject side by side; the Meta pixel loads only after Accept.
+- School question: free text with suggestions; Phase 3's weekly list will group on school email domain plus the cleaned name.
+- E10's idea: a short list (8) written here, editable in admin, each opening its tool; the cost line uses the tool's real estimate.
+- Defaults not objected to: E9a stays marketing (the spec calls it account; it sells Pro); P10 and E11 drop "no Jooma mark" (Standard is clean); P6 on Free and the trial, not Standard; role and school are optional fields (blank is the skip); "paid after a prompt or email" means within 7 days.
+- Staging migrations now go through the Supabase CLI (the MCP tool is refused in auto mode). See the migration note below.
+
+### Built (by spec step)
+
+| Step | Item | Where |
+|---|---|---|
+| 6 | One-click unsubscribe for E9a, E9b, E10: a signed per-teacher link (`u1.<user>.<HMAC>`), the List-Unsubscribe header, consent off plus the address on `email_opt_outs`. No migration. Also fixed: the cron ignored `email_opt_outs`. | `app/lib/unsub-link.ts`, `/api/email/unsubscribe`, cron |
+| 5 | P6 note after an export (Free and trial, once a UK day), wired into all nine export finish points | `export-mark.ts` `noteExported`, `PhaseTwoPrompts.tsx` |
+| 5 | P7: line under Ask Jo at 2 left; the sheet at 10. Fixed: the refusal used to open the generic "Choose a plan" box. | `RefinesLine`, `UpgradeGate` |
+| 5 | P8 replaces Today's all-time pill: "This month: N resources, about N hours saved", "See what Pro adds" on Free and Standard. Uses the spec's band minutes. | `TodayView.tsx` |
+| 5 | P9 banner on Today, P10 line in the top-up picker; Standard, once per allowance period | `PhaseTwoPrompts.tsx`, `P10Line.tsx` |
+| 6 | E10 (Free, 14 days after the last visit, 16:30 UK, once per absence, marketing) and E11 (Standard at 80% with more than 7 days left, once per period, account) | `lifecycle.ts`, `e10-ideas.ts`, cron |
+| 6 | `profiles.last_seen_at`, written by the proxy at most once a UK day per browser (day cookie `jooma_seen`) | `proxy.ts`, `last-seen.ts` |
+| 7 | Role and school on /complete-profile, optional; sent with `signup_completed`; school suggestions only for names 2+ teachers typed | `signup-questions.ts`, `school_suggestions()` |
+| 7 | Meta CAPI, server side only: CompleteRegistration (`reg:<user>`), StartTrial (unchanged), Activated (`act:<user>`), Subscribe on the first payment, Purchase on renewals and top-ups | `meta-purchase.ts`, `meta-capi.ts`, trial start, resource-made, webhook |
+| 7 | Cookie banner; the pixel waits for Accept; Reject clears `_fbp`/`_fbc`; "Cookie settings" in the footer reopens it | `CookieBanner.tsx`, `MetaPixel.tsx` |
+| 9 | Admin, Money, "Plans results" (`/admin/funnel`): Free back in the funnel, trial cohorts, prompt results, email results, and the E10 idea editor | `admin-v45-reports.ts`, `app/admin/funnel` |
+
+### Migration
+
+`20261119000100_phase2_profile_fields.sql`, applied to STAGING with `supabase db push` (CLI linked to staging, dry run first, then relinked to production). Adds `last_seen_at`, `job_role`, `school_name`, `lifecycle_ideas` (admins only), `school_suggestions()` (signed in only).
+
+Staging's history had last night's `resources_change_plan_once` recorded as `20261118162132` (the MCP tool stamps its own time). Renumbered to `20261119000000` with `supabase migration repair`, matching the file; history only, no schema change.
+
+**Production, with the code:** push `20261119000000` and `20261119000100`. Production's history was not touched.
+
+### For you to know before launch
+
+- Privacy page and Meta consent: done in section 12.1 below (no legal team, so Claude wrote it on the defensible reading of UK GDPR and PECR).
+- `META_CAPI_ACCESS_TOKEN` must be set for any of this to reach Meta; without it every send is a logged no-op.
+- E10 never emails an account with no recorded visit, so it starts working 14 days after this ships.
+- Lifecycle emails have no open or click tracking, so email results are sends and payments only.
+- Lapse: `last-seen.ts` was written in the same step as its test (not seen red first).
+
+### Tests (fresh staging build, `scripts/with-staging-env.sh`)
+
+| Layer | Result |
+|---|---|
+| Unit (`pnpm test:unit`) | 2,121 passed. New: `unsub-link`, `prompts-phase2`, `lifecycle-phase2`, `last-seen`, `signup-questions`, `meta-events-v45`, `cookie-consent`, `admin-v45-reports`. Older tests updated where Phase 2 changes what they pin (the email list, E10 as marketing, the footer rule; `savedPill` removed with Today's old pill). |
+| New E2E | `tests/billing/phase2-unsubscribe.spec.ts` 3 of 3; `tests/billing/phase2-prompts.spec.ts` 9 of 9 (P6, P7, P8 x2, P9 with P10, signup questions x2, cookie banner x2). |
+| Regression E2E | `tests/billing`, `tests/auth`, `tests/shell`: 234 passed, 2 skipped, 2 failed, then: `annual-plan` was a race in the test (its second `goto` aborted the page's own redirect), fixed in the test, 5 of 5 twice; `cancel-flow` "two cancel clicks at once" passed both reruns (an existing timing flake, cancel code untouched). Jo and export tool specs: 17 passed, 1 skipped (LIVE_MODEL). |
+| Cron | Dry run on staging (sending off): ran clean, nothing due. |
+| Language check, tsc, eslint on touched files | Clean. |
+
+E2E now runs with a default "rejected" consent cookie (`tests/support/consent-state.json` in `playwright.config.ts`) so the banner never covers what a screen test clicks; the banner's own tests clear it.
+
+**Deliberately not tested:** a real Meta delivery (needs the token and Test Events code); real email sends (`LIFECYCLE_EMAILS` stays off); the 14-day wait for E10 and the 80% wait for E11 in real time (unit tests move the clock); every export button clicking through to P6 (unit and the event are tested; the nine call sites are one line each).
+
+### Next
+
+1. Committed and pushed to `staging` (owner asked, 19 Nov). Production needs `20261119000000`, `20261119000100` and `20261119000200` pushed with the code.
+2. Owner: set `META_CAPI_ACCESS_TOKEN` (and `META_TEST_EVENT_CODE` to check in Events Manager first).
+3. Phase 3 (3 Jan): E15 term emails (editable dates) and the weekly list of schools with 3+ teachers (group on email domain plus `school_name`).
+
+### 12.1 Privacy page and Meta consent (19 Nov, later)
+
+No legal team, so the owner asked Claude to write `/privacy` on the correct approach. The page was rewritten (date 19 Nov 2026, no dashes) and the code changed to match it:
+
+- **Meta server events now follow the banner.** Sending a hashed email to Meta after a Reject fails the legitimate-interest balance test (the visitor has just said no), so every server send (CompleteRegistration, StartTrial, Activated, Subscribe/Purchase, top-up Purchase) runs only on Accept. The choice is read from the request cookie when there is one, else `profiles.ads_consent`. No choice anywhere means no event. Pure rule: `mayReportToMeta` in `cookie-consent.ts`; server helpers `adsConsented` and `saveAdsConsent` in `meta-capi.ts`.
+- **The choice is saved on the profile** by `/api/consent` (the banner posts to it; public, does nothing signed out) and by `/api/trial/start` at signup, for webhooks that have no browser. A Reject also clears `meta_fbp`/`meta_fbc`. An unreported invoice releases its `meta_reported_at` claim.
+- **Existing accounts have no saved choice**, so they send nothing to Meta until they choose. The cost: renewals of current subscribers stop being reported until those teachers click Accept.
+- **`jooma_attr` (our own "where you came from" cookie)** relies on PECR's statistics exemption (Data (Use and Access) Act 2025, in force Feb 2026), which needs a simple way to object: it is no longer set after a Reject, and Reject deletes it.
+- Page content: optional role and school, last visit, cookie choice; in-app plan suggestions; E10 ideas email and one-click unsubscribe; school grouping (for Phase 3's list) and school name suggestions; device check on trials; a cookie table (sign-in, `jooma_consent`, `jooma_device`, `jooma_guest`, `jooma_seen`, `jooma_attr`, `_fbp`/`_fbc`); consent as the legal basis for Meta; Meta as joint controller; "continued use is acceptance" removed (a privacy notice is not accepted); response time "one month". Sub-processor text for Meta updated (shared with /trust).
+- Migration `20261119000200_ads_consent.sql` (`ads_consent`, `ads_consent_at`), applied to STAGING by CLI.
+- Judgment call left as is: `jooma_seen` is a signed-in, first-party, date-only cookie, disclosed in the table, not behind the banner.
+- Tests: `cookie-consent` unit (the rule), `route-coverage` (public route); E2E banner saves the choice and Reject clears the Meta ids, signed-out save is a 204, no `jooma_attr` after Reject; `signup-attribution` 7 of 7, `about-trust`, `profile-gate`, `meta-activation` 3 of 3, phase2 specs all green. Unit 2,122.
+- `eslint.config.mjs` now ignores `.next-e2e/**` (the E2E build). Repo-wide eslint still has pre-existing errors in untouched files.

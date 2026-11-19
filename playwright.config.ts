@@ -67,6 +67,10 @@ export default defineConfig({
 
   use: {
     baseURL: BASE_URL,
+    // Jooma 4.5: a cookie choice already made, so the cookie banner (fixed at
+    // the foot of every page) never covers what a screen test clicks. The
+    // banner's own tests clear it (tests/billing/phase2-prompts.spec.ts).
+    storageState: "tests/support/consent-state.json",
     // Kept only for a failure, which is when they are worth having and when
     // nobody minds the disk. See .gitignore.
     trace: "retain-on-failure",

@@ -227,3 +227,53 @@
   cursor: pointer;
   padding: 0;
 }
+
+/* P6: a small note at the foot of the screen after an export. Not a pop-up:
+   it never covers the work, and goes on its own after a few seconds. */
+.note {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 12px 10px 16px;
+  border-radius: var(--j-r);
+  background: var(--j-card);
+  color: var(--j-ink);
+  border: 1px solid var(--j-line);
+  box-shadow: 0 8px 24px rgba(20, 12, 40, 0.14);
+  font-size: 0.86rem;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+.noteText {
+  flex: 1 1 220px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* P10: one line at the top of the top-up picker. */
+.pickerLine {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--j-r);
+  background: var(--j-res-soft);
+  color: var(--j-ink);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.pickerLine button {
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--j-purple);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

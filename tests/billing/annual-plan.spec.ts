@@ -125,6 +125,9 @@ test.describe("Yearly billing", () => {
     // Strictly "month": a missing interval would also bill monthly, but would
     // mean the picker stopped saying what it was choosing.
     expect(sent[0]).toEqual({ plan: "pro", interval: "month" });
+    // The page follows the checkout URL itself; let that land first, or the
+    // goto below races it and is aborted (ERR_ABORTED).
+    await page.waitForURL(/checkout=cancelled/);
 
     await page.goto("/pricing");
     await page.locator("label", { hasText: "Yearly" }).click();

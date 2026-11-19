@@ -57,6 +57,14 @@
   font-weight: 800;
 }
 
+/* P8's "See what Pro adds", on Free and Standard. */
+.savedLink {
+  color: var(--j-purple);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ── Ask Jo ──────────────────────────────────────────────────────────────── */
 
 .jo {

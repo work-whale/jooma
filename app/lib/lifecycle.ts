@@ -17,6 +17,8 @@
  *   E4   day 5, 16:30                      Pro trial
  *   E9a  1 hour after running out, at most once a UK week     Free (marketing)
  *   E9b  1 hour after the second run-out opened the offer, once  Free (marketing)
+ *   E10  16:30 UK, 14 days after the last visit, once per absence  Free (marketing)
+ *   E11  80% of the allowance used, >7 days to refill, per period  Standard (e11Due)
  *   Still to build: E10 (14 days away), E11 (80% used, paid plans).
  *
  * Rules for every email:
@@ -37,9 +39,10 @@
 import type { AccountPlan } from "@/app/lib/plan-config";
 import { PLAN_TIMEZONE } from "@/app/lib/plan-config";
 import { londonDate, londonTime, type CalendarDate } from "@/app/lib/resource-periods";
+import { runningLow } from "@/app/lib/prompt-views";
 import { ukWeekKey } from "@/app/lib/run-out-offer";
 
-export type LifecycleId = "E1" | "E2a" | "E2b" | "E3" | "E4" | "E5" | "E6" | "E7" | "E8" | "E9a" | "E9b" | "E12" | "E13" | "E14";
+export type LifecycleId = "E1" | "E2a" | "E2b" | "E3" | "E4" | "E5" | "E6" | "E7" | "E8" | "E9a" | "E9b" | "E10" | "E11" | "E12" | "E13" | "E14";
 export type EmailKind = "account" | "marketing";
 
 export interface LifecycleTeacher {
@@ -63,6 +66,8 @@ export interface LifecycleTeacher {
   /** The second run-out offer (P3b, E9b): when it opened and ends. */
   offerOpenedAt?: Date | null;
   offerEndsAt?: Date | null;
+  /** The last visit (profiles.last_seen_at), for E10. Null: not recorded. */
+  lastSeenAt?: Date | null;
 }
 
 export interface DueEmail {
@@ -119,6 +124,14 @@ function isDue(dueAt: Date, now: Date): boolean {
   return late >= 0 && late <= LATE_LIMIT_MS;
 }
 
+/** An address on email_opt_outs (a broadcast unsubscribe, a bounce, a spam
+ *  report, or this email's own link) gets no marketing, whatever the profile's
+ *  consent flag says. Account mail still goes. The cron only knows the address
+ *  after dueEmails, so this runs second. */
+export function dropOptedOutMarketing(emails: DueEmail[], optedOut: boolean): DueEmail[] {
+  return optedOut ? emails.filter((e) => e.kind !== "marketing") : emails;
+}
+
 /** What to send to this teacher now, given the keys already sent. */
 export function dueEmails(t: LifecycleTeacher, sent: ReadonlySet<string>, now: Date): DueEmail[] {
   if (inQuietHours(now)) return [];
@@ -167,6 +180,14 @@ export function dueEmails(t: LifecycleTeacher, sent: ReadonlySet<string>, now: D
       if (week === offerWeek) continue;
       add("E9a", `E9a:${week}`, new Date(ran.getTime() + HOUR_MS), "marketing");
     }
+
+    // E10 (Phase 2): 14 days with no visit, 16:30 UK on day 14, once per
+    // absence. Never without a recorded visit: accounts from before visits
+    // were tracked would otherwise all be "away" on the first run.
+    if (t.lastSeenAt) {
+      const seen = londonDate(t.lastSeenAt);
+      add("E10", `E10:${iso(seen)}`, londonTime(addDays(seen, 14), 16, 30), "marketing");
+    }
   }
   // At most one marketing email a day, and one per week key.
   const seen = new Set<string>();
@@ -178,6 +199,39 @@ export function dueEmails(t: LifecycleTeacher, sent: ReadonlySet<string>, now: D
     marketing += 1;
     return marketing === 1;
   });
+}
+
+/** Keys in lifecycle_email_log that count towards "one marketing email a day". */
+export function isMarketingKey(key: string): boolean {
+  return /^(E9a|E9b|E10)(:|$)/.test(key);
+}
+
+/** The Standard allowance as the cron reads it (service role). */
+export interface StandardAccount {
+  plan: AccountPlan;
+  allowance: number;
+  /** Resources spent this period (resources_spent), allowance first. */
+  spent: number;
+  periodStart: Date;
+  nextRefillAt: Date | null;
+}
+
+/**
+ * E11 (Phase 2): Standard with 80% of the allowance used and more than 7 days
+ * to the refill (the same rule as P9), once per allowance period. An account
+ * email, so no consent check; never in quiet hours.
+ */
+export function e11Due(a: StandardAccount, sent: ReadonlySet<string>, now: Date): DueEmail | null {
+  if (a.plan !== "standard" || inQuietHours(now)) return null;
+  const key = `E11:${iso(londonDate(a.periodStart))}`;
+  if (sent.has(key)) return null;
+  const low = runningLow({
+    allowance: a.allowance,
+    allowanceLeft: a.allowance - a.spent,
+    nextRefillAt: a.nextRefillAt,
+    now,
+  });
+  return low ? { id: "E11", key, kind: "account" } : null;
 }
 
 /** The event that sends an email at once. */

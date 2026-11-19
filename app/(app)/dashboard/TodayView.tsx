@@ -17,7 +17,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { ToolTile } from "@/app/components/v2/Squircle";
-import { minutesSavedFor, V2_TOOLS, v2ToolForSlug, toolSolid } from "@/app/lib/tools";
+import { V2_TOOLS, v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { isToolHiddenFor } from "@/app/lib/curricula/tool-scope";
 import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import { createChat, saveMessage } from "@/app/lib/assistantChats";
@@ -28,7 +28,10 @@ import { useAccountAccess } from "@/app/lib/useAccountAccess";
 import { useCreditMeter } from "@/app/lib/useCreditMeter";
 import { estimateFor, estimateLabel } from "@/app/lib/tool-estimates";
 import { whenLabel } from "@/app/lib/when-label";
-import { savedPill, planNudge } from "@/app/lib/today-copy";
+import { planNudge } from "@/app/lib/today-copy";
+import { p8Totals, p8View } from "@/app/lib/prompt-views";
+import { ukDateKey } from "@/app/lib/prompts";
+import { lastShownKey, logPrompt, markShownIn } from "@/app/lib/prompt-client";
 import { useStoredFlag } from "@/app/lib/useStoredFlag";
 import StartTrialButton from "@/app/components/billing/StartTrialButton";
 import { listWeek, mondayOf, nextUnplanned, upcomingDays, dayName, makeItHref, type LessonWithResource } from "@/app/lib/timetable";
@@ -167,8 +170,18 @@ export default function TodayView({
 
   const now = useSyncExternalStore(subscribeToClock, getClock, getServerClock);
 
-  const minutes = useMemo(() => runs.reduce((sum, r) => sum + minutesSavedFor(r.tool_slug), 0), [runs]);
-  const pill = loading ? null : savedPill(minutes, runs.length);
+  // P8 (Jooma 4.5 Step 5): this month's resources and time saved, at the
+  // spec's band minutes, for everyone; "See what Pro adds" on Free and
+  // Standard. Always on, so "shown" is logged once a UK day, not every visit.
+  const p8Plan = access?.accountPlan ?? null;
+  const p8 = useMemo(
+    () => (loading || !now || !p8Plan ? null : p8View({ plan: p8Plan, ...p8Totals(runs, now) })),
+    [loading, now, p8Plan, runs],
+  );
+  const p8Day = now ? ukDateKey(now) : null;
+  useEffect(() => {
+    if (p8 && p8Day && lastShownKey("P8") !== p8Day) markShownIn("P8", p8Day);
+  }, [p8, p8Day]);
 
   // Tools built only for UK schools are never suggested to a teacher on
   // another school system. Ones they have actually used still rank.
@@ -275,12 +288,24 @@ export default function TodayView({
         <p className={styles.date}>
           {now ? now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) : " "}
         </p>
-        {pill && (
+        {p8 && (
           <p className={styles.saved} data-testid="today-saved">
             <Clock weight="fill" aria-hidden />
             <span>
-              <b>{pill.lead}</b>
-              {pill.rest}
+              {p8.text}
+              {p8.link && (
+                <>
+                  {" "}
+                  <Link
+                    href="/pricing?plan=pro&from=P8"
+                    className={styles.savedLink}
+                    onClick={() => logPrompt("P8", "clicked", "see_pro")}
+                    data-testid="prompt-P8-link"
+                  >
+                    {p8.link}
+                  </Link>
+                </>
+              )}
             </span>
           </p>
         )}

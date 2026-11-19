@@ -1,4 +1,4 @@
-import { currentExportMark, withExportMark } from "./export-mark";
+import { currentExportMark, noteExported, withExportMark } from "./export-mark";
 import {
   Document,
   Packer,
@@ -158,6 +158,7 @@ export async function exportToDocx(text: string, filename: string) {
 
   const blob = await Packer.toBlob(doc);
   triggerDownload(blob, `${filename}.docx`);
+  noteExported();
 }
 
 // --- Real PDF export ---
@@ -279,6 +280,7 @@ export async function exportToPdf(
     });
 
     pdf.save(`${filename}.pdf`);
+    noteExported();
   } finally {
     // Always removed: leaving a 10,000px-offset node behind on a failed export
     // would accumulate one per attempt.

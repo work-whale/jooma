@@ -16,6 +16,8 @@ import { renderLifecycleEmail, LIFECYCLE_IDS } from "@/app/lib/lifecycle-emails"
  */
 
 const at = (iso: string) => new Date(iso);
+// A signed teacher token's shape (app/lib/unsub-link.ts); only marketing reads it.
+const TOKEN = "u1.3f2b8c1e-9d4a-4b7e-8f21-0c5d6e7f8a9b.AAAAAAAAAAAAAAAAAAAAAA";
 // Sun 15 Nov 2026 signup; trial ends Wed 25 Nov 23:59:59.
 const trialTeacher = (over: Partial<LifecycleTeacher> = {}): LifecycleTeacher => ({
   plan: "pro_trial",
@@ -144,9 +146,9 @@ test.describe("templates", () => {
   };
 
   test("every email renders, one button, copy rules kept", () => {
-    expect(LIFECYCLE_IDS).toEqual(["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E12", "E13", "E14"]);
+    expect(LIFECYCLE_IDS).toEqual(["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E10", "E11", "E12", "E13", "E14"]);
     for (const id of LIFECYCLE_IDS) {
-      const e = renderLifecycleEmail(id, vars);
+      const e = renderLifecycleEmail(id, vars, { unsubToken: TOKEN });
       expect(e.subject.length).toBeGreaterThan(5);
       expect(e.button.length).toBeGreaterThan(1);
       const all = `${e.subject} ${e.preheader} ${e.body} ${e.button}`;
@@ -155,16 +157,17 @@ test.describe("templates", () => {
     }
   });
 
-  test("E9a and E9b are marketing; every other email is an account email; all link to settings", () => {
+  test("E9a, E9b and E10 are marketing and link to unsubscribe; every other email is an account email linking to settings", () => {
     for (const id of LIFECYCLE_IDS) {
-      const e = renderLifecycleEmail(id, vars);
-      expect(e.kind, id).toBe(id === "E9a" || id === "E9b" ? "marketing" : "account");
-      expect(e.footerPath).toBe("/profile#email-settings");
+      const e = renderLifecycleEmail(id, vars, { unsubToken: TOKEN });
+      const marketing = id === "E9a" || id === "E9b" || id === "E10";
+      expect(e.kind, id).toBe(marketing ? "marketing" : "account");
+      expect(e.footerPath, id).toBe(marketing ? `/unsubscribe?t=${TOKEN}` : "/profile#email-settings");
     }
   });
 
   test("E9b names the offer price and its end date", () => {
-    const e = renderLifecycleEmail("E9b", vars);
+    const e = renderLifecycleEmail("E9b", vars, { unsubToken: TOKEN });
     expect(e.subject).toBe("Your first month of Pro for £3.99");
     expect(e.body).toContain("ends on Sunday 6 December");
     expect(e.body).toContain("£3.99 instead of £7.99");

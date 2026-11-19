@@ -1,7 +1,7 @@
 "use client";
 
 import { useExportLock } from "@/app/components/guest/useExportLock";
-import { exportMarkNow } from "@/app/lib/export-mark";
+import { exportMarkNow, noteExported } from "@/app/lib/export-mark";
 import { useMarkPresenting } from "@/app/lib/presenting";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Check, Loader2 } from "lucide-react";
@@ -2610,6 +2610,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         }
 
         pdf.save(`${titleRef.current || "presentation"}.pdf`);
+        noteExported();
       } finally {
         // Unmount before removing the host, or React keeps a reference to a
         // detached tree. Deferred because unmounting during a commit warns.
@@ -2841,6 +2842,7 @@ export default function Editor({ presentation, generationParams, guest }: Props)
         }
       }
       await pptx.writeFile({ fileName: `${titleRef.current || "presentation"}.pptx` });
+      noteExported();
     } catch (err) {
       console.error("Export failed:", err);
     } finally {

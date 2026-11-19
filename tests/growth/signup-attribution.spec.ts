@@ -56,7 +56,21 @@ async function completeProfile(page: Page) {
 }
 
 test.describe("Signup attribution", () => {
+  // No cookie choice yet, as for a first visit from an ad: the source cookie is
+  // allowed under PECR's statistics exemption until the visitor rejects.
+  test.use({ storageState: { cookies: [], origins: [] } });
   let teacher: TestTeacher;
+
+  test("after the cookie banner's Reject, no source cookie is set", async ({ browser }) => {
+    const context = await browser.newContext({ storageState: "tests/support/consent-state.json" });
+    const page = await context.newPage();
+    try {
+      await page.goto("/?utm_source=facebook&utm_medium=cpc");
+      expect((await context.cookies()).find((c) => c.name === "jooma_attr")).toBeUndefined();
+    } finally {
+      await context.close();
+    }
+  });
 
   test.beforeEach(async () => {
     teacher = await createProfilelessTeacher("Attrib");

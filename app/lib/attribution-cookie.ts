@@ -6,6 +6,7 @@ import {
   encodeAttribution,
   parseAttribution,
 } from "./attribution";
+import { CONSENT_COOKIE } from "./cookie-consent";
 
 // ── Writing the first touch ──────────────────────────────────────────────────
 //
@@ -51,6 +52,12 @@ export function applyAttributionCookie(
   // First touch wins. Someone who clicked a Facebook ad last week and a
   // newsletter link today is still credited to Facebook.
   if (request.cookies.has(ATTRIBUTION_COOKIE)) return;
+
+  // The cookie banner's Reject is the "simple means to object" that PECR's
+  // statistics exemption (Data (Use and Access) Act 2025) requires: a visitor
+  // who rejected gets no source cookie at all. Undecided still gets one, as
+  // the exemption allows; it never goes to Meta.
+  if (request.cookies.get(CONSENT_COOKIE)?.value === "rejected") return;
 
   const attribution = parseAttribution(
     request.nextUrl,

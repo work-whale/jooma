@@ -7,7 +7,7 @@ import { recordAppEvent } from "@/app/lib/app-events";
 // to payment. Signed in only; the user comes from the session, never the body.
 // Never fails the page: a bad body is ignored with 204.
 
-const IDS = new Set(["P1", "P2", "P3", "P3b", "P5", "P12"]);
+const IDS = new Set(["P1", "P2", "P3", "P3b", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P12"]);
 const KINDS = { shown: "prompt_shown", clicked: "prompt_clicked", dismissed: "prompt_dismissed" } as const;
 
 export async function POST(req: NextRequest) {

@@ -7,17 +7,19 @@
  *     the trial "clean exports"; E6 sells "no Jooma mark" as Pro's.
  *   - E8 sends WITHOUT the weekly idea until Ash approves the ideas list.
  *
- * Each email has one button. Phase 1 emails are all account emails, so the
- * footer links to email settings (marketing would link to unsubscribe).
+ * Each email has one button. Account emails link to email settings in the
+ * footer; marketing emails (E9a, E9b, E10) link to a signed one-click unsubscribe
+ * (app/lib/unsub-link.ts) and carry the List-Unsubscribe header.
  * Sent through app/lib/email.ts by the cron, and only when sendingEnabled().
  *
  * Pure.
  */
 
-import { OFFER, PLAN_CONFIG, TRIAL } from "@/app/lib/plan-config";
+import { OFFER, PLAN_CONFIG, TOP_UP_PACKS, TRIAL } from "@/app/lib/plan-config";
+import { PRO_EXTRA } from "@/app/lib/prompts";
 import type { EmailKind, LifecycleId } from "@/app/lib/lifecycle";
 
-export const LIFECYCLE_IDS: LifecycleId[] = ["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E12", "E13", "E14"];
+export const LIFECYCLE_IDS: LifecycleId[] = ["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E10", "E11", "E12", "E13", "E14"];
 
 export interface LifecycleVars {
   firstName: string;
@@ -41,6 +43,10 @@ export interface LifecycleVars {
   offerEnds?: string;
   /** "Sunday" */
   offerEndsDay?: string;
+  /** E11: resources used this period (the allowance is `resources`). */
+  used?: number;
+  /** E10: this week's idea, its tool page and its rounded cost. */
+  idea?: { text: string; href: string; cost: number };
 }
 
 export interface RenderedEmail {
@@ -52,8 +58,11 @@ export interface RenderedEmail {
   /** Where the button goes, on the site. */
   path: string;
   kind: EmailKind;
-  /** Footer link: email settings for account mail. */
+  /** Footer link: email settings for account mail, unsubscribe for marketing. */
   footerPath: string;
+  footerLabel: "Email settings" | "Unsubscribe";
+  /** RFC 8058 one-click target (List-Unsubscribe header), marketing only. */
+  oneClickPath: string | null;
 }
 
 const n = (v: number) => v.toLocaleString("en-GB");
@@ -62,9 +71,9 @@ const FREE = PLAN_CONFIG.free.resources;
 const PRO = PLAN_CONFIG.pro;
 const TOOLS = 35;
 
-type Draft = Omit<RenderedEmail, "kind" | "footerPath" | "heading"> & { heading?: string };
+type Draft = Omit<RenderedEmail, "kind" | "footerPath" | "footerLabel" | "oneClickPath" | "heading"> & { heading?: string };
 
-const MARKETING: ReadonlySet<LifecycleId> = new Set(["E9a", "E9b"]);
+const MARKETING: ReadonlySet<LifecycleId> = new Set(["E9a", "E9b", "E10"]);
 
 function draft(id: LifecycleId, v: LifecycleVars): Draft {
   const hi = v.firstName ? `Hi ${v.firstName}, ` : "";
@@ -181,6 +190,32 @@ function draft(id: LifecycleId, v: LifecycleVars): Draft {
         button: `Get Pro for £${OFFER.firstMonthPrice}`,
         path: "/pricing?plan=pro&interval=month",
       };
+    case "E10": {
+      const idea = v.idea ?? { text: "a quick quiz on this week's topic", href: "/tools", cost: 1 };
+      return {
+        subject: "One for this week",
+        preheader: `Ready in one sentence: ${idea.text}.`,
+        body:
+          `Haven't been in for a while? Here's a quick one for this week: ${idea.text}. ` +
+          `It takes one sentence and about ${plural(idea.cost, "resource", "resources")}.`,
+        button: "Make it now",
+        path: idea.href,
+      };
+    }
+    case "E11": {
+      // Standard exports are clean (red note), so Pro is sold on resources
+      // and pictures, never on the Jooma mark.
+      const from = Math.min(...TOP_UP_PACKS.map((p) => p.price));
+      return {
+        subject: `You've used ${n(v.used ?? 0)} of your ${n(v.resources)} resources`,
+        preheader: `They refill on ${v.refill}.`,
+        body:
+          `Your resources refill on ${v.refill}. If you need more before then, top-ups start at £${from.toFixed(2)}. ` +
+          `Or switch to Pro: double the resources and generated pictures for ${PRO_EXTRA} more a month.`,
+        button: "Switch to Pro",
+        path: "/pricing?plan=pro",
+      };
+    }
     case "E12":
       return {
         subject: `Welcome to ${v.plan}`,
@@ -215,11 +250,25 @@ function draft(id: LifecycleId, v: LifecycleVars): Draft {
   }
 }
 
-export function renderLifecycleEmail(id: LifecycleId, v: LifecycleVars): RenderedEmail {
+export function renderLifecycleEmail(
+  id: LifecycleId,
+  v: LifecycleVars,
+  opts: { unsubToken?: string } = {},
+): RenderedEmail {
   const d = draft(id, v);
-  // E9a and E9b are marketing (spec Step 6): sent only with consent. Their
-  // footer goes to email settings, where product news can be switched off.
-  // TODO before LIFECYCLE_EMAILS=on: a one-click unsubscribe link for these.
-  const kind: EmailKind = MARKETING.has(id) ? "marketing" : "account";
-  return { heading: d.subject, ...d, kind, footerPath: "/profile#email-settings" };
+  if (!MARKETING.has(id)) {
+    return { heading: d.subject, ...d, kind: "account", footerPath: "/profile#email-settings", footerLabel: "Email settings", oneClickPath: null };
+  }
+  // Marketing (spec Step 6 rule 4): an unsubscribe link in the footer, and
+  // one-click in the inbox. Never sent without one.
+  if (!opts.unsubToken) throw new Error(`${id} is marketing and needs an unsubscribe token`);
+  const t = encodeURIComponent(opts.unsubToken);
+  return {
+    heading: d.subject,
+    ...d,
+    kind: "marketing",
+    footerPath: `/unsubscribe?t=${t}`,
+    footerLabel: "Unsubscribe",
+    oneClickPath: `/api/email/unsubscribe?t=${t}`,
+  };
 }

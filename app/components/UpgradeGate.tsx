@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Medal, Zap, Clock, X } from "lucide-react";
 import TopUpModal from "@/app/components/v2/TopUpModal";
 import { P3Sheet, P5Sheet } from "@/app/components/v45/PlanSheets";
+import { P7Sheet } from "@/app/components/v45/PhaseTwoPrompts";
 import { refreshResources } from "@/app/lib/useResources";
 import type { OutOfResources } from "@/app/lib/resources";
 
@@ -32,6 +33,8 @@ interface QuotaBlock {
   prompt?: OutOfResources;
   /** Jooma 4.5: generated pictures are locked on this plan. */
   promptId?: "P5";
+  /** Jooma 4.5: Free's 10 weekly refines are used (P7). */
+  code?: string;
 }
 
 export default function UpgradeGate() {
@@ -69,6 +72,7 @@ export default function UpgradeGate() {
 
   // Jooma 4.5: the prompt sheets. The form underneath is never touched.
   if (block.promptId === "P5") return <P5Sheet onClose={() => setBlock(null)} />;
+  if (block.code === "refine_limit") return <P7Sheet onClose={() => setBlock(null)} />;
   if (block.prompt?.prompt === "P3") return <P3Sheet payload={block.prompt} onClose={() => setBlock(null)} />;
   const v45 = block.prompt !== undefined;
 

@@ -950,6 +950,7 @@ function ResourceItem({
           import("@/app/lib/exportUtils"),
         ]);
         triggerDownload(await buildSheetDocx(sheet), `${title}.docx`);
+        (await import("@/app/lib/export-mark")).noteExported();
       } else {
         const { exportToDocx } = await import("@/app/lib/exportUtils");
         await exportToDocx(output, title);

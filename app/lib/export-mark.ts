@@ -38,6 +38,24 @@ export async function exportMarkNow(): Promise<string | null> {
   return current;
 }
 
+/** The page event P6 listens for (PlanPromptsHost). */
+export const EXPORTED_EVENT = "jooma:exported";
+
+/**
+ * Call where an export has just finished (the file saved, or the print dialog
+ * opened). Tells P6 to show its note, but only when this export carried the
+ * mark: clean plans, and downloads that are never marked (CSV, quiz imports),
+ * never call it or have no mark set.
+ */
+export function noteExported(): void {
+  if (!current || typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(new CustomEvent(EXPORTED_EVENT));
+  } catch {
+    /* the note is a nicety */
+  }
+}
+
 /** Markdown with the mark as its last, small line. Idempotent. */
 export function withExportMark(markdown: string, mark: string | null): string {
   if (!mark) return markdown;

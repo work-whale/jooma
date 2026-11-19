@@ -2,7 +2,7 @@
 
 import { createRoot } from "react-dom/client";
 import { triggerDownload } from "@/app/lib/exportUtils";
-import { exportMarkNow } from "@/app/lib/export-mark";
+import { exportMarkNow, noteExported } from "@/app/lib/export-mark";
 import { SHEET_CSS } from "@/app/lib/sheets/sheet-css";
 import { getSheetTheme, pagePx } from "@/app/lib/sheets/themes";
 import type { SheetDoc } from "@/app/lib/sheets/types";
@@ -86,6 +86,7 @@ export async function exportSheetPdf(doc: SheetDoc, filename: string): Promise<v
       }
     }
     pdf.save(`${filename}.pdf`);
+    noteExported();
   } finally {
     dispose();
   }
@@ -132,6 +133,7 @@ html, body { margin: 0; padding: 0; background: #fff; }
     const go = () => {
       win?.focus();
       win?.print();
+      noteExported();
       setTimeout(() => iframe.remove(), 1000);
     };
     const fontsReady = win?.document.fonts?.ready;
@@ -146,4 +148,5 @@ html, body { margin: 0; padding: 0; background: #fff; }
 export async function exportSheetDocx(doc: SheetDoc, filename: string): Promise<void> {
   const { buildSheetDocx } = await import("@/app/lib/sheets/docx");
   triggerDownload(await buildSheetDocx(doc), `${filename}.docx`);
+  noteExported();
 }

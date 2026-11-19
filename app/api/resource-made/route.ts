@@ -1,3 +1,4 @@
+import { adsConsented, metaCookieFrom, metaEventId, metaIdentity, sendMetaEvent } from "@/app/lib/meta-capi";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
@@ -87,6 +88,20 @@ export async function POST(req: NextRequest) {
     });
     if (decision.activate) {
       await recordAppEvent(user.id, "activated", { days_since_signup: decision.daysSinceSignup });
+      // Meta's custom Activated: the agency optimises on it (spec Step 7).
+      // Once per account (event id act:<user>). Never throws.
+      const cookieHeader = req.headers.get("cookie");
+      const id = await metaIdentity(user.id);
+      // Only on the cookie banner's Accept (privacy policy section 9).
+      if (await adsConsented(user.id, cookieHeader)) await sendMetaEvent({
+        eventName: "Activated",
+        eventId: metaEventId("Activated", user.id),
+        email: user.email ?? id.email,
+        fbp: metaCookieFrom(cookieHeader, "_fbp") ?? id.fbp,
+        fbc: metaCookieFrom(cookieHeader, "_fbc") ?? id.fbc,
+        eventTimeUnix: Math.floor(now.getTime() / 1000),
+        clientUserAgent: req.headers.get("user-agent"),
+      });
     }
   }
 

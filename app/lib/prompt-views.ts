@@ -6,8 +6,8 @@
  * Pure: shared by the sidebar, the tool chrome, UpgradeGate and the tests.
  */
 
-import { PLAN_CONFIG, type AccountPlan } from "@/app/lib/plan-config";
-import { PROMPT_COPY } from "@/app/lib/prompts";
+import { minutesSavedFor, PLAN_CONFIG, type AccountPlan } from "@/app/lib/plan-config";
+import { PROMPT_COPY, ukDateKey } from "@/app/lib/prompts";
 import { estimateCheck, type OutOfResources } from "@/app/lib/resources";
 import { estimateFor, roundEstimate } from "@/app/lib/tool-estimates";
 import { trialDateShort } from "@/app/lib/account-plan";
@@ -132,4 +132,86 @@ export function planBlockV45(plan: AccountPlan, trialEndsAt: Date | null): PlanB
   }
   if (plan === "standard") return { note: null, cta: { label: "Upgrade", href: "/pricing?plan=pro" } };
   return { note: null, cta: { label: "See plans", href: "/pricing" } };
+}
+
+/* ── Phase 2: P6 to P10 ─────────────────────────────────────────────────── */
+
+/** P6, after an export finishes: Free and the trial (their exports carry the
+ *  mark). Null for the clean plans. */
+export function p6View(plan: AccountPlan | string): { text: string; button: string } | null {
+  if (plan === "free") return { ...PROMPT_COPY.P6.free };
+  if (plan === "pro_trial") return { ...PROMPT_COPY.P6.trial };
+  return null;
+}
+
+/** P7's sheet, once all 10 of the week's refines are used. */
+export function p7Sheet(): { title: string; body: string; buttons: string[] } {
+  const c = PROMPT_COPY.P7;
+  return { title: c.title, body: c.body, buttons: [...c.buttons] };
+}
+
+/** P8: resources made this UK calendar month, and the minutes they saved at
+ *  the spec's band rates (the same rates P2 and the emails use). */
+export function p8Totals(
+  runs: ReadonlyArray<{ tool_slug: string | null; created_at: string }>,
+  now: Date,
+): { made: number; minutes: number } {
+  const month = ukDateKey(now).slice(0, 7);
+  let made = 0;
+  let minutes = 0;
+  for (const r of runs) {
+    const t = new Date(r.created_at);
+    if (Number.isNaN(t.getTime()) || t.getTime() > now.getTime()) continue;
+    if (ukDateKey(t).slice(0, 7) !== month) continue;
+    made += 1;
+    minutes += minutesSavedFor(r.tool_slug ?? "");
+  }
+  return { made, minutes };
+}
+
+/** P8's line on Today, with "See what Pro adds" on Free and Standard. */
+export function p8View(v: { plan: AccountPlan | string; made: number; minutes: number }): { text: string; link: string | null } {
+  const c = PROMPT_COPY.P8;
+  const link = v.plan === "free" || v.plan === "standard" ? c.link : null;
+  if (v.made <= 0) return { text: c.none, link };
+  return { text: c.line({ made: v.made, hours: hoursSaved(v.minutes) }), link };
+}
+
+const DAY_MS = 86_400_000;
+
+/** P9 and E11: 80% or more of the allowance used, with more than 7 days to
+ *  the refill. Top-ups are not part of the allowance. */
+export function runningLow(v: { allowance: number; allowanceLeft: number; nextRefillAt: Date | null; now: Date }): boolean {
+  if (!(v.allowance > 0) || !v.nextRefillAt) return false;
+  const used = v.allowance - Math.max(0, Math.min(v.allowance, v.allowanceLeft));
+  if (used * 5 < v.allowance * 4) return false;
+  return v.nextRefillAt.getTime() - v.now.getTime() > 7 * DAY_MS;
+}
+
+const REFILL = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", day: "numeric", month: "long" });
+
+/** "3 December", in UK time. */
+export function refillDate(d: Date): string {
+  return REFILL.format(d);
+}
+
+/** P9, the banner on Today for Standard running low. */
+export function p9View(v: {
+  plan: AccountPlan | string;
+  allowance: number;
+  allowanceLeft: number;
+  nextRefillAt: Date | null;
+  now: Date;
+}): { text: string; buttons: string[] } | null {
+  if (v.plan !== "standard" || !runningLow(v) || !v.nextRefillAt) return null;
+  const used = v.allowance - Math.max(0, Math.min(v.allowance, v.allowanceLeft));
+  return {
+    text: PROMPT_COPY.P9.text({ used, allowance: v.allowance, refill: refillDate(v.nextRefillAt) }),
+    buttons: [...PROMPT_COPY.P9.buttons],
+  };
+}
+
+/** P10, the line at the top of the top-up picker, Standard only. */
+export function p10Line(plan: AccountPlan | string): string | null {
+  return plan === "standard" ? PROMPT_COPY.P10.text : null;
 }
