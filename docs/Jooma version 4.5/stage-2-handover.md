@@ -480,3 +480,42 @@ No legal team, so the owner asked Claude to write `/privacy` on the correct appr
 - Judgment call left as is: `jooma_seen` is a signed-in, first-party, date-only cookie, disclosed in the table, not behind the banner.
 - Tests: `cookie-consent` unit (the rule), `route-coverage` (public route); E2E banner saves the choice and Reject clears the Meta ids, signed-out save is a 204, no `jooma_attr` after Reject; `signup-attribution` 7 of 7, `about-trust`, `profile-gate`, `meta-activation` 3 of 3, phase2 specs all green. Unit 2,122.
 - `eslint.config.mjs` now ignores `.next-e2e/**` (the E2E build). Repo-wide eslint still has pre-existing errors in untouched files.
+
+## 13. Sixth session (19 Nov, evening): Phase 3
+
+Phase 3 is the spec's Step 9 list due 3 Jan. Nothing committed. No migration (Phase 2's `school_name` and `job_role` are all it needs).
+
+### Owner decisions this session
+
+- **E15 term emails: not built.** Ash's red note beside the four E15 dates reads "Leave it for Now"; the owner read it as leave E15 out. Build it only if the owner asks again.
+- **Public share link: not in Phase 3.** It is a red note in the Step 1 plans table ("a link to share outside of Jooma, e.g. WhatsApp") and is in no phase of Step 9. To be planned separately (privacy: pupil names in resources, links anyone can open).
+- **Weekly schools list:** an admin page plus a Monday 08:00 email to info@jooma.ai, school names and counts only.
+
+### Built
+
+| Step | Item | Where |
+|---|---|---|
+| 9 | Grouping rules: school email domain plus the cleaned typed name. Webmail, shared platforms (Hwb, C2k, LGfL, Glow), test addresses and Jooma staff never make a school domain; a trust's shared domain splits by typed name; a teacher who typed nothing joins the domain's only named school; a webmail teacher joins the one domain school with the same name. "New this week" = the third teacher joined in the last 7 days. | `app/lib/school-groups.ts` (pure) |
+| 9 | Admin, People, "Schools with 3+" (`/admin/school-leads`, `see_people`): each school with teachers, paying, senior leaders, and each teacher's first name, role, plan, join date. Addresses are read only to find the domain and never shown. | `app/admin/school-leads`, `app/lib/school-leads-data.ts` |
+| 9 | Monday email to `SCHOOL_LEADS_TO` (default info@jooma.ai): new this week, then all schools, link to the page. Cron at 07:00 and 08:00 UTC on Mondays; only the one that is 08:00 UK sends. Internal, so `LIFECYCLE_EMAILS` does not gate it. | `app/api/cron/school-leads`, `vercel.json` |
+| 6 | **Bug fix from Phase 2:** the lifecycle cron sent every email with `oneClickUrl: null`, so E9a, E9b and E10 never had the List-Unsubscribe header, and the footer of every email read "Email settings" even when it linked to unsubscribe. Now `lifecycleOutgoing()` builds the message and options: marketing gets the header and an "Unsubscribe" footer (HTML and plain text), account mail neither. | `lifecycle-emails.ts`, cron |
+
+Production on 19 Nov (read-only count): no school email domain had 3 accounts; 136 Gmail, 12 + 11 Hotmail. The list will fill from the typed school name, which starts with Phase 2's signup question, so expect it to be empty at first.
+
+### Tests (fresh staging build into `.next-e2e`, `scripts/with-staging-env.sh`)
+
+| Layer | Result |
+|---|---|
+| Unit | 2,151 passed. New: `school-groups` (26: cleaning, domains, grouping, new this week, the email, Monday 08:00 in GMT and BST), `lifecycle-one-click` (3, seen failing on the old code first). |
+| New E2E | `tests/admin/school-leads.spec.ts` 2 of 2: three spellings of one school show as one card, new this week, senior leader counted, no addresses on the page, link in People; marketing (no `see_people`) is turned away. |
+| Regression E2E | `tests/admin` plus `phase2-unsubscribe`: 54 passed, 3 skipped (LIVE_MODEL). |
+| Cron | `/api/cron/school-leads` locally: 401 without the secret; "Not Monday 08:00 UK" with it. |
+| tsc, eslint on touched files, language check | Clean. |
+
+**Deliberately not tested:** a real Monday send (SendGrid to info@jooma.ai; the email is rendered and unit tested, and the reader runs on every page load); real webmail teachers on school domains (fixtures are on `@jooma.test`, so the domain rules are unit tested only).
+
+### Next
+
+1. Owner: review and commit. Production needs no new migration for Phase 3, only Phase 2's `20261119000000` to `000200` with the code.
+2. Optional: set `SCHOOL_LEADS_TO` if the list should go somewhere other than info@jooma.ai.
+3. Later, if wanted: E15 (held by the red note) and the public share link (needs its own plan).

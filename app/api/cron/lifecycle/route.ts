@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { sendBroadcastEmail } from "@/app/lib/email";
-import { lifecycleHtml } from "@/app/lib/lifecycle-html";
 import { dropOptedOutMarketing, dueEmails, e11Due, eventEmails, isMarketingKey, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
 import { ideaFor, pickIdea, type Idea } from "@/app/lib/e10-ideas";
 import { signUnsubToken, unsubSecret } from "@/app/lib/unsub-link";
-import { renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-emails";
+import { lifecycleOutgoing, renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-emails";
 import { planInForce, trialDateLong } from "@/app/lib/account-plan";
 import { MINUTES_SAVED_PER_BAND, allowanceFor, type AccountPlan } from "@/app/lib/plan-config";
 
@@ -54,7 +53,6 @@ interface Row {
   last_seen_at: string | null;
 }
 
-const html = lifecycleHtml;
 const DAY_KEY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" });
 
 async function run(): Promise<{ enabled: boolean; due: number; sent: number; failed: number }> {
@@ -389,15 +387,8 @@ async function sendOne(
     .from("lifecycle_email_log")
     .insert({ user_id: userId, key, status: "sent" });
   if (lockError) return "locked";
-  const result = await sendBroadcastEmail(
-    to,
-    {
-      subject: m.subject,
-      html: html(m.subject, m.body, m.button, site + m.path, site + m.footerPath),
-      text: `${m.body}\n\n${m.button}: ${site}${m.path}`,
-    },
-    { purpose: "lifecycle", oneClickUrl: null },
-  );
+  const out = lifecycleOutgoing(m, site);
+  const result = await sendBroadcastEmail(to, out.rendered, out.opts);
   if (result.status === "sent") return "sent";
   await supabaseAdmin
     .from("lifecycle_email_log")

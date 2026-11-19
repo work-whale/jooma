@@ -18,6 +18,7 @@
 import { OFFER, PLAN_CONFIG, TOP_UP_PACKS, TRIAL } from "@/app/lib/plan-config";
 import { PRO_EXTRA } from "@/app/lib/prompts";
 import type { EmailKind, LifecycleId } from "@/app/lib/lifecycle";
+import { lifecycleHtml } from "@/app/lib/lifecycle-html";
 
 export const LIFECYCLE_IDS: LifecycleId[] = ["E1", "E2a", "E2b", "E3", "E4", "E5", "E6", "E7", "E8", "E9a", "E9b", "E10", "E11", "E12", "E13", "E14"];
 
@@ -248,6 +249,32 @@ function draft(id: LifecycleId, v: LifecycleVars): Draft {
         path: "/account/billing",
       };
   }
+}
+
+/**
+ * What the cron hands to sendBroadcastEmail for one rendered email: the
+ * message and the options. Marketing mail gets the RFC 8058 one-click URL (the
+ * List-Unsubscribe header) and an "Unsubscribe" footer; account mail gets
+ * neither. Until 19 Nov the cron passed null for every header and always
+ * labelled the footer "Email settings", so E9a, E9b and E10 went out without
+ * the header and with an unsubscribe link that said "Email settings".
+ */
+export function lifecycleOutgoing(
+  m: RenderedEmail,
+  site: string,
+): {
+  rendered: { subject: string; html: string; text: string };
+  opts: { purpose: "lifecycle"; oneClickUrl: string | null };
+} {
+  const base = site.replace(/\/+$/, "");
+  return {
+    rendered: {
+      subject: m.subject,
+      html: lifecycleHtml(m.subject, m.body, m.button, base + m.path, base + m.footerPath, m.footerLabel),
+      text: `${m.body}\n\n${m.button}: ${base}${m.path}\n\n${m.footerLabel}: ${base}${m.footerPath}`,
+    },
+    opts: { purpose: "lifecycle", oneClickUrl: m.oneClickPath ? base + m.oneClickPath : null },
+  };
 }
 
 export function renderLifecycleEmail(
