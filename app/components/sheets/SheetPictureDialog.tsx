@@ -26,7 +26,7 @@ export type PictureTab = "search" | "ai" | "upload";
 
 const TABS: { id: PictureTab; label: string; icon: typeof Search }[] = [
   { id: "search", label: "Search", icon: Search },
-  { id: "ai", label: "AI picture", icon: Sparkles },
+  { id: "ai", label: "Generated picture", icon: Sparkles },
   { id: "upload", label: "Upload", icon: Upload },
 ];
 

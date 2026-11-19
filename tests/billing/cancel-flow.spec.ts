@@ -286,6 +286,56 @@ test.describe("The cancel flow", () => {
     });
   }
 
+  // ── Jooma 4.5, P11: the two ways down, above the reasons ──────────────────
+
+  test("P11: Switch to Free asks the one-tap reason, then goes straight to confirm", async ({ page }) => {
+    const sub = await subscribe();
+    await openFlow(page);
+    const p11 = page.getByTestId("cancel-p11");
+    await expect(p11.getByRole("button", { name: /Switch to Free/ })).toContainText("50 resources every Sunday");
+    await expect(p11.getByRole("button", { name: /Move to Standard/ })).toContainText("£4.99 a month");
+
+    await p11.getByRole("button", { name: /Switch to Free/ }).click();
+    await expect(page.getByRole("heading", { name: "One last thing: why are you leaving?" })).toBeVisible();
+    await page.getByLabel("It costs too much").check();
+    await page.getByRole("button", { name: "Continue to Switch to Free" }).click();
+
+    // Past the offers and the inventory: the save flow is for those who did
+    // not already choose a way down.
+    await expect(step(page)).toHaveAttribute("data-step", "confirm");
+    await page.getByTestId("confirm-cancel").click();
+    await expect(page.getByRole("heading", { name: "Your plan is cancelled." })).toBeVisible();
+
+    const after = await stripe.subscriptions.retrieve(sub.id);
+    expect(after.cancel_at_period_end).toBe(true);
+    expect(await events()).toEqual([expect.objectContaining({ reason: "cost", outcome: "cancelled" })]);
+  });
+
+  test("P11: Move to Standard schedules the change for renewal and is recorded", async ({ page }) => {
+    const sub = await subscribe();
+    await openFlow(page);
+    await page.getByTestId("cancel-p11").getByRole("button", { name: /Move to Standard/ }).click();
+    await page.getByLabel("I'm not using it enough").check();
+    await page.getByRole("button", { name: "Continue to Standard" }).click();
+    await page.getByRole("button", { name: "Switch to Standard Teacher" }).click();
+    await expect(page.getByRole("heading", { name: "That's sorted." })).toBeVisible();
+
+    const after = await stripe.subscriptions.retrieve(sub.id);
+    expect(after.schedule).toBeTruthy();
+    expect(after.cancel_at_period_end).toBe(false);
+    await expect.poll(events).toEqual([expect.objectContaining({ reason: "unused", outcome: "downgrade" })]);
+  });
+
+  test("the inventory says leaving lands on Free, never locked out", async ({ page }) => {
+    await subscribe();
+    await openFlow(page);
+    await pickReason(page, "Something went wrong");
+    await forward(page).click();
+    await expect(step(page)).toHaveAttribute("data-step", "lose");
+    await expect(page.getByText(/You move to Free: 50 resources every Sunday/)).toBeVisible();
+    await expect(page.getByText(/can't make or edit|won't be able to create/i)).toHaveCount(0);
+  });
+
   test("Continue stays disabled until a reason is picked", async ({ page }) => {
     await subscribe();
     await openFlow(page);

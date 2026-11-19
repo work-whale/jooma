@@ -42,11 +42,11 @@ const nf = new Intl.NumberFormat("en-GB");
  * The "<1" case earns its keep: a tool with a genuine but tiny cost would
  * otherwise render "0", which reads as "this one is free" and invites a teacher
  * to hammer it. "<1" is honest that there is a cost without inventing
- * precision. Exact zero stays "—", the existing convention for no data.
+ * precision. Exact zero stays "-", the existing convention for no data.
  */
 const credits = (n: number) => {
   const v = Number(n) || 0;
-  if (v <= 0) return "—";
+  if (v <= 0) return "-";
   if (v < 1) return "<1";
   return nf.format(Math.round(v));
 };
@@ -96,7 +96,7 @@ export default function UsageTable({ rows }: { rows: ReportRow[] }) {
             <tr style={{ color: "var(--j-faint)" }} className="text-left">
               <th className="font-semibold px-4 py-3">Tool</th>
               <th className="font-semibold px-4 py-3 text-right">Generations</th>
-              <th className="font-semibold px-4 py-3 text-right">Credits used</th>
+              <th className="font-semibold px-4 py-3 text-right">Resources used</th>
               <th className="font-semibold px-4 py-3 text-right">Per generation</th>
               {/* "Next 10" rather than "Average per 10": these are forward
                   projections at the current average, and the old label read

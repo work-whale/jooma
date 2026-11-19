@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
-import { createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
+import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
- * The plan pill in the sidebar, above credits, and the button to /pricing.
+ * The plan pill in the sidebar, above resources, and the button to /pricing.
  *
  * Every teacher sees which plan they are on and has one obvious way to move
  * between plans, on every screen. The wording of the pill and the button is
@@ -25,42 +25,47 @@ test.describe("Sidebar plan", () => {
     await deleteTeacher(teacher);
   });
 
-  for (const [plan, label, cta] of [
-    ["standard", "Standard", "Upgrade"],
-    ["pro", "Pro", "Upgrade"],
-    ["max", "Max", "See plans"],
+  // Jooma 4.5 (planBlockV45): Standard is offered Pro; Pro and Max see all plans.
+  for (const [plan, label, cta, to] of [
+    ["standard", "Standard", "Upgrade", /\/pricing\?plan=pro$/],
+    ["pro", "Pro", "See plans", /\/pricing$/],
+    ["max", "Max", "See plans", /\/pricing$/],
   ] as const) {
     test(`a ${label} teacher sees ${label}, and ${cta} goes to the plans`, async ({ page }) => {
       await setPlan(teacher, plan, "paying");
       await signIn(page, teacher);
       await page.goto("/dashboard");
 
+      // v4: the plan's name is the chip at the head of the sidebar, and the
+      // plan block with its button sits below the resources meter.
       const block = planBlock(page);
-      await expect(block.getByText("Your plan")).toBeVisible();
-      await expect(block.getByText(label, { exact: true })).toBeVisible();
+      await expect(page.getByTestId("sidebar-plan-chip")).toHaveText(label);
 
-      // Above the credit meter, in the foot of the rail.
-      const meter = page.locator("#app-sidenav-v2").getByText("Credits", { exact: true });
+      const meter = page.locator("#app-sidenav-v2").getByTestId("sidebar-resources");
       const blockBox = await block.boundingBox();
       const meterBox = await meter.boundingBox();
-      expect(blockBox && meterBox && blockBox.y < meterBox.y).toBe(true);
+      expect(blockBox && meterBox && blockBox.y > meterBox.y).toBe(true);
 
       await block.getByRole("link", { name: cta }).click();
-      await expect(page).toHaveURL(/\/pricing$/);
+      await expect(page).toHaveURL(to);
       await expect(page.getByRole("button", { name: "Your plan" }).first()).toBeVisible();
     });
   }
 
-  test("a teacher with no plan is asked to choose one", async ({ page }) => {
+  test("a Free teacher sees Free, the weekly allowance, and Go Pro", async ({ page }) => {
+    // Jooma 4.5: nobody has "no plan". Free is a plan with 50 every Sunday.
+    await admin
+      .from("profiles")
+      .update({ plan: "free", subscription_status: null, stripe_subscription_id: null, current_period_end: null })
+      .eq("id", teacher.id);
+    await admin.rpc("resources_start", { p_uid: teacher.id, p_plan: "free" });
     await signIn(page, teacher);
     await page.goto("/dashboard");
 
     const block = planBlock(page);
-    await expect(block.getByText("No plan", { exact: true })).toBeVisible();
-    await expect(block.getByRole("link", { name: "Choose a plan" })).toHaveAttribute(
-      "href",
-      "/pricing",
-    );
+    await expect(page.getByTestId("sidebar-plan-chip")).toHaveText("Free");
+    await expect(page.getByTestId("sidebar-plan-note")).toHaveText("50 resources every Sunday");
+    await expect(block.getByRole("link", { name: "Go Pro" })).toHaveAttribute("href", "/pricing?plan=pro");
   });
 
   test("a non ambassador sees the plain wordmark and no Ambassador item", async ({ page }) => {
@@ -69,7 +74,7 @@ test.describe("Sidebar plan", () => {
     await page.goto("/dashboard");
 
     const nav = page.locator("#app-sidenav-v2");
-    await expect(planBlock(page).getByText("Pro", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("sidebar-plan-chip")).toHaveText("Pro");
     await expect(nav.getByRole("img", { name: "Jooma", exact: true })).toBeVisible();
     await expect(nav.getByRole("img", { name: "Jooma Ambassador" })).toHaveCount(0);
     await expect(nav.getByRole("link", { name: "Ambassador", exact: true })).toHaveCount(0);

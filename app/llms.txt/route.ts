@@ -39,7 +39,7 @@ export function GET() {
     const plan = PLANS[id];
     const credits = planCredits(id)?.toLocaleString("en-GB");
     const yearly = plan.priceYearly ? `, or ${planCardPrice(id, "year")} a year` : "";
-    return `- ${planCardName(id)}: ${planCardPrice(id)} a month${yearly}. ${credits} credits a month.`;
+    return `- ${planCardName(id)}: ${planCardPrice(id)} a month${yearly}. ${credits} resources a month.`;
   }).join("\n");
 
   const body = `# Jooma

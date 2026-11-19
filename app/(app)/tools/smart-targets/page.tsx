@@ -19,7 +19,7 @@ export default async function SmartTargetsPage({
           icon={<Target className="w-5 h-5 text-emerald-600" />}
 
           title="SMART Targets"
-          description="This tool can be used to draft SMART targets for students. Simply provide the year group and the overall targets and let the AI draft the targets for you. Remember to review and adapt the output so it is fully applicable to your student."
+          description="This tool can be used to draft SMART targets for students. Simply provide the year group and the overall targets and let Jooma draft the targets for you. Remember to review and adapt the output so it is fully applicable to your student."
           steps={[
             { label: "Enter your targets", detail: "Be as specific as you can, and keep surnames and other children's names out. A first name, if you add one, stays on your device." },
             { label: "Generate", detail: "Get fully structured SMART targets with specific, measurable, achievable, relevant, and time-bound criteria." },

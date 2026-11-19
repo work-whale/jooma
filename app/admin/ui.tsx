@@ -14,20 +14,20 @@ import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { nf } from "./format";
 
 // ── Palette ──────────────────────────────────────────────────────────────────
-// Mirrors the V2 brand tokens on :root in app/globals.css. Literal hex rather
-// than var(--j-*) because this console styles through inline style={{}}, which
-// takes a value not a custom property reference. Keep the two in step: if a
-// token moves in globals.css, move it here.
+// Mirrors the v4 brand tokens on :root in app/globals.css. Literal hex rather
+// than var(--j-*) because the stats charts pass these to SVG attributes
+// (stopColor, stroke, fill), which do not resolve custom properties. Keep the
+// two in step: if a token moves in globals.css, move it here.
 export const C = {
-  page: "#F7F5FC", // --j-bg
+  page: "#FAF9FC", // --j-bg
   surface: "#FFFFFF", // --j-card
   white: "#FFFFFF",
-  border: "#EAE6F5", // --j-line
+  border: "#ECE8F4", // --j-line
   divider: "#F1ECFC", // --j-tint
   ink: "#1D1730", // --j-ink
-  ink2: "#3C3552", // --j-body
-  muted: "#6D6683", // --j-muted
-  nav: "#3C3552", // --j-body
+  ink2: "#453E5E", // --j-body
+  muted: "#5F5876", // --j-muted
+  nav: "#453E5E", // --j-body
   // Status colours keep their semantic job — an admin reads these at a glance
   // in dense tables — and are only retuned to sit beside the purple ramp.
   ok: "#0F6E56",
@@ -828,7 +828,7 @@ export function DrawerFooter({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="shrink-0 border-t px-5 py-3.5"
-      style={{ borderColor: C.border, backgroundColor: "#F7F5FC" }}
+      style={{ borderColor: C.border, backgroundColor: "#FAF9FC" }}
     >
       <div className="flex flex-wrap items-center gap-2">{children}</div>
     </div>

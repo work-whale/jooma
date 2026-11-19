@@ -108,7 +108,7 @@ export default async function OverviewTab({
           className="rounded-xl px-4 py-3 mb-5 text-sm font-medium"
           style={{ backgroundColor: "#DDF0E2", color: "#1f6b3b" }}
         >
-          Payment received — {PLAN_CREDITS.toLocaleString("en-GB")} credits have been added
+          Payment received — {PLAN_CREDITS.toLocaleString("en-GB")} resources have been added
           to this month.
         </div>
       )}
@@ -281,7 +281,7 @@ export default async function OverviewTab({
             page really is the only route back. */}
         {ending && (
           <p className="text-sm mt-4" style={{ color: "var(--j-faint)" }}>
-            Your plan is set to end. Renew to keep it — you won&apos;t be charged
+            Your plan is set to end. Renew to keep it. You won&apos;t be charged
             until {renews ?? "the next billing date"}.
           </p>
         )}

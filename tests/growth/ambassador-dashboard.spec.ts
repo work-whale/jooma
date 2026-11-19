@@ -128,6 +128,8 @@ test.describe("Ambassador dashboard", () => {
 
     const nav = mine.locator("#app-sidenav-v2");
     await expect(nav.getByRole("img", { name: "Jooma Ambassador" })).toBeVisible();
+    // The gold wordmark already says Ambassador; the chip beside it is the plan.
+    await expect(nav.getByTestId("sidebar-plan-chip")).toHaveText("Pro");
     await expect(nav.getByTestId("sidebar-plan").getByText("Ambassador · Pro")).toBeVisible();
     await expect(nav.getByTestId("sidebar-plan").getByText(/^Free until /)).toBeVisible();
 

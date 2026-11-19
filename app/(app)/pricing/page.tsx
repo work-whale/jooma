@@ -1,3 +1,4 @@
+import { sourcePrompt } from "@/app/lib/app-event-rules";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Crown } from "@phosphor-icons/react/dist/ssr";
@@ -8,6 +9,9 @@ import { loadPlanState } from "@/app/account/billing/loadPlanState";
 import PlanPicker from "@/app/account/billing/PlanPicker";
 import AmbassadorCodeField from "@/app/account/billing/AmbassadorCodeField";
 import { trialOfferFor, type TrialOfferRow } from "@/app/lib/trial-offer";
+import { accountAccess, type AccessRow } from "@/app/lib/account-access";
+import { isBillingInterval, type PlanId } from "@/app/lib/plans";
+import ChosenPlanScreen from "./ChosenPlanScreen";
 
 // Plans: every plan a teacher can be on, and the way to each one.
 //
@@ -65,6 +69,22 @@ export default async function PricingPage({
     | TrialOfferRow
     | undefined;
   const trialOffer = accessRow ? trialOfferFor(accessRow) : null;
+
+  // Jooma 4.5: the plan in force, for the picker's one-line diff. Only a row
+  // from the 4.5 my_account_access() has resources_made.
+  const v45Row = accessRow && (accessRow as AccessRow).resources_made !== undefined ? (accessRow as AccessRow) : null;
+  const accountPlan = v45Row ? accountAccess(v45Row).accountPlan : null;
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const asked = one(params.plan);
+  const initialPlan: PlanId | null = asked === "standard" || asked === "pro" || asked === "max" ? asked : null;
+  const askedInterval = one(params.interval);
+  const initialInterval = isBillingInterval(askedInterval) ? askedInterval : null;
+  // Jooma 4.5 Step 7: the prompt that opened the picker, for checkout_started.
+  const fromPrompt = sourcePrompt(one(params.from));
+  // Signed out "Choose X" on the pricing page: signup first, then this one
+  // screen (spec Step 4, rule 4), while the ten free days are running.
+  const chosen = one(params.chosen);
+  const showChosen = accountPlan === "pro_trial" && (chosen === "standard" || chosen === "pro" || chosen === "max");
   const {
     plan,
     hasSubscription,
@@ -99,6 +119,8 @@ export default async function PricingPage({
           </Link>
           .
         </p>
+
+        {showChosen && <ChosenPlanScreen />}
 
         {/* Where Stripe sends someone who backs out of paying. Nothing was
             charged, and the cards below are right here to try again. */}
@@ -156,7 +178,7 @@ export default async function PricingPage({
             current={ambassadorPro || reviewTrialUntil ? "free" : plan}
             hasSubscription={hasSubscription}
             chargesToday={chargesToday}
-            onFreeTrial={Boolean(reviewTrialUntil)}
+            onFreeTrial={Boolean(reviewTrialUntil) || accountPlan === "pro_trial"}
             pendingPlan={pendingSwitch ? null : (pending?.plan ?? null)}
             pendingInterval={pending?.interval ?? null}
             pendingAt={pendingAt}
@@ -169,6 +191,10 @@ export default async function PricingPage({
             hasUnusedCode={Boolean(referralCode) && !codeSpent}
             codeDiscount={codeDiscount}
             trialOfferEndsAt={trialOffer ? trialOffer.endsAt.toISOString() : null}
+            accountPlan={accountPlan}
+            initialPlan={initialPlan}
+            initialInterval={initialInterval}
+            sourcePrompt={fromPrompt}
           />
         )}
 

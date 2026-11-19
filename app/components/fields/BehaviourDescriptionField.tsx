@@ -15,7 +15,7 @@ interface Props {
 export default function BehaviourDescriptionField({ value, onChange, invalid }: Props) {
   const placeholder = useTypingPlaceholder([
     "e.g. Frequently calls out without permission during whole-class teaching",
-    "e.g. Leaves seat and disrupts peers, occurring 3–4 times per lesson",
+    "e.g. Leaves seat and disrupts peers, occurring 3 or 4 times per lesson",
     "e.g. Refuses tasks verbally and leaves the room when challenged",
     "e.g. Makes threatening comments towards peers in unstructured times",
   ]);

@@ -20,6 +20,11 @@ import { EmailPreferencesSkeleton } from "./Skeletons";
 
 export default function EmailPreferencesSection() {
   const [on, setOn] = useState<boolean | null>(null);
+  // Jooma 4.5: E8, the Sunday email on Free, has its own switch (spec Step 6,
+  // rule 4). Null hides it: before the plans engine migration there is no
+  // column to store it in.
+  const [sunday, setSunday] = useState<boolean | null>(null);
+  const [sundayBusy, setSundayBusy] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -36,6 +41,10 @@ export default function EmailPreferencesSection() {
         return;
       }
       setOn((data as { product_emails?: boolean } | null)?.product_emails !== false);
+      const { data: row, error: rowError } = await createClient().from("profiles").select("sunday_emails").maybeSingle();
+      if (!cancelled && !rowError && row && typeof (row as { sunday_emails?: unknown }).sunday_emails === "boolean") {
+        setSunday((row as { sunday_emails: boolean }).sunday_emails);
+      }
     })();
     return () => {
       cancelled = true;
@@ -63,7 +72,36 @@ export default function EmailPreferencesSection() {
       setError("Could not save that. Please try again.");
       return;
     }
+    // Jooma 4.5: the same choice is marketing consent. Missing column before
+    // the migration: ignored.
+    {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) await supabase.from("profiles").update({ marketing_consent: next }).eq("id", user.id);
+    }
     setSaved(true);
+  };
+
+  const toggleSunday = async () => {
+    if (sunday === null || sundayBusy) return;
+    const next = !sunday;
+    setSunday(next);
+    setSundayBusy(true);
+    setError(null);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = user
+      ? await supabase.from("profiles").update({ sunday_emails: next }).eq("id", user.id)
+      : { error: new Error("signed out") };
+    setSundayBusy(false);
+    if (error) {
+      setSunday(!next);
+      setError("Could not save that. Please try again.");
+    }
   };
 
   if (loadError) {
@@ -111,6 +149,20 @@ export default function EmailPreferencesSection() {
         </button>
       </div>
 
+      {sunday !== null && (
+        <div className="flex items-start justify-between gap-6 max-w-xl mt-6">
+          <div>
+            <p id="sunday-emails-label" className="font-semibold" style={{ color: "var(--j-ink)" }}>
+              The Sunday email
+            </p>
+            <p className="text-sm mt-1" style={{ color: "var(--j-faint)" }}>
+              On Free, a short note each Sunday when your resources are back.
+            </p>
+          </div>
+          <Switch on={sunday} busy={sundayBusy} onClick={toggleSunday} labelledBy="sunday-emails-label" testId="sunday-emails-switch" />
+        </div>
+      )}
+
       <p className="text-sm mt-4 min-h-5" role="status" aria-live="polite" data-testid="product-emails-status">
         {error ? (
           <span className="text-red-600">{error}</span>
@@ -124,9 +176,44 @@ export default function EmailPreferencesSection() {
   );
 }
 
+function Switch({
+  on,
+  busy,
+  onClick,
+  labelledBy,
+  testId,
+}: {
+  on: boolean;
+  busy: boolean;
+  onClick: () => void;
+  labelledBy: string;
+  testId: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-labelledby={labelledBy}
+      onClick={onClick}
+      disabled={busy}
+      data-testid={testId}
+      className="relative shrink-0 rounded-full transition-colors disabled:opacity-60"
+      style={{ width: 48, height: 28, backgroundColor: on ? "var(--j-purple)" : "var(--j-line)" }}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute top-1 rounded-full bg-white shadow transition-[left]"
+        style={{ width: 20, height: 20, left: on ? 24 : 4 }}
+      />
+    </button>
+  );
+}
+
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
+      id="email-settings"
       className="rounded-3xl p-6 sm:p-8 border"
       style={{ backgroundColor: "var(--j-card)", borderColor: "var(--j-line)" }}
     >

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CONSENT_EVENT, readConsent } from "@/app/lib/cookie-consent";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 
@@ -48,9 +49,20 @@ export default function MetaPixel() {
   // The inline snippet already reported the page it loaded on. Without this the
   // first navigation would be counted twice.
   const firstRender = useRef(true);
+  // Jooma 4.5 Step 7: nothing loads until the visitor accepts the cookie
+  // banner (CookieBanner). Read in an effect: document.cookie is browser only.
+  // Checked before firstRender below, so the snippet's own PageView still
+  // counts as the first one once consent arrives.
+  const [consented, setConsented] = useState(false);
+  useEffect(() => {
+    const read = () => setConsented(readConsent(document.cookie) === "accepted");
+    read();
+    window.addEventListener(CONSENT_EVENT, read);
+    return () => window.removeEventListener(CONSENT_EVENT, read);
+  }, []);
 
   useEffect(() => {
-    if (!PIXEL_ID) return;
+    if (!PIXEL_ID || !consented) return;
     if (firstRender.current) {
       firstRender.current = false;
       return;
@@ -59,9 +71,9 @@ export default function MetaPixel() {
     // error worth reporting: a missed PageView is the least consequential thing
     // this file does, and the conversions that matter are sent server side.
     window.fbq?.("track", "PageView");
-  }, [pathname]);
+  }, [pathname, consented]);
 
-  if (!PIXEL_ID) return null;
+  if (!PIXEL_ID || !consented) return null;
 
   return (
     <Script id="meta-pixel" strategy="afterInteractive">

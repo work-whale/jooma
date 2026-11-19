@@ -41,7 +41,7 @@ export default function StartTrialButton({
   return (
     <>
       <button type="button" onClick={start} disabled={busy} className={className} style={style} data-testid="start-trial">
-        {busy ? "Starting…" : "Start your 3 day free trial"}
+        {busy ? "Starting…" : "Start 10 days of Pro free"}
       </button>
       {error && (
         <p role="alert" className="text-sm mt-2" style={{ color: "#c2342b" }}>

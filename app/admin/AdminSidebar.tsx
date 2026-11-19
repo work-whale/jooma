@@ -22,6 +22,7 @@ import {
   UserMinus,
   Megaphone,
   UsersRound,
+  Building2,
   ScrollText,
   FlaskConical,
   Sliders,
@@ -81,6 +82,7 @@ const NAV: NavGroup[] = [
     perm: "see_people",
     items: [
       { href: "/admin/users", label: "Teachers", icon: Users },
+      { href: "/admin/school-leads", label: "Schools with 3+", icon: Building2 },
       // The School plan isn't part of the product yet — there is no pricing for
       // it, no seat model on profiles, and nothing reads plan_config.school at
       // runtime. Disabled rather than hidden so it's visibly planned-but-unbuilt.
@@ -93,6 +95,7 @@ const NAV: NavGroup[] = [
     perm: "see_money",
     items: [
       { href: "/admin/plans", label: "Plans & pricing", icon: PoundSterling },
+      { href: "/admin/funnel", label: "Plans results", icon: BarChart3 },
       { href: "/admin/revenue", label: "Payments & invoices", icon: CreditCard },
       { href: "/admin/topups", label: "Top-ups", icon: Zap },
       { href: "/admin/promos", label: "Promo codes", icon: Tag },

@@ -87,7 +87,7 @@ test("Live beside a resource: warned, connected, an edit by voice, and the resul
   // The warning comes first, with the credits.
   await page.getByTestId("jo-live").click();
   await expect(page.getByTestId("live-confirm")).toBeVisible();
-  await expect(page.getByTestId("live-credits")).toContainText("credits left", NAV);
+  await expect(page.getByTestId("live-credits")).toContainText("resources left", NAV);
   await page.getByTestId("live-start").click();
   await expect(page.getByTestId("live-bar")).toContainText("Live", NAV);
   expect(opened[0]).toMatchObject({ surface: "panel" });

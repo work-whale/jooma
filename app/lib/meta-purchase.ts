@@ -40,13 +40,69 @@ export interface PurchaseInput {
   clientUserAgent?: string | null;
 }
 
+export type MetaEventName = "CompleteRegistration" | "StartTrial" | "Activated" | "Subscribe" | "Purchase";
+
 export interface MetaEventPayload {
-  event_name: "Purchase";
+  event_name: MetaEventName;
   event_time: number;
   event_id: string;
   action_source: "website";
   user_data: Record<string, string>;
-  custom_data: { value: number; currency: string };
+  custom_data?: { value: number; currency: string };
+}
+
+/**
+ * Jooma 4.5 Step 7. One stable id per account for the once-only events, so a
+ * retry (or the browser and the server both sending) counts once in Meta.
+ * StartTrial keeps the bare user id it has always used.
+ */
+export function metaEventId(name: "CompleteRegistration" | "Activated" | "StartTrial", userId: string): string {
+  if (name === "CompleteRegistration") return `reg:${userId}`;
+  if (name === "Activated") return `act:${userId}`;
+  return userId;
+}
+
+/** A subscription invoice's Meta name: the first payment is Subscribe; a
+ *  renewal or an upgrade's proration stays Purchase (owner's choice, 19 Nov). */
+export function metaNameForInvoice(billingReason: string | null | undefined): "Subscribe" | "Purchase" {
+  return billingReason === "subscription_create" ? "Subscribe" : "Purchase";
+}
+
+export interface MetaEventInput {
+  eventName: MetaEventName;
+  eventId: string;
+  email: string | null;
+  fbp: string | null;
+  fbc: string | null;
+  eventTimeUnix: number;
+  /** Minor units (pence), with `currency`, for Subscribe and Purchase. */
+  valueMinor?: number;
+  currency?: string;
+  clientIpAddress?: string | null;
+  clientUserAgent?: string | null;
+}
+
+/** Any Step 7 event's body. Pure. */
+export function buildMetaEvent(input: MetaEventInput): MetaEventPayload {
+  const user_data: Record<string, string> = {};
+  const em = hashedEmail(input.email);
+  if (em) user_data.em = em;
+  // NOT hashed: Meta's own cookie values.
+  if (input.fbp) user_data.fbp = input.fbp;
+  if (input.fbc) user_data.fbc = input.fbc;
+  if (input.clientIpAddress) user_data.client_ip_address = input.clientIpAddress;
+  if (input.clientUserAgent) user_data.client_user_agent = input.clientUserAgent;
+  const body: MetaEventPayload = {
+    event_name: input.eventName,
+    event_time: input.eventTimeUnix,
+    event_id: input.eventId,
+    action_source: "website",
+    user_data,
+  };
+  if (typeof input.valueMinor === "number" && input.currency) {
+    body.custom_data = { value: input.valueMinor / 100, currency: input.currency.toUpperCase() };
+  }
+  return body;
 }
 
 /**
@@ -81,7 +137,10 @@ export function isReportablePurchase(inv: Stripe.Invoice): boolean {
 
 /** Build the event body. Pure, so every rule it encodes is testable with no
  *  network and no credentials. */
-export function buildPurchasePayload(input: PurchaseInput): MetaEventPayload {
+/** Subscribe and Purchase always carry a value. */
+export type PurchasePayload = MetaEventPayload & { custom_data: { value: number; currency: string } };
+
+export function buildPurchasePayload(input: PurchaseInput & { eventName?: "Subscribe" | "Purchase" }): PurchasePayload {
   const user_data: Record<string, string> = {};
 
   const em = hashedEmail(input.email);
@@ -96,7 +155,7 @@ export function buildPurchasePayload(input: PurchaseInput): MetaEventPayload {
   if (input.clientUserAgent) user_data.client_user_agent = input.clientUserAgent;
 
   return {
-    event_name: "Purchase",
+    event_name: input.eventName ?? "Purchase",
     event_time: input.eventTimeUnix,
     event_id: input.eventId,
     action_source: "website",
@@ -110,4 +169,14 @@ export function buildPurchasePayload(input: PurchaseInput): MetaEventPayload {
       currency: input.currency.toUpperCase(),
     },
   };
+}
+
+/** A Meta cookie (_fbp, _fbc) from a raw Cookie header. */
+export function metaCookieFrom(header: string | null, name: "_fbp" | "_fbc"): string | null {
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const [k, ...v] = part.trim().split("=");
+    if (k === name) return v.join("=") || null;
+  }
+  return null;
 }

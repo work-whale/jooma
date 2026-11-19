@@ -1,0 +1,102 @@
+.band {
+  background: var(--j-chrome);
+  color: var(--j-on-chrome);
+  padding: 88px 16px 0;
+  overflow: hidden;
+}
+
+.inner {
+  max-width: var(--j-shell);
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--j-on-chrome-mid);
+  margin: 0 0 18px;
+}
+
+.title {
+  font-size: clamp(2rem, 4.4vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: #fff;
+  margin: 0;
+  max-width: 14ch;
+}
+
+.lede {
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--j-on-chrome-mid);
+  margin: 22px 0 0;
+  max-width: 42rem;
+}
+
+.rules {
+  list-style: none;
+  margin: 34px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 56px;
+}
+
+.rules li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 1.03rem;
+  line-height: 1.55;
+  color: #fff;
+  max-width: 17rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+  margin-top: 8px;
+}
+
+.res {
+  background: var(--j-res-on-dark);
+}
+
+.pic {
+  background: var(--j-pic-on-dark);
+}
+
+.make {
+  background: var(--j-cat-make);
+}
+
+.frame {
+  margin-top: 56px;
+  border-radius: 18px 18px 0 0;
+  background: var(--j-bg);
+  padding: 10px 10px 0;
+  box-shadow: 0 -20px 80px -30px rgba(0, 0, 0, 0.6);
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px 10px 0 0;
+}
+
+@media (max-width: 640px) {
+  .band {
+    padding-top: 64px;
+  }
+
+  .rules {
+    gap: 14px;
+  }
+}

@@ -156,8 +156,8 @@ test.describe("eligibleForTrial", () => {
 
 test.describe("trial and charge lines", () => {
   test("a visitor's card says no card and quotes the price", () => {
-    expect(planTrialLine("standard")).toBe("3 days free, no card needed. £4.99 a month if you subscribe");
-    expect(planTrialLine("standard", "year")).toBe("3 days free, no card needed. £47.99 a year if you subscribe");
+    expect(planTrialLine("standard")).toBe("10 days of Pro free, no card needed. £4.99 a month if you subscribe");
+    expect(planTrialLine("standard", "year")).toBe("10 days of Pro free, no card needed. £47.99 a year if you subscribe");
   });
 
   test("a signed in card says what is charged today", () => {

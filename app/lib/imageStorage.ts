@@ -3,11 +3,11 @@
 // the browser stream image bytes via a public CDN-backed URL instead of
 // pulling them through PostgREST for every query that touches the slide JSON.
 //
-// All helpers are server-only (they need the shared `supabase` client which
-// is fine on the server for these public-bucket writes).
+// All helpers are server-only (they write with the service role).
 
-import { supabase } from "./supabase";
+import { supabaseAdmin } from "./supabase-admin";
 import { compressImage } from "./imageCompress";
+import { contentAddressedName } from "./contentName";
 
 // toThumbnailUrl lives in ./imageUrl: this module imports sharp, so no client
 // component may import anything from here.
@@ -42,27 +42,31 @@ function extensionForMime(mime: string): string {
 
 /** Upload raw bytes to the `images` bucket and return the public URL.
  *  Compressed first (see imageCompress.ts), so the stored type and extension
- *  can differ from `mime`: an opaque PNG is stored as a JPEG. */
+ *  can differ from `mime`: an opaque PNG is stored as a JPEG.
+ *
+ *  Named by content (contentName.ts): the same source bytes always map to the
+ *  same object, so a repeat upload stores nothing new. It overwrites (upsert)
+ *  rather than skipping, because the overwrite refreshes `updated_at`, and
+ *  storage_paths_in_use() treats a file written in the last hour as in use.
+ *  That protects a deck that has been handed a shared file but not saved yet
+ *  from a sweep that runs in between.
+ *
+ *  Service role: the anon key has insert but not update on storage.objects,
+ *  and an upsert onto an existing object is an update. */
 export async function uploadImageBytes(
   rawBytes: Uint8Array,
   rawMime: string,
   filenameHint?: string,
 ): Promise<string> {
   const { bytes, mime } = await compressImage(rawBytes, rawMime);
-  const ext = extensionForMime(mime);
-  const safeHint = (filenameHint ?? "image")
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
-  const filename = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeHint || "image"}.${ext}`;
+  const filename = contentAddressedName(rawBytes, filenameHint, extensionForMime(mime));
 
-  const { error } = await supabase.storage
+  const { error } = await supabaseAdmin.storage
     .from(BUCKET)
-    .upload(filename, bytes, { contentType: mime, upsert: false });
+    .upload(filename, bytes, { contentType: mime, upsert: true });
   if (error) throw new Error(`Storage upload failed: ${error.message}`);
 
-  const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(filename);
+  const { data: pub } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filename);
   if (!pub.publicUrl) throw new Error("Storage upload succeeded but no public URL returned");
   return pub.publicUrl;
 }

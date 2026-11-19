@@ -19,7 +19,7 @@ export default async function HomeworkGeneratorPage({
           icon={<BookOpen className="w-5 h-5 text-amber-600" />}
 
           title="Homework Generator"
-          description="Generate a structured, differentiated homework task tailored to your year group, subject, and learning objective — with optional answers and a self-assessment checklist."
+          description="Generate a structured, differentiated homework task tailored to your year group, subject, and learning objective, with optional answers and a self-assessment checklist."
           steps={[
             { label: "Fill in the details", detail: "Choose your year group, subject, learning objective, homework type, and effort level." },
             { label: "Customise", detail: "Add any additional instructions or paste in your lesson plan for a homework task that closely follows your lesson." },

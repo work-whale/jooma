@@ -15,6 +15,14 @@ export const PRODUCT_EMAILS_KEY = "jooma:product-emails";
 
 export const OPT_OUT_LABEL = "I'd rather not get product news and tips by email.";
 
+/**
+ * Jooma 4.5 (spec Step 6, rule 3): consent is OPT-IN. One unticked box,
+ * "Send me ideas and offers". Ticked is consent (marketing_consent, and product
+ * email on); left unticked, no marketing email is ever sent and product email
+ * is off. Stored the same way as before: "rather not" = the box left unticked.
+ */
+export const CONSENT_LABEL = "Send me ideas and offers";
+
 export const PREFERENCE_LABEL = "Product news and updates";
 
 export const PREFERENCE_HINT =

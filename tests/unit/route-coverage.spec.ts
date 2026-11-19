@@ -62,6 +62,8 @@ test("public pages, and URLs nothing serves, do not", () => {
   expect(needsSession("/made/some-deck")).toBe(false);
   expect(needsSession("/ambassador/join")).toBe(false);
   expect(needsSession("/api/try/worksheet")).toBe(false);
+  // The cookie banner saves its choice here; signed out, the route does nothing.
+  expect(needsSession("/api/consent")).toBe(false);
   // The point of the change: these fall through to the 404 page.
   expect(needsSession("/this-does-not-exist")).toBe(false);
   expect(needsSession("/refunds")).toBe(false);

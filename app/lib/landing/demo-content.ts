@@ -33,9 +33,9 @@
 export type DemoTabId = "slides" | "comp" | "ws";
 
 export const DEMO_TABS: { id: DemoTabId; label: string; icon: string; solid: string }[] = [
-  { id: "slides", label: "Slides", icon: "presentation-chart", solid: "#5B2ED6" },
-  { id: "comp", label: "Comprehension", icon: "book-open-text", solid: "#0F8A63" },
-  { id: "ws", label: "Worksheets", icon: "file-text", solid: "#0F8A63" },
+  { id: "slides", label: "Slides", icon: "presentation-chart", solid: "var(--j-cat-make)" },
+  { id: "comp", label: "Comprehension", icon: "book-open-text", solid: "var(--j-cat-pupil)" },
+  { id: "ws", label: "Worksheets", icon: "file-text", solid: "var(--j-cat-pupil)" },
 ];
 
 /** The real pitch control on the comprehension tool. Not a reading age: the

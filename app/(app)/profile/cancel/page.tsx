@@ -12,6 +12,7 @@ import {
   offerFor,
   offerLine,
   offerMoney,
+  p11Options,
   resolveStep,
 } from "@/app/lib/cancel-flow";
 import {
@@ -112,7 +113,8 @@ export default async function CancelPage({
         // Monthly to yearly, through the existing switch and its preview.
         canSwitchAnnual={canChange && ctx.interval === "month"}
         tiles={lossInventory(summary)}
-        losses={planLosses(ctx.plan, "free")}
+        losses={planLosses(ctx.plan, "free", { v45: summary.v45 })}
+        p11={summary.v45 && !ctx.ending ? p11Options(ctx.plan, ctx.interval, canChange) : []}
         timeline={cancelTimeline(summary)}
         kept={params.kept ?? null}
       />

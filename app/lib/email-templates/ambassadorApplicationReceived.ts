@@ -61,7 +61,7 @@ export function ambassadorApplicationReceivedTemplate(
     <p ${P}>
       ${
         trialEnds
-          ? `While we review, you have Jooma Standard free until ${trialEnds}: every tool and 500 credits, no card needed. If we approve you before then, it becomes twelve months of Pro.`
+          ? `While we review, you have Jooma Standard free until ${trialEnds}: every tool and 500 resources, no card needed. If we approve you before then, it becomes twelve months of Pro.`
           : "Until then your Jooma account works exactly as it did."
       }
     </p>

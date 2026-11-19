@@ -61,7 +61,10 @@ import { compressImage } from "../app/lib/imageCompress.ts";
 /* ── Environment ─────────────────────────────────────────────────────────── */
 
 // Same hand-rolled loader as sweep-orphans.mjs: no Next.js runtime here.
-for (const raw of readFileSync(".env.local", "utf8").split(/\r?\n/)) {
+// --env-file picks another file (e.g. .env.production.local, gitignored).
+const envFileArg = process.argv.indexOf("--env-file");
+const ENV_FILE = envFileArg >= 0 ? process.argv[envFileArg + 1] : ".env.local";
+for (const raw of readFileSync(ENV_FILE, "utf8").split(/\r?\n/)) {
   const line = raw.trim();
   if (line === "" || line.startsWith("#")) continue;
   const m = line.match(/^([A-Za-z0-9_]+)\s*=\s*(.*)$/);
@@ -74,6 +77,16 @@ const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!URL || !SERVICE) {
   console.error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env.local.");
+  process.exit(1);
+}
+
+// Production only on purpose, never by a stray .env file.
+if (URL.includes("hhgfhhofbhzioywnppzr") && !process.argv.includes("--production")) {
+  console.error("This is PRODUCTION. Pass --production as well if that is intended.");
+  process.exit(1);
+}
+if (URL.includes("hhgfhhofbhzioywnppzr") && process.argv.includes("--delete-before")) {
+  console.error("--delete-before is for staging test data only, never production.");
   process.exit(1);
 }
 
@@ -133,7 +146,25 @@ async function listAll() {
   return out;
 }
 
+/** Download every object about to be removed into BACKUP_DIR first. A file that
+ *  cannot be backed up is NOT removed: it is dropped from the returned list. */
+async function backupAll(names, label) {
+  const ok = [];
+  await pool(names, 6, async (name) => {
+    const { data, error } = await db.storage.from(BUCKET).download(name);
+    if (error || !data) {
+      console.error(`  could not back up ${name} (${label}), keeping it: ${error?.message ?? "no data"}`);
+      return;
+    }
+    writeFileSync(join(BACKUP_DIR, name), new Uint8Array(await data.arrayBuffer()));
+    ok.push(name);
+  });
+  return ok;
+}
+
 async function removeAll(names, label) {
+  // Every removal is backed up first, so nothing deleted here is unrecoverable.
+  names = await backupAll(names, label);
   let done = 0;
   for (let i = 0; i < names.length; i += 100) {
     const slice = names.slice(i, i + 100);
@@ -226,7 +257,10 @@ async function main() {
   const rows = await loadRows();
   const live = referencedNames(rows);
   const cutoff = Date.now() - MIN_AGE_MS;
-  const orphans = objects.filter((o) => !live.has(o.name) && new Date(o.created_at).getTime() < cutoff);
+  // Last written, not first: uploads are content addressed and upsert, so an
+  // old object rewritten a minute ago may be on a deck that is not saved yet.
+  const lastWritten = (o) => Math.max(new Date(o.created_at).getTime(), new Date(o.updated_at ?? o.created_at).getTime());
+  const orphans = objects.filter((o) => !live.has(o.name) && lastWritten(o) < cutoff);
   console.log(`2. Orphans: ${orphans.length} objects, ${bytes(orphans.reduce((a, o) => a + sizeOf(o), 0))}`);
   if (APPLY && orphans.length) console.log(`   removed ${await removeAll(orphans.map((o) => o.name), "orphans")}`);
   const orphanSet = new Set(orphans.map((o) => o.name));

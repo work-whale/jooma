@@ -1,0 +1,11 @@
+{"slug":"comprehension-generator","runs":[0.8,0.7,0.7,0.7,0.7],"median":0.7,"mean":0.7,"failures":[],"at":"2026-11-18T22:52:44.860Z"}
+{"slug":"exam-question-generator","runs":[0.9,0.8,0.8,0.8,1],"median":0.8,"mean":0.9,"failures":[],"at":"2026-11-18T22:52:49.246Z"}
+{"slug":"worksheet-generator","runs":[1.1,1.1,1,1,1],"median":1,"mean":1,"failures":[],"at":"2026-11-18T22:53:05.333Z"}
+{"slug":"homework-generator","runs":[7.5,11.5,6.9,6.7,7],"median":7,"mean":7.9,"failures":[],"at":"2026-11-18T22:53:09.779Z"}
+{"slug":"cover-lesson","runs":[1.5,1.6,1.6,1.5,1.6],"median":1.6,"mean":1.6,"failures":[],"at":"2026-11-18T22:53:45.556Z"}
+{"slug":"model-text-generator","runs":[0.5,0.6,0.5,0.5,0.6],"median":0.5,"mean":0.5,"failures":[],"at":"2026-11-18T22:53:52.018Z"}
+{"slug":"quiz-generator","runs":[0.3,0.3,0.3,0.3,0.3],"median":0.3,"mean":0.3,"failures":[],"at":"2026-11-18T22:53:52.640Z"}
+{"slug":"smart-targets","runs":[0.1,0.2,0.1,0.1,0.2],"median":0.1,"mean":0.1,"failures":[],"at":"2026-11-18T22:54:22.640Z"}
+{"slug":"targeted-intervention","runs":[1.2,1.2,1,1.1,5.1],"median":1.2,"mean":1.9,"failures":[],"at":"2026-11-18T22:55:17.315Z"}
+{"slug":"model-answer-generator","runs":[13.5,14,12.6,12.9,12.3],"median":12.9,"mean":13.1,"failures":[],"at":"2026-11-18T22:55:34.555Z"}
+{"slug":"lesson-planner","runs":[23.7,56.8,23.3,23.4,25.1],"median":23.7,"mean":30.5,"failures":[],"at":"2026-11-18T23:00:15.874Z"}

@@ -115,7 +115,7 @@ export default function TransactionsTable({
                   {/* A label, not a link. The download lives behind the single
                       portal button below — see the note there. */}
                   <td className="px-4 py-3 text-right text-xs" style={{ color: "var(--j-faint)" }}>
-                    {r.stripeInvoiceId ? "In Stripe" : "—"}
+                    {r.stripeInvoiceId ? "In Stripe" : "-"}
                   </td>
                 </tr>
               ))}

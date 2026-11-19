@@ -140,7 +140,7 @@ export default function ChangePlanModal({
           <div
             className="rounded-xl px-3 py-2.5 text-sm"
             style={{
-              backgroundColor: !downgrade && !hasCustomer ? "#FBF3DF" : "#F7F5FC",
+              backgroundColor: !downgrade && !hasCustomer ? "#FBF3DF" : "#FAF9FC",
               color: !downgrade && !hasCustomer ? "#8A3C12" : "#3C3552",
             }}
           >

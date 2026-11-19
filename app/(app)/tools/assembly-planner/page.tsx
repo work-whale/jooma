@@ -19,7 +19,7 @@ export default async function AssemblyPlannerPage({
           icon={<Users className="w-5 h-5 text-blue-600" />}
 
           title="Assembly Planner"
-          description="This tool can be used to plan an assembly around a particular theme. Simply enter the theme, phase of education and duration. The AI will then provide a plan for an assembly, including an introduction, a story relating to the theme and questions to ask the audience."
+          description="This tool can be used to plan an assembly around a particular theme. Simply enter the theme, phase of education and duration. Jooma will then provide a plan for an assembly, including an introduction, a story relating to the theme and questions to ask the audience."
           steps={[
             { label: "Enter the theme", detail: "Be specific when entering the theme of the assembly." },
             { label: "Set phase and duration", detail: "Specify the phase of education and how long the assembly will run." },

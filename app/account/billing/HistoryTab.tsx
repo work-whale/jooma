@@ -145,7 +145,7 @@ export default async function HistoryTab() {
 function describe(type: string, method: string | null, amountGbp: number): string {
   if (type === "topup") {
     const granted = toCredits(amountGbp * 100);
-    return `AI credit top-up · ${granted.toLocaleString("en-GB")} credits`;
+    return `Top up · ${granted.toLocaleString("en-GB")} resources`;
   }
   if (type === "school") return method || "School invoice";
   return method || "Subscription payment";

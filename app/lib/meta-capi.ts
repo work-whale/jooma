@@ -34,9 +34,11 @@
 //                               switches in tool-availability.ts and
 //                               profile-gate.ts.
 import "server-only";
-import { buildPurchasePayload, hashedEmail, type PurchaseInput } from "./meta-purchase";
+import { buildMetaEvent, buildPurchasePayload, hashedEmail, type MetaEventInput, type PurchaseInput } from "./meta-purchase";
+import { supabaseAdmin } from "./supabase-admin";
+import { mayReportToMeta, readConsent } from "./cookie-consent";
 
-export { buildPurchasePayload, isReportablePurchase } from "./meta-purchase";
+export { buildPurchasePayload, isReportablePurchase, metaCookieFrom, metaEventId, metaNameForInvoice } from "./meta-purchase";
 export type { PurchaseInput, MetaEventPayload } from "./meta-purchase";
 
 /** Pinned rather than floating: Meta changes payload requirements between
@@ -180,7 +182,7 @@ export function metaCapiConfigured(): boolean {
  * header. A false return is already logged by the time it is returned, so the
  * caller does not need to log again.
  */
-export async function sendPurchase(input: PurchaseInput): Promise<boolean> {
+export async function sendPurchase(input: PurchaseInput & { eventName?: "Subscribe" | "Purchase" }): Promise<boolean> {
   const payload = buildPurchasePayload(input);
 
   // An event with no identifier at all cannot be matched to anyone, so it would
@@ -190,5 +192,72 @@ export async function sendPurchase(input: PurchaseInput): Promise<boolean> {
     return false;
   }
 
-  return postEvent(payload, "Purchase", input.eventId);
+  return postEvent(payload, payload.event_name, input.eventId);
+}
+
+/**
+ * Any Jooma 4.5 Step 7 event (CompleteRegistration, Activated, a top-up's
+ * Purchase). Server side only: the browser pixel sends PageView alone, so
+ * there is one sender per conversion and nothing to double count. Never
+ * throws; false when skipped or refused, already logged.
+ */
+export async function sendMetaEvent(input: MetaEventInput): Promise<boolean> {
+  const payload = buildMetaEvent(input);
+  if (Object.keys(payload.user_data).length === 0) {
+    console.warn(`[meta-capi] no usable identifiers, skipping ${input.eventName}`, input.eventId);
+    return false;
+  }
+  return postEvent(payload, input.eventName, input.eventId);
+}
+
+/** The account's email and the Meta cookies stored at signup, for events sent
+ *  with no browser request to read them from (webhooks). Never throws. */
+export async function metaIdentity(userId: string): Promise<{ email: string | null; fbp: string | null; fbc: string | null }> {
+  try {
+    const [{ data: profile }, { data: auth }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("meta_fbp, meta_fbc").eq("id", userId).maybeSingle(),
+      supabaseAdmin.auth.admin.getUserById(userId),
+    ]);
+    return {
+      email: auth?.user?.email ?? null,
+      fbp: (profile?.meta_fbp as string | null) ?? null,
+      fbc: (profile?.meta_fbc as string | null) ?? null,
+    };
+  } catch {
+    return { email: null, fbp: null, fbc: null };
+  }
+}
+
+/**
+ * Whether this teacher may be reported to Meta at all: the cookie banner's
+ * choice, from this request's cookie when there is one, else as saved on the
+ * profile. No choice means no. Never throws (false on any error).
+ */
+export async function adsConsented(userId: string, cookieHeader: string | null = null): Promise<boolean> {
+  const cookie = readConsent(cookieHeader);
+  if (cookie !== "undecided") return mayReportToMeta(cookie, null);
+  try {
+    const { data } = await supabaseAdmin.from("profiles").select("ads_consent").eq("id", userId).maybeSingle();
+    return mayReportToMeta("undecided", (data?.ads_consent as string | null) ?? null);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Save the banner's choice on the profile, so webhooks follow it. A Reject
+ * also forgets the Meta cookie ids stored at signup. Never throws.
+ */
+export async function saveAdsConsent(userId: string, choice: "accepted" | "rejected"): Promise<void> {
+  const patch: Record<string, string | null> = { ads_consent: choice, ads_consent_at: new Date().toISOString() };
+  if (choice === "rejected") {
+    patch.meta_fbp = null;
+    patch.meta_fbc = null;
+  }
+  try {
+    const { error } = await supabaseAdmin.from("profiles").update(patch).eq("id", userId);
+    if (error) console.error("[meta-capi] could not save the cookie choice", userId, error.message);
+  } catch (err) {
+    console.error("[meta-capi] could not save the cookie choice", userId, err);
+  }
 }

@@ -14,6 +14,7 @@ import {
   type CancelReason,
   type CancelStep,
   type InventoryTile,
+  type P11Option,
   type TimelineStep,
 } from "@/app/lib/cancel-flow";
 import type { BillingInterval, PlanId } from "@/app/lib/plans";
@@ -64,6 +65,8 @@ interface Props {
   losses: string[];
   timeline: TimelineStep[];
   kept: string | null;
+  /** Jooma 4.5 (P11): the ways down shown above the reasons. Empty before 4.5. */
+  p11: P11Option[];
 }
 
 type Kept = "discount" | "downgrade" | "switch_annual" | "kept";
@@ -179,8 +182,22 @@ export default function CancelFlow(props: Props) {
       {step === "reason" && (
         <ReasonStep
           initial={reason}
-          onContinue={(r) => go(screenFor(r), r)}
           planName={props.planName}
+          p11={props.p11}
+          plan={props.plan}
+          interval={props.interval}
+          onContinue={(r, choice) => {
+            // P11: Switch to Free skips the save flow and goes to the last
+            // screen. Move to Standard is handled inside the step.
+            if (choice === "free") go("confirm", r);
+            else go(screenFor(r), r);
+          }}
+          onMovedToStandard={async (r) => {
+            await post("/api/billing/cancel-flow/outcome", { reason: r, outcome: "downgrade" });
+            const params = new URLSearchParams({ step: "saved", reason: r, kept: "downgrade" });
+            router.replace(`/profile/cancel?${params.toString()}`);
+            router.refresh();
+          }}
         />
       )}
 
@@ -311,18 +328,82 @@ function Forward({ onClick, label = "No thanks, continue cancelling" }: { onClic
 function ReasonStep({
   initial,
   onContinue,
+  onMovedToStandard,
   planName,
+  p11,
+  plan,
+  interval,
 }: {
   initial: CancelReason | null;
-  onContinue: (r: CancelReason) => void;
+  onContinue: (r: CancelReason, choice: P11Option["id"] | null) => void;
+  onMovedToStandard: (r: CancelReason) => void;
   planName: string;
+  p11: P11Option[];
+  plan: PlanId;
+  interval: BillingInterval;
 }) {
   const [picked, setPicked] = useState<CancelReason | null>(initial);
+  // P11: a way down chosen above the reasons. The reason is still asked for
+  // (one tap), since every cancel record carries one.
+  const [choice, setChoice] = useState<P11Option["id"] | null>(null);
+  const [downgrading, setDowngrading] = useState(false);
+
+  if (downgrading && picked) {
+    return (
+      <>
+        <Heading title="Move to Standard" lede="Your plan changes at your next renewal. Nothing changes before then." />
+        <DowngradeButton
+          from={plan}
+          to="standard"
+          interval={interval}
+          onClose={() => setDowngrading(false)}
+          onDone={() => onMovedToStandard(picked)}
+        />
+      </>
+    );
+  }
+
   return (
     <>
+      {p11.length > 0 && (
+        <div className={`${card} mb-6`} style={cardStyle} data-testid="cancel-p11">
+          <p className="text-sm font-semibold mb-3" style={{ color: "var(--j-ink)" }}>
+            Before you go
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {p11.map((o) => {
+              const on = choice === o.id;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setChoice(on ? null : o.id)}
+                  className="text-left rounded-xl border px-4 py-3.5 cursor-pointer"
+                  style={{
+                    backgroundColor: on ? "var(--j-tint)" : "var(--j-card)",
+                    borderColor: on ? "var(--j-purple)" : "var(--j-line)",
+                  }}
+                >
+                  <span className="block text-sm font-bold" style={{ color: "var(--j-ink)" }}>
+                    {o.title}
+                  </span>
+                  <span className="block text-sm mt-0.5" style={{ color: "var(--j-body)" }}>
+                    {o.body}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <Heading
-        title="Why are you thinking of cancelling?"
-        lede={`One tap. It tells us what to fix, and it means we only show you what might help. You can cancel ${planName} at the end of this.`}
+        title={choice ? "One last thing: why are you leaving?" : "Why are you thinking of cancelling?"}
+        lede={
+          choice
+            ? "One tap. It tells us what to fix."
+            : `One tap. It tells us what to fix, and it means we only show you what might help. You can cancel ${planName} at the end of this.`
+        }
       />
       <fieldset>
         <legend className="sr-only">Your reason</legend>
@@ -357,11 +438,15 @@ function ReasonStep({
         <button
           type="button"
           disabled={!picked}
-          onClick={() => picked && onContinue(picked)}
+          onClick={() => {
+            if (!picked) return;
+            if (choice === "standard") setDowngrading(true);
+            else onContinue(picked, choice);
+          }}
           className={primary}
           style={primaryStyle}
         >
-          Continue
+          {choice === "free" ? "Continue to Switch to Free" : choice === "standard" ? "Continue to Standard" : "Continue"}
         </button>
       </div>
     </>
@@ -797,7 +882,7 @@ function SavedStep({
         ? "You move to Standard when your current period ends. Until then nothing changes."
         : kept === "switch_annual"
           ? "You are now billed yearly."
-          : `${planName} carries on exactly as it was. Your library, your badges and your credits are untouched.`;
+          : `${planName} carries on exactly as it was. Your library, your badges and your resources are untouched.`;
   return (
     <>
       <Heading title="That's sorted." lede={lede} />

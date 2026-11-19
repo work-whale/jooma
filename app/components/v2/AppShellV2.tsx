@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import SideNavV2 from "@/app/components/v2/SideNavV2";
 import TopBarV2 from "@/app/components/v2/TopBarV2";
+import PlanPromptsHost from "@/app/components/v45/PlanPromptsHost";
 import { useAccount } from "@/app/components/v2/AccountLinks";
 import SupportLauncher from "@/app/components/SupportLauncher";
 import AnnouncementBanner from "@/app/components/AnnouncementBanner";
@@ -13,6 +14,7 @@ import DeletionBanner from "@/app/components/v2/DeletionBanner";
 import CurriculumBanner from "@/app/components/v2/CurriculumBanner";
 import { SquircleDefs } from "@/app/components/v2/Squircle";
 import { useAppShellSettings } from "@/app/components/v2/AppShellContext";
+import { useStoredFlag } from "@/app/lib/useStoredFlag";
 import styles from "./AppShellV2.module.css";
 import appStyles from "./app.module.css";
 
@@ -29,6 +31,8 @@ import appStyles from "./app.module.css";
  * piece of it documents a real bug, so it is repeated here rather than
  * simplified.
  */
+
+const COLLAPSE_KEY = "jooma.sidebar.collapsed";
 
 export interface AppShellV2Props {
   /**
@@ -139,6 +143,11 @@ export default function AppShellV2({
 
   const drawerOpen = navOpen && isMobile;
 
+  // The collapsed 70px rail (desktop), remembered in this browser. Where
+  // storage is unavailable it always opens expanded.
+  const [collapsed, setCollapsed] = useStoredFlag(COLLAPSE_KEY);
+  const toggleCollapsed = useCallback(() => setCollapsed(!collapsed), [collapsed, setCollapsed]);
+
   // Scroll lock while the drawer is open.
   //
   // Deliberately the plain `overflow: hidden` version, not the
@@ -179,10 +188,8 @@ export default function AppShellV2({
   const fixed = shellVariant === "fixed";
 
   return (
-    // `jooma-v2` is load-bearing: every --j-* token is scoped to it in
-    // globals.css, so without it on this wrapper the whole tree renders with
-    // unresolved variables and no styling at all.
-    <div className={`jooma-v2 ${styles.app}`}>
+    // `jooma-v2` is an empty legacy alias now that the tokens live on :root.
+    <div className={`jooma-v2 ${styles.app} ${collapsed ? styles.appMini : ""}`}>
       {/* The squircle clip-path. `url(#jsq)` resolves against the current
           document, so it has to be in this tree — not only on the landing
           page. A square, unclipped tool tile means this is missing. */}
@@ -190,7 +197,14 @@ export default function AppShellV2({
 
       {slot}
 
-      <SideNavV2 mobileOpen={drawerOpen} onMobileClose={closeNav} account={account} openAt={openAt} />
+      <SideNavV2
+        mobileOpen={drawerOpen}
+        onMobileClose={closeNav}
+        account={account}
+        openAt={openAt}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
+      />
 
       {/* Backdrop. Rendered here rather than inside SideNavV2 so the stacking
           order reads in one place: backdrop below the drawer. */}
@@ -236,6 +250,8 @@ export default function AppShellV2({
         <CurriculumBanner />
         <TrialBanner />
         <TrialEndedModal />
+        {/* Jooma 4.5: launch-day trial start, P1, P2 and P12. */}
+        <PlanPromptsHost />
         {shellBanner && <AnnouncementBanner />}
         <div className={shellContentClassName ?? appStyles.wrap}>{children}</div>
       </main>

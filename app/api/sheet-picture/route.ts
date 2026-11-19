@@ -14,6 +14,10 @@ import { searchPixabay } from "@/app/lib/slideshow-pipeline";
 import { isPictureStyle, type PictureSource } from "@/app/lib/sheets/picture-options";
 import { recordAssetCost } from "@/app/lib/usage";
 import { isSheetTool, sheetToolProfile } from "@/app/lib/sheets/tools";
+import { createClient } from "@/app/lib/auth/server";
+import { planFromResources } from "@/app/lib/generation-guard";
+import { sheetPictureSource } from "@/app/lib/plan-features";
+import type { AccountPlan } from "@/app/lib/plan-config";
 
 export const maxDuration = 120;
 
@@ -36,11 +40,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const query = body.query?.trim().slice(0, 120);
-  const source = body.source;
+  const asked = body.source;
   const toolSlug = isSheetTool(body.tool) && sheetToolProfile(body.tool).pictures ? sheetToolProfile(body.tool).slug : undefined;
-  if (!query || !toolSlug || (source !== "web" && source !== "ai" && source !== "auto")) {
+  if (!query || !toolSlug || (asked !== "web" && asked !== "ai" && asked !== "auto")) {
     return NextResponse.json({ error: "Missing query, tool or source" }, { status: 400 });
   }
+  // Jooma 4.5: Free and Standard get library photos, decided here on the
+  // server whatever the page asked for (null before the migration).
+  const plan = (await planFromResources(await createClient())) as AccountPlan | null;
+  const source = sheetPictureSource(plan, asked);
   const style = isPictureStyle(body.style) ? body.style : "illustration";
   const title = body.title?.trim().slice(0, 120) || undefined;
 

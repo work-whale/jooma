@@ -105,82 +105,70 @@ test.describe("pricing", () => {
     const standard = card(page, "Standard");
     await expect(standard.getByText("£3.99", { exact: true })).toBeVisible();
     await expect(standard.getByText("a month", { exact: true })).toBeVisible();
-    // The monthly plan's price, struck through beside it.
-    await expect(standard.locator("s")).toContainText("£4.99");
     await expect(standard.getByText("£47.99 billed yearly")).toBeVisible();
 
     await expect(card(page, "Pro").getByText("£5.99", { exact: true })).toBeVisible();
     await expect(card(page, "Max").getByText("£11.99", { exact: true })).toBeVisible();
   });
 
-  test("monthly shows the monthly price, with no yearly line", async ({ page }) => {
+  test("monthly shows the monthly price, with the yearly option under it (Step 4.5)", async ({ page }) => {
     // The table opens on monthly, so no click is needed.
     const standard = card(page, "Standard");
     await expect(standard.getByText("£4.99", { exact: true })).toBeVisible();
     await expect(standard.getByText(/billed yearly/)).toHaveCount(0);
+    await expect(card(page, "Pro").getByText("or £71.99 a year, £5.99 a month")).toBeVisible();
+    await expect(card(page, "Max").getByText("£13.99", { exact: true })).toBeVisible();
   });
 
-  test("every trial button is burnt orange", async ({ page }) => {
-    // The table opens on monthly, so the buttons name the plain trial.
-    const buttons = page.locator("#pricing").getByRole("button", { name: "Start free trial" });
-    await expect(buttons).toHaveCount(3);
-    for (let i = 0; i < 3; i++) {
-      // --j-orange, #C2551F: the accent on the landing page's workload figures.
-      await expect(buttons.nth(i)).toHaveCSS("background-color", "rgb(194, 85, 31)");
-    }
-  });
-
-  test("the trial button is the same at either interval: the trial has no price", async ({ page }) => {
+  test("four plans, each with the spec's button, the same at either interval", async ({ page }) => {
     const pricing = page.locator("#pricing");
-    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-
-    await page.locator('#pricing label[data-option="year"]').click();
-    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-
-    // And back again.
-    await page.locator('#pricing label[data-option="month"]').click();
-    await expect(pricing.getByRole("button", { name: "Start free trial" })).toHaveCount(3);
+    const expected = ["Start free", "Choose Standard", "Choose Pro", "Choose Max"];
+    for (const interval of ["month", "year", "month"]) {
+      await page.locator(`#pricing label[data-option="${interval}"]`).click();
+      for (const name of expected) {
+        await expect(pricing.getByRole("button", { name, exact: true })).toHaveCount(1);
+      }
+      await expect(pricing.locator("article").getByRole("button")).toHaveCount(4);
+    }
+    // No trace of the old three-day trial.
+    await expect(pricing.getByText(/free trial|3 days|three days/i)).toHaveCount(0);
   });
 
-  test("each card's button sits under its price, above its features", async ({ page }) => {
-    await expect(page.locator("#pricing").getByRole("button")).toHaveCount(3);
-    // Measured in one pass, in page coordinates: the page is still smooth
-    // scrolling to #pricing, so separate boundingBox() calls would each catch
-    // the viewport at a different point.
-    const cards = await page.locator("#pricing").evaluate((section) => {
-      const top = (el: Element | null) => (el ? el.getBoundingClientRect().top + window.scrollY : NaN);
-      return [...section.querySelectorAll("h3")]
-        .map((h) => h.parentElement!)
-        .filter((c) => c.querySelector("button"))
-        .map((c) => ({
-          price: top(c.querySelector("h3 + p")),
+  test("only Pro is Recommended", async ({ page }) => {
+    const pricing = page.locator("#pricing");
+    await expect(pricing.getByText("Recommended", { exact: true })).toHaveCount(1);
+    await expect(card(page, "Pro").getByText("Recommended", { exact: true })).toBeVisible();
+  });
+
+  test("each card's button sits under its price, above its features; all but Pro line up", async ({ page }) => {
+    for (const interval of ["month", "year"]) {
+      await page.locator(`#pricing label[data-option="${interval}"]`).click();
+      // Let the reveal and any note row settle before measuring.
+      await page.waitForTimeout(600);
+      // Measured in one pass, in page coordinates: the page may still be
+      // smooth scrolling to #pricing.
+      const cards = await page.locator("#pricing").evaluate((section) => {
+        const top = (el: Element | null) => (el ? el.getBoundingClientRect().top + window.scrollY : NaN);
+        return [...section.querySelectorAll("article")].map((c) => ({
+          plan: c.getAttribute("data-plan"),
+          price: top(c.querySelector("h3 ~ p")),
           button: top(c.querySelector("button")),
           firstFeature: top(c.querySelector("li")),
         }));
-    });
+      });
 
-    expect(cards).toHaveLength(3);
-    for (const c of cards) {
-      expect(c.button).toBeGreaterThan(c.price);
-      expect(c.firstFeature).toBeGreaterThan(c.button);
+      expect(cards).toHaveLength(4);
+      for (const c of cards) {
+        expect(c.button).toBeGreaterThan(c.price);
+        expect(c.firstFeature).toBeGreaterThan(c.button);
+      }
+      // Screenshot 2: Free, Standard and Max line up; Pro's badge puts its
+      // button lower, which is the design, not drift.
+      const tops = cards.filter((c) => c.plan !== "pro").map((c) => Math.round(c.button));
+      expect(tops).toHaveLength(3);
+      expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
+      const pro = cards.find((c) => c.plan === "pro")!;
+      expect(pro.button).toBeGreaterThan(Math.max(...tops));
     }
-
-    // The buttons still line up across the row, whatever each list's length.
-    const tops = cards.map((c) => Math.round(c.button));
-    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
-  });
-
-  test("on monthly the buttons line up too, though only Pro has a badge", async ({ page }) => {
-    await page.locator('#pricing label[data-option="month"]').click();
-    await expect(page.locator("#pricing").getByRole("button", { name: "Start free trial" })).toHaveCount(3);
-    // Let the note row collapse before measuring.
-    await page.waitForTimeout(600);
-    const tops = await page.locator("#pricing").evaluate((section) =>
-      [...section.querySelectorAll("button")]
-        .filter((b) => /trial/.test(b.textContent ?? ""))
-        .map((b) => Math.round(b.getBoundingClientRect().top + window.scrollY)),
-    );
-    expect(tops).toHaveLength(3);
-    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
   });
 });

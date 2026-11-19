@@ -25,6 +25,9 @@ import {
   hasActivePlan,
   planCredits,
 } from "./plans";
+import { estimateFor } from "./tool-estimates";
+import { pictureGate, resourceGate, type ResourcesRow } from "./resource-gate";
+import type { OutOfResources } from "./resources";
 
 // The API routes that count as one generation against the cap. Each is a tool's
 // primary endpoint and produces exactly one saved tool_run, so counting these
@@ -237,6 +240,10 @@ export interface QuotaResult {
   // Cost gate only (pence):
   spendPence?: number;
   ceilingPence?: number;
+  /** Jooma 4.5: which prompt the client opens (P3, or a top-up). */
+  prompt?: OutOfResources;
+  /** Jooma 4.5: a feature prompt (P5, pictures locked). */
+  promptId?: "P5";
 }
 
 interface GateRow {
@@ -273,7 +280,13 @@ export function noPlanBlock(): QuotaResult {
  */
 export async function checkAllGates(
   supabase: SupabaseClient,
-  opts: { countsAsGeneration: boolean },
+  opts: {
+    countsAsGeneration: boolean;
+    /** The request path, so the resources check knows the tool. */
+    path?: string;
+    /** Generated pictures this request will make (decks), for the estimate. */
+    pictures?: number;
+  },
 ): Promise<QuotaResult | null> {
   const { data, error } = await supabase.rpc("my_generation_gate");
   if (error) {
@@ -287,6 +300,39 @@ export async function checkAllGates(
   const row = (Array.isArray(data) ? data[0] : data) as GateRow | undefined;
   if (!row) return null;
   if (row.is_admin) return null; // admins bypass every gate
+
+  // ── Jooma 4.5: the resources balance ──
+  // Read after the admin bypass and before the legacy gates. When
+  // my_resources() exists (migration 20261118000000), it replaces the "no
+  // plan" block and the monthly spend ceiling: Free is a real plan with 50 a
+  // week. Until that migration is pushed, the RPC is missing and the old gates
+  // below run unchanged.
+  const resources = await readResources(supabase);
+  if (resources !== "missing") {
+    // The hourly fair-use limit still applies to generations on every plan.
+    if (opts.countsAsGeneration) {
+      const rate = rateLimitBlock(row);
+      if (rate) return rate;
+    }
+    if (resources === "error") return null; // fail open, as below
+    // P5: generated pictures are Pro, Max and the trial only.
+    const pictures = pictureGate(resources.plan, opts.path ?? "");
+    if (pictures) {
+      return { blocked: true, reason: "plan_required", action: "upgrade", message: pictures.message, promptId: "P5" };
+    }
+    const slug = opts.path?.startsWith("/api/") ? opts.path.slice("/api/".length) : null;
+    const estimate =
+      opts.countsAsGeneration && slug ? estimateFor(slug, { pictures: opts.pictures ?? 0 }) : null;
+    const block = resourceGate(resources, { path: opts.path ?? "", estimate, isAdmin: false });
+    if (!block) return null;
+    return {
+      blocked: true,
+      reason: "credit_exhausted",
+      action: block.action,
+      message: block.message,
+      prompt: block.prompt,
+    };
+  }
 
   const plan = asPlanId(row.plan);
 
@@ -316,7 +362,7 @@ export async function checkAllGates(
         action: "wait",
         message:
           `You've generated ${hourLimit} times in the last hour. That's a fair-use limit ` +
-          "to keep Jooma quick for everyone — try again shortly.",
+          "to keep Jooma quick for everyone. Try again shortly.",
         used: usedHour,
         limit: hourLimit,
         // The window is rolling, so the true wait is until the oldest run ages
@@ -346,7 +392,7 @@ export async function checkAllGates(
         // poor value. The £1.50 top-up PRICE is fine to state — they pay it.
         message:
           `You've used this month's ${monthly.toLocaleString("en-GB")} credits. ` +
-          `Add ${PLAN_CREDITS.toLocaleString("en-GB")} more for £1.50 — they last ` +
+          `Add ${PLAN_CREDITS.toLocaleString("en-GB")} more for £1.50. They last ` +
           `until the end of the month.`,
         spendPence,
         ceilingPence: allowance,
@@ -354,6 +400,48 @@ export async function checkAllGates(
     }
   }
 
+  return null;
+}
+
+/** The plan in force for the caller, from my_resources(); null before the
+ *  plans engine migration or on error (callers then change nothing). */
+export async function planFromResources(supabase: SupabaseClient): Promise<string | null> {
+  const r = await readResources(supabase);
+  return r === "missing" || r === "error" ? null : (r.plan ?? null);
+}
+
+/** my_resources() for the caller: the row, "missing" before the migration is
+ *  pushed (Postgres 42883 / PostgREST PGRST202), or "error" for anything else. */
+async function readResources(
+  supabase: SupabaseClient,
+): Promise<ResourcesRow | "missing" | "error"> {
+  const { data, error } = await supabase.rpc("my_resources");
+  if (error) {
+    if (error.code === "PGRST202" || error.code === "42883") return "missing";
+    console.warn("[generation-guard] my_resources failed:", error.message);
+    return "error";
+  }
+  const r = (Array.isArray(data) ? data[0] : data) as ResourcesRow | undefined;
+  return r ?? "error";
+}
+
+/** The hourly fair-use limit, shared by the 4.5 and legacy paths. */
+function rateLimitBlock(row: GateRow): QuotaResult | null {
+  const hourLimit = Number(row.rate_limit_hour ?? 0);
+  const usedHour = Number(row.used_hour ?? 0);
+  if (hourLimit > 0 && usedHour >= hourLimit) {
+    return {
+      blocked: true,
+      reason: "rate_limited",
+      action: "wait",
+      message:
+        `You've generated ${hourLimit} times in the last hour. That's a fair-use limit ` +
+        "to keep Jooma quick for everyone. Try again shortly.",
+      used: usedHour,
+      limit: hourLimit,
+      retryAfter: 300,
+    };
+  }
   return null;
 }
 
@@ -382,6 +470,10 @@ export async function checkAssistantAccess(
   const row = (Array.isArray(data) ? data[0] : data) as GateRow | undefined;
   if (!row) return null;
   if (row.is_admin) return null; // admins bypass every gate
+
+  // Jooma 4.5: Ask Jo chat is open on every plan, Free included, behind the
+  // hourly limit only, once my_resources() exists (the migration is pushed).
+  if ((await readResources(supabase)) !== "missing") return null;
 
   const plan = asPlanId(row.plan);
   if (can(plan, "assistant")) return null;
@@ -417,6 +509,8 @@ export function quotaBlockBody(q: QuotaResult) {
     ...(q.retryAfter !== undefined ? { retryAfter: q.retryAfter } : {}),
     ...(q.spendPence !== undefined ? { spendPence: q.spendPence } : {}),
     ...(q.ceilingPence !== undefined ? { ceilingPence: q.ceilingPence } : {}),
+    ...(q.prompt !== undefined ? { prompt: q.prompt } : {}),
+    ...(q.promptId !== undefined ? { promptId: q.promptId } : {}),
   };
 }
 

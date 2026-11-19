@@ -385,7 +385,7 @@ export default function AdminTeachersTable({ rows }: { rows: TeacherRow[] }) {
         {selecting && selected.size > 0 && (
           <div
             className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b"
-            style={{ borderColor: "#F1ECFC", backgroundColor: "#F7F5FC" }}
+            style={{ borderColor: "#F1ECFC", backgroundColor: "#FAF9FC" }}
           >
             <span className="text-xs font-semibold" style={{ color: "#3C3552" }}>
               {nf.format(selected.size)} selected

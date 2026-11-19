@@ -4,6 +4,8 @@ import { stripe, topUpPriceId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { effectivePlan } from "@/app/lib/plans";
 import { packAllowsPlan, toPack } from "@/app/lib/topup-packs";
+import { isTopUpPackId, topUpRefusal } from "@/app/lib/topups-v45";
+import { planInForce } from "@/app/lib/account-plan";
 
 // Creates a one-off Stripe Checkout Session for a credit pack and returns its
 // URL. Offered when a paid user is running low on their monthly ceiling.
@@ -35,6 +37,21 @@ export async function POST(req: NextRequest) {
     .select("plan, stripe_customer_id, subscription_status, stripe_subscription_id, current_period_end")
     .eq("id", user.id)
     .maybeSingle();
+
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin;
+
+  // Jooma 4.5: a config pack ("pack-500" and so on), in resources, never
+  // expiring. The pack and its price come from plan-config; topup_packs only
+  // maps it to this environment's Stripe price (pack_key).
+  if (isTopUpPackId(packId)) {
+    return startResourcesTopUp({
+      userId: user.id,
+      email: user.email ?? null,
+      customerId: profile?.stripe_customer_id ?? null,
+      packId,
+      origin,
+    });
+  }
 
   const plan = effectivePlan(profile);
 
@@ -69,8 +86,6 @@ export async function POST(req: NextRequest) {
       );
     }
   }
-
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin;
 
   try {
     // Resolved from the pack (falling back to the lowest-sort pack, then the
@@ -109,6 +124,59 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("[stripe/topup]", err);
+    return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
+  }
+}
+
+/** Jooma 4.5: one-off Checkout for a resources pack. The webhook grants it. */
+async function startResourcesTopUp(o: {
+  userId: string;
+  email: string | null;
+  customerId: string | null;
+  packId: string;
+  origin: string;
+}) {
+  // The plan in force, read through the service role because trial_ends_at is
+  // one of the billing columns. Scoped to the caller's own id.
+  const { data: row } = await supabaseAdmin
+    .from("profiles")
+    .select("plan, trial_ends_at, subscription_status, stripe_subscription_id, current_period_end")
+    .eq("id", o.userId)
+    .maybeSingle();
+  const refusal = topUpRefusal(planInForce(row, new Date()), o.packId);
+  if (refusal) return NextResponse.json({ error: refusal }, { status: 403 });
+
+  const { data: pack, error } = await supabaseAdmin
+    .from("topup_packs")
+    .select("id, stripe_price_id")
+    .eq("kind", "resources_topup")
+    .eq("pack_key", o.packId)
+    .eq("active", true)
+    .maybeSingle();
+  if (error) {
+    console.error("[stripe/topup] resources pack lookup failed", error);
+    return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
+  }
+  // No price means not for sale here: never fall back to another price.
+  if (!pack?.stripe_price_id) {
+    return NextResponse.json({ error: "That top up is no longer available." }, { status: 400 });
+  }
+
+  try {
+    const metadata = { userId: o.userId, kind: "resources_topup", packId: o.packId };
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [{ price: pack.stripe_price_id, quantity: 1 }],
+      client_reference_id: o.userId,
+      metadata,
+      payment_intent_data: { metadata },
+      ...(o.customerId ? { customer: o.customerId } : o.email ? { customer_email: o.email } : {}),
+      success_url: `${o.origin}/profile?section=subscription&topup=success`,
+      cancel_url: `${o.origin}/profile?section=subscription&topup=cancelled`,
+    });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error("[stripe/topup] resources", err);
     return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
   }
 }

@@ -19,7 +19,7 @@ export default async function SchoolImprovementPlanPage({
           icon={<TrendingUp className="w-5 h-5 text-rose-600" />}
 
           title="School Improvement Plans"
-          description="This tool can be used to draft a SIP based on a set of areas for development. The AI will generate the SIP either as a table, or in narrative form. The AI will identify priority objectives and present a detailed actionable school improvement plan."
+          description="This tool can be used to draft a SIP based on a set of areas for development. Jooma will draft the SIP either as a table, or in narrative form. It will identify priority objectives and present a detailed actionable school improvement plan."
           steps={[
             { label: "Enter areas for development", detail: "Be specific when entering areas for development." },
             { label: "Choose output format", detail: "Select table or narrative form for your SIP." },

@@ -56,7 +56,7 @@
 
 .ttheadToday,
 .ttheadToday .ttheadDate {
-  color: var(--j-purple);
+  color: var(--j-res);
 }
 
 /* The period label, in the gutter beside the week.
@@ -92,7 +92,7 @@
   background: var(--j-card);
   border: 1px solid var(--j-line);
   border-radius: var(--j-r);
-  min-height: 78px;
+  min-height: 92px;
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -106,7 +106,7 @@
 }
 
 .ttcell:hover {
-  border-color: var(--j-lilac-2);
+  border-color: var(--j-line-2);
 }
 
 /* A live drop target with a row over it. Distinct from :hover, which fires on
@@ -119,20 +119,19 @@
 }
 
 .ttcellEmpty {
-  border-style: dashed;
   display: grid;
   place-items: center;
   color: var(--j-line-2);
 }
 
 .ttcellEmpty:hover {
-  border-color: var(--j-lilac-2);
-  color: var(--j-purple);
+  border-color: var(--j-res);
+  color: var(--j-res);
 }
 
 .ttcellEmpty svg {
-  width: 22px;
-  height: 22px;
+  width: 17px;
+  height: 17px;
 }
 
 /* ── Cell content ────────────────────────────────────────────────────────── */
@@ -153,7 +152,7 @@
 
 .lesson {
   display: block;
-  background: var(--j-tint);
+  background: var(--j-res-soft);
   border-radius: 9px;
   padding: 8px 9px;
 }
@@ -161,7 +160,7 @@
 .lessonSubject {
   display: block;
   font-size: 0.79rem;
-  color: var(--j-deep);
+  color: var(--j-ink);
   font-weight: 800;
   letter-spacing: -0.01em;
 }
@@ -209,8 +208,8 @@
 }
 
 .attach:hover {
-  border-color: var(--j-lilac-2);
-  color: var(--j-deep);
+  border-color: var(--j-line-2);
+  color: var(--j-ink);
 }
 
 .attachName {
@@ -219,16 +218,15 @@
   white-space: nowrap;
 }
 
-/* "Nothing made" is a GAP, not an error.
-   globals.css is explicit that burnt orange marks the cost of not acting and is
-   never a warning, which is exactly the job here: this is an invitation to make
-   something, in the same tone the accent carries on the landing page. A genuine
-   failure uses the error style below instead, and must not borrow this. */
+/* "Nothing made" is a GAP, not an error, and not a picture cost: v4 keeps
+   orange for picture slides only, so the empty slot is neutral (prototype
+   `.cell.has.empty`): a quiet tint with a dashed edge, inviting rather than
+   warning. */
 .needs {
   display: block;
   width: 100%;
-  background: var(--j-orange-bg);
-  border: 1px solid transparent;
+  background: var(--j-tint-slate);
+  border: 1px dashed var(--j-line-2);
   border-radius: 9px;
   padding: 8px 9px;
   font-family: inherit;
@@ -237,20 +235,20 @@
 }
 
 .needs:hover {
-  border-color: var(--j-orange);
+  border-style: solid;
+  border-color: var(--j-faint);
 }
 
 .needsTitle {
   display: block;
   font-size: 0.79rem;
-  color: var(--j-orange-ink);
+  color: var(--j-muted);
   font-weight: 800;
 }
 
 .needsHint {
   font-size: 0.71rem;
-  color: var(--j-orange-ink);
-  opacity: 0.8;
+  color: var(--j-faint);
 }
 
 /* ── The resources strip ─────────────────────────────────────────────────── */

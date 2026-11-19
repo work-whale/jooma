@@ -2,7 +2,7 @@
 //
 // A visitor can make a deck on Monday and a comprehension on Tuesday from
 // /create, then sign up on Wednesday. Everything made under their guest cookie
-// in the last thirty days lands in their library at that moment, the way the
+// inside TRIAL_RETENTION_DAYS lands in their library at that moment, the way the
 // generation would have if they had been signed in all along:
 //
 //   * a deck becomes a presentations row (plus the tool_runs row the editor
@@ -16,6 +16,7 @@
 import "server-only";
 import { supabaseAdmin } from "./supabase-admin";
 import type { TrialTool } from "./trial-limits";
+import { trialRetentionCutoff } from "./trial-retention";
 
 const UNTITLED: Record<TrialTool, string> = {
   slideshow: "Untitled deck",
@@ -23,7 +24,6 @@ const UNTITLED: Record<TrialTool, string> = {
   "worksheet-generator": "Worksheet",
 };
 
-const CLAIM_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface ClaimedItem {
   kind: "slides" | "comprehension" | "worksheet";
@@ -115,7 +115,7 @@ async function createResource(userId: string, row: TrialRow): Promise<ClaimedIte
  * only one caller can win that update.
  */
 export async function claimGuestWork(userId: string, guestId: string): Promise<ClaimedItem[]> {
-  const since = new Date(Date.now() - CLAIM_WINDOW_MS).toISOString();
+  const since = trialRetentionCutoff().toISOString();
   const { data, error } = await supabaseAdmin
     .from("trial_generations")
     .select("id, tool, title, input, output, run_id")

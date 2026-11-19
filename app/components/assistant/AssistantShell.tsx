@@ -35,8 +35,8 @@ import {
   renameChat,
   type AssistantChat,
 } from "@/app/lib/assistantChats";
-import { getEntitlements } from "@/app/lib/entitlements";
-import { can } from "@/app/lib/plans";
+import { loadAccountAccess } from "@/app/lib/useAccountAccess";
+import { askJoAccess } from "@/app/lib/account-plan";
 import { useJoVoice } from "@/app/components/jo/useJoVoice";
 import { useLiveCall, type LiveTool } from "@/app/lib/useLiveCall";
 
@@ -47,6 +47,9 @@ interface AssistantChatsValue {
   refreshChats: () => void;
   /** null while the plan is still being resolved — see below. */
   allowed: boolean | null;
+  /** Whether Live (the voice call) is part of the plan. Free on 4.5 chats but
+   *  has no Live. null while loading, like `allowed`. */
+  liveAllowed: boolean | null;
   /**
    * Turns handed up by the page just before its own route is replaced.
    *
@@ -158,6 +161,7 @@ export default function AssistantShell({ children }: { children: React.ReactNode
   // null = still loading. Rendering the composer before we know the plan would
   // flash an enabled input at a Free user and then disable it.
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [liveAllowed, setLiveAllowed] = useState<boolean | null>(null);
 
   // The open chat, derived from the URL rather than stored. /assistant/<id> is
   // already the source of truth; duplicating it in state would mean a write on
@@ -182,12 +186,17 @@ export default function AssistantShell({ children }: { children: React.ReactNode
   }, []);
 
   useEffect(() => {
-    getEntitlements()
-      .then((e) => setAllowed(can(e.plan, "assistant")))
-      // Fail open in the UI only. proxy.ts is the real gate, so the worst case
-      // is a Free user seeing an enabled composer and getting the upgrade modal
-      // on send — far better than locking out a paying teacher over a blip.
-      .catch(() => setAllowed(true));
+    // The plan in force from my_account_access(), which knows the Pro trial.
+    // getEntitlements() read the plan through asPlanId, which turned
+    // "pro_trial" into Free and locked trial teachers out of Ask Jo.
+    // Fail open in the UI only: null means the read failed, and proxy.ts is
+    // the real gate, so the worst case is the upgrade modal on send, far
+    // better than locking out a paying teacher over a blip.
+    void loadAccountAccess().then((a) => {
+      const access = a ? askJoAccess(a.accountPlan, Boolean(a.resourcesV45)) : { chat: true, live: true };
+      setAllowed(access.chat);
+      setLiveAllowed(access.live);
+    });
   }, []);
 
   useEffect(() => {
@@ -238,6 +247,7 @@ export default function AssistantShell({ children }: { children: React.ReactNode
       addChat,
       refreshChats,
       allowed,
+      liveAllowed,
       // A getter would be cleaner, but the consumer only reads this during its
       // first render, and a plain property keeps the context shape obvious.
       get handover() {
@@ -245,7 +255,7 @@ export default function AssistantShell({ children }: { children: React.ReactNode
       },
       setHandover,
     }),
-    [addChat, refreshChats, allowed, setHandover],
+    [addChat, refreshChats, allowed, liveAllowed, setHandover],
   );
 
   return (

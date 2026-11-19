@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jooma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --chrome:#1E1138; --chrome-2:#2B1A4D; --chrome-line:rgba(255,255,255,.09);
+  --on-chrome:#FFFFFF; --on-chrome-mid:#BFB2E4; --on-chrome-dim:#8B7FB5;
+  --canvas:#FAF9FC; --card:#FFFFFF; --line:#ECE8F4; --line-2:#DED8EE;
+  --ink:#1D1730; --body:#453E5E; --muted:#5F5876; --faint:#8E87A4;
+  /* the two credit languages. these never mix. */
+  --res:#5B2ED6; --res-soft:#F0EBFD; --res-on-dark:#9D82EF;
+  --pic:#C2551F; --pic-soft:#FDF0E8; --pic-on-dark:#E8763C;
+  /* tool categories, by what the tool is for. no purple, no orange. */
+  --make:#1D6FD0; --pupil:#0F8A63; --check:#0E7490; --support:#C43D6B; --adult:#4A5568;
+  --ok:#0F8A63;
+  --r:12px; --r-lg:16px; --r-xl:22px; --pill:999px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--body);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;color:var(--ink);font-weight:800;letter-spacing:-.028em;line-height:1.15}
+p{margin:0}
+button{font:inherit;border:0;background:none;cursor:pointer;color:inherit;padding:0}
+a{color:inherit;text-decoration:none}
+svg{display:block}
+:focus-visible{outline:2px solid var(--res);outline-offset:3px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.proto{position:sticky;top:0;z-index:90;background:#120A26;color:#fff;
+  display:flex;align-items:center;gap:7px;padding:9px 16px;font-size:12.5px;flex-wrap:wrap}
+.proto span{color:#8B7FB5;margin:0 3px 0 10px}
+.proto span:first-child{margin-left:0}
+.proto button{border:1px solid rgba(255,255,255,.2);border-radius:var(--pill);padding:5px 12px;
+  font-size:12.5px;font-weight:700;color:#CFC4EC}
+.proto button:hover{background:rgba(255,255,255,.12);color:#fff}
+.proto button.on{background:#fff;color:#120A26;border-color:#fff}
+
+.app{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 38px);
+  transition:grid-template-columns .26s var(--ease)}
+.app.mini{grid-template-columns:70px 1fr}
+
+/* ─────────── chrome ─────────── */
+.side{background:var(--chrome);color:var(--on-chrome);display:flex;flex-direction:column;
+  padding:18px 13px 13px;position:sticky;top:38px;height:calc(100vh - 38px);min-width:0;overflow:hidden}
+.shead{display:flex;align-items:center;gap:9px;padding:2px 5px 20px;min-width:0}
+.brand{display:flex;align-items:center;min-width:0}
+.brand .full{width:78px;height:auto;fill:#fff}
+.brand .mark{width:15px;height:auto;fill:#fff;display:none}
+.planchip{font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:var(--pill);
+  background:rgba(255,255,255,.16);color:#E3DAFB;white-space:nowrap;flex:none;text-transform:uppercase}
+.collapse{margin-left:auto;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  color:var(--on-chrome-dim);flex:none;transition:background .15s,color .15s}
+.collapse:hover{background:rgba(255,255,255,.1);color:#fff}
+.collapse svg{width:15px;height:15px;fill:currentColor;transition:transform .26s var(--ease)}
+
+.nav{display:flex;flex-direction:column;gap:1px;min-width:0}
+.nav button{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;width:100%;
+  font-size:14px;font-weight:600;color:var(--on-chrome-mid);transition:background .15s,color .15s;
+  white-space:nowrap;position:relative;text-align:left}
+.nav button svg{width:18px;height:18px;fill:currentColor;flex:none;opacity:.85}
+.nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav button.on{background:rgba(255,255,255,.12);color:#fff;font-weight:800}
+.nav button.on svg{opacity:1}
+.nav .ct{margin-left:auto;font-size:12px;font-weight:700;color:var(--on-chrome-dim)}
+.nav button.on .ct{color:var(--on-chrome-mid)}
+.spacer{flex:1;min-height:20px}
+
+.meters{border-top:1px solid var(--chrome-line);padding:17px 10px 2px;display:grid;gap:15px}
+.meter .mh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.meter .mt{font-size:12.5px;font-weight:700;color:var(--on-chrome-mid)}
+.meter .mv{font-size:12.5px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+.meter.calm .mv{color:var(--on-chrome-dim);font-weight:700}
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;border-radius:3px;transition:width .5s var(--ease)}
+.meter .ms{font-size:11.5px;color:var(--on-chrome-dim);margin-top:6px;line-height:1.45}
+.meter.low .mt,.meter.low .mv{color:#fff}
+.meter.locked .mv{color:var(--on-chrome-dim)}
+.lockrow{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--on-chrome-dim);margin-top:6px}
+.lockrow svg{width:12px;height:12px;fill:currentColor;flex:none}
+.topup{display:block;width:100%;margin-top:10px;padding:8px 10px;border-radius:9px;
+  border:1px solid rgba(255,255,255,.22);font-size:12.5px;font-weight:800;color:#fff;text-align:center;transition:background .15s}
+.topup:hover{background:rgba(255,255,255,.1)}
+.plan{margin:15px 0 0;background:var(--chrome-2);border-radius:var(--r-lg);padding:13px 14px}
+.plan .pd{font-size:11.5px;color:var(--on-chrome-mid);line-height:1.5}
+.plan .pb{display:block;width:100%;margin-top:11px;padding:9px 12px;border-radius:9px;
+  font-size:13px;font-weight:800;text-align:center;background:#fff;color:var(--chrome);transition:filter .15s}
+.plan .pb:hover{filter:brightness(.93)}
+.sfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:12px 10px 2px;margin-top:11px;border-top:1px solid var(--chrome-line);
+  font-size:11.5px;color:var(--on-chrome-dim);white-space:nowrap}
+.sfoot a:hover{color:#fff}
+.lvl{display:flex;align-items:center;gap:7px}
+.lvl .dot{width:6px;height:6px;border-radius:50%;background:var(--res-on-dark)}
+
+.mini .shead{flex-direction:column;gap:13px;padding:2px 0 17px}
+.mini .brand .full{display:none}
+.mini .brand .mark{display:block}
+.mini .planchip,.mini .meters,.mini .plan,.mini .sfoot{display:none}
+.mini .collapse{margin-left:0}
+.mini .collapse svg{transform:rotate(180deg)}
+.mini .nav button{justify-content:center;padding:10px 0}
+.mini .nav button .lab,.mini .nav .ct{display:none}
+.mini .railwarn{display:flex}
+.railwarn{display:none;flex-direction:column;align-items:center;gap:7px;
+  border-top:1px solid var(--chrome-line);padding:14px 0 2px;margin-top:auto}
+.railwarn .rw{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:rgba(255,255,255,.12);color:#fff;position:relative}
+.railwarn .rw svg{width:17px;height:17px;fill:currentColor}
+.railwarn .rw .pip{position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;
+  background:var(--res-on-dark);border:2px solid var(--chrome)}
+.railwarn .rn{font-size:10.5px;font-weight:800;color:var(--on-chrome-mid);font-variant-numeric:tabular-nums}
+.nav button[data-tip]::after{content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;
+  transform:translateY(-50%);background:var(--ink);color:#fff;font-size:12px;font-weight:700;
+  padding:5px 10px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .13s;z-index:60}
+.app:not(.mini) .nav button[data-tip]::after{content:none}
+.mini .nav button:hover::after{opacity:1}
+
+/* ─────────── workspace ─────────── */
+.main{min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:15px 32px;border-bottom:1px solid var(--line);
+  background:var(--card);position:sticky;top:38px;z-index:20}
+.ttl{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.search{flex:1;max-width:400px;display:flex;align-items:center;gap:9px;background:var(--canvas);
+  border:1px solid var(--line);border-radius:var(--pill);padding:8px 15px;color:var(--faint);font-size:13.5px}
+.search svg{width:16px;height:16px;fill:var(--faint);flex:none}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.iconbtn{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--muted)}
+.iconbtn:hover{background:var(--canvas);color:var(--ink)}
+.iconbtn svg{width:18px;height:18px;fill:currentColor}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--res-soft);color:var(--res);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800}
+.content{padding:32px;max-width:1180px;width:100%}
+.page{display:none}
+.page.on{display:block;animation:rise .3s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+.phead{margin-bottom:22px}
+.phead h1{font-size:27px}
+.phead p{font-size:14px;color:var(--muted);margin-top:7px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:var(--pill);padding:10px 18px;
+  font-size:13.5px;font-weight:800;transition:filter .15s,border-color .15s,background .15s}
+.btn svg{width:16px;height:16px;fill:currentColor}
+.btn.pri{background:var(--res);color:#fff}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sec{background:var(--card);border:1px solid var(--line-2);color:var(--ink)}
+.btn.sec:hover{border-color:var(--res);color:var(--res)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.dark:hover{filter:brightness(1.3)}
+
+/* ══════════ TODAY ══════════ */
+.hello h1{font-size:30px}
+.hello .sub{margin-top:7px;font-size:15px;color:var(--muted)}
+.hello .sub b{color:var(--ink);font-weight:800}
+.hello .date{font-size:12.5px;color:var(--faint);margin-top:13px}
+.saved{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);
+  background:var(--card);border:1px solid var(--line);border-radius:var(--pill);padding:7px 15px 7px 12px}
+.saved svg{width:15px;height:15px;fill:var(--ok);flex:none}
+.saved b{color:var(--ink);font-weight:800}
+.jo{margin-top:20px;background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-xl);
+  padding:7px 7px 7px 19px;display:flex;align-items:center;gap:13px;
+  box-shadow:0 1px 2px rgba(29,23,48,.04),0 8px 24px -18px rgba(29,23,48,.3)}
+.jo:focus-within{border-color:var(--res);box-shadow:0 0 0 3px var(--res-soft)}
+.jo .jicon{width:28px;height:28px;flex:none;border-radius:9px;background:var(--res);display:grid;place-items:center}
+.jo .jicon svg{width:16px;height:16px;fill:#fff}
+.jo input{flex:1;border:0;background:none;font-size:15.5px;color:var(--ink);padding:11px 0;min-width:0}
+.jo input::placeholder{color:var(--faint)}
+.jo input:focus{outline:none}
+.jo .go{flex:none;background:var(--res);color:#fff;border-radius:var(--pill);padding:11px 20px;font-size:14px;font-weight:800}
+.jo .go:hover{filter:brightness(1.08)}
+.hints{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;padding-left:4px}
+.hints button{font-size:12.5px;color:var(--muted);background:var(--card);border:1px solid var(--line);
+  border-radius:var(--pill);padding:5px 12px}
+.hints button:hover{border-color:var(--line-2);color:var(--ink)}
+.sec{margin-top:32px}
+.sech{display:flex;align-items:baseline;gap:12px;margin-bottom:13px}
+.sech h2{font-size:16px}
+.sech .note{font-size:13px;color:var(--faint)}
+.sech .link{margin-left:auto;font-size:13px;font-weight:700;color:var(--res)}
+.sech .link:hover{text-decoration:underline}
+.lessons{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.les{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 16px;
+  display:flex;flex-direction:column;gap:9px;min-height:132px;transition:border-color .15s,transform .15s}
+.les:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.les .when{font-size:12.5px;font-weight:800;color:var(--faint);font-variant-numeric:tabular-nums}
+.les h3{font-size:14.5px;line-height:1.3}
+.les .meta{font-size:12.5px;color:var(--muted)}
+.les .state{margin-top:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--ok)}
+.les .state svg{width:13px;height:13px;fill:currentColor}
+.les.todo{border:1px dashed var(--line-2);background:#F6F4FA}
+.les.todo .when{color:var(--muted)}
+.les .mk{margin-top:auto;align-self:flex-start;background:var(--ink);color:#fff;border-radius:var(--pill);
+  padding:7px 15px;font-size:12.5px;font-weight:800}
+.les .mk:hover{filter:brightness(1.3)}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.tool{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:17px 18px;
+  text-align:left;display:flex;flex-direction:column;gap:11px;transition:border-color .15s,transform .15s}
+.tool:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.tool .ti{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;clip-path:url(#sq)}
+.tool .ti svg{width:20px;height:20px;fill:#fff}
+.tool h3{font-size:14.5px}
+.tool p{font-size:13px;color:var(--muted);line-height:1.45}
+.tool .cost{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:4px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:var(--pill)}
+.chip svg{width:11px;height:11px;fill:currentColor}
+.chip.res{background:var(--res-soft);color:var(--res)}
+.chip.pic{background:var(--pic-soft);color:var(--pic)}
+.chip.gate{background:var(--canvas);color:var(--muted);border:1px solid var(--line-2)}
+.recent{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.row{display:flex;align-items:center;gap:13px;padding:13px 17px;border-bottom:1px solid var(--line);transition:background .15s}
+.recent .row:last-child{border-bottom:0}
+.row:hover{background:var(--canvas)}
+.row .ri{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;clip-path:url(#sq)}
+.row .ri svg{width:16px;height:16px;fill:#fff}
+.row .rn{min-width:0}
+.row .rn b{display:block;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rn span{font-size:12.5px;color:var(--faint)}
+.row .rt{margin-left:auto;font-size:12.5px;color:var(--faint);white-space:nowrap}
+.row .mark{font-size:11.5px;font-weight:700;color:var(--muted);background:var(--canvas);
+  border:1px solid var(--line-2);padding:2px 9px;border-radius:var(--pill);white-space:nowrap}
+.nudge{margin-top:32px;border-radius:var(--r-xl);padding:24px 26px;display:flex;align-items:center;gap:24px;
+  background:var(--card);border:1px solid var(--line-2)}
+.nudge .nx{flex:1;min-width:0}
+.nudge h2{font-size:17px}
+.nudge p{font-size:13.5px;color:var(--muted);margin-top:6px;max-width:58ch}
+.nudge .nb{flex:none;background:var(--res);color:#fff;border-radius:var(--pill);padding:12px 22px;font-size:14px;font-weight:800}
+.nudge .np{font-size:12px;color:var(--faint);margin-top:8px;text-align:center}
+/* the timetable offer. one line, last thing on the page, dismissible. */
+.ttoffer{display:flex;align-items:center;gap:14px;margin-top:26px;padding:14px 18px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);font-size:13.5px;color:var(--muted)}
+.ttoffer svg{width:17px;height:17px;fill:var(--faint);flex:none}
+.ttoffer b{color:var(--ink);font-weight:800}
+.ttoffer .tx{flex:1;min-width:0}
+.ttoffer .ta{flex:none;font-size:13px;font-weight:800;color:var(--res)}
+.ttoffer .td{flex:none;font-size:13px;color:var(--faint)}
+.ttoffer .td:hover{color:var(--ink)}
+
+/* ══════════ MAKE ══════════ */
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0 26px}
+.pills button{font-size:13px;font-weight:700;padding:8px 15px;border-radius:var(--pill);
+  background:var(--card);border:1px solid var(--line-2);color:var(--muted);transition:all .15s}
+.pills button:hover{border-color:var(--ink);color:var(--ink)}
+.pills button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.catsec{margin-bottom:26px}
+.cath{display:flex;align-items:baseline;gap:10px;margin-bottom:11px}
+.cath h2{font-size:15px}
+.cath span{font-size:12.5px;color:var(--faint)}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 16px;
+  display:flex;gap:12px;text-align:left;position:relative;transition:border-color .15s,transform .15s}
+.tcard:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.tcard .ti{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;clip-path:url(#sq)}
+.tcard .ti svg{width:18px;height:18px;fill:#fff}
+.tcard .tx{min-width:0;padding-right:16px}
+.tcard h3{font-size:13.5px}
+.tcard p{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.tcard .pin{position:absolute;top:13px;right:13px;width:20px;height:20px;color:var(--line-2)}
+.tcard .pin svg{width:15px;height:15px;fill:currentColor}
+.tcard:hover .pin{color:var(--faint)}
+
+/* ══════════ LIBRARY ══════════ */
+.libbar{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:22px}
+.libbar .search{max-width:330px;flex:1}
+.viewtog{margin-left:auto;display:flex;gap:2px;background:var(--card);border:1px solid var(--line-2);
+  border-radius:10px;padding:3px}
+.viewtog button{width:30px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--faint)}
+.viewtog button.on{background:var(--res-soft);color:var(--res)}
+.viewtog svg{width:15px;height:15px;fill:currentColor}
+.crumb{font-size:13px;color:var(--faint);margin-bottom:12px}
+.crumb b{color:var(--ink);font-weight:800}
+.folders{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.fold{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 17px;
+  text-align:left;transition:border-color .15s,transform .15s}
+.fold:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.fold .fi{width:34px;height:34px;border-radius:10px;background:var(--res-soft);color:var(--res);
+  display:grid;place-items:center;margin-bottom:11px}
+.fold .fi svg{width:17px;height:17px;fill:currentColor}
+.fold h3{font-size:13.5px}
+.fold p{font-size:12.5px;color:var(--faint);margin-top:3px}
+.fold.new{border:1px dashed var(--line-2);background:transparent;display:grid;place-items:center;text-align:center}
+.fold.new .fi{margin:0 auto 9px}
+.fold.new h3{color:var(--res)}
+.resgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.rescard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 16px;
+  text-align:left;position:relative;transition:border-color .15s,transform .15s}
+.rescard:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.rescard .ri{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;margin-bottom:11px;clip-path:url(#sq)}
+.rescard .ri svg{width:17px;height:17px;fill:#fff}
+.rescard h3{font-size:13.5px;line-height:1.3}
+.rescard p{font-size:12px;color:var(--faint);margin-top:5px;line-height:1.4}
+.rescard .dots{position:absolute;top:12px;right:12px;color:var(--line-2)}
+.rescard .dots svg{width:16px;height:16px;fill:currentColor}
+.rescard:hover .dots{color:var(--faint)}
+
+/* ══════════ TIMETABLE ══════════ */
+.ttbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:20px}
+.ttbar .right{margin-left:auto;display:flex;gap:9px}
+.grid{display:grid;grid-template-columns:62px repeat(5,1fr);gap:8px}
+.gh{text-align:center;padding-bottom:6px}
+.gh .d{font-size:11.5px;font-weight:800;color:var(--faint);letter-spacing:.06em}
+.gh .n{font-size:17px;font-weight:800;color:var(--ink);margin-top:2px}
+.gh.today .d,.gh.today .n{color:var(--res)}
+.gt{font-size:11.5px;color:var(--faint);font-weight:700;text-align:right;padding-top:14px;line-height:1.3}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:var(--r);min-height:92px;
+  display:grid;place-items:center;color:var(--line-2);transition:border-color .15s,color .15s}
+.cell:hover{border-color:var(--res);color:var(--res)}
+.cell svg{width:17px;height:17px;fill:currentColor}
+.cell.has{display:block;padding:0;overflow:hidden;border-color:var(--line-2)}
+.cell.has .sub{background:var(--res-soft);color:var(--ink);font-size:12.5px;font-weight:800;padding:8px 11px}
+.cell.has .bod{padding:9px 11px}
+.cell.has .bod b{display:block;font-size:12.5px;font-weight:800;color:var(--ink)}
+.cell.has .bod span{font-size:11.5px;color:var(--faint)}
+/* nothing made is an empty slot, not a picture cost. neutral, never orange. */
+.cell.has.empty .bod{background:#F6F4FA;border-top:1px dashed var(--line-2)}
+.cell.has.empty .bod b{color:var(--muted)}
+
+/* ══════════ COLLEAGUES ══════════ */
+.colls{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;margin-bottom:28px}
+.coll{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.colls .coll:last-child{border-bottom:0}
+.coll .av{width:38px;height:38px;border-radius:50%;background:var(--res-soft);color:var(--res);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;flex:none}
+.coll .who{min-width:0}
+.coll .who b{display:block;font-size:14px;color:var(--ink);font-weight:800}
+.coll .who span{font-size:12.5px;color:var(--faint)}
+.coll .stats{margin-left:auto;display:flex;align-items:center;gap:26px}
+.coll .st{text-align:center}
+.coll .st b{display:block;font-size:15px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.coll .st span{font-size:10.5px;color:var(--faint);font-weight:700;letter-spacing:.04em}
+.coll .lvlchip{font-size:11px;font-weight:800;padding:3px 9px;border-radius:var(--pill);
+  background:var(--res-soft);color:var(--res)}
+.coll .acts{display:flex;align-items:center;gap:9px;flex:none}
+.empty{background:var(--card);border:1px dashed var(--line-2);border-radius:var(--r-lg);
+  padding:48px 24px;text-align:center}
+.empty .ei{width:44px;height:44px;border-radius:13px;background:var(--res-soft);color:var(--res);
+  display:grid;place-items:center;margin:0 auto 14px}
+.empty .ei svg{width:21px;height:21px;fill:currentColor}
+.empty h3{font-size:15px}
+.empty p{font-size:13.5px;color:var(--muted);margin-top:7px;max-width:46ch;margin-left:auto;margin-right:auto}
+
+/* ══════════ ASK JO ══════════ */
+.jowrap{display:grid;grid-template-columns:268px 1fr;gap:14px;height:calc(100vh - 38px - 66px - 64px)}
+.chats{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:17px 15px;
+  display:flex;flex-direction:column;min-height:0}
+.chats .ch{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.chats .ch h2{font-size:15px}
+.chats .ch span{font-size:13px;color:var(--faint)}
+.chats .ch .new{margin-left:auto;font-size:12.5px;font-weight:800;color:var(--res);display:inline-flex;align-items:center;gap:5px}
+.chats .ch .new svg{width:13px;height:13px;fill:currentColor}
+.chatlist{overflow-y:auto;display:flex;flex-direction:column;gap:3px;margin-top:12px;min-height:0}
+.chatlist button{text-align:left;padding:10px 12px;border-radius:9px;font-size:13px;color:var(--body);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s}
+.chatlist button:hover{background:var(--canvas)}
+.chatlist button.on{background:var(--res-soft);color:var(--res);font-weight:700}
+.convo{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  display:flex;flex-direction:column;min-height:0}
+.convo .mid{flex:1;display:grid;place-items:center;padding:30px;text-align:center}
+.convo .mid h2{font-size:23px}
+.convo .mid p{font-size:14px;color:var(--muted);margin-top:11px;max-width:54ch}
+.composer{border-top:1px solid var(--line);padding:14px 16px}
+.composer .box{border:1px solid var(--line-2);border-radius:var(--r-lg);padding:13px 15px}
+.composer .box:focus-within{border-color:var(--res);box-shadow:0 0 0 3px var(--res-soft)}
+.composer input{width:100%;border:0;background:none;font-size:14.5px;color:var(--ink)}
+.composer input:focus{outline:none}
+.composer input::placeholder{color:var(--faint)}
+.composer .crow{display:flex;align-items:center;gap:8px;margin-top:11px}
+.composer .cbtn{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  background:var(--canvas);color:var(--muted)}
+.composer .cbtn:hover{color:var(--ink)}
+.composer .cbtn svg{width:15px;height:15px;fill:currentColor}
+.composer .send{margin-left:auto;width:34px;height:34px;border-radius:50%;background:var(--res);color:#fff;
+  display:grid;place-items:center}
+.composer .send svg{width:16px;height:16px;fill:currentColor}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.sheet.on{display:flex}
+.sheet .scrim{position:absolute;inset:0;background:rgba(20,12,40,.5)}
+.sheet .box{position:relative;background:var(--card);border-radius:var(--r-xl);padding:28px;width:100%;max-width:430px;
+  box-shadow:0 30px 70px -30px rgba(20,12,40,.6)}
+.sheet h2{font-size:19px}
+.sheet .sp{font-size:13.5px;color:var(--muted);margin-top:7px}
+.packs{display:grid;gap:9px;margin-top:18px}
+.pack{display:flex;align-items:center;gap:13px;border:1px solid var(--line-2);border-radius:var(--r);
+  padding:14px 16px;text-align:left;transition:border-color .15s,background .15s}
+.pack:hover{border-color:var(--res);background:var(--res-soft)}
+.pack b{font-size:14.5px;color:var(--ink);font-weight:800}
+.pack span{font-size:12.5px;color:var(--muted)}
+.pack .pp{margin-left:auto;font-size:15px;font-weight:800;color:var(--ink)}
+.sheet .better{margin-top:16px;background:var(--res-soft);border-radius:var(--r);padding:13px 15px;
+  font-size:12.5px;color:var(--ink);line-height:1.5}
+.sheet .close{display:block;width:100%;margin-top:14px;padding:10px;font-size:13.5px;font-weight:700;color:var(--muted)}
+
+@media(max-width:1180px){ .tgrid,.folders{grid-template-columns:repeat(3,1fr)} .resgrid{grid-template-columns:repeat(4,1fr)} }
+@media(max-width:1080px){ .lessons,.tools{grid-template-columns:repeat(2,1fr)} .resgrid{grid-template-columns:repeat(3,1fr)} }
+@media(max-width:860px){
+  .app,.app.mini{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px}
+  .shead{padding:0;gap:8px} .mini .shead{flex-direction:row}
+  .brand .full{display:block!important} .brand .mark{display:none!important}
+  .collapse{display:none}
+  .nav{flex-direction:row;overflow-x:auto;gap:3px;flex:1}
+  .nav button{white-space:nowrap;padding:8px 11px;width:auto} .nav button .lab{display:inline!important} .nav .ct{display:none}
+  .spacer,.meters,.plan,.sfoot,.railwarn{display:none!important}
+  .top{padding:12px 18px;position:static} .top .search{display:none}
+  .content{padding:22px 18px 60px}
+  .hello h1{font-size:25px}
+  .lessons,.tools,.tgrid,.folders,.resgrid{grid-template-columns:1fr}
+  .jo{flex-wrap:wrap;padding:14px} .jo input{width:100%;flex:1 0 100%} .jo .go{width:100%}
+  .nudge{flex-direction:column;align-items:flex-start} .nudge .nb{width:100%;text-align:center}
+  .grid{grid-template-columns:48px repeat(5,110px);overflow-x:auto}
+  .coll{flex-wrap:wrap} .coll .stats{gap:16px;width:100%;margin-left:0;justify-content:space-between}
+  .jowrap{grid-template-columns:1fr;height:auto} .chatlist{max-height:180px}
+  .ttoffer{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <clipPath id="sq" clipPathUnits="objectBoundingBox">
+    <path d="M0,0.5 C0,0.115 0.115,0 0.5,0 C0.885,0 1,0.115 1,0.5 C1,0.885 0.885,1 0.5,1 C0.115,1 0,0.885 0,0.5 Z"/>
+  </clipPath>
+</defs></svg>
+
+<div class="proto">
+  <span>Plan</span>
+  <button data-plan="free">Free</button>
+  <button data-plan="standard">Standard</button>
+  <button class="on" data-plan="pro">Pro</button>
+  <button data-plan="max">Max</button>
+  <span>Credits</span>
+  <button class="on" data-cred="full">Plenty</button>
+  <button data-cred="low">Low</button>
+  <span>Timetable</span>
+  <button class="on" data-tt="0">Not set up</button>
+  <button data-tt="1">Set up</button>
+</div>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="shead">
+      <div class="brand"><svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg> <svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/></g></svg></div>
+      <span class="planchip" id="planChip">Pro</span>
+      <button class="collapse" id="collapseBtn" aria-label="Collapse the sidebar" title="Collapse"><i data-i="caret-left"></i></button>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="on" data-go="today" data-tip="Today"><i data-i="house"></i><span class="lab">Today</span></button>
+      <button data-go="make" data-tip="Make"><i data-i="squares-four"></i><span class="lab">Make</span><span class="ct">35</span></button>
+      <button data-go="library" data-tip="Library"><i data-i="folder-open"></i><span class="lab">Library</span><span class="ct">55</span></button>
+      <button data-go="timetable" data-tip="Timetable"><i data-i="calendar-blank"></i><span class="lab">Timetable</span></button>
+      <button data-go="colleagues" data-tip="Colleagues"><i data-i="users-three"></i><span class="lab">Colleagues</span><span class="ct">3</span></button>
+      <button data-go="jo" data-tip="Ask Jo"><i data-i="chat-circle"></i><span class="lab">Ask Jo</span></button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="railwarn" id="railWarn">
+      <span class="rw"><i data-i="lightning"></i><span class="pip"></span></span>
+      <span class="rn" id="railNum">—</span>
+    </div>
+    <div class="meters" id="meters"></div>
+    <div class="plan" id="planBlock"></div>
+    <div class="sfoot"><span class="lvl"><span class="dot"></span>Level 4</span><a href="#">Help</a></div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <span class="ttl" id="pageTitle">Today</span>
+      <div class="search"><i data-i="magnifying-glass"></i>Search your library and the 35 tools</div>
+      <div class="right">
+        <button class="iconbtn" aria-label="Updates"><i data-i="bell"></i></button>
+        <button class="iconbtn" aria-label="Settings"><i data-i="gear"></i></button>
+        <span class="avatar">AA</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ══════════ TODAY ══════════ -->
+      <section class="page on" id="p-today">
+        <div class="hello">
+          <h1>Morning, Ash.</h1>
+          <p class="sub" id="helloSub">Four lessons today. <b>Three are ready.</b></p>
+          <p class="date">Friday 13 November</p>
+          <p class="saved"><i data-i="clock"></i><span><b>30 hours</b> you have not spent planning since September.</span></p>
+        </div>
+        <form class="jo" onsubmit="return false">
+          <span class="jicon"><i data-i="sparkle"></i></span>
+          <input placeholder="Tell Jo what you need" aria-label="Ask Jo">
+          <button class="go" type="submit">Ask Jo</button>
+        </form>
+        <div class="hints">
+          <button>Year 4 fractions worksheet</button>
+          <button>Comprehension on The Highwayman</button>
+          <button>Cover lesson for Year 6 science</button>
+        </div>
+        <div id="todaySlot"></div>
+        <section class="sec">
+          <div class="sech"><h2>Make something</h2><span class="note">Your most used</span>
+            <a href="#" class="link" data-go="make">All 35 tools</a></div>
+          <div class="tools" id="toolGrid"></div>
+        </section>
+        <section class="sec">
+          <div class="sech"><h2>Pick up where you left off</h2><a href="#" class="link" data-go="library">Library</a></div>
+          <div class="recent" id="recentList"></div>
+        </section>
+        <div id="nudgeSlot"></div>
+        <div id="ttOfferSlot"></div>
+      </section>
+
+      <!-- ══════════ MAKE ══════════ -->
+      <section class="page" id="p-make">
+        <div class="phead"><h1>What would you like to make?</h1><p>Thirty five tools. Each one costs what it says.</p></div>
+        <div class="search" style="max-width:520px"><i data-i="magnifying-glass"></i>Search 35 tools. Try cover lesson, or report</div>
+        <div class="pills" id="makePills"></div>
+        <div id="makeGrid"></div>
+      </section>
+
+      <!-- ══════════ LIBRARY ══════════ -->
+      <section class="page" id="p-library">
+        <div class="phead"><h1>Library</h1><p>Everything you make is filed here. Drag a resource onto a folder to move it.</p></div>
+        <div class="libbar">
+          <button class="btn pri"><i data-i="folder-plus"></i>New folder</button>
+          <div class="search"><i data-i="magnifying-glass"></i>Search your library</div>
+          <div class="viewtog">
+            <button aria-label="List view"><i data-i="list"></i></button>
+            <button class="on" aria-label="Grid view"><i data-i="grid-four"></i></button>
+          </div>
+        </div>
+        <p class="crumb"><b>Library</b> / Unfiled</p>
+        <div class="folders">
+          <button class="fold"><span class="fi"><i data-i="folder-open"></i></span><h3>All resources</h3><p>55 resources</p></button>
+          <button class="fold"><span class="fi"><i data-i="users-three"></i></span><h3>Shared with me</h3><p>2 resources</p></button>
+          <button class="fold"><span class="fi"><i data-i="folder-open"></i></span><h3>Autumn 1 resources</h3><p>5 resources</p></button>
+          <button class="fold new"><span class="fi"><i data-i="folder-plus"></i></span><h3>New folder</h3></button>
+        </div>
+        <div class="sech"><h2>Unfiled</h2><span class="note">Drag any card onto a folder above</span></div>
+        <div class="resgrid" id="resGrid"></div>
+      </section>
+
+      <!-- ══════════ TIMETABLE ══════════ -->
+      <section class="page" id="p-timetable">
+        <div class="phead"><h1>Timetable</h1><p>Your teaching week. Drag a resource onto any lesson, or click a slot to add one.</p></div>
+        <div class="ttbar">
+          <button class="btn sec"><i data-i="caret-left"></i>Previous</button>
+          <button class="btn sec">This week</button>
+          <button class="btn sec">Next<i data-i="caret-right"></i></button>
+          <div class="right">
+            <button class="btn sec"><i data-i="list"></i>Edit rows</button>
+            <button class="btn pri"><i data-i="plus"></i>Add a lesson</button>
+          </div>
+        </div>
+        <div class="grid" id="ttGrid"></div>
+      </section>
+
+      <!-- ══════════ COLLEAGUES ══════════ -->
+      <section class="page" id="p-colleagues">
+        <div class="phead"><h1>Colleagues</h1><p>Share resources, compare progress and keep each other going.</p></div>
+        <div class="libbar">
+          <div class="search"><i data-i="magnifying-glass"></i>Find a colleague by username or email</div>
+          <button class="btn pri"><i data-i="user-plus"></i>Invite a colleague</button>
+        </div>
+        <div class="colls" id="collList"></div>
+        <div class="sech"><h2>Shared with you</h2></div>
+        <div class="empty">
+          <span class="ei"><i data-i="file-text"></i></span>
+          <h3>Nothing shared with you yet</h3>
+          <p>When a colleague shares a resource it waits here until you save it. You get your own copy to edit, and theirs stays untouched.</p>
+        </div>
+      </section>
+
+      <!-- ══════════ ASK JO ══════════ -->
+      <section class="page" id="p-jo">
+        <div class="jowrap">
+          <div class="chats">
+            <div class="ch"><h2>Chats</h2><span>9</span>
+              <button class="new"><i data-i="plus"></i>New chat</button></div>
+            <div class="search"><i data-i="magnifying-glass"></i>Search for a chat</div>
+            <div class="chatlist" id="chatList"></div>
+          </div>
+          <div class="convo">
+            <div class="mid">
+              <div>
+                <h2>How can I help you?</h2>
+                <p>Ask about planning, assessment, behaviour, SEND, or anything else in your teaching week.</p>
+                <p>Ask for a resource and I will open the right tool with the details filled in. Mention the year group and subject and there will be less to correct.</p>
+              </div>
+            </div>
+            <div class="composer">
+              <div class="box">
+                <input placeholder="Message Jo. Try: create a Year 5 multiplication quiz" aria-label="Message Jo">
+                <div class="crow">
+                  <button class="cbtn" aria-label="Attach"><i data-i="plus"></i></button>
+                  <button class="cbtn" aria-label="Voice"><i data-i="microphone"></i></button>
+                  <button class="send" aria-label="Send"><i data-i="paper-plane-right"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="sheet" id="topupSheet">
+  <div class="scrim" data-close></div>
+  <div class="box">
+    <h2>Top up your resources</h2>
+    <p class="sp">Added to your account straight away. They sit on top of your monthly allowance and roll over.</p>
+    <div class="packs" id="packList"></div>
+    <div class="better" id="betterBox"></div>
+    <button class="close" data-close>Not now</button>
+  </div>
+</div>
+
+<script>
+var I = {"arrow-right": "<path d=\"M221.66,133.66l-72,72A8,8,0,0,1,136,200V136H40a8,8,0,0,1,0-16h96V56a8,8,0,0,1,13.66-5.66l72,72A8,8,0,0,1,221.66,133.66Z\"/>", "arrow-up": "<path d=\"M207.39,115.06A8,8,0,0,1,200,120H136v96a8,8,0,0,1-16,0V120H56a8,8,0,0,1-5.66-13.66l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,207.39,115.06Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z\"/>", "blueprint": "<path d=\"M136,120h24v16H136ZM240,64V200a8,8,0,0,1-8,8H48a32,32,0,0,1-32-32V64A32,32,0,0,1,48,32H64a8,8,0,0,1,8,8V56H232A8,8,0,0,1,240,64ZM56,48H48A16,16,0,0,0,32,64v84.29A31.82,31.82,0,0,1,48,144h8Zm120,88V120h16a8,8,0,0,0,0-16H176V96a8,8,0,0,0-16,0v8H136V96a8,8,0,0,0-16,0v8H104a8,8,0,0,0,0,16h16v16H104a8,8,0,0,0,0,16h16v8a8,8,0,0,0,16,0v-8h24v8a8,8,0,0,0,16,0v-8h16a8,8,0,0,0,0-16Z\"/>", "book-open-text": "<path d=\"M232,48H168a32,32,0,0,0-32,32v87.73a8.17,8.17,0,0,1-7.47,8.25,8,8,0,0,1-8.53-8V80A32,32,0,0,0,88,48H24a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H96a24,24,0,0,1,24,23.94,7.9,7.9,0,0,0,5.12,7.55A8,8,0,0,0,136,232a24,24,0,0,1,24-24h72a8,8,0,0,0,8-8V56A8,8,0,0,0,232,48ZM208,168H168.27a8.17,8.17,0,0,1-8.25-7.47,8,8,0,0,1,8-8.53h39.73a8.17,8.17,0,0,1,8.25,7.47A8,8,0,0,1,208,168Zm0-32H168.27a8.17,8.17,0,0,1-8.25-7.47,8,8,0,0,1,8-8.53h39.73a8.17,8.17,0,0,1,8.25,7.47A8,8,0,0,1,208,136Zm0-32H168.27A8.17,8.17,0,0,1,160,96.53,8,8,0,0,1,168,88h39.73A8.17,8.17,0,0,1,216,95.47,8,8,0,0,1,208,104Z\"/>", "calendar-blank": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,48H48V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24Z\"/>", "caret-left": "<path d=\"M168,48V208a8,8,0,0,1-13.66,5.66l-80-80a8,8,0,0,1,0-11.32l80-80A8,8,0,0,1,168,48Z\"/>", "caret-right": "<path d=\"M181.66,133.66l-80,80A8,8,0,0,1,88,208V48a8,8,0,0,1,13.66-5.66l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "certificate": "<path d=\"M232,86.53V56a16,16,0,0,0-16-16H40A16,16,0,0,0,24,56V184a16,16,0,0,0,16,16H160v24A8,8,0,0,0,172,231l24-13.74L220,231A8,8,0,0,0,232,224V161.47a51.88,51.88,0,0,0,0-74.94ZM128,144H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm0-32H72a8,8,0,0,1,0-16h56a8,8,0,0,1,0,16Zm88,98.21-16-9.16a8,8,0,0,0-7.94,0l-16,9.16V172a51.88,51.88,0,0,0,40,0ZM196,160a36,36,0,1,1,36-36A36,36,0,0,1,196,160Z\"/>", "chart-bar": "<path d=\"M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1,0-16h8V136a8,8,0,0,1,8-8H72a8,8,0,0,1,8,8v64H96V88a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V200h16V40a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8V200h8A8,8,0,0,1,232,208Z\"/>", "chart-line-up": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM200,192H56a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v76.69l34.34-34.35a8,8,0,0,1,11.32,0L128,132.69,172.69,88H144a8,8,0,0,1,0-16h48a8,8,0,0,1,8,8v48a8,8,0,0,1-16,0V99.31l-50.34,50.35a8,8,0,0,1-11.32,0L104,131.31l-40,40V176H200a8,8,0,0,1,0,16Z\"/>", "check": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z\"/>", "check-square-offset": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM80,200a8,8,0,0,1-5.66-2.34l-16-16a8,8,0,0,1,11.32-11.32L80,180.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-40,40A8,8,0,0,1,80,200Zm120-8a8,8,0,0,1-8,8H136a8,8,0,0,1,0-16h48V72H72v64a8,8,0,0,1-16,0V64a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z\"/>", "clipboard-text": "<path d=\"M200,32H163.74a47.92,47.92,0,0,0-71.48,0H56A16,16,0,0,0,40,48V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V48A16,16,0,0,0,200,32Zm-72,0a32,32,0,0,1,32,32H96A32,32,0,0,1,128,32Zm32,128H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z\"/>", "clock": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm56,112H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "coins": "<path d=\"M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM56,146.87C36.41,141.4,24,132.39,24,124V109.93c8.16,5.78,19.09,10.44,32,13.57Zm80-23.37c12.91-3.13,23.84-7.79,32-13.57V124c0,8.39-12.41,17.4-32,22.87Zm-16,71.37C100.41,189.4,88,180.39,88,172v-4.17c2.63.1,5.29.17,8,.17,3.88,0,7.67-.13,11.39-.35A121.92,121.92,0,0,0,120,171.41Zm0-44.62A163,163,0,0,1,96,152a163,163,0,0,1-24-1.75V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54Zm64,48a165.45,165.45,0,0,1-48,0V174.4a179.48,179.48,0,0,0,24,1.6,183.74,183.74,0,0,0,24-1.54ZM232,172c0,8.39-12.41,17.4-32,22.87V171.5c12.91-3.13,23.84-7.79,32-13.57Z\"/>", "download-simple": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40A8,8,0,0,0,168,96H136V32a8,8,0,0,0-16,0V96H88a8,8,0,0,0-5.66,13.66Z\"/>", "envelope-simple": "<path d=\"M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-8,144H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z\"/>", "exam": "<path d=\"M96,113.89,107.06,136H84.94ZM232,56V216a8,8,0,0,1-11.58,7.16L192,208.94l-28.42,14.22a8,8,0,0,1-7.16,0L128,208.94,99.58,223.16a8,8,0,0,1-7.16,0L64,208.94,35.58,223.16A8,8,0,0,1,24,216V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.16,156.42l-32-64a8,8,0,0,0-14.32,0l-32,64a8,8,0,0,0,14.32,7.16L76.94,152h38.12l5.78,11.58a8,8,0,1,0,14.32-7.16ZM208,128a8,8,0,0,0-8-8H184V104a8,8,0,0,0-16,0v16H152a8,8,0,0,0,0,16h16v16a8,8,0,0,0,16,0V136h16A8,8,0,0,0,208,128Z\"/>", "eye": "<path d=\"M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>", "file-text": "<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,176H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm-8-56V44l44,44Z\"/>", "folder": "<path d=\"M216,72H131.31L104,44.69A15.88,15.88,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.41,15.41,0,0,0,39.39,216h177.5A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40Z\"/>", "folder-plus": "<path d=\"M216,72H131.31L104,44.69A15.88,15.88,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.41,15.41,0,0,0,39.39,216h177.5A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40Zm112,96H136v16a8,8,0,0,1-16,0V152H104a8,8,0,0,1,0-16h16V120a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16Z\"/>", "footprints": "<path d=\"M216.06,192v12A36,36,0,0,1,144,204V192a8,8,0,0,1,8-8h56A8,8,0,0,1,216.06,192ZM104,160h-56a8,8,0,0,0-8,8v12A36,36,0,0,0,112,180V168A8,8,0,0,0,104,160ZM76,16C64.36,16,53.07,26.31,44.2,45c-13.93,29.38-18.56,73,.29,96a8,8,0,0,0,6.2,2.93h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C98.85,26.31,87.57,16,76,16Zm78.8,152h50.55a8,8,0,0,0,6.2-2.93c18.85-23,14.22-66.65.29-96C202.93,50.31,191.64,40,180,40s-22.89,10.31-31.77,29c-13.93,29.38-18.56,73,.29,96A8,8,0,0,0,154.76,168Z\"/>", "gavel": "<path d=\"M52.69,99.31a16,16,0,0,1,0-22.63l64-64a16,16,0,0,1,22.63,22.63l-64,64a16,16,0,0,1-22.63,0Zm190.63,17.37a16,16,0,0,0-22.63,0l-64,64a16,16,0,0,0,0,22.63h0a16,16,0,0,0,22.63,0l64-64A16,16,0,0,0,243.32,116.68Zm-35.11-15.8L155.12,47.79a4,4,0,0,0-5.66,0L87.8,109.45a4,4,0,0,0,0,5.66L103,130.34,28.69,204.69a16,16,0,0,0,22.62,22.62L125.66,153l15.23,15.23a4,4,0,0,0,5.66,0l61.66-61.66A4,4,0,0,0,208.21,100.88Z\"/>", "hand-palm": "<path d=\"M216,104v48a88,88,0,0,1-176,0V64a16,16,0,0,1,32,0v56a8,8,0,0,0,16,0V32a16,16,0,0,1,32,0v80a8,8,0,0,0,16,0V48a16,16,0,0,1,32,0v80.67A48.08,48.08,0,0,0,128,176a8,8,0,0,0,16,0,32,32,0,0,1,32-32,8,8,0,0,0,8-8V104a16,16,0,0,1,32,0Z\"/>", "house": "<path d=\"M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z\"/>", "house-line": "<path d=\"M240,208H224V136l2.34,2.34A8,8,0,0,0,237.66,127L139.31,28.68a16,16,0,0,0-22.62,0L18.34,127a8,8,0,0,0,11.32,11.31L32,136v72H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16Zm-88,0H104V160a4,4,0,0,1,4-4h40a4,4,0,0,1,4,4Z\"/>", "identification-card": "<path d=\"M112,120a16,16,0,1,1-16-16A16,16,0,0,1,112,120ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.75,166a39.76,39.76,0,0,0-17.19-23.34,32,32,0,1,0-45.12,0A39.84,39.84,0,0,0,56.25,166a8,8,0,0,0,15.5,4c2.64-10.25,13.06-18,24.25-18s21.62,7.73,24.25,18a8,8,0,1,0,15.5-4ZM200,144a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,144Zm0-32a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,112Z\"/>", "lightning": "<path d=\"M213.85,125.46l-112,120a8,8,0,0,1-13.69-7l14.66-73.33L45.19,143.49a8,8,0,0,1-3-13l112-120a8,8,0,0,1,13.69,7L153.18,90.9l57.63,21.61a8,8,0,0,1,3,12.95Z\"/>", "magnifying-glass": "<path d=\"M168,112a56,56,0,1,1-56-56A56,56,0,0,1,168,112Zm61.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88,88,0,1,1,11.32-11.31l50.06,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z\"/>", "map-trifold": "<path d=\"M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM96,176a8,8,0,0,0-1.94.24L40,189.75V62.25L95.07,48.48l.93.46Zm120,17.75-55.07,13.77-.93-.46V80a8,8,0,0,0,1.94-.23L216,66.25Z\"/>", "medal": "<path d=\"M216,96A88,88,0,1,0,72,163.83V240a8,8,0,0,0,11.58,7.16L128,225l44.43,22.21A8.07,8.07,0,0,0,176,248a8,8,0,0,0,8-8V163.83A87.85,87.85,0,0,0,216,96ZM56,96a72,72,0,1,1,72,72A72.08,72.08,0,0,1,56,96Zm16,0a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z\"/>", "megaphone": "<path d=\"M200,72H160.2c-2.91-.17-53.62-3.74-101.91-44.24A16,16,0,0,0,32,40V200a16,16,0,0,0,26.29,12.25c37.77-31.68,77-40.76,93.71-43.3v31.72A16,16,0,0,0,159.12,214l11,7.33A16,16,0,0,0,194.5,212l11.77-44.36A48,48,0,0,0,200,72ZM179,207.89l0,.11-11-7.33V168h21.6ZM200,152H168V88h32a32,32,0,1,1,0,64Z\"/>", "microphone": "<path d=\"M80,128V64a48,48,0,0,1,96,0v64a48,48,0,0,1-96,0Zm128,0a8,8,0,0,0-16,0,64,64,0,0,1-128,0,8,8,0,0,0-16,0,80.11,80.11,0,0,0,72,79.6V240a8,8,0,0,0,16,0V207.6A80.11,80.11,0,0,0,208,128Z\"/>", "newspaper": "<path d=\"M216,48H56A16,16,0,0,0,40,64V184a8,8,0,0,1-16,0V88A8,8,0,0,0,8,88v96.11A24,24,0,0,0,32,208H208a24,24,0,0,0,24-24V64A16,16,0,0,0,216,48ZM176,152H96a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h80a8,8,0,0,1,0,16Z\"/>", "notebook": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM80,208H48V48H80Zm96-56H112a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H112a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Z\"/>", "pen-nib": "<path d=\"M243.31,81.36,174.63,12.68a16,16,0,0,0-22.63,0L123.56,41.12l-58,21.76A16,16,0,0,0,55.36,75.23L34.59,199.83a4,4,0,0,0,6.77,3.49l57-57a23.85,23.85,0,0,1-2.29-12.08,24,24,0,1,1,13.6,23.4l-57,57a4,4,0,0,0,3.49,6.77l124.61-20.77a16,16,0,0,0,12.35-10.16l21.77-58.07L243.31,104a16,16,0,0,0,0-22.63ZM208,116.68,139.32,48l24-24L232,92.68Z\"/>", "pencil-simple": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "play": "<path d=\"M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z\"/>", "plus": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM184,136H136v48a8,8,0,0,1-16,0V136H72a8,8,0,0,1,0-16h48V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "presentation-chart": "<path d=\"M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM104,144a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32,0a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z\"/>", "projector-screen": "<path d=\"M232,64V48a16,16,0,0,0-16-16H40A16,16,0,0,0,24,48V64A16,16,0,0,0,40,80v96H32a8,8,0,0,0,0,16h88v17.38a24,24,0,1,0,16,0V192h88a8,8,0,0,0,0-16h-8V80A16,16,0,0,0,232,64ZM128,240a8,8,0,1,1,8-8A8,8,0,0,1,128,240ZM40,48H216V64H40Z\"/>", "scroll": "<path d=\"M220.8,169.6A8,8,0,0,0,216,168h-8V64a32,32,0,0,0-32-32H40A32,32,0,0,0,8,64C8,77.61,18.05,85.54,19.2,86.4h0A7.89,7.89,0,0,0,24,88a8,8,0,0,0,4.87-14.33h0C28.83,73.62,24,69.74,24,64a16,16,0,0,1,32,0V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32C232,178.39,222,170.46,220.8,169.6ZM104,96h64a8,8,0,0,1,0,16H104a8,8,0,0,1,0-16Zm-8,40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H104A8,8,0,0,1,96,136Zm104,72H107.71A31.82,31.82,0,0,0,112,192a26.92,26.92,0,0,0-1.21-8h102a12.58,12.58,0,0,1,3.23,8A16,16,0,0,1,200,208Z\"/>", "share-network": "<path d=\"M212,200a36,36,0,1,1-69.85-12.25l-53-34.05a36,36,0,1,1,0-51.4l53-34a36.09,36.09,0,1,1,8.67,13.45l-53,34.05a36,36,0,0,1,0,24.5l53,34.05A36,36,0,0,1,212,200Z\"/>", "shield-check": "<path d=\"M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "sparkle": "<path d=\"M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z\"/>", "squares-four": "<path d=\"M120,56v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40h48A16,16,0,0,1,120,56Zm80-16H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm-96,96H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm96,0H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Z\"/>", "student": "<path d=\"M226.53,56.41l-96-32a8,8,0,0,0-5.06,0l-96,32A8,8,0,0,0,24,64v80a8,8,0,0,0,16,0V75.1L73.59,86.29a64,64,0,0,0,20.65,88.05c-18,7.06-33.56,19.83-44.94,37.29a8,8,0,1,0,13.4,8.74C77.77,197.25,101.57,184,128,184s50.23,13.25,65.3,36.37a8,8,0,0,0,13.4-8.74c-11.38-17.46-27-30.23-44.94-37.29a64,64,0,0,0,20.65-88l44.12-14.7a8,8,0,0,0,0-15.18ZM176,120A48,48,0,1,1,89.35,91.55l36.12,12a8,8,0,0,0,5.06,0l36.12-12A47.89,47.89,0,0,1,176,120Z\"/>", "target": "<path d=\"M221.87,83.16A104.1,104.1,0,1,1,195.67,49l22.67-22.68a8,8,0,0,1,11.32,11.32L167.6,99.71h0l-37.71,37.71-23.95,23.95a40,40,0,0,0,62-35.67,8,8,0,1,1,16-.9,56,56,0,0,1-95.5,42.79h0a56,56,0,0,1,73.13-84.43L184.3,60.39a87.88,87.88,0,1,0,23.13,29.67,8,8,0,0,1,14.44-6.9Z\"/>", "text-aa": "<path d=\"M200,156c0,6.5-7.33,12-16,12s-16-5.5-16-12,7.33-12,16-12S200,149.5,200,156ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM143.37,172.88l-44-104a8,8,0,0,0-14.74,0l-44,104a8,8,0,0,0,14.74,6.24L66.84,152h50.32l11.47,27.12a8,8,0,0,0,14.74-6.24ZM216,124c0-15.44-14.36-28-32-28a34.86,34.86,0,0,0-20.78,6.68,8,8,0,0,0,9.56,12.83A18.84,18.84,0,0,1,184,112c8.56,0,15.8,5.36,16,11.76v8A35.24,35.24,0,0,0,184,128c-17.64,0-32,12.56-32,28s14.36,28,32,28a35.13,35.13,0,0,0,16.93-4.26A8,8,0,0,0,216,176ZM73.61,136h36.78L92,92.53Z\"/>", "user": "<path d=\"M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z\"/>", "user-switch": "<path d=\"M84,120a44,44,0,1,1,44,44A44,44,0,0,1,84,120Zm126.16,57.18a8.21,8.21,0,0,0-10.86,2.41,87.42,87.42,0,0,1-5.52,6.85A79.76,79.76,0,0,0,172,165.1a4,4,0,0,0-4.84.32,59.8,59.8,0,0,1-78.26,0A4,4,0,0,0,84,165.1a79.71,79.71,0,0,0-21.79,21.31A87.66,87.66,0,0,1,40.37,136h15.4a8.2,8.2,0,0,0,6.69-3.28,8,8,0,0,0-.8-10.38l-24-24a8,8,0,0,0-11.32,0l-24,24a8,8,0,0,0-.8,10.38A8.2,8.2,0,0,0,8.23,136H24.3a104,104,0,0,0,188.18,52.67A8,8,0,0,0,210.16,177.18Zm45.23-52.24A8,8,0,0,0,248,120H231.7A104,104,0,0,0,43.52,67.33a8,8,0,0,0,13,9.34A88,88,0,0,1,215.63,120H200a8,8,0,0,0-5.66,13.66l24,24a8,8,0,0,0,11.32,0l24-24A8,8,0,0,0,255.39,124.94Z\"/>", "users-three": "<path d=\"M64.12,147.8a4,4,0,0,1-4,4.2H16a8,8,0,0,1-7.8-6.17,8.35,8.35,0,0,1,1.62-6.93A67.79,67.79,0,0,1,37,117.51a40,40,0,1,1,66.46-35.8,3.94,3.94,0,0,1-2.27,4.18A64.08,64.08,0,0,0,64,144C64,145.28,64,146.54,64.12,147.8Zm182-8.91A67.76,67.76,0,0,0,219,117.51a40,40,0,1,0-66.46-35.8,3.94,3.94,0,0,0,2.27,4.18A64.08,64.08,0,0,1,192,144c0,1.28,0,2.54-.12,3.8a4,4,0,0,0,4,4.2H240a8,8,0,0,0,7.8-6.17A8.33,8.33,0,0,0,246.17,138.89Zm-89,43.18a48,48,0,1,0-58.37,0A72.13,72.13,0,0,0,65.07,212,8,8,0,0,0,72,224H184a8,8,0,0,0,6.93-12A72.15,72.15,0,0,0,157.19,182.07Z\"/>", "warning": "<path d=\"M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z\"/>", "x": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM181.66,170.34a8,8,0,0,1-11.32,11.32L128,139.31,85.66,181.66a8,8,0,0,1-11.32-11.32L116.69,128,74.34,85.66A8,8,0,0,1,85.66,74.34L128,116.69l42.34-42.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "folder-open": "<path d=\"M245,110.64A16,16,0,0,0,232,104H216V88a16,16,0,0,0-16-16H130.67L102.94,51.2a16.14,16.14,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V208h0a8,8,0,0,0,8,8H211.1a8,8,0,0,0,7.59-5.47l28.49-85.47A16.05,16.05,0,0,0,245,110.64ZM93.34,64,123.2,86.4A8,8,0,0,0,128,88h72v16H69.77a16,16,0,0,0-15.18,10.94L40,158.7V64Z\"/>", "user-circle": "<path d=\"M172,120a44,44,0,1,1-44-44A44.05,44.05,0,0,1,172,120Zm60,8A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88.09,88.09,0,0,0-91.47-87.93C77.43,41.89,39.87,81.12,40,128.25a87.65,87.65,0,0,0,22.24,58.16A79.71,79.71,0,0,1,84,165.1a4,4,0,0,1,4.83.32,59.83,59.83,0,0,0,78.28,0,4,4,0,0,1,4.83-.32,79.71,79.71,0,0,1,21.79,21.31A87.62,87.62,0,0,0,216,128Z\"/>", "user-plus": "<path d=\"M256,136a8,8,0,0,1-8,8H232v16a8,8,0,0,1-16,0V144H200a8,8,0,0,1,0-16h16V112a8,8,0,0,1,16,0v16h16A8,8,0,0,1,256,136ZM144,157.68a68,68,0,1,0-71.9,0c-20.65,6.76-39.23,19.39-54.17,37.17A8,8,0,0,0,24,208H192a8,8,0,0,0,6.13-13.15C183.18,177.07,164.6,164.44,144,157.68Z\"/>", "caret-down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z\"/>", "calendar-plus": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM152,160H136v16a8,8,0,0,1-16,0V160H104a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16a8,8,0,0,1,0,16ZM48,80V48H72v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80Z\"/>", "trophy": "<path d=\"M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z\"/>", "fire": "<path d=\"M143.38,17.85a8,8,0,0,0-12.63,3.41l-22,60.41L84.59,58.26a8,8,0,0,0-11.93.89C51,87.53,40,116.08,40,144a88,88,0,0,0,176,0C216,84.55,165.21,36,143.38,17.85Zm40.51,135.49a57.6,57.6,0,0,1-46.56,46.55A7.65,7.65,0,0,1,136,200a8,8,0,0,1-1.32-15.89c16.57-2.79,30.63-16.85,33.44-33.45a8,8,0,0,1,15.78,2.68Z\"/>", "star": "<path d=\"M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.46,16.46,0,0,1,9.37,28.86Z\"/>", "seal-check": "<path d=\"M225.86,102.82c-3.77-3.94-7.67-8-9.14-11.57-1.36-3.27-1.44-8.69-1.52-13.94-.15-9.76-.31-20.82-8-28.51s-18.75-7.85-28.51-8c-5.25-.08-10.67-.16-13.94-1.52-3.56-1.47-7.63-5.37-11.57-9.14C146.28,23.51,138.44,16,128,16s-18.27,7.51-25.18,14.14c-3.94,3.77-8,7.67-11.57,9.14C88,40.64,82.56,40.72,77.31,40.8c-9.76.15-20.82.31-28.51,8S41,67.55,40.8,77.31c-.08,5.25-.16,10.67-1.52,13.94-1.47,3.56-5.37,7.63-9.14,11.57C23.51,109.72,16,117.56,16,128s7.51,18.27,14.14,25.18c3.77,3.94,7.67,8,9.14,11.57,1.36,3.27,1.44,8.69,1.52,13.94.15,9.76.31,20.82,8,28.51s18.75,7.85,28.51,8c5.25.08,10.67.16,13.94,1.52,3.56,1.47,7.63,5.37,11.57,9.14C109.72,232.49,117.56,240,128,240s18.27-7.51,25.18-14.14c3.94-3.77,8-7.67,11.57-9.14,3.27-1.36,8.69-1.44,13.94-1.52,9.76-.15,20.82-.31,28.51-8s7.85-18.75,8-28.51c.08-5.25.16-10.67,1.52-13.94,1.47-3.56,5.37-7.63,9.14-11.57C232.49,146.28,240,138.44,240,128S232.49,109.73,225.86,102.82Zm-52.2,6.84-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "lock-simple": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96Z\"/>", "upload-simple": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM88,80h32v64a8,8,0,0,0,16,0V80h32a8,8,0,0,0,5.66-13.66l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,88,80Z\"/>", "dots-three": "<path d=\"M224,80H32A16,16,0,0,0,16,96v64a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V96A16,16,0,0,0,224,80ZM60,140a12,12,0,1,1,12-12A12,12,0,0,1,60,140Zm68,0a12,12,0,1,1,12-12A12,12,0,0,1,128,140Zm68,0a12,12,0,1,1,12-12A12,12,0,0,1,196,140Z\"/>", "trash-simple": "<path d=\"M224,56a8,8,0,0,1-8,8h-8V208a16,16,0,0,1-16,16H64a16,16,0,0,1-16-16V64H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,56ZM88,32h80a8,8,0,0,0,0-16H88a8,8,0,0,0,0,16Z\"/>", "chat-circle": "<path d=\"M232,128A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Z\"/>", "chat-teardrop-dots": "<path d=\"M132,24A100.11,100.11,0,0,0,32,124v84a16,16,0,0,0,16,16h84a100,100,0,0,0,0-200ZM88,140a12,12,0,1,1,12-12A12,12,0,0,1,88,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,132,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,176,140Z\"/>", "paper-plane-tilt": "<path d=\"M231.4,44.34s0,.1,0,.15l-58.2,191.94a15.88,15.88,0,0,1-14,11.51q-.69.06-1.38.06a15.86,15.86,0,0,1-14.42-9.15L107,164.15a4,4,0,0,1,.77-4.58l57.92-57.92a8,8,0,0,0-11.31-11.31L96.43,148.26a4,4,0,0,1-4.58.77L17.08,112.64a16,16,0,0,1,2.49-29.8l191.94-58.2.15,0A16,16,0,0,1,231.4,44.34Z\"/>", "link-simple": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM144.56,173.66l-21.45,21.45a44,44,0,0,1-62.22-62.22l21.45-21.46a8,8,0,0,1,11.32,11.31L72.2,144.2a28,28,0,0,0,39.6,39.6l21.45-21.46a8,8,0,0,1,11.31,11.32Zm-34.9-16a8,8,0,0,1-11.32-11.32l48-48a8,8,0,0,1,11.32,11.32Zm85.45-34.55-21.45,21.45a8,8,0,0,1-11.32-11.31L183.8,111.8a28,28,0,0,0-39.6-39.6L122.74,93.66a8,8,0,0,1-11.31-11.32l21.46-21.45a44,44,0,0,1,62.22,62.22Z\"/>", "gear": "<path d=\"M216,130.16q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.29,107.29,0,0,0-26.25-10.86,8,8,0,0,0-7.06,1.48L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z\"/>", "sign-out": "<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40A8,8,0,0,0,176,88v32H112a8,8,0,0,0,0,16h64v32a8,8,0,0,0,13.66,5.66l40-40A8,8,0,0,0,229.66,122.34Z\"/>", "camera": "<path d=\"M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z\"/>", "crown-simple": "<path d=\"M239.75,90.81c0,.11,0,.21-.07.32L217,195a16,16,0,0,1-15.72,13H54.71A16,16,0,0,1,39,195L16.32,91.13c0-.11-.05-.21-.07-.32A16,16,0,0,1,44,77.39l33.67,36.29,35.8-80.29a1,1,0,0,0,0-.1,16,16,0,0,1,29.06,0,1,1,0,0,0,0,.1l35.8,80.29L212,77.39a16,16,0,0,1,27.71,13.42Z\"/>", "books": "<path d=\"M231.65,194.55,198.46,36.75a16,16,0,0,0-19-12.39L132.65,34.42a16.08,16.08,0,0,0-12.3,19l33.19,157.8A16,16,0,0,0,169.16,224a16.25,16.25,0,0,0,3.38-.36l46.81-10.06A16.09,16.09,0,0,0,231.65,194.55ZM136,50.15c0-.06,0-.09,0-.09l46.8-10,3.33,15.87L139.33,66Zm10,47.38-3.35-15.9,46.82-10.06,3.34,15.9Zm70,100.41-46.8,10-3.33-15.87L212.67,182,216,197.85C216,197.91,216,197.94,216,197.94ZM104,32H56A16,16,0,0,0,40,48V208a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V48A16,16,0,0,0,104,32ZM56,48h48V64H56Zm48,160H56V192h48v16Z\"/>", "graduation-cap": "<path d=\"M176,207.24a119,119,0,0,0,16-7.73V240a8,8,0,0,1-16,0Zm11.76-88.43-56-29.87a8,8,0,0,0-7.52,14.12L171,128l17-9.06Zm64-29.87-120-64a8,8,0,0,0-7.52,0l-120,64a8,8,0,0,0,0,14.12L32,117.87v48.42a15.91,15.91,0,0,0,4.06,10.65C49.16,191.53,78.51,216,128,216a130,130,0,0,0,48-8.76V130.67L171,128l-43,22.93L43.83,106l0,0L25,96,128,41.07,231,96l-18.78,10-.06,0L188,118.94a8,8,0,0,1,4,6.93v73.64a115.63,115.63,0,0,0,27.94-22.57A15.91,15.91,0,0,0,224,166.29V117.87l27.76-14.81a8,8,0,0,0,0-14.12Z\"/>", "sliders-horizontal": "<path d=\"M32,80a8,8,0,0,1,8-8H77.17a28,28,0,0,1,53.66,0H216a8,8,0,0,1,0,16H130.83a28,28,0,0,1-53.66,0H40A8,8,0,0,1,32,80Zm184,88H194.83a28,28,0,0,0-53.66,0H40a8,8,0,0,0,0,16H141.17a28,28,0,0,0,53.66,0H216a8,8,0,0,0,0-16Z\"/>", "list": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM192,184H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Zm0-48H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Zm0-48H64a8,8,0,0,1,0-16H192a8,8,0,0,1,0,16Z\"/>", "grid-four": "<path d=\"M216,56v60a4,4,0,0,1-4,4H136V44a4,4,0,0,1,4-4h60A16,16,0,0,1,216,56ZM116,40H56A16,16,0,0,0,40,56v60a4,4,0,0,0,4,4h76V44A4,4,0,0,0,116,40Zm96,96H136v76a4,4,0,0,0,4,4h60a16,16,0,0,0,16-16V140A4,4,0,0,0,212,136ZM40,140v60a16,16,0,0,0,16,16h60a4,4,0,0,0,4-4V136H44A4,4,0,0,0,40,140Z\"/>", "arrows-out-cardinal": "<path d=\"M96,136H64v24a8,8,0,0,1-13.66,5.66l-32-32a8,8,0,0,1,0-11.32l32-32A8,8,0,0,1,64,96v24H96a8,8,0,0,1,0,16Zm0-72h24V96a8,8,0,0,0,16,0V64h24a8,8,0,0,0,5.66-13.66l-32-32a8,8,0,0,0-11.32,0l-32,32A8,8,0,0,0,96,64Zm141.66,58.34-32-32A8,8,0,0,0,192,96v24H160a8,8,0,0,0,0,16h32v24a8,8,0,0,0,13.66,5.66l32-32A8,8,0,0,0,237.66,122.34ZM160,192H136V160a8,8,0,0,0-16,0v32H96a8,8,0,0,0-5.66,13.66l32,32a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,160,192Z\"/>", "globe-hemisphere-west": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.62,87.62,0,0,1-6.4,32.94l-44.7-27.49a15.92,15.92,0,0,0-6.24-2.23l-22.82-3.08a16.11,16.11,0,0,0-16,7.86h-8.72l-3.8-7.86a15.91,15.91,0,0,0-11-8.67l-8-1.73L96.14,104h16.71a16.06,16.06,0,0,0,7.73-2l12.25-6.76a16.62,16.62,0,0,0,3-2.14l26.91-24.34A15.93,15.93,0,0,0,166,49.1l-.36-.65A88.11,88.11,0,0,1,216,128ZM40,128a87.53,87.53,0,0,1,8.54-37.8l11.34,30.27a16,16,0,0,0,11.62,10l21.43,4.61L96.74,143a16.09,16.09,0,0,0,14.4,9h1.48l-7.23,16.23a16,16,0,0,0,2.86,17.37l.14.14L128,205.94l-1.94,10A88.11,88.11,0,0,1,40,128Z\"/>", "cursor-click": "<path d=\"M220.49,190.83a12,12,0,0,1,0,17L207.8,220.49a12,12,0,0,1-17,0l-56.56-56.57L115,214.09c0,.1-.08.21-.13.32a15.83,15.83,0,0,1-14.6,9.59l-.79,0a15.83,15.83,0,0,1-14.41-11L32.8,52.92A16,16,0,0,1,52.92,32.8L213,85.07a16,16,0,0,1,1.41,29.8l-.32.13-50.17,19.27ZM96,32a8,8,0,0,0,8-8V16a8,8,0,0,0-16,0v8A8,8,0,0,0,96,32ZM16,104h8a8,8,0,0,0,0-16H16a8,8,0,0,0,0,16ZM124.42,39.16a8,8,0,0,0,10.74-3.58l8-16a8,8,0,0,0-14.31-7.16l-8,16A8,8,0,0,0,124.42,39.16Zm-96,81.69-16,8a8,8,0,0,0,7.16,14.31l16-8a8,8,0,1,0-7.16-14.31Z\"/>", "arrow-down": "<path d=\"M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72A8,8,0,0,1,56,136h64V40a8,8,0,0,1,16,0v96h64a8,8,0,0,1,5.66,13.66Z\"/>", "hand-pointing": "<path d=\"M224,104v50.93c0,46.2-36.85,84.55-83,85.06A83.71,83.71,0,0,1,80.6,215.4C58.79,192.33,34.15,136,34.15,136a16,16,0,0,1,6.53-22.23c7.66-4,17.1-.84,21.4,6.62l21,36.44a6.09,6.09,0,0,0,6,3.09l.12,0A8.19,8.19,0,0,0,96,151.74V32a16,16,0,0,1,16.77-16c8.61.4,15.23,7.82,15.23,16.43V104a8,8,0,0,0,8.53,8,8.17,8.17,0,0,0,7.47-8.25V88a16,16,0,0,1,16.77-16c8.61.4,15.23,7.82,15.23,16.43V112a8,8,0,0,0,8.53,8,8.17,8.17,0,0,0,7.47-8.25v-7.28c0-8.61,6.62-16,15.23-16.43A16,16,0,0,1,224,104Z\"/>", "magic-wand": "<path d=\"M248,152a8,8,0,0,1-8,8H224v16a8,8,0,0,1-16,0V160H192a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16A8,8,0,0,1,248,152ZM56,72H72V88a8,8,0,0,0,16,0V72h16a8,8,0,0,0,0-16H88V40a8,8,0,0,0-16,0V56H56a8,8,0,0,0,0,16ZM184,192h-8v-8a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0v-8h8a8,8,0,0,0,0-16ZM219.31,80,80,219.31a16,16,0,0,1-22.62,0L36.68,198.63a16,16,0,0,1,0-22.63L176,36.69a16,16,0,0,1,22.63,0l20.68,20.68A16,16,0,0,1,219.31,80ZM208,68.69,187.31,48l-32,32L176,100.69Z\"/>", "paper-plane-right": "<path d=\"M240,127.89a16,16,0,0,1-8.18,14L63.9,237.9A16.15,16.15,0,0,1,56,240a16,16,0,0,1-15-21.33l27-79.95A4,4,0,0,1,71.72,136H144a8,8,0,0,0,8-8.53,8.19,8.19,0,0,0-8.26-7.47h-72a4,4,0,0,1-3.79-2.72l-27-79.94A16,16,0,0,1,63.84,18.07l168,95.89A16,16,0,0,1,240,127.89Z\"/>", "keyboard": "<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM64,168H48a8,8,0,0,1,0-16H64a8,8,0,0,1,0,16Zm96,0H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm48,0H192a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm0-32H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Zm0-32H48a8,8,0,0,1,0-16H208a8,8,0,0,1,0,16Z\"/>", "arrows-clockwise": "<path d=\"M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1-5.66-13.66L180.65,72a79.48,79.48,0,0,0-54.72-22.09h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27,96,96,0,0,1,192,60.7l18.36-18.36A8,8,0,0,1,224,48ZM186.41,183.29A80,80,0,0,1,75.35,184l18.31-18.31A8,8,0,0,0,88,152H40a8,8,0,0,0-8,8v48a8,8,0,0,0,13.66,5.66L64,195.3a95.42,95.42,0,0,0,66,26.76h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z\"/>", "arrow-up-right": "<path d=\"M200,64V168a8,8,0,0,1-13.66,5.66L140,127.31,69.66,197.66a8,8,0,0,1-11.32-11.32L128.69,116,82.34,69.66A8,8,0,0,1,88,56H192A8,8,0,0,1,200,64Z\"/>", "image": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM156,88a12,12,0,1,1-12,12A12,12,0,0,1,156,88Zm60,112H40V160.69l46.34-46.35a8,8,0,0,1,11.32,0h0L165,181.66a8,8,0,0,0,11.32-11.32l-17.66-17.65L173,138.34a8,8,0,0,1,11.31,0L216,170.07V200Z\"/>", "crown": "<path d=\"M248,80a28,28,0,1,0-51.12,15.77l-26.79,33L146,73.4a28,28,0,1,0-36.06,0L85.91,128.74l-26.79-33a28,28,0,1,0-26.6,12L47,194.63A16,16,0,0,0,62.78,208H193.22A16,16,0,0,0,209,194.63l14.47-86.85A28,28,0,0,0,248,80ZM128,40a12,12,0,1,1-12,12A12,12,0,0,1,128,40ZM24,80A12,12,0,1,1,36,92,12,12,0,0,1,24,80ZM220,92a12,12,0,1,1,12-12A12,12,0,0,1,220,92Z\"/>", "copy": "<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32Zm-8,128H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>", "bank": "<path d=\"M248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208ZM16.3,98.18a8,8,0,0,1,3.51-9l104-64a8,8,0,0,1,8.38,0l104,64A8,8,0,0,1,232,104H208v64h16a8,8,0,0,1,0,16H32a8,8,0,0,1,0-16H48V104H24A8,8,0,0,1,16.3,98.18ZM144,160a8,8,0,0,0,16,0V112a8,8,0,0,0-16,0Zm-48,0a8,8,0,0,0,16,0V112a8,8,0,0,0-16,0Z\"/>", "instagram-logo": "<path d=\"M176,24H80A56.06,56.06,0,0,0,24,80v96a56.06,56.06,0,0,0,56,56h96a56.06,56.06,0,0,0,56-56V80A56.06,56.06,0,0,0,176,24ZM128,176a48,48,0,1,1,48-48A48.05,48.05,0,0,1,128,176Zm60-96a12,12,0,1,1,12-12A12,12,0,0,1,188,80Zm-28,48a32,32,0,1,1-32-32A32,32,0,0,1,160,128Z\"/>", "tiktok-logo": "<path d=\"M232,80v40a8,8,0,0,1-8,8,103.25,103.25,0,0,1-48-11.71V156a76,76,0,0,1-152,0c0-36.9,26.91-69.52,62.6-75.88A8,8,0,0,1,96,88v42.69a8,8,0,0,1-4.57,7.23A20,20,0,1,0,120,156V24a8,8,0,0,1,8-8h40a8,8,0,0,1,8,8,48.05,48.05,0,0,0,48,48A8,8,0,0,1,232,80Z\"/>", "x-logo": "<path d=\"M215,219.85a8,8,0,0,1-7,4.15H160a8,8,0,0,1-6.75-3.71l-40.49-63.63L53.92,221.38a8,8,0,0,1-11.84-10.76l61.77-68L41.25,44.3A8,8,0,0,1,48,32H96a8,8,0,0,1,6.75,3.71l40.49,63.63,58.84-64.72a8,8,0,0,1,11.84,10.76l-61.77,67.95,62.6,98.38A8,8,0,0,1,215,219.85Z\"/>", "facebook-logo": "<path d=\"M232,128a104.16,104.16,0,0,1-91.55,103.26,4,4,0,0,1-4.45-4V152h24a8,8,0,0,0,8-8.53,8.17,8.17,0,0,0-8.25-7.47H136V112a16,16,0,0,1,16-16h16a8,8,0,0,0,8-8.53A8.17,8.17,0,0,0,167.73,80H152a32,32,0,0,0-32,32v24H96a8,8,0,0,0-8,8.53A8.17,8.17,0,0,0,96.27,152H120v75.28a4,4,0,0,1-4.44,4A104.15,104.15,0,0,1,24.07,124.09c2-54,45.74-97.9,99.78-100A104.12,104.12,0,0,1,232,128Z\"/>", "youtube-logo": "<path d=\"M234.33,69.52a24,24,0,0,0-14.49-16.4C185.56,39.88,131,40,128,40s-57.56-.12-91.84,13.12a24,24,0,0,0-14.49,16.4C19.08,79.5,16,97.74,16,128s3.08,48.5,5.67,58.48a24,24,0,0,0,14.49,16.41C69,215.56,120.4,216,127.34,216h1.32c6.94,0,58.37-.44,91.18-13.11a24,24,0,0,0,14.49-16.41c2.59-10,5.67-28.22,5.67-58.48S236.92,79.5,234.33,69.52Zm-73.74,65-40,28A8,8,0,0,1,108,156V100a8,8,0,0,1,12.59-6.55l40,28a8,8,0,0,1,0,13.1Z\"/>", "linkedin-logo": "<path d=\"M216,24H40A16,16,0,0,0,24,40V216a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V40A16,16,0,0,0,216,24ZM96,176a8,8,0,0,1-16,0V112a8,8,0,0,1,16,0ZM88,96a12,12,0,1,1,12-12A12,12,0,0,1,88,96Zm96,80a8,8,0,0,1-16,0V140a20,20,0,0,0-40,0v36a8,8,0,0,1-16,0V112a8,8,0,0,1,15.79-1.78A36,36,0,0,1,184,140Z\"/>", "signature": "<path d=\"M80.3,120.26A58.29,58.29,0,0,1,81,97.07C83.32,87,87.89,80,92.1,80c2.57,0,2.94.67,3.12,1,.88,1.61,4,10.93-12.63,46.52A28.87,28.87,0,0,1,80.3,120.26ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM84,160c2-3.59,3.94-7.32,5.9-11.14,10.34-.32,22.21-7.57,35.47-21.68,5,9.69,11.38,15.25,18.87,16.55,8,1.38,16-2.38,23.94-11.2,6,5.53,16.15,11.47,31.8,11.47a8,8,0,0,0,0-16c-17.91,0-24.3-10.88-24.84-11.86a7.83,7.83,0,0,0-6.54-4.51,8,8,0,0,0-7.25,3.6c-6.78,10-11.87,13.16-14.39,12.73-4-.69-9.15-10-11.23-18a8,8,0,0,0-14-3c-8.88,10.94-16.3,17.79-22.13,21.66,15.8-35.65,13.27-48.59,9.6-55.3C107.35,69.84,102.59,64,92.1,64,79.66,64,69.68,75,65.41,93.46a75,75,0,0,0-.83,29.81c1.7,8.9,5.17,15.73,10.16,20.12-3,5.81-6.09,11.43-9,16.61H56a8,8,0,0,0,0,16h.44c-4.26,7.12-7.11,11.59-7.18,11.69a8,8,0,0,0,13.48,8.62c.36-.55,5.47-8.57,12.29-20.31H200a8,8,0,0,0,0-16Z\"/>", "phone": "<path d=\"M231.88,175.08A56.26,56.26,0,0,1,176,224C96.6,224,32,159.4,32,80A56.26,56.26,0,0,1,80.92,24.12a16,16,0,0,1,16.62,9.52l21.12,47.15,0,.12A16,16,0,0,1,117.39,96c-.18.27-.37.52-.57.77L96,121.45c7.49,15.22,23.41,31,38.83,38.51l24.34-20.71a8.12,8.12,0,0,1,.75-.56,16,16,0,0,1,15.17-1.4l.13.06,47.11,21.11A16,16,0,0,1,231.88,175.08Z\"/>", "trend-up": "<path d=\"M240,56v64a8,8,0,0,1-13.66,5.66L200,99.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,188.69,88,162.34,61.66A8,8,0,0,1,168,48h64A8,8,0,0,1,240,56Z\"/>", "receipt": "<path d=\"M216,40H40A16,16,0,0,0,24,56V208a8,8,0,0,0,11.58,7.15L64,200.94l28.42,14.21a8,8,0,0,0,7.16,0L128,200.94l28.42,14.21a8,8,0,0,0,7.16,0L192,200.94l28.42,14.21A8,8,0,0,0,232,208V56A16,16,0,0,0,216,40ZM176,144H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Zm0-32H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Z\"/>", "hourglass-medium": "<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.59A16.09,16.09,0,0,0,200,75.64ZM184,180.36V216H72V180l48-36v24a8,8,0,0,0,16,0V144.08Zm0-104.72L178.23,80H77.33L72,76V40H184Z\"/>", "currency-gbp": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm40,160H88a8,8,0,0,1,0-16,16,16,0,0,0,16-16V136H88a8,8,0,0,1,0-16h16V96a40,40,0,0,1,60-34.64,8,8,0,0,1-8,13.85A24,24,0,0,0,120,96v24h16a8,8,0,0,1,0,16H120v16a31.71,31.71,0,0,1-4.31,16H168a8,8,0,0,1,0,16Z\"/>", "user-circle-check": "<path d=\"M230.56,110.68a103.92,103.92,0,1,1-85.24-85.24,8,8,0,0,1-2.64,15.78A88.07,88.07,0,0,0,40,128a87.62,87.62,0,0,0,22.24,58.41A79.71,79.71,0,0,1,84,165.1a4,4,0,0,1,4.84.32,59.8,59.8,0,0,0,78.26,0,4,4,0,0,1,4.84-.32,79.86,79.86,0,0,1,21.79,21.31A87.62,87.62,0,0,0,216,128a88.85,88.85,0,0,0-1.22-14.68,8,8,0,1,1,15.78-2.64ZM84,120a44,44,0,1,0,44-44A44,44,0,0,0,84,120ZM237.66,34.34a8,8,0,0,0-11.32,0L200,60.69,189.66,50.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,237.66,34.34Z\"/>", "caret-up": "<path d=\"M215.39,163.06A8,8,0,0,1,208,168H48a8,8,0,0,1-5.66-13.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,215.39,163.06Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z\"/>", "check-circle": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>", "arrow-square-out": "<path d=\"M192,136v72a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V80A16,16,0,0,1,48,64h72a8,8,0,0,1,0,16H48V208H176V136a8,8,0,0,1,16,0Zm32-96a8,8,0,0,0-8-8H152a8,8,0,0,0-5.66,13.66L172.69,72l-42.35,42.34a8,8,0,0,0,11.32,11.32L184,83.31l26.34,26.35A8,8,0,0,0,224,104Z\"/>", "credit-card": "<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM136,176H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm64,0H168a8,8,0,0,1,0-16h32a8,8,0,0,1,0,16ZM32,88V64H224V88Z\"/>", "buildings": "<path d=\"M239.73,208H224V96a16,16,0,0,0-16-16H164a4,4,0,0,0-4,4V208H144V32.41a16.43,16.43,0,0,0-6.16-13,16,16,0,0,0-18.72-.69L39.12,72A16,16,0,0,0,32,85.34V208H16.27A8.18,8.18,0,0,0,8,215.47,8,8,0,0,0,16,224H240a8,8,0,0,0,8-8.53A8.18,8.18,0,0,0,239.73,208ZM76,184a8,8,0,0,1-8.53,8A8.18,8.18,0,0,1,60,183.72V168.27A8.19,8.19,0,0,1,67.47,160,8,8,0,0,1,76,168Zm0-56a8,8,0,0,1-8.53,8A8.19,8.19,0,0,1,60,127.72V112.27A8.19,8.19,0,0,1,67.47,104,8,8,0,0,1,76,112Zm40,56a8,8,0,0,1-8.53,8,8.18,8.18,0,0,1-7.47-8.26V168.27a8.19,8.19,0,0,1,7.47-8.26,8,8,0,0,1,8.53,8Zm0-56a8,8,0,0,1-8.53,8,8.19,8.19,0,0,1-7.47-8.26V112.27a8.19,8.19,0,0,1,7.47-8.26,8,8,0,0,1,8.53,8Z\"/>", "question": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,168a12,12,0,1,1,12-12A12,12,0,0,1,128,192Zm8-48.72V144a8,8,0,0,1-16,0v-8a8,8,0,0,1,8-8c13.23,0,24-9,24-20s-10.77-20-24-20-24,9-24,20v4a8,8,0,0,1-16,0v-4c0-19.85,17.94-36,40-36s40,16.15,40,36C168,125.38,154.24,139.93,136,143.28Z\"/>"};
+function paintIcons(root){
+  (root||document).querySelectorAll('i[data-i]').forEach(function(el){
+    var p = I[el.dataset.i]; if(!p) return;
+    var s = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    s.setAttribute('viewBox','0 0 256 256');
+    if(el.className) s.setAttribute('class', el.className);
+    s.innerHTML = p; el.replaceWith(s);
+  });
+}
+
+var PLANS = {
+  free:{ name:'Free', credits:50, period:'week', refill:'Refills Sunday', pictures:0, watermark:true,
+         refines:10, refinesUsed:7, topUp:false, next:'Standard', nextPrice:'£4.99 a month',
+         nudge:{h:'You have __LEFT__ resources left this week.',
+                p:'Standard gives you 500 a month instead of 50 a week, and you can top up when a busy fortnight needs it.',
+                b:'See Standard'} },
+  standard:{ name:'Standard', credits:500, period:'month', refill:'Refills 1 December', pictures:0,
+         watermark:true, topUp:true, next:'Pro', nextPrice:'£7.99 a month',
+         nudge:{h:'Your exports carry the Jooma mark.',
+                p:'Pro takes it off, adds picture slides to your decks, and doubles your resources to 1,000 a month.',
+                b:'See Pro'} },
+  pro:{ name:'Pro', credits:1000, period:'month', refill:'Refills 1 December', pictures:40, watermark:false, topUp:true, next:null },
+  max:{ name:'Max', credits:2500, period:'month', refill:'Refills 1 December', pictures:120, watermark:false, topUp:true, next:null }
+};
+var TOPUPS = [ {credits:100, price:'£1.49', each:'1.5p each'}, {credits:300, price:'£3.99', each:'1.3p each'} ];
+var LEVELS = {
+  full:{ free:{res:18,pic:0}, standard:{res:314,pic:0}, pro:{res:940,pic:29}, max:{res:2090,pic:102} },
+  low: { free:{res:4,pic:0},  standard:{res:48,pic:0},  pro:{res:92,pic:3},   max:{res:210,pic:9} }
+};
+
+// Categories are coloured by what the tool is for, not at random.
+var CATS = [
+  { k:'slides',   n:'Slides',              c:'var(--make)' },
+  { k:'planning', n:'Planning',            c:'var(--make)' },
+  { k:'class',    n:'Classroom resources', c:'var(--pupil)' },
+  { k:'assess',   n:'Assessment',          c:'var(--check)' },
+  { k:'send',     n:'Behaviour and SEND',  c:'var(--support)' },
+  { k:'comms',    n:'Communication',       c:'var(--adult)' },
+  { k:'lead',     n:'Leadership',          c:'var(--adult)' }
+];
+var ALLTOOLS = [
+  {n:'Slides',          d:'A full teaching deck you can edit, present and export.', i:'presentation-chart', k:'slides',   cost:4, pics:true},
+  {n:'Staff Slides',    d:'A training deck for staff, with activities and next steps.', i:'projector-screen', k:'slides', cost:4, pics:true},
+  {n:'Lesson Plan',     d:'A full lesson from a topic and an objective.',          i:'clipboard-text', k:'planning', cost:3},
+  {n:'Topic Map',       d:'The shape of a topic, with lesson summaries.',          i:'map-trifold',    k:'planning', cost:3},
+  {n:'Term Plan',       d:'Lesson by lesson across a whole topic.',                i:'calendar-blank', k:'planning', cost:5},
+  {n:'Early Years Plan',d:'All seven areas, indoors and out.',                     i:'blueprint',      k:'planning', cost:4},
+  {n:'Homework',        d:'A follow up task tied to the objective.',               i:'house-line',     k:'planning', cost:2},
+  {n:'Cover Lesson',    d:'Self contained, so any non specialist can teach it.',   i:'arrows-clockwise', k:'planning', cost:3},
+  {n:'Comprehension',   d:'An original text at any reading age.',                  i:'book-open-text', k:'class',    cost:2},
+  {n:'Worksheets',      d:'Differentiated three ways, with the answers.',          i:'file-text',      k:'class',    cost:2},
+  {n:'Model Texts',     d:'Exemplar writing with the features you name.',          i:'pen-nib',        k:'class',    cost:2},
+  {n:'Sensory Ideas',   d:'Five multisensory activities, with sensory adaptations.', i:'hand-palm',    k:'class',    cost:2},
+  {n:'Phonics',         d:'Word banks, decodable texts and pseudo words.',         i:'text-aa',        k:'class',    cost:2},
+  {n:'Quizzes',         d:'Retrieval practice, ready to export.',                  i:'target',         k:'assess',   cost:1},
+  {n:'Rubrics',         d:'Clear criteria pupils can actually read.',              i:'list',           k:'assess',   cost:2},
+  {n:'Behaviour Plan',  d:'Triggers, strategies and what to do in the moment.',    i:'shield-check',   k:'send',     cost:3},
+  {n:'Parent Letter',   d:'The right tone, ready to send home.',                   i:'paper-plane-tilt', k:'comms',  cost:1},
+  {n:'Report Comments', d:'Written in your voice, per pupil.',                     i:'notebook',       k:'comms',    cost:2},
+  {n:'Staff Briefing',  d:'One page, the things people need to know.',             i:'megaphone',      k:'lead',     cost:2}
+];
+var FAVS = ['Slides','Worksheets','Comprehension','Cover Lesson','Lesson Plan','Quizzes'];
+
+var RECENT = [
+  {n:'Rounding to the nearest 10, 100 and 1,000', t:'Slides',        i:'presentation-chart', k:'slides', w:'2 hours ago'},
+  {n:'The Day Class 5 Went to Space',             t:'Comprehension', i:'book-open-text',     k:'class',  w:'Yesterday'},
+  {n:'Properties of 2D shapes',                   t:'Worksheets',    i:'file-text',          k:'class',  w:'Wednesday'},
+  {n:'Year 6 science, states of matter',          t:'Cover Lesson',  i:'arrows-clockwise',   k:'planning', w:'Monday'}
+];
+var LIB = [
+  ['World War 2','Cover Lesson','arrows-clockwise','planning','11 Nov'],
+  ['Inside a Newspaper Report','Slides','presentation-chart','slides','9 Nov'],
+  ['The Power of Products','Slides','presentation-chart','slides','9 Nov'],
+  ['English Language','Worksheets','file-text','class','6 Nov'],
+  ['Rounding: Near or Far?','Slides','presentation-chart','slides','28 Oct'],
+  ['Rome’s Bold Invasion','Slides','presentation-chart','slides','26 Oct'],
+  ['Cities That Shape the World','Slides','presentation-chart','slides','26 Oct'],
+  ['Ancient Greece story','Comprehension','book-open-text','class','19 Oct'],
+  ['Ten-Step Number Magic','Slides','presentation-chart','slides','19 Oct'],
+  ['Fractions on the Move','Slides','presentation-chart','slides','12 Oct'],
+  ['A year 5 class went on a school trip','Comprehension','book-open-text','class','12 Oct'],
+  ['Properties of 2D shapes','Worksheets','file-text','class','9 Oct'],
+  ['Waste to Wonder','Slides','presentation-chart','slides','19 Oct'],
+  ['Year 4 spelling patterns','Worksheets','file-text','class','7 Oct'],
+  ['Forces and friction quiz','Quizzes','target','assess','3 Oct']
+];
+var COLLEAGUES = [
+  ['Daniyal Iqbal','DI',2,'5','15','3h'],
+  ['Hana Begum','HB',1,'1','3','< 1h'],
+  ['Ohi Ahmed','OA',1,'1','5','< 1h']
+];
+var CHATS = ['Create a worksheet for a year 4 class','Create me a slideshow on ancient Rome',
+  'I need comprehension on the water cycle','Create me a lesson on fronted adverbials',
+  'How do I get my year 5 parents on board','How do I get my kids to read more',
+  'How can I get my kids to revise','Create me a slideshow from my notes','Create a year 4 lesson on Equality'];
+
+function catColour(k){ var c = CATS.filter(function(x){return x.k===k})[0]; return c ? c.c : 'var(--adult)' }
+function n(x){ return x.toLocaleString('en-GB') }
+function meterState(left, total){ var p = left/total; return p > .40 ? 'calm' : (p > .15 ? 'watch' : 'low') }
+
+var plan = 'pro', level = 'full', hasTimetable = false, page = 'today';
+
+function renderChrome(){
+  var P = PLANS[plan], L = LEVELS[level][plan];
+  var resLeft = L.res, picLeft = L.pic, rs = meterState(resLeft, P.credits);
+  document.getElementById('planChip').textContent = P.name;
+
+  var m = '<div class="meter ' + rs + '"><div class="mh"><span class="mt">Resources</span><span class="mv">' +
+    (rs === 'calm' ? n(P.credits) + ' a ' + P.period : n(resLeft) + ' left') + '</span></div>' +
+    (rs === 'calm' ? '' : '<div class="bar"><i style="width:' + (resLeft/P.credits*100).toFixed(1) + '%;background:var(--res-on-dark)"></i></div>') +
+    '<p class="ms">' + (rs === 'calm' ? P.refill + '.' : 'of ' + n(P.credits) + ' a ' + P.period + '. ' + P.refill + '.') + '</p>' +
+    (rs === 'low' && P.topUp ? '<button class="topup" data-topup>Top up</button>' : '') + '</div>';
+
+  if(P.pictures > 0){
+    var ps = meterState(picLeft, P.pictures);
+    m += '<div class="meter ' + ps + '"><div class="mh"><span class="mt">Picture slides</span><span class="mv">' +
+      (ps === 'calm' ? P.pictures + ' a ' + P.period : picLeft + ' left') + '</span></div>' +
+      (ps === 'calm' ? '' : '<div class="bar"><i style="width:' + (picLeft/P.pictures*100).toFixed(1) + '%;background:var(--pic-on-dark)"></i></div>') +
+      '<p class="ms">' + (ps === 'calm' ? P.refill + '.' : 'of ' + P.pictures + ' a ' + P.period + '. ' + P.refill + '.') + '</p></div>';
+  } else {
+    m += '<div class="meter locked"><div class="mh"><span class="mt">Picture slides</span><span class="mv">None</span></div>' +
+         '<p class="lockrow"><i data-i="lock-simple"></i><span>Pro and Max only</span></p></div>';
+  }
+  document.getElementById('meters').innerHTML = m;
+
+  var pd = P.watermark ? 'Exports carry the Jooma mark.' : 'Clean exports, no mark.';
+  if(P.pictures === 0) pd += ' No picture slides.';
+  if(P.refines) pd += ' ' + (P.refines - P.refinesUsed) + ' refines left this week.';
+  document.getElementById('planBlock').innerHTML = '<p class="pd">' + pd + '</p>' +
+    (P.next ? '<button class="pb">Upgrade to ' + P.next + '</button>' : '');
+
+  var rw = document.getElementById('railWarn');
+  if(rs === 'calm'){ rw.style.display = 'none' }
+  else { rw.style.display = ''; document.getElementById('railNum').textContent = n(resLeft) }
+
+  document.getElementById('packList').innerHTML = TOPUPS.map(function(t){
+    return '<button class="pack"><span><b>' + t.credits + ' resources</b><br><span>' + t.each +
+      '</span></span><span class="pp">' + t.price + '</span></button>' }).join('');
+  document.getElementById('betterBox').innerHTML = P.next
+    ? '<b>Worth knowing.</b> Two top-ups in a month costs more than moving to ' + P.next + ', and ' + P.next + ' gives you the whole allowance every month.'
+    : '<b>Worth knowing.</b> Top-ups roll over, so anything you do not use this month is still there next month.';
+}
+
+function renderToday(){
+  var P = PLANS[plan], resLeft = LEVELS[level][plan].res;
+
+  // Almost nobody sets a timetable up. So the lesson strip only exists when
+  // there is something to put in it. No empty state, no prompt in the fold.
+  document.getElementById('helloSub').innerHTML = hasTimetable
+    ? 'Four lessons today. <b>Three are ready.</b>'
+    : 'Everything you made this week is in your library. <b>What next?</b>';
+
+  document.getElementById('todaySlot').innerHTML = hasTimetable
+    ? '<section class="sec"><div class="sech"><h2>Today</h2><span class="note">From your timetable</span>' +
+      '<a href="#" class="link" data-go="timetable">Open timetable</a></div><div class="lessons">' +
+      '<div class="les"><p class="when">9:00</p><h3>Fractions of amounts</h3><p class="meta">Maths, Year 4</p><p class="state"><i data-i="check-circle"></i>Ready</p></div>' +
+      '<div class="les"><p class="when">10:15</p><h3>The Highwayman, verse three</h3><p class="meta">English, Year 4</p><p class="state"><i data-i="check-circle"></i>Ready</p></div>' +
+      '<div class="les todo"><p class="when">11:30</p><h3>Forces and friction</h3><p class="meta">Science, Year 4</p><button class="mk">Make it</button></div>' +
+      '<div class="les"><p class="when">13:30</p><h3>Roman roads</h3><p class="meta">History, Year 4</p><p class="state"><i data-i="check-circle"></i>Ready</p></div>' +
+      '</div></section>'
+    : '';
+
+  document.getElementById('toolGrid').innerHTML = FAVS.map(function(name){
+    var t = ALLTOOLS.filter(function(x){ return x.n === name })[0];
+    var chips = '<span class="chip res"><i data-i="lightning"></i>' + t.cost + (t.cost === 1 ? ' resource' : ' resources') + '</span>';
+    if(t.pics) chips += P.pictures > 0
+      ? '<span class="chip pic"><i data-i="image"></i>Picture slides</span>'
+      : '<span class="chip gate"><i data-i="lock-simple"></i>Pictures on Pro</span>';
+    return '<button class="tool"><span class="ti" style="background:' + catColour(t.k) + '"><i data-i="' + t.i + '"></i></span>' +
+      '<h3>' + t.n + '</h3><p>' + t.d + '</p><span class="cost">' + chips + '</span></button>';
+  }).join('');
+
+  document.getElementById('recentList').innerHTML = RECENT.map(function(r){
+    return '<a href="#" class="row"><span class="ri" style="background:' + catColour(r.k) + '"><i data-i="' + r.i + '"></i></span>' +
+      '<span class="rn"><b>' + r.n + '</b><span>' + r.t + '</span></span>' +
+      (P.watermark ? '<span class="mark">Jooma mark</span>' : '') + '<span class="rt">' + r.w + '</span></a>';
+  }).join('');
+
+  document.getElementById('nudgeSlot').innerHTML = P.nudge
+    ? '<div class="nudge"><div class="nx"><h2>' + P.nudge.h.replace('__LEFT__', n(resLeft)) + '</h2><p>' + P.nudge.p +
+      '</p></div><div><button class="nb">' + P.nudge.b + '</button><p class="np">' + P.nextPrice + '</p></div></div>'
+    : '';
+
+  // One line, last thing on the page, and it goes away when dismissed.
+  document.getElementById('ttOfferSlot').innerHTML = hasTimetable ? '' :
+    '<div class="ttoffer" id="ttOffer"><i data-i="calendar-blank"></i>' +
+    '<span class="tx"><b>Add your timetable and this page knows your week.</b> ' +
+    'Tell Jo what you teach and when, and anything you have not made yet shows up here.</span>' +
+    '<button class="ta" data-go="timetable">Set it up</button>' +
+    '<button class="td" data-dismiss>Not now</button></div>';
+}
+
+function renderMake(){
+  var P = PLANS[plan];
+  document.getElementById('makePills').innerHTML =
+    '<button class="on">Everything</button>' + CATS.map(function(c){ return '<button>' + c.n + '</button>' }).join('');
+  document.getElementById('makeGrid').innerHTML = CATS.map(function(c){
+    var list = ALLTOOLS.filter(function(t){ return t.k === c.k });
+    if(!list.length) return '';
+    return '<div class="catsec"><div class="cath"><h2>' + c.n + '</h2><span>' + list.length +
+      (list.length === 1 ? ' tool' : ' tools') + '</span></div><div class="tgrid">' +
+      list.map(function(t){
+        return '<button class="tcard"><span class="ti" style="background:' + c.c + '"><i data-i="' + t.i + '"></i></span>' +
+          '<span class="tx"><h3>' + t.n + '</h3><p>' + t.d + '</p></span>' +
+          '<span class="pin"><i data-i="star"></i></span></button>';
+      }).join('') + '</div></div>';
+  }).join('');
+}
+
+function renderLibrary(){
+  var P = PLANS[plan];
+  document.getElementById('resGrid').innerHTML = LIB.map(function(r){
+    return '<button class="rescard"><span class="ri" style="background:' + catColour(r[3]) + '"><i data-i="' + r[2] + '"></i></span>' +
+      '<h3>' + r[0] + '</h3><p>' + r[1] + ', ' + r[4] + (P.watermark ? ', Jooma mark' : '') + '</p>' +
+      '<span class="dots"><i data-i="dots-three"></i></span></button>';
+  }).join('');
+}
+
+function renderTimetable(){
+  var days = [['MON',9],['TUE',10],['WED',11],['THU',12],['FRI',13]];
+  var rows = ['9 am','10.30 am','After break','1.30 pm','After school'];
+  var filled = { '0-0':['Maths','Fractions of amounts',true], '0-1':['History','',false],
+                 '1-1':['Maths','Column addition',true], '2-1':['English','',false],
+                 '3-2':['English','The Highwayman',true] };
+  var g = '<div></div>' + days.map(function(d,i){
+    return '<div class="gh' + (i === 4 ? ' today' : '') + '"><p class="d">' + d[0] + '</p><p class="n">' + d[1] + '</p></div>';
+  }).join('');
+  rows.forEach(function(r, ri){
+    g += '<div class="gt">' + r + '</div>';
+    days.forEach(function(d, di){
+      var key = ri + '-' + di, f = filled[key];
+      g += f
+        ? '<div class="cell has' + (f[2] ? '' : ' empty') + '"><p class="sub">' + f[0] + '</p>' +
+          '<div class="bod">' + (f[2] ? '<b>' + f[1] + '</b><span>Ready</span>' : '<b>Nothing made</b><span>Add a topic first</span>') + '</div></div>'
+        : '<button class="cell"><i data-i="plus"></i></button>';
+    });
+  });
+  document.getElementById('ttGrid').innerHTML = g;
+}
+
+function renderColleagues(){
+  document.getElementById('collList').innerHTML = COLLEAGUES.map(function(c){
+    return '<div class="coll"><span class="av">' + c[1] + '</span>' +
+      '<span class="who"><b>' + c[0] + '</b><span>Colleague</span></span>' +
+      '<span class="stats"><span class="lvlchip">Level ' + c[2] + '</span>' +
+      '<span class="st"><b>' + c[3] + '</b><span>RESOURCES</span></span>' +
+      '<span class="st"><b>' + c[4] + '</b><span>BADGES</span></span>' +
+      '<span class="st"><b>' + c[5] + '</b><span>TIME SAVED</span></span></span>' +
+      '<span class="acts"><button class="btn sec">Share</button>' +
+      '<button style="font-size:13px;color:var(--faint);font-weight:700">Remove</button></span></div>';
+  }).join('');
+}
+
+function renderJo(){
+  document.getElementById('chatList').innerHTML = CHATS.map(function(c, i){
+    return '<button' + (i === 0 ? ' class="on"' : '') + '>' + c + '</button>';
+  }).join('');
+}
+
+var TITLES = { today:'Today', make:'Make', library:'Library', timetable:'Timetable', colleagues:'Colleagues', jo:'Ask Jo' };
+
+function go(p){
+  page = p;
+  document.querySelectorAll('.page').forEach(function(s){ s.classList.toggle('on', s.id === 'p-' + p) });
+  document.querySelectorAll('#nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.go === p) });
+  document.getElementById('pageTitle').textContent = TITLES[p];
+  window.scrollTo(0, 0);
+}
+
+function renderAll(){
+  renderChrome(); renderToday(); renderMake(); renderLibrary();
+  renderTimetable(); renderColleagues(); renderJo();
+  paintIcons(document.querySelector('.app'));
+  paintIcons(document.getElementById('topupSheet'));
+}
+
+paintIcons(document);
+renderAll();
+
+document.getElementById('collapseBtn').addEventListener('click', function(){
+  var mini = document.getElementById('app').classList.toggle('mini');
+  this.title = mini ? 'Expand' : 'Collapse';
+});
+
+document.addEventListener('click', function(e){
+  var nav = e.target.closest('[data-go]');
+  if(nav){ e.preventDefault(); go(nav.dataset.go); return }
+  if(e.target.closest('[data-topup]')) document.getElementById('topupSheet').classList.add('on');
+  if(e.target.closest('[data-close]')) document.getElementById('topupSheet').classList.remove('on');
+  if(e.target.closest('[data-dismiss]')){ var o = document.getElementById('ttOffer'); if(o) o.remove() }
+  var pill = e.target.closest('#makePills button');
+  if(pill){ document.querySelectorAll('#makePills button').forEach(function(x){ x.classList.remove('on') }); pill.classList.add('on') }
+  var vt = e.target.closest('.viewtog button');
+  if(vt){ document.querySelectorAll('.viewtog button').forEach(function(x){ x.classList.remove('on') }); vt.classList.add('on') }
+});
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') document.getElementById('topupSheet').classList.remove('on') });
+
+document.querySelectorAll('.proto button[data-plan]').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.proto button[data-plan]').forEach(function(x){ x.classList.remove('on') });
+    b.classList.add('on'); plan = b.dataset.plan; renderAll();
+  });
+});
+document.querySelectorAll('.proto button[data-cred]').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.proto button[data-cred]').forEach(function(x){ x.classList.remove('on') });
+    b.classList.add('on'); level = b.dataset.cred; renderAll();
+  });
+});
+document.querySelectorAll('.proto button[data-tt]').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.proto button[data-tt]').forEach(function(x){ x.classList.remove('on') });
+    b.classList.add('on'); hasTimetable = b.dataset.tt === '1'; renderAll();
+  });
+});
+</script>
+</body>
+</html>

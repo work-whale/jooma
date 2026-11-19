@@ -3,15 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Question, Medal, X } from "@phosphor-icons/react/dist/ssr";
+import {
+  Bell,
+  CaretLeft,
+  ImageSquare,
+  Lightning,
+  LockSimple,
+  Question,
+  X,
+} from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
 import { TOOLS, V2_TOOLS, toolSolid } from "@/app/lib/tools";
 import { useCreditMeter } from "@/app/lib/useCreditMeter";
 import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { usePlanBadge } from "@/app/lib/usePlanBadge";
+import { useAccountAccess } from "@/app/lib/useAccountAccess";
+import { chipLabel } from "@/app/lib/plan-badge";
 import { usePinnedTools } from "@/app/lib/usePinnedTools";
 import { isNavActive } from "@/app/lib/navActive";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
+import { meterState, meterValue } from "@/app/lib/resource-meter";
+import { PLAN_CONFIG, topUpsAllowed, type AccountPlan } from "@/app/lib/plan-config";
+import { trialDateShort } from "@/app/lib/account-plan";
+import { planBlockV45 } from "@/app/lib/prompt-views";
 import { NAV, AMBASSADOR_NAV, type NavItem } from "@/app/components/v2/navItems";
 import Wordmark from "@/app/components/v2/Wordmark";
 import AmbassadorWordmark from "@/app/components/v2/AmbassadorWordmark";
@@ -23,21 +37,18 @@ import PlanCountdown from "./PlanCountdown";
 import styles from "./SideNavV2.module.css";
 
 /*
- * The 250px rail.
+ * The sidebar, v4 (docs/Jooma version 4.5/15-jooma-dashboard-v4.html).
  *
- * Icons are Phosphor at REGULAR weight: this is interface chrome, and fill
- * weight is reserved for glyphs sitting inside a coloured tile.
+ * Dark chrome. From the top: the wordmark with the plan chip and the collapse
+ * button, the nav, pinned tools, then pushed to the foot the resources meter,
+ * the picture slides row, the plan block and a footer with the level and help.
  *
- * Nav counts are live values, not decoration. "Make" counts the tools that
- * actually exist; "Library" counts the teacher's own saved resources.
+ * Collapsed (desktop only) it is a 70px rail: icons with tooltips, and a
+ * lightning badge with the number left once resources are worth watching.
+ * Below 900px it is the phone drawer as before, dark too.
+ *
+ * Icons are Phosphor at REGULAR weight: chrome, not a glyph in a tile.
  */
-
-/**
- * Show the top-up button once this fraction of the month's credits or less is
- * left. The mirror of PROMINENT_AT (0.8 USED) in the billing page's
- * AllowanceMeter — same moment, counted from the other end.
- */
-const LOW_CREDIT_AT = 0.2;
 
 interface SideNavV2Props {
   /** Below 900px the rail is an off-canvas drawer; this is its open state. */
@@ -47,14 +58,36 @@ interface SideNavV2Props {
   account?: Account;
   /** "account" when the avatar opened the drawer: it opens at those links. */
   openAt?: "top" | "account";
+  /** Desktop: the 70px rail. Ignored as a drawer. */
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
-export default function SideNavV2({ mobileOpen = false, onMobileClose, account, openAt = "top" }: SideNavV2Props) {
+export default function SideNavV2({
+  mobileOpen = false,
+  onMobileClose,
+  account,
+  openAt = "top",
+  collapsed = false,
+  onToggleCollapsed,
+}: SideNavV2Props) {
   const pathname = usePathname();
   const credits = useCreditMeter();
   const badges = useBadgeProgress();
   const plan = usePlanBadge();
+  const access = useAccountAccess();
+  const chip = chipLabel(
+    plan,
+    access?.accountPlan === "pro_trial" && access.state === "trial" ? "pro_trial" : access?.state === "free" ? "free" : null,
+  );
   const nav = plan.ambassador ? [...NAV, AMBASSADOR_NAV] : NAV;
+  // Jooma 4.5: the plan block from the plan in force. The trial shows its real
+  // end date (P1's chip) and no ticking countdown. An ambassador's free Pro
+  // keeps its own block. Null before the migration (no 4.5 row).
+  const v45Block =
+    access && (access.state === "free" || access.accountPlan === "pro_trial" || access.resourcesV45) && !plan.ambassador
+      ? planBlockV45(access.accountPlan, access.trialEndsAt)
+      : null;
   const [topUpOpen, setTopUpOpen] = useState(false);
 
   // Pinned tools — a shared store, kept in sync with the Library page live.
@@ -81,16 +114,14 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
         // to the signed-in teacher.
         supabase.from("tool_runs").select("id", { count: "exact", head: true }),
         // colleague_edges stores both directions, so this is already the
-        // connection count without a de-duplicating OR. Counted here rather
-        // than via listColleagues(), which also fetches every profile.
+        // connection count without a de-duplicating OR.
         supabase.from("colleague_edges").select("other_id", { count: "exact", head: true }),
         supabase.rpc("my_support_unread"),
         supabase.rpc("my_announcements_unread"),
       ]);
       if (cancelled) return;
       setResourceCount(runs.count ?? null);
-      // null on error (the table is absent on an environment without the
-      // migration), which hides the count rather than showing a false zero.
+      // null on error hides the count rather than showing a false zero.
       setColleagueCount(colleagues.error ? null : colleagues.count ?? null);
       setSupportUnread(Number(support.data ?? 0));
       setAnnounceUnread(Number(announce.data ?? 0));
@@ -116,43 +147,90 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
     }
   }, [mobileOpen, openAt]);
 
-  // While it is a drawer it is a modal: Tab cycles inside it rather than
-  // escaping to the page dimmed behind the backdrop. Stands down while the
-  // top-up modal is open: that renders outside the drawer and runs its own.
+  // While it is a drawer it is a modal: Tab cycles inside it. Stands down
+  // while the top-up modal is open: that renders outside the drawer.
   const asideRef = useRef<HTMLElement>(null);
   useFocusTrap(asideRef, mobileOpen && !topUpOpen);
 
   const countFor = (item: NavItem): number | null => {
     if (item.count === "tools") return TOOLS.length;
     if (item.count === "resources") return resourceCount;
-    // Hidden at zero: "Colleagues 0" reads as a failure state, and the empty
-    // page already explains how to connect to someone.
+    // Hidden at zero: "Colleagues 0" reads as a failure state.
     if (item.count === "colleagues") return colleagueCount || null;
     return null;
   };
+
+  // The meter. Calm states the allowance; watch and low show what is left.
+  const state = credits.loading ? "calm" : meterState(credits.remaining, credits.allowance);
+  const showRailWarn = credits.metered && !credits.loading && state !== "calm";
+  const refill = credits.refillsOn
+    ? credits.refillsOn.toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Europe/London" })
+    : null;
+  // The line under the meter: when it refills, or when the trial ends.
+  const refillLine =
+    credits.period === "trial"
+      ? credits.endsOn
+        ? `Trial ends ${trialDateShort(credits.endsOn)}.`
+        : ""
+      : refill
+        ? credits.period === "week"
+          ? `Back to ${PLAN_CONFIG.free.resources} on Sunday.`
+          : `Refills ${refill}.`
+        : "";
+  // 4.5: only plans that can buy a pack are offered one. Before 4.5 (plan
+  // null) the meter only ever shows for paid plans, which could.
+  const canTopUp = credits.plan === null || topUpsAllowed(credits.plan as AccountPlan);
+  const per = credits.period === "trial" ? "in your trial" : `a ${credits.period}`;
+
+  // Desktop only: the drawer is never a rail.
+  const mini = collapsed && !mobileOpen;
 
   return (
     <>
       <aside
         id="app-sidenav-v2"
         ref={asideRef}
-        className={`${styles.side} ${mobileOpen ? styles.sideOpen : ""}`}
-        // Dialog semantics only while it is open as the phone drawer. On
-        // desktop it is the page's plain sidebar.
+        className={`${styles.side} ${mobileOpen ? styles.sideOpen : ""} ${mini ? styles.mini : ""}`}
+        data-collapsed={mini ? "true" : undefined}
+        // Dialog semantics only while it is open as the phone drawer.
         role={mobileOpen ? "dialog" : undefined}
         aria-modal={mobileOpen ? true : undefined}
         aria-label={mobileOpen ? "Menu" : undefined}
       >
         <div className={styles.head}>
-          {/* An ambassador's rail carries the Jooma Ambassador lockup. 27px
-              keeps "jooma" inside it the same size as the plain 22px mark. */}
           <Link
             href="/dashboard"
             className={styles.logo}
             aria-label={plan.ambassador ? "Jooma Ambassador, go to Today" : "Jooma, go to Today"}
           >
-            {plan.ambassador ? <AmbassadorWordmark height={27} /> : <Wordmark height={22} />}
+            <span className={styles.logoFull}>
+              {plan.ambassador ? <AmbassadorWordmark height={25} /> : <Wordmark height={20} />}
+            </span>
+            {/* The collapsed rail carries the "j" alone. */}
+            <svg className={styles.logoMark} viewBox="0 0 270 967" aria-hidden>
+              <g transform="translate(65,745) scale(1,-1)" fill="currentColor">
+                <path d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z" />
+              </g>
+            </svg>
           </Link>
+          {!plan.loading && chip && (
+            <span
+              className={`${styles.planChip} ${plan.ambassador ? styles.planChipGold : ""}`}
+              data-testid="sidebar-plan-chip"
+            >
+              {chip}
+            </span>
+          )}
+          <button
+            type="button"
+            className={styles.collapse}
+            onClick={onToggleCollapsed}
+            aria-label={mini ? "Expand the sidebar" : "Collapse the sidebar"}
+            aria-pressed={mini}
+            title={mini ? "Expand" : "Collapse"}
+          >
+            <CaretLeft weight="bold" className={styles.collapseIcon} />
+          </button>
           {/* Drawer-only. The rail has nothing to close. */}
           <button
             type="button"
@@ -165,8 +243,7 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
           </button>
         </div>
 
-        {/* Tool search. Lives in the drawer on mobile because the top bar has
-            no room for it there: its results panel alone is wider than a phone. */}
+        {/* Tool search, drawer only: the top bar has no room for it on a phone. */}
         <div className={styles.drawerSearch}>
           <ToolSearch variant="drawer" onNavigate={onMobileClose} />
         </div>
@@ -181,9 +258,10 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
                   key={item.label}
                   className={`${styles.navitem} ${styles.navitemSoon}`}
                   aria-disabled="true"
+                  data-tip={item.label}
                 >
                   <item.Icon className={styles.navicon} />
-                  {item.label}
+                  <span className={styles.lab}>{item.label}</span>
                   <span className={styles.soon}>Soon</span>
                 </span>
               );
@@ -196,168 +274,188 @@ export default function SideNavV2({ mobileOpen = false, onMobileClose, account, 
                 key={item.label}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
+                data-tip={item.label}
                 className={`${styles.navitem} ${
                   item.gold ? (active ? styles.navitemGoldOn : styles.navitemGold) : ""
                 } ${active && !item.gold ? styles.navitemOn : ""}`}
               >
-                <item.Icon
-                  className={styles.navicon}
-                  weight={active || item.gold ? "fill" : "regular"}
-                />
-                {item.label}
+                <item.Icon className={styles.navicon} weight={active || item.gold ? "fill" : "regular"} />
+                <span className={styles.lab}>{item.label}</span>
                 {count !== null && <span className={styles.count}>{count}</span>}
               </Link>
             );
           })}
         </nav>
 
-        {/* The level box, directly under the nav rather than down with credits.
-            Shown from level 1 with an empty track, as in the mockup: "9 more
-            badges to reach Level 2" is a goal rather than a judgement, and
-            hiding it until something is earned meant most teachers would
-            never discover the collection exists. Only the migration not being
-            applied hides it. */}
-        {badges.available && !badges.loading && (
-          <Link href="/profile?section=badges" className={styles.levelBox}>
-            <div className={styles.meterTop}>
-              <span className={styles.meterName}>
-                <Medal weight="fill" className={styles.levelIcon} />
-                Level {badges.level}
-              </span>
-              <span className={styles.meterVal}>
-                {/* "None yet" rather than "0 of 100": the count is the one
-                    place a zero would read as a verdict on the teacher. */}
-                {badges.earnedCount === 0
-                  ? "None yet"
-                  : `${badges.earnedCount} of ${badges.total}`}
-              </span>
-            </div>
-            <div className={styles.track}>
-              <i
-                className={styles.trackFill}
-                style={{ width: `${Math.round(badges.levelFraction * 100)}%` }}
-              />
-            </div>
-            <p className={styles.meterNote}>
-              {badges.toNextLevel === 0
-                ? "The full set. Nothing left to climb."
-                : `${badges.toNextLevel} more ${
-                    badges.toNextLevel === 1 ? "badge" : "badges"
-                  } to reach Level ${badges.level + 1}`}
-            </p>
+        {/* Pinned from the Make page. */}
+        {pinnedTools.length > 0 && (
+          <div className={styles.pinned}>
+            <span className={styles.pinnedHead}>Pinned</span>
+            {pinnedTools.map((tool) => (
+              <Link key={tool.href} href={tool.href} className={styles.pinnedItem} data-tip={tool.name}>
+                <ToolTile icon={tool.icon} solid={toolSolid(tool)} size="xs" />
+                <span className={styles.pinnedName}>{tool.name}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className={styles.spacer} />
+
+        {/* The collapsed rail's one warning: what is left, once it matters. */}
+        {showRailWarn && (
+          <Link
+            href="/profile?section=subscription"
+            className={styles.railWarn}
+            aria-label={`${credits.remaining.toLocaleString("en-GB")} resources left`}
+          >
+            <span className={styles.railWarnIcon}>
+              <Lightning weight="fill" />
+              <span className={styles.pip} />
+            </span>
+            <span className={styles.railWarnNum}>{credits.remaining.toLocaleString("en-GB")}</span>
           </Link>
         )}
 
         <div className={styles.foot}>
-          {/* Pinned from the Library page. */}
-          {pinnedTools.length > 0 && (
-            <div className={styles.pinned}>
-              <span className={styles.pinnedHead}>Pinned</span>
-              {pinnedTools.map((tool) => (
-                <Link key={tool.href} href={tool.href} className={styles.pinnedItem}>
-                  <ToolTile icon={tool.icon} solid={toolSolid(tool)} size="xs" />
-                  <span className={styles.pinnedName}>{tool.name}</span>
-                </Link>
-              ))}
+          {credits.metered && (
+            <div className={styles.meters}>
+              <div className={`${styles.meter} ${styles[`meter_${state}`]}`} data-testid="sidebar-resources">
+                <div className={styles.meterTop}>
+                  <span className={styles.meterName}>Resources</span>
+                  <span className={styles.meterVal}>
+                    {credits.loading
+                      ? "…"
+                      : meterValue({ left: credits.remaining, allowance: credits.allowance, period: credits.period })}
+                  </span>
+                </div>
+                {!credits.loading && state !== "calm" && (
+                  <div
+                    className={styles.track}
+                    role="progressbar"
+                    aria-label={`Resources left ${credits.period === "week" ? "this week" : credits.period === "trial" ? "in your trial" : "this month"}`}
+                    aria-valuemin={0}
+                    aria-valuemax={credits.allowance}
+                    aria-valuenow={credits.remaining}
+                  >
+                    <i className={styles.trackFill} style={{ width: `${Math.round(credits.fraction * 100)}%` }} />
+                  </div>
+                )}
+                <p className={styles.meterNote}>
+                  {state === "calm"
+                    ? refillLine
+                    : `of ${credits.allowance.toLocaleString("en-GB")} ${per}. ${refillLine}`.trim()}
+                </p>
+                {/* Offered only once it is actually low: selling more to someone
+                    with most of the month left is a nag. Suppressed while
+                    loading so it cannot flash on against the initial zero. */}
+                {!credits.loading && state === "low" && canTopUp && (
+                  <button type="button" className={styles.topup} onClick={() => setTopUpOpen(true)}>
+                    Top up
+                  </button>
+                )}
+              </div>
+
+              {/* Orange is picture slides and nothing else. Free and Standard
+                  get library photos, so the row is locked there. */}
+              {credits.pictures ? (
+                <div className={styles.meter} data-testid="sidebar-pictures">
+                  <div className={styles.meterTop}>
+                    <span className={styles.meterName}>
+                      <ImageSquare weight="fill" className={styles.picIcon} aria-hidden />
+                      Picture slides
+                    </span>
+                    <span className={styles.meterVal}>Included</span>
+                  </div>
+                </div>
+              ) : (
+                <div className={`${styles.meter} ${styles.meterLocked}`} data-testid="sidebar-pictures">
+                  <div className={styles.meterTop}>
+                    <span className={styles.meterName}>Picture slides</span>
+                    <span className={styles.meterVal}>Library photos</span>
+                  </div>
+                  <p className={styles.lockRow}>
+                    <LockSimple weight="fill" aria-hidden />
+                    <span>Pro and Max only</span>
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
+          {!credits.metered && !credits.loading && plan.plan === "free" && (
+            <div className={styles.meters}>
+              <div className={`${styles.meter} ${styles.meterLocked}`}>
+                <div className={styles.meterTop}>
+                  <span className={styles.meterName}>Picture slides</span>
+                  <span className={styles.meterVal}>None</span>
+                </div>
+                <p className={styles.lockRow}>
+                  <LockSimple weight="fill" aria-hidden />
+                  <span>On every paid plan</span>
+                </p>
+              </div>
+            </div>
+          )}
 
-          {/* The plan they are on, and the way to change it, for everybody.
-              Directly above credits because the two answer one question
-              between them: what do I have, and how much of it is left. The
-              button always goes to /pricing, the one place plans change. */}
+          {/* What they have and the one way to change it. Always /pricing. */}
           <div
             className={`${styles.plan} ${plan.ambassador ? styles.planGold : ""} ${
               plan.countdown?.kind === "offer" ? styles.planOfferCard : ""
             }`}
             data-testid="sidebar-plan"
           >
-            <div className={styles.meterTop}>
-              <span className={styles.meterName}>Your plan</span>
-              <span
-                className={`${styles.planPill} ${plan.ambassador ? styles.planPillGold : ""}`}
-              >
-                {plan.loading ? " " : plan.label}
-              </span>
-            </div>
-            {!plan.loading && plan.countdown ? (
-              <PlanCountdown countdown={plan.countdown} note={plan.note} />
+            <span className={styles.srOnly}>Your plan: {plan.loading ? "" : plan.label}</span>
+            {v45Block ? (
+              <>
+                {v45Block.note && (
+                  <p className={styles.planNote} data-testid="sidebar-plan-note">
+                    {v45Block.note}
+                  </p>
+                )}
+                <Link href={v45Block.cta.href} className={styles.upgrade} onClick={onMobileClose}>
+                  {v45Block.cta.label}
+                </Link>
+              </>
             ) : (
-              !plan.loading && plan.note && <p className={styles.meterNote}>{plan.note}</p>
-            )}
-            {!plan.loading && (
-              <Link href={plan.cta.href} className={styles.upgrade} onClick={onMobileClose}>
-                {plan.cta.label}
-              </Link>
+              <>
+                {!plan.loading && plan.countdown ? (
+                  <PlanCountdown countdown={plan.countdown} note={plan.note} />
+                ) : (
+                  !plan.loading && plan.note && <p className={styles.planNote}>{plan.note}</p>
+                )}
+                {!plan.loading && (
+                  <Link href={plan.cta.href} className={styles.upgrade} onClick={onMobileClose}>
+                    {plan.cta.label}
+                  </Link>
+                )}
+              </>
             )}
           </div>
-
-          {/* Credits live HERE and in the account page, nowhere else. No per
-              tool costs on cards, no chips on list rows. */}
-          {credits.metered && (
-            <div className={styles.meter}>
-              <div className={styles.meterTop}>
-                <span className={styles.meterName}>Credits</span>
-                <span className={styles.meterVal}>
-                  {credits.loading
-                    ? "—"
-                    : `${credits.remaining.toLocaleString("en-GB")} left`}
-                </span>
-              </div>
-              <div className={styles.track}>
-                <i
-                  className={styles.trackFill}
-                  style={{ width: `${Math.round(credits.fraction * 100)}%` }}
-                />
-              </div>
-              <p className={styles.meterNote}>
-                Refills to {credits.allowance.toLocaleString("en-GB")} on{" "}
-                {credits.refillsOn.toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                })}
-              </p>
-              {/* The METER is always shown on a metered plan; the BUTTON only
-                  once credits are actually running low. Offering to sell more
-                  to someone with most of the month's allowance left is a nag,
-                  and pricing_rules carries the same instinct as `hide_counter`.
-
-                  MIND THE INVERSION: this fraction is credits REMAINING (see
-                  useCreditMeter), while AllowanceMeter's same-named fraction is
-                  the proportion USED. `remaining <= 0.2` here and `used >= 0.8`
-                  there are the same moment described from opposite ends — they
-                  are not a contradiction to be tidied up.
-
-                  Suppressed while loading so the button cannot flash on against
-                  the initial remaining=0 before real figures arrive. */}
-              {!credits.loading && credits.fraction <= LOW_CREDIT_AT && (
-                <button
-                  type="button"
-                  className={styles.topup}
-                  onClick={() => setTopUpOpen(true)}
-                >
-                  Top up credits
-                </button>
-              )}
-            </div>
-          )}
 
           <div className={styles.sideFoot}>
-            <Link href="/notifications" className={styles.footLink}>
-              <Bell className={styles.footIcon} />
-              Updates
-              {announceUnread > 0 && <span className={styles.badge}>{announceUnread}</span>}
-            </Link>
-            <Link href="/help" className={styles.footLink}>
-              <Question className={styles.footIcon} />
-              Help
-              {supportUnread > 0 && <span className={styles.badge}>{supportUnread}</span>}
-            </Link>
+            {badges.available && !badges.loading ? (
+              <Link href="/profile?section=badges" className={styles.level}>
+                <span className={styles.levelDot} />
+                Level {badges.level}
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className={styles.footLinks}>
+              <Link href="/notifications" className={styles.footLink} aria-label="Updates">
+                <Bell className={styles.footIcon} />
+                {announceUnread > 0 && <span className={styles.badge}>{announceUnread}</span>}
+              </Link>
+              <Link href="/help" className={styles.footLink}>
+                <Question className={styles.footIcon} />
+                Help
+                {supportUnread > 0 && <span className={styles.badge}>{supportUnread}</span>}
+              </Link>
+            </span>
           </div>
 
-          {/* Drawer-only (hidden in CSS on the desktop rail, where the avatar's
-              dropdown carries them). */}
+          {/* Drawer-only (the avatar's dropdown carries them on desktop). */}
           {account && (
             <div ref={accountRef} className={styles.account} aria-label="Account" role="group">
               <AccountLinks account={account} variant="drawer" onNavigate={onMobileClose} />

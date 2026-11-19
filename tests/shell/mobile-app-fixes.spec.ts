@@ -138,21 +138,18 @@ test.describe("on a phone", () => {
     await expect(drawer).toBeHidden();
   });
 
-  test("Today's four counts are square tiles in a 2x2 grid, with no words under them", async ({ page }) => {
+  test("Today on a phone: one column of tools, Ask Jo full width, nothing sideways", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/dashboard");
-    const tiles = ["Day streak", "Resources made", "Badges earned", "Time saved"].map((t) => page.locator(`[title="${t}"]`));
-    await expect(tiles[0]).toBeVisible(NAV);
-    const boxes = await Promise.all(tiles.map(box));
-    for (const b of boxes) expect(Math.abs(b.width - b.height)).toBeLessThan(2);
-    expect(Math.round(boxes[0].y)).toBe(Math.round(boxes[1].y));
-    expect(Math.round(boxes[2].y)).toBe(Math.round(boxes[3].y));
-    expect(boxes[2].y).toBeGreaterThan(boxes[0].y);
-    // The sentence values and the labels give way to a bare number.
-    await expect(page.getByText("Starts today")).toBeHidden();
-    await expect(page.getByText("Let us find out")).toBeHidden();
-    await expect(tiles[0].locator("b:visible")).toHaveText("0");
-    await page.screenshot({ path: "test-results/app-today-tiles-phone.png" });
+    await expect(page.getByRole("heading", { name: "Make something" })).toBeVisible(NAV);
+    const ask = page.getByRole("button", { name: "Ask Jo", exact: true });
+    const input = page.getByRole("textbox", { name: "Ask Jo" });
+    // The button drops under the input and takes the width.
+    expect((await box(ask)).y).toBeGreaterThan((await box(input)).y);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
   });
 
   test("the tool filters are one row that scrolls sideways", async ({ page }) => {
@@ -248,7 +245,7 @@ test.describe("Ask Jo's chats on a phone", () => {
       await expect(toggle).toBeVisible(NAV);
       await expect(page.getByTestId("assistant-chat-title")).toHaveText("New chat");
       // Closed, the list is out of sight and out of reach.
-      await expect(page.getByRole("button", { name: "Rainforest plan" })).toBeHidden();
+      await expect(page.getByRole("button", { name: "Rainforest plan", exact: true })).toBeHidden();
 
       await toggle.click();
       const panel = page.getByRole("dialog", { name: "Chats" });
@@ -258,12 +255,12 @@ test.describe("Ask Jo's chats on a phone", () => {
       await expect.poll(async () => Math.round((await box(panel)).x)).toBe(0);
       expect((await box(panel)).height).toBeGreaterThanOrEqual(843);
       await expect(page.getByTestId("assistant-chats-backdrop")).toBeVisible();
-      await expect(panel.getByRole("button", { name: "Rainforest plan" })).toBeVisible();
+      await expect(panel.getByRole("button", { name: "Rainforest plan", exact: true })).toBeVisible();
       await page.screenshot({ path: "test-results/app-ask-jo-chats-phone.png" });
 
       // Search narrows it.
       await panel.getByLabel("Search chats").fill("fraction");
-      await expect(panel.getByRole("button", { name: "Rainforest plan" })).toBeHidden();
+      await expect(panel.getByRole("button", { name: "Rainforest plan", exact: true })).toBeHidden();
       await panel.getByLabel("Search chats").fill("");
 
       // Escape puts it away and gives focus back.
@@ -279,7 +276,7 @@ test.describe("Ask Jo's chats on a phone", () => {
 
       // Choosing a chat opens it, closes the panel and names it in the bar.
       await toggle.click();
-      await page.getByRole("dialog", { name: "Chats" }).getByRole("button", { name: "Rainforest plan" }).click();
+      await page.getByRole("dialog", { name: "Chats" }).getByRole("button", { name: "Rainforest plan", exact: true }).click();
       const rainforest = data!.find((c) => c.title === "Rainforest plan")!;
       await page.waitForURL(`**/assistant/${rainforest.id}`, NAV);
       await expect(page.getByRole("dialog", { name: "Chats" })).toHaveCount(0);
@@ -301,7 +298,8 @@ test.describe("Ask Jo's chats on a desktop", () => {
     await expect(column).not.toHaveAttribute("role", "dialog");
     await expect(page.getByRole("button", { name: "Open chats" })).toBeHidden();
     const b = await box(column);
-    expect(Math.round(b.width)).toBe(292);
+    // The v4 prototype's chats column (.jowrap 268px).
+    expect(Math.round(b.width)).toBe(268);
     // In the page's flow beside the rail, not over it.
     expect(b.x).toBeGreaterThan(250);
   });
@@ -374,13 +372,13 @@ test.describe("on a Fold's cover screen", () => {
 test.describe("on a Fold, open", () => {
   test.use(FOLD_OPEN);
 
-  test("the tiles stay a 2x2 grid of modest squares", async ({ page }) => {
+  test("Today does not scroll sideways on an open Fold", async ({ page }) => {
     await signIn(page, teacher);
     await page.goto("/dashboard");
-    const tile = page.locator('[title="Day streak"]');
-    await expect(tile).toBeVisible(NAV);
-    const b = await box(tile);
-    expect(Math.abs(b.width - b.height)).toBeLessThan(2);
-    expect(b.width).toBeLessThanOrEqual(200);
+    await expect(page.getByRole("heading", { name: "Make something" })).toBeVisible(NAV);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
   });
 });

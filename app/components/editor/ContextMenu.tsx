@@ -191,7 +191,7 @@ export default function ContextMenu({
       items.push("divider");
       items.push({
         icon: <RefreshCw className="w-3.5 h-3.5" />,
-        label: "Regenerate with AI",
+        label: "Regenerate",
         onClick: click(onRegenerate),
       });
     }

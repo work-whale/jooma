@@ -51,7 +51,7 @@ async function exportSlidesToPdf(slides: SlideData[], filename: string) {
 
       const label = document.createElement("p");
       label.style.cssText = `font-family:var(--font-karla),sans-serif;font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:${C_RED};margin-bottom:28px;`;
-      label.textContent = "Professional Development — Teachers";
+      label.textContent = "Professional Development: Teachers";
 
       const title = document.createElement("h1");
       title.style.cssText = `font-family:var(--font-spectral),serif;font-size:52px;font-weight:700;line-height:1.15;color:${C_TEXT};margin-bottom:24px;`;
@@ -316,7 +316,7 @@ async function exportSlidesToPptx(slides: SlideData[], filename: string) {
     });
 
     if (slide.type === "title") {
-      s.addText("PROFESSIONAL DEVELOPMENT — TEACHERS", {
+      s.addText("PROFESSIONAL DEVELOPMENT: TEACHERS", {
         x: 0, y: 2.5, w: "100%", h: 0.35,
         align: "center", fontSize: 9, color: ACC,
         fontFace: "Karla", charSpacing: 4,
@@ -458,7 +458,7 @@ function slidesToMarkdown(slides: SlideData[]): string {
         return lines.join("\n\n");
       }
       if (s.type === "stat") {
-        const lines = [`## ${s.title}`, `**${s.stat}** — ${s.statLabel ?? ""}`];
+        const lines = [`## ${s.title}`, `**${s.stat}**: ${s.statLabel ?? ""}`];
         if (s.statContext) lines.push(s.statContext);
         return lines.join("\n\n");
       }
@@ -528,7 +528,7 @@ function TitleSlide({ slide, index, total }: { slide: SlideData; index: number; 
           className="text-md tracking-widest uppercase mb-6"
           style={{ ...BODY_FONT, color: C_RED }}
         >
-          Professional Development — Teachers
+          Professional Development: Teachers
         </p>
         <h2
           className="text-5xl font-bold leading-tight mb-5 max-w-2xl"

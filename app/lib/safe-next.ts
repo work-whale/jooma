@@ -32,10 +32,13 @@ export const SIGNED_IN_HOME = "/dashboard";
  * keeps landing where it always has, so adding this changed nothing for anyone
  * outside the programme. Widen the prefix list here, nowhere else.
  */
-const HONOURED_NEXT = ["/ambassador"];
+const HONOURED_NEXT = ["/ambassador", "/pricing"];
 
 export function honouredNextPath(next: string | null | undefined): string | null {
   const path = safeNextPath(next, "");
   if (!path) return null;
-  return HONOURED_NEXT.some((p) => path === p || path.startsWith(`${p}/`)) ? path : null;
+  // The prefix is tested on the path alone, so a query (/pricing?chosen=pro)
+  // is allowed but a look-alike (/pricingevil) is not.
+  const bare = path.split(/[?#]/)[0];
+  return HONOURED_NEXT.some((p) => bare === p || bare.startsWith(`${p}/`)) ? path : null;
 }

@@ -16,8 +16,9 @@ import AuthLayout from "@/app/components/v2/AuthLayout";
 import auth from "@/app/components/v2/auth.module.css";
 import styles from "./complete-profile.module.css";
 import { honouredNextPath } from "@/app/lib/safe-next";
+import { cleanRole, cleanSchool, ROLE_OPTIONS } from "@/app/lib/signup-questions";
 import {
-  OPT_OUT_LABEL,
+  CONSENT_LABEL,
   clearProductEmailsChoice,
   readProductEmailsChoice,
 } from "@/app/lib/product-emails";
@@ -77,6 +78,22 @@ export default function CompleteProfilePage() {
   const [phone, setPhone] = useState("");
   // Seeded from the dial code so the teacher does not have to pick twice.
   const [country, setCountry] = useState<string | null>(DEFAULT_CODE);
+  // Jooma 4.5 Phase 2: role and school, both optional (blank is skipping).
+  const [jobRole, setJobRole] = useState("");
+  const [school, setSchool] = useState("");
+  const [schoolHints, setSchoolHints] = useState<string[]>([]);
+  // Names at least two other teachers typed (school_suggestions), after a
+  // short pause, from 3 characters.
+  useEffect(() => {
+    const q = school.trim();
+    if (q.length < 3) return;
+    const timer = setTimeout(() => {
+      void createClient()
+        .rpc("school_suggestions", { p_query: q })
+        .then(({ data }) => setSchoolHints(((data ?? []) as { name: string }[]).map((r) => r.name)));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [school]);
 
   // Keep country in sync when the dial code changes. Still overridable.
   useEffect(() => {
@@ -162,7 +179,8 @@ export default function CompleteProfilePage() {
   // before the box was ticked. Decided after mount, since the answer lives in
   // sessionStorage, which the server render cannot see.
   const [askEmails, setAskEmails] = useState(false);
-  const [ratherNot, setRatherNot] = useState(false);
+  // Jooma 4.5: opt-in, unticked to start (see app/lib/product-emails.ts).
+  const [ratherNot, setRatherNot] = useState(true);
   useEffect(() => {
     if (readProductEmailsChoice() === null) queueMicrotask(() => setAskEmails(true));
   }, []);
@@ -225,7 +243,18 @@ export default function CompleteProfilePage() {
    */
   const startTrial = async () => {
     try {
-      const res = await fetch("/api/trial/start", { method: "POST" });
+      // The ?code= / ?ref= kept by /signup, for signup_completed's ref_code.
+      let refCode: string | null = null;
+      try {
+        refCode = sessionStorage.getItem("jooma:ambassador-code");
+      } catch {
+        // Storage blocked: the event simply goes without it.
+      }
+      const res = await fetch("/api/trial/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refCode }),
+      });
       if (!res.ok) console.warn("[complete-profile] trial not started", res.status);
     } catch (err) {
       console.warn("[complete-profile] trial not started", err);
@@ -291,6 +320,15 @@ export default function CompleteProfilePage() {
       .update({ curriculum_id: curriculumId, curriculum_confirmed_at: new Date().toISOString() })
       .eq("id", user.id);
     if (curriculumError) console.error("[complete-profile] curriculum not saved", curriculumError);
+    // Role and school (Phase 2), separate for the same reason: optional, and a
+    // failure must never stop a signup. Read by signup_completed.
+    {
+      const { error: aboutError } = await supabase
+        .from("profiles")
+        .update({ job_role: cleanRole(jobRole), school_name: cleanSchool(school) })
+        .eq("id", user.id);
+      if (aboutError) console.error("[complete-profile] role and school not saved", aboutError);
+    }
     // The store loaded before this profile existed; reload it, or the app
     // would ask them to confirm the curriculum they have just chosen.
     resetTeacherCurriculum();
@@ -299,7 +337,8 @@ export default function CompleteProfilePage() {
     // record it against. Before the invite step, which can end this handler
     // early. A failure is logged and not shown: the profile is saved, and the
     // Emails section of /profile can always change it.
-    const optedOut = askEmails ? ratherNot : readProductEmailsChoice() === "off";
+    // Opt-in: only an explicit "on" is consent.
+    const optedOut = askEmails ? ratherNot : readProductEmailsChoice() !== "on";
     if (optedOut) {
       const { error: prefError } = await supabase.rpc("set_my_product_emails", {
         p_on: false,
@@ -308,6 +347,18 @@ export default function CompleteProfilePage() {
       if (prefError) console.error("[complete-profile] product email choice not saved", prefError);
     }
     clearProductEmailsChoice();
+    // Jooma 4.5: the same box is marketing consent (E9b, E10, E15, E16). The
+    // teacher may set their own; the time is stamped by the server. Before the
+    // plans engine migration the column is missing and this is ignored.
+    {
+      const { error: consentError } = await supabase
+        .from("profiles")
+        .update({ marketing_consent: !optedOut })
+        .eq("id", user.id);
+      if (consentError && consentError.code !== "PGRST204" && consentError.code !== "42703") {
+        console.error("[complete-profile] marketing consent not saved", consentError);
+      }
+    }
 
     // The ambassador code, claimed now that the account exists and before the
     // trial starts. Never stops them: a code that is refused here is offered
@@ -485,6 +536,49 @@ export default function CompleteProfilePage() {
         </div>
 
         <div className={auth.field}>
+          <label htmlFor="jobRole" className={auth.label}>
+            Your role <span className={styles.optional}>(optional)</span>
+          </label>
+          <select
+            id="jobRole"
+            value={jobRole}
+            onChange={(e) => setJobRole(e.target.value)}
+            className={auth.input}
+            data-testid="signup-role"
+          >
+            <option value="">Choose one</option>
+            {ROLE_OPTIONS.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={auth.field}>
+          <label htmlFor="school" className={auth.label}>
+            Your school <span className={styles.optional}>(optional)</span>
+          </label>
+          <input
+            id="school"
+            type="text"
+            value={school}
+            onChange={(e) => setSchool(e.target.value)}
+            list="school-hints"
+            maxLength={120}
+            autoComplete="organization"
+            placeholder="For example, Oakfield Primary School"
+            className={auth.input}
+            data-testid="signup-school"
+          />
+          <datalist id="school-hints">
+            {(school.trim().length >= 3 ? schoolHints : []).map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
+        </div>
+
+        <div className={auth.field}>
           <label htmlFor="ambassadorCode" className={auth.label}>
             Ambassador code <span className={styles.optional}>(optional)</span>
           </label>
@@ -531,12 +625,12 @@ export default function CompleteProfilePage() {
           <label className={auth.check}>
             <input
               type="checkbox"
-              checked={ratherNot}
-              onChange={(e) => setRatherNot(e.target.checked)}
+              checked={!ratherNot}
+              onChange={(e) => setRatherNot(!e.target.checked)}
               className={auth.checkBox}
-              data-testid="profile-product-emails-opt-out"
+              data-testid="profile-marketing-consent"
             />
-            <span>{OPT_OUT_LABEL}</span>
+            <span>{CONSENT_LABEL}</span>
           </label>
         )}
 

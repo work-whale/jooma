@@ -55,13 +55,15 @@
   --color-stone-900: var(--j-ink);
   --color-stone-950: #120E1F;
 
-  --font-sans: var(--font-bricolage), Arial, Helvetica, sans-serif;
-  --font-headline: var(--font-bricolage), Arial, Helvetica, sans-serif;
+  /* v4: Plus Jakarta Sans everywhere, headings at 800. Bricolage stays loaded
+     only because slide and sheet themes name it. */
+  --font-sans: var(--font-jakarta), Arial, Helvetica, sans-serif;
+  --font-headline: var(--font-jakarta), Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono);
 
   /* Two-font system — `font-primary` (display/headings) and `font-secondary`
      (body/UI) utilities are generated from these. */
-  --font-primary: var(--font-bricolage), Arial, Helvetica, sans-serif;
+  --font-primary: var(--font-jakarta), Arial, Helvetica, sans-serif;
   --font-secondary: var(--font-inter), system-ui, -apple-system, sans-serif;
 
   --container-8xl: 88rem;
@@ -86,6 +88,14 @@ body {
    secondary (body) font from `body`. */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-primary);
+}
+
+/* v4 heading tracking. In the base layer so a `tracking-*` utility on a
+   heading (an uppercase eyebrow, say) still wins. */
+@layer base {
+  h1, h2, h3 {
+    letter-spacing: -0.028em;
+  }
 }
 
 /* Infinite logo marquee — the track holds two copies of the logos, so a -50%
@@ -392,7 +402,7 @@ summary {
  * components; reference the variable.
  */
 :root {
-  --j-bg: #F7F5FC;
+  --j-bg: #FAF9FC;
   --j-card: #FFFFFF;
   --j-tint: #F1ECFC;
   --j-tint-2: #E9E2FB;
@@ -403,12 +413,12 @@ summary {
   --j-deep: #3A1C8F;
 
   --j-ink: #1D1730;    /* headings */
-  --j-body: #3C3552;   /* paragraphs */
-  --j-muted: #6D6683;  /* supporting */
-  --j-faint: #9A93AD;  /* metadata ONLY, never body copy */
+  --j-body: #453E5E;   /* paragraphs */
+  --j-muted: #5F5876;  /* supporting */
+  --j-faint: #8E87A4;  /* metadata ONLY, never body copy */
 
-  --j-line: #EAE6F5;
-  --j-line-2: #DDD6EE;
+  --j-line: #ECE8F4;
+  --j-line-2: #DED8EE;
 
   /* Burnt orange is the marketing accent: one element per section at most. It
      marks the cost of not acting, and the Behaviour/SEND tool colour. Never a
@@ -426,9 +436,9 @@ summary {
   --j-gold: #B8860B;
   --j-gold-bg: #FBF3DF;
 
-  --j-r: 14px;
-  --j-r-lg: 20px;
-  --j-r-xl: 28px;
+  --j-r: 12px;
+  --j-r-lg: 16px;
+  --j-r-xl: 22px;
   --j-pill: 999px;
 
   /* Tile sizes are tokens, not per-call values. A tile's glyph is sized by a
@@ -462,6 +472,42 @@ summary {
   --j-tint-amber: #FBF3DF;
   --j-tint-pink: #FBEAF0;
   --j-tint-slate: #F4F2F8;
+
+  /* ── v4 (Jooma 4.5) ──────────────────────────────────────────────────────
+   * docs/Jooma version 4.5/15-jooma-dashboard-v4.html. Three colour rules:
+   * purple is ONLY what a resource costs, orange is ONLY picture slides, and
+   * tools are coloured by what they are for. The two credit languages never
+   * mix, and neither is ever a tool or a status colour. */
+
+  /* The dark sidebar. */
+  --j-chrome: #1E1138;
+  --j-chrome-2: #2B1A4D;
+  --j-chrome-line: rgba(255, 255, 255, 0.09);
+  --j-on-chrome: #FFFFFF;
+  --j-on-chrome-mid: #BFB2E4;
+  --j-on-chrome-dim: #8B7FB5;
+
+  /* Resources: what a thing costs, and how many are left. */
+  --j-res: #5B2ED6;
+  --j-res-soft: #F0EBFD;
+  --j-res-on-dark: #9D82EF;
+
+  /* Picture slides. */
+  --j-pic: #C2551F;
+  --j-pic-soft: #FDF0E8;
+  --j-pic-on-dark: #E8763C;
+
+  /* Tool categories, by purpose (app/lib/tools.ts V2_CATEGORIES). */
+  --j-cat-make: #1D6FD0;
+  --j-cat-pupil: #0F8A63;
+  --j-cat-check: #0E7490;
+  --j-cat-support: #C43D6B;
+  --j-cat-adult: #4A5568;
+
+  --j-ok: #0F8A63;
+
+  /* The collapsed sidebar rail. */
+  --j-nav-mini: 70px;
 }
 
 /* The tokens above used to be scoped to this class. They are on `:root` now,

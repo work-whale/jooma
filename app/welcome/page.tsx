@@ -101,7 +101,7 @@ export default async function WelcomePage({
         </h1>
         <p className={styles.lede}>
           {onTrial
-            ? `Your 3 day free trial has started, with all thirty five tools and no card needed. It ends on ${trialEnds}. Pick something to make first.`
+            ? `Your 10 days of Pro have started, with all thirty five tools and no card needed. They end on ${trialEnds}. Pick something to make first.`
             : needsPlan
               ? "Choose a plan to use all thirty five tools. Most of them take about a minute."
               : "Everything you need for tomorrow is here, and most of it takes about a minute. Pick something to make first."}

@@ -59,8 +59,12 @@ export default function HeroTry({
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
-    const line = parseFloat(getComputedStyle(el).lineHeight);
-    setMulti(el.scrollHeight > line * 1.6);
+    const cs = getComputedStyle(el);
+    const line = parseFloat(cs.lineHeight);
+    // scrollHeight includes the padding the card adds (data-multi), so count
+    // lines without it, or a short topic would keep the box a card forever.
+    const text = el.scrollHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    setMulti(text > line * 1.6);
     // multi is a dependency because the card's padding changes the height.
   }, [topic, idle, tool, multi]);
 

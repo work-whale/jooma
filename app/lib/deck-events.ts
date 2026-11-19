@@ -528,7 +528,7 @@ export function placeAudioAnswers(prev: DeckSlide[], p: AudioAnswersPayload): De
   const titleText: TextObject = {
     id: newId("t"),
     x: 80, y: 80, width: SLIDE_W - 240,
-    text: p.title || "Audio activity — answers",
+    text: p.title || "Audio activity: answers",
     fontSize: 44, fontWeight: "800",
     fontStyle: "normal", underline: false,
     fontFamily: headingFont,

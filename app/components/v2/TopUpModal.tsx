@@ -6,7 +6,11 @@ import { useTopUp } from "@/app/lib/useTopUp";
 import { useTopUpPacks } from "@/app/lib/useTopUpPacks";
 import { packCredits } from "@/app/lib/topup-packs";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
+import { useResources } from "@/app/lib/useResources";
+import { TOP_UP_PACKS } from "@/app/lib/plan-config";
+import type { TopUpPack } from "@/app/lib/topup-packs";
 import styles from "./TopUpModal.module.css";
+import { P10Line } from "@/app/components/v45/P10Line";
 
 /*
  * Top up credits.
@@ -39,9 +43,26 @@ export default function TopUpModal({
   onClose: () => void;
 }) {
   const { start, loading, error } = useTopUp();
+  // Jooma 4.5 (my_resources() exists): the packs come from plan-config, in
+  // resources, and never expire. Before that, the old credit packs.
+  const balance = useResources();
+  const v45 = balance !== "missing" && balance !== null;
   // Only queried while open, so opening the sidebar does not fetch packs for a
   // dialog nobody asked for.
-  const { packs, loading: loadingPacks, empty } = useTopUpPacks(open);
+  const legacy = useTopUpPacks(open && !v45);
+  const packs: (TopUpPack & { resources?: number })[] = v45
+    ? TOP_UP_PACKS.map((p, i) => ({
+        id: p.id,
+        name: "",
+        unit: 0,
+        priceGbp: p.price,
+        availableTo: ["standard", "pro", "max"],
+        sort: i,
+        resources: p.resources,
+      }))
+    : legacy.packs;
+  const loadingPacks = v45 ? false : legacy.loading;
+  const empty = v45 ? false : legacy.empty;
   // Null until the teacher picks one. The DEFAULT is derived below rather than
   // written into state by an effect: the packs arrive asynchronously, so an
   // effect would set state on the render after they land and cascade a second
@@ -113,10 +134,13 @@ export default function TopUpModal({
         className={styles.modal}
       >
         <h2 id="topup-title" className={styles.title}>
-          Top up credits
+          Top up your resources
         </h2>
+        {v45 && <P10Line onSwitch={onClose} />}
         <p className={styles.sub}>
-          A top up sits on top of your monthly refill and is used first.
+          {v45
+            ? "Extra resources for a busy month, on top of your plan."
+            : "A top up sits on top of your monthly refill and is used first."}
         </p>
 
         {loadingPacks ? (
@@ -144,7 +168,7 @@ export default function TopUpModal({
                   className={`${styles.pack} ${isSelected ? "" : styles.packIdle}`}
                 >
                   <span className={styles.packName}>
-                    {nf.format(packCredits(pack))} credits
+                    {nf.format(pack.resources ?? packCredits(pack))} resources
                     {/* The pack's own name, when it says more than the size
                         does. Skipped when it is the generic seeded label. */}
                     {pack.name && !/^AI credit top-up$/i.test(pack.name) && (
@@ -160,9 +184,19 @@ export default function TopUpModal({
           </div>
         )}
 
-        <p className={styles.note}>
-          Top ups run to the end of the month, alongside your plan allowance.
-        </p>
+        {v45 ? (
+          <div className={styles.worth}>
+            <b>Worth knowing</b>
+            <p>
+              Top ups never run out. They are used only once your monthly
+              resources are gone.
+            </p>
+          </div>
+        ) : (
+          <p className={styles.note}>
+            Top ups run to the end of the month, alongside your plan allowance.
+          </p>
+        )}
 
         {error && (
           <p className={styles.note} style={{ color: "#c2342b" }} role="alert">

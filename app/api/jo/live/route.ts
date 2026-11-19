@@ -10,7 +10,8 @@ import { createHash } from "node:crypto";
 import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { loadFxRate } from "@/app/lib/fx";
-import { AI_SPEND_CEILING_PENCE, asPlanId, can } from "@/app/lib/plans";
+import { AI_SPEND_CEILING_PENCE, can } from "@/app/lib/plans";
+import { livePlanFor } from "@/app/lib/account-plan";
 import { checkAllGates, quotaBlockBody, quotaBlockHeaders, quotaBlockStatus } from "@/app/lib/generation-guard";
 import { LIVE_MAX_SECONDS, cleanDocLabel, liveBudgetUsd, liveSessionConfig, type LiveSurface } from "@/app/lib/live";
 import { watchLiveCall } from "@/app/lib/live-watch";
@@ -50,7 +51,9 @@ export async function POST(req: NextRequest) {
   // just the verdict: what is left is what the session may spend.
   const { data } = await supabase.rpc("my_generation_gate");
   const row = (Array.isArray(data) ? data[0] : data) as GateRow | undefined;
-  const plan = asPlanId(row?.plan ?? null);
+  // livePlanFor, not asPlanId: the Pro trial is Pro's features, and asPlanId
+  // read it as Free, so trial teachers were told Live is for paid plans.
+  const plan = livePlanFor(row?.plan ?? null);
   const admin = !!row?.is_admin;
   if (!admin && !can(plan, "assistant")) {
     const block = await checkAllGates(supabase, { countsAsGeneration: false });

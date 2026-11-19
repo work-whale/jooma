@@ -166,7 +166,7 @@ export default function TrustPage() {
         <section className={styles.close}>
           <div className={shared.shell}>
             <h2>Bringing Jooma to your whole school?</h2>
-            <p>Pooled credits, an admin dashboard and one invoice. Tell us about your school.</p>
+            <p>Pooled resources, an admin dashboard and one invoice. Tell us about your school.</p>
             <Link href="/contact?type=school" className={`${shared.btn} ${shared.btnW}`}>
               Talk to us
             </Link>

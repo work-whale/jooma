@@ -19,7 +19,7 @@ export default async function PolicyGeneratorPage({
           icon={<ScrollText className="w-5 h-5 text-blue-600" />}
 
           title="Policy Generator"
-          description="Draft a school policy with numbered sections, roles and the legislation it follows. For policies in our list, whether it is statutory, how often to review it and who approves it come from DfE guidance, not the AI, and the policy has a details box and version history for your governors."
+          description="Draft a school policy with numbered sections, roles and the legislation it follows. For policies in our list, whether it is statutory, how often to review it and who approves it come from DfE guidance, not from a guess, and the policy has a details box and version history for your governors."
           steps={[
             { label: "Pick or type the policy", detail: "Choose from the list, or type your own, for example \"School Uniform Policy\"." },
             { label: "Choose full draft or outline", detail: "Draft the whole policy, or an outline of sections with notes on what to write." },

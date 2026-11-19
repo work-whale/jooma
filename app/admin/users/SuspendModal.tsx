@@ -90,7 +90,7 @@ export default function SuspendModal({
           <div
             className="rounded-xl px-3 py-2.5 text-sm"
             style={{
-              backgroundColor: suspend ? "#FBECEB" : "#F7F5FC",
+              backgroundColor: suspend ? "#FBECEB" : "#FAF9FC",
               color: suspend ? "#B3261E" : "#3C3552",
             }}
           >

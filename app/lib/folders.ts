@@ -18,20 +18,23 @@ import { createClient } from "@/app/lib/auth/client";
  * `tint` and `solid` are the two treatments a folder card can take. Light
  * variants put the solid glyph on the tint, which is the prototype's folder
  * icon chip. Deep variants put a white glyph on the solid. Nothing here is a
- * new colour: the tints are the --j-tint-* tokens and the solids are the seven
- * V2 category colours, so the palette cannot drift from the brand bible.
+ * new colour: the tints are the --j-tint-* tokens and the solids are the v4
+ * category tokens, so the palette cannot drift from the brand bible.
+ *
+ * Violet stays the brand purple: it is the prototype's own folder chip. Amber
+ * is gold rather than orange, because orange means picture slides (v4 rule).
  */
 export const FOLDER_COLOURS = [
-  { key: "violet", name: "Violet", tint: "var(--j-tint-violet)", solid: "#5B2ED6" },
-  { key: "blue", name: "Blue", tint: "var(--j-tint-blue)", solid: "#1D6FD0" },
-  { key: "green", name: "Green", tint: "var(--j-tint-green)", solid: "#0F8A63" },
-  { key: "amber", name: "Amber", tint: "var(--j-tint-amber)", solid: "#C2551F" },
-  { key: "pink", name: "Pink", tint: "var(--j-tint-pink)", solid: "#C43D6B" },
-  { key: "violet-deep", name: "Deep violet", tint: "#5B2ED6", solid: "#fff" },
-  { key: "blue-deep", name: "Deep blue", tint: "#1D6FD0", solid: "#fff" },
-  { key: "green-deep", name: "Deep green", tint: "#0F8A63", solid: "#fff" },
-  { key: "amber-deep", name: "Deep amber", tint: "#C2551F", solid: "#fff" },
-  { key: "pink-deep", name: "Deep pink", tint: "#C43D6B", solid: "#fff" },
+  { key: "violet", name: "Violet", tint: "var(--j-tint-violet)", solid: "var(--j-purple)" },
+  { key: "blue", name: "Blue", tint: "var(--j-tint-blue)", solid: "var(--j-cat-make)" },
+  { key: "green", name: "Green", tint: "var(--j-tint-green)", solid: "var(--j-cat-pupil)" },
+  { key: "amber", name: "Amber", tint: "var(--j-tint-amber)", solid: "var(--j-gold)" },
+  { key: "pink", name: "Pink", tint: "var(--j-tint-pink)", solid: "var(--j-cat-support)" },
+  { key: "violet-deep", name: "Deep violet", tint: "var(--j-purple)", solid: "#fff" },
+  { key: "blue-deep", name: "Deep blue", tint: "var(--j-cat-make)", solid: "#fff" },
+  { key: "green-deep", name: "Deep green", tint: "var(--j-cat-pupil)", solid: "#fff" },
+  { key: "amber-deep", name: "Deep amber", tint: "var(--j-gold)", solid: "#fff" },
+  { key: "pink-deep", name: "Deep pink", tint: "var(--j-cat-support)", solid: "#fff" },
 ] as const;
 
 export type FolderColour = (typeof FOLDER_COLOURS)[number]["key"];

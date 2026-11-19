@@ -21,12 +21,12 @@ const PICTURE_SUB_TAB_LABELS: Record<PictureSubTab, string> = {
   stock: "Images",
   web: "Google",
   upload: "Upload",
-  ai: "AI generate",
+  ai: "Generate",
 };
 
 type VideoSubTab = "ai" | "youtube" | "upload";
 const VIDEO_SUB_TAB_LABELS: Record<VideoSubTab, string> = {
-  ai: "Suggest with AI",
+  ai: "Suggest",
   youtube: "YouTube",
   upload: "Upload",
 };
@@ -1096,11 +1096,11 @@ export default function Sidebar({
             {active === "audio" && (
               <div className="space-y-3">
                 <p className="text-[11px] text-gray-500">
-                  Generate a listening activity — a TTS clip plus comprehension questions — and drop it onto a new slide.
+                  Generate a listening activity, a spoken clip with comprehension questions, and drop it onto a new slide.
                 </p>
                 <label className="block">
                   <span className="text-[11px] font-semibold text-gray-700">
-                    Topic <span className="text-gray-400 font-normal">{audioScript.trim() ? "(used for AI questions)" : ""}</span>
+                    Topic <span className="text-gray-400 font-normal">{audioScript.trim() ? "(used to write the questions)" : ""}</span>
                   </span>
                   <input
                     type="text"
@@ -1119,7 +1119,7 @@ export default function Sidebar({
                   <textarea
                     value={audioScript}
                     onChange={(e) => setAudioScript(e.target.value)}
-                    placeholder="Paste your own script here — it'll be read aloud exactly. Leave blank and AI will write one."
+                    placeholder="Paste your own script here. It will be read aloud exactly. Leave it blank and Jooma will write one."
                     rows={4}
                     disabled={audioBusy}
                     className="mt-1 w-full px-2.5 py-2 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 disabled:opacity-60 resize-none"
@@ -1187,7 +1187,7 @@ export default function Sidebar({
                   <p className="text-[10px] text-red-600">{audioError}</p>
                 )}
                 <p className="text-[10px] text-gray-400 mt-2">
-                  Generation takes ~10–15 seconds. A new slide will be inserted into your deck with the audio player, transcript, and questions.
+                  Generation takes about 10 to 15 seconds. A new slide will be inserted into your deck with the audio player, transcript, and questions.
                 </p>
               </div>
             )}

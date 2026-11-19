@@ -92,7 +92,8 @@ test.describe("signed out, on a phone", () => {
       const links = page.locator("#landing-menu a");
       await expect(links.first()).toBeVisible();
       for (const box of await links.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
-        expect(box).toBeGreaterThanOrEqual(48);
+        // 48px, less sub-pixel rounding (47.99999 seen 2026-11-18).
+        expect(box).toBeGreaterThanOrEqual(47.99);
       }
     });
   });

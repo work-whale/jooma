@@ -101,7 +101,7 @@ export default function NewConversation({
   // column, with the category kept and the tail trimmed: the prefix is the part
   // support triages on.
   const composedSubject = category
-    ? `${category.label} — ${effectiveSubject}`.slice(0, 200)
+    ? `${category.label}: ${effectiveSubject}`.slice(0, 200)
     : effectiveSubject.slice(0, 200);
 
   const ready = category !== null && effectiveSubject !== "" && body.trim() !== "";

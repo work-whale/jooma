@@ -54,7 +54,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   if (notFound) {
     return (
       <div className="flex items-center justify-center h-screen text-sm text-gray-500" style={{ backgroundColor: "var(--j-editor-canvas)" }}>
-        Presentation not found — redirecting…
+        Presentation not found. Redirecting…
       </div>
     );
   }

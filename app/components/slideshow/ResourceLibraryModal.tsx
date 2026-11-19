@@ -165,7 +165,7 @@ export default function ResourceLibraryModal({
             // ── Folders ──────────────────────────────────────────────────
             folders.length === 0 ? (
               <p className="py-10 text-center text-sm text-gray-400">
-                Nothing here yet — generate something with a tool first.
+                Nothing here yet. Generate something with a tool first.
               </p>
             ) : (
               <div className="grid grid-cols-2 gap-2.5">

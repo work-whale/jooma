@@ -19,15 +19,20 @@ export interface Tool {
 // This lives beside TOOLS rather than inside it so the 35 entries above keep
 // exactly the shape the dashboard already reads.
 
-/** The seven V2 tool categories. Colour tells you the kind of job. */
+/**
+ * The seven V2 tool categories, coloured by PURPOSE from five tokens (v4
+ * prototype). Purple means what a resource costs and orange means picture
+ * slides, so neither is ever a tool colour. Values are CSS variables, so a
+ * tile reads `background: var(--j-cat-make)`; never parse these as hexes.
+ */
 export const V2_CATEGORIES = [
-  { id: "slides", name: "Slides", solid: "#5B2ED6" },
-  { id: "planning", name: "Planning", solid: "#1D6FD0" },
-  { id: "resources", name: "Classroom resources", solid: "#0F8A63" },
-  { id: "assessment", name: "Assessment", solid: "#0E7490" },
-  { id: "send", name: "Behaviour and SEND", solid: "#C2551F" },
-  { id: "communication", name: "Communication", solid: "#C43D6B" },
-  { id: "leadership", name: "Leadership", solid: "#4A4458" },
+  { id: "slides", name: "Slides", solid: "var(--j-cat-make)" },
+  { id: "planning", name: "Planning", solid: "var(--j-cat-make)" },
+  { id: "resources", name: "Classroom resources", solid: "var(--j-cat-pupil)" },
+  { id: "assessment", name: "Assessment", solid: "var(--j-cat-check)" },
+  { id: "send", name: "Behaviour and SEND", solid: "var(--j-cat-support)" },
+  { id: "communication", name: "Communication", solid: "var(--j-cat-adult)" },
+  { id: "leadership", name: "Leadership", solid: "var(--j-cat-adult)" },
 ] as const;
 
 export type V2CategoryId = (typeof V2_CATEGORIES)[number]["id"];
@@ -378,7 +383,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/exam-question-generator",
     icon: "exam",
     label: "Exam Question Generator",
-    description: "Generate a complete examination paper for any subject, topic, and exam type — with questions scaled by marks and an optional mark scheme.",
+    description: "Generate a complete examination paper for any subject, topic, and exam type, with questions scaled by marks and an optional mark scheme.",
     tag: "Assessment",
   },
   {
@@ -406,14 +411,14 @@ export const TOOLS: Tool[] = [
     href: "/tools/homework-generator",
     icon: "homework",
     label: "Homework Generator",
-    description: "Generate a structured, differentiated homework task for any year group, subject, and learning objective — with optional answers.",
+    description: "Generate a structured, differentiated homework task for any year group, subject, and learning objective, with optional answers.",
     tag: "Assessment",
   },
   {
     href: "/tools/smart-targets",
     icon: "smart-targets",
     label: "SMART Targets",
-    description: "Turn raw targets into a fully structured SMART table — specific, measurable, achievable, relevant, and time-bound.",
+    description: "Turn raw targets into a fully structured SMART table: specific, measurable, achievable, relevant, and time-bound.",
     tag: "SEND",
   },
   {
@@ -504,7 +509,7 @@ export const TOOLS: Tool[] = [
     href: "/tools/cover-lesson",
     icon: "cover-lesson",
     label: "Cover Lesson Generator",
-    description: "Generate a fully self-contained cover lesson any non-specialist can deliver — complete with a cover teacher script, timed activities, and end-of-lesson checklist.",
+    description: "Generate a fully self-contained cover lesson any non-specialist can deliver, complete with a cover teacher script, timed activities, and end-of-lesson checklist.",
     tag: "Planning",
   },
   {
@@ -578,8 +583,8 @@ const CATEGORY_SOLID: Record<string, string> = Object.fromEntries(
   V2_CATEGORIES.map((c) => [c.id, c.solid]),
 );
 
-/** A neutral tile for a run whose tool no longer exists. --j-muted. */
-const FALLBACK_SOLID = "#6D6683";
+/** A neutral tile for a run whose tool no longer exists. */
+const FALLBACK_SOLID = "var(--j-cat-adult)";
 
 /**
  * Resolve a tool_runs.tool_slug to its V2 metadata.

@@ -260,7 +260,7 @@ export function useJoSession(adapter: JoAdapter, opts: JoSessionOptions) {
             setPromptsLeft(0);
             setBlocked(data.error ?? "limit");
           } else if (res.status === 402) {
-            setBlocked(data.error ?? "Your plan has run out of credit for Jo this month.");
+            setBlocked(data.error ?? "You are out of resources for Jo for now.");
           }
           failure = data.error ?? "Jo couldn't do that just now. Please try again.";
         } else {

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { getEntitlements } from "./entitlements";
 import { creditsRemaining, toCredits } from "./plans";
+import { picturesAllowed, type AccountPlan } from "./plan-config";
+import type { MeterPeriod } from "./resource-meter";
+import { useResources } from "./useResources";
 
 /*
  * The sidebar credit meter.
@@ -34,8 +37,16 @@ export interface CreditMeter {
    * instead of inventing a credit figure it does not have.
    */
   metered: boolean;
-  /** When the allowance resets. Grants expire at month end and never roll over. */
-  refillsOn: Date;
+  /** When the allowance resets. Null for the 4.5 trial, which never refills. */
+  refillsOn: Date | null;
+  /** Jooma 4.5: when the Pro trial ends. Null otherwise and before 4.5. */
+  endsOn: Date | null;
+  /** What the allowance is per: "week" on Free, "trial" once, else "month". */
+  period: MeterPeriod;
+  /** The plan the balance belongs to, or null before 4.5. */
+  plan: string | null;
+  /** Generated pictures on this plan. Before 4.5, any metered (paid) plan. */
+  pictures: boolean;
 }
 
 /** The first of next month. Grants expire at month end, so this is the reset. */
@@ -43,8 +54,56 @@ function startOfNextMonth(from = new Date()): Date {
   return new Date(from.getFullYear(), from.getMonth() + 1, 1);
 }
 
+type LegacyMeter = Omit<CreditMeter, "refillsOn" | "endsOn" | "period" | "plan" | "pictures">;
+
+/**
+ * Jooma 4.5 reads my_resources() (useResources). Before that migration is
+ * pushed the RPC is missing and this falls back to the monthly spend meter
+ * below, unchanged.
+ */
 export function useCreditMeter(): CreditMeter {
-  const [state, setState] = useState<Omit<CreditMeter, "refillsOn">>({
+  const v45 = useResources();
+  const legacy = useLegacyCreditMeter(v45 === "missing");
+  if (v45 === "missing") {
+    return {
+      ...legacy,
+      refillsOn: startOfNextMonth(),
+      endsOn: null,
+      period: "month",
+      plan: null,
+      pictures: legacy.metered,
+    };
+  }
+  if (v45 === null) {
+    return {
+      loading: true,
+      remaining: 0,
+      allowance: 0,
+      fraction: 0,
+      metered: false,
+      refillsOn: null,
+      endsOn: null,
+      period: "month",
+      plan: null,
+      pictures: false,
+    };
+  }
+  return {
+    loading: false,
+    remaining: v45.remaining,
+    allowance: v45.allowance,
+    fraction: v45.fraction,
+    metered: v45.metered,
+    refillsOn: v45.refillsOn,
+    endsOn: v45.endsOn,
+    period: v45.period,
+    plan: v45.plan,
+    pictures: picturesAllowed(v45.plan as AccountPlan),
+  };
+}
+
+function useLegacyCreditMeter(enabled: boolean): LegacyMeter {
+  const [state, setState] = useState<LegacyMeter>({
     loading: true,
     remaining: 0,
     allowance: 0,
@@ -53,6 +112,7 @@ export function useCreditMeter(): CreditMeter {
   });
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -108,7 +168,7 @@ export function useCreditMeter(): CreditMeter {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
-  return { ...state, refillsOn: startOfNextMonth() };
+  return state;
 }

@@ -100,7 +100,7 @@ export default function DowngradeButton({
         <li>You keep {current.name} until your next renewal date.</li>
         {targetCredits !== null && (
           <li>
-            From then you get {targetCredits.toLocaleString("en-GB")} credits a
+            From then you get {targetCredits.toLocaleString("en-GB")} resources a
             month.
           </li>
         )}

@@ -11,6 +11,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "./supabase-admin";
+import { trialRetentionCutoff } from "./trial-retention";
 import { createClient } from "./auth/server";
 import { accountAccess, type AccessRow } from "./account-access";
 import {
@@ -86,7 +87,7 @@ export async function ensureGuestId(): Promise<string | null> {
   const store = await cookies();
   const existing = verifyGuestCookie(store.get(GUEST_COOKIE)?.value, secret);
   if (existing) {
-    // Refresh the expiry: thirty days from the last visit, not the first.
+    // Refresh the expiry: TRIAL_RETENTION_DAYS from the last visit, not the first.
     store.set(GUEST_COOKIE, guestCookieValue(existing, secret), guestCookieOptions);
     return existing;
   }
@@ -342,10 +343,10 @@ export interface GuestRunSummary {
   created_at: string;
 }
 
-/** This guest's finished, unclaimed tries from the last thirty days, newest
+/** This guest's finished, unclaimed tries still inside TRIAL_RETENTION_DAYS, newest
  *  first. Summaries only: a deck's output can be megabytes. */
 export async function listGuestRuns(guestId: string): Promise<GuestRunSummary[]> {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const since = trialRetentionCutoff().toISOString();
   const { data, error } = await supabaseAdmin
     .from("trial_generations")
     .select("id, tool, title, status, created_at")

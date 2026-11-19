@@ -19,7 +19,7 @@ export default async function TopicOverviewPage({
           icon={<ListChecks className="w-5 h-5 text-blue-600" />}
 
           title="Topic Overview"
-          description="This tool can be used to generate a topic overview. Simply provide the year group, subject and topic and the AI will generate a structured overview with lesson summaries."
+          description="This tool can be used to generate a topic overview. Simply provide the year group, subject and topic and Jooma will generate a structured overview with lesson summaries."
           steps={[
             { label: "Be specific with the topic", detail: "Use the language from your curriculum documentation." },
             { label: "Set lesson count", detail: "Set the number of lessons to match your actual scheme of work." },

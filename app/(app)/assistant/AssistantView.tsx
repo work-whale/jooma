@@ -42,7 +42,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
   // The chat list and the plan gate live in the layout, so they survive
   // navigation between /assistant and /assistant/[id]. See AssistantShell.
-  const { addChat, allowed, handover, setHandover } = useAssistantChats();
+  const { addChat, allowed, liveAllowed, handover, setHandover } = useAssistantChats();
   // Jo's voice, talk mode and a Live call live in the layout, so they carry
   // on across the url change after a chat's first message.
   const { voice, talkState, live: call, handlers } = useAssistantVoice();
@@ -584,7 +584,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
   return (
     <section
-      className="flex flex-1 flex-col overflow-hidden rounded-2xl"
+      className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-(--j-line)"
       style={{ backgroundColor: "var(--j-card)" }}
     >
       {locked ? (
@@ -630,7 +630,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
               voice={allowed ? voice : null}
               talkState={talkState}
               live={{
-                available: allowed === true && call.supported,
+                available: allowed === true && liveAllowed === true && call.supported,
                 on: inCall || confirming,
                 onToggle: () => (inCall ? call.end() : setConfirming((c) => !c)),
               }}
@@ -665,8 +665,8 @@ function EmptyState() {
     <div className="flex flex-1 min-h-0 flex-col overflow-y-auto px-4 sm:px-6 lg:px-10 text-center" data-testid="assistant-splash">
       <div className="my-auto flex flex-col items-center py-6">
         <h2
-          className="text-2xl sm:text-[32px] font-semibold text-dark"
-          style={{ letterSpacing: "0.38px" }}
+          className="text-2xl sm:text-[23px] font-extrabold text-dark"
+          style={{ letterSpacing: "-0.028em" }}
         >
           How can I help you?
         </h2>

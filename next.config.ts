@@ -2,7 +2,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // A second local build for E2E (NEXT_DIST_DIR=.next-e2e), so a test server
+  // can run beside one already serving `.next`. Unset everywhere else.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
 };
 
 // A build on a developer's machine, for testing against staging

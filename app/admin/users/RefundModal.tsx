@@ -142,7 +142,7 @@ export default function RefundModal({
                     className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 cursor-pointer"
                     style={{
                       borderColor: chargeId === c.id ? "#1D1730" : "#EAE6F5",
-                      backgroundColor: chargeId === c.id ? "#F7F5FC" : "#fff",
+                      backgroundColor: chargeId === c.id ? "#FAF9FC" : "#fff",
                     }}
                   >
                     <input

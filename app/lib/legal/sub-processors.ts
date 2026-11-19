@@ -49,6 +49,6 @@ export const SUB_PROCESSORS: SubProcessor[] = [
   {
     name: "Meta",
     purpose:
-      "Advertising measurement. We send a one-way encrypted (hashed) form of your email address, advertising cookie identifiers, and the amount and currency of a subscription payment, so we can tell which adverts led to signups. Operated by Meta Platforms Ireland Ltd. See facebook.com/privacy/policy",
+      "Advertising measurement, only if you accept advertising cookies. We send a one-way encrypted (hashed) form of your email address, Meta's cookie identifiers, and for some events your IP address and browser type or the amount and currency paid, so we can tell which adverts led to signups and payments. Meta Platforms Ireland Ltd is a joint controller with us for this. See facebook.com/privacy/policy",
   },
 ];

@@ -751,7 +751,7 @@ export default function TeacherDrawer({ userId, onClose }: { userId: string; onC
 
             <div
               className="shrink-0 border-t px-5 py-3.5"
-              style={{ borderColor: "#EAE6F5", backgroundColor: "#F7F5FC" }}
+              style={{ borderColor: "#EAE6F5", backgroundColor: "#FAF9FC" }}
             >
               {notice && (
                 <p className="text-xs mb-2" style={{ color: "#8A3C12" }}>

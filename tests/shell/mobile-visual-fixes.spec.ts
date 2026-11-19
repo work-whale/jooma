@@ -324,10 +324,10 @@ test.describe("a guest worksheet on a phone", () => {
     const sent = await stubWorksheet(page);
 
     // Jo's "yes" was not applied, and choosing Yes asks them to sign up.
-    const no = page.getByRole("radio", { name: "No" });
+    const no = page.getByRole("radio", { name: "No", exact: true });
     await expect(no).toBeChecked();
     await expect(page.getByText("Sign up to use")).toBeVisible();
-    await page.getByRole("radio", { name: "Yes" }).click();
+    await page.getByRole("radio", { name: "Yes", exact: true }).click();
     const gate = page.getByTestId("auth-gate");
     await expect(gate).toBeVisible();
     await expect(gate).toContainText("Sign up free to differentiate");

@@ -11,6 +11,9 @@ import {
   quotaBlockStatus,
   toolSlugFor,
 } from "@/app/lib/generation-guard";
+import { LAST_SEEN_COOKIE, shouldRecordVisit } from "@/app/lib/last-seen";
+import { ukDateKey } from "@/app/lib/prompts";
+import { refineCheck, REFINE_PATHS } from "@/app/lib/plan-features";
 import { isToolEnabled } from "@/app/lib/tool-availability";
 import { profileGateBody } from "@/app/lib/profile-gate";
 import { publicSettings } from "@/app/lib/settings";
@@ -116,6 +119,9 @@ const GATE_EXEMPT = [
   // it with a 403 precisely when it is meant to run. It reports the signup to
   // Meta and stores the advertising cookies, and grants nothing.
   "/api/meta/activation",
+  // The cookie banner's choice. It shows on /complete-profile too; it writes
+  // only the caller's own ads_consent and grants nothing.
+  "/api/consent",
   // The form also checks an ambassador code as it is typed, before the profile
   // exists, so it can say "not recognised" while there is still time to fix it.
   // Read-only and signed-in only (the route refuses anyone else), and it
@@ -378,6 +384,7 @@ async function route(request: NextRequest) {
   if (user && isCostBearingRequest(request.method, pathname)) {
     const quota = await checkAllGates(supabase, {
       countsAsGeneration: isGenerationRequest(request.method, pathname),
+      path: pathname,
     });
     // A locked account on /free-tools needs the slideshow wizard's helper
     // buttons, the same as a guest does, under the same per hour brake. Keyed on
@@ -396,6 +403,21 @@ async function route(request: NextRequest) {
     }
   }
 
+  // Jooma 4.5: Free has 10 refines a week, back on Sunday (P7). Refining never
+  // spends resources on any plan; use_refine() counts it and returns null for
+  // plans with no cap. Before the plans engine migration the RPC is missing and
+  // this does nothing.
+  if (user && request.method === "POST" && REFINE_PATHS.has(pathname)) {
+    const { error } = await supabase.rpc("use_refine");
+    if (error && error.message.includes("refine_limit")) {
+      const r = refineCheck("free", Number.POSITIVE_INFINITY);
+      return NextResponse.json(
+        { error: r.ok ? "" : r.message, code: "refine_limit", reason: "refine_limit", action: "upgrade", prompt: "P7" },
+        { status: 402, headers: { "x-upgrade-required": "1" } },
+      );
+    }
+  }
+
   // Where this visitor came from, recorded once and never overwritten.
   //
   // Last, and on `response` rather than any earlier object, because the Supabase
@@ -406,6 +428,35 @@ async function route(request: NextRequest) {
   // signed-out page load that returns here; the redirects above are by
   // definition second visits, and first touch wins would skip them anyway.
   applyAttributionCookie(request, response);
+
+  // Jooma 4.5 Phase 2: profiles.last_seen_at for E10 ("after 14 days with no
+  // visit"), at most once a UK day per browser. The cookie goes on `response`
+  // for the same reason as the attribution cookie above. A failed write is
+  // logged and retried on the next page load (no cookie set).
+  if (
+    shouldRecordVisit(
+      {
+        method: request.method,
+        pathname,
+        prefetch: request.headers.get("next-router-prefetch") === "1" || request.headers.get("purpose") === "prefetch",
+        signedIn: Boolean(user),
+        cookie: request.cookies.get(LAST_SEEN_COOKIE)?.value,
+      },
+      new Date(),
+    ) &&
+    user
+  ) {
+    const { error } = await supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", user.id);
+    if (error) console.warn("[proxy] last_seen_at not recorded", error.message);
+    else
+      response.cookies.set(LAST_SEEN_COOKIE, ukDateKey(new Date()), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 2 * 86_400,
+      });
+  }
 
   // A visitor arriving at /create becomes a guest: a random id, signed, that
   // their free tries are kept against until they sign up. Set here because the

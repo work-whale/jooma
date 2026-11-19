@@ -166,7 +166,7 @@ export default function AdminUsageTable({ rows }: { rows: AdminUsageRow[] }) {
                 <Fragment key={r.tool_slug}>
                   <tr
                     className="border-t"
-                    style={{ borderColor: "#F1ECFC", backgroundColor: isOn ? "#F7F5FC" : undefined }}
+                    style={{ borderColor: "#F1ECFC", backgroundColor: isOn ? "#FAF9FC" : undefined }}
                     onClick={selectable ? () => toggle(r.tool_slug) : undefined}
                   >
                     {selecting && (

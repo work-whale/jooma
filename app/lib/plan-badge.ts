@@ -169,3 +169,21 @@ export function planBadgeFor(
     countdown: null,
   };
 }
+
+/**
+ * The chip beside the sidebar wordmark. An active ambassador's gold wordmark
+ * already says "Ambassador", so their chip names the plan alone, and is left
+ * out when they have none: ambassadors are on Pro by default, and a stale row
+ * should not put "No plan" next to the ambassador lockup. Everyone else gets
+ * the badge's label as it is.
+ */
+export function chipLabel(badge: PlanBadge, v45?: "pro_trial" | "free" | null): string | null {
+  // Jooma 4.5 (only once the plans engine migration is pushed, which is when
+  // useAccountAccess reports these states): the trial chip reads "PRO TRIAL"
+  // (owner, 17 Nov) and Free is a plan called Free.
+  if (v45 === "pro_trial") return "PRO TRIAL";
+  if (v45 === "free") return badge.ambassador ? null : "Free";
+  if (!badge.ambassador) return badge.label;
+  if (badge.label === SHORT_NAME.free) return null;
+  return badge.label.replace(/^Ambassador · /, "");
+}

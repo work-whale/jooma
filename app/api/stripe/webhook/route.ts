@@ -3,9 +3,14 @@ import type Stripe from "stripe";
 import { stripe, planForPriceId, isPaidPlanId } from "@/app/lib/stripe";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { DEFAULT_PLAN, TOPUP_PENCE, type BillingInterval } from "@/app/lib/plans";
+import { planInForce } from "@/app/lib/account-plan";
+import { planAfterStripeEvent, planChangeKind } from "@/app/lib/billing-rules";
+import { recordAppEvent } from "@/app/lib/app-events";
+import { topUpGrant } from "@/app/lib/topups-v45";
+import type { AccountPlan } from "@/app/lib/plan-config";
 import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
-import { isReportablePurchase, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
+import { adsConsented, isReportablePurchase, metaIdentity, metaNameForInvoice, sendMetaEvent, sendPurchase, sendStartTrialEvent } from "@/app/lib/meta-capi";
 import { annualTrialEmailParams, isTrialInvoice, startsAnnualTrial, startsTrial } from "@/app/lib/trial";
 import { sendTemplate } from "@/app/lib/email";
 import { claimGuestWork } from "@/app/lib/claimGuestWork";
@@ -15,11 +20,12 @@ import { claimGuestWork } from "@/app/lib/claimGuestWork";
 // must verify the signature on the raw body, so the request is never trusted
 // blindly. This route is exempted from auth in proxy.ts.
 
-// Statuses that should grant the paid plan. `trialing` is a Stripe trial, which
-// new checkouts only start for an ambassador's free year: the card is on file and
-// the teacher has the plan in full.
-// Anything else (canceled, unpaid, incomplete_expired, past_due…) falls back to
-// DEFAULT_PLAN, the locked "no plan" state.
+// Statuses of a subscription in good standing, used to decide whether a plan
+// being set to end is worth logging (E13). `trialing` is a Stripe trial, which
+// new checkouts only start for an ambassador's free year.
+// WHICH PLAN TO STORE is decided by planAfterStripeEvent (billing-rules.ts):
+// past_due keeps the plan while Stripe retries; canceled, unpaid and
+// incomplete_expired move the account to Free.
 const ACTIVE_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
   "active",
   "trialing",
@@ -82,12 +88,45 @@ async function syncSubscription(sub: Stripe.Subscription) {
   // dropped to Free just because the plan's price has since changed.
   const paidPlan = await planForPriceId(priceId);
   const isActive = ACTIVE_STATUSES.has(sub.status);
-  const plan = isActive && paidPlan ? paidPlan : DEFAULT_PLAN;
+  // Jooma 4.5 (Step 4): past_due keeps the paid plan while Stripe retries
+  // (P12 and E14 run in that window); only a subscription Stripe has given up
+  // on (canceled, unpaid, incomplete_expired) moves the account to Free.
+  const plan = paidPlan
+    ? planAfterStripeEvent({ type: "customer.subscription.updated", plan: paidPlan, status: sub.status })
+    : DEFAULT_PLAN;
+
+  // Jooma 4.5: what the plan was, so the resources balance can follow the
+  // change (upgrade adds the difference now, downgrade waits for the refill,
+  // a move to Free gives a fresh 50) and the change is recorded as an event.
+  const { data: before } = await supabaseAdmin
+    .from("profiles")
+    .select("plan, trial_ends_at, subscription_status, stripe_subscription_id, current_period_end, cancel_at_period_end")
+    .eq("id", userId)
+    .maybeSingle();
+  const fromPlan = planInForce(before ?? null, new Date());
+  // E13: the moment a paid plan is set to end (cancel in the portal or the
+  // cancel flow). Logged once per flip, not on every later update.
+  const nowEnding = isActive && Boolean(paidPlan) && endsAtPeriodEnd(sub);
+  // Claimed atomically: Stripe can deliver the same change twice at once, and
+  // reading the old flag first let both deliveries log it (two E13s). Only the
+  // delivery that actually flips the flag logs the event.
+  let flippedToEnding = false;
+  if (nowEnding) {
+    const { data: flipped } = await supabaseAdmin
+      .from("profiles")
+      .update({ cancel_at_period_end: true })
+      .eq("id", userId)
+      .or("cancel_at_period_end.is.null,cancel_at_period_end.eq.false")
+      .select("id");
+    flippedToEnding = (flipped ?? []).length > 0;
+  }
 
   const { error } = await supabaseAdmin
     .from("profiles")
     .update({
       plan,
+      // Paying during the Pro trial ends it: the paid plan starts now.
+      ...(plan !== DEFAULT_PLAN ? { trial_ends_at: null } : {}),
       stripe_customer_id: customerId,
       stripe_subscription_id: sub.id,
       subscription_status: sub.status,
@@ -103,7 +142,53 @@ async function syncSubscription(sub: Stripe.Subscription) {
     })
     .eq("id", userId);
 
-  if (error) console.error("[stripe/webhook] profile update failed", error);
+  if (error) {
+    console.error("[stripe/webhook] profile update failed", error);
+    return;
+  }
+  await followPlanChange(userId, fromPlan, plan as AccountPlan, sub);
+  if (nowEnding && flippedToEnding) {
+    await recordAppEvent(userId, "cancelled", { plan, ends_at: periodEnd(sub) });
+  }
+}
+
+/** Jooma 4.5: move the resources balance and log the event for a plan change.
+ *  Never throws; before the plans engine migration the RPC is simply missing. */
+async function followPlanChange(userId: string, from: AccountPlan, to: AccountPlan, sub: Stripe.Subscription) {
+  const kind = planChangeKind(from, to);
+  if (kind === "same") return;
+  try {
+    const { error } = await supabaseAdmin.rpc("resources_change_plan", { p_uid: userId, p_from: from, p_to: to });
+    if (error && error.code !== "PGRST202") console.error("[stripe/webhook] resources_change_plan", error);
+  } catch (err) {
+    console.error("[stripe/webhook] resources_change_plan", err);
+  }
+  const interval = sub.items.data[0]?.price?.recurring?.interval ?? null;
+  if (kind === "to_free") {
+    const why = sub.status === "unpaid" || sub.status === "incomplete_expired" ? "failed_payment" : "cancel";
+    await recordAppEvent(userId, "moved_to_free", { from: why, plan: from });
+  } else if (kind === "start") {
+    await recordAppEvent(userId, "subscribed", { plan: to, interval, from });
+  } else {
+    await recordAppEvent(userId, "plan_changed", { from, to });
+  }
+}
+
+/** invoice.payment_failed sets payment_failed_at (P12, E14); invoice.paid
+ *  clears it. Keyed on the Stripe customer. */
+async function markPaymentFailed(inv: Stripe.Invoice, failed: boolean) {
+  const customer = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
+  const userId = await userIdForCustomer(customer);
+  if (!userId) return;
+  const { error } = await supabaseAdmin
+    .from("profiles")
+    .update({ payment_failed_at: failed ? new Date().toISOString() : null })
+    .eq("id", userId);
+  // 42703: the column arrives with the plans engine migration.
+  if (error && error.code !== "42703" && error.code !== "PGRST204") {
+    console.error("[stripe/webhook] payment_failed_at", error);
+  }
+  if (failed) await recordAppEvent(userId, "payment_failed", { invoice: inv.id ?? null });
 }
 
 // ── AI credit top-ups ────────────────────────────────────────────────────────
@@ -215,7 +300,7 @@ async function grantTopUpCredit(session: Stripe.Checkout.Session) {
     user_id: userId,
     kind: "credit_gbp",
     amount: amountPence,
-    reason: "Purchased AI credit top-up",
+    reason: "Purchased top up",
     granted_by: null, // bought, not granted by an admin
     expires_at: endOfMonthIso(),
   });
@@ -240,7 +325,7 @@ async function grantTopUpCredit(session: Stripe.Checkout.Session) {
     amount_gbp: toMajor(paidPence),
     status: "paid",
     paid_at: new Date().toISOString(),
-    method: "Card · AI credit top-up",
+    method: "Card · top up",
     stripe_charge_id: chargeId,
   });
   if (invoiceErr) {
@@ -249,6 +334,94 @@ async function grantTopUpCredit(session: Stripe.Checkout.Session) {
     // leaving this row missing anyway. Log it for manual reconciliation.
     console.error("[stripe/webhook] top-up invoice mirror failed", invoiceErr);
   }
+}
+
+/**
+ * Jooma 4.5: grant a bought resources pack (allowance_grants kind
+ * 'resources_topup', never expiring; my_resources() spends it after the
+ * allowance).
+ *
+ * The amount comes from the CONFIG pack named in metadata, never from what
+ * was paid. An unknown pack id grants nothing (logged): inventing resources is
+ * worse than a support ticket. Same idempotency gate and write order as
+ * grantTopUpCredit above: purchase row (unique payment intent) first.
+ */
+async function grantResourcesTopUp(session: Stripe.Checkout.Session) {
+  const paymentIntentId =
+    typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+  if (!paymentIntentId) {
+    console.warn("[stripe/webhook] resources top-up has no payment_intent", session.id);
+    return;
+  }
+  const userId = session.metadata?.userId ?? session.client_reference_id;
+  const packKey = session.metadata?.packId ?? null;
+  const resources = topUpGrant(packKey);
+  if (!userId || resources === null) {
+    console.error("[stripe/webhook] resources top-up with no user or unknown pack", session.id, packKey);
+    return;
+  }
+  const paidPence = session.amount_total ?? 0;
+
+  const { data: packRow } = await supabaseAdmin
+    .from("topup_packs")
+    .select("id")
+    .eq("pack_key", packKey)
+    .maybeSingle();
+
+  const { error: purchaseErr } = await supabaseAdmin.from("topup_purchases").insert({
+    user_id: userId,
+    pack_id: packRow?.id ?? null,
+    kind: "resources_topup",
+    units: resources,
+    price_gbp: toMajor(paidPence),
+    stripe_payment_intent_id: paymentIntentId,
+  });
+  if (purchaseErr) {
+    if (purchaseErr.code === "23505") return;
+    throw purchaseErr;
+  }
+
+  const { error: grantErr } = await supabaseAdmin.from("allowance_grants").insert({
+    user_id: userId,
+    kind: "resources_topup",
+    amount: resources,
+    reason: `Bought ${resources.toLocaleString("en-GB")} resources`,
+    granted_by: null,
+    expires_at: null,
+  });
+  if (grantErr) throw grantErr;
+
+  await recordAppEvent(userId, "topup_bought", { pack: packKey, resources });
+  // Meta's Purchase for the top-up (spec Step 7), once per Checkout session:
+  // reached only past the topup_purchases insert above, which a retried
+  // webhook cannot pass twice. Never throws.
+  // Only on the cookie banner's Accept, as saved on the profile.
+  if (await adsConsented(userId)) {
+    const id = await metaIdentity(userId);
+    await sendMetaEvent({
+      eventName: "Purchase",
+      eventId: session.id,
+      email: session.customer_details?.email ?? id.email,
+      fbp: id.fbp,
+      fbc: id.fbc,
+      eventTimeUnix: session.created,
+      valueMinor: paidPence,
+      currency: session.currency ?? "gbp",
+    });
+  }
+
+  const chargeId = await chargeIdForPaymentIntent(paymentIntentId);
+  const { error: invoiceErr } = await supabaseAdmin.from("invoices").insert({
+    reference: session.id,
+    user_id: userId,
+    type: "topup",
+    amount_gbp: toMajor(paidPence),
+    status: "paid",
+    paid_at: new Date().toISOString(),
+    method: `Card · ${resources.toLocaleString("en-GB")} resources`,
+    stripe_charge_id: chargeId,
+  });
+  if (invoiceErr) console.error("[stripe/webhook] resources top-up invoice mirror failed", invoiceErr);
 }
 
 // ── Ambassador referrals ─────────────────────────────────────────────────────
@@ -603,6 +776,8 @@ async function reverseAmbassadorCommissions(stripeInvoiceIds: string[]) {
  */
 async function reportTrialStart(userId: string | null) {
   if (!userId) return;
+  // Only on the cookie banner's Accept, as saved on the profile.
+  if (!(await adsConsented(userId))) return;
   try {
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -833,6 +1008,13 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
       return;
     }
 
+    // Only on the cookie banner's Accept, as saved on the profile (privacy
+    // policy section 9). Release the claim: nothing was reported.
+    if (!(await adsConsented(userId))) {
+      await releaseMetaClaim(inv.id);
+      return;
+    }
+
     // The advertising cookies captured at signup, possibly weeks ago. This is
     // what links this payment back to the ad click that started the free trial,
     // and the whole reason those columns exist. Null for an organic signup, or
@@ -869,6 +1051,9 @@ async function reportPurchaseToMeta(inv: Stripe.Invoice) {
     }
 
     const accepted = await sendPurchase({
+      // Jooma 4.5 Step 7: the first payment is Subscribe; renewals and
+      // upgrades stay Purchase (owner's choice, 19 Nov).
+      eventName: metaNameForInvoice(inv.billing_reason),
       eventId: inv.id ?? `invoice-${userId}-${inv.created}`,
       email,
       fbp: profile?.meta_fbp ?? null,
@@ -1277,6 +1462,9 @@ export async function POST(req: NextRequest) {
           if (startsAnnualTrial(sub)) {
             await sendAnnualTrialEmail(sub, sub.metadata?.userId ?? null);
           }
+        } else if (session.mode === "payment" && session.metadata?.kind === "resources_topup") {
+          // Jooma 4.5: a resources pack, never expiring.
+          await grantResourcesTopUp(session);
         } else if (session.mode === "payment" && session.metadata?.kind === "credit_topup") {
           // One-off £1.50 AI credit. No subscription is involved, so this grants
           // an allowance row rather than changing the plan.
@@ -1304,6 +1492,7 @@ export async function POST(req: NextRequest) {
       case "invoice.payment_succeeded": {
         const inv = event.data.object as Stripe.Invoice;
         await syncInvoice(inv, "paid");
+        await markPaymentFailed(inv, false);
         // Money has actually arrived, which is the moment an ambassador becomes
         // owed for this teacher. Idempotent: only ever writes the FIRST payment.
         await markReferralPaid(inv);
@@ -1348,6 +1537,7 @@ export async function POST(req: NextRequest) {
       }
       case "invoice.payment_failed": {
         await syncInvoice(event.data.object as Stripe.Invoice, "failed");
+        await markPaymentFailed(event.data.object as Stripe.Invoice, true);
         break;
       }
       case "invoice.voided": {

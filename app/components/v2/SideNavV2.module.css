@@ -1,29 +1,96 @@
-/* The 250px rail, and its off-canvas drawer form below 900px. */
+/* The v4 sidebar: dark chrome, a collapsible 70px rail on desktop, and the
+   off-canvas drawer below 900px. docs/Jooma version 4.5/15-jooma-dashboard-v4.html */
 
 .side {
-  background: var(--j-card);
-  border-right: 1px solid var(--j-line);
+  background: var(--j-chrome);
+  color: var(--j-on-chrome);
   display: flex;
   flex-direction: column;
-  padding: 20px 14px 16px;
+  padding: 18px 13px 13px;
   position: sticky;
   top: 0;
   height: 100vh;
   height: 100dvh;
-  /* A short viewport with pins overflows, which would put the Help link out of
-     reach. */
+  min-width: 0;
+  /* A short viewport with pins overflows, which would put Help out of reach. */
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
+
+/* ── Head ────────────────────────────────────────────────────────────────── */
 
 .head {
   display: flex;
   align-items: center;
-  padding: 2px 10px 22px;
+  gap: 9px;
+  padding: 2px 5px 20px;
+  min-width: 0;
 }
 
 .logo {
-  color: var(--j-purple);
-  display: block;
+  color: var(--j-on-chrome);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.logoMark {
+  display: none;
+  width: 15px;
+  height: auto;
+}
+
+.planChip {
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--j-pill);
+  background: rgba(255, 255, 255, 0.16);
+  color: #e3dafb;
+  white-space: nowrap;
+  flex: none;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planChipGold {
+  background: var(--j-gold);
+  color: #fff;
+}
+
+.collapse {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  display: grid;
+  place-items: center;
+  color: var(--j-on-chrome-dim);
+  flex: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+@media (hover: hover) {
+  .collapse:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+}
+
+.collapseIcon {
+  width: 15px;
+  height: 15px;
+  transition: transform 0.26s var(--j-ease);
 }
 
 /* Drawer-only: the sticky rail has nothing to close. */
@@ -35,21 +102,16 @@
   border: 0;
   background: none;
   border-radius: 10px;
-  color: var(--j-muted);
+  color: var(--j-on-chrome-mid);
   cursor: pointer;
   place-items: center;
 }
 
 @media (hover: hover) {
   .close:hover {
-    background: var(--j-tint);
-    color: var(--j-deep);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
   }
-}
-
-.close:active {
-  background: var(--j-tint);
-  color: var(--j-deep);
 }
 
 .closeIcon {
@@ -63,23 +125,28 @@
   margin-bottom: 18px;
 }
 
+/* ── Nav ─────────────────────────────────────────────────────────────────── */
+
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 1px;
+  min-width: 0;
 }
 
 .navitem {
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 10px 12px;
-  border-radius: var(--j-r);
-  font-size: 0.93rem;
+  padding: 9px 11px;
+  border-radius: 10px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--j-body);
+  color: var(--j-on-chrome-mid);
   width: 100%;
   text-align: left;
+  white-space: nowrap;
+  position: relative;
   transition:
     background 0.15s,
     color 0.15s;
@@ -87,428 +154,436 @@
 
 @media (hover: hover) {
   .navitem:hover {
-    background: var(--j-tint);
-    color: var(--j-deep);
-  }
-}
-
-.navitem:active {
-  background: var(--j-tint);
-  color: var(--j-deep);
-}
-
-.navitemOn {
-  background: var(--j-purple);
-  color: #fff;
-}
-
-@media (hover: hover) {
-  .navitemOn:hover {
-    background: var(--j-purple);
+    background: rgba(255, 255, 255, 0.06);
     color: #fff;
   }
 }
 
-.navitemOn:active {
-  background: var(--j-purple);
+.navitem:active {
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
-/* A designed-but-unbuilt feature. Not a link, and visibly inert. */
-.navitemSoon {
-  color: var(--j-faint);
+/* Active is a lift, not purple: purple is what a resource costs. */
+.navitemOn,
+.navitemOn:hover,
+.navitemOn:active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 800;
+}
+
+.navitemSoon,
+.navitemSoon:hover {
+  color: var(--j-on-chrome-dim);
+  background: none;
   cursor: default;
 }
 
-@media (hover: hover) {
-  .navitemSoon:hover {
-    background: none;
-    color: var(--j-faint);
-  }
-}
-
-.navitemSoon:active {
-  background: none;
-  color: var(--j-faint);
-}
-
-/* Its own class rather than `.navitem svg`: a bare tag selector here would
-   also capture the glyph inside a pinned tool's tile and fight the percentage
-   sizing that centres it. */
 .navicon {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
   flex: none;
+  opacity: 0.85;
+}
+
+.navitemOn .navicon {
+  opacity: 1;
+}
+
+.lab {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .count {
   margin-left: auto;
   font-size: 0.75rem;
-  font-weight: 800;
-  color: var(--j-faint);
+  font-weight: 700;
+  color: var(--j-on-chrome-dim);
 }
 
 .navitemOn .count {
-  color: var(--j-lilac);
+  color: var(--j-on-chrome-mid);
 }
 
 .soon {
   margin-left: auto;
-  font-size: 0.66rem;
+  font-size: 0.63rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--j-muted);
-  background: var(--j-tint);
+  color: var(--j-on-chrome-mid);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: var(--j-pill);
   padding: 3px 8px;
 }
 
-/* Everything below the nav, pushed to the bottom of the rail. */
-.foot {
-  margin-top: auto;
-  padding-top: 18px;
+/* ── Ambassador nav item: gold is what a teacher has EARNED ─────────────── */
+
+.navitemGold {
+  color: #e8c35a;
+}
+
+@media (hover: hover) {
+  .navitemGold:hover {
+    background: rgba(232, 195, 90, 0.12);
+    color: #f4d98b;
+  }
+}
+
+.navitemGoldOn,
+.navitemGoldOn:hover {
+  background: var(--j-gold);
+  color: #fff;
 }
 
 /* ── Pinned tools ────────────────────────────────────────────────────────── */
 
 .pinned {
-  background: var(--j-bg);
-  border: 1px solid var(--j-line);
-  border-radius: var(--j-r-lg);
-  padding: 12px;
-  margin-bottom: 16px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--j-chrome-line);
 }
 
 .pinnedHead {
   display: block;
-  font-size: 0.71rem;
+  font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--j-faint);
-  margin-bottom: 8px;
+  color: var(--j-on-chrome-dim);
+  margin: 0 0 6px 11px;
 }
 
 .pinnedItem {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 5px 6px;
+  padding: 5px 8px;
   border-radius: 10px;
+  position: relative;
   transition: background 0.15s;
 }
 
 @media (hover: hover) {
   .pinnedItem:hover {
-    background: var(--j-tint);
+    background: rgba(255, 255, 255, 0.06);
   }
 }
 
-.pinnedItem:active {
-  background: var(--j-tint);
-}
-
 .pinnedName {
-  font-size: 0.83rem;
+  font-size: 0.81rem;
   font-weight: 600;
-  color: var(--j-body);
+  color: var(--j-on-chrome-mid);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ── Level box ───────────────────────────────────────────────────────────────
- *
- * Sits above the credit meter and borrows its track, so the two read as a pair
- * of gauges rather than as unrelated widgets. Tinted rather than bordered: the
- * meter below is the plain one, and giving this the brand tint is what stops
- * two stacked progress bars looking like a settings panel. */
-/* Sits directly under the nav, not down in the foot with credits. The top
-   margin separates it from the last nav item; there is no bottom margin
-   because .foot below owns its own spacing and is pushed to the bottom by
-   margin-top: auto. */
-.levelBox {
-  display: block;
-  background: var(--j-tint);
-  border-radius: var(--j-r);
-  padding: 12px 13px;
-  margin-top: 16px;
-  text-decoration: none;
-  transition: background 0.2s var(--j-ease);
+.spacer {
+  flex: 1;
+  min-height: 20px;
 }
 
-@media (hover: hover) {
-  .levelBox:hover {
-    background: var(--j-tint-2);
-  }
-}
+/* ── The collapsed rail's warning ────────────────────────────────────────── */
 
-.levelBox:active {
-  background: var(--j-tint-2);
-}
-
-.levelBox .meterName {
-  display: flex;
+.railWarn {
+  display: none;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  color: var(--j-deep);
+  gap: 7px;
+  border-top: 1px solid var(--j-chrome-line);
+  padding: 14px 0 2px;
 }
 
-.levelIcon {
-  width: 14px;
-  height: 14px;
-  color: var(--j-purple);
-  flex: none;
-}
-
-/* ── Ambassador nav item ─────────────────────────────────────────────────── */
-
-.navitemGold {
-  color: var(--j-gold);
-}
-
-@media (hover: hover) {
-  .navitemGold:hover {
-    background: var(--j-gold-bg);
-    color: var(--j-gold);
-  }
-}
-
-.navitemGold:active {
-  background: var(--j-gold-bg);
-  color: var(--j-gold);
-}
-
-.navitemGoldOn {
-  background: var(--j-gold);
+.railWarnIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
+  position: relative;
 }
 
-@media (hover: hover) {
-  .navitemGoldOn:hover {
-    background: var(--j-gold);
-    color: #fff;
-  }
+.railWarnIcon svg {
+  width: 17px;
+  height: 17px;
 }
 
-.navitemGoldOn:active {
-  background: var(--j-gold);
-  color: #fff;
+.pip {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--j-res-on-dark);
+  border: 2px solid var(--j-chrome);
 }
 
-/* ── Plan ────────────────────────────────────────────────────────────────────
- *
- * Above the credit meter, for every plan including none. Plain like the meter
- * it sits on, except for an ambassador, whose card takes the gold tint. */
-
-.plan {
-  border: 1px solid var(--j-line);
-  border-radius: var(--j-r);
-  padding: 12px 13px;
-  margin-bottom: 14px;
-}
-
-.planGold {
-  background: var(--j-gold-bg);
-  border-color: color-mix(in srgb, var(--j-gold) 30%, transparent);
-}
-
-.planPill {
-  font-size: 0.71rem;
+.railWarnNum {
+  font-size: 0.66rem;
   font-weight: 800;
-  color: var(--j-deep);
-  background: var(--j-tint);
-  border-radius: var(--j-pill);
-  padding: 3px 9px;
-  min-width: 2.5em;
-  text-align: center;
-}
-
-.planPillGold {
-  color: #fff;
-  background: var(--j-gold);
-}
-
-.upgrade {
-  display: block;
-  text-align: center;
-  background: var(--j-purple);
-  color: #fff;
-  border-radius: var(--j-pill);
-  padding: 9px;
-  font-size: 0.83rem;
-  font-weight: 800;
-  margin-top: 10px;
-  transition: background 0.15s;
-}
-
-@media (hover: hover) {
-  .upgrade:hover {
-    background: var(--j-deep);
-  }
-}
-
-.upgrade:active {
-  background: var(--j-deep);
-}
-
-.planGold .upgrade {
-  background: var(--j-gold);
-}
-
-@media (hover: hover) {
-  .planGold .upgrade:hover {
-    background: color-mix(in srgb, var(--j-gold) 80%, #000);
-  }
-}
-
-.planGold .upgrade:active {
-  background: color-mix(in srgb, var(--j-gold) 80%, #000);
-}
-
-/* The trial or offer countdown inside the plan card (PlanCountdown.tsx).
-   It replaced the strip across the top of every screen. */
-
-.planClock {
-  margin-top: 2px;
-}
-
-/* The meter's track is styled for a block; here it is a span inside a p's
-   sibling, so it needs saying. */
-.planClock .track {
-  display: block;
-}
-
-.planClockText {
-  font-size: 0.75rem;
-  color: var(--j-body);
-  margin: 0 0 6px;
-}
-
-.planClockText strong {
-  color: var(--j-orange);
-  font-weight: 800;
+  color: var(--j-on-chrome-mid);
   font-variant-numeric: tabular-nums;
 }
 
-.planOffer {
-  font-size: 0.86rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--j-ink);
-  margin: 0 0 2px;
+/* ── Foot: meters, plan, level and help ──────────────────────────────────── */
+
+.foot {
+  min-width: 0;
 }
 
-/* The offer is the one time this card should catch the eye: a warm edge in
-   the marketing accent, nothing louder. */
-.planOfferCard {
-  border-color: color-mix(in srgb, var(--j-orange) 45%, transparent);
-  background: var(--j-orange-bg);
+.meters {
+  border-top: 1px solid var(--j-chrome-line);
+  padding: 17px 10px 2px;
+  display: grid;
+  gap: 15px;
 }
-
-/* ── Credit meter ────────────────────────────────────────────────────────── */
 
 .meterTop {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .meterName {
-  font-size: 0.77rem;
-  font-weight: 800;
-  color: var(--j-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--j-on-chrome-mid);
 }
 
 .meterVal {
-  font-size: 0.73rem;
+  font-size: 0.78rem;
   font-weight: 800;
-  color: var(--j-faint);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.meter_calm .meterVal {
+  color: var(--j-on-chrome-dim);
+  font-weight: 700;
+}
+
+.meter_low .meterName,
+.meter_low .meterVal {
+  color: #fff;
+}
+
+.picIcon {
+  width: 13px;
+  height: 13px;
+  color: var(--j-pic-on-dark);
+  flex: none;
 }
 
 .track {
-  height: 6px;
-  border-radius: 4px;
-  background: var(--j-tint-2);
+  display: block;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
   overflow: hidden;
+  margin-top: 7px;
 }
 
 .trackFill {
   display: block;
   height: 100%;
-  border-radius: 4px;
-  background: var(--j-purple);
-  transition: width 0.3s var(--j-ease);
+  border-radius: 3px;
+  background: var(--j-res-on-dark);
+  transition: width 0.5s var(--j-ease);
 }
 
 .meterNote {
-  font-size: 0.71rem;
-  color: var(--j-faint);
-  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--j-on-chrome-dim);
+  margin: 6px 0 0;
+  line-height: 1.45;
+}
+
+.meterLocked .meterVal {
+  color: var(--j-on-chrome-dim);
+}
+
+.lockRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--j-on-chrome-dim);
+  margin: 6px 0 0;
+}
+
+.lockRow svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
 }
 
 .topup {
+  display: block;
   width: 100%;
-  background: var(--j-tint);
-  color: var(--j-deep);
-  border: 0;
-  border-radius: var(--j-pill);
-  padding: 10px;
-  font-size: 0.83rem;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: none;
+  font: inherit;
+  font-size: 0.78rem;
   font-weight: 800;
-  font-family: inherit;
+  color: #fff;
+  text-align: center;
   cursor: pointer;
-  margin: 12px 0;
   transition: background 0.15s;
 }
 
 @media (hover: hover) {
   .topup:hover {
-    background: var(--j-tint-2);
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 
-.topup:active {
-  background: var(--j-tint-2);
+/* The plan block: what the plan includes, and the one way to change it. */
+.plan {
+  margin: 15px 0 0;
+  background: var(--j-chrome-2);
+  border-radius: var(--j-r-lg);
+  padding: 13px 14px;
 }
 
-/* ── Foot links ──────────────────────────────────────────────────────────── */
+.planGold {
+  background: color-mix(in srgb, var(--j-gold) 22%, var(--j-chrome-2));
+}
+
+.planOfferCard {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.planNote {
+  font-size: 0.72rem;
+  color: var(--j-on-chrome-mid);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.upgrade {
+  display: block;
+  width: 100%;
+  margin-top: 11px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 0.81rem;
+  font-weight: 800;
+  text-align: center;
+  background: #fff;
+  color: var(--j-chrome);
+  transition: filter 0.15s;
+}
+
+.plan > .upgrade:first-child,
+.srOnly + .upgrade {
+  margin-top: 0;
+}
+
+@media (hover: hover) {
+  .upgrade:hover {
+    filter: brightness(0.93);
+  }
+}
+
+.planGold .upgrade {
+  background: var(--j-gold);
+  color: #fff;
+}
+
+/* The trial or offer countdown inside the plan block (PlanCountdown.tsx). */
+.planClock {
+  margin-top: 2px;
+}
+
+.planClockText {
+  font-size: 0.72rem;
+  color: var(--j-on-chrome-mid);
+  margin: 0 0 6px;
+}
+
+.planClockText strong {
+  color: #fff;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.planOffer {
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+  margin: 0 0 2px;
+}
 
 .sideFoot {
   display: flex;
-  gap: 4px;
-  padding-top: 12px;
-  border-top: 1px solid var(--j-line);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 6px 2px 10px;
+  margin-top: 11px;
+  border-top: 1px solid var(--j-chrome-line);
+  font-size: 0.72rem;
+  color: var(--j-on-chrome-dim);
+  white-space: nowrap;
+}
+
+.level {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--j-on-chrome-dim);
+  font-weight: 700;
+}
+
+.levelDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e8c35a;
+}
+
+.footLinks {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .footLink {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--j-muted);
-  padding: 7px;
+  gap: 5px;
+  padding: 5px 7px;
   border-radius: 8px;
+  color: var(--j-on-chrome-dim);
+  font-weight: 700;
   transition:
     background 0.15s,
     color 0.15s;
 }
 
 @media (hover: hover) {
+  .level:hover,
   .footLink:hover {
-    background: var(--j-tint);
-    color: var(--j-deep);
+    color: #fff;
   }
-}
-
-.footLink:active {
-  background: var(--j-tint);
-  color: var(--j-deep);
+  .footLink:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 
 .footIcon {
@@ -517,8 +592,7 @@
   flex: none;
 }
 
-/* Unread count. Burnt orange is the marketing accent and explicitly never a
-   warning, so this uses the app's own alert red. */
+/* Unread count: the app's alert red, never orange (that is pictures). */
 .badge {
   min-width: 17px;
   height: 17px;
@@ -532,24 +606,120 @@
   place-items: center;
 }
 
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* The account links: phones only, at the foot of the drawer. */
 .account {
   display: none;
 }
 
+/* ── Collapsed rail (desktop only) ───────────────────────────────────────── */
+
+@media (min-width: 901px) {
+  .mini {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .mini .head {
+    flex-direction: column;
+    gap: 13px;
+    padding: 2px 0 17px;
+  }
+
+  .mini .logoFull,
+  .mini .planChip,
+  .mini .meters,
+  .mini .plan,
+  .mini .sideFoot,
+  .mini .pinnedHead,
+  .mini .pinnedName,
+  .mini .count,
+  .mini .soon {
+    display: none;
+  }
+
+  .mini .logoMark {
+    display: block;
+  }
+
+  .mini .collapse {
+    margin-left: 0;
+  }
+
+  .mini .collapseIcon {
+    transform: rotate(180deg);
+  }
+
+  .mini .navitem,
+  .mini .pinnedItem {
+    justify-content: center;
+    padding: 10px 0;
+  }
+
+  /* Visually hidden, still read out. */
+  .mini .lab {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .mini .railWarn {
+    display: flex;
+  }
+
+  .mini [data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--j-ink);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 7px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.13s;
+    z-index: 60;
+  }
+
+  .mini [data-tip]:hover::after,
+  .mini [data-tip]:focus-visible::after {
+    opacity: 1;
+  }
+
+  /* The tooltips sit outside the rail, so it cannot clip them. */
+  .mini {
+    overflow: visible;
+  }
+}
+
 /* ── Drawer ──────────────────────────────────────────────────────────────── */
 
-/* From the right, under the burger that opens it. The desktop rail stays on
-   the left. */
+/* From the right, under the burger that opens it. */
 @media (max-width: 900px) {
   .side {
     position: fixed;
     inset: 0 0 0 auto;
     z-index: 50;
-    border-right: 0;
-    border-left: 1px solid var(--j-line);
-    /* translate rather than animating left/width: transform is composited, so
-       the drawer slides without relaying out the page behind it. */
+    /* translate rather than animating left/width: composited, no relayout. */
     transform: translateX(100%);
     /* Hidden as well as off-screen when closed, so its links leave the tab
        order and the accessibility tree. The visibility flip waits for the
@@ -558,20 +728,11 @@
     transition:
       transform 0.25s var(--j-ease),
       visibility 0s linear 0.25s;
-    box-shadow: 0 0 40px -12px rgba(29, 23, 48, 0.35);
-    /* The drawer runs the full height of the screen, so it clears the notch,
-       the home indicator and a landscape side inset. */
+    box-shadow: 0 0 40px -12px rgba(20, 12, 40, 0.6);
     padding-top: max(20px, env(safe-area-inset-top));
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     padding-right: max(14px, env(safe-area-inset-right));
     width: min(calc(var(--j-nav) + 30px + env(safe-area-inset-right)), calc(100vw - 40px));
-  }
-
-  .account {
-    display: block;
-    margin-top: 12px;
-    padding-top: 4px;
-    border-top: 1px solid var(--j-line);
   }
 
   .sideOpen {
@@ -580,9 +741,13 @@
     transition: transform 0.25s var(--j-ease);
   }
 
+  .collapse {
+    display: none;
+  }
+
   .close {
     display: grid;
-    /* 48px to tap; the negative margin keeps the head row the height it was. */
+    /* 48px to tap; the negative margin keeps the head row's height. */
     width: 48px;
     height: 48px;
     margin: -8px -8px -8px auto;
@@ -592,13 +757,20 @@
     display: block;
   }
 
-  /* Rows a finger presses: 48px tall in the drawer. The desktop rail, used
-     with a mouse, keeps its tighter rhythm. */
+  .account {
+    display: block;
+    margin-top: 12px;
+    padding-top: 4px;
+    border-top: 1px solid var(--j-chrome-line);
+  }
+
+  /* Rows a finger presses: 48px tall in the drawer. */
   .navitem,
   .footLink,
   .pinnedItem,
   .upgrade,
-  .topup {
+  .topup,
+  .level {
     min-height: 48px;
   }
 
@@ -610,7 +782,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .side {
+  .side,
+  .collapseIcon,
+  .trackFill {
     transition: none;
   }
 }

@@ -101,7 +101,7 @@ export default function Loading() {
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-800">
                 Content domain
-                <span className="ml-2 text-xs font-normal text-gray-400">KS2 (2a–2h)</span>
+                <span className="ml-2 text-xs font-normal text-gray-400">KS2 (2a to 2h)</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {[

@@ -908,10 +908,11 @@ button.step:hover {
     font-size: 1rem;
   }
 
-  /* About five lines at the larger size, but never so tall that a short phone
-     loses the conversation behind it. */
+  /* About seven lines at the larger size (the mic button narrowed the box, so
+     150px stopped holding a long sentence), but never so tall that a short
+     phone loses the conversation behind it: 24svh still wins there. */
   .input {
-    max-height: min(150px, 24svh);
+    max-height: min(180px, 24svh);
   }
 }
 

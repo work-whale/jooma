@@ -1,746 +1,680 @@
-/* ── Ask Mo card ─────────────────────────────────────────────────────────── */
+/* Today, v4. docs/Jooma version 4.5/15-jooma-dashboard-v4.html */
 
-/* `moAsk`, not `mo`. In the prototype a bare `.mo` also matched `.msg.mo` in
-   the chat and styled every message as a purple card. */
-.moAsk {
-  background: linear-gradient(135deg, var(--j-deep), #4a24a8);
+.today {
+  min-width: 0;
+}
+
+/* ── Greeting ────────────────────────────────────────────────────────────── */
+
+.today .hello h1 {
+  font-size: 1.875rem;
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+  color: var(--j-ink);
+  margin: 0;
+}
+
+.today .sub {
+  margin: 7px 0 0;
+  font-size: 0.94rem;
+  color: var(--j-muted);
+}
+
+.sub b {
+  color: var(--j-ink);
+  font-weight: 800;
+}
+
+.today .date {
+  font-size: 0.78rem;
+  color: var(--j-faint);
+  margin: 13px 0 0;
+}
+
+.today .saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-size: 0.81rem;
+  color: var(--j-muted);
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-pill);
+  padding: 7px 15px 7px 12px;
+}
+
+.saved svg {
+  width: 15px;
+  height: 15px;
+  color: var(--j-ok);
+  flex: none;
+}
+
+.saved b {
+  color: var(--j-ink);
+  font-weight: 800;
+}
+
+/* P8's "See what Pro adds", on Free and Standard. */
+.savedLink {
+  color: var(--j-purple);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Ask Jo ──────────────────────────────────────────────────────────────── */
+
+.jo {
+  margin-top: 20px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line-2);
   border-radius: var(--j-r-xl);
-  padding: 22px 24px;
+  padding: 7px 7px 7px 19px;
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
+  gap: 13px;
+  box-shadow:
+    0 1px 2px rgba(29, 23, 48, 0.04),
+    0 8px 24px -18px rgba(29, 23, 48, 0.3);
 }
 
-/* The soft glow in the corner. Decorative, so it sits behind everything and
-   takes no pointer events. */
-.moAsk::after {
-  content: "";
-  position: absolute;
-  right: -70px;
-  top: -70px;
-  width: 240px;
-  height: 240px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(205, 188, 247, 0.28), transparent 68%);
-  pointer-events: none;
+.jo:focus-within {
+  border-color: var(--j-res);
+  box-shadow: 0 0 0 3px var(--j-res-soft);
 }
 
-.moFace {
-  width: 52px;
-  height: 52px;
-  border-radius: 17px;
-  background: #fff;
-  color: var(--j-purple);
+.joIcon {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 9px;
+  background: var(--j-res);
   display: grid;
   place-items: center;
-  flex: none;
-  position: relative;
-}
-
-.moFaceIcon {
-  width: 26px;
-  height: 26px;
-}
-
-.moText {
-  flex: 1;
-  min-width: 0;
-  position: relative;
-}
-
-.moText b {
-  display: block;
   color: #fff;
-  font-size: 1.02rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
 }
 
-.moText p {
-  color: var(--j-lilac);
-  font-size: 0.89rem;
-  margin-top: 3px;
+.joIcon svg {
+  width: 16px;
+  height: 16px;
 }
 
-.moIn {
-  flex: 1.3;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--j-pill);
-  padding: 7px 8px 7px 16px;
-  position: relative;
-  min-width: 0;
-}
-
-.moIn:focus-within {
-  border-color: rgba(255, 255, 255, 0.45);
-}
-
-.moInput {
+.joInput {
   flex: 1;
   min-width: 0;
+  border: 0;
   background: none;
-  border: 0;
+  font: inherit;
+  font-size: 0.97rem;
+  color: var(--j-ink);
+  padding: 11px 0;
+}
+
+.joInput::placeholder {
+  color: var(--j-faint);
+}
+
+.joInput:focus {
   outline: none;
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.9rem;
 }
 
-.moInput::placeholder {
-  color: var(--j-lilac);
-}
-
-.moGo {
-  background: #fff;
-  color: var(--j-deep);
-  border: 0;
-  border-radius: var(--j-pill);
-  padding: 8px 16px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  font-family: inherit;
-  cursor: pointer;
+.joGo {
   flex: none;
+  border: 0;
+  background: var(--j-res);
+  color: #fff;
+  border-radius: var(--j-pill);
+  padding: 11px 20px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s;
 }
 
 @media (hover: hover) {
-  .moGo:hover:not(:disabled) {
-    background: var(--j-tint);
+  .joGo:hover:not(:disabled) {
+    filter: brightness(1.08);
   }
 }
 
-.moGo:active:not(:disabled) {
-  background: var(--j-tint);
-}
-
-.moGo:disabled {
+.joGo:disabled {
   opacity: 0.55;
   cursor: default;
 }
 
-.moInput:disabled {
-  cursor: default;
-}
-
-.moError {
-  margin: -12px 0 20px;
-  font-size: 0.86rem;
+.today .joError {
+  margin: 8px 0 0 4px;
+  font-size: 0.81rem;
   color: #b3261e;
 }
 
-@media (max-width: 900px) {
-  .moAsk {
-    flex-wrap: wrap;
-  }
-
-  .moIn {
-    flex-basis: 100%;
-  }
-}
-
-/* ── Metrics ─────────────────────────────────────────────────────────────── */
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.metric {
-  background: var(--j-card);
-  border: 1px solid var(--j-line);
-  border-radius: var(--j-r-lg);
-  padding: 16px 18px;
+.hints {
   display: flex;
-  gap: 13px;
-  align-items: center;
-  min-width: 0;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+  padding-left: 4px;
 }
 
-.metric b {
-  display: block;
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: var(--j-ink);
-  letter-spacing: -0.04em;
-  line-height: 1.1;
-}
-
-/* Its own class, not `.metric span`. The icon tile is a <span> too, so a bare
-   tag selector matched it as well and its `display: block` beat the tile's
-   `display: grid` at equal specificity, killing `place-items: center` and
-   dropping every glyph to the top left. */
-.metricLabel {
-  font-size: 0.79rem;
-  color: var(--j-faint);
-  display: block;
-  margin-top: 3px;
-}
-
-/* A metric with no data behind it yet. Muted so it does not read as a real
-   figure, but present so the shape of the screen is honest about what is
-   coming. */
-.metricSoon {
-  border-style: dashed;
-}
-
-.metricSoonValue {
-  font-size: 1.02rem !important;
-  color: var(--j-faint) !important;
-  letter-spacing: -0.02em !important;
-}
-
-.metricIcon {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-
-/* Sized on the container, not with a class on the SVG: a size utility landing
-   on the icon beats the container rule and shifts the glyph off centre. */
-.metricIcon svg {
-  width: 19px;
-  height: 19px;
-}
-
-.metricIcon[data-tone="violet"] {
-  background: var(--j-tint-violet);
-  color: var(--j-purple);
-}
-
-.metricIcon[data-tone="green"] {
-  background: var(--j-tint-green);
-  color: #0f6e56;
-}
-
-.metricIcon[data-tone="orange"] {
-  background: var(--j-orange-bg);
-  color: var(--j-orange);
-}
-
-.metricIcon[data-tone="amber"] {
-  background: var(--j-tint-amber);
-  color: #b8860b;
-}
-
-/* The bare number, for the square phone tiles below. */
-.metricShort {
-  display: none !important;
-}
-
-@media (max-width: 1240px) {
-  .metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* Phones, and a Fold open or closed: four square tiles in a 2x2 grid, each the
-   icon over a number. Capped in width so an unfolded Fold does not draw them
-   as 300px squares. */
-@media (max-width: 900px) {
-  .metrics {
-    max-width: 400px;
-    gap: 10px;
-  }
-
-  .metric {
-    aspect-ratio: 1;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .metricIcon {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-  }
-
-  .metricIcon svg {
-    width: 23px;
-    height: 23px;
-  }
-
-  .metric b {
-    font-size: 1.7rem;
-  }
-
-  .metricFull {
-    display: none !important;
-  }
-
-  .metricShort {
-    display: block !important;
-  }
-
-  /* Read out, not drawn: the tile's title carries it for sighted users. */
-  .metricLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-}
-
-/* ── Quick tools ─────────────────────────────────────────────────────────── */
-
-.quick {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.qt {
-  background: var(--j-card);
-  border: 1px solid var(--j-line);
-  border-radius: var(--j-r-lg);
-  padding: 16px;
-  text-align: left;
-  min-height: 148px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  transition:
-    transform 0.18s var(--j-ease),
-    border-color 0.18s,
-    box-shadow 0.2s;
-}
-
-@media (hover: hover) {
-  .qt:hover {
-    transform: translateY(-3px);
-    border-color: var(--j-lilac-2);
-    box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
-  }
-}
-
-.qt:active {
-  transform: translateY(-3px);
-  border-color: var(--j-lilac-2);
-  box-shadow: 0 14px 26px -18px rgba(58, 28, 143, 0.5);
-}
-
-.qt h3 {
-  margin-top: 8px;
-}
-
-/* Clamped to three lines: descriptions vary a lot in length, and a card row of
-   ragged heights reads as broken. */
-.qt span {
+.hints button {
+  font: inherit;
   font-size: 0.78rem;
-  color: var(--j-faint);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-@media (max-width: 1240px) {
-  .quick {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 900px) {
-  .quick {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .quick {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .qt {
-    min-height: 0;
-  }
-}
-
-/* ── Bento ───────────────────────────────────────────────────────────────── */
-
-.bento {
-  display: grid;
-  grid-template-columns: 1.5fr minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-  margin-top: 24px;
-}
-
-@media (max-width: 1240px) {
-  .bento {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* A section header sitting flush at the top of a panel, where the panel's own
-   padding already supplies the space above it. */
-.shFlush {
-  margin-top: 0;
-}
-
-.quiet {
-  font-size: 0.86rem;
-  color: var(--j-faint);
-  padding: 26px 0;
-  text-align: center;
-}
-
-/* The chevron on a row.
- *
- * Always visible rather than revealed on hover: the row it sits in is styled by
- * app.module.css, so no selector here can reach its :hover state, and a
- * hover-only affordance is invisible on a touch screen anyway. Muted instead,
- * so a resting list still reads calm. */
-.rowGo {
-  width: 17px;
-  height: 17px;
-  flex: none;
-  color: var(--j-lilac-2);
-}
-
-/* ── A recent row ───────────────────────────────────────────────────────────
- *
- * Two actions, so the row is a container and the title is its own button. It
- * cannot use app.row, which IS the button. Everything else matches app.row so
- * the two read identically. */
-.recentRow {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--j-line);
-}
-
-.recentRow:last-child {
-  border-bottom: 0;
-}
-
-.recentOpen {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  font-family: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-/* Hovering the row, not just the title, previews the whole thing as clickable,
-   which is what app.row does.
-
-   Its own class rather than reaching for app.module.css's .rowTitle: that class
-   is hashed by CSS Modules and is not addressable from this file. Matching on a
-   partial attribute selector would work until the hashing changed. */
-@media (hover: hover) {
-  .recentRow:hover .recentTitle {
-    color: var(--j-purple);
-  }
-}
-
-.recentRow:active .recentTitle {
-  color: var(--j-purple);
-}
-
-/* Visible on hover and on focus. Focus matters more than hover here: without
-   it the button is invisible to a keyboard user until it is already focused,
-   which is too late to know it was there. */
-.recentShare {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  cursor: pointer;
-  flex: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.recentShare {
-  position: relative;
-}
-
-/* A 48px tap target around the 30px button; it draws as before. */
-.recentShare::after {
-  content: "";
-  position: absolute;
-  inset: -9px;
-}
-
-.recentShare:focus-visible {
-  opacity: 1;
-}
-
-@media (hover: hover) {
-  .recentRow:hover .recentShare {
-    opacity: 1;
-  }
-}
-
-.recentRow:active .recentShare {
-  opacity: 1;
-}
-
-@media (hover: hover) {
-  .recentShare:hover {
-    background: var(--j-tint);
-  }
-}
-
-.recentShare:active {
-  background: var(--j-tint);
-}
-
-@media (hover: hover) {
-  .recentShare:hover .rowGo {
-    color: var(--j-purple);
-  }
-}
-
-.recentShare:active .rowGo {
-  color: var(--j-purple);
-}
-
-/* A touch screen has no hover, so the action would never appear. */
-@media (hover: none) {
-  .recentShare {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .recentShare {
-    transition: none;
-  }
-}
-
-/* ── Badge strip ─────────────────────────────────────────────────────────────
- *
- * The current level's ten badges. Ten across on a wide screen, matching the
- * prototype, dropping to five and then four rather than shrinking the medallion
- * past the point where its glyph is readable. */
-.badgeStrip {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 10px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.stripItem {
-  display: grid;
-  place-items: center;
-  gap: 5px;
-  min-width: 0;
-}
-
-/* The medallion is generated SVG at a fixed viewBox, so it scales to whatever
-   the grid cell allows. 70% keeps the ribbon tails clear of the name.
-   BadgeMedallion draws its locked state in grey already; the drop shadow is
-   what makes an earned one lift off the panel, and it is dropped for locked
-   ones by the rule below. */
-.stripItem svg {
-  width: 70%;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 4px 7px rgba(29, 23, 48, 0.2));
-}
-
-.stripItem:has(.stripName[data-locked="true"]) svg {
-  filter: none;
-  opacity: 0.55;
-}
-
-.stripName {
-  font-size: 0.63rem;
-  font-weight: 800;
-  color: var(--j-ink);
-  text-align: center;
-  line-height: 1.25;
-}
-
-.stripName[data-locked="true"] {
-  color: var(--j-faint);
-  font-weight: 800;
-}
-
-@media (max-width: 1240px) {
-  .badgeStrip {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
-  }
-}
-
-@media (max-width: 560px) {
-  .badgeStrip {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .qt:hover {
-    transform: none;
-  }
-}
-
-/* ── This week ───────────────────────────────────────────────────────────────
- *
- * The prototype's week strip on Today, fed by the timetable. One row per day
- * that still has a lesson on it, headed by that day's first lesson.
- *
- * Each element carries its own class rather than being selected by tag. The
- * prototype's `.day p` and `.day span` are exactly the shape the handover warns
- * about: a bare tag selector reaching content it did not mean to.
- */
-
-.week {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.day {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 12px;
-  border-radius: var(--j-r);
-  background: var(--j-bg);
-  border: 1px solid transparent;
-}
-
-.dayNow {
-  background: var(--j-tint);
-  border-color: var(--j-lilac);
-}
-
-/* A lesson with nothing attached. Dashed rather than orange: the orange is
-   spent on the "Make it" chip and the cell in the grid, and a whole row of it
-   would make a normal unplanned week look like a screen full of problems. */
-.dayEmpty {
-  border: 1px dashed var(--j-line-2);
-}
-
-.dayD {
-  width: 38px;
-  text-align: center;
-  flex: none;
-  font-size: 0.67rem;
-  font-weight: 800;
   color: var(--j-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  line-height: 1.25;
-}
-
-.dayNow .dayD {
-  color: var(--j-purple);
-}
-
-.dayDate {
-  display: block;
-  font-size: 1rem;
-  color: var(--j-ink);
-  letter-spacing: -0.02em;
-}
-
-.dayNow .dayDate {
-  color: var(--j-purple);
-}
-
-.dayInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.dayTitle {
-  font-size: 0.83rem;
-  font-weight: 600;
-  color: var(--j-body);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dayMeta {
-  font-size: 0.75rem;
-  color: var(--j-faint);
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gap {
-  font-size: 0.71rem;
-  font-weight: 800;
-  color: var(--j-purple);
   background: var(--j-card);
   border: 1px solid var(--j-line);
-  padding: 5px 10px;
   border-radius: var(--j-pill);
-  flex: none;
+  padding: 5px 12px;
+  cursor: pointer;
 }
 
 @media (hover: hover) {
-  .gap:hover {
-    border-color: var(--j-lilac-2);
-    color: var(--j-deep);
+  .hints button:hover:not(:disabled) {
+    border-color: var(--j-line-2);
+    color: var(--j-ink);
   }
 }
 
-.gap:active {
-  border-color: var(--j-lilac-2);
-  color: var(--j-deep);
+/* ── Sections ────────────────────────────────────────────────────────────── */
+
+.sec {
+  margin-top: 32px;
 }
 
-/* The way in from the empty state. A link rather than a plain sentence: the
-   panel is telling the teacher to go and do something, so it should take them. */
-.weekSetUp {
-  margin-top: 10px;
-  font-size: 0.84rem;
+.sech {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.today .sech h2 {
+  font-size: 1rem;
   font-weight: 800;
-  color: var(--j-purple);
+  color: var(--j-ink);
+  margin: 0;
+}
+
+.note {
+  font-size: 0.81rem;
+  color: var(--j-faint);
+}
+
+.link {
+  margin-left: auto;
+  font-size: 0.81rem;
+  font-weight: 700;
+  color: var(--j-res);
+  white-space: nowrap;
 }
 
 @media (hover: hover) {
-  .weekSetUp:hover {
+  .link:hover {
     text-decoration: underline;
   }
 }
 
-.weekSetUp:active {
-  text-decoration: underline;
+/* ── The week ────────────────────────────────────────────────────────────── */
+
+.lessons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 11px;
 }
 
-/* ── Ambassador trim ─────────────────────────────────────────────────────
-   A gold hairline under the greeting and the verified strip above it. The
-   same purple page as everyone else; the gold is a trim, so it stays thin. */
+.les {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  padding: 15px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 132px;
+}
+
+.lesTodo {
+  border: 1px dashed var(--j-line-2);
+  background: #f6f4fa;
+}
+
+.today .when {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--j-faint);
+  margin: 0;
+}
+
+.today .les h3 {
+  font-size: 0.9rem;
+  line-height: 1.3;
+  color: var(--j-ink);
+  margin: 0;
+}
+
+.today .meta {
+  font-size: 0.78rem;
+  color: var(--j-muted);
+  margin: 0;
+}
+
+.today .state {
+  margin: auto 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--j-ok);
+}
+
+.state svg {
+  width: 13px;
+  height: 13px;
+}
+
+.mk {
+  margin-top: auto;
+  align-self: flex-start;
+  background: var(--j-ink);
+  color: #fff;
+  border-radius: var(--j-pill);
+  padding: 7px 15px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* ── Make something ──────────────────────────────────────────────────────── */
+
+.tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.tool {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  padding: 17px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+
+@media (hover: hover) {
+  .tool:hover {
+    border-color: var(--j-line-2);
+    transform: translateY(-1px);
+  }
+}
+
+.today .tool h3 {
+  font-size: 0.9rem;
+  color: var(--j-ink);
+  margin: 0;
+}
+
+.today .tool p {
+  font-size: 0.81rem;
+  color: var(--j-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.cost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: var(--j-pill);
+}
+
+.chip svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* Purple is what a resource costs, and nothing else. */
+.chipRes {
+  background: var(--j-res-soft);
+  color: var(--j-res);
+}
+
+/* Orange is picture slides, and nothing else. */
+.chipPic {
+  background: var(--j-pic-soft);
+  color: var(--j-pic);
+}
+
+.chipGate {
+  background: var(--j-bg);
+  color: var(--j-muted);
+  border: 1px solid var(--j-line-2);
+}
+
+/* ── Recent ──────────────────────────────────────────────────────────────── */
+
+.today .quiet {
+  font-size: 0.875rem;
+  color: var(--j-faint);
+}
+
+.recent {
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 0;
+  border-bottom: 1px solid var(--j-line);
+  transition: background 0.15s;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--j-bg);
+  }
+}
+
+.rowOpen {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 0 13px 17px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowMain {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rowMain b {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--j-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowMain span {
+  font-size: 0.78rem;
+  color: var(--j-faint);
+}
+
+.rowWhen {
+  font-size: 0.78rem;
+  color: var(--j-faint);
+  white-space: nowrap;
+}
+
+.rowShare {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--j-faint);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.rowShare svg {
+  width: 17px;
+  height: 17px;
+}
+
+@media (hover: hover) {
+  .rowShare:hover {
+    background: var(--j-tint);
+    color: var(--j-ink);
+  }
+}
+
+.empty {
+  background: var(--j-card);
+  border: 1px dashed var(--j-line-2);
+  border-radius: var(--j-r-lg);
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: var(--j-tint);
+  color: var(--j-muted);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+}
+
+.emptyIcon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.today .empty h3 {
+  font-size: 0.94rem;
+  color: var(--j-ink);
+  margin: 0;
+}
+
+.today .empty p {
+  font-size: 0.84rem;
+  color: var(--j-muted);
+  margin: 7px auto 0;
+  max-width: 46ch;
+}
+
+/* ── Nudge and timetable offer ───────────────────────────────────────────── */
+
+.nudge {
+  margin-top: 32px;
+  border-radius: var(--j-r-xl);
+  padding: 24px 26px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line-2);
+}
+
+.nudgeText {
+  flex: 1;
+  min-width: 0;
+}
+
+.today .nudgeText h2 {
+  font-size: 1.06rem;
+  color: var(--j-ink);
+  margin: 0;
+}
+
+.today .nudgeText p {
+  font-size: 0.84rem;
+  color: var(--j-muted);
+  margin: 6px 0 0;
+  max-width: 58ch;
+}
+
+.today .nudgeAct p {
+  font-size: 0.75rem;
+  color: var(--j-faint);
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+.nudgeBtn {
+  display: block;
+  background: var(--j-res);
+  color: #fff;
+  border-radius: var(--j-pill);
+  padding: 12px 22px;
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ttOffer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  padding: 14px 18px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line);
+  border-radius: var(--j-r-lg);
+  font-size: 0.84rem;
+  color: var(--j-muted);
+}
+
+.ttOffer > svg {
+  width: 17px;
+  height: 17px;
+  color: var(--j-faint);
+  flex: none;
+}
+
+.ttText {
+  flex: 1;
+  min-width: 0;
+}
+
+.ttText b {
+  color: var(--j-ink);
+  font-weight: 800;
+}
+
+.ttGo {
+  flex: none;
+  font-size: 0.81rem;
+  font-weight: 800;
+  color: var(--j-res);
+}
+
+.ttNo {
+  flex: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.81rem;
+  color: var(--j-faint);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .ttNo:hover {
+    color: var(--j-ink);
+  }
+}
+
+/* ── Narrower screens ────────────────────────────────────────────────────── */
+
+@media (max-width: 1080px) {
+  .lessons,
+  .tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .today .hello h1 {
+    font-size: 1.56rem;
+  }
+
+  .lessons,
+  .tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .jo {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+
+  .joInput {
+    flex: 1 0 calc(100% - 44px);
+    /* 16px: iOS zooms the page on focus for anything smaller. */
+    font-size: 1rem;
+  }
+
+  .joGo {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .hints button,
+  .ttNo,
+  .ttGo {
+    min-height: 44px;
+  }
+
+  .rowWhen {
+    display: none;
+  }
+
+  .rowShare {
+    width: 44px;
+    height: 44px;
+  }
+
+  .nudge {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ttOffer {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool {
+    transition: none;
+  }
+}
+
+/* ── Kept from the previous Today: the ambassador trim and the locked card ── */
+
 .helloAmbassador {
   position: relative;
   padding-bottom: 18px;

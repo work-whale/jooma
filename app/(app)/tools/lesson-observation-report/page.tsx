@@ -19,9 +19,9 @@ export default async function LessonObservationReportPage({
           icon={<Eye className="w-5 h-5 text-rose-600" />}
 
           title="Lesson Observation Report"
-          description="This tool can be used to write up a lesson observation. Simply enter your notes on the details of the lesson, the strengths and areas for development, and the AI will draft a formal report."
+          description="This tool can be used to write up a lesson observation. Simply enter your notes on the details of the lesson, the strengths and areas for development, and Jooma will draft a formal report."
           steps={[
-            { label: "Enter your observation notes", detail: "Be specific about strengths and areas for development — the more detail, the more accurate the report." },
+            { label: "Enter your observation notes", detail: "Be specific about strengths and areas for development. The more detail, the more accurate the report." },
             { label: "Add optional elements", detail: "Include an action plan or follow-up support suggestions if needed.", optional: true },
             { label: "Generate", detail: "Get a formal lesson observation report ready to share or adapt." },
           ]}

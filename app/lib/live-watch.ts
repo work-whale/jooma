@@ -182,7 +182,7 @@ export function watchLiveCall(opts: WatchOptions, deps: WatchDeps = realDeps(opt
       unrecorded += cost;
       if (closing && event.type === "response.done") void finish("wrapped up");
       else if (opts.budgetUsd !== null && spent >= opts.budgetUsd) {
-        wrapUp("credit", "You've used this month's credits, so I'm ending Live now. You can top up from the menu.");
+        wrapUp("credit", "You're out of resources, so I'm ending Live now.");
       }
     });
     socket.on("close", () => void finish("closed"));

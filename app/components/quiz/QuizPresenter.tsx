@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useMarkPresenting } from "@/app/lib/presenting";
 import { ChevronLeft, ChevronRight, Eye, Pause, Play, Timer, X } from "lucide-react";
 import type { QuizDoc } from "@/app/lib/quiz/quiz";
 
@@ -24,6 +25,8 @@ const LETTERS = "ABCDE";
 const TILE = ["#5B2ED6", "#0F8A63", "#C2551F", "#1D6FD0", "#C43D6B"];
 
 export default function QuizPresenter({ quiz, onClose }: { quiz: QuizDoc; onClose: () => void }) {
+  // Jooma 4.5: no prompt of any kind while a quiz is shown to a class.
+  useMarkPresenting();
   const total = quiz.questions.length;
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);

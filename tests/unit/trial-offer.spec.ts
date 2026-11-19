@@ -117,7 +117,8 @@ test.describe("what the cards and charge lines say", () => {
 
   test("Pro and Max are halved the same way", () => {
     expect(planCardPricing("pro", "month", TRIAL_OFFER_DISCOUNT).price).toBe("£3.99");
-    expect(planCardPricing("max", "month", TRIAL_OFFER_DISCOUNT).price).toBe("£7.49");
+    // Jooma 4.5: half of £13.99, rounded down to the penny as before.
+    expect(planCardPricing("max", "month", TRIAL_OFFER_DISCOUNT).price).toBe("£6.99");
   });
 
   test("yearly cards ignore it", () => {

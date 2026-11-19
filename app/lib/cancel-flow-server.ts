@@ -144,10 +144,14 @@ export async function loadAccountSummary(
   ctx: Pick<CancelContext, "plan" | "periodEnd" | "trialing">,
   now = new Date(),
 ): Promise<AccountSummary> {
-  const [{ data: runs }, { count: badges }] = await Promise.all([
+  const [{ data: runs }, { count: badges }, resources] = await Promise.all([
     supabase.from("tool_runs").select("tool_slug, created_at").limit(10000),
     supabase.from("user_badges").select("badge_id", { count: "exact", head: true }),
+    // Only to learn whether this is a Jooma 4.5 database: the function exists
+    // there (leaving lands on Free) and not before it (leaving locks).
+    supabase.rpc("my_resources"),
   ]);
+  const v45 = !resources.error || resources.error.code !== "PGRST202";
 
   const rows = (runs ?? []) as { tool_slug: string; created_at: string }[];
   const activeDays = new Set<string>();
@@ -166,6 +170,7 @@ export async function loadAccountSummary(
     minutesSaved,
     badges: badges ?? 0,
     streak: streakFrom(activeDays, now),
+    v45,
   };
 }
 

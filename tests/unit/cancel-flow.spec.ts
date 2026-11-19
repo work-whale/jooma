@@ -205,7 +205,9 @@ test.describe("what the offer is worth", () => {
   const cases: [string, "standard" | "pro" | "max", "month" | "year", number, number, number][] = [
     ["Standard monthly", "standard", "month", 499, 249, 750],
     ["Pro monthly", "pro", "month", 799, 399, 1200],
-    ["Max monthly", "max", "month", 1499, 749, 2250],
+    // Jooma 4.5: list price £13.99. KNOWN GAP (handover): a legacy £14.99
+    // Max payer is quoted from the list price, not their own Stripe price.
+    ["Max monthly", "max", "month", 1399, 699, 2100],
     ["Standard yearly", "standard", "year", 4799, 4199, 600],
     ["Pro yearly", "pro", "year", 7199, 6299, 900],
     ["Max yearly", "max", "year", 14399, 12599, 1800],
@@ -354,7 +356,8 @@ test.describe("what you lose", () => {
   });
 
   test("Standard already has watermarks, so it loses no clean exports", () => {
-    expect(lossInventory({ ...busy, plan: "standard" }).some((t) => t.id === "exports")).toBe(false);
+    // Jooma 4.5 red note: Standard is clean now, so leaving it does lose clean exports.
+    expect(lossInventory({ ...busy, plan: "standard" }).some((t) => t.id === "exports")).toBe(true);
   });
 
   test("one of anything is singular", () => {

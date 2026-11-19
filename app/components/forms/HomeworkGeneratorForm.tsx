@@ -330,7 +330,7 @@ export default function HomeworkGeneratorForm({
                       onChange={() => setIncludeAnswers(val)}
                       className="accent-gray-900"
                     />
-                    {val === "yes" ? "Yes — provide answers" : "No — student-only version"}
+                    {val === "yes" ? "Yes, with answers" : "No, a pupil-only version"}
                   </label>
                 ))}
               </div>
@@ -343,7 +343,7 @@ export default function HomeworkGeneratorForm({
               rows={3}
               placeholders={[
                 `e.g. Include a challenge task at the end`,
-                `e.g. Suitable for SEND learners — keep language simple`,
+                `e.g. Suitable for SEND learners, keep language simple`,
                 `e.g. Add a retrieval question at the start`,
                 `e.g. Include a real-world application`,
               ]}
@@ -357,7 +357,7 @@ export default function HomeworkGeneratorForm({
                 label="Paste lesson plan / worksheet / slides"
                 rows={5}
                 placeholders={[
-                  "e.g. Paste your lesson plan and the AI will build homework around it",
+                  "e.g. Paste your lesson plan and Jooma will build homework around it",
                   "e.g. Paste slide notes or a worksheet to use as the basis",
                   "e.g. Paste your learning objectives and key content here",
                 ]}

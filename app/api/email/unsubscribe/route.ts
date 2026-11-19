@@ -14,11 +14,19 @@
 // tied to one address, and the function only ever answers whether it existed.
 // On top of that, a per-IP throttle through auth_rate.
 //
+// LIFECYCLE MARKETING (E9a, E9b, E10) uses a signed teacher token instead,
+// "u1.<user id>.<HMAC>" (app/lib/unsub-link.ts): those emails have no
+// recipient row to hold a uuid. The signature is the credential, checked here
+// on the server; then, under the service role, the teacher's marketing_consent
+// goes off and the address joins email_opt_outs, so broadcasts respect it too.
+// Same throttle, same honeypot, same "not valid" answer for a bad token.
+//
 // A GET never acts. Some clients open the header's URL in a browser instead of
 // posting to it, and a scanner would too; both are sent to the confirm page.
 import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
+import { isTeacherToken, unsubSecret, verifyUnsubToken } from "@/app/lib/unsub-link";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +83,8 @@ export async function POST(req: Request) {
     source = "link";
   }
 
-  if (!UUID_RE.test(token)) {
+  const teacher = isTeacherToken(token);
+  if (!teacher && !UUID_RE.test(token)) {
     return NextResponse.json({ error: "This unsubscribe link is not valid." }, { status: 400 });
   }
 
@@ -90,6 +99,8 @@ export async function POST(req: Request) {
     await supabaseAdmin.from("auth_rate").insert({ kind: "unsub_ip", identifier: ip });
   }
 
+  if (teacher) return unsubscribeTeacher(token, source);
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("email_unsubscribe", {
     p_token: token,
@@ -101,6 +112,30 @@ export async function POST(req: Request) {
   }
   if (data !== true) {
     return NextResponse.json({ error: "This unsubscribe link is not valid." }, { status: 400 });
+  }
+  return NextResponse.json({ ok: true });
+}
+
+/** A signed lifecycle link: consent off, and the address on the opt-out list. */
+async function unsubscribeTeacher(token: string, source: "link" | "one_click") {
+  const key = unsubSecret(process.env);
+  const userId = key ? verifyUnsubToken(token, key) : null;
+  if (!userId) {
+    return NextResponse.json({ error: "This unsubscribe link is not valid." }, { status: 400 });
+  }
+  const { data: auth } = await supabaseAdmin.auth.admin.getUserById(userId);
+  const email = auth?.user?.email?.toLowerCase();
+  if (!email) {
+    // The account has gone; there is nothing left to send to.
+    return NextResponse.json({ ok: true });
+  }
+  const [{ error: consentError }, { error: optOutError }] = await Promise.all([
+    supabaseAdmin.from("profiles").update({ marketing_consent: false }).eq("id", userId),
+    supabaseAdmin.from("email_opt_outs").upsert({ email, source }, { onConflict: "email", ignoreDuplicates: true }),
+  ]);
+  if (consentError || optOutError) {
+    console.error("[unsubscribe] teacher write failed", consentError ?? optOutError);
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
   return NextResponse.json({ ok: true });
 }

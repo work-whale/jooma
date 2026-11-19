@@ -1,6 +1,7 @@
 import { requireSection } from "../access";
 import { loadFxRate } from "@/app/lib/fx";
 import PlansView, { type PlanRow, type PricingRule } from "./PlansView";
+import LaunchV45Card from "./LaunchV45Card";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +18,13 @@ export default async function AdminPlansPage() {
   ]);
 
   return (
-    <PlansView
-      plans={(plans ?? []) as PlanRow[]}
-      rules={(rules ?? []) as PricingRule[]}
-      fx={fx}
-    />
+    <>
+      <PlansView
+        plans={(plans ?? []) as PlanRow[]}
+        rules={(rules ?? []) as PricingRule[]}
+        fx={fx}
+      />
+      <LaunchV45Card />
+    </>
   );
 }
