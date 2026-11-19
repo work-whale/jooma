@@ -47,6 +47,10 @@ function load(): Promise<AccountAccess | null> {
 }
 registerExportMarkLoader(load);
 
+/** The same cached read, for code that must tell "still loading" from
+ *  "failed" (resolves to null on failure; the hook cannot say which). */
+export const loadAccountAccess = load;
+
 export function useAccountAccess(): AccountAccess | null {
   const [access, setAccess] = useState<AccountAccess | null>(null);
 

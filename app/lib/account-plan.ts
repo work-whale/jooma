@@ -61,6 +61,33 @@ export function featurePlan(plan: AccountPlan): Exclude<AccountPlan, "pro_trial"
   return plan === "pro_trial" ? "pro" : plan;
 }
 
+/**
+ * The plan the Live route checks, from a raw my_generation_gate() plan. The
+ * trial is Pro's features, so it counts as Pro; anything unknown is Free.
+ * asPlanId alone only knows the four sold plans and read the trial as Free.
+ */
+export function livePlanFor(raw: string | null | undefined): Exclude<AccountPlan, "pro_trial"> {
+  const plan = raw ?? "free";
+  if (!KNOWN.has(plan)) return "free";
+  return featurePlan(plan as AccountPlan);
+}
+
+/** Plans whose features include the assistant and its Live voice. Mirrors
+ *  `limits.assistant` in plans.ts (true on every paid plan, false on Free). */
+const ASSISTANT_PLANS: ReadonlySet<string> = new Set(["standard", "pro", "max", "school"]);
+
+/**
+ * What Ask Jo offers on screen. Twin of checkAssistantAccess (the real gate):
+ *   chat  every plan once the 4.5 migration is in (Free included, behind the
+ *         hourly limit); before it, the paid plans only.
+ *   live  the paid plans and the Pro trial; Free is refused by /api/jo/live.
+ * Comped Pro (an ambassador) is plain "pro" here, the same as paying Pro.
+ */
+export function askJoAccess(plan: AccountPlan, v45: boolean): { chat: boolean; live: boolean } {
+  const live = ASSISTANT_PLANS.has(featurePlan(plan));
+  return { chat: v45 || live, live };
+}
+
 /** The sidebar chip. Owner's decision (17 Nov): "PRO TRIAL" during the trial. */
 export function planChipLabel(plan: AccountPlan): string {
   return plan === "pro_trial" ? "PRO TRIAL" : plan.toUpperCase();

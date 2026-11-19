@@ -42,7 +42,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
 
   // The chat list and the plan gate live in the layout, so they survive
   // navigation between /assistant and /assistant/[id]. See AssistantShell.
-  const { addChat, allowed, handover, setHandover } = useAssistantChats();
+  const { addChat, allowed, liveAllowed, handover, setHandover } = useAssistantChats();
   // Jo's voice, talk mode and a Live call live in the layout, so they carry
   // on across the url change after a chat's first message.
   const { voice, talkState, live: call, handlers } = useAssistantVoice();
@@ -630,7 +630,7 @@ export default function AssistantView({ chatId }: { chatId?: string }) {
               voice={allowed ? voice : null}
               talkState={talkState}
               live={{
-                available: allowed === true && call.supported,
+                available: allowed === true && liveAllowed === true && call.supported,
                 on: inCall || confirming,
                 onToggle: () => (inCall ? call.end() : setConfirming((c) => !c)),
               }}

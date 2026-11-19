@@ -1,6 +1,5 @@
 import { offerIsOpen } from "@/app/lib/run-out-offer";
 import { offerAppliesTo } from "@/app/lib/billing-rules";
-import { OFFER } from "@/app/lib/plan-config";
 import { NextRequest, NextResponse } from "next/server";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
 import { createClient } from "@/app/lib/auth/server";
@@ -13,6 +12,7 @@ import { discountOfPromotion } from "@/app/lib/ambassador-discount";
 import { PLANS } from "@/app/lib/plans";
 import {
   betterFirstMonthDiscount,
+  ensureRunOutCoupon,
   ensureTrialOfferCoupon,
   trialOfferApplies,
   trialOfferFor,
@@ -265,9 +265,11 @@ export async function POST(req: NextRequest) {
 
     if (useOffer && offer) {
       try {
-        // The 4.5 offer is the sandbox/live coupon PRO-HALF-FIRST-MONTH (Pro
-        // product only, so Stripe itself refuses it on anything else).
-        const coupon = runOutOpen ? OFFER.code : await ensureTrialOfferCoupon(stripe);
+        // The 4.5 offer is the coupon PRO-HALF-FIRST-MONTH (Pro product only,
+        // so Stripe itself refuses it on anything else), made here the first
+        // time it is needed. The offer only applies to Pro monthly, so
+        // priceId is the Pro monthly price.
+        const coupon = runOutOpen ? await ensureRunOutCoupon(stripe, priceId) : await ensureTrialOfferCoupon(stripe);
         // A session left open must not outlive the window by much. Stripe
         // allows 30 minutes to 24 hours; inside that, close it with the offer.
         const nowSec = Math.floor(Date.now() / 1000);

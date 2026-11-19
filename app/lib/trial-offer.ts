@@ -13,6 +13,7 @@
 import type { BillingInterval } from "./plans";
 import type { CouponClient } from "./cancel-flow";
 import { discountedPence, type Discount } from "./ambassador-discount";
+import { OFFER } from "./plan-config";
 
 export const TRIAL_OFFER_PERCENT = 50;
 
@@ -162,5 +163,55 @@ export async function ensureTrialOfferCoupon(client: CouponClient): Promise<stri
   } catch (err) {
     if (stripeCode(err) !== "resource_already_exists") throw err;
     return (await client.coupons.retrieve(spec.id)).id;
+  }
+}
+
+/** What ensureRunOutCoupon needs from Stripe. */
+export interface RunOutCouponClient {
+  coupons: {
+    retrieve(id: string): Promise<{ id: string }>;
+    create(params: {
+      id: string;
+      percent_off: number;
+      duration: "once";
+      name: string;
+      applies_to: { products: string[] };
+      metadata: Record<string, string>;
+    }): Promise<{ id: string }>;
+  };
+  prices: {
+    retrieve(id: string): Promise<{ product: string | { id: string } }>;
+  };
+}
+
+/**
+ * The second run-out offer's coupon (P3b, E9b), PRO-HALF-FIRST-MONTH, made the
+ * first time a teacher uses the offer, so nobody has to create it by hand in
+ * live Stripe. Half off the first payment, and only on the Pro product (read
+ * from the Pro monthly price checkout is charging), so Stripe itself refuses
+ * it on any other plan. Same race handling as ensureTrialOfferCoupon.
+ */
+export async function ensureRunOutCoupon(client: RunOutCouponClient, proMonthlyPriceId: string): Promise<string> {
+  const id = OFFER.code;
+  try {
+    return (await client.coupons.retrieve(id)).id;
+  } catch (err) {
+    if (stripeCode(err) !== "resource_missing") throw err;
+  }
+  const price = await client.prices.retrieve(proMonthlyPriceId);
+  const product = typeof price.product === "string" ? price.product : price.product.id;
+  try {
+    const created = await client.coupons.create({
+      id,
+      percent_off: 50,
+      duration: "once",
+      name: `Pro for £${OFFER.firstMonthPrice} first month`,
+      applies_to: { products: [product] },
+      metadata: { source: "run_out_offer" },
+    });
+    return created.id;
+  } catch (err) {
+    if (stripeCode(err) !== "resource_already_exists") throw err;
+    return (await client.coupons.retrieve(id)).id;
   }
 }
