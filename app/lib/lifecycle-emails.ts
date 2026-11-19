@@ -10,7 +10,8 @@
  * Each email has one button. Account emails link to email settings in the
  * footer; marketing emails (E9a, E9b, E10) link to a signed one-click unsubscribe
  * (app/lib/unsub-link.ts) and carry the List-Unsubscribe header.
- * Sent through app/lib/email.ts by the cron, and only when sendingEnabled().
+ * Sent through app/lib/email.ts by the cron, and only when switched on in
+ * Admin, Emails & templates (lib/lifecycle-switch.ts).
  *
  * Pure.
  */

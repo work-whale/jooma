@@ -29,8 +29,8 @@
  *   - Each email once per key. E8 is keyed per Sunday ("E8:2026-11-29").
  *   - A send more than 12 hours late is dropped, never sent days late.
  *
- * NOTHING SENDS unless LIFECYCLE_EMAILS=on (see sendingEnabled). The owner
- * turns it on after approving the wording.
+ * NOTHING SENDS until it is switched on in Admin, Emails & templates
+ * (lib/lifecycle-switch.ts), as a whole and per email.
  *
  * Pure: the cron (app/api/cron/lifecycle) reads the teachers and the sent log
  * and asks this file what to send.
@@ -102,10 +102,6 @@ export function inQuietHours(now: Date): boolean {
 export function mayReceive(kind: EmailKind, t: LifecycleTeacher): boolean {
   if (kind === "account") return true;
   return t.marketingConsent && !t.marketingSentToday;
-}
-
-export function sendingEnabled(env: Record<string, string | undefined>): boolean {
-  return env.LIFECYCLE_EMAILS === "on";
 }
 
 const PAID: ReadonlySet<AccountPlan> = new Set(["standard", "pro", "max", "school"]);

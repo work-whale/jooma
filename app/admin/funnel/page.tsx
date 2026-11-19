@@ -176,7 +176,7 @@ export default async function PlansResultsPage({ searchParams }: { searchParams:
           <CardBody>
             <p className="text-sm mb-3" style={{ color: C.muted }}>
               Lifecycle emails have no open or click tracking, so this is sends and payments. Nothing sends until
-              LIFECYCLE_EMAILS is on.
+              it is switched on in Emails &amp; templates.
             </p>
             {emails.length === 0 ? (
               <Note>No lifecycle emails sent in this range.</Note>

@@ -1,4 +1,6 @@
 import { requireAnySection } from "../access";
+import LifecycleEmailsCard from "./LifecycleEmailsCard";
+import { LIFECYCLE_SETTING_KEY, parseLifecycleSwitch } from "@/app/lib/lifecycle-switch";
 import { mailerConfigured } from "@/app/lib/email";
 import { TEMPLATES } from "@/app/lib/email-templates";
 import { Note, PageHead } from "../ui";
@@ -117,14 +119,18 @@ export default async function AdminEmailsPage({
     // Keyed on the search so the add form and any inline state reset with it.
     body = <OptOutsView key={search} rows={(data ?? []) as OptOutRow[]} search={search} />;
   } else {
-    const [templates, automations, system] = await Promise.all([
+    const [templates, automations, system, settings] = await Promise.all([
       canSend ? supabase.rpc("admin_broadcast_templates") : null,
       canSend ? supabase.rpc("admin_email_automations") : null,
       canSystem ? supabase.rpc("admin_email_templates") : null,
+      canSystem ? supabase.rpc("admin_settings") : null,
     ]);
-    for (const r of [templates, automations, system]) {
+    for (const r of [templates, automations, system, settings]) {
       if (r?.error) problems.push(r.error.message);
     }
+    const switchRow = ((settings?.data ?? []) as { key: string; value: unknown }[]).find(
+      (r) => r.key === LIFECYCLE_SETTING_KEY,
+    );
     body = (
       <div className="space-y-8">
         {canSend && (
@@ -132,6 +138,9 @@ export default async function AdminEmailsPage({
             templates={(templates?.data ?? []) as BroadcastTemplate[]}
             automations={(automations?.data ?? []) as AutomationRow[]}
           />
+        )}
+        {canSystem && (
+          <LifecycleEmailsCard initial={parseLifecycleSwitch(switchRow?.value)} saved={Boolean(switchRow)} />
         )}
         {canSystem && (
           <section>
