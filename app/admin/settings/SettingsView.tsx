@@ -46,7 +46,7 @@ const NOT_ENFORCED = new Set(["block_disposable_email"]);
 // Rendering an editable second copy here meant two controls writing one row.
 // Image quality and prices live on /admin/tools for the same reason, and are a
 // JSON object this page has no control for.
-const HIDDEN_SECTIONS = new Set(["fair_use", "images"]);
+const HIDDEN_SECTIONS = new Set(["fair_use", "images", "emails"]);
 
 export default function SettingsView({ rows }: { rows: SettingRow[] }) {
   const router = useRouter();

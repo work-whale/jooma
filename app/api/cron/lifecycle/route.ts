@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { sendBroadcastEmail } from "@/app/lib/email";
-import { dropOptedOutMarketing, dueEmails, e11Due, eventEmails, isMarketingKey, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
+import { dropOptedOutMarketing, dueEmails, e11Due, eventEmails, isMarketingKey, type LifecycleTeacher } from "@/app/lib/lifecycle";
+import { LIFECYCLE_SETTING_KEY, lifecycleMaySend, parseLifecycleSwitch, type LifecycleSwitch } from "@/app/lib/lifecycle-switch";
 import { ideaFor, pickIdea, type Idea } from "@/app/lib/e10-ideas";
 import { signUnsubToken, unsubSecret } from "@/app/lib/unsub-link";
 import { lifecycleOutgoing, renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-emails";
@@ -14,9 +15,11 @@ import { MINUTES_SAVED_PER_BAND, allowanceFor, type AccountPlan } from "@/app/li
 // webhook logs as app_events (subscribed, cancelled, payment_failed) and this
 // sends within 15 minutes, outside quiet hours. Meant to run every 15 minutes; the rules are in lib/lifecycle.ts.
 //
-// SAFE BY DEFAULT. Unless LIFECYCLE_EMAILS=on, this is a dry run: it works out
-// who is due and returns the count, and sends and records nothing. The owner
-// turns it on after approving the wording.
+// SAFE BY DEFAULT. Sending is switched on in Admin, Emails & templates (the
+// app_settings row lifecycle_emails, read by lib/lifecycle-switch.ts), master
+// switch and per email. Off, or unreadable, this is a dry run: it works out
+// who is due and returns the count, and sends and records nothing.
+// LIFECYCLE_EMAILS=off in Vercel is an emergency stop over the admin switch.
 //
 // Scheduled every 15 minutes in vercel.json (the team is on Vercel Pro, which
 // allows sub-daily crons).
@@ -56,7 +59,9 @@ interface Row {
 const DAY_KEY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" });
 
 async function run(): Promise<{ enabled: boolean; due: number; sent: number; failed: number }> {
-  const enabled = sendingEnabled(process.env);
+  const sw = await readSwitch();
+  const may = (id: Parameters<typeof lifecycleMaySend>[1]) => lifecycleMaySend(sw, id, process.env);
+  const enabled = sw.enabled && process.env.LIFECYCLE_EMAILS !== "off";
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://jooma.ai";
   const started = Date.now();
   const now = new Date();
@@ -159,7 +164,8 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
       };
       let emails = dueEmails(t, sentKeys.get(r.id) ?? new Set(), now);
       due += emails.length;
-      if (!enabled || emails.length === 0) continue;
+      emails = emails.filter((e) => may(e.id));
+      if (emails.length === 0) continue;
 
       const { data: auth } = await supabaseAdmin.auth.admin.getUserById(r.id);
       const to = auth?.user?.email;
@@ -208,8 +214,8 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
     if (rows.length < PAGE) break;
   }
 
-  const events = await sendEventEmails(enabled, site, now);
-  const standard = await sendStandardEmails(enabled, site, now);
+  const events = await sendEventEmails(sw, site, now);
+  const standard = await sendStandardEmails(sw, site, now);
   return {
     enabled,
     due: due + events.due + standard.due,
@@ -225,7 +231,7 @@ async function run(): Promise<{ enabled: boolean; due: number; sent: number; fai
  * my_resources() uses; only accounts without this period's E11 are read.
  */
 async function sendStandardEmails(
-  enabled: boolean,
+  sw: LifecycleSwitch,
   site: string,
   now: Date,
 ): Promise<{ due: number; sent: number; failed: number }> {
@@ -281,7 +287,7 @@ async function sendStandardEmails(
     );
     if (!e) continue;
     due += 1;
-    if (!enabled) continue;
+    if (!lifecycleMaySend(sw, e.id, process.env)) continue;
     const { data: auth } = await supabaseAdmin.auth.admin.getUserById(a.user_id);
     const to = auth?.user?.email;
     if (!to) continue;
@@ -310,7 +316,7 @@ const DATE = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", day: 
 
 /** E12 to E14: one email per logged event, at most 12 hours late. */
 async function sendEventEmails(
-  enabled: boolean,
+  sw: LifecycleSwitch,
   site: string,
   now: Date,
 ): Promise<{ due: number; sent: number; failed: number }> {
@@ -347,9 +353,11 @@ async function sendEventEmails(
     if (!profile || profile.deletion_scheduled_for) continue;
     const emails = eventEmails(list, new Set((log ?? []).map((l) => l.key)), now, {
       paymentFailing: Boolean(profile.payment_failed_at),
+    }).filter((e) => {
+      due += 1;
+      return lifecycleMaySend(sw, e.id, process.env);
     });
-    due += emails.length;
-    if (!enabled || emails.length === 0) continue;
+    if (emails.length === 0) continue;
 
     const { data: auth } = await supabaseAdmin.auth.admin.getUserById(userId);
     const to = auth?.user?.email;
@@ -373,6 +381,13 @@ async function sendEventEmails(
     }
   }
   return { due, sent, failed };
+}
+
+/** The admin switch (Emails & templates). Unreadable reads as off. */
+async function readSwitch(): Promise<LifecycleSwitch> {
+  const { data, error } = await supabaseAdmin.from("app_settings").select("value").eq("key", LIFECYCLE_SETTING_KEY).maybeSingle();
+  if (error) console.warn("[cron/lifecycle] could not read the email switch, sending nothing", error.message);
+  return parseLifecycleSwitch(error ? null : data?.value);
 }
 
 /** Lock, send and record one email. The log row is the lock. */

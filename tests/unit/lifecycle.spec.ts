@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { dueEmails, emailForEvent, inQuietHours, mayReceive, sendingEnabled, type LifecycleTeacher } from "@/app/lib/lifecycle";
+import { dueEmails, emailForEvent, inQuietHours, mayReceive, type LifecycleTeacher } from "@/app/lib/lifecycle";
 import { renderLifecycleEmail, LIFECYCLE_IDS } from "@/app/lib/lifecycle-emails";
 
 /*
@@ -123,11 +123,7 @@ test.describe("events and the switch", () => {
     expect(emailForEvent("resource_made")).toBeNull();
   });
 
-  test("off unless LIFECYCLE_EMAILS is exactly 'on'", () => {
-    expect(sendingEnabled({})).toBe(false);
-    expect(sendingEnabled({ LIFECYCLE_EMAILS: "true" })).toBe(false);
-    expect(sendingEnabled({ LIFECYCLE_EMAILS: "on" })).toBe(true);
-  });
+  // The on/off switch moved to Admin (20 Nov): tests/unit/lifecycle-switch.spec.ts.
 });
 
 test.describe("templates", () => {
