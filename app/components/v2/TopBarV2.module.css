@@ -254,3 +254,12 @@
     color: var(--j-orange-ink);
   }
 }
+
+/* Phones: P1's chip drops "trial" and the weekday ("Pro until 25 Nov"), so the
+   page title beside it keeps its name instead of "To...". Spaces sit inside
+   the spans, so hiding them leaves single spaces. */
+@media (max-width: 480px) {
+  .chipWide {
+    display: none;
+  }
+}

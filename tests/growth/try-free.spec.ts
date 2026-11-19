@@ -33,6 +33,11 @@ function encodePrefill(prefill: { slug: string; fields: Record<string, unknown> 
 test.setTimeout(240_000);
 const NAV = { timeout: 120_000 };
 
+/** Jo has finished typing the form in (the panel says so; on a desktop the card is open). */
+async function joFinished(page: Page) {
+  await expect(page.getByText("Jo filled this in", { exact: true }).first()).toBeVisible(NAV);
+}
+
 const SLIDE = {
   shapes: [],
   images: [],
@@ -216,6 +221,9 @@ test.describe("signed out", () => {
 
     const generate = page.locator("[data-jo-generate]");
     await expect(generate).toBeEnabled(NAV);
+    // Jo types the form in letter by letter; pressing Generate mid-fill sent
+    // "fraction" for "fractions" about one run in two.
+    await joFinished(page);
     await generate.click();
 
     const result = page.getByTestId("guest-result");
@@ -273,8 +281,10 @@ test.describe("signed out", () => {
     await expect(title).toHaveValue("Volcanoes and the Ring of Fire", NAV);
 
     // What the page sent: the wizard's params plus an empty honeypot, and
-    // never a run id of its own (the server mints those).
-    expect(calls.slideshow).toHaveLength(1);
+    // never a run id of its own (the server mints those). Polled: the editor
+    // can show the title before the stubbed request is recorded, and reading
+    // it at once saw none about one run in two.
+    await expect.poll(() => calls.slideshow.length, NAV).toBe(1);
     expect(calls.slideshow[0]).toMatchObject({ topic: "Volcanoes and the Ring of Fire", year: "Year 3", website: "" });
     expect(calls.slideshow[0].runId).toBeUndefined();
 
@@ -652,10 +662,13 @@ test.describe("on a phone", () => {
     await page.route("**/api/try/jo**", (route) => route.fulfill({ json: { left: 3 } }));
 
     await page.goto("/create?tool=comp&topic=Why%20do%20bees%20matter%3F");
-    // On a phone the "Jo filled this in" panel sits over the form's own
-    // button, and offers to press it.
+    // On a phone the "Jo filled this in" card waits folded behind a pill (open,
+    // it covered the form's own Generate button); tapped, it offers to press it.
     await expect(page.locator("[data-jo-generate]")).toBeEnabled(NAV);
-    await page.getByRole("button", { name: "Yes, generate" }).click(NAV);
+    const yes = page.getByRole("button", { name: "Yes, generate" });
+    await expect(yes).toBeHidden();
+    await page.getByRole("button", { name: "Jo filled this in" }).click(NAV);
+    await yes.click(NAV);
     const result = page.getByTestId("guest-result");
     await expect(result).toContainText("Bees carry pollen", NAV);
 

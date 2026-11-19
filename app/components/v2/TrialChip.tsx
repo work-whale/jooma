@@ -11,7 +11,7 @@ import { useAccountAccess } from "@/app/lib/useAccountAccess";
 import { useCountdown } from "@/app/lib/useCountdown";
 import { shortCountdown } from "@/app/lib/trial-offer";
 import { trialDateShort } from "@/app/lib/account-plan";
-import { PROMPT_COPY } from "@/app/lib/prompts";
+import { PROMPT_COPY, p1ChipParts } from "@/app/lib/prompts";
 import styles from "./TopBarV2.module.css";
 
 const DAY_MS = 86_400_000;
@@ -27,10 +27,21 @@ export default function TrialChip() {
   // Jooma 4.5: the Pro trial shows P1's chip, the actual end date, never a
   // countdown ("Show that actual date everywhere, never '3 days left'").
   if (access?.accountPlan === "pro_trial" && access.trialEndsAt) {
-    const label = PROMPT_COPY.P1.chip({ ends: trialDateShort(access.trialEndsAt) });
+    const ends = trialDateShort(access.trialEndsAt);
+    const label = PROMPT_COPY.P1.chip({ ends });
+    // Narrow phones drop "trial" and the weekday ("Pro until 25 Nov"): the
+    // full chip squeezed the page title beside it to "To...".
     return (
       <Link href="/pricing?plan=pro" className={styles.chip} data-testid="trial-chip" aria-label={label}>
-        {label}
+        {p1ChipParts(ends).map((part, i) =>
+          part.wide ? (
+            <span key={i} className={styles.chipWide}>
+              {part.text}
+            </span>
+          ) : (
+            part.text
+          ),
+        )}
       </Link>
     );
   }

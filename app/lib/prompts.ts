@@ -203,3 +203,21 @@ export const PROMPT_COPY = {
     buttons: ["Update card"],
   },
 } as const;
+
+/**
+ * P1's chip in pieces for the phone top bar. Joined, it is exactly
+ * PROMPT_COPY.P1.chip; the `wide` pieces ("trial " and the weekday) are hidden
+ * on narrow phones, where the full chip squeezed the page title to "To...",
+ * so it reads "Pro until 25 Nov" there and keeps the actual date.
+ */
+export function p1ChipParts(ends: string): { text: string; wide: boolean }[] {
+  const m = /^([A-Za-z]{3,9}) (.+)$/.exec(ends);
+  const weekday = m && !/^\d/.test(m[1]) ? m[1] : null;
+  return [
+    { text: "Pro ", wide: false },
+    { text: "trial ", wide: true },
+    { text: "until ", wide: false },
+    ...(weekday ? [{ text: `${weekday} `, wide: true }] : []),
+    { text: weekday ? m![2] : ends, wide: false },
+  ];
+}

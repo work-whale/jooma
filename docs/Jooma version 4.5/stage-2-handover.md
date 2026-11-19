@@ -519,3 +519,17 @@ Production on 19 Nov (read-only count): no school email domain had 3 accounts; 1
 1. Owner: review and commit. Production needs no new migration for Phase 3, only Phase 2's `20261119000000` to `000200` with the code.
 2. Optional: set `SCHOOL_LEADS_TO` if the list should go somewhere other than info@jooma.ai.
 3. Later, if wanted: E15 (held by the red note) and the public share link (needs its own plan).
+
+### 13.1 Open screen bugs fixed (19 Nov, late)
+
+The three open items from section 11, all fixed or settled:
+
+| Item | Cause | Fix |
+|---|---|---|
+| Ask Jo box on a phone hid the end of a long sentence | The mic button narrowed the box, so the 150px ceiling held less text | Ceiling `min(180px, 24svh)`: short phones still keep the conversation in view (`jo.module.css`) |
+| Phone trial chip squeezed the page title to "To..." | "Pro trial until Wed 25 Nov" beside the bell, avatar and burger | Up to 480px wide the chip reads "Pro until 25 Nov" (still the real date); the full text stays in the DOM and the aria label. `p1ChipParts` in `prompts.ts`, unit tested; Step 10 spec now checks the title is not cut off (seen failing on the old build) |
+| try-free phone test could not find "Yes, generate" | Not an app bug: since `f4b4e75` the card waits behind the "Jo filled this in" pill on purpose (open, it covered Generate) | Test taps the pill first |
+
+Two try-free tests were found flaky in the same run (one run in two) and fixed in the tests: the worksheet test pressed Generate while Jo was still typing ("fraction" for "fractions"), now waits for "Jo filled this in"; the Slides test read the request count before the stub recorded it, now polls. Both 8 of 8 on repeat.
+
+Tests: unit 2,154; `input-grow`, `try-free`, `step10` and `tests/shell` 125 of 125 on a fresh staging build.

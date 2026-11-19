@@ -227,6 +227,11 @@ test("1. sign up on Sunday 15 November: Pro until Wednesday 25 November 23:59, o
   await page.goto("/dashboard");
   await expect(page.getByTestId("trial-chip")).toHaveText("Pro trial until Wed 25 Nov", NAV);
   await expect(page.locator("body")).not.toContainText(/\d+d left|\bdays? left\b/i);
+  // Regression: the full chip squeezed the page title to "To...". A narrow
+  // phone shows the short form, and the title is not cut off.
+  await expect(page.getByTestId("trial-chip")).toHaveText("Pro until 25 Nov", { useInnerText: true });
+  const title = page.locator("[data-topbar] h2");
+  expect(await title.evaluate((h) => h.scrollWidth <= h.clientWidth)).toBe(true);
   await page.setViewportSize({ width: 1280, height: 720 });
 
   // Day 8 for that teacher (clock moved forward): the P1 banner on Today.

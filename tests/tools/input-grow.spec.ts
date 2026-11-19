@@ -71,7 +71,7 @@ test.describe("Ask Jo", () => {
     // A very long message stops growing and scrolls, so the conversation
     // stays in view above it.
     await box.fill(Array(12).fill(LONG).join(" "));
-    expect(await height(box)).toBeLessThanOrEqual(151);
+    expect(await height(box)).toBeLessThanOrEqual(181);
     expect(await box.evaluate((n) => n.scrollHeight > n.clientHeight)).toBe(true);
 
     const send = await page.getByTestId("jo-send").boundingBox();
