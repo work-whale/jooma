@@ -61,3 +61,8 @@ staging_seed.sql
 # Before/after screenshots and walkthrough videos for showing changes.
 # Kept locally, never committed.
 /docs/screenshots/
+
+# legislation.gov.uk footnote ids (key- plus 32 hex) look like Mailgun keys to GitHub push protection.
+# Kept locally only; refetch them as docs/uk-curricula-build.md section 3 says.
+docs/standards/uk/northern-ireland/nisr-2007-46-schedule-2.xml
+docs/standards/uk/northern-ireland/schedule-2-page.html

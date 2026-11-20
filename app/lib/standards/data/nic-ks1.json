@@ -1,0 +1,1660 @@
+{
+ "source": {
+  "title": "The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007, Schedule 2",
+  "file": "docs/standards/uk/northern-ireland/",
+  "url": "https://www.legislation.gov.uk/nisr/2007/46/schedule/2",
+  "credit": "Northern Ireland Curriculum statutory requirements, from The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007: © Crown copyright. Contains public sector information licensed under the Open Government Licence v3.0."
+ },
+ "statements": [
+  {
+   "id": "nic-ks1-74547b118f",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Participate in talking and listening in every area of learning"
+  },
+  {
+   "id": "nic-ks1-addcea6651",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Listen to, respond to and explore stories, poems, songs, drama, and media texts through the use of traditional and digital resources and recreate parts of them in a range of expressive activities"
+  },
+  {
+   "id": "nic-ks1-56e0894822",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Listen to, interpret and retell, with some supporting detail, a range of oral and written texts"
+  },
+  {
+   "id": "nic-ks1-88b7cbd49c",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Tell their own stories based on personal experiences and imagination"
+  },
+  {
+   "id": "nic-ks1-308de6eadb",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Listen to and respond to guidance and instructions"
+  },
+  {
+   "id": "nic-ks1-83c1817332",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Take turns at talking and listening in group and paired activities"
+  },
+  {
+   "id": "nic-ks1-0326d27a32",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Take part in a range of drama activities to support activity based learning across the curriculum"
+  },
+  {
+   "id": "nic-ks1-c11ecf95c2",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Express thoughts, feelings and opinions in response to personal experiences, imaginary situations, literature, media and curricular topics and activities"
+  },
+  {
+   "id": "nic-ks1-71176c4f00",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Present ideas and information with some structure and sequence"
+  },
+  {
+   "id": "nic-ks1-938b8afe6e",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Think about what they say and how they say it"
+  },
+  {
+   "id": "nic-ks1-05f1667836",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Speak audibly and clearly, using appropriate quality of speech and voice"
+  },
+  {
+   "id": "nic-ks1-8e4a9f271a",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Devise and ask questions to find information in social situations and across the curriculum"
+  },
+  {
+   "id": "nic-ks1-4566f38dd4",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Read aloud from a variety of sources, including their own work, inflecting appropriately to emphasise meaning"
+  },
+  {
+   "id": "nic-ks1-57c6057445",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise and talk about features of spoken language, showing phonological awareness."
+  },
+  {
+   "id": "nic-ks1-c1d1ea5a0e",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Participate in modelled, shared, paired and guided reading activities"
+  },
+  {
+   "id": "nic-ks1-88034373f0",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Read, and be read to from a wide selection of poetry and prose"
+  },
+  {
+   "id": "nic-ks1-812840b742",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Read with some independence for enjoyment and information"
+  },
+  {
+   "id": "nic-ks1-43657ba95b",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Read, explore, understand and make use of a range of traditional and digital texts"
+  },
+  {
+   "id": "nic-ks1-132fce6aef",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Re-tell, re-read and act out a range of texts, representing ideas through drama, pictures, diagrams and ICT"
+  },
+  {
+   "id": "nic-ks1-f493f9940d",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Begin to locate, select and use texts for specific purposes"
+  },
+  {
+   "id": "nic-ks1-7fbe1e0d04",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Research and manage information relevant to specific purposes, using traditional and digital sources, and present their findings in a variety of ways"
+  },
+  {
+   "id": "nic-ks1-d0d8ce08b0",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use a range of comprehension skills, both oral and written, to interpret and discuss texts"
+  },
+  {
+   "id": "nic-ks1-29830c6e54",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore and begin to understand how texts are structured in a range of genres"
+  },
+  {
+   "id": "nic-ks1-ecdb47191e",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore and interpret a range of visual texts"
+  },
+  {
+   "id": "nic-ks1-7516dfc861",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Express opinions and give reasons based on what they have read"
+  },
+  {
+   "id": "nic-ks1-910cf90222",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Begin to use evidence from text to support their views"
+  },
+  {
+   "id": "nic-ks1-9ab4a782a8",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Read and share their own books of stories and poems including the use of digital resources"
+  },
+  {
+   "id": "nic-ks1-57bfab04de",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Build up a sight vocabulary"
+  },
+  {
+   "id": "nic-ks1-973122d1be",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use a range of strategies to identify unfamiliar words"
+  },
+  {
+   "id": "nic-ks1-d26c8820de",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Talk with the teacher about ways in which language is written down, identifying phrases, words, patterns or letters and other features of written language"
+  },
+  {
+   "id": "nic-ks1-ffbab31b94",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise and notice how words are constructed and spelt."
+  },
+  {
+   "id": "nic-ks1-bbe738aa66",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Participate in modelled, shared, guided and independent writing, including composing on-screen"
+  },
+  {
+   "id": "nic-ks1-7dd7182400",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand and use a range of vocabulary by investigating and experimenting with language"
+  },
+  {
+   "id": "nic-ks1-4e4189d5e1",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Talk about and plan what they are going to write"
+  },
+  {
+   "id": "nic-ks1-c013134485",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Begin to check their work in relation to specific criteria"
+  },
+  {
+   "id": "nic-ks1-6a8e1727b8",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Write without prompting, making their own decisions about form and content"
+  },
+  {
+   "id": "nic-ks1-f915c8e362",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Write for a variety of purposes and audiences"
+  },
+  {
+   "id": "nic-ks1-b576124be3",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Express thoughts, feelings and opinions in imaginative and factual writing"
+  },
+  {
+   "id": "nic-ks1-78fdd31c79",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Organise, structure and present ideas and information using traditional and digital means"
+  },
+  {
+   "id": "nic-ks1-b479fe3ff0",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand some of the differences between spoken and written language"
+  },
+  {
+   "id": "nic-ks1-5f9e1ba1d7",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use a variety of skills to spell words in their writing"
+  },
+  {
+   "id": "nic-ks1-723c1d8a04",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Spell correctly a range of familiar, important and regularly occurring words"
+  },
+  {
+   "id": "nic-ks1-dad3fd8aac",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop increasing competence in the use of grammar and punctuation"
+  },
+  {
+   "id": "nic-ks1-738cafccee",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use a legible style of handwriting."
+  },
+  {
+   "id": "nic-ks1-eabf027742",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Making and Monitoring Decisions",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Select the materials and mathematics appropriate for a task"
+  },
+  {
+   "id": "nic-ks1-b215306dec",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Making and Monitoring Decisions",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop different approaches to problem solving"
+  },
+  {
+   "id": "nic-ks1-7657de43e0",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Making and Monitoring Decisions",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Begin to organise their own work and work systematically."
+  },
+  {
+   "id": "nic-ks1-de152e26d5",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Communicating Mathematically",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand mathematical language and be able to use it to talk about their work"
+  },
+  {
+   "id": "nic-ks1-899ee9b4c8",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Communicating Mathematically",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Represent work in a clear and organised way, using symbols where appropriate."
+  },
+  {
+   "id": "nic-ks1-62442aa42d",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Mathematical Reasoning",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise simple patterns and relationships and make predictions"
+  },
+  {
+   "id": "nic-ks1-f963077bd8",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Mathematical Reasoning",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Ask and respond to open-ended questions"
+  },
+  {
+   "id": "nic-ks1-7462ca46c4",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Mathematical Reasoning",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explain their way of working"
+  },
+  {
+   "id": "nic-ks1-ba99cbd0f6",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Processes in Mathematics: Mathematical Reasoning",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Know ways to check their own work."
+  },
+  {
+   "id": "nic-ks1-05d7cb7d55",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number and Number Notation",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Count, read, write and order whole numbers, initially to 10, progressing to at least 1,000"
+  },
+  {
+   "id": "nic-ks1-baaa95662d",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number and Number Notation",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand the empty set and the conservation of number"
+  },
+  {
+   "id": "nic-ks1-f578384422",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number and Number Notation",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand that the place of the digit indicates its value"
+  },
+  {
+   "id": "nic-ks1-384dda92c2",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number and Number Notation",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Make a sensible estimate of a small number of objects and begin to approximate to the nearest 10 or 100"
+  },
+  {
+   "id": "nic-ks1-b8bb5b7438",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number and Number Notation",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise and use simple everyday fractions."
+  },
+  {
+   "id": "nic-ks1-a6df6d0f69",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Patterns, Relationships and Sequences in Number",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Copy, continue and devise repeating patterns"
+  },
+  {
+   "id": "nic-ks1-fc4cf3b932",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Patterns, Relationships and Sequences in Number",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore patterns in number tables"
+  },
+  {
+   "id": "nic-ks1-615a1a1841",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Patterns, Relationships and Sequences in Number",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand the commutative property of addition and the relationship between addition and subtraction"
+  },
+  {
+   "id": "nic-ks1-04bb8f15da",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Patterns, Relationships and Sequences in Number",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand the use of a symbol to stand for an unknown number"
+  },
+  {
+   "id": "nic-ks1-ed11ea60e6",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Patterns, Relationships and Sequences in Number",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand and use simple function machines."
+  },
+  {
+   "id": "nic-ks1-b046781f1f",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Operations and their Applications",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand the operations of addition, subtraction, multiplication and division (without remainders) and use them to solve problems"
+  },
+  {
+   "id": "nic-ks1-e991f7c492",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Operations and their Applications",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Know addition and subtraction facts to 20 and the majority of multiplication facts up to 10 x 10"
+  },
+  {
+   "id": "nic-ks1-35599d716f",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Operations and their Applications",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop strategies for adding and subtracting mentally up to the addition of two two-digit numbers within 100."
+  },
+  {
+   "id": "nic-ks1-0cb173054b",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Money",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise coins and use them in simple contexts"
+  },
+  {
+   "id": "nic-ks1-d17c5a651e",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Money",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Add and subtract money up to £10, use the conventional way of recording money, and use these skills to solve problems"
+  },
+  {
+   "id": "nic-ks1-a81641954c",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Money",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Talk about the value of money and ways in which it could be spent, saved and kept safe"
+  },
+  {
+   "id": "nic-ks1-b7762a08a1",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Money",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Talk about what money is and alternatives for paying"
+  },
+  {
+   "id": "nic-ks1-1a6542fbd9",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Money",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Decide how to spend money."
+  },
+  {
+   "id": "nic-ks1-7a3c74e829",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand and use the language associated with length, ‘weight’, capacity, area and time"
+  },
+  {
+   "id": "nic-ks1-b4eea4d71b",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use non-standard units to measure and recognise the need for standard units"
+  },
+  {
+   "id": "nic-ks1-ff2cbc998a",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Know and use the most commonly used units to measure in purposeful contexts"
+  },
+  {
+   "id": "nic-ks1-1f0fb5de66",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Make estimates using arbitrary and standard units"
+  },
+  {
+   "id": "nic-ks1-3d547f3401",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Choose and use simple measuring instruments, reading and interpreting them with reasonable accuracy"
+  },
+  {
+   "id": "nic-ks1-7f409558e0",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Sequence everyday events; know the days of the week, months of the year and seasons; explore calendar patterns"
+  },
+  {
+   "id": "nic-ks1-77108e2e7d",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise times on the analogue clock and digital displays"
+  },
+  {
+   "id": "nic-ks1-18388e0f49",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand the conservation of measures."
+  },
+  {
+   "id": "nic-ks1-dd7895d5e3",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Exploration of Shape",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Sort 2-D and 3-D shapes in different ways"
+  },
+  {
+   "id": "nic-ks1-76ca56cf0a",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Exploration of Shape",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Make constructions, pictures and patterns using 2-D and 3-D shapes"
+  },
+  {
+   "id": "nic-ks1-373654aaf8",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Exploration of Shape",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Name and describe 2-D and 3-D shapes; recognise reflective symmetry"
+  },
+  {
+   "id": "nic-ks1-a560c9e79f",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Exploration of Shape",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore simple tessellation through practical activities."
+  },
+  {
+   "id": "nic-ks1-3d39348d97",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Position, Movement and Direction",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use prepositions to state position"
+  },
+  {
+   "id": "nic-ks1-99f68612db",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Position, Movement and Direction",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Understand angle as a measure of turn; understand and give instructions for turning through right angles"
+  },
+  {
+   "id": "nic-ks1-0b3eaaa8b2",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Position, Movement and Direction",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Recognise right-angled corners in 2-D and 3-D shapes"
+  },
+  {
+   "id": "nic-ks1-d754e7b9f0",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Position, Movement and Direction",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Know the four points of the compass"
+  },
+  {
+   "id": "nic-ks1-21f04b85d6",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space: Position, Movement and Direction",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use programmable devices to explore movement and direction."
+  },
+  {
+   "id": "nic-ks1-8b365aee5b",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Handling Data: Collecting, Representing and Interpreting Data",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Sort and classify objects for one or two criteria and represent results using Venn, Carroll and Tree diagrams"
+  },
+  {
+   "id": "nic-ks1-b6f82b6619",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Handling Data: Collecting, Representing and Interpreting Data",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Collect data, record and present it using real objects, drawings, tables, mapping diagrams, simple graphs and ICT software"
+  },
+  {
+   "id": "nic-ks1-3c8b248330",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Handling Data: Collecting, Representing and Interpreting Data",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Discuss and interpret the data"
+  },
+  {
+   "id": "nic-ks1-758aa0d3ce",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Handling Data: Collecting, Representing and Interpreting Data",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Extract information from a range of charts, diagrams and tables"
+  },
+  {
+   "id": "nic-ks1-51e39f98e2",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Handling Data: Collecting, Representing and Interpreting Data",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Enter and access information using a database."
+  },
+  {
+   "id": "nic-ks1-e58cfda43e",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Investigate and respond to direct sensory experience; including visual, verbal, spatial and tactile dimensions, memory and imagination"
+  },
+  {
+   "id": "nic-ks1-95dc194762",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Look at and talk about resource material to stimulate their own ideas"
+  },
+  {
+   "id": "nic-ks1-d8f878a0c3",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Enjoy and appreciate the work of artists and designers and craftworkers from their own and other cultures; use what has been viewed as a starting point for their own work"
+  },
+  {
+   "id": "nic-ks1-282b6af164",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore the visual elements of colour, tone, line, shape, form, space, texture and pattern to express ideas"
+  },
+  {
+   "id": "nic-ks1-f21450ee4c",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Talk about their own and others’ work and how it was made, use observations to identify difficulties and suggest modifications"
+  },
+  {
+   "id": "nic-ks1-c570a813bb",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Experiment with a range of media, materials, tools and processes such as: drawing, painting, printmaking, malleable materials, textiles and three-dimensional construction."
+  },
+  {
+   "id": "nic-ks1-36cf1bb62f",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Work creatively with sound by investigating, experimenting, selecting and combining sounds to express feelings, ideas, mood and atmosphere"
+  },
+  {
+   "id": "nic-ks1-9f3de237b5",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Sing and perform with simple instruments to develop vocal and manipulative control"
+  },
+  {
+   "id": "nic-ks1-3a944699f5",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Listen and respond to their own and others’ music-making, thinking and talking about sounds, effects and musical features in music that they create, perform or listen to."
+  },
+  {
+   "id": "nic-ks1-0945007b3b",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop their understanding of the world by engaging in a range of creative and imaginative role play situations by creating invented situations on their own and with others, and responding in role to the dramatic play of others and to the teacher in role"
+  },
+  {
+   "id": "nic-ks1-387fc470fa",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore a range of cultural and human issues in a safe environment by participating in dramatic activity and sharing ideas with others"
+  },
+  {
+   "id": "nic-ks1-d6185a851a",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop a range of drama strategies including freeze frame, tableau and hot seating"
+  },
+  {
+   "id": "nic-ks1-c97ae94b9b",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop dramatic skills appropriate to audience, context, purpose and task by using simple props to suggest character, and by using symbols and images to develop action and make meaning."
+  },
+  {
+   "id": "nic-ks1-b36f9a23d1",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "‘Me’ in the world"
+  },
+  {
+   "id": "nic-ks1-4742148ea8",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "How plants and animals rely on each other within the natural world"
+  },
+  {
+   "id": "nic-ks1-f39a111f14",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Interdependence of people and the environment"
+  },
+  {
+   "id": "nic-ks1-b1ca9efb0e",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "The effect of people on the natural environment over time"
+  },
+  {
+   "id": "nic-ks1-e26172edab",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Interdependence of people, plants, animals and place."
+  },
+  {
+   "id": "nic-ks1-3993109175",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "How place influences plant and animal life"
+  },
+  {
+   "id": "nic-ks1-14370fe91c",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Ways in which living things depend on and adapt to their environment"
+  },
+  {
+   "id": "nic-ks1-0146e87900",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Features of the immediate world and comparisons between places"
+  },
+  {
+   "id": "nic-ks1-35edb71e8f",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Change over time in local places"
+  },
+  {
+   "id": "nic-ks1-0fe0a87627",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Positive and negative effects of people on places."
+  },
+  {
+   "id": "nic-ks1-950cca35f5",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Sources of energy in the world"
+  },
+  {
+   "id": "nic-ks1-ed83102d2b",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "How and why people and animals move"
+  },
+  {
+   "id": "nic-ks1-85cb404482",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Changes in movement and energy over time."
+  },
+  {
+   "id": "nic-ks1-cefd9d70b2",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Change over Time",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Ways in which change occurs in the natural world"
+  },
+  {
+   "id": "nic-ks1-b7f1f42783",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Change over Time",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "How people and places have changed over time"
+  },
+  {
+   "id": "nic-ks1-f88e658edc",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Change over Time",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Positive change and how we have a responsibility to make an active contribution."
+  },
+  {
+   "id": "nic-ks1-4d9fe3cb3d",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Their self esteem and self confidence"
+  },
+  {
+   "id": "nic-ks1-8fed492c46",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Their own and others’ feelings and emotions and how their actions affect others"
+  },
+  {
+   "id": "nic-ks1-9591623288",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Positive attitudes to learning and achievement"
+  },
+  {
+   "id": "nic-ks1-0527f265ed",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Strategies and skills for keeping themselves healthy and safe."
+  },
+  {
+   "id": "nic-ks1-67572653e0",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Initiating and developing mutually satisfying relationships"
+  },
+  {
+   "id": "nic-ks1-49bb8b7095",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Responsibility and respect, honesty and fairness"
+  },
+  {
+   "id": "nic-ks1-497d40be77",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Constructive approaches to conflict"
+  },
+  {
+   "id": "nic-ks1-cb9616f2be",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Similarities and differences between people"
+  },
+  {
+   "id": "nic-ks1-c5547185a9",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Developing themselves as members of a community."
+  },
+  {
+   "id": "nic-ks1-12b611fb11",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Athletics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Participate in fun activities and physical challenges enabling them to begin to learn, understand and develop the core skills of running, jumping and throwing individually and in a co-operative context, using a variety of equipment"
+  },
+  {
+   "id": "nic-ks1-e76e31c224",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Athletics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Practise simple running techniques in a variety of fun activities"
+  },
+  {
+   "id": "nic-ks1-c449ebcecc",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Athletics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Practise jumping and throwing activities, initially from a stationary position progressing to a controlled run-up"
+  },
+  {
+   "id": "nic-ks1-958f29c91d",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Athletics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Measure performance in simple athletic activities."
+  },
+  {
+   "id": "nic-ks1-f7eadcc2b5",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Dance",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Use different parts of the body to explore personal and general space and to move using simple actions"
+  },
+  {
+   "id": "nic-ks1-074d0d7b79",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Dance",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Listen to, and move in response to, different stimuli and accompaniments"
+  },
+  {
+   "id": "nic-ks1-f694484177",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Dance",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Move in a controlled manner, at different speeds and in different directions, using different levels in space, (high, low), and different strengths (heavy, light)"
+  },
+  {
+   "id": "nic-ks1-c0f09a3adf",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Dance",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Perform simple steps and movements to given rhythms and musical phrases"
+  },
+  {
+   "id": "nic-ks1-2815f20ccd",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Dance",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Create, practise, remember and perform simple movement sequences"
+  },
+  {
+   "id": "nic-ks1-0819b2f939",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Dance",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop their movements progressively individually and in pairs."
+  },
+  {
+   "id": "nic-ks1-37c2962c56",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Games",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Practise and develop the skills of handling, hitting and kicking through a range of activities and using a variety of equipment"
+  },
+  {
+   "id": "nic-ks1-8da8d44bd5",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Games",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Develop the skills relevant to games, including running, stopping, jumping and skipping"
+  },
+  {
+   "id": "nic-ks1-b36c734480",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Games",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Make use of space to outwit an opponent"
+  },
+  {
+   "id": "nic-ks1-e293eb5217",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Games",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Take part in simple games involving individual and co-operative play."
+  },
+  {
+   "id": "nic-ks1-0a202550e4",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Gymnastics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore a range of movement skills, including travelling, jumping and landing, rolling, climbing, transferring weight, balancing"
+  },
+  {
+   "id": "nic-ks1-28745dbe52",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Gymnastics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Explore, practise and improve body management skills"
+  },
+  {
+   "id": "nic-ks1-294a44c70d",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Gymnastics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Form simple sequences by linking movements"
+  },
+  {
+   "id": "nic-ks1-1455eea252",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Gymnastics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Progress from working individually to working in pairs"
+  },
+  {
+   "id": "nic-ks1-cfca8abe6d",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Gymnastics",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "Evaluate their movements and those of others."
+  }
+ ]
+}

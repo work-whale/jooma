@@ -1,0 +1,105 @@
+<title>Favourites and Share Links</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap">
+<style>
+/* Layout: one narrow column, choice cards, then a short build list. */
+:root {
+  --bg: #f7f5fc; --card: #ffffff; --ink: #1d1730; --muted: #5d5670;
+  --line: #e4def3; --accent: #5b2ed6; --tint: #efe9fd; --ok: #1f7a4d; --warn: #a04a12;
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15121f; --card: #1f1a2e; --ink: #f1edfb; --muted: #aaa2c0;
+  --line: #342c4a; --accent: #a98bff; --tint: #2a2240; --ok: #6fd3a0; --warn: #f0a46a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15121f; --card: #1f1a2e; --ink: #f1edfb; --muted: #aaa2c0;
+  --line: #342c4a; --accent: #a98bff; --tint: #2a2240; --ok: #6fd3a0; --warn: #f0a46a; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 48px; }
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.15rem; font-weight: 800; margin: 0 0 12px; }
+.lede { color: var(--muted); margin: 6px 0 0; }
+.choices { display: grid; gap: 12px; }
+.choice { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 6px; }
+.q { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.pick { font-weight: 800; color: var(--accent); }
+.choice p { margin: 0; color: var(--ink); }
+ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+li { min-width: 0; }
+code { font-size: 0.86em; background: var(--tint); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.ok { color: var(--ok); font-weight: 700; }
+.todo { border-color: var(--warn); }
+.todo h2 { color: var(--warn); }
+</style>
+
+<main>
+  <header>
+    <h1>Favourites and Share Links</h1>
+    <p class="lede">Jooma, 20 Nov 2026. Built and tested on staging. Database change on production. Code not committed yet.</p>
+  </header>
+
+  <section>
+    <h2>Your 4 picks</h2>
+    <div class="choices">
+      <div class="choice">
+        <span class="q">What share link opens</span>
+        <span class="pick">Public view page</span>
+        <p>Anyone with link sees read only copy. No sign in. Has "Make your own" button. Jooma teachers can save a copy. Teacher can turn link off.</p>
+      </div>
+      <div class="choice">
+        <span class="q">Which tools can share</span>
+        <span class="pick">Classroom resources only</span>
+        <p>Slides, worksheets, comprehension, quizzes, homework, plans and more. Reports, pupil profiles, behaviour, SEND, letters and staff docs stay colleague only. No pupil name in WhatsApp group.</p>
+      </div>
+      <div class="choice">
+        <span class="q">Where stars live</span>
+        <span class="pick">Account + sidebar</span>
+        <p>Stars save to teacher account. Same at school and home. Sidebar "Pinned" now "Favourites". Old pins move over. Teacher can unstar defaults.</p>
+      </div>
+      <div class="choice">
+        <span class="q">What goes A to Z</span>
+        <span class="pick">Categories and filter chips</span>
+        <p>Sections and filter buttons go A to Z. Tools inside each section keep their order. Most used first.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>What got made</h2>
+    <ul>
+      <li><b>Favourites:</b> star icon on each tool. Favourites on top. Slides, Worksheets, Comprehension starred for all.</li>
+      <li><b>A to Z:</b> Assessment, Behaviour and SEND, Classroom resources, Communication, Leadership, Planning, Slides.</li>
+      <li><b>Share:</b> Library menu says "Share". Dialog has Colleagues and Link. Link gives WhatsApp, Viber, Messenger, Instagram, Copy link.</li>
+      <li><b>Public page:</b> <code>/share/&lt;token&gt;</code>. No teacher name. Hidden from Google. Nice preview card in chat apps.</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>Two app quirks</h2>
+    <ul>
+      <li><b>Instagram:</b> no web share link exists. Phone uses share sheet. Computer copies link, opens Instagram inbox.</li>
+      <li><b>Messenger on computer:</b> copies link, opens messenger.com. Direct send needs Facebook App ID in <code>NEXT_PUBLIC_FACEBOOK_APP_ID</code>.</li>
+    </ul>
+  </section>
+
+  <section class="box">
+    <h2>Tests</h2>
+    <ul>
+      <li><span class="ok">Pass:</span> 2,242 unit tests.</li>
+      <li><span class="ok">Pass:</span> 46 database safety checks. They found one hole first. Fixed.</li>
+      <li><span class="ok">Pass:</span> new browser tests. They caught missing preview picture. Fixed.</li>
+      <li>Not tested: real WhatsApp, Viber, Messenger apps opening. Can't run in test browser.</li>
+    </ul>
+  </section>
+
+  <section class="box todo">
+    <h2>You do next</h2>
+    <ul>
+      <li><span class="ok">Done:</span> migration <code>20261120000300_favourites_and_resource_links.sql</code> is on production (pushed 20 Nov).</li>
+      <li>Now commit and deploy the code.</li>
+      <li>Screenshots: <code>docs/screenshots/2026-11-20-favourites-share/</code>.</li>
+    </ul>
+  </section>
+</main>

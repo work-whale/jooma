@@ -61,6 +61,13 @@ test("Year 4 fractions: the year's statements, the best matches ticked, and the 
   await expect(year.locator("option:checked")).toHaveText("Key Stage 2 · Year 4");
   await expect(card).toContainText("National Curriculum in England");
 
+  // Regression: the old Country dropdown listed every other country as
+  // "coming soon", whatever the admin curriculum switches said. The card names
+  // the curriculum it follows instead.
+  await expect(card.getByTestId("curriculum-alignment-name")).toHaveText("National Curriculum in England");
+  await expect(card.getByLabel("Country")).toHaveCount(0);
+  await expect(card).not.toContainText(/coming soon/i);
+
   // The auto pick: asked once, for this topic and year, and applied.
   await expect(card.getByLabel("Subject")).toHaveValue("Maths", NAV);
   expect(calls.suggest).toEqual([{ topic: "Fractions", year: "Year 4" }]);

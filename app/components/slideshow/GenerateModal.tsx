@@ -15,7 +15,7 @@ import { DEFAULT_THEME_ID, DEFAULT_THEME_FOR_FAMILY, defaultFamilyForYear, getTh
 import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
 import { alignParamFor, type AlignStatement } from "@/app/lib/standards/align";
-import { alignmentMode } from "@/app/lib/standards";
+import { usesUkYearList } from "@/app/lib/curricula";
 import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
@@ -195,7 +195,7 @@ export default function GenerateModal({
   // A guest has no curriculum and gets the UK list.
   const teacherCurriculum = useTeacherCurriculum();
   const yearOptions =
-    guest || alignmentMode(teacherCurriculum.id) === "england"
+    guest || usesUkYearList(teacherCurriculum.id)
       ? YEARS
       : [...teacherCurriculum.curriculum.years.map((y) => y.label), "Adult learners"];
 

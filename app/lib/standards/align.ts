@@ -14,7 +14,25 @@ import { getCurriculum } from "@/app/lib/curricula";
 import type { NcStatement } from "@/app/lib/national-curriculum";
 import { curriculumAlignParam, type CurriculumAlign } from "@/app/lib/national-curriculum/prompt";
 
-import { FRAMEWORK_NAME, alignmentMode, frameworkOf, shortCode, usableFrameworks, type FrameworkId } from "./index";
+import { isCurriculumYear } from "@/app/lib/national-curriculum";
+
+import { FRAMEWORK_NAME, alignmentMode, alignmentStageLabel, alignmentYears, frameworkOf, shortCode, usableFrameworks, type FrameworkId } from "./index";
+
+/**
+ * Where the topic matcher (/api/suggest-subject) takes its candidates from:
+ * England's own statements for England, a curriculum's published standards
+ * when it has them for that year, otherwise nowhere (null). A curriculum
+ * without its own statements never falls back to England's.
+ */
+export function suggestionSource(curriculumId: unknown, year: string): "england" | "standards" | null {
+  const mode = alignmentMode(curriculumId);
+  if (mode === "england") return isCurriculumYear(year) ? "england" : null;
+  if (mode === "standards") {
+    const c = getCurriculum(curriculumId);
+    return c && alignmentYears(c).some((y) => y.label === year) ? "standards" : null;
+  }
+  return null;
+}
 
 /** A statement as the card holds it: England's have no code. */
 export interface AlignStatement {
@@ -41,17 +59,24 @@ export function alignParamFor(
     const f = frameworkOf(s.id);
     return f !== null && usable.has(f);
   });
-  if (mode === "none" || !c || !on || statements.length === 0 || !c.years.some((y) => y.label === year)) return undefined;
+  // The year must be one this curriculum has statements for: Scotland's Year 11
+  // (S4) is a year it has, but the senior phase has no Es and Os.
+  if (mode === "none" || !c || !on || statements.length === 0 || !alignmentYears(c).some((y) => y.label === year)) return undefined;
 
   const frameworks = [...new Set(statements.map((s) => frameworkOf(s.id)).filter((f): f is FrameworkId => f !== null))];
   const strands = new Set(statements.map((s) => s.strand));
-  const place = c.place ?? c.name;
+  // The UK nations are one country (GB) with a nation each: their own id names them.
+  const place = c.place ?? c.state ?? c.name;
+  // Two frameworks can share a name (Scotland's four levels): say it once.
+  const names = [...new Set(frameworks.map((f) => FRAMEWORK_NAME[f]))];
+  const stage = alignmentStageLabel(c, year);
   return {
-    countryId: c.country.toLowerCase(),
+    countryId: c.region === "uk" ? c.id : c.country.toLowerCase(),
     countryName: place,
-    curriculumName: frameworks.map((f) => FRAMEWORK_NAME[f]).join(" and ") + (c.alignment?.adapted ? ` (as adapted in ${place})` : ""),
+    curriculumName: names.join(" and ") + (c.alignment?.adapted ? ` (as adapted in ${place})` : ""),
     grade: year,
     year,
+    ...(stage ? { stage } : {}),
     subject: selection.subject || statements[0].subject,
     strand: selection.strand || (strands.size === 1 ? statements[0].strand : ""),
     statements: statements.map((s) => ({ id: s.id, text: s.code ? `${shortCode(s.code)}: ${s.text}` : s.text })),

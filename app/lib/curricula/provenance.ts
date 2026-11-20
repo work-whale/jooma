@@ -31,6 +31,7 @@ export const PROVENANCE: Record<string, Provenance> = {
   "scotland": {
     sheetRow: { tab: "Countries", name: "Scotland" },
     source: "https://education.gov.scot/curriculum-for-excellence/",
+    notes: "Align to curriculum (2026-11-20): the Experiences and Outcomes (Es and Os) from the 12 area PDFs at https://education.gov.scot/curriculum-for-excellence/curriculum-for-excellence-documents/experiences-and-outcomes/ (Crown copyright, reuse under the Open Government Licence v3.0 per https://education.gov.scot/terms-of-use). Excluded: every Gaelic-medium translation, Literacy and Gaidhlig, the across-learning documents, Benchmarks. Year to level by age: Nursery to Year 1 Early, Year 2 to 4 First, Year 5 to 7 Second, Year 8 to 10 Third and fourth (S1 = Year 8); Year 11 (S4) is the senior phase and has none.",
   },
   "wales": {
     sheetRow: { tab: "Countries", name: "Wales" },
@@ -39,6 +40,7 @@ export const PROVENANCE: Record<string, Provenance> = {
   "northern-ireland": {
     sheetRow: { tab: "Countries", name: "Northern Ireland" },
     source: "https://ccea.org.uk/",
+    notes: "Align to curriculum (2026-11-20): the statutory requirements (minimum content) of The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007, Schedule 2, from https://www.legislation.gov.uk/nisr/2007/46/schedule/2 (latest available revised version; all content on legislation.gov.uk is available under the Open Government Licence v3.0). Not CCEA's own documents, which are CCEA copyright and are not used. Foundation Stage, Key Stage 1 and Key Stage 2 only (Years 1 to 7, by year number: NI Year 3 is Year 3); Key Stages 3 and 4 are prose under objectives, not itemised statements, and are not built.",
   },
   "jersey": {
     sheetRow: { tab: "Countries", name: "Jersey" },

@@ -1,0 +1,2086 @@
+{
+ "source": {
+  "title": "Curriculum for Excellence experiences and outcomes",
+  "file": "docs/standards/uk/scotland/",
+  "url": "https://education.gov.scot/curriculum-for-excellence/curriculum-for-excellence-documents/experiences-and-outcomes/",
+  "credit": "Curriculum for Excellence experiences and outcomes: © Crown copyright, Education Scotland. Contains public sector information licensed under the Open Government Licence v3.0."
+ },
+ "statements": [
+  {
+   "id": "cfe-early-exa-0-01a",
+   "code": "EXA 0-01a",
+   "subject": "Expressive arts",
+   "strand": "Participation in performances and presentations",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have experienced the energy and excitement of presenting/performing for audiences and being part of an audience for other people’s presentations/performances."
+  },
+  {
+   "id": "cfe-early-exa-0-02a",
+   "code": "EXA 0-02a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have the freedom to discover and choose ways to create images and objects using a variety of materials."
+  },
+  {
+   "id": "cfe-early-exa-0-04a",
+   "code": "EXA 0-04a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can create a range of visual information through observing and recording from my experiences across the curriculum."
+  },
+  {
+   "id": "cfe-early-exa-0-05a",
+   "code": "EXA 0-05a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Inspired by a range of stimuli, I can express and communicate my ideas, thoughts and feelings through activities within art and design."
+  },
+  {
+   "id": "cfe-early-exa-0-06a",
+   "code": "EXA 0-06a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Working on my own and with others, I use my curiosity and imagination to solve design problems."
+  },
+  {
+   "id": "cfe-early-exa-0-07a",
+   "code": "EXA 0-07a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can respond to the work of artists and designers by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-early-exa-0-08a",
+   "code": "EXA 0-08a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have the opportunity and freedom to choose and explore ways that I can move rhythmically, expressively and playfully."
+  },
+  {
+   "id": "cfe-early-exa-0-09a",
+   "code": "EXA 0-09a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Inspired by a range of stimuli, I can express my ideas, thoughts and feelings through creative work in dance."
+  },
+  {
+   "id": "cfe-early-exa-0-10a",
+   "code": "EXA 0-10a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have opportunities to enjoy taking part in dance experiences."
+  },
+  {
+   "id": "cfe-early-exa-0-11a",
+   "code": "EXA 0-11a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can respond to the experience of dance by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-early-exa-0-12a",
+   "code": "EXA 0-12a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have the freedom to choose and explore how I can use my voice, movement, and expression in role play and drama."
+  },
+  {
+   "id": "cfe-early-exa-0-13a",
+   "code": "EXA 0-13a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Inspired by a range of stimuli, I can express and communicate my ideas, thoughts and feelings through drama."
+  },
+  {
+   "id": "cfe-early-exa-0-14a",
+   "code": "EXA 0-14a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I use drama to explore real and imaginary situations, helping me to understand my world."
+  },
+  {
+   "id": "cfe-early-exa-0-15a",
+   "code": "EXA 0-15a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can respond to the experience of drama by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-early-exa-0-16a",
+   "code": "EXA 0-16a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy singing and playing along to music of different styles and cultures."
+  },
+  {
+   "id": "cfe-early-exa-0-17a",
+   "code": "EXA 0-17a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have the freedom to use my voice, musical instruments and music technology to discover and enjoy playing with sound and rhythm."
+  },
+  {
+   "id": "cfe-early-exa-0-18a",
+   "code": "EXA 0-18a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Inspired by a range of stimuli, and working on my own and/or with others, I can express and communicate my ideas, thoughts and feelings through musical activities."
+  },
+  {
+   "id": "cfe-early-exa-0-19a",
+   "code": "EXA 0-19a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can respond to music by describing my thoughts and feelings about my own and others’ work."
+  },
+  {
+   "id": "cfe-early-hwb-0-01a",
+   "code": "HWB 0-01a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of and able to express my feelings and am developing the ability to talk about them."
+  },
+  {
+   "id": "cfe-early-hwb-0-02a",
+   "code": "HWB 0-02a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that we all experience a variety of thoughts and emotions that affect how we feel and behave and I am learning ways of managing them."
+  },
+  {
+   "id": "cfe-early-hwb-0-03a",
+   "code": "HWB 0-03a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand that there are people I can talk to and that there are a number of ways in which I can gain access to practical and emotional support to help me and others in a range of circumstances."
+  },
+  {
+   "id": "cfe-early-hwb-0-04a",
+   "code": "HWB 0-04a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand that my feelings and reactions can change depending upon what is happening within and around me. This helps me to understand my own behaviour and the way others behave."
+  },
+  {
+   "id": "cfe-early-hwb-0-05a",
+   "code": "HWB 0-05a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that friendship, caring, sharing, fairness, equality and love are important in building positive relationships. As I develop and value relationships, I care and show respect for myself and others."
+  },
+  {
+   "id": "cfe-early-hwb-0-06a",
+   "code": "HWB 0-06a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand the importance of mental wellbeing and that this can be fostered and strengthened through personal coping skills and positive relationships. I know that it is not always possible to enjoy good mental health and that if this happens there is support available."
+  },
+  {
+   "id": "cfe-early-hwb-0-07a",
+   "code": "HWB 0-07a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am learning skills and strategies which will support me in challenging times, particularly in relation to change and loss."
+  },
+  {
+   "id": "cfe-early-hwb-0-08a",
+   "code": "HWB 0-08a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand that people can feel alone and can be misunderstood and left out by others. I am learning how to give appropriate support."
+  },
+  {
+   "id": "cfe-early-hwb-0-09a",
+   "code": "HWB 0-09a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I explore the rights to which I and others are entitled, I am able to exercise these rights appropriately and accept the responsibilities that go with them. I show respect for the rights of others."
+  },
+  {
+   "id": "cfe-early-hwb-0-10a",
+   "code": "HWB 0-10a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I recognise that each individual has a unique blend of abilities and needs. I contribute to making my school community one which values individuals equally and is a welcoming place for all."
+  },
+  {
+   "id": "cfe-early-hwb-0-11a",
+   "code": "HWB 0-11a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I make full use of and value the opportunities I am given to improve and manage my learning and, in turn, I can help to encourage learning and confidence in others."
+  },
+  {
+   "id": "cfe-early-hwb-0-12a",
+   "code": "HWB 0-12a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Representing my class, school and/or wider community encourages my self-worth and confidence and allows me to contribute to and participate in society."
+  },
+  {
+   "id": "cfe-early-hwb-0-13a",
+   "code": "HWB 0-13a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through contributing my views, time and talents, I play a part in bringing about positive change in my school and wider community."
+  },
+  {
+   "id": "cfe-early-hwb-0-14a",
+   "code": "HWB 0-14a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I value the opportunities I am given to make friends and be part of a group in a range of situations."
+  },
+  {
+   "id": "cfe-early-hwb-0-15a",
+   "code": "HWB 0-15a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am developing my understanding of the human body and can use this knowledge to maintain and improve my wellbeing and health."
+  },
+  {
+   "id": "cfe-early-hwb-0-16a",
+   "code": "HWB 0-16a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am learning to assess and manage risk, to protect myself and others, and to reduce the potential for harm when possible."
+  },
+  {
+   "id": "cfe-early-hwb-0-17a",
+   "code": "HWB 0-17a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know and can demonstrate how to keep myself and others safe and how to respond in a range of emergency situations."
+  },
+  {
+   "id": "cfe-early-hwb-0-18a",
+   "code": "HWB 0-18a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know and can demonstrate how to travel safely."
+  },
+  {
+   "id": "cfe-early-hwb-0-19a",
+   "code": "HWB 0-19a",
+   "subject": "Health and wellbeing",
+   "strand": "Planning for choices and changes",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "In everyday activity and play, I explore and make choices to develop my learning and interests. I am encouraged to use and share my experiences."
+  },
+  {
+   "id": "cfe-early-hwb-0-20a",
+   "code": "HWB 0-20a",
+   "subject": "Health and wellbeing",
+   "strand": "Planning for choices and changes",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can describe some of the kinds of work that people do and I am finding out about the wider world of work."
+  },
+  {
+   "id": "cfe-early-hwb-0-21a",
+   "code": "HWB 0-21a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Movement skills, competencies and concepts",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am learning to move my body well, exploring how to manage and control it and finding out how to use and share space."
+  },
+  {
+   "id": "cfe-early-hwb-0-22a",
+   "code": "HWB 0-22a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Movement skills, competencies and concepts",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am developing my movement skills through practice and energetic play."
+  },
+  {
+   "id": "cfe-early-hwb-0-23a",
+   "code": "HWB 0-23a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Cooperation and competition",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of my own and others’ needs and feelings especially when taking turns and sharing resources. I recognise the need to follow rules."
+  },
+  {
+   "id": "cfe-early-hwb-0-24a",
+   "code": "HWB 0-24a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Evaluating and appreciating",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "By exploring and observing movement, I can describe what I have learned about it."
+  },
+  {
+   "id": "cfe-early-hwb-0-25a",
+   "code": "HWB 0-25a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and sport",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am enjoying daily opportunities to participate in different kinds of energetic play, both outdoors and indoors."
+  },
+  {
+   "id": "cfe-early-hwb-0-27a",
+   "code": "HWB 0-27a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and health",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that being active is a healthy way to be."
+  },
+  {
+   "id": "cfe-early-hwb-0-28a",
+   "code": "HWB 0-28a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and health",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can describe how I feel after taking part in energetic activities and I am becoming aware of some of the changes that take place in my body."
+  },
+  {
+   "id": "cfe-early-hwb-0-29a",
+   "code": "HWB 0-29a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Nutrition",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy eating a diversity of foods in a range of social situations."
+  },
+  {
+   "id": "cfe-early-hwb-0-30a",
+   "code": "HWB 0-30a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Nutrition",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Together we enjoy handling, tasting, talking and learning about different foods, discovering ways in which eating and drinking may help us to grow and keep healthy."
+  },
+  {
+   "id": "cfe-early-hwb-0-32a",
+   "code": "HWB 0-32a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Nutrition",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that people need different kinds of food to keep them healthy."
+  },
+  {
+   "id": "cfe-early-hwb-0-33a",
+   "code": "HWB 0-33a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Safe and hygienic practices",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am becoming aware of how cleanliness, hygiene and safety can affect health and wellbeing and I apply this knowledge in my everyday routines such as taking care of my teeth."
+  },
+  {
+   "id": "cfe-early-hwb-0-35a-43ee7e",
+   "code": "HWB 0-35a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Food and the consumer",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore and discover where foods come from as I choose, prepare and taste different foods."
+  },
+  {
+   "id": "cfe-early-hwb-0-38a",
+   "code": "HWB 0-38a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand there are things I should not touch or eat and how to keep myself safe, and I am learning what is meant by medicines and harmful substances."
+  },
+  {
+   "id": "cfe-early-hwb-0-42a",
+   "code": "HWB 0-42a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can show ways of getting help in unsafe situations and emergencies."
+  },
+  {
+   "id": "cfe-early-hwb-0-44a",
+   "code": "HWB 0-44a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of how friendships are formed and that likes, dislikes, special qualities and needs can influence relationships."
+  },
+  {
+   "id": "cfe-early-hwb-0-44b",
+   "code": "HWB 0-44b",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand positive things about friendships and relationships but when something worries or upsets me I know who I should talk to."
+  },
+  {
+   "id": "cfe-early-hwb-0-45a",
+   "code": "HWB 0-45a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that there are people in our lives who care for and look after us and I am aware that people may be cared for by parents, carers or other adults."
+  },
+  {
+   "id": "cfe-early-hwb-0-45b",
+   "code": "HWB 0-45b",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of the need to respect personal space and boundaries and can recognise and respond appropriately to verbal and non-verbal communication."
+  },
+  {
+   "id": "cfe-early-hwb-0-47a-80b125",
+   "code": "HWB 0-47a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I recognise that we have similarities and differences but are all unique."
+  },
+  {
+   "id": "cfe-early-hwb-0-47b-e9d39b",
+   "code": "HWB 0-47b",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of my growing body and I am learning the correct names for its different parts and how they work."
+  },
+  {
+   "id": "cfe-early-hwb-0-48a",
+   "code": "HWB 0-48a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am learning what I can do to look after my body and who can help me."
+  },
+  {
+   "id": "cfe-early-hwb-0-49a",
+   "code": "HWB 0-49a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am learning about respect for my body and what behaviour is right and wrong. I know who I should talk to if I am worried about this."
+  },
+  {
+   "id": "cfe-early-hwb-0-50a",
+   "code": "HWB 0-50a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am learning about where living things come from and about how they grow, develop and are nurtured."
+  },
+  {
+   "id": "cfe-early-hwb-0-51a",
+   "code": "HWB 0-51a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am able to show an awareness of the tasks required to look after a baby."
+  },
+  {
+   "id": "cfe-early-lgl-0-01a-8cefe1",
+   "code": "LGL 0-01a / LGL 0-05a / LGL 0-07a / LGL 0-08a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening for information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through listening to and joining in with story-telling, games, rhymes and songs, I have explored and experimented with sound patterns, words and phrases in Gaelic."
+  },
+  {
+   "id": "cfe-early-lgl-0-02a",
+   "code": "LGL 0-02a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have explored and experimented with the patterns and sounds of the language and can use what I have learned."
+  },
+  {
+   "id": "cfe-early-lgl-0-04a",
+   "code": "LGL 0-04a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through daily experiences and play I can listen or watch for interesting or useful information."
+  },
+  {
+   "id": "cfe-early-lgl-0-01a-df67fc",
+   "code": "LGL 0-01a / LGL 0-05a / LGL 0-07a / LGL 0-08a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through listening to and joining in with story-telling, games, rhymes and songs, I have explored and experimented with sound patterns, words and phrases in Gaelic."
+  },
+  {
+   "id": "cfe-early-lgl-0-06a",
+   "code": "LGL 0-06a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Organising and using information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can listen, watch and use play to explore aspects of Gaelic culture."
+  },
+  {
+   "id": "cfe-early-lgl-0-01a-62c291",
+   "code": "LGL 0-01a / LGL 0-05a / LGL 0-07a / LGL 0-08a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Using knowledge about language",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through listening to and joining in with story-telling, games, rhymes and songs, I have explored and experimented with sound patterns, words and phrases."
+  },
+  {
+   "id": "cfe-early-lgl-0-01a-720738",
+   "code": "LGL 0-01a / LGL 0-05a / LGL 0-07a / LGL 0-08a",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through listening to and joining in with story-telling, games, rhymes and songs, I have explored and enjoyed using sound patterns, words and phrases in Gaelic."
+  },
+  {
+   "id": "cfe-early-lgl-0-11a-a48a85",
+   "code": "LGL 0-11a / LGL 0-12a / LGL 0-13a",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have explored and experimented with Gaelic words and phrases."
+  },
+  {
+   "id": "cfe-early-lgl-0-11a-07ca5a",
+   "code": "LGL 0-11a / LGL 0-12a / LGL 0-13a",
+   "subject": "Gaelic (learners)",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have explored and experimented with Gaelic words and phrases."
+  },
+  {
+   "id": "cfe-early-lgl-0-11a-aa4cc8",
+   "code": "LGL 0-11a / LGL 0-12a / LGL 0-13a",
+   "subject": "Gaelic (learners)",
+   "strand": "Writing: Using knowledge about language",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have explored and experimented with Gaelic words and phrases."
+  },
+  {
+   "id": "cfe-early-lit-0-01a-6b948e",
+   "code": "LIT 0-01a / LIT 0-11a / LIT 0-20a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Enjoyment and choice",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring and playing with the patterns and sounds of language, and can use what I learn."
+  },
+  {
+   "id": "cfe-early-lit-0-01b-e917ce",
+   "code": "LIT 0-01b / LIT 0-11b",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Enjoyment and choice",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring and choosing stories and other texts to watch, read or listen to, and can share my likes and dislikes."
+  },
+  {
+   "id": "cfe-early-lit-0-01c",
+   "code": "LIT 0-01c",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Enjoyment and choice",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring events and characters in stories and other texts, sharing my thoughts in different ways."
+  },
+  {
+   "id": "cfe-early-lit-0-02a",
+   "code": "LIT 0-02a / ENG 0-03a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Tools for listening and talking",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I listen and talk in different situations, I am learning to take turns and am developing my awareness of when to talk and when to listen."
+  },
+  {
+   "id": "cfe-early-lit-0-04a",
+   "code": "LIT 0-04a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Finding and using information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I listen or watch for useful or interesting information and I use this to make choices or learn new things."
+  },
+  {
+   "id": "cfe-early-lit-0-07a-b578d5",
+   "code": "LIT 0-07a / LIT 0-16a / ENG 0-17a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Understanding, analysing and evaluating",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "To help me understand stories and other texts, I ask questions and link what I am learning with what I already know."
+  },
+  {
+   "id": "cfe-early-lit-0-09a",
+   "code": "LIT 0-09a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Creating texts",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Within real and imaginary situations, I share experiences and feelings, ideas and information in a way that communicates my message."
+  },
+  {
+   "id": "cfe-early-lit-0-09b-883fb8",
+   "code": "LIT 0-09b / LIT 0-31a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Creating texts",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring events and characters in stories and other texts and I use what I learn to invent my own, sharing these with others in imaginative ways."
+  },
+  {
+   "id": "cfe-early-lit-0-10a",
+   "code": "LIT 0-10a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Creating texts",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I listen and take part in conversations and discussions, I discover new words and phrases which I use to help me express my ideas, thoughts and feelings."
+  },
+  {
+   "id": "cfe-early-lit-0-01a-7015fa",
+   "code": "LIT 0-01a / LIT 0-11a / LIT 0-20a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Enjoyment and choice",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring and playing with the patterns and sounds of language and can use what I learn."
+  },
+  {
+   "id": "cfe-early-lit-0-01b-34f107",
+   "code": "LIT 0-01b / LIT 0-11b",
+   "subject": "Literacy and English",
+   "strand": "Reading: Enjoyment and choice",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring and choosing stories and other texts to watch, read or listen to, and can share my likes and dislikes."
+  },
+  {
+   "id": "cfe-early-eng-0-12a-eb796a",
+   "code": "ENG 0-12a / LIT 0-13a / LIT 0-21a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Tools for reading",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore sounds, letters and words, discovering how they work together, and I can use what I learn to help me as I read and write."
+  },
+  {
+   "id": "cfe-early-lit-0-14a",
+   "code": "LIT 0-14a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I use signs, books or other texts to find useful or interesting information and I use this to plan, make choices or learn new things."
+  },
+  {
+   "id": "cfe-early-lit-0-07a-1f1fba",
+   "code": "LIT 0-07a / LIT 0-16a / ENG 0-17a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Understanding, analysing and evaluating",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "To help me understand stories and other texts, I ask questions and link what I am learning with what I already know."
+  },
+  {
+   "id": "cfe-early-lit-0-19a",
+   "code": "LIT 0-19a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Understanding, analysing and evaluating",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring events and characters in stories and other texts, sharing my thoughts in different ways."
+  },
+  {
+   "id": "cfe-early-lit-0-01a-c3f5d7",
+   "code": "LIT 0-01a / LIT 0-11a / LIT 0-20a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Enjoyment and choice",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring and playing with the patterns and sounds of language and can use what I learn."
+  },
+  {
+   "id": "cfe-early-eng-0-12a-a01bbe",
+   "code": "ENG 0-12a / LIT 0-13a / LIT 0-21a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Tools for writing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore sounds, letters and words, discovering how they work together, and I can use what I learn to help me as I read or write."
+  },
+  {
+   "id": "cfe-early-lit-0-21b",
+   "code": "LIT 0-21b",
+   "subject": "Literacy and English",
+   "strand": "Writing: Tools for writing",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I play and learn, I enjoy exploring interesting materials for writing and different ways of recording my experiences and feelings, ideas and information."
+  },
+  {
+   "id": "cfe-early-lit-0-26a",
+   "code": "LIT 0-26a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Within real and imaginary situations, I share experiences and feelings, ideas and information in a way that communicates my message."
+  },
+  {
+   "id": "cfe-early-lit-0-09b-af4a4c",
+   "code": "LIT 0-09b / LIT 0-31a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Creating texts",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring events and characters in stories and other texts and I use what I learn to invent my own, sharing these with others in imaginative ways."
+  },
+  {
+   "id": "cfe-early-mnu-0-01a",
+   "code": "MNU 0-01a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Estimation and rounding",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am developing a sense of size and amount by observing, exploring, using and communicating with others about things in the world around me."
+  },
+  {
+   "id": "cfe-early-mnu-0-02a",
+   "code": "MNU 0-02a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have explored numbers, understanding that they represent quantities, and I can use them to count, create sequences and describe order."
+  },
+  {
+   "id": "cfe-early-mnu-0-03a",
+   "code": "MNU 0-03a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I use practical materials and can ‘count on and back’ to help me to understand addition and subtraction, recording my ideas and solutions in different ways."
+  },
+  {
+   "id": "cfe-early-mnu-0-07a",
+   "code": "MNU 0-07a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Fractions, decimal fractions and percentages",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can share out a group of items by making smaller groups and can split a whole object into smaller parts."
+  },
+  {
+   "id": "cfe-early-mnu-0-09a",
+   "code": "MNU 0-09a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Money",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am developing my awareness of how money is used and can recognise and use a range of coins."
+  },
+  {
+   "id": "cfe-early-mnu-0-10a",
+   "code": "MNU 0-10a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Time",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of how routines and events in my world link with times and seasons, and have explored ways to record and display these using clocks, calendars and other methods."
+  },
+  {
+   "id": "cfe-early-mnu-0-11a",
+   "code": "MNU 0-11a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Measurement",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have experimented with everyday items as units of measure to investigate and compare sizes and amounts in my environment, sharing my findings with others."
+  },
+  {
+   "id": "cfe-early-mth-0-13a",
+   "code": "MTH 0-13a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Patterns and relationships",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have spotted and explored patterns in my own and the wider environment and can copy and continue these and create my own patterns."
+  },
+  {
+   "id": "cfe-early-mth-0-16a",
+   "code": "MTH 0-16a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Properties of 2D shapes and 3D objects",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy investigating objects and shapes and can sort, describe and be creative with them."
+  },
+  {
+   "id": "cfe-early-mth-0-17a",
+   "code": "MTH 0-17a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "In movement, games, and using technology I can use simple directions and describe positions."
+  },
+  {
+   "id": "cfe-early-mth-0-19a",
+   "code": "MTH 0-19a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have had fun creating a range of symmetrical pictures and patterns using a range of media."
+  },
+  {
+   "id": "cfe-early-mnu-0-20a",
+   "code": "MNU 0-20a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Data and analysis",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can collect objects and ask questions to gather information, organising and displaying my findings in different ways."
+  },
+  {
+   "id": "cfe-early-mnu-0-20b",
+   "code": "MNU 0-20b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Data and analysis",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can match objects, and sort using my own and others’ criteria, sharing my ideas with others."
+  },
+  {
+   "id": "cfe-early-mnu-0-20c",
+   "code": "MNU 0-20c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Data and analysis",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can use the signs and charts around me for information, helping me plan and make choices and decisions in my daily life."
+  },
+  {
+   "id": "cfe-early-rme-0-01a",
+   "code": "RME 0-01a",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Beliefs",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I explore Christian stories, images, music and poems, I am becoming familiar with some beliefs Christian people have about God and Jesus."
+  },
+  {
+   "id": "cfe-early-rme-0-02a",
+   "code": "RME 0-02a",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Values and issues",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I play and learn, I am developing my understanding of what is fair and unfair and the importance of caring for, sharing and cooperating with others."
+  },
+  {
+   "id": "cfe-early-rme-0-03a",
+   "code": "RME 0-03a",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Practices and traditions",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am becoming aware of the importance of celebrations, festivals and customs in Christian people’s lives."
+  },
+  {
+   "id": "cfe-early-rme-0-04a",
+   "code": "RME 0-04a",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Beliefs",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I explore stories, images, music and poems, I am becoming familiar with the beliefs of the world religions I am learning about."
+  },
+  {
+   "id": "cfe-early-rme-0-05a",
+   "code": "RME 0-05a",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Values and issues",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I play and learn, I am developing my understanding of what is fair and unfair and the importance of caring for, sharing and cooperating with others."
+  },
+  {
+   "id": "cfe-early-rme-0-06a",
+   "code": "RME 0-06a",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Practices and traditions",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am becoming aware of the importance of celebrations, festivals and customs in religious people’s lives."
+  },
+  {
+   "id": "cfe-early-rme-0-07a",
+   "code": "RME 0-07a",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am developing respect for others and my understanding of their beliefs and values."
+  },
+  {
+   "id": "cfe-early-rme-0-09a",
+   "code": "RME 0-09a",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "As I play and learn, I am developing my understanding of what is fair and unfair and why caring and sharing are important."
+  },
+  {
+   "id": "cfe-early-rerc-0-01a",
+   "code": "RERC 0-01a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Mystery of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore God’s natural world and I am beginning to see the wonder and awe of this gift in the world around me."
+  },
+  {
+   "id": "cfe-early-rerc-0-02a",
+   "code": "RERC 0-02a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: In the Image of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can share my awareness of what makes me a unique child who has been given gifts from God."
+  },
+  {
+   "id": "cfe-early-rerc-0-03a",
+   "code": "RERC 0-03a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Revealed Truth of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of God’s love for me and His call for me to be close to Him."
+  },
+  {
+   "id": "cfe-early-rerc-0-04a",
+   "code": "RERC 0-04a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Revealed Truth of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am becoming aware of God as Father, Son and Holy Spirit."
+  },
+  {
+   "id": "cfe-early-rerc-0-05a",
+   "code": "RERC 0-05a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Son of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am familiar with the Christmas story and I know that at Christmas we celebrate the birth of Jesus the Son of God and Son of Mary."
+  },
+  {
+   "id": "cfe-early-rerc-0-07a",
+   "code": "RERC 0-07a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Son of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am familiar with the Easter story and I understand that God raised Jesus from the dead to be with us."
+  },
+  {
+   "id": "cfe-early-rerc-0-08a",
+   "code": "RERC 0-08a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Signs of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of being part of a community and I have begun to explore aspects of the local Catholic community."
+  },
+  {
+   "id": "cfe-early-rerc-0-11a",
+   "code": "RERC 0-11a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Word of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of some Bible stories."
+  },
+  {
+   "id": "cfe-early-rerc-0-12a",
+   "code": "RERC 0-12a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Word of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that the Bible is the inspired Word of God and that I should treat it with reverence."
+  },
+  {
+   "id": "cfe-early-rerc-0-14a",
+   "code": "RERC 0-14a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that when I pray I am speaking to God."
+  },
+  {
+   "id": "cfe-early-rerc-0-15a",
+   "code": "RERC 0-15a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware that Mary is the Mother of Jesus and Our Mother."
+  },
+  {
+   "id": "cfe-early-rerc-0-16a",
+   "code": "RERC 0-16a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can share that Sunday is a special day when the Catholic Christian community meets to celebrate Mass."
+  },
+  {
+   "id": "cfe-early-rerc-0-17a",
+   "code": "RERC 0-17a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have experienced liturgy as a community event."
+  },
+  {
+   "id": "cfe-early-rerc-0-18a",
+   "code": "RERC 0-18a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can recognise Easter and Christmas as special times for the Christian Community."
+  },
+  {
+   "id": "cfe-early-rerc-0-20a",
+   "code": "RERC 0-20a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know that God invites us to show love to others."
+  },
+  {
+   "id": "cfe-early-rerc-0-21a",
+   "code": "RERC 0-21a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can respond to stories that reflect Christian values."
+  },
+  {
+   "id": "cfe-early-scn-0-01a",
+   "code": "SCN 0-01a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Biodiversity and interdependence",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have observed living things in the environment over time and am becoming aware of how they depend on each other."
+  },
+  {
+   "id": "cfe-early-scn-0-03a",
+   "code": "SCN 0-03a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Biodiversity and interdependence",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have helped to grow plants and can name their basic parts. I can talk about how they grow and what I need to do to look after them."
+  },
+  {
+   "id": "cfe-early-scn-0-04a",
+   "code": "SCN 0-04a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Energy sources and sustainability",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have experienced, used and described a wide range of toys and common appliances. I can say ‘what makes it go’ and say what they do when they work."
+  },
+  {
+   "id": "cfe-early-scn-0-05a",
+   "code": "SCN 0-05a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Processes of the planet",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "By investigating how water can change from one form to another, I can relate my findings to everyday experiences."
+  },
+  {
+   "id": "cfe-early-scn-0-06a",
+   "code": "SCN 0-06a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Space",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have experienced the wonder of looking at the vastness of the sky, and can recognise the sun, moon and stars and link them to daily patterns of life."
+  },
+  {
+   "id": "cfe-early-scn-0-07a",
+   "code": "SCN 0-07a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Forces",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through everyday experiences and play with a variety of toys and other objects, I can recognise simple types of forces and describe their effects."
+  },
+  {
+   "id": "cfe-early-scn-0-09a",
+   "code": "SCN 0-09a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Electricity",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I know how to stay safe when using electricity. I have helped to make a display to show the importance of electricity in our daily lives."
+  },
+  {
+   "id": "cfe-early-scn-0-11a",
+   "code": "SCN 0-11a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Vibrations and waves",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through play, I have explored a variety of ways of making sounds."
+  },
+  {
+   "id": "cfe-early-hwb-0-47b-2ae8ec",
+   "code": "HWB 0-47b",
+   "subject": "Sciences",
+   "strand": "Biological systems: Body systems and cells",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware of my growing body and I am learning the correct names for its different parts and how they work."
+  },
+  {
+   "id": "cfe-early-scn-0-12a",
+   "code": "SCN 0-12a",
+   "subject": "Sciences",
+   "strand": "Biological systems: Body systems and cells",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can identify my senses and use them to explore the world around me."
+  },
+  {
+   "id": "cfe-early-hwb-0-47a-880ba1",
+   "code": "HWB 0-47a",
+   "subject": "Sciences",
+   "strand": "Biological systems: Inheritance",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I recognise that we have similarities and differences but are all unique."
+  },
+  {
+   "id": "cfe-early-scn-0-15a",
+   "code": "SCN 0-15a",
+   "subject": "Sciences",
+   "strand": "Materials: Properties and uses of substances",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Through creative play, I explore different materials and can share my reasoning for selecting materials for different purposes."
+  },
+  {
+   "id": "cfe-early-scn-0-20a",
+   "code": "SCN 0-20a",
+   "subject": "Sciences",
+   "strand": "Topical science: Topical science",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can talk about science stories to develop my understanding of science and the world around me."
+  },
+  {
+   "id": "cfe-early-soc-0-01a",
+   "code": "SOC 0-01a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware that different types of evidence can help me to find out about the past."
+  },
+  {
+   "id": "cfe-early-soc-0-02a",
+   "code": "SOC 0-02a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can make a personal link to the past by exploring items or images connected with important individuals or special events in my life."
+  },
+  {
+   "id": "cfe-early-soc-0-04a",
+   "code": "SOC 0-04a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have explored how people lived in the past and have used imaginative play to show how their lives were different from my own and the people around me."
+  },
+  {
+   "id": "cfe-early-soc-0-07a",
+   "code": "SOC 0-07a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore and discover the interesting features of my local environment to develop an awareness of the world around me."
+  },
+  {
+   "id": "cfe-early-soc-0-08a",
+   "code": "SOC 0-08a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore and appreciate the wonder of nature within different environments and have played a part in caring for the environment."
+  },
+  {
+   "id": "cfe-early-hwb-0-35a-74c40e",
+   "code": "HWB 0-35a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore and discover where foods come from as I choose, prepare and taste different foods."
+  },
+  {
+   "id": "cfe-early-soc-0-09a",
+   "code": "SOC 0-09a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I have experimented with imaginative ways such as modelling and drawing, to represent the world around me, the journeys I make and the different ways I can travel."
+  },
+  {
+   "id": "cfe-early-soc-0-12a",
+   "code": "SOC 0-12a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "While learning outdoors in differing weathers, I have described and recorded the weather, its effects and how it makes me feel and can relate my recordings to the seasons."
+  },
+  {
+   "id": "cfe-early-soc-0-15a",
+   "code": "SOC 0-15a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I am aware that different types of evidence can help me to find out about the world around me."
+  },
+  {
+   "id": "cfe-early-soc-0-16a",
+   "code": "SOC 0-16a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "By exploring my local community, I have discovered the different roles people play and how they can help."
+  },
+  {
+   "id": "cfe-early-soc-0-17a",
+   "code": "SOC 0-17a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I make decisions and take responsibility in my everyday experiences and play, showing consideration for others."
+  },
+  {
+   "id": "cfe-early-soc-0-18a",
+   "code": "SOC 0-18a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "Within my everyday experiences and play, I make choices about where I work, how I work and who I work with."
+  },
+  {
+   "id": "cfe-early-soc-0-20a",
+   "code": "SOC 0-20a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "In real-life settings and imaginary play, I explore how local shops and services provide us with what we need in our daily lives."
+  },
+  {
+   "id": "cfe-early-tch-0-01a",
+   "code": "TCH 0-01a",
+   "subject": "Technologies",
+   "strand": "Digital Literacy: Using digital products and services in a variety of contexts to achieve a purposeful outcome",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can explore digital technologies and use what I learn to solve problems and share ideas and thoughts."
+  },
+  {
+   "id": "cfe-early-tch-0-02a",
+   "code": "TCH 0-02a",
+   "subject": "Technologies",
+   "strand": "Digital Literacy: Searching, processing and managing information responsibly",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can use digital technologies to explore how to search and find information."
+  },
+  {
+   "id": "cfe-early-tch-0-03a",
+   "code": "TCH 0-03a",
+   "subject": "Technologies",
+   "strand": "Digital Literacy: Cyber resilience and internet safety",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can explore, play and communicate using digital technologies safely and securely."
+  },
+  {
+   "id": "cfe-early-tch-0-04a",
+   "code": "TCH 0-04a",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy exploring and working with foods in different contexts"
+  },
+  {
+   "id": "cfe-early-tch-0-04b",
+   "code": "TCH 0-04b",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy experimenting with a range of textiles"
+  },
+  {
+   "id": "cfe-early-tch-0-04c",
+   "code": "TCH 0-04c",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can share their thoughts with others to h`elp further develop ideas and solve problems."
+  },
+  {
+   "id": "cfe-early-tch-0-05a",
+   "code": "TCH 0-05a",
+   "subject": "Technologies",
+   "strand": "Technological Developments in Society and Business: Awareness of technological developments (Past, Present and Future), including how they work.",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I enjoy playing with and exploring technologies to discover what they can do and how they can help us."
+  },
+  {
+   "id": "cfe-early-tch-0-06a",
+   "code": "TCH 0-06a",
+   "subject": "Technologies",
+   "strand": "Technological Developments in Society and Business: Impact, contribution, and relationship of technologies on business, the economy, politics, and the environment.",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "To help care for the environment, I reduce, re-use and recycle the resources I use."
+  },
+  {
+   "id": "cfe-early-tch-0-07a",
+   "code": "TCH 0-07a",
+   "subject": "Technologies",
+   "strand": "Technological Developments in Society and Business: Impact, contribution, and relationship of technologies on business, the economy, politics, and the environment.",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand how local shops and services use technologies to provide us with what we need and want in our daily lives."
+  },
+  {
+   "id": "cfe-early-tch-0-09a",
+   "code": "TCH 0-09a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Design and construct models/product",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore ways to design and construct models."
+  },
+  {
+   "id": "cfe-early-tch-0-10a",
+   "code": "TCH 0-10a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Exploring uses of materials",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore everyday materials in the creation of pictures/models/concepts."
+  },
+  {
+   "id": "cfe-early-tch-0-11a",
+   "code": "TCH 0-11a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Representing ideas, concepts and products through a variety of graphic media",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore and discover different ways of representing ideas in imaginative ways."
+  },
+  {
+   "id": "cfe-early-tch-0-12a",
+   "code": "TCH 0-12a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Application of Engineering",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I explore a variety of products covering a range of engineering disciplines."
+  },
+  {
+   "id": "cfe-early-tch-0-13a",
+   "code": "TCH 0-13a",
+   "subject": "Technologies",
+   "strand": "Computing Science: Understanding the world through computational thinking",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can explore computational thinking processes involved in a variety of everyday tasks and can identify patterns in objects or information."
+  },
+  {
+   "id": "cfe-early-tch-0-14a",
+   "code": "TCH 0-14a",
+   "subject": "Technologies",
+   "strand": "Computing Science: Understanding and analysing computing technology",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I understand that sequences of instructions are used to control computing technology."
+  },
+  {
+   "id": "cfe-early-tch-0-14b",
+   "code": "TCH 0-14b",
+   "subject": "Technologies",
+   "strand": "Computing Science: Understanding and analysing computing technology",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can experiment with and identify uses of a range of computing technology in the world around me."
+  },
+  {
+   "id": "cfe-early-tch-0-15a",
+   "code": "TCH 0-15a",
+   "subject": "Technologies",
+   "strand": "Computing Science: Designing, building and testing computing solutions",
+   "ages": [
+    3,
+    4,
+    5
+   ],
+   "text": "I can develop a sequence of instructions and run them using programmable devices or equivalent."
+  }
+ ]
+}

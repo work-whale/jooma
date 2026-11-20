@@ -50,6 +50,14 @@ for (const c of CURRICULA_REGISTRY) {
 const UK_IDS = new Set<string>(UK_CURRICULUM_IDS);
 const REGION_IDS = new Set<string>(REGIONS.map((r) => r.id));
 
+/** True when the slides wizard offers the UK year list (Nursery to Year 13,
+ *  plus Adult learners): every UK and island curriculum, and a guest or an
+ *  unknown value. Every other system lists its own year names. */
+export function usesUkYearList(value: unknown): boolean {
+  const c = getCurriculum(value);
+  return !c || c.region === "uk" || c.region === "british-isles";
+}
+
 /** A known curriculum id, from an id or a label a form has sent; null for
  *  anything else. The value is untrusted: never put it in a prompt unparsed. */
 export function parseCurriculum(value: unknown): string | null {
