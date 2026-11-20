@@ -148,6 +148,30 @@ test.describe("Accepting the new ambassador agreement", () => {
     await expect(main(page).getByTestId("accept-agreement")).toHaveCount(0);
   });
 
+  test("the route refuses someone who is not offered it: an ended agreement cannot accept 0.5", async ({ page }) => {
+    const amb = await createTeacher("Rhea");
+    people.push(amb);
+    const fx = await makeAmbassador(amb, "0.4");
+    ambassadors.push(fx.ambassadorId!);
+    await admin
+      .from("ambassadors")
+      .update({ agreement_ends_at: new Date(Date.now() - 86_400_000).toISOString() })
+      .eq("id", fx.ambassadorId!);
+
+    await signIn(page, amb);
+    const res = await page.request.post("/api/ambassadors/accept-agreement", {
+      data: { version: "0.5", signature_name: `${amb.firstName} ${amb.surname}` },
+    });
+    expect(res.status()).toBe(403);
+    expect((await res.json()).error).toBe("There is no new agreement for you to accept.");
+
+    const { data: rows } = await admin
+      .from("ambassador_agreement_acceptances")
+      .select("id")
+      .eq("application_id", fx.applicationId);
+    expect(rows).toHaveLength(0);
+  });
+
   test("an applicant still waiting, on 0.4, sees the prompt on their status page", async ({ page }) => {
     const amb = await createTeacher("Quin");
     people.push(amb);
