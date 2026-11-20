@@ -112,6 +112,8 @@ export default function TermsPage() {
               {/* NGSS is off until permission (app/lib/standards/permissions.ts). */}
               {FRAMEWORK_PERMITTED.ngss && <li>{FRAMEWORK_CREDIT.ngss}</li>}
               <li>{FRAMEWORK_CREDIT.ac9}</li>
+              {FRAMEWORK_PERMITTED["cfe-early"] && <li>{FRAMEWORK_CREDIT["cfe-early"]}</li>}
+              {FRAMEWORK_PERMITTED["nic-fs"] && <li>{FRAMEWORK_CREDIT["nic-fs"]}</li>}
             </ul>
             <p>
               The International Baccalaureate, Cambridge International and Pearson Edexcel programmes are named so that teachers can choose

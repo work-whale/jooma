@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, ChevronDown, HelpCircle, Loader2, Search, X } from "lucide-react";
-import { COUNTRIES } from "@/app/lib/curriculum";
 import { getCurriculum } from "@/app/lib/curricula";
 import {
   FRAMEWORK_CREDIT,
   alignmentMode,
+  alignmentStageLabel,
   alignmentYears,
   frameworkOf,
   loadStandardsFor,
@@ -40,10 +40,13 @@ import {
  *
  * England (and the islands that teach its curriculum) covers Nursery to Year
  * 6 from app/lib/national-curriculum. A curriculum with published standards
- * (Common Core and NGSS states, Australia) lists those, by year, from
- * app/lib/standards, with each framework's credit under the list. Anything
- * else shows a short note instead of the dropdowns: an empty or wrong list
- * would be worse than an honest "not yet".
+ * (Common Core and NGSS states, Australia, and Scotland, Wales and Northern
+ * Ireland with their own) lists those, by year, from app/lib/standards, with
+ * each framework's credit under the list. The three UK nations name the stage
+ * beside the year ("First level · Year 4"). Anything else shows a short note
+ * instead of the dropdowns: an empty or wrong list would be worse than an
+ * honest "not yet". Scotland, Wales and Northern Ireland are never shown
+ * England's statements.
  */
 
 export interface CurriculumSelection {
@@ -285,24 +288,21 @@ export default function CurriculumAlignment({
                 disabled={disabled}
               >
                 <option value="">Select year</option>
-                {standardYears.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
+                {standardYears.map((y) => {
+                  // A nation's own stage names (First level, Key Stage 1) sit
+                  // beside the year label, so the teacher sees what it maps to.
+                  const stageName = alignmentStageLabel(cur, y);
+                  return <option key={y} value={y}>{stageName ? `${stageName} · ${y}` : y}</option>;
+                })}
               </Select>
             </div>
           ) : (
-          <div className="grid grid-cols-3 gap-2">
-            <Select label="Country" value="england" onChange={() => {}} disabled={disabled}>
-              {COUNTRIES.map((c) => (
-                <option key={c.id} value={c.id} disabled={c.id !== "england"}>
-                  {c.id === "england" ? c.name : `${c.name} (coming soon)`}
-                </option>
-              ))}
-            </Select>
+          <div className="grid grid-cols-2 gap-2">
             <div
               className="px-2.5 py-2 text-xs rounded-lg border truncate"
               style={{ borderColor: "var(--j-line)", backgroundColor: "var(--j-tint)", color: "var(--j-body)" }}
               title={covered ? curriculumNameFor(year as CurriculumYear) : "National Curriculum in England"}
+              data-testid="curriculum-alignment-name"
             >
               {covered ? curriculumNameFor(year as CurriculumYear) : "National Curriculum in England"}
             </div>

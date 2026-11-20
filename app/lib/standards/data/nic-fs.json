@@ -1,0 +1,2639 @@
+{
+ "source": {
+  "title": "The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007, Schedule 2",
+  "file": "docs/standards/uk/northern-ireland/",
+  "url": "https://www.legislation.gov.uk/nisr/2007/46/schedule/2",
+  "credit": "Northern Ireland Curriculum statutory requirements, from The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007: © Crown copyright. Contains public sector information licensed under the Open Government Licence v3.0."
+ },
+ "statements": [
+  {
+   "id": "nic-fs-1fbaada0a0",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Attention and listening skills through: (a) listening to a wide range of stories, poems, songs and music (b) following instructions (c) identifying environmental sounds (d) repeating familiar phrases/sound sequences (e) recalling sequence and detail."
+  },
+  {
+   "id": "nic-fs-9e1dcbe44f",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Phonological awareness through: (a) responding to a steady beat (b) identifying words in phrases and sentences (c) identifying syllables (d) identifying and generating rhymes (e) identifying and manipulating phonemes."
+  },
+  {
+   "id": "nic-fs-ff877e59a4",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Social use of language through: (a) observing modelled behaviours (b) understanding non-verbal signals (c) talking with adults and other pupils (d) initiating and joining in conversations in pairs or groups (e) working in different groupings (f) adopting or assuming a role relevant to context."
+  },
+  {
+   "id": "nic-fs-b8ecac9525",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Language and thinking through: (a) talking about experiences, pictures and stories (b) talking about their work, play and things they have made (c) naming (d) recalling (e) sequencing (f) predicting (g) asking and answering questions (h) describing (i) explaining (j) sharing their thoughts, feelings and ideas with different audiences (k) taking part/contributing to group oral language activities."
+  },
+  {
+   "id": "nic-fs-547b2717c5",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "An extended vocabulary through: (a) listening and responding to adults and peers (b) an immersion in the language of books, both fiction and non-fiction (c) focused experiences to introduce or generate vocabulary."
+  },
+  {
+   "id": "nic-fs-1203fefab3",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Express themselves with increasing clarity and confidence, using a growing vocabulary and more complex sentence structure"
+  },
+  {
+   "id": "nic-fs-5b42cf278d",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand and use social conventions in conversations and pupil initiated interactions"
+  },
+  {
+   "id": "nic-fs-3f86ade87b",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Initiate and sustain conversations with adults and peers in the classroom"
+  },
+  {
+   "id": "nic-fs-71b90105fb",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Retell stories, events or personal experiences in sequence with reasonable detail"
+  },
+  {
+   "id": "nic-fs-77fa7ac2f6",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Answer questions to give information and demonstrate understanding"
+  },
+  {
+   "id": "nic-fs-57f5f0cf7c",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Ask questions to find information or seek an explanation"
+  },
+  {
+   "id": "nic-fs-59508bdc5e",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Offer reasons to support opinions given"
+  },
+  {
+   "id": "nic-fs-fb14a66a96",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen with increasing attentiveness and for longer periods of time"
+  },
+  {
+   "id": "nic-fs-bf7fabac25",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Talking and Listening (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen to and carry out increasingly complex instructions."
+  },
+  {
+   "id": "nic-fs-553bdbc169",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Read with some independence"
+  },
+  {
+   "id": "nic-fs-7ed83f196c",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Read a range of texts including electronic texts and those composed by themselves and others"
+  },
+  {
+   "id": "nic-fs-6e34e13374",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sequence stories in reasonable detail using appropriate language"
+  },
+  {
+   "id": "nic-fs-88d5d86686",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use word structure to develop reading"
+  },
+  {
+   "id": "nic-fs-aa3afb8259",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop auditory discrimination and memory"
+  },
+  {
+   "id": "nic-fs-33a3f881af",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop visual discrimination and memory"
+  },
+  {
+   "id": "nic-fs-0cf7983bd5",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Share a range of books with adults/other pupils"
+  },
+  {
+   "id": "nic-fs-28c32fa7e1",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Know how to handle and care for books"
+  },
+  {
+   "id": "nic-fs-ccd179131b",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand and use some language associated with books"
+  },
+  {
+   "id": "nic-fs-eab9fd887e",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Select and use books for specific purposes"
+  },
+  {
+   "id": "nic-fs-24378f0e0d",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop concepts of print"
+  },
+  {
+   "id": "nic-fs-915d7aeb14",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen to a range of stories, poems and non-fiction texts read to them by adults/other pupils."
+  },
+  {
+   "id": "nic-fs-d5d91c555b",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that words are made up of sounds and syllables and that sounds are represented by letters (phoneme/grapheme awareness)"
+  },
+  {
+   "id": "nic-fs-334bc8b434",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Recognise different types of text and identify specific features of some genres"
+  },
+  {
+   "id": "nic-fs-57a5690223",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Read and follow simple instructions"
+  },
+  {
+   "id": "nic-fs-19172abceb",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use a range of reading cues with increasing independence and begin to self-correct"
+  },
+  {
+   "id": "nic-fs-fb616ac755",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Read on sight, some words in a range of meaningful contexts"
+  },
+  {
+   "id": "nic-fs-219d558c34",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to read with expression in response to print variations and punctuation"
+  },
+  {
+   "id": "nic-fs-1581891ae1",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use extended vocabulary when discussing text, re-telling stories or in their emergent writing"
+  },
+  {
+   "id": "nic-fs-fd8721a34c",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Make links between personal experience and the text"
+  },
+  {
+   "id": "nic-fs-9644144e17",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Make and give reasons for predictions"
+  },
+  {
+   "id": "nic-fs-96d419b067",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand the purpose of and use environmental print"
+  },
+  {
+   "id": "nic-fs-03a7274364",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Reading (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Browse and choose books for a specific purpose."
+  },
+  {
+   "id": "nic-fs-c843a487e2",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Distinguish between drawing and writing"
+  },
+  {
+   "id": "nic-fs-c95c0511cb",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about the ideas represented in their drawings."
+  },
+  {
+   "id": "nic-fs-517c500889",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that writing is a means of communication and can be used for different purposes"
+  },
+  {
+   "id": "nic-fs-7b85407506",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Share their writing with others"
+  },
+  {
+   "id": "nic-fs-d429765adb",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "See themselves and the teacher as ‘writers’"
+  },
+  {
+   "id": "nic-fs-958839ac1c",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Observe the teacher modelling specific writing strategies"
+  },
+  {
+   "id": "nic-fs-94c1c0f229",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use ICT to present and communicate their ideas."
+  },
+  {
+   "id": "nic-fs-51ac09e221",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Write without prompting and make decisions about how and what they will write"
+  },
+  {
+   "id": "nic-fs-7863c1ae64",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use rhymes, poems and patterned stories as models for structuring their own writing"
+  },
+  {
+   "id": "nic-fs-37b85b8d05",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Write in a range of genres with teacher guidance"
+  },
+  {
+   "id": "nic-fs-f596d7bafc",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to problem-solve how to write using sound-symbol correspondence as the first strategy"
+  },
+  {
+   "id": "nic-fs-bd240fdb3a",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to show evidence of sequence in recount and instructions"
+  },
+  {
+   "id": "nic-fs-91b72f7ede",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use a wide range of vocabulary in their writing"
+  },
+  {
+   "id": "nic-fs-e7fbbc0bf1",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to demarcate sentences"
+  },
+  {
+   "id": "nic-fs-49918514ce",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to use capital letters for the pronoun ‘I’, for names and at the start of a sentence"
+  },
+  {
+   "id": "nic-fs-3093aadbf0",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Writing (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show increased control over formation of lower and upper-case letters, size and spacing."
+  },
+  {
+   "id": "nic-fs-e2bded9f03",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Count a variety of objects"
+  },
+  {
+   "id": "nic-fs-c5d45125c3",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop an understanding of one-to-one correspondence and come to appreciate that the size of a set is given by the last number in the count"
+  },
+  {
+   "id": "nic-fs-07151376c5",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Investigate different ways of making sets for a given number within 5/10"
+  },
+  {
+   "id": "nic-fs-5dec64f3b7",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Match numerals to sets"
+  },
+  {
+   "id": "nic-fs-6d80de9894",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Order numerals and sets within 5/10"
+  },
+  {
+   "id": "nic-fs-9f84f6d96f",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop an understanding of conservation of number within 5/10"
+  },
+  {
+   "id": "nic-fs-2dd0155f5e",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand in counting activities that ‘none’ is represented by zero"
+  },
+  {
+   "id": "nic-fs-5846d2186d",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore ordinal number"
+  },
+  {
+   "id": "nic-fs-0bf0d2c600",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore the number that comes after, before, between a given number"
+  },
+  {
+   "id": "nic-fs-b2d76d006a",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Carry out simple mental calculations"
+  },
+  {
+   "id": "nic-fs-1f5e84b3a7",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Number",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Extend, when appropriate, understanding of number beyond 10."
+  },
+  {
+   "id": "nic-fs-e520cca492",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Count in the context of number rhymes, jingles and stories"
+  },
+  {
+   "id": "nic-fs-1a38f018be",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Count forwards in ones within 5/10 from different starting points"
+  },
+  {
+   "id": "nic-fs-0dc21998f8",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Count backwards in ones within 5/10 from different starting points"
+  },
+  {
+   "id": "nic-fs-67ab4fde9f",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Recognise numerals up to 5/10"
+  },
+  {
+   "id": "nic-fs-b865d44795",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "State, without counting, quantities within 5"
+  },
+  {
+   "id": "nic-fs-9baeef2b46",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Make a sensible guess of quantities within 10"
+  },
+  {
+   "id": "nic-fs-f5508e30fc",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore numbers relevant to their every day lives"
+  },
+  {
+   "id": "nic-fs-ab140124d4",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Extend, when appropriate, counting in ones and recognition of numbers beyond 10"
+  },
+  {
+   "id": "nic-fs-c921788d79",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Counting and Number Recognition",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Extend activities to include counting in 2s, 5s and 10s."
+  },
+  {
+   "id": "nic-fs-67eccd7d41",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Money",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use money in various contexts"
+  },
+  {
+   "id": "nic-fs-99659e05c6",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Money",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about things that they want to spend money on"
+  },
+  {
+   "id": "nic-fs-126a949d58",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Money",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand the need to pay for goods"
+  },
+  {
+   "id": "nic-fs-d204870916",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Money",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Become familiar with coins in everyday use"
+  },
+  {
+   "id": "nic-fs-463abf422c",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Money",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about different ways we can pay for goods"
+  },
+  {
+   "id": "nic-fs-2493b81806",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Number: Understanding Money",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use their number skills in shopping activities."
+  },
+  {
+   "id": "nic-fs-f4b516f86a",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Compare two objects of different length/weight/capacity/area; understand and use the language of comparison"
+  },
+  {
+   "id": "nic-fs-d9b974c955",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Order three objects of different length, weight, capacity, area; talk about the ordering using appropriate language"
+  },
+  {
+   "id": "nic-fs-216ed9ecc0",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Find an object of similar length, weight, capacity, area; talk about their findings in terms of ‘just about the same’ length, weight, capacity, area"
+  },
+  {
+   "id": "nic-fs-45ff3550b9",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to explore the notion of conservation of length, weight, capacity in practical situations; engage in discussion about their observations"
+  },
+  {
+   "id": "nic-fs-5d058fc6ca",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Choose and use, with guidance, non-standard units to measure length/capacity/weight; talk about their work"
+  },
+  {
+   "id": "nic-fs-03da85cd43",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sequence two or three familiar events"
+  },
+  {
+   "id": "nic-fs-0ad4f2e134",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about significant times on the clock"
+  },
+  {
+   "id": "nic-fs-a53341eb5f",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Compare two intervals of time; talk about their observations in terms of took longer/shorter time"
+  },
+  {
+   "id": "nic-fs-0e6e85d8c9",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore time patterns"
+  },
+  {
+   "id": "nic-fs-4ce6e5fa48",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Measures",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Choose and use, with guidance, non-standard units to measure time; talk about their work."
+  },
+  {
+   "id": "nic-fs-7d677666f7",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore and talk about shapes in the environment"
+  },
+  {
+   "id": "nic-fs-6b9c014485",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Build and make models with 3D shapes; create pictures and patterns with 2D shapes"
+  },
+  {
+   "id": "nic-fs-115b7f9e0a",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Investigate and talk about the properties of shapes"
+  },
+  {
+   "id": "nic-fs-d5e0be099e",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sort collections of shapes in several ways; describe the arrangements"
+  },
+  {
+   "id": "nic-fs-937588ca2d",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Describe and name common 3-D and 2-D shapes"
+  },
+  {
+   "id": "nic-fs-73cd9fb778",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore body space through different types of movement"
+  },
+  {
+   "id": "nic-fs-608a4816d9",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore movement through space during indoor and outdoor play activities"
+  },
+  {
+   "id": "nic-fs-4c2fa92399",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand and use a range of positional words"
+  },
+  {
+   "id": "nic-fs-86535646e7",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore movement using programmable devices"
+  },
+  {
+   "id": "nic-fs-9f4dd40872",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Shape and Space",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Follow/give directions from/to a partner for simple movements."
+  },
+  {
+   "id": "nic-fs-ccdfbeee84",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Sorting",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore freely properties of a range of materials and one/two/three property collections; respond to questions about the arrangements"
+  },
+  {
+   "id": "nic-fs-3ca5b6faad",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Sorting",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sort collections of random materials"
+  },
+  {
+   "id": "nic-fs-6b896d8cee",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Sorting",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sort for one criterion using one-property materials; talk about the arrangement"
+  },
+  {
+   "id": "nic-fs-ba686d4a33",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Sorting",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sort for one criterion using two-property collections; re-sort for the second criterion; explain their work"
+  },
+  {
+   "id": "nic-fs-8eb4eeb526",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Sorting",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sort for one criterion using three/four-property collections; find the various possibilities; explain their work"
+  },
+  {
+   "id": "nic-fs-6df24d3f62",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Sorting",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Partition sets into subsets in preparation for exploring components of number."
+  },
+  {
+   "id": "nic-fs-c98e1a60f7",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Investigate and talk about pattern in the environment"
+  },
+  {
+   "id": "nic-fs-e9c640414d",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Copy a simple pattern"
+  },
+  {
+   "id": "nic-fs-d34dcd8b42",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Continue a simple pattern"
+  },
+  {
+   "id": "nic-fs-63582e6697",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Create patterns"
+  },
+  {
+   "id": "nic-fs-3294fbe0e1",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore pattern in number"
+  },
+  {
+   "id": "nic-fs-011f3b3a4b",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Discover the components of numbers within 5/10 by investigating different ways of partitioning sets into subsets practically; talk abut the outcomes"
+  },
+  {
+   "id": "nic-fs-b53f7a24bf",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand the concept of addition by combining sets of objects to find ‘how many’"
+  },
+  {
+   "id": "nic-fs-8782ea846e",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Match objects in real contexts"
+  },
+  {
+   "id": "nic-fs-732d27d99e",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Compare sets by matching objects/counting objects to understand the terms ‘more than’ less than’ ‘the same’"
+  },
+  {
+   "id": "nic-fs-f4eade1b75",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Patterns and Relationships",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Investigate the relationship between addition and subtraction in practical situations."
+  },
+  {
+   "id": "nic-fs-660c1dfea8",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use appropriate mathematical language and symbols"
+  },
+  {
+   "id": "nic-fs-bcbef69ae4",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sort and re-sort materials, recording the outcomes in a variety of ways"
+  },
+  {
+   "id": "nic-fs-ca0e37b1a1",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about data represented in simple block graphs, tables and diagrams"
+  },
+  {
+   "id": "nic-fs-039145f54e",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand the conservation of number"
+  },
+  {
+   "id": "nic-fs-20c82ed6db",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Count forwards and backwards from different starting points"
+  },
+  {
+   "id": "nic-fs-699e28c1c6",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Recognise numbers to at least 20"
+  },
+  {
+   "id": "nic-fs-fc19098921",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Carry out mental calculations such as 1 more/less than up to 20, doubles up to 10 and mentally add and subtract within 10"
+  },
+  {
+   "id": "nic-fs-5718f34fea",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that ‘teen’ numbers are made up of 10 plus another number"
+  },
+  {
+   "id": "nic-fs-43b64310be",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to measure using non-standard units"
+  },
+  {
+   "id": "nic-fs-5386a42eba",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about the properties of 3-D and 2-D shapes using appropriate mathematical language"
+  },
+  {
+   "id": "nic-fs-5869f03855",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics and Numeracy (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be involved in solving practical problems."
+  },
+  {
+   "id": "nic-fs-cd0272f981",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Observe and respond to things seen, handled, remembered and imagined"
+  },
+  {
+   "id": "nic-fs-b9523d7663",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Investigate and talk about colours, lines, shapes, textures and patterns"
+  },
+  {
+   "id": "nic-fs-9650f5c747",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Look at, and respond to a piece of work by artists, designers, illustrators or craft workers"
+  },
+  {
+   "id": "nic-fs-f947f3bfed",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore and use a wide range of materials and processes"
+  },
+  {
+   "id": "nic-fs-0613835695",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Create and develop ideas using colours, lines, shapes, textures and patterns"
+  },
+  {
+   "id": "nic-fs-1a04eb1626",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about own and other pupils work, and how the work was made."
+  },
+  {
+   "id": "nic-fs-0fb97de62c",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use senses to explore real things, developing the capacity for focusing attention to detail"
+  },
+  {
+   "id": "nic-fs-0eebe487e7",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use direct experiences, memory and imagination to observe and respond to the world"
+  },
+  {
+   "id": "nic-fs-bb0e94780c",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to use visual language to describe what has been examined and observed"
+  },
+  {
+   "id": "nic-fs-e775a82e8b",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to appreciate the visual qualities in the natural and made environment"
+  },
+  {
+   "id": "nic-fs-2afa17da77",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Value own and other pupils’ work"
+  },
+  {
+   "id": "nic-fs-b179e68e1f",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Talk about the processes involved in creating own work"
+  },
+  {
+   "id": "nic-fs-472d59bad6",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Look at, explore and talk with some confidence about works of art, craft and design"
+  },
+  {
+   "id": "nic-fs-7168c72cda",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore and discover qualities of various materials in order to make choices and to create their own unique pictures and structures"
+  },
+  {
+   "id": "nic-fs-44e3ff0625",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and design (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to develop a range of skills using materials, tools and processes (drawing, painting, printmaking, textiles, malleable materials and three dimensional construction)."
+  },
+  {
+   "id": "nic-fs-f030633e02",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Work creatively with sound"
+  },
+  {
+   "id": "nic-fs-ce09ec1502",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Sing and perform with simple instruments"
+  },
+  {
+   "id": "nic-fs-aca5da729b",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen and respond to own and others’ music-making."
+  },
+  {
+   "id": "nic-fs-a664402f9f",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be aware of and perform a steady beat"
+  },
+  {
+   "id": "nic-fs-6e542576ec",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Distinguish between loud/quiet sounds, high/low sounds, long/short sounds, fast/slow music"
+  },
+  {
+   "id": "nic-fs-c25185d7d1",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen to and repeat simple rhythms"
+  },
+  {
+   "id": "nic-fs-6ac6fae675",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Make music"
+  },
+  {
+   "id": "nic-fs-b315a4c4be",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Watch and respond to start/stop signals"
+  },
+  {
+   "id": "nic-fs-af9f5a79c4",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Value own and others’ contributions in the team aspect of music making and performing."
+  },
+  {
+   "id": "nic-fs-f8c7cb3de4",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Express thoughts ideas and feelings"
+  },
+  {
+   "id": "nic-fs-5ad2d69a0c",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop their creativity through imaginative play"
+  },
+  {
+   "id": "nic-fs-2b6c601c30",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Engage in dramatic play to extend the learning"
+  },
+  {
+   "id": "nic-fs-b55c9abad0",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Take part in a range of drama games and strategies."
+  },
+  {
+   "id": "nic-fs-fb02e9026b",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Co-operate during role play, negotiate roles, agree rules and act out scenarios"
+  },
+  {
+   "id": "nic-fs-30ede6ab2d",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Express thoughts, ideas, feelings and imagination with confidence in a range of dramatic contexts using verbal and non-verbal language"
+  },
+  {
+   "id": "nic-fs-1345c710a4",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Adopt and sustain a role."
+  },
+  {
+   "id": "nic-fs-d5f0392165",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Who am I?"
+  },
+  {
+   "id": "nic-fs-b330e5bc27",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "What am I?"
+  },
+  {
+   "id": "nic-fs-753e74266f",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Am I the same as everyone else?"
+  },
+  {
+   "id": "nic-fs-5039b271a0",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "What else is living?"
+  },
+  {
+   "id": "nic-fs-d7293d8211",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Interdependence",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How do living things survive?"
+  },
+  {
+   "id": "nic-fs-157f5ca982",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Where do I live?"
+  },
+  {
+   "id": "nic-fs-9e69ca45b5",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How have I changed over time?"
+  },
+  {
+   "id": "nic-fs-647235c366",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "What is in my world?"
+  },
+  {
+   "id": "nic-fs-5578a5c641",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "What is beyond my world?"
+  },
+  {
+   "id": "nic-fs-02c09241ef",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Place",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How has this place changed?"
+  },
+  {
+   "id": "nic-fs-c8946aa835",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How do things move now and in the past?"
+  },
+  {
+   "id": "nic-fs-7088de39f6",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Why do things move?"
+  },
+  {
+   "id": "nic-fs-ff4f1ab121",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How do things work?"
+  },
+  {
+   "id": "nic-fs-89c27a3ed1",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Why do people and animals move?"
+  },
+  {
+   "id": "nic-fs-c418d721c0",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Where do things move?"
+  },
+  {
+   "id": "nic-fs-34be1e7cfc",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Where do people and animals move to?"
+  },
+  {
+   "id": "nic-fs-df8fab3155",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "What sources of energy are in my world?"
+  },
+  {
+   "id": "nic-fs-c67a4241dd",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Movement and Energy",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How and why are they used?"
+  },
+  {
+   "id": "nic-fs-d201b60b9c",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Change over Time",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How do things change?"
+  },
+  {
+   "id": "nic-fs-ad038ac32e",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Change over Time",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "What kind of changes happen, have happened or might happen?"
+  },
+  {
+   "id": "nic-fs-8cb8b42ca0",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "Change over Time",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How can we make change happen?"
+  },
+  {
+   "id": "nic-fs-0e3c2359b2",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show curiosity about the living things, places, objects and materials in the environment"
+  },
+  {
+   "id": "nic-fs-cc21e97e87",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Identify similarities and differences between living things, places, objects and materials"
+  },
+  {
+   "id": "nic-fs-95a9059b8f",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that some things change over time"
+  },
+  {
+   "id": "nic-fs-1f3e8f421d",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that different materials behave in different ways, have different properties and can be used for different purposes"
+  },
+  {
+   "id": "nic-fs-7d40037706",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that some materials change if kept in different conditions"
+  },
+  {
+   "id": "nic-fs-a20b15a2ff",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand that materials can be joined/assembled in different ways"
+  },
+  {
+   "id": "nic-fs-9c392bae5f",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be aware of the local natural and built environment and their place in it"
+  },
+  {
+   "id": "nic-fs-6175e78507",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Know some of the jobs that are carried out by different people in the local community"
+  },
+  {
+   "id": "nic-fs-a71ef67132",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be able to sequence familiar events"
+  },
+  {
+   "id": "nic-fs-0f5b89f2b0",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be aware of different lifestyles"
+  },
+  {
+   "id": "nic-fs-5bf07907f4",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand the need to respect and care for themselves, other people, plants, animals and the environment"
+  },
+  {
+   "id": "nic-fs-bd2a8b197b",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Understand and use positional and directional language, as well as simple maps and drawings"
+  },
+  {
+   "id": "nic-fs-44225bcd75",
+   "code": "",
+   "subject": "The World Around Us",
+   "strand": "The World Around Us (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be aware of everyday uses of technological tools and know how to use some of these safely."
+  },
+  {
+   "id": "nic-fs-8c30364995",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Themselves and their personal attributes"
+  },
+  {
+   "id": "nic-fs-bb479f0b83",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Their own and others’ feelings and emotions"
+  },
+  {
+   "id": "nic-fs-c1dc2a99dc",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Their dispositions and attitudes to learning"
+  },
+  {
+   "id": "nic-fs-5b4dc532ca",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Understanding and Health",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "The importance of keeping healthy and how to keep safe in familiar and unfamiliar environments."
+  },
+  {
+   "id": "nic-fs-6616604e3c",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Their relationships with family and friends"
+  },
+  {
+   "id": "nic-fs-f7fc1bc64b",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Their responsibilities for self and others"
+  },
+  {
+   "id": "nic-fs-69eb266498",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "How to respond appropriately in conflict situations"
+  },
+  {
+   "id": "nic-fs-c057c4a5aa",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Similarities and differences between groups of people"
+  },
+  {
+   "id": "nic-fs-4747174477",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Mutual Understanding in the Local and Wider Community",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Learning to live as a member of a community."
+  },
+  {
+   "id": "nic-fs-74bb2792a3",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Express a senses of self awareness"
+  },
+  {
+   "id": "nic-fs-f0ad34fff7",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show some self control and express their own feelings and emotions appropriately"
+  },
+  {
+   "id": "nic-fs-6286a57b92",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show a positive attitude to learning"
+  },
+  {
+   "id": "nic-fs-63b49fd381",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Adopt healthy and hygienic routines and understand how to keep safe"
+  },
+  {
+   "id": "nic-fs-1610b4e1b4",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Form good relationships with adults and other pupils"
+  },
+  {
+   "id": "nic-fs-ffcfadd9f8",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show independence and know when to seek help"
+  },
+  {
+   "id": "nic-fs-8871fad9c7",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show respect when working and playing together and recognise the need for rules"
+  },
+  {
+   "id": "nic-fs-4d0f056030",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Recognise similarities and differences in families and the wider community"
+  },
+  {
+   "id": "nic-fs-147ef9c549",
+   "code": "",
+   "subject": "Personal Development and Mutual Understanding",
+   "strand": "Personal Development and Mutual Understanding (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be familiar with the interdependent nature of the class/school community."
+  },
+  {
+   "id": "nic-fs-5be0dcb509",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Athletics: Pupils should be provided with opportunities for activities and physical challenges enabling them to learn, understand and develop the core skills of running, jumping and throwing in a co-operative context."
+  },
+  {
+   "id": "nic-fs-7f8719e434",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Dance: Pupils should be given opportunities to respond to a variety of stimuli and the use of body movements to communicate ideas and express feelings."
+  },
+  {
+   "id": "nic-fs-c9f8e5046e",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Games: Pupils should be taught to develop games skills through a range of activities and using a variety of equipment."
+  },
+  {
+   "id": "nic-fs-5efa1f440e",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Gymnastics: Pupils should be taught to explore, create, practice and improve body management skills."
+  },
+  {
+   "id": "nic-fs-80c2724def",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen to and follow simple instructions/rules"
+  },
+  {
+   "id": "nic-fs-7566694f39",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Take part in warm-up and cool-down activities"
+  },
+  {
+   "id": "nic-fs-2d9eb58633",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Experiment with different ways of moving and exploring personal and general space"
+  },
+  {
+   "id": "nic-fs-44600eddc0",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop confidence, imagination and some understanding of safety through participating in a range of movement activities"
+  },
+  {
+   "id": "nic-fs-f816a4fb8f",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop body awareness through varying body movements in relation to shape, levels, pathways (straight/curved), directions, speed"
+  },
+  {
+   "id": "nic-fs-08daa5796e",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use a range of small equipment to develop skills of rolling, pushing, patting, throwing, catching, aiming, hitting, kicking and passing"
+  },
+  {
+   "id": "nic-fs-ad16b52cfb",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Play/create/modify simple games"
+  },
+  {
+   "id": "nic-fs-ac1eb72eba",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Listen and respond to a range of stimuli"
+  },
+  {
+   "id": "nic-fs-46785d98c2",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Explore, refine and improve simple movements"
+  },
+  {
+   "id": "nic-fs-6ec9e02067",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Create, practise, improve and perform simple movement sequences which have a clear beginning, middle and end"
+  },
+  {
+   "id": "nic-fs-bbe62c6eed",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use a range of movement vocabulary to discuss actions"
+  },
+  {
+   "id": "nic-fs-6ae5b51c4e",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Observe, describe and copy what others have done"
+  },
+  {
+   "id": "nic-fs-74d9e6c0b4",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Lift, carry, place and store equipment safely, with adult assistance where appropriate."
+  },
+  {
+   "id": "nic-fs-b9079193ab",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Move with control and co-ordination"
+  },
+  {
+   "id": "nic-fs-99e385f507",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Move with confidence, imagination and safety"
+  },
+  {
+   "id": "nic-fs-61fed725e9",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Show an awareness of personal and general space"
+  },
+  {
+   "id": "nic-fs-628bd81245",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Respond appropriately to instructions and to stimuli"
+  },
+  {
+   "id": "nic-fs-6429b12e9e",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Travel, showing changes of speed, direction and level"
+  },
+  {
+   "id": "nic-fs-e427cf25af",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Develop controlled movement, understanding positional language"
+  },
+  {
+   "id": "nic-fs-4af6545c96",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Create, remember and perform simple movement sequences"
+  },
+  {
+   "id": "nic-fs-ec4fd427fc",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use a range of small and large equipment appropriately"
+  },
+  {
+   "id": "nic-fs-7fdf8e3558",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Handle small tools, objects, construction and malleable materials safely and with increasing control"
+  },
+  {
+   "id": "nic-fs-9ba0c3547c",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Use appropriate language to talk about ideas, feelings and movements of themselves and others"
+  },
+  {
+   "id": "nic-fs-dbe3f51f93",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to understand the importance of warm-up and cool-down activities before and after exercise"
+  },
+  {
+   "id": "nic-fs-0f4881a030",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Begin to understand the importance of physical activity for good health and the reasons that it is important to dress appropriately for physical activity"
+  },
+  {
+   "id": "nic-fs-1dd8bb62c9",
+   "code": "",
+   "subject": "Physical Development and Movement",
+   "strand": "Physical Development and Movement (progression)",
+   "ages": [
+    5,
+    6
+   ],
+   "text": "Be aware of the effects of exercise on their bodies."
+  }
+ ]
+}

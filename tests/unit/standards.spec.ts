@@ -11,7 +11,6 @@ import {
   shortCode,
   statementsForAge,
   type FrameworkData,
-  type FrameworkId,
 } from "@/app/lib/standards";
 import ccssMath from "@/app/lib/standards/data/ccss-math.json";
 import ccssEla from "@/app/lib/standards/data/ccss-ela.json";
@@ -27,13 +26,17 @@ import ac9 from "@/app/lib/standards/data/ac9.json";
  * get which data.
  */
 
-const DATA: Record<FrameworkId, FrameworkData> = {
+/** The frameworks this spec checks against their PDFs and workbook: Common Core,
+ *  NGSS and the Australian Curriculum. The UK nations are in uk-curricula-data.spec.ts. */
+type Standards = "ccss-math" | "ccss-ela" | "ngss" | "ac9";
+
+const DATA: Record<Standards, FrameworkData> = {
   "ccss-math": ccssMath as FrameworkData,
   "ccss-ela": ccssEla as FrameworkData,
   ngss: ngss as FrameworkData,
   ac9: ac9 as FrameworkData,
 };
-const IDS = Object.keys(DATA) as FrameworkId[];
+const IDS = Object.keys(DATA) as Standards[];
 
 test.describe("the data", () => {
   test("ids are unique across every framework, and each says which framework it is", () => {
@@ -76,7 +79,7 @@ test.describe("the data", () => {
   });
 
   test("known statements landed in the right grade", () => {
-    const by = (f: FrameworkId, code: string) => DATA[f].statements.find((s) => s.code === code);
+    const by = (f: Standards, code: string) => DATA[f].statements.find((s) => s.code === code);
     expect(by("ccss-ela", "CCSS.ELA-LITERACY.RL.3.1")?.text).toMatch(/^Ask and answer questions to demonstrate understanding of a text/);
     expect(by("ccss-ela", "CCSS.ELA-LITERACY.RL.4.1")?.text).toMatch(/^Refer to details and examples in a text/);
     expect(by("ccss-ela", "CCSS.ELA-LITERACY.L.2.3")?.text).toMatch(/Compare formal and informal uses of English/);
@@ -214,10 +217,10 @@ test.describe("every statement is in its source, word for word", () => {
 // ── Which curricula align to what ──────────────────────────────────────────
 
 test.describe("which curricula get which standards", () => {
-  test("England and the islands keep England's own statements", () => {
-    for (const c of CURRICULA_REGISTRY.filter((x) => x.region === "uk" || x.region === "british-isles")) {
-      expect(alignmentMode(c.id), c.id).toBe("england");
-    }
+  test("England, EYFS and the islands keep England's own statements", () => {
+    const ids = ["england", "england-eyfs", ...CURRICULA_REGISTRY.filter((x) => x.region === "british-isles").map((x) => x.id)];
+    expect(ids.length).toBeGreaterThan(2);
+    for (const id of ids) expect(alignmentMode(id), id).toBe("england");
     expect(alignmentMode(null)).toBe("england");
   });
 
@@ -312,7 +315,19 @@ test.describe("NGSS stays off until permission", () => {
   const sel = { subject: "", strand: "" };
 
   test("NGSS is switched off; Common Core and the Australian Curriculum are on", () => {
-    expect(FRAMEWORK_PERMITTED).toEqual({ "ccss-math": true, "ccss-ela": true, ngss: false, ac9: true });
+    expect(FRAMEWORK_PERMITTED).toEqual({
+      "ccss-math": true,
+      "ccss-ela": true,
+      ngss: false,
+      ac9: true,
+      "cfe-early": true,
+      "cfe-first": true,
+      "cfe-second": true,
+      "cfe-third-fourth": true,
+      "nic-fs": true,
+      "nic-ks1": true,
+      "nic-ks2": true,
+    });
   });
 
   test("the registry still records that California uses NGSS, but only Common Core is usable", () => {
@@ -324,7 +339,7 @@ test.describe("NGSS stays off until permission", () => {
     // loadStandardsFor's lazy JSON import needs the bundler, so the same steps
     // run here on the data already loaded: usable frameworks, then the year.
     const frameworks = usableFrameworks(getCurriculum("us-ca"));
-    const grade3 = statementsForAge(frameworks.map((f) => DATA[f]), 8);
+    const grade3 = statementsForAge(frameworks.map((f) => DATA[f as Standards]), 8);
     expect(grade3.length).toBeGreaterThan(0);
     expect(grade3.some((s) => s.id.startsWith("ngss-") || s.subject === "Science")).toBe(false);
   });

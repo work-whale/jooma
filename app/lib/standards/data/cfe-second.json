@@ -1,0 +1,3622 @@
+{
+ "source": {
+  "title": "Curriculum for Excellence experiences and outcomes",
+  "file": "docs/standards/uk/scotland/",
+  "url": "https://education.gov.scot/curriculum-for-excellence/curriculum-for-excellence-documents/experiences-and-outcomes/",
+  "credit": "Curriculum for Excellence experiences and outcomes: © Crown copyright, Education Scotland. Contains public sector information licensed under the Open Government Licence v3.0."
+ },
+ "statements": [
+  {
+   "id": "cfe-second-exa-2-01a",
+   "code": "EXA 2-01a",
+   "subject": "Expressive arts",
+   "strand": "Participation in performances and presentations",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have experienced the energy and excitement of presenting/performing for audiences and being part of an audience for other people’s presentations/performances."
+  },
+  {
+   "id": "cfe-second-exa-2-02a",
+   "code": "EXA 2-02a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have the opportunity to choose and explore an extended range of media and technologies to create images and objects, comparing and combining them for specific tasks."
+  },
+  {
+   "id": "cfe-second-exa-2-03a",
+   "code": "EXA 2-03a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can create and present work that shows developing skill in using the visual elements and concepts."
+  },
+  {
+   "id": "cfe-second-exa-2-04a",
+   "code": "EXA 2-04a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through observing and recording from my experiences across the curriculum, I can create images and objects which show my awareness and recognition of detail."
+  },
+  {
+   "id": "cfe-second-exa-2-05a",
+   "code": "EXA 2-05a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Inspired by a range of stimuli, I can express and communicate my ideas, thoughts and feelings through activities within art and design."
+  },
+  {
+   "id": "cfe-second-exa-2-06a",
+   "code": "EXA 2-06a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can develop and communicate my ideas, demonstrating imagination and presenting at least one possible solution to a design problem."
+  },
+  {
+   "id": "cfe-second-exa-2-07a",
+   "code": "EXA 2-07a",
+   "subject": "Expressive arts",
+   "strand": "Art and design",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can respond to the work of artists and designers by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-second-exa-2-08a",
+   "code": "EXA 2-08a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explore and choose movements to create and present dance, developing my skills and techniques."
+  },
+  {
+   "id": "cfe-second-exa-2-09a",
+   "code": "EXA 2-09a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Inspired by a range of stimuli, I can express my ideas, thoughts and feelings through creative work in dance."
+  },
+  {
+   "id": "cfe-second-exa-2-10a",
+   "code": "EXA 2-10a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have taken part in dance from a range of styles and cultures, demonstrating my awareness of the dance features."
+  },
+  {
+   "id": "cfe-second-exa-2-11a",
+   "code": "EXA 2-11a",
+   "subject": "Expressive arts",
+   "strand": "Dance",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can respond to the experience of dance by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-second-exa-2-12a",
+   "code": "EXA 2-12a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can create, adapt and sustain different roles, experimenting with movement, expression and voice and using theatre arts technology."
+  },
+  {
+   "id": "cfe-second-exa-2-13a",
+   "code": "EXA 2-13a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Inspired by a range of stimuli, I can express and communicate my ideas, thoughts and feelings through drama."
+  },
+  {
+   "id": "cfe-second-exa-2-14a",
+   "code": "EXA 2-14a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have created and presented scripted or improvised drama, beginning to take account of audience and atmosphere."
+  },
+  {
+   "id": "cfe-second-exa-2-15a",
+   "code": "EXA 2-15a",
+   "subject": "Expressive arts",
+   "strand": "Drama",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can respond to the experience of drama by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-second-exa-2-16a",
+   "code": "EXA 2-16a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can sing and play music from a range of styles and cultures, showing skill and using performance directions, and/or musical notation."
+  },
+  {
+   "id": "cfe-second-exa-2-17a",
+   "code": "EXA 2-17a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my voice, musical instruments and music technology to experiment with sounds, pitch, melody, rhythm, timbre and dynamics."
+  },
+  {
+   "id": "cfe-second-exa-2-18a",
+   "code": "EXA 2-18a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Inspired by a range of stimuli, and working on my own and/or with others, I can express and communicate my ideas, thoughts and feelings through musical activities."
+  },
+  {
+   "id": "cfe-second-exa-2-19a",
+   "code": "EXA 2-19a",
+   "subject": "Expressive arts",
+   "strand": "Music",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have listened to a range of music and can respond by discussing my thoughts and feelings. I can give and accept constructive comment on my own and others’ work."
+  },
+  {
+   "id": "cfe-second-hwb-2-01a",
+   "code": "HWB 2-01a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am aware of and able to express my feelings and am developing the ability to talk about them."
+  },
+  {
+   "id": "cfe-second-hwb-2-02a",
+   "code": "HWB 2-02a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that we all experience a variety of thoughts and emotions that affect how we feel and behave and I am learning ways of managing them."
+  },
+  {
+   "id": "cfe-second-hwb-2-03a",
+   "code": "HWB 2-03a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand that there are people I can talk to and that there are a number of ways in which I can gain access to practical and emotional support to help me and others in a range of circumstances."
+  },
+  {
+   "id": "cfe-second-hwb-2-04a",
+   "code": "HWB 2-04a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand that my feelings and reactions can change depending upon what is happening within and around me. This helps me to understand my own behaviour and the way others behave."
+  },
+  {
+   "id": "cfe-second-hwb-2-05a",
+   "code": "HWB 2-05a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that friendship, caring, sharing, fairness, equality and love are important in building positive relationships. As I develop and value relationships, I care and show respect for myself and others."
+  },
+  {
+   "id": "cfe-second-hwb-2-06a",
+   "code": "HWB 2-06a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand the importance of mental wellbeing and that this can be fostered and strengthened through personal coping skills and positive relationships. I know that it is not always possible to enjoy good mental health and that if this happens there is support available."
+  },
+  {
+   "id": "cfe-second-hwb-2-07a",
+   "code": "HWB 2-07a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am learning skills and strategies which will support me in challenging times, particularly in relation to change and loss."
+  },
+  {
+   "id": "cfe-second-hwb-2-08a",
+   "code": "HWB 2-08a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Mental and emotional wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand that people can feel alone and can be misunderstood and left out by others. I am learning how to give appropriate support."
+  },
+  {
+   "id": "cfe-second-hwb-2-09a",
+   "code": "HWB 2-09a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "As I explore the rights to which I and others are entitled, I am able to exercise these rights appropriately and accept the responsibilities that go with them. I show respect for the rights of others."
+  },
+  {
+   "id": "cfe-second-hwb-2-10a",
+   "code": "HWB 2-10a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I recognise that each individual has a unique blend of abilities and needs. I contribute to making my school community one which values individuals equally and is a welcoming place for all."
+  },
+  {
+   "id": "cfe-second-hwb-2-11a",
+   "code": "HWB 2-11a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I make full use of and value the opportunities I am given to improve and manage my learning and, in turn, I can help to encourage learning and confidence in others."
+  },
+  {
+   "id": "cfe-second-hwb-2-12a",
+   "code": "HWB 2-12a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Representing my class, school and/or wider community encourages my self-worth and confidence and allows me to contribute to and participate in society."
+  },
+  {
+   "id": "cfe-second-hwb-2-13a",
+   "code": "HWB 2-13a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through contributing my views, time and talents, I play a part in bringing about positive change in my school and wider community."
+  },
+  {
+   "id": "cfe-second-hwb-2-14a",
+   "code": "HWB 2-14a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Social wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I value the opportunities I am given to make friends and be part of a group in a range of situations."
+  },
+  {
+   "id": "cfe-second-hwb-2-15a",
+   "code": "HWB 2-15a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing my understanding of the human body and can use this knowledge to maintain and improve my wellbeing and health."
+  },
+  {
+   "id": "cfe-second-hwb-2-16a",
+   "code": "HWB 2-16a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am learning to assess and manage risk, to protect myself and others, and to reduce the potential for harm when possible."
+  },
+  {
+   "id": "cfe-second-hwb-2-17a",
+   "code": "HWB 2-17a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know and can demonstrate how to keep myself and others safe and how to respond in a range of emergency situations."
+  },
+  {
+   "id": "cfe-second-hwb-2-18a",
+   "code": "HWB 2-18a",
+   "subject": "Health and wellbeing",
+   "strand": "Mental, emotional, social and physical wellbeing: Physical wellbeing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know and can demonstrate how to travel safely."
+  },
+  {
+   "id": "cfe-second-hwb-2-19a",
+   "code": "HWB 2-19a",
+   "subject": "Health and wellbeing",
+   "strand": "Planning for choices and changes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Opportunities to carry out different activities and roles in a variety of settings have enabled me to identify my achievements, skills and areas for development. This will help me to prepare for the next stage in my life and learning."
+  },
+  {
+   "id": "cfe-second-hwb-2-20a",
+   "code": "HWB 2-20a",
+   "subject": "Health and wellbeing",
+   "strand": "Planning for choices and changes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am investigating different careers/occupations, ways of working, and learning and training paths. I am gaining experience that helps me recognise the relevance of my learning, skills and interests to my future life."
+  },
+  {
+   "id": "cfe-second-hwb-2-21a",
+   "code": "HWB 2-21a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Movement skills, competencies and concepts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "As I encounter new challenges and contexts for learning, I am encouraged and supported to demonstrate my ability to select, adapt and apply movement skills and strategies, creatively, accurately and with control."
+  },
+  {
+   "id": "cfe-second-hwb-2-22a",
+   "code": "HWB 2-22a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Movement skills, competencies and concepts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I practise, consolidate and refine my skills to improve my performance. I am developing and sustaining my levels of fitness."
+  },
+  {
+   "id": "cfe-second-hwb-2-23a",
+   "code": "HWB 2-23a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Cooperation and competition",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "While working and learning with others, I improve my range of skills, demonstrate tactics and achieve identified goals."
+  },
+  {
+   "id": "cfe-second-hwb-2-24a",
+   "code": "HWB 2-24a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical education: Evaluating and appreciating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By reflecting on my own and others’ work and evaluating it against shared criteria, I can recognise improvement and achievement and use this to progress further."
+  },
+  {
+   "id": "cfe-second-hwb-2-25a",
+   "code": "HWB 2-25a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and sport",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am experiencing enjoyment and achievement on a daily basis by taking part in different kinds of energetic physical activities of my choosing, including sport and opportunities for outdoor learning, available at my place of learning and in the wider community."
+  },
+  {
+   "id": "cfe-second-hwb-2-26a",
+   "code": "HWB 2-26a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and sport",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have investigated the role of sport and the opportunities it may offer me. I am able to access opportunities for participation in sport and the development of my performance in my place of learning and beyond."
+  },
+  {
+   "id": "cfe-second-hwb-2-27a",
+   "code": "HWB 2-27a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and health",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain why I need to be active on a daily basis to maintain good health and try to achieve a good balance of sleep, rest and physical activity."
+  },
+  {
+   "id": "cfe-second-hwb-2-28a",
+   "code": "HWB 2-28a",
+   "subject": "Health and wellbeing",
+   "strand": "Physical education, physical activity and sport: Physical activity and health",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain the links between the energy I use while being physically active, the food I eat, and my health and wellbeing."
+  },
+  {
+   "id": "cfe-second-hwb-2-29a",
+   "code": "HWB 2-29a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Nutrition",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I enjoy eating a diversity of foods in a range of social situations."
+  },
+  {
+   "id": "cfe-second-hwb-2-30a",
+   "code": "HWB 2-30a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Nutrition",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By applying my knowledge and understanding of current healthy eating advice I can contribute to a healthy eating plan."
+  },
+  {
+   "id": "cfe-second-hwb-2-32a",
+   "code": "HWB 2-32a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Nutrition",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand that people at different life stages have differing nutritional needs and that some people may eat or avoid certain foods."
+  },
+  {
+   "id": "cfe-second-hwb-2-33a",
+   "code": "HWB 2-33a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Safe and hygienic practices",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having learned about cleanliness, hygiene and safety, I can apply these principles to my everyday routines, understanding their importance to health and wellbeing."
+  },
+  {
+   "id": "cfe-second-hwb-2-34a",
+   "code": "HWB 2-34a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Food and the consumer",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through exploration and discussion, I can understand that food practices and preferences are influenced by factors such as food sources, finance, culture and religion."
+  },
+  {
+   "id": "cfe-second-hwb-2-35a",
+   "code": "HWB 2-35a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Food and the consumer",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "When preparing and cooking a variety of foods, I am becoming aware of the journeys which foods make from source to consumer, their seasonality, their local availability and their sustainability."
+  },
+  {
+   "id": "cfe-second-hwb-2-36a",
+   "code": "HWB 2-36a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Food and the consumer",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By investigating food labelling systems, I can begin to understand how to use them to make healthy food choices."
+  },
+  {
+   "id": "cfe-second-hwb-2-37a",
+   "code": "HWB 2-37a",
+   "subject": "Health and wellbeing",
+   "strand": "Food and health: Food and the consumer",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can understand how advertising and the media are used to influence consumers."
+  },
+  {
+   "id": "cfe-second-hwb-2-38a",
+   "code": "HWB 2-38a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand the effect that a range of substances including tobacco and alcohol can have on the body."
+  },
+  {
+   "id": "cfe-second-hwb-2-39a",
+   "code": "HWB 2-39a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that popular culture, the media and peer groups as well as my own attitudes and values can influence how I feel about substance use and recognise the impact this may have on my actions."
+  },
+  {
+   "id": "cfe-second-hwb-2-40a",
+   "code": "HWB 2-40a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that alcohol and drugs can affect people’s ability to make decisions."
+  },
+  {
+   "id": "cfe-second-hwb-2-41a",
+   "code": "HWB 2-41a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can identify the different kinds of risks associated with the use and misuse of a range of substances."
+  },
+  {
+   "id": "cfe-second-hwb-2-42a",
+   "code": "HWB 2-42a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know of actions I can take to help someone in an emergency."
+  },
+  {
+   "id": "cfe-second-hwb-2-43a",
+   "code": "HWB 2-43a",
+   "subject": "Health and wellbeing",
+   "strand": "Substance misuse",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand the impact that misuse of substances can have on individuals, their families and friends."
+  },
+  {
+   "id": "cfe-second-hwb-2-44a",
+   "code": "HWB 2-44a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand that a wide range of different kinds of friendships and relationships exist."
+  },
+  {
+   "id": "cfe-second-hwb-2-44b",
+   "code": "HWB 2-44b",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am aware that positive friendships and relationships can promote health and the health and wellbeing of others."
+  },
+  {
+   "id": "cfe-second-hwb-2-45a",
+   "code": "HWB 2-45a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am identifying and practising skills to manage changing relationships and I understand the positive impact this can have on my emotional wellbeing."
+  },
+  {
+   "id": "cfe-second-hwb-2-45b",
+   "code": "HWB 2-45b",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am aware of the need to respect personal space and boundaries and can recognise and respond appropriately to verbal and non-verbal communication."
+  },
+  {
+   "id": "cfe-second-hwb-2-47a",
+   "code": "HWB 2-47a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I recognise that how my body changes can affect how I feel about myself and how I may behave."
+  },
+  {
+   "id": "cfe-second-hwb-2-48a",
+   "code": "HWB 2-48a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe the physical and emotional changes during puberty, understand why they are taking place and the importance of personal hygiene."
+  },
+  {
+   "id": "cfe-second-hwb-2-49a",
+   "code": "HWB 2-49a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that all forms of abuse are wrong and I am developing the skills to keep myself safe and get help if I need it."
+  },
+  {
+   "id": "cfe-second-hwb-2-50a",
+   "code": "HWB 2-50a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am able to describe how human life begins and how a baby is born."
+  },
+  {
+   "id": "cfe-second-hwb-2-51a",
+   "code": "HWB 2-51a",
+   "subject": "Health and wellbeing",
+   "strand": "Relationships, sexual health and parenthood",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe the role of a parent/carer and the skills, commitment and qualities the role requires."
+  },
+  {
+   "id": "cfe-second-lgl-2-01a",
+   "code": "LGL 2-01a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening for information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can listen to and show understanding of familiar instructions and language from familiar voices and sources."
+  },
+  {
+   "id": "cfe-second-lgl-2-02a",
+   "code": "LGL 2-02a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can listen and respond to familiar voices in short, predictable conversations using straightforward language and/or non-verbal techniques such as gesture and eye contact."
+  },
+  {
+   "id": "cfe-second-lgl-2-03a",
+   "code": "LGL 2-03a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can take part effectively in prepared conversations by sharing information about myself, others or interests of my choice, using familiar vocabulary and basic language structures."
+  },
+  {
+   "id": "cfe-second-lgl-2-04a",
+   "code": "LGL 2-04a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can ask for help confidently, using learned phrases and familiar language."
+  },
+  {
+   "id": "cfe-second-lgl-2-05a",
+   "code": "LGL 2-05a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can participate in familiar collaborative activities in Gaelic including games, paired speaking and short role plays."
+  },
+  {
+   "id": "cfe-second-lgl-2-06a",
+   "code": "LGL 2-06a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can deliver a brief presentation on a familiar topic using familiar language and phrases."
+  },
+  {
+   "id": "cfe-second-lgl-2-06b",
+   "code": "LGL 2-06b",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have worked with others, using ICT and other media where appropriate, and can contribute successfully to a presentation in English, supported by Gaelic vocabulary, on an aspect of Gaelic culture and tradition."
+  },
+  {
+   "id": "cfe-second-lgl-2-07a",
+   "code": "LGL 2-07a",
+   "subject": "Gaelic (learners)",
+   "strand": "Listening and talking: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my knowledge about language and pronunciation to ensure that others can understand me when I read aloud or say familiar words, phrases and short texts."
+  },
+  {
+   "id": "cfe-second-lgl-2-08a",
+   "code": "LGL 2-08a",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have worked on my own and with others to understand texts using appropriate resources. I can read and demonstrate my understanding of sentences and simple texts containing familiar language."
+  },
+  {
+   "id": "cfe-second-lgl-2-09a",
+   "code": "LGL 2-09a",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Reading for cultural appreciation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have worked on my own and with others to read and discuss Gaelic texts. I can share simple facts about life in some of the countries where Gaelic and related languages are spoken."
+  },
+  {
+   "id": "cfe-second-lgl-2-10a",
+   "code": "LGL 2-10a",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Reading for interest and enjoyment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have selected and can read, on my own and with others, a variety of straightforward texts of different types, which may have been adapted."
+  },
+  {
+   "id": "cfe-second-lgl-2-11a",
+   "code": "LGL 2-11a",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can understand how a bilingual dictionary works and use it with support."
+  },
+  {
+   "id": "cfe-second-lgl-2-11b",
+   "code": "LGL 2-11b",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can make comparisons and explore connections between spelling patterns in English and Gaelic."
+  },
+  {
+   "id": "cfe-second-lgl-2-11c",
+   "code": "LGL 2-11c",
+   "subject": "Gaelic (learners)",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can recognise and comment on other features of my own language, which help me to make sense of words in Gaelic."
+  },
+  {
+   "id": "cfe-second-lgl-2-12a",
+   "code": "LGL 2-12a",
+   "subject": "Gaelic (learners)",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use familiar language to describe my circumstances and exchange straightforward information. I can make reference to aspects of Gaelic culture and tradition."
+  },
+  {
+   "id": "cfe-second-lgl-2-13a",
+   "code": "LGL 2-13a",
+   "subject": "Gaelic (learners)",
+   "strand": "Writing: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have used my knowledge about language and success criteria to help me, and I can check that I have written familiar words and phrases accurately."
+  },
+  {
+   "id": "cfe-second-lit-2-01a",
+   "code": "LIT 2-01a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Enjoyment and choice",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I regularly select and listen to or watch texts which I enjoy and find interesting, and I can explain why I prefer certain sources. I regularly select subject, purpose, format and resources to create texts of my choice."
+  },
+  {
+   "id": "cfe-second-lit-2-02a",
+   "code": "LIT 2-02a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Tools for listening and talking",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "When I engage with others, I can respond in ways appropriate to my role, show that I value others’ contributions and use these to build on thinking."
+  },
+  {
+   "id": "cfe-second-eng-2-03a",
+   "code": "ENG 2-03a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Tools for listening and talking",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can recognise how the features of spoken language can help in communication, and I can use what I learn. I can recognise different features of my own and others’ spoken language."
+  },
+  {
+   "id": "cfe-second-lit-2-04a",
+   "code": "LIT 2-04a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "As I listen or watch, I can identify and discuss the purpose, main ideas and supporting detail contained within the text, and use this information for different purposes."
+  },
+  {
+   "id": "cfe-second-lit-2-05a",
+   "code": "LIT 2-05a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "As I listen or watch, I can make notes, organise these under suitable headings and use these to understand ideas and information and create new texts, using my own words as appropriate."
+  },
+  {
+   "id": "cfe-second-lit-2-06a",
+   "code": "LIT 2-06a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can select ideas and relevant information, organise these in an appropriate way for my purpose and use suitable vocabulary for my audience."
+  },
+  {
+   "id": "cfe-second-lit-2-07a",
+   "code": "LIT 2-07a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Understanding, analysing and evaluating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can show my understanding of what I listen to or watch by responding to literal, inferential, evaluative and other types of questions, and by asking different kinds of questions of my own."
+  },
+  {
+   "id": "cfe-second-lit-2-08a",
+   "code": "LIT 2-08a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Understanding, analysing and evaluating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "To help me develop an informed view, I can distinguish fact from opinion, and I am learning to recognise when my sources try to influence me and how useful these are."
+  },
+  {
+   "id": "cfe-second-lit-2-09a",
+   "code": "LIT 2-09a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "When listening and talking with others for different purposes, I can: • share information, experiences and opinions • explain processes and ideas • identify issues raised and summarise main points or findings • clarify points by asking questions or by asking others to say more."
+  },
+  {
+   "id": "cfe-second-lit-2-10a",
+   "code": "LIT 2-10a",
+   "subject": "Literacy and English",
+   "strand": "Listening and talking: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing confidence when engaging with others within and beyond my place of learning. I can communicate in a clear, expressive way and I am learning to select and organise resources independently."
+  },
+  {
+   "id": "cfe-second-lit-2-11a",
+   "code": "LIT 2-11a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Enjoyment and choice",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I regularly select and read, listen to or watch texts which I enjoy and find interesting, and I can explain why I prefer certain texts and authors."
+  },
+  {
+   "id": "cfe-second-eng-2-12a",
+   "code": "ENG 2-12a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Tools for reading",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through developing my knowledge of context clues, punctuation, grammar and layout, I can read unfamiliar texts with increasing fluency, understanding and expression."
+  },
+  {
+   "id": "cfe-second-lit-2-13a",
+   "code": "LIT 2-13a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Tools for reading",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can select and use a range of strategies and resources before I read, and as I read, to make meaning clear and give reasons for my selection."
+  },
+  {
+   "id": "cfe-second-lit-2-14a",
+   "code": "LIT 2-14a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Using what I know about the features of different types of texts, I can find, select and sort information from a variety of sources and use this for different purposes."
+  },
+  {
+   "id": "cfe-second-lit-2-15a",
+   "code": "LIT 2-15a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can make notes, organise them under suitable headings and use them to understand information, develop my thinking, explore problems and create new texts, using my own words as appropriate."
+  },
+  {
+   "id": "cfe-second-lit-2-16a",
+   "code": "LIT 2-16a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Understanding, analysing and evaluating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "To show my understanding across different areas of learning, I can identify and consider the purpose and main ideas of a text and use supporting detail."
+  },
+  {
+   "id": "cfe-second-eng-2-17a",
+   "code": "ENG 2-17a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Understanding, analysing and evaluating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "To show my understanding, I can respond to literal, inferential and evaluative questions and other close reading tasks and can create different kinds of questions of my own."
+  },
+  {
+   "id": "cfe-second-lit-2-18a",
+   "code": "LIT 2-18a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Understanding, analysing and evaluating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "To help me develop an informed view, I can identify and explain the difference between fact and opinion, recognise when I am being influenced, and have assessed how useful and believable my sources are."
+  },
+  {
+   "id": "cfe-second-eng-2-19a",
+   "code": "ENG 2-19a",
+   "subject": "Literacy and English",
+   "strand": "Reading: Understanding, analysing and evaluating",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can: • discuss structure, characterisation and/or setting • recognise the relevance of the writer’s theme and how this relates to my own and others’ experiences • discuss the writer’s style and other features appropriate to genre."
+  },
+  {
+   "id": "cfe-second-lit-2-20a",
+   "code": "LIT 2-20a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Enjoyment and choice",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I enjoy creating texts of my choice and I regularly select subject, purpose, format and resources to suit the needs of my audience."
+  },
+  {
+   "id": "cfe-second-lit-2-21a",
+   "code": "LIT 2-21a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Tools for writing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can spell most of the words I need to communicate, using spelling rules, specialist vocabulary, self-correction techniques and a range of resources."
+  },
+  {
+   "id": "cfe-second-lit-2-22a",
+   "code": "LIT 2-22a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Tools for writing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "In both short and extended texts, I can use appropriate punctuation, vary my sentence structures and divide my work into paragraphs in a way that makes sense to my reader."
+  },
+  {
+   "id": "cfe-second-lit-2-23a",
+   "code": "LIT 2-23a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Tools for writing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Throughout the writing process, I can check that my writing makes sense and meets its purpose."
+  },
+  {
+   "id": "cfe-second-lit-2-24a",
+   "code": "LIT 2-24a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Tools for writing",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I consider the impact that layout and presentation will have and can combine lettering, graphics and other features to engage my reader."
+  },
+  {
+   "id": "cfe-second-lit-2-25a",
+   "code": "LIT 2-25a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my notes and other types of writing to help me understand information and ideas, explore problems, make decisions, generate and develop ideas or create new text. I recognise the need to acknowledge my sources and can do this appropriately."
+  },
+  {
+   "id": "cfe-second-lit-2-26a",
+   "code": "LIT 2-26a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By considering the type of text I am creating, I can select ideas and relevant information, organise these in an appropriate way for my purpose and use suitable vocabulary for my audience."
+  },
+  {
+   "id": "cfe-second-eng-2-27a",
+   "code": "ENG 2-27a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am learning to use language and style in a way which engages and/or influences my reader."
+  },
+  {
+   "id": "cfe-second-lit-2-28a",
+   "code": "LIT 2-28a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can convey information, describe events, explain processes or combine ideas in different ways."
+  },
+  {
+   "id": "cfe-second-lit-2-29a",
+   "code": "LIT 2-29a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can persuade, argue, explore issues or express an opinion using relevant supporting detail and/or evidence."
+  },
+  {
+   "id": "cfe-second-eng-2-30a",
+   "code": "ENG 2-30a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "As I write for different purposes and readers, I can describe and share my experiences, expressing what they made me think about and how they made me feel."
+  },
+  {
+   "id": "cfe-second-eng-2-31a",
+   "code": "ENG 2-31a",
+   "subject": "Literacy and English",
+   "strand": "Writing: Creating texts",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored the elements which writers use in different genres, I can use what I learn to create stories, poems and plays with an interesting and appropriate structure, interesting characters and/or settings which come to life."
+  },
+  {
+   "id": "cfe-second-mlan-2-01a",
+   "code": "MLAN 2-01a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening for information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I explore the patterns and sounds of language through songs and rhymes and show understanding and enjoyment by listening, joining in and responding."
+  },
+  {
+   "id": "cfe-second-mlan-2-01b",
+   "code": "MLAN 2-01b",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening for information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I take an active part in daily routines, responding to instructions which are accompanied by gesture and expression."
+  },
+  {
+   "id": "cfe-second-mlan-2-01c",
+   "code": "MLAN 2-01c",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening for information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can listen to and show understanding of familiar instructions and language from familiar voices and sources."
+  },
+  {
+   "id": "cfe-second-mlan-2-02a",
+   "code": "MLAN 2-02a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I explore how gesture, expression and emphasis are used to help understanding. I can listen and respond to familiar voices in short, predictable conversations using straightforward language and non-verbal techniques as appropriate such as gesture and eye contact."
+  },
+  {
+   "id": "cfe-second-mlan-2-03a",
+   "code": "MLAN 2-03a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "When listening and talking with others, I am developing an awareness of when to listen and when to talk. I am learning new words which I use to share information about myself and others."
+  },
+  {
+   "id": "cfe-second-mlan-2-03b",
+   "code": "MLAN 2-03b",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can take part effectively in prepared conversations by sharing information about myself and others or interests of my choice, using familiar vocabulary and basic language structures."
+  },
+  {
+   "id": "cfe-second-mlan-2-04a",
+   "code": "MLAN 2-04a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can ask for help confidently using learned phrases and familiar language."
+  },
+  {
+   "id": "cfe-second-mlan-2-05a",
+   "code": "MLAN 2-05a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I explore simple songs and rhymes and I enjoy learning with others as we talk and listen together."
+  },
+  {
+   "id": "cfe-second-mlan-2-05b",
+   "code": "MLAN 2-05b",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Listening and talking with others",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can participate in familiar collaborative activities including games, paired speaking and short role plays."
+  },
+  {
+   "id": "cfe-second-mlan-2-06a",
+   "code": "MLAN 2-06a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can deliver a brief presentation on a familiar topic using familiar language and phrases."
+  },
+  {
+   "id": "cfe-second-mlan-2-06b",
+   "code": "MLAN 2-06b",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have worked with others, using a variety of media including ICT where appropriate, and can contribute successfully to a presentation in English, supported by use of the language I am learning, on an aspect of life in a country where the language I am learning is spoken."
+  },
+  {
+   "id": "cfe-second-mlan-2-07a",
+   "code": "MLAN 2-07a",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I explore comparisons and connections between sound patterns in different languages through play, discussion and experimentation."
+  },
+  {
+   "id": "cfe-second-mlan-2-07b",
+   "code": "MLAN 2-07b",
+   "subject": "Modern languages",
+   "strand": "Listening and talking: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my knowledge about language and pronunciation to ensure that others can understand me when I read aloud or say familiar words, phrases and short texts."
+  },
+  {
+   "id": "cfe-second-mlan-2-08a",
+   "code": "MLAN 2-08a",
+   "subject": "Modern languages",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I work on my own and with others to understand text using appropriate resources, demonstrating my understanding by matching written words to pictures and by reconstructing the text in a logical sequence, for example."
+  },
+  {
+   "id": "cfe-second-mlan-2-08b",
+   "code": "MLAN 2-08b",
+   "subject": "Modern languages",
+   "strand": "Reading: Finding and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can read and demonstrate understanding of words, signs, phrases and simple texts containing mainly familiar language."
+  },
+  {
+   "id": "cfe-second-mlan-2-09a",
+   "code": "MLAN 2-09a",
+   "subject": "Modern languages",
+   "strand": "Reading: Reading to appreciate other cultures",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I work on my own and with others to read and discuss simple texts in the language I am learning. I can share simple facts about features of life in some of the countries where the language I am learning is spoken."
+  },
+  {
+   "id": "cfe-second-mlan-2-10a",
+   "code": "MLAN 2-10a",
+   "subject": "Modern languages",
+   "strand": "Reading: Reading for interest and enjoyment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can choose and can read, on my own and with others, a variety of straightforward texts of different types, including non-fiction, short imaginative accounts, prose and poetry, which may have been adapted."
+  },
+  {
+   "id": "cfe-second-mlan-2-11a",
+   "code": "MLAN 2-11a",
+   "subject": "Modern languages",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can understand how a bilingual dictionary works and use it with support."
+  },
+  {
+   "id": "cfe-second-mlan-2-11b",
+   "code": "MLAN 2-11b",
+   "subject": "Modern languages",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can make comparisons and explore connections between spelling patterns in English and the language I am learning."
+  },
+  {
+   "id": "cfe-second-mlan-2-11c",
+   "code": "MLAN 2-11c",
+   "subject": "Modern languages",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I experiment with new language, working out the meaning of words and phrases using vocabulary I have learned so far."
+  },
+  {
+   "id": "cfe-second-mlan-2-11d",
+   "code": "MLAN 2-11d",
+   "subject": "Modern languages",
+   "strand": "Reading: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can recognise and comment on other features of my own language which help to make sense of words in the language I am learning."
+  },
+  {
+   "id": "cfe-second-mlan-2-12a",
+   "code": "MLAN 2-12a",
+   "subject": "Modern languages",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I use the support of others and access appropriate reference materials of my choice to help me plan my writing in ways that engage my reader, using ICT when appropriate."
+  },
+  {
+   "id": "cfe-second-mlan-2-13a",
+   "code": "MLAN 2-13a",
+   "subject": "Modern languages",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have opportunities to express myself in writing, exploring and experimenting with words and phrases using resources, to ensure my writing makes sense."
+  },
+  {
+   "id": "cfe-second-mlan-2-13b",
+   "code": "MLAN 2-13b",
+   "subject": "Modern languages",
+   "strand": "Writing: Organising and using information",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use familiar language to describe myself and to exchange straightforward information."
+  },
+  {
+   "id": "cfe-second-mlan-2-14a",
+   "code": "MLAN 2-14a",
+   "subject": "Modern languages",
+   "strand": "Writing: Using knowledge about language",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I use my knowledge about language and success criteria to help me, and I can check that I have written familiar words and phrases accurately."
+  },
+  {
+   "id": "cfe-second-mnu-2-01a",
+   "code": "MNU 2-01a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Estimation and rounding",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my knowledge of rounding to routinely estimate the answer to a problem then, after calculating, decide if my answer is reasonable, sharing my solution with others."
+  },
+  {
+   "id": "cfe-second-mnu-2-02a",
+   "code": "MNU 2-02a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have extended the range of whole numbers I can work with and having explored how decimal fractions are constructed, can explain the link between a digit, its place and its value."
+  },
+  {
+   "id": "cfe-second-mnu-2-03a",
+   "code": "MNU 2-03a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having determined which calculations are needed, I can solve problems involving whole numbers using a range of methods, sharing my approaches and solutions with others."
+  },
+  {
+   "id": "cfe-second-mnu-2-03b",
+   "code": "MNU 2-03b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have explored the contexts in which problems involving decimal fractions occur and can solve related problems using a variety of methods."
+  },
+  {
+   "id": "cfe-second-mth-2-03c",
+   "code": "MTH 2-03c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored the need for rules for the order of operations in number calculations, I can apply them correctly when solving simple problems."
+  },
+  {
+   "id": "cfe-second-mnu-2-04a",
+   "code": "MNU 2-04a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Number and number processes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can show my understanding of how the number line extends to include numbers less than zero and have investigated how these numbers occur and are used."
+  },
+  {
+   "id": "cfe-second-mth-2-05a",
+   "code": "MTH 2-05a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Multiples, factors and primes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored the patterns and relationships in multiplication and division, I can investigate and identify the multiples and factors of numbers."
+  },
+  {
+   "id": "cfe-second-mnu-2-07a",
+   "code": "MNU 2-07a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Fractions, decimal fractions and percentages",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have investigated the everyday contexts in which simple fractions, percentages or decimal fractions are used and can carry out the necessary calculations to solve related problems."
+  },
+  {
+   "id": "cfe-second-mnu-2-07b",
+   "code": "MNU 2-07b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Fractions, decimal fractions and percentages",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can show the equivalent forms of simple fractions, decimal fractions and percentages and can choose my preferred form when solving a problem, explaining my choice of method."
+  },
+  {
+   "id": "cfe-second-mth-2-07c",
+   "code": "MTH 2-07c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Fractions, decimal fractions and percentages",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have investigated how a set of equivalent fractions can be created, understanding the meaning of simplest form, and can apply my knowledge to compare and order the most commonly used fractions."
+  },
+  {
+   "id": "cfe-second-mnu-2-09a",
+   "code": "MNU 2-09a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Money",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can manage money, compare costs from different retailers, and determine what I can afford to buy."
+  },
+  {
+   "id": "cfe-second-mnu-2-09b",
+   "code": "MNU 2-09b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Money",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand the costs, benefits and risks of using bank cards to purchase goods or obtain cash and realise that budgeting is important."
+  },
+  {
+   "id": "cfe-second-mnu-2-09c",
+   "code": "MNU 2-09c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Money",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use the terms profit and loss in buying and selling activities and can make simple calculations for this."
+  },
+  {
+   "id": "cfe-second-mnu-2-10a",
+   "code": "MNU 2-10a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Time",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use and interpret electronic and paper-based timetables and schedules to plan events and activities, and make time calculations as part of my planning."
+  },
+  {
+   "id": "cfe-second-mnu-2-10b",
+   "code": "MNU 2-10b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Time",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can carry out practical tasks and investigations involving timed events and can explain which unit of time would be most appropriate to use."
+  },
+  {
+   "id": "cfe-second-mnu-2-10c",
+   "code": "MNU 2-10c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Time",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Using simple time periods, I can give a good estimate of how long a journey should take, based on my knowledge of the link between time, speed and distance."
+  },
+  {
+   "id": "cfe-second-mnu-2-11a",
+   "code": "MNU 2-11a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Measurement",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my knowledge of the sizes of familiar objects or places to assist me when making an estimate of measure."
+  },
+  {
+   "id": "cfe-second-mnu-2-11b",
+   "code": "MNU 2-11b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Measurement",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use the common units of measure, convert between related units of the metric system and carry out calculations when solving problems."
+  },
+  {
+   "id": "cfe-second-mnu-2-11c",
+   "code": "MNU 2-11c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Measurement",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain how different methods can be used to find the perimeter and area of a simple 2D shape or volume of a simple 3D object."
+  },
+  {
+   "id": "cfe-second-mth-2-12a",
+   "code": "MTH 2-12a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Mathematics - its impact on the world, past, present and future",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have worked with others to explore, and present our findings on, how mathematics impacts on the world and the important part it has played in advances and inventions."
+  },
+  {
+   "id": "cfe-second-mth-2-13a",
+   "code": "MTH 2-13a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Patterns and relationships",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored more complex number sequences, including well-known named number patterns, I can explain the rule used to generate the sequence, and apply it to extend the pattern."
+  },
+  {
+   "id": "cfe-second-mth-2-15a",
+   "code": "MTH 2-15a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Number, money and measure: Expressions and equations",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can apply my knowledge of number facts to solve problems where an unknown value is represented by a symbol or letter."
+  },
+  {
+   "id": "cfe-second-mth-2-16a",
+   "code": "MTH 2-16a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Properties of 2D shapes and 3D objects",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored a range of 3D objects and 2D shapes, I can use mathematical language to describe their properties, and through investigation can discuss where and why particular shapes are used in the environment."
+  },
+  {
+   "id": "cfe-second-mth-2-16b",
+   "code": "MTH 2-16b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Properties of 2D shapes and 3D objects",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through practical activities, I can show my understanding of the relationship between 3D objects and their nets."
+  },
+  {
+   "id": "cfe-second-mth-2-16c",
+   "code": "MTH 2-16c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Properties of 2D shapes and 3D objects",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can draw 2D shapes and make representations of 3D objects using an appropriate range of methods and efficient use of resources."
+  },
+  {
+   "id": "cfe-second-mth-2-17a",
+   "code": "MTH 2-17a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have investigated angles in the environment, and can discuss, describe and classify angles using appropriate mathematical vocabulary."
+  },
+  {
+   "id": "cfe-second-mth-2-17b",
+   "code": "MTH 2-17b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can accurately measure and draw angles using appropriate equipment, applying my skills to problems in context."
+  },
+  {
+   "id": "cfe-second-mth-2-17c",
+   "code": "MTH 2-17c",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through practical activities which include the use of technology, I have developed my understanding of the link between compass points and angles and can describe, follow and record directions, routes and journeys using appropriate vocabulary."
+  },
+  {
+   "id": "cfe-second-mth-2-17d",
+   "code": "MTH 2-17d",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having investigated where, why and how scale is used and expressed, I can apply my understanding to interpret simple models, maps and plans."
+  },
+  {
+   "id": "cfe-second-mth-2-18a",
+   "code": "MTH 2-18a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my knowledge of the coordinate system to plot and describe the location of a point on a grid."
+  },
+  {
+   "id": "cfe-second-mth-2-19a",
+   "code": "MTH 2-19a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Shape, position and movement: Angle, symmetry and transformation",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can illustrate the lines of symmetry for a range of 2D shapes and apply my understanding to create and complete symmetrical pictures and patterns."
+  },
+  {
+   "id": "cfe-second-mnu-2-20a",
+   "code": "MNU 2-20a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Data and analysis",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having discussed the variety of ways and range of media used to present data, I can interpret and draw conclusions from the information displayed, recognising that the presentation may be misleading."
+  },
+  {
+   "id": "cfe-second-mnu-2-20b",
+   "code": "MNU 2-20b",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Data and analysis",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have carried out investigations and surveys, devising and using a variety of methods to gather information and have worked with others to collate, organise and communicate the results in an appropriate way."
+  },
+  {
+   "id": "cfe-second-mth-2-21a",
+   "code": "MTH 2-21a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Data and analysis",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can display data in a clear way using a suitable scale, by choosing appropriately from an extended range of tables, charts, diagrams and graphs, making effective use of technology."
+  },
+  {
+   "id": "cfe-second-mnu-2-22a",
+   "code": "MNU 2-22a",
+   "subject": "Numeracy and mathematics",
+   "strand": "Information handling: Ideas of chance and uncertainty",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can conduct simple experiments involving chance and communicate my predictions and findings using the vocabulary of probability."
+  },
+  {
+   "id": "cfe-second-rme-2-01a",
+   "code": "RME 2-01a",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through investigating and reflecting upon biblical and other Christian stories, I can show my understanding of these stories."
+  },
+  {
+   "id": "cfe-second-rme-2-01b",
+   "code": "RME 2-01b",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through exploring the lives and teachings of Jesus and other figures in Christianity, I am increasing my knowledge and understanding of key Christian beliefs."
+  },
+  {
+   "id": "cfe-second-rme-2-01c",
+   "code": "RME 2-01c",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can show understanding of Christian beliefs and explore the similarities and differences between these and my developing beliefs."
+  },
+  {
+   "id": "cfe-second-rme-2-02a",
+   "code": "RME 2-02a",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Values and issues",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through investigating and reflecting upon the lives and teachings of Jesus and key Christian figures, and drawing upon moral values as expressed in Christianity, I am beginning to understand how these have influenced Christian morality."
+  },
+  {
+   "id": "cfe-second-rme-2-02b",
+   "code": "RME 2-02b",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Values and issues",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can share my developing views about values such as fairness and equality and love, caring, sharing and human rights."
+  },
+  {
+   "id": "cfe-second-rme-2-03a",
+   "code": "RME 2-03a",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am increasing my knowledge and understanding of different forms of Christian worship and artefacts and can explain their importance for Christians."
+  },
+  {
+   "id": "cfe-second-rme-2-03b",
+   "code": "RME 2-03b",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through investigating the ways in which Christians mark major life events and times of year, I can explain key features of such festivals and celebrations."
+  },
+  {
+   "id": "cfe-second-rme-2-03c",
+   "code": "RME 2-03c",
+   "subject": "Religious and moral education",
+   "strand": "Christianity: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe the practices and traditions of Christianity and have considered the way these have influenced Scottish society."
+  },
+  {
+   "id": "cfe-second-rme-2-04a",
+   "code": "RME 2-04a",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through investigating and reflecting upon stories of world religions, I can show my understanding of these stories."
+  },
+  {
+   "id": "cfe-second-rme-2-04b",
+   "code": "RME 2-04b",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through exploring the lives and teachings of significant figures from world religions, I am increasing my knowledge and understanding of their key beliefs."
+  },
+  {
+   "id": "cfe-second-rme-2-04c",
+   "code": "RME 2-04c",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can show understanding of the beliefs of world religions and explore the similarities and differences between these and my developing beliefs."
+  },
+  {
+   "id": "cfe-second-rme-2-05a",
+   "code": "RME 2-05a",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Values and issues",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through investigating and reflecting upon the lives and teachings of significant figures from world religions, and drawing upon moral values as expressed in religious scriptures and other stories, I am beginning to understand how these have influenced the morality of world religions."
+  },
+  {
+   "id": "cfe-second-rme-2-05b",
+   "code": "RME 2-05b",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Values and issues",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can share my developing views about values such as fairness and equality and love, caring, sharing and human rights."
+  },
+  {
+   "id": "cfe-second-rme-2-06a",
+   "code": "RME 2-06a",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am increasing my knowledge and understanding of different forms of worship and artefacts within world religions and can explain their importance for followers of world religions."
+  },
+  {
+   "id": "cfe-second-rme-2-06b",
+   "code": "RME 2-06b",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through investigating and reflecting upon the ways in which followers of world religions mark major life events and times of year, I can explain key features of such festivals and celebrations."
+  },
+  {
+   "id": "cfe-second-rme-2-06c",
+   "code": "RME 2-06c",
+   "subject": "Religious and moral education",
+   "strand": "World religions selected for study: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe and reflect upon practices and traditions of world religions."
+  },
+  {
+   "id": "cfe-second-rme-2-07a",
+   "code": "RME 2-07a",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing respect for others and my understanding of their beliefs and values."
+  },
+  {
+   "id": "cfe-second-rme-2-08a",
+   "code": "RME 2-08a",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing an increasing awareness and understanding of my own beliefs and I put them into action in positive ways."
+  },
+  {
+   "id": "cfe-second-rme-2-09a",
+   "code": "RME 2-09a",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am increasing my understanding of how people come to have their beliefs, and further developing my awareness that there is a diversity of belief in modern Scotland."
+  },
+  {
+   "id": "cfe-second-rme-2-09b",
+   "code": "RME 2-09b",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing my understanding that people have beliefs and values based upon religious or other positions."
+  },
+  {
+   "id": "cfe-second-rme-2-09c",
+   "code": "RME 2-09c",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain why different people think that values such as honesty, respect and compassion are important, and I show respect for others."
+  },
+  {
+   "id": "cfe-second-rme-2-09d",
+   "code": "RME 2-09d",
+   "subject": "Religious and moral education",
+   "strand": "Development of beliefs and values",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing my understanding of how my own and other people’s beliefs and values affect their actions."
+  },
+  {
+   "id": "cfe-second-rerc-2-01a",
+   "code": "RERC 2-01a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Mystery of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I examine God’s precious gift of life and can reflect and act upon my God-given role."
+  },
+  {
+   "id": "cfe-second-rerc-2-01b",
+   "code": "RERC 2-01b",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Mystery of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I explore the Biblical stories of Creation and I can reflect on how we understand these truths in our modern world."
+  },
+  {
+   "id": "cfe-second-rerc-2-02a",
+   "code": "RERC 2-02a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: In the Image of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that God wants me to develop my God-given gifts and I have reflected on how I can use them for the common good."
+  },
+  {
+   "id": "cfe-second-rerc-2-03a",
+   "code": "RERC 2-03a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Revealed Truth of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can examine God’s relationship with myself and others. I have reflected on how the gift of faith can permeate my whole being."
+  },
+  {
+   "id": "cfe-second-rerc-2-04a",
+   "code": "RERC 2-04a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Revealed Truth of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can identify the three persons in the Holy Trinity and I have reflected on how I can honour the Holy Trinity."
+  },
+  {
+   "id": "cfe-second-rerc-2-05a",
+   "code": "RERC 2-05a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Son of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that Jesus is truly divine and truly human and I can acknowledge Him as our Saviour who brings the New Covenant."
+  },
+  {
+   "id": "cfe-second-rerc-2-06a",
+   "code": "RERC 2-06a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Son of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have examined some political, social, historical and religious elements in first-century Palestine and gained an understanding of Jesus’ life on earth."
+  },
+  {
+   "id": "cfe-second-rerc-2-06b",
+   "code": "RERC 2-06b",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Son of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have examined the role of Jesus as a teacher and a healer and I have reflected on how His words and actions influence my own life and the lives of others."
+  },
+  {
+   "id": "cfe-second-rerc-2-07a",
+   "code": "RERC 2-07a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Son of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have explored the events of the Passion, Death and Resurrection of Jesus and I have reflected on the Catholic meaning of eternal life."
+  },
+  {
+   "id": "cfe-second-rerc-2-08a",
+   "code": "RERC 2-08a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Signs of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have explored Christian heritage and my role in the Catholic community and I have reflected on how this role can affect my life."
+  },
+  {
+   "id": "cfe-second-rerc-2-09a",
+   "code": "RERC 2-09a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Signs of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through my study of the Seven Sacraments I have developed a deeper understanding of them and I have reflected on how they strengthen my relationships with God and others."
+  },
+  {
+   "id": "cfe-second-rerc-2-09b",
+   "code": "RERC 2-09b",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Signs of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can understand that the Eucharist is ‘the source and summit of the Christian life’."
+  },
+  {
+   "id": "cfe-second-rerc-2-10a",
+   "code": "RERC 2-10a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Signs of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can reflect on the Holy Spirit’s prophetic influence."
+  },
+  {
+   "id": "cfe-second-rerc-2-11a",
+   "code": "RERC 2-11a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Word of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have studied the structure of the Bible. I can identify the different parts of the Bible and I have explored God’s message in these."
+  },
+  {
+   "id": "cfe-second-rerc-2-12a",
+   "code": "RERC 2-12a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Word of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that the Bible is the inspired Word of God and that I should treat it with reverence."
+  },
+  {
+   "id": "cfe-second-rerc-2-14a",
+   "code": "RERC 2-14a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I recognise the importance of personal prayer and communal prayer in the growth of all people’s relationship with God. I know a number of traditional Catholic prayers and I have developed an understanding of the meaning of these prayers. I have participated in different approaches to, and experiences of, prayer. I can describe how prayer is an important part of the liturgical and devotional life of the Church. I have reflected on how all of these are different ways of worshipping God."
+  },
+  {
+   "id": "cfe-second-rerc-2-15a",
+   "code": "RERC 2-15a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can recognise Mary’s significance within the Catholic tradition and I know that celebrating her feast days and praying to God through Mary can enrich my life."
+  },
+  {
+   "id": "cfe-second-rerc-2-16a",
+   "code": "RERC 2-16a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that the Mass is at the heart of Catholic community life and I am developing an understanding of how to participate fully in this celebration."
+  },
+  {
+   "id": "cfe-second-rerc-2-17a",
+   "code": "RERC 2-17a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have, through liturgical experiences, reflected on an ability to respond to symbols and take part in rituals in order to worship God."
+  },
+  {
+   "id": "cfe-second-rerc-2-18a",
+   "code": "RERC 2-18a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know some of the signs and symbols related to Lent, Easter, Pentecost, Advent and Christmastide and I can use this understanding to help me explore the themes of these celebrations."
+  },
+  {
+   "id": "cfe-second-rerc-2-19a",
+   "code": "RERC 2-19a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Hours of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that the Holy Spirit strengthens my faith and the faith of the saints and I have reflected on how the stories of the Saints can inspire me to live a more Christian life."
+  },
+  {
+   "id": "cfe-second-rerc-2-20a",
+   "code": "RERC 2-20a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that I have been called by God to grow in love, justice and peace in my relationships with others."
+  },
+  {
+   "id": "cfe-second-rerc-2-21a",
+   "code": "RERC 2-21a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can recognise how my relationship with God and others can be shaped by the values of Jesus’ Kingdom."
+  },
+  {
+   "id": "cfe-second-rerc-2-21b",
+   "code": "RERC 2-21b",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I recognise the contribution of other Christian Churches to Jesus’ Kingdom. I have explored ecumenical action and reflected upon its impact in the world."
+  },
+  {
+   "id": "cfe-second-rerc-2-22a",
+   "code": "RERC 2-22a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have explored the call to forgiveness and reconciliation and have reflected on how this can restore my relationship with God and others. I can put this understanding into practice in my relationship with God and others."
+  },
+  {
+   "id": "cfe-second-rerc-2-23a",
+   "code": "RERC 2-23a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I know that God has given me the freedom to make choices about the way I live my life. I have reflected on how the decisions of my conscience affect my relationship with God and others."
+  },
+  {
+   "id": "cfe-second-rerc-2-24a",
+   "code": "RERC 2-24a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Catholic Christianity: Reign of God",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have considered ways in which the Catholic Christian community works together to show care for the world and for the needs of all people. I have reflected on the implications of this for my life and that of others."
+  },
+  {
+   "id": "cfe-second-rerc-2-25a",
+   "code": "RERC 2-25a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Other world religions: Beliefs",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have explored some beliefs of the Jewish and/or Muslim communities."
+  },
+  {
+   "id": "cfe-second-rerc-2-26a",
+   "code": "RERC 2-26a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Other world religions: Values and issues",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can identify some of the principles by which people of the Jewish and/or Muslim faith communities live."
+  },
+  {
+   "id": "cfe-second-rerc-2-27a",
+   "code": "RERC 2-27a",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Other world religions: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can share some of the key features and rituals associated with the Jewish and/or Muslim communities’ places of worship and their festivals."
+  },
+  {
+   "id": "cfe-second-rerc-2-27b",
+   "code": "RERC 2-27b",
+   "subject": "Religious education in Roman Catholic schools",
+   "strand": "Other world religions: Practices and traditions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can identify some of the customs and artefacts related to the Jewish and/or Muslim communities and their festivals."
+  },
+  {
+   "id": "cfe-second-scn-2-01a",
+   "code": "SCN 2-01a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Biodiversity and interdependence",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can identify and classify examples of living things, past and present, to help me appreciate their diversity. I can relate physical and behavioural characteristics to their survival or extinction."
+  },
+  {
+   "id": "cfe-second-scn-2-02a",
+   "code": "SCN 2-02a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Biodiversity and interdependence",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use my knowledge of the interactions and energy flow between plants and animals in ecosystems, food chains and webs. I have contributed to the design or conservation of a wildlife area."
+  },
+  {
+   "id": "cfe-second-scn-2-02b",
+   "code": "SCN 2-02b",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Biodiversity and interdependence",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through carrying out practical activities and investigations, I can show how plants have benefited society."
+  },
+  {
+   "id": "cfe-second-scn-2-03a",
+   "code": "SCN 2-03a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Biodiversity and interdependence",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have collaborated in the design of an investigation into the effects of fertilisers on the growth of plants. I can express an informed view of the risks and benefits of their use."
+  },
+  {
+   "id": "cfe-second-scn-2-04a",
+   "code": "SCN 2-04a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Energy sources and sustainability",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By considering examples where energy is conserved, I can identify the energy source, how it is transferred and ways of reducing wasted energy."
+  },
+  {
+   "id": "cfe-second-scn-2-04b",
+   "code": "SCN 2-04b",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Energy sources and sustainability",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through exploring non-renewable energy sources, I can describe how they are used in Scotland today and express an informed view on the implications for their future use."
+  },
+  {
+   "id": "cfe-second-tch-2-02b",
+   "code": "TCH 2-02b",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Energy sources and sustainability",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can investigate the use and development of renewable and sustainable energy to gain an awareness of their growing importance in Scotland or beyond."
+  },
+  {
+   "id": "cfe-second-scn-2-05a",
+   "code": "SCN 2-05a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Processes of the planet",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can apply my knowledge of how water changes state to help me understand the processes involved in the water cycle in nature over time."
+  },
+  {
+   "id": "cfe-second-scn-2-06a",
+   "code": "SCN 2-06a",
+   "subject": "Sciences",
+   "strand": "Planet Earth: Space",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By observing and researching features of our solar system, I can use simple models to communicate my understanding of size, scale, time and relative motion within it."
+  },
+  {
+   "id": "cfe-second-scn-2-07a",
+   "code": "SCN 2-07a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Forces",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By investigating how friction, including air resistance, affects motion, I can suggest ways to improve efficiency in moving objects."
+  },
+  {
+   "id": "cfe-second-scn-2-08a",
+   "code": "SCN 2-08a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Forces",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have collaborated in investigations to compare magnetic, electrostatic and gravitational forces and have explored their practical applications."
+  },
+  {
+   "id": "cfe-second-scn-2-08b",
+   "code": "SCN 2-08b",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Forces",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By investigating floating and sinking of objects in water, I can apply my understanding of buoyancy to solve a practical challenge."
+  },
+  {
+   "id": "cfe-second-scn-2-09a",
+   "code": "SCN 2-09a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Electricity",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have used a range of electrical components to help to make a variety of circuits for differing purposes. I can represent my circuit using symbols and describe the transfer of energy around the circuit."
+  },
+  {
+   "id": "cfe-second-scn-2-10a",
+   "code": "SCN 2-10a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Electricity",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "To begin to understand how batteries work, I can help to build simple chemical cells using readily-available materials which can be used to make an appliance work."
+  },
+  {
+   "id": "cfe-second-scn-2-11a",
+   "code": "SCN 2-11a",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Vibrations and waves",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through research on how animals communicate, I can explain how sound vibrations are carried by waves through air, water and other media."
+  },
+  {
+   "id": "cfe-second-scn-2-11b",
+   "code": "SCN 2-11b",
+   "subject": "Sciences",
+   "strand": "Forces, electricity and waves: Vibrations and waves",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By exploring reflections, the formation of shadows and the mixing of coloured lights, I can use my knowledge of the properties of light to show how it can be used in a creative way."
+  },
+  {
+   "id": "cfe-second-scn-2-12a",
+   "code": "SCN 2-12a",
+   "subject": "Sciences",
+   "strand": "Biological systems: Body systems and cells",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By investigating some body systems and potential problems which they may develop, I can make informed decisions to help me to maintain my health and wellbeing."
+  },
+  {
+   "id": "cfe-second-scn-2-12b",
+   "code": "SCN 2-12b",
+   "subject": "Sciences",
+   "strand": "Biological systems: Body systems and cells",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have explored the structure and function of sensory organs to develop my understanding of body actions in response to outside conditions."
+  },
+  {
+   "id": "cfe-second-scn-2-13a",
+   "code": "SCN 2-13a",
+   "subject": "Sciences",
+   "strand": "Biological systems: Body systems and cells",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have contributed to investigations into the role of microorganisms in producing and breaking down some materials."
+  },
+  {
+   "id": "cfe-second-scn-2-14a",
+   "code": "SCN 2-14a",
+   "subject": "Sciences",
+   "strand": "Biological systems: Inheritance",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By investigating the lifecycles of plants and animals, I can recognise the different stages of their development."
+  },
+  {
+   "id": "cfe-second-scn-2-14b",
+   "code": "SCN 2-14b",
+   "subject": "Sciences",
+   "strand": "Biological systems: Inheritance",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By exploring the characteristics offspring inherit when living things reproduce, I can distinguish between inherited and non-inherited characteristics."
+  },
+  {
+   "id": "cfe-second-scn-2-15a",
+   "code": "SCN 2-15a",
+   "subject": "Sciences",
+   "strand": "Materials: Properties and uses of substances",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By contributing to investigations into familiar changes in substances to produce other substances, I can describe how their characteristics have changed."
+  },
+  {
+   "id": "cfe-second-scn-2-16a",
+   "code": "SCN 2-16a",
+   "subject": "Sciences",
+   "strand": "Materials: Properties and uses of substances",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have participated in practical activities to separate simple mixtures of substances and can relate my findings to my everyday experience."
+  },
+  {
+   "id": "cfe-second-scn-2-16b",
+   "code": "SCN 2-16b",
+   "subject": "Sciences",
+   "strand": "Materials: Properties and uses of substances",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By investigating common conditions that increase the amount of substance that will dissolve or the speed of dissolving, I can relate my findings to the world around me."
+  },
+  {
+   "id": "cfe-second-scn-2-17a",
+   "code": "SCN 2-17a",
+   "subject": "Sciences",
+   "strand": "Materials: Earth’s materials",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored the substances that make up Earth’s surface, I can compare some of their characteristics and uses."
+  },
+  {
+   "id": "cfe-second-scn-2-18a",
+   "code": "SCN 2-18a",
+   "subject": "Sciences",
+   "strand": "Materials: Chemical changes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have investigated different water samples from the environment and explored methods that can be used to clean and conserve water and I am aware of the properties and uses of water."
+  },
+  {
+   "id": "cfe-second-scn-2-19a",
+   "code": "SCN 2-19a",
+   "subject": "Sciences",
+   "strand": "Materials: Chemical changes",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I have collaborated in activities which safely demonstrate simple chemical reactions using everyday chemicals. I can show an appreciation of a chemical reaction as being a change in which different materials are made."
+  },
+  {
+   "id": "cfe-second-scn-2-20a",
+   "code": "SCN 2-20a",
+   "subject": "Sciences",
+   "strand": "Topical science: Topical science",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through research and discussion I have an appreciation of the contribution that individuals are making to scientific discovery and invention and the impact this has made on society."
+  },
+  {
+   "id": "cfe-second-scn-2-20b",
+   "code": "SCN 2-20b",
+   "subject": "Sciences",
+   "strand": "Topical science: Topical science",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can report and comment on current scientific news items to develop my knowledge and understanding of topical science."
+  },
+  {
+   "id": "cfe-second-soc-2-01a",
+   "code": "SOC 2-01a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use primary and secondary sources selectively to research events in the past."
+  },
+  {
+   "id": "cfe-second-soc-2-02a",
+   "code": "SOC 2-02a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can interpret historical evidence from a range of periods to help to build a picture of Scotland’s heritage and my sense of chronology."
+  },
+  {
+   "id": "cfe-second-soc-2-03a",
+   "code": "SOC 2-03a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can investigate a Scottish historical theme to discover how past events or the actions of individuals or groups have shaped Scottish society."
+  },
+  {
+   "id": "cfe-second-soc-2-04a",
+   "code": "SOC 2-04a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can compare and contrast a society in the past with my own and contribute to a discussion of the similarities and differences."
+  },
+  {
+   "id": "cfe-second-soc-2-06a",
+   "code": "SOC 2-06a",
+   "subject": "Social studies",
+   "strand": "People, past events and societies",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can discuss why people and events from a particular time in the past were important, placing them within a historical sequence."
+  },
+  {
+   "id": "cfe-second-soc-2-07a",
+   "code": "SOC 2-07a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe the major characteristic features of Scotland’s landscape and explain how these were formed."
+  },
+  {
+   "id": "cfe-second-soc-2-07b",
+   "code": "SOC 2-07b",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe the physical processes of a natural disaster and discuss its impact on people and the landscape."
+  },
+  {
+   "id": "cfe-second-soc-2-08a",
+   "code": "SOC 2-08a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can discuss the environmental impact of human activity and suggest ways in which we can live in a more environmentally-responsible way."
+  },
+  {
+   "id": "cfe-second-soc-2-08b",
+   "code": "SOC 2-08b",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can consider the advantages and disadvantages of a proposed land use development and discuss the impact this may have on the community."
+  },
+  {
+   "id": "cfe-second-soc-2-09a",
+   "code": "SOC 2-09a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored the ways journeys can be made, I can consider the advantages and disadvantages of different forms of transport, discussing their impact on the environment."
+  },
+  {
+   "id": "cfe-second-soc-2-10a",
+   "code": "SOC 2-10a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Having explored my local area, I can present information on different places to live, work and relax and interesting places to visit."
+  },
+  {
+   "id": "cfe-second-soc-2-12a",
+   "code": "SOC 2-12a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By comparing my local area with a contrasting area outwith Britain, I can investigate the main features of weather and climate, discussing the impact on living things."
+  },
+  {
+   "id": "cfe-second-soc-2-13a",
+   "code": "SOC 2-13a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain how the physical environment influences the ways in which people use land by comparing my local area with a contrasting area."
+  },
+  {
+   "id": "cfe-second-soc-2-14a",
+   "code": "SOC 2-14a",
+   "subject": "Social studies",
+   "strand": "People, place and environment",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "To extend my mental map and sense of place, I can interpret information from different types of maps and am beginning to locate key features within Scotland, UK, Europe or the wider world."
+  },
+  {
+   "id": "cfe-second-soc-2-15a",
+   "code": "SOC 2-15a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use evidence selectively to research current social, political or economic issues."
+  },
+  {
+   "id": "cfe-second-soc-2-16a",
+   "code": "SOC 2-16a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain how the needs of a group in my local community are supported."
+  },
+  {
+   "id": "cfe-second-soc-2-16b",
+   "code": "SOC 2-16b",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can gather and use information about forms of discrimination against people in societies and consider the impact this has on people’s lives."
+  },
+  {
+   "id": "cfe-second-soc-2-16c",
+   "code": "SOC 2-16c",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can discuss issues of the diversity of cultures, values and customs in our society."
+  },
+  {
+   "id": "cfe-second-soc-2-17a",
+   "code": "SOC 2-17a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can describe the main features of a democracy and discuss the rights and responsibilities of citizens in Scotland."
+  },
+  {
+   "id": "cfe-second-soc-2-18a",
+   "code": "SOC 2-18a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can investigate the features of an election and the work of representatives at a local, national or European level to begin to develop my understanding of how democracy works."
+  },
+  {
+   "id": "cfe-second-soc-2-19a",
+   "code": "SOC 2-19a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By comparing the lifestyle and culture of citizens in another country with those of Scotland, I can discuss the similarities and differences."
+  },
+  {
+   "id": "cfe-second-soc-2-20a",
+   "code": "SOC 2-20a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "Through exploring ethical trading, I can understand how people’s basic needs are the same around the world, discussing why some societies are more able to meet these needs than others."
+  },
+  {
+   "id": "cfe-second-soc-2-21a",
+   "code": "SOC 2-21a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can identify essential goods and services, discuss the different ways to pay for them, considering the benefits and risks of each method."
+  },
+  {
+   "id": "cfe-second-soc-2-22a",
+   "code": "SOC 2-22a",
+   "subject": "Social studies",
+   "strand": "People in society, economy and business",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "By experiencing the setting up and running of a business, I can collaborate in making choices relating to the different roles and responsibilities and have evaluated its success."
+  },
+  {
+   "id": "cfe-second-tch-2-01a",
+   "code": "TCH 2-01a",
+   "subject": "Technologies",
+   "strand": "Digital Literacy: Using digital products and services in a variety of contexts to achieve a purposeful outcome",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can extend and enhance my knowledge of digital technologies to collect, analyse ideas, relevant information and organise these in an appropriate way."
+  },
+  {
+   "id": "cfe-second-tch-2-02a",
+   "code": "TCH 2-02a",
+   "subject": "Technologies",
+   "strand": "Digital Literacy: Searching, processing and managing information responsibly",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use digital technologies to search, access and retrieve information and am aware that not all of this information will be credible."
+  },
+  {
+   "id": "cfe-second-tch-2-03a",
+   "code": "TCH 2-03a",
+   "subject": "Technologies",
+   "strand": "Digital Literacy: Cyber resilience and internet safety",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explore online communities demonstrating an understanding of responsible digital behaviour and I’m aware of how to keep myself safe and secure."
+  },
+  {
+   "id": "cfe-second-tch-2-04a",
+   "code": "TCH 2-04a",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing dexterity, creativity and confidence when preparing and cooking food"
+  },
+  {
+   "id": "cfe-second-tch-2-04b",
+   "code": "TCH 2-04b",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I am developing dexterity, creativity and confidence when working with textiles"
+  },
+  {
+   "id": "cfe-second-tch-2-04c",
+   "code": "TCH 2-04c",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can extend and explore problem solving strategies to meet increasingly difficult challenges with a food or textile focus"
+  },
+  {
+   "id": "cfe-second-tch-2-04d",
+   "code": "TCH 2-04d",
+   "subject": "Technologies",
+   "strand": "Food and Textile Technology: Food and Textile",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can discuss, debate and improve my ideas with increasing confidence and clear explanations"
+  },
+  {
+   "id": "cfe-second-tch-2-05a",
+   "code": "TCH 2-05a",
+   "subject": "Technologies",
+   "strand": "Technological Developments in Society and Business: Awareness of technological developments (Past, Present and Future), including how they work.",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can investigate how product design and development have been influenced by changing lifestyles."
+  },
+  {
+   "id": "cfe-second-tch-2-06a",
+   "code": "TCH 2-06a",
+   "subject": "Technologies",
+   "strand": "Technological Developments in Society and Business: Impact, contribution, and relationship of technologies on business, the economy, politics, and the environment.",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can analyse how lifestyles can impact on the environment and Earth’s resources and can make suggestions about how to live in a more sustainable way."
+  },
+  {
+   "id": "cfe-second-tch-2-07a",
+   "code": "TCH 2-07a",
+   "subject": "Technologies",
+   "strand": "Technological Developments in Society and Business: Impact, contribution, and relationship of technologies on business, the economy, politics, and the environment.",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can make suggestions as to how individuals and organisations may use technologies to support sustainability and reduce the impact on our environment."
+  },
+  {
+   "id": "cfe-second-tch-2-09a",
+   "code": "TCH 2-09a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Design and construct models/product",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can extend and enhance my design skills to solve problems and can construct models."
+  },
+  {
+   "id": "cfe-second-tch-2-10a",
+   "code": "TCH 2-10a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Exploring uses of materials",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can recognise basic properties and uses for a variety of materials and can discuss which ones are most suitable for a given task."
+  },
+  {
+   "id": "cfe-second-tch-2-11a",
+   "code": "TCH 2-11a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Representing ideas, concepts and products through a variety of graphic media",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can use a range of graphic techniques, manually and digitally, to communicate ideas, concepts or products, experimenting with the use of shape, colour and texture to enhance my work."
+  },
+  {
+   "id": "cfe-second-tch-2-12a",
+   "code": "TCH 2-12a",
+   "subject": "Technologies",
+   "strand": "Craft, Design, Engineering and Graphics: Application of Engineering",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can extend my knowledge and understanding of engineering disciplines to create solution."
+  },
+  {
+   "id": "cfe-second-tch-2-13a",
+   "code": "TCH 2-13a",
+   "subject": "Technologies",
+   "strand": "Computing Science: Understanding the world through computational thinking",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand the operation of a process and its outcome. I can structure related items of information."
+  },
+  {
+   "id": "cfe-second-tch-2-14a",
+   "code": "TCH 2-14a",
+   "subject": "Technologies",
+   "strand": "Computing Science: Understanding and analysing computing technology",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can explain core programming language concepts in appropriate technical language."
+  },
+  {
+   "id": "cfe-second-tch-2-14b",
+   "code": "TCH 2-14b",
+   "subject": "Technologies",
+   "strand": "Computing Science: Understanding and analysing computing technology",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I understand how information is stored and how key components of computing technology connect and interact through networks."
+  },
+  {
+   "id": "cfe-second-tch-2-15a",
+   "code": "TCH 2-15a",
+   "subject": "Technologies",
+   "strand": "Computing Science: Designing, building and testing computing solutions",
+   "ages": [
+    9,
+    10,
+    11
+   ],
+   "text": "I can create, develop and evaluate computing solutions in response to a design challenge."
+  }
+ ]
+}

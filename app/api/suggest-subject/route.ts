@@ -11,8 +11,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createCompletion } from "@/app/lib/usage";
 import { modelFor } from "@/app/lib/tool-model";
-import { isCurriculumYear, loadStatements } from "@/app/lib/national-curriculum";
-import { alignmentMode, loadStandardsFor } from "@/app/lib/standards";
+import { loadStatements } from "@/app/lib/national-curriculum";
+import { loadStandardsFor } from "@/app/lib/standards";
+import { suggestionSource } from "@/app/lib/standards/align";
 
 export const maxDuration = 15;
 
@@ -26,11 +27,12 @@ export async function POST(req: NextRequest) {
   const year = body.year;
   if (!topic || typeof year !== "string") return NextResponse.json(empty);
 
-  // A curriculum with published standards picks from those; anything else
-  // (England, or no curriculum named) from England's, exactly as before.
-  const standards = alignmentMode(body.curriculumId) === "standards";
-  if (!standards && !isCurriculumYear(year)) return NextResponse.json(empty);
-  const statements = standards ? (await loadStandardsFor(body.curriculumId, year)).statements : await loadStatements(year as Parameters<typeof loadStatements>[0]);
+  // A curriculum with published standards picks from those; England (or no
+  // curriculum named) from England's, exactly as before. Any other curriculum,
+  // one with no statements of its own yet, gets nothing: never England's.
+  const source = suggestionSource(body.curriculumId, year);
+  if (!source) return NextResponse.json(empty);
+  const statements = source === "standards" ? (await loadStandardsFor(body.curriculumId, year)).statements : await loadStatements(year as Parameters<typeof loadStatements>[0]);
   if (statements.length === 0) return NextResponse.json(empty);
 
   // Numbers rather than ids: shorter for the model, and unambiguous to check.

@@ -20,7 +20,22 @@ export const FRAMEWORK_PERMITTED = {
   "ccss-ela": true,
   ngss: false,
   ac9: true,
-} as const satisfies Record<"ccss-math" | "ccss-ela" | "ngss" | "ac9", boolean>;
+  // Curriculum for Excellence: Crown copyright, Open Government Licence v3.0
+  // (https://education.gov.scot/terms-of-use, checked 2026-11-20).
+  "cfe-early": true,
+  "cfe-first": true,
+  "cfe-second": true,
+  "cfe-third-fourth": true,
+  // Northern Ireland: the Order is on legislation.gov.uk, where all content is
+  // available under the Open Government Licence v3.0 (checked 2026-11-20). CCEA's
+  // own documents are CCEA copyright and are not used.
+  "nic-fs": true,
+  "nic-ks1": true,
+  "nic-ks2": true,
+} as const satisfies Record<
+  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2",
+  boolean
+>;
 
 /** True while the model must not write the NGSS name in its output. */
 export const NGSS_NAME_BLOCKED = !FRAMEWORK_PERMITTED.ngss;
