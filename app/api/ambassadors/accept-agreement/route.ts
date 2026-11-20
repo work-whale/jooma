@@ -3,6 +3,7 @@ import { createClient } from "@/app/lib/auth/server";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { validateAcceptance } from "@/app/lib/ambassador-agreement-status";
 import { signerIp } from "@/app/lib/signer-ip";
+import { loadAgreementState } from "@/app/(app)/ambassador/data";
 
 // An ambassador, or an applicant still waiting, accepting the current version
 // of the agreement in place of the one they signed.
@@ -21,6 +22,13 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { version?: unknown; signature_name?: unknown } | null;
   const check = validateAcceptance(body ?? {});
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+
+  // The same rule that shows the Accept panel, checked again here: only an
+  // active, unexpired ambassador or a waiting applicant on an older version.
+  const state = await loadAgreementState();
+  if (!state.offer) {
+    return NextResponse.json({ error: "There is no new agreement for you to accept." }, { status: 403 });
+  }
 
   const { data: acceptedAt, error } = await supabaseAdmin.rpc("accept_ambassador_agreement", {
     p_user_id: user.id,
