@@ -45,8 +45,13 @@ export interface ActivityFacts {
   /** The newest first_paid_at among the ambassador's referrals. */
   lastFirstPaidAt: Date | null;
   activeSubscribers: number;
-  /** agreement_version on the signed application. */
+  /** The version in force: the signed one, or a newer one they accepted. */
   agreementVersion: string | null;
+  /**
+   * For someone who signed before clause 5 and accepted a version with it
+   * later: when they accepted. The clock starts no earlier (clauseFiveFrom()).
+   */
+  clauseFiveFrom?: Date | null;
   now: Date;
 }
 
@@ -87,10 +92,12 @@ export function activityStage(f: ActivityFacts): ActivityStage {
   if (!versionAtLeast(f.agreementVersion, MIN_VERSION)) return "exempt";
   if (f.activeSubscribers > EXEMPT_OVER) return "exempt";
 
-  const anchor =
-    f.lastFirstPaidAt && f.lastFirstPaidAt.getTime() > f.approvedAt.getTime()
-      ? f.lastFirstPaidAt
-      : f.approvedAt;
+  // The latest of approval, the newest subscriber, and (for an earlier signer)
+  // the day they agreed to clause 5.
+  let anchor = f.approvedAt;
+  for (const d of [f.lastFirstPaidAt, f.clauseFiveFrom]) {
+    if (d && d.getTime() > anchor.getTime()) anchor = d;
+  }
   const quiet = quietMonths(anchor, f.now);
 
   if (quiet === 0) return "ok";

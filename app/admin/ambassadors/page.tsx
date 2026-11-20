@@ -9,6 +9,7 @@ import AmbassadorsView, {
   type ProgrammeSummary,
 } from "./AmbassadorsView";
 import { parseAmbRange, type AmbRange } from "./range";
+import { agreementInForce, type Acceptance } from "@/app/lib/ambassador-agreement-status";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,29 @@ function fromFor(range: AmbRange): string | null {
   return null;
 }
 
+interface AgreementRow {
+  application_id: string;
+  signed_version: string;
+  version: string | null;
+  signature_name: string | null;
+  accepted_at: string | null;
+}
+
+/** Application id to the version in force: the signed one, or a newer acceptance. */
+function versionsInForce(rows: AgreementRow[]): Record<string, string> {
+  const byApp = new Map<string, { signed: string; acceptances: Acceptance[] }>();
+  for (const r of rows) {
+    const entry = byApp.get(r.application_id) ?? { signed: r.signed_version, acceptances: [] };
+    if (r.version && r.accepted_at) {
+      entry.acceptances.push({ version: r.version, signature_name: r.signature_name ?? "", accepted_at: r.accepted_at });
+    }
+    byApp.set(r.application_id, entry);
+  }
+  const out: Record<string, string> = {};
+  for (const [id, e] of byApp) out[id] = agreementInForce(e.signed, e.acceptances).version;
+  return out;
+}
+
 export default async function AdminAmbassadorsPage(props: {
   searchParams?: Promise<{ range?: string }>;
 }) {
@@ -42,21 +66,25 @@ export default async function AdminAmbassadorsPage(props: {
     { data: rows, error },
     { data: summaryRows, error: summaryError },
     { data: applications, error: applicationsError },
+    { data: agreementRows, error: agreementsError },
   ] = await Promise.all([
     supabase.rpc("admin_ambassadors"),
     supabase.rpc("admin_programme_summary", { p_from: fromFor(range) }),
     supabase.rpc("admin_ambassador_applications", { p_status: "pending" }),
+    supabase.rpc("admin_ambassador_agreements"),
   ]);
 
   for (const [what, err] of [
     ["ambassadors", error],
     ["summary", summaryError],
     ["applications", applicationsError],
+    ["agreements", agreementsError],
   ] as const) {
     if (err) console.error(`[admin/ambassadors] could not load ${what}`, err);
   }
 
   const ambassadors = (rows ?? []) as AmbassadorRow[];
+  const agreementVersions = versionsInForce((agreementRows ?? []) as AgreementRow[]);
   const summary = ((summaryRows ?? [])[0] ?? null) as ProgrammeSummary | null;
 
   // Live offer and redemption count per code, keyed by the code string. Only
@@ -119,6 +147,7 @@ export default async function AdminAmbassadorsPage(props: {
       shareLink={shareLink()}
       live={live}
       stripeError={stripeError}
+      agreementVersions={agreementVersions}
     />
   );
 }

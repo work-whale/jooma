@@ -4,7 +4,9 @@ import { Crown } from "@phosphor-icons/react/dist/ssr";
 import AppShellSettings from "@/app/components/v2/AppShellSettings";
 import { gbp } from "@/app/lib/ambassador-commission";
 import s from "@/app/components/ambassador/programme.module.css";
+import { Suspense } from "react";
 import { loadAmbassadorContext } from "./data";
+import AgreementBannerSlot from "./AgreementBannerSlot";
 import CodeActions from "./CodeActions";
 import TabsNav from "./TabsNav";
 
@@ -97,6 +99,9 @@ export default async function AmbassadorLayout({ children }: { children: React.R
         </div>
         <div className={s.under}>
           <TabsNav />
+          <Suspense fallback={null}>
+            <AgreementBannerSlot />
+          </Suspense>
           {children}
         </div>
       </div>

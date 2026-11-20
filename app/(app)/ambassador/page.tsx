@@ -16,7 +16,9 @@ import { planCardName } from "@/app/lib/plan-copy";
 import { daysUntil, AMBASSADOR_ENDING_DAYS } from "@/app/lib/plan-badge";
 import ApplicationStatus from "@/app/components/ambassador/ApplicationStatus";
 import s from "@/app/components/ambassador/programme.module.css";
+import { Suspense } from "react";
 import { loadAmbassadorContext, loadLedger, loadReferrals, type MyReferral } from "./data";
+import AgreementBannerSlot from "./AgreementBannerSlot";
 import { Bars, Metric, Panel, PlanSwatch, SegLinks, longDate, shortDate } from "./parts";
 
 // Dashboard tab: this month, who is paying, the last twelve months, and the
@@ -45,6 +47,10 @@ export default async function AmbassadorDashboard(props: {
     const app = ctx.application;
     if (app && (app.status === "pending" || app.status === "declined")) {
       return (
+        <>
+        <Suspense fallback={null}>
+          <AgreementBannerSlot wrapClassName={`${s.wrap} ${s.narrow}`} />
+        </Suspense>
         <ApplicationStatus
           status={app.status}
           firstName={ctx.firstName}
@@ -52,6 +58,7 @@ export default async function AmbassadorDashboard(props: {
           declineReason={app.decline_reason}
           trialUntil={ctx.reviewTrialUntil}
         />
+        </>
       );
     }
     redirect("/ambassador/join");

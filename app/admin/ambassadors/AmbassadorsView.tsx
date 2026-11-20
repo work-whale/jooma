@@ -43,6 +43,7 @@ import ReferralsPanel, { reviewExpired } from "./ReferralsPanel";
 import { CodeChip, GOLD, Person, ago, shortDate } from "./shared";
 import { AMB_RANGES, AMB_RANGE_LABEL, type AmbRange } from "./range";
 import styles from "./ambassadors.module.css";
+import { needsNewAgreement } from "@/app/lib/ambassador-agreement-status";
 
 export interface AmbassadorRow {
   id: string;
@@ -138,6 +139,7 @@ export default function AmbassadorsView({
   shareLink,
   live,
   stripeError,
+  agreementVersions = {},
 }: {
   range: AmbRange;
   rows: AmbassadorRow[];
@@ -147,7 +149,14 @@ export default function AmbassadorsView({
   shareLink: { url: string; display: string };
   live: Record<string, CodeLive>;
   stripeError: string | null;
+  /** Application id to the agreement version in force (signed, or accepted later). */
+  agreementVersions?: Record<string, string>;
 }) {
+  // On an older agreement than the current one, and not yet accepted the new.
+  const olderAgreement = (applicationId: string | null) => {
+    const v = applicationId ? agreementVersions[applicationId] : undefined;
+    return v && needsNewAgreement(v) ? v : null;
+  };
   const router = useRouter();
   const pathname = usePathname();
   const [toastNode, fire] = useToast();
@@ -430,6 +439,11 @@ export default function AmbassadorsView({
                     </Td>
                     <Td>
                       <span className="text-xs">{shortDate(a.signed_at)}</span>
+                      {olderAgreement(a.id) && (
+                        <span className="block text-xs" style={{ color: C.muted }}>
+                          On version {olderAgreement(a.id)}
+                        </span>
+                      )}
                     </Td>
                     <Td align="right">
                       <Btn size="sm" variant="primary" onClick={() => setReviewing(a.id)}>
@@ -552,6 +566,9 @@ export default function AmbassadorsView({
                               {state.label}
                             </Tag>
                             {a.end_requested_at && <Tag tone="warn">Asked to end</Tag>}
+                            {olderAgreement(a.application_id) && (
+                              <Tag tone="plain">On agreement {olderAgreement(a.application_id)}</Tag>
+                            )}
                           </div>
                         </Td>
                       </Tr>
