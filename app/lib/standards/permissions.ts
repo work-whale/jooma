@@ -32,8 +32,10 @@ export const FRAMEWORK_PERMITTED = {
   "nic-fs": true,
   "nic-ks1": true,
   "nic-ks2": true,
+  "nic-ks3": true,
+  "nic-ks4": true,
 } as const satisfies Record<
-  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2",
+  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4",
   boolean
 >;
 

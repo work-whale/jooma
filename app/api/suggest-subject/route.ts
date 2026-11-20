@@ -14,18 +14,22 @@ import { modelFor } from "@/app/lib/tool-model";
 import { loadStatements } from "@/app/lib/national-curriculum";
 import { loadStandardsFor } from "@/app/lib/standards";
 import { suggestionSource } from "@/app/lib/standards/align";
+import { resolvePicks, suggestPrompt } from "@/app/lib/standards/suggest";
 
 export const maxDuration = 15;
 
 const empty = { subject: "", strand: "", statementIds: [] as string[] };
 
 export async function POST(req: NextRequest) {
-  let body: { topic?: string; year?: string; curriculumId?: string };
+  let body: { topic?: unknown; year?: unknown; curriculumId?: string; subject?: unknown };
   try { body = await req.json(); } catch { return NextResponse.json(empty); }
 
-  const topic = body.topic?.trim().slice(0, 300);
+  const topic = typeof body.topic === "string" ? body.topic.trim().slice(0, 300) : "";
   const year = body.year;
   if (!topic || typeof year !== "string") return NextResponse.json(empty);
+  // The subject the teacher typed (the worksheet's Subject field), when the
+  // card has one: it narrows the candidates to that subject's statements.
+  const subject = typeof body.subject === "string" ? body.subject.trim().slice(0, 100) : "";
 
   // A curriculum with published standards picks from those; England (or no
   // curriculum named) from England's, exactly as before. Any other curriculum,
@@ -36,27 +40,18 @@ export async function POST(req: NextRequest) {
   if (statements.length === 0) return NextResponse.json(empty);
 
   // Numbers rather than ids: shorter for the model, and unambiguous to check.
-  const list = statements
-    .map((s, i) => `${i + 1}. [${s.subject} > ${s.strand}] ${s.text.slice(0, 220)}`)
-    .join("\n");
+  // Filtered to the teacher's subject, capped at MAX_CANDIDATES and cut to
+  // MAX_PROMPT_CHARS (app/lib/standards/suggest.ts): a guest can call this.
+  const prompt = suggestPrompt({ topic, year, statements, subject });
+  if (prompt.candidates.length === 0) return NextResponse.json(empty);
 
   try {
     const completion = await createCompletion({
       toolSlug: "suggest-subject",
       ...(await modelFor("suggest-subject", "gpt-4o-mini")),
       messages: [
-        {
-          role: "system",
-          content:
-            "You align a lesson to the curriculum statements it would directly teach. " +
-            "From the numbered list, return the numbers of one to three statements a lesson on this topic would teach, " +
-            "most relevant first, all from the same subject. Prefer the statement that names the topic's content. " +
-            "Return an empty list if no statement is a reasonable fit.",
-        },
-        {
-          role: "user",
-          content: `Lesson topic: "${topic}"\nYear group: ${year}\n\nStatements:\n${list}`,
-        },
+        { role: "system", content: prompt.system },
+        { role: "user", content: prompt.user },
       ],
       response_format: {
         type: "json_schema",
@@ -75,11 +70,10 @@ export async function POST(req: NextRequest) {
 
     const content = completion.choices[0]?.message?.content;
     if (!content) return NextResponse.json(empty);
-    const { picks } = JSON.parse(content) as { picks: number[] };
+    const { picks } = JSON.parse(content) as { picks: unknown };
 
-    const chosen = (Array.isArray(picks) ? picks : [])
-      .map((n) => statements[n - 1])
-      .filter((s): s is NonNullable<typeof s> => !!s);
+    // The numbers point into the candidates sent, not the whole year.
+    const chosen = resolvePicks(picks, prompt.candidates);
     if (chosen.length === 0) return NextResponse.json(empty);
 
     // One subject, the first pick's. A second subject's statement would be

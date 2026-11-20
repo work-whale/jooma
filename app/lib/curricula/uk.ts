@@ -77,6 +77,6 @@ export const UK_CURRICULA: Curriculum[] = [
     versions: [{ label: "Northern Ireland Curriculum (2007)", inForceFrom: "2007-09-01" }],
     years: UK_YEARS,
     defaultLanguage: "en-GB",
-    alignment: { frameworks: ["nic-fs", "nic-ks1", "nic-ks2"], adapted: false },
+    alignment: { frameworks: ["nic-fs", "nic-ks1", "nic-ks2", "nic-ks3", "nic-ks4"], adapted: false },
   },
 ];

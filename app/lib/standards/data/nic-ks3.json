@@ -1,0 +1,1858 @@
+{
+ "source": {
+  "title": "The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007, Schedule 2",
+  "file": "docs/standards/uk/northern-ireland/",
+  "url": "https://www.legislation.gov.uk/nisr/2007/46/schedule/2",
+  "credit": "Northern Ireland Curriculum statutory requirements, from The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007: © Crown copyright. Contains public sector information licensed under the Open Government Licence v3.0."
+ },
+ "statements": [
+  {
+   "id": "nic-ks3-0fba0c8025",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Expressing meaning, feelings and viewpoints"
+  },
+  {
+   "id": "nic-ks3-ccd7bea31f",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Talking, to include debate, role play, interviews, presentations and group discussions"
+  },
+  {
+   "id": "nic-ks3-53b2644f28",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Listening actively and reporting back"
+  },
+  {
+   "id": "nic-ks3-f3311c66ff",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Reading and viewing for key ideas, enjoyment, engagement and empathy"
+  },
+  {
+   "id": "nic-ks3-326223417c",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Writing and presenting in different media and for different audiences and purposes"
+  },
+  {
+   "id": "nic-ks3-dc2b7e2891",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Participating in a range of drama activities"
+  },
+  {
+   "id": "nic-ks3-b7bea38927",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Interpreting visual stimuli including the moving image"
+  },
+  {
+   "id": "nic-ks3-06fb7d63e6",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing an understanding of different forms, genres and methods of communication and an understanding of how meaning is created"
+  },
+  {
+   "id": "nic-ks3-9fb781f2be",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing their knowledge of how language works and their accuracy in using the conventions of language, including spelling, punctuation and grammar"
+  },
+  {
+   "id": "nic-ks3-442048f5b1",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Analysing critically their own and other texts"
+  },
+  {
+   "id": "nic-ks3-6aeeb5b0e5",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "English with Media Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Using a range of techniques, forms and media to convey information creatively and appropriately."
+  },
+  {
+   "id": "nic-ks3-925adbc83e",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Expressing meaning, feelings and viewpoints"
+  },
+  {
+   "id": "nic-ks3-faf318c418",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Talking - including debate, role play, interviews, presentations"
+  },
+  {
+   "id": "nic-ks3-4bb53f9d39",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Active listening and reporting back"
+  },
+  {
+   "id": "nic-ks3-9cf003811f",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Reading and viewing for key ideas, enjoyment, engagement and empathy"
+  },
+  {
+   "id": "nic-ks3-1223be18c2",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Writing for different audiences and purposes"
+  },
+  {
+   "id": "nic-ks3-f013464c65",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Participation in a range of drama activities"
+  },
+  {
+   "id": "nic-ks3-236249885a",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Interpreting visual stimuli and the moving image"
+  },
+  {
+   "id": "nic-ks3-58a4c54e2a",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing an understanding of different forms, genres and methods of communication and understanding how meaning is created"
+  },
+  {
+   "id": "nic-ks3-8a6fc89e13",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing their knowledge of how language works and their accuracy in using the conventions of language, including spelling, punctuation and grammar"
+  },
+  {
+   "id": "nic-ks3-c518d117c8",
+   "code": "",
+   "subject": "Language and Literacy",
+   "strand": "Irish with Media Education in Irish-speaking schools",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Using a range of techniques, forms and media to convey information creatively and appropriately."
+  },
+  {
+   "id": "nic-ks3-8e14a1bac0",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics with Financial Capability",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Knowledge and understanding of (a) Number (b) Algebra (c) Shape, Space and Measures (d) Handling Data"
+  },
+  {
+   "id": "nic-ks3-30ca9ef055",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics with Financial Capability",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Knowledge and understanding of personal finance issues; and skills to enable competent and responsible financial decision making"
+  },
+  {
+   "id": "nic-ks3-69df0c5752",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics with Financial Capability",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "The application of mathematical skills to real life and work situations"
+  },
+  {
+   "id": "nic-ks3-256372c709",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics with Financial Capability",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "The creative use of technology to enhance mathematical understanding"
+  },
+  {
+   "id": "nic-ks3-868015b276",
+   "code": "",
+   "subject": "Mathematics and Numeracy",
+   "strand": "Mathematics with Financial Capability",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "By demonstrating: (a) creative thinking in their approach to solving mathematical problems (b) increasing competence in mental mathematics skills (c) increasing competence in pencil and paper methods (d) increasing confidence in the use of mathematical language and notation (e) practical skills using technology."
+  },
+  {
+   "id": "nic-ks3-4003060cc5",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Listening and responding in oral and written form, in the target language, to a range of stimuli and for a variety of purposes"
+  },
+  {
+   "id": "nic-ks3-1f7de81539",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Talking about experience, feelings and opinions using the target language"
+  },
+  {
+   "id": "nic-ks3-029f1b01a2",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing an awareness of language and how it works, and by improving accuracy"
+  },
+  {
+   "id": "nic-ks3-1ad9655289",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Comparing linguistic features in first and target language"
+  },
+  {
+   "id": "nic-ks3-d7d9521c1a",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Reading and viewing a range of stimuli in the target language for key ideas, detail, enjoyment and engagement"
+  },
+  {
+   "id": "nic-ks3-412a0821d6",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Writing in the target language to exchange information and ideas, establish and maintain contact"
+  },
+  {
+   "id": "nic-ks3-305f7b30dc",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Using a range of techniques, including performance and multi-media, to convey, present and exchange information innovatively in the target language and as a means of creative expression"
+  },
+  {
+   "id": "nic-ks3-b5ca20bb69",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Using previously learnt language in unfamiliar contexts"
+  },
+  {
+   "id": "nic-ks3-e711398769",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Engaging with others including, where possible, partner schools"
+  },
+  {
+   "id": "nic-ks3-03b1b8eeea",
+   "code": "",
+   "subject": "Modern Languages",
+   "strand": "Modern Languages",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Applying the language-specific skills and transferable skills acquired through second language learning to real-life situations locally, nationally and internationally."
+  },
+  {
+   "id": "nic-ks3-fb51b959c4",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Researching, gathering and interpreting information from direct experiences, observations, memory, imagination and a range of traditional and digital sources"
+  },
+  {
+   "id": "nic-ks3-6a00061b55",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing an appreciation of the work of artists, designers and craft workers from their own and other cultures, past and present"
+  },
+  {
+   "id": "nic-ks3-95fb6b1f5f",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Developing creative thinking skills and personal creative outcomes through investigating, realising, designing and making (a) drawing and graphic media (b) printmaking (c) textiles (d) ceramics (e) 3-dimensional construction or prototyping (f) lens based and digital media"
+  },
+  {
+   "id": "nic-ks3-46baa104d3",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Using the visual elements with understanding when engaging in art and design"
+  },
+  {
+   "id": "nic-ks3-a37830a2bc",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Art and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Evaluating and appreciating their own and others’ work through discussion and reflection."
+  },
+  {
+   "id": "nic-ks3-61c18abf88",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Improvise, compose and perform music in a range of styles"
+  },
+  {
+   "id": "nic-ks3-dc60b77015",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore and combine the elements of music (pitch, rhythm, dynamics, timbre, texture) to create structure and style when improvising and composing"
+  },
+  {
+   "id": "nic-ks3-0facee8c62",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Perform individually and in groups, and discuss and decide on points of interpretation in the music"
+  },
+  {
+   "id": "nic-ks3-daff7da278",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Use existing and emerging music technology resources when composing and performing"
+  },
+  {
+   "id": "nic-ks3-26a4525337",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Listen to and appraise their own music and that of others"
+  },
+  {
+   "id": "nic-ks3-2741f69da1",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Listen to a wide range of music from different styles and genres and respond critically to what they hear"
+  },
+  {
+   "id": "nic-ks3-dc111c6e1c",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore how the skills they learn through music-making are relevant to their present and future lives"
+  },
+  {
+   "id": "nic-ks3-57210345c9",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Music",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop awareness of the range of employment opportunities in the music and music-related industries."
+  },
+  {
+   "id": "nic-ks3-11418fdcd5",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Engage with a range of stimuli to develop critical and creative thinking skills"
+  },
+  {
+   "id": "nic-ks3-a53dc4d83f",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Adopt a role"
+  },
+  {
+   "id": "nic-ks3-b7b612b576",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Take part in improvisation"
+  },
+  {
+   "id": "nic-ks3-7d1bea1d1d",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Devise scripts and use drama forms and strategies effectively to explore and present ideas"
+  },
+  {
+   "id": "nic-ks3-cacaf102da",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Employ sign, symbol, metaphor and image"
+  },
+  {
+   "id": "nic-ks3-fe02cf733f",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Engage in movement and/or dance"
+  },
+  {
+   "id": "nic-ks3-037dbdaeda",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Experience live and recorded drama, and respond to a variety of texts"
+  },
+  {
+   "id": "nic-ks3-60ca2bbc72",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Begin to develop an appreciation of theatre styles, genres and vocabulary"
+  },
+  {
+   "id": "nic-ks3-6eff9e4a01",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore characterisation through use of masks, costume, props, puppets and electronic media"
+  },
+  {
+   "id": "nic-ks3-438cc20e9c",
+   "code": "",
+   "subject": "The Arts",
+   "strand": "Drama",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Evaluate their own and others’ work."
+  },
+  {
+   "id": "nic-ks3-abc302f2e1",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "History",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the past and its impact on our world today through an understanding of: (a) different perspectives and interpretations (b) cause and effect (c) continuity and change (d) progression and regression"
+  },
+  {
+   "id": "nic-ks3-1ae32e5740",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "History",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "And by developing: (a) the enquiry skills to undertake historical investigations (b) critical thinking skills to evaluate a range of evidence and appreciate different interpretations (c) creative thinking skills in their approach to solving problems and making decisions (d) chronological awareness and the ability to make connections between historical periods, events and turning points (e) an ability to challenge stereotypical, biased or distorted viewpoints with appropriately sensitive, informed and balanced responses"
+  },
+  {
+   "id": "nic-ks3-f85edb030f",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "History",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Through a broad and balanced range of: (a) historical periods (b) Irish, British, European and global contexts (c) significant political, social, economic, cultural and religious development."
+  },
+  {
+   "id": "nic-ks3-11961673e0",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "Geography",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop geographical skills to interpret spatial patterns including atlas and map-work skills"
+  },
+  {
+   "id": "nic-ks3-4bbb30ad67",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "Geography",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop enquiry and fieldwork skills-questioning, planning, collecting, recording, presenting, analysing, interpreting information and drawing conclusions relating to a range of primary and secondary sources"
+  },
+  {
+   "id": "nic-ks3-a99e1b4d01",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "Geography",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop critical and creative thinking skills to solve geographical problems and make informed decisions"
+  },
+  {
+   "id": "nic-ks3-f53983fa5b",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "Geography",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop a sense of place through the study of: (a) a range of local, national, European and global contexts (b) contrasting physical and human environments (c) issues of topical significance"
+  },
+  {
+   "id": "nic-ks3-79a29cd133",
+   "code": "",
+   "subject": "Environment and Society",
+   "strand": "Geography",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "In order to develop an understanding of: (a) physical processes of landscape development (b) the interrelationships between physical and human environments (c) the dynamic nature of physical and human environments (d) the ways in which places are interdependent (e) the need for social, economic and environmental change to be sustainable."
+  },
+  {
+   "id": "nic-ks3-e6c93e8b4b",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop skills in scientific methods of enquiry to further scientific knowledge and understanding: (a) planning for investigations (b) obtaining evidence (c) presenting and interpreting results"
+  },
+  {
+   "id": "nic-ks3-9b11e486ec",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop creative and critical thinking in their approach to solving scientific problems"
+  },
+  {
+   "id": "nic-ks3-703b676963",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Research scientific information from a range of sources"
+  },
+  {
+   "id": "nic-ks3-c037a08837",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop a range of practical skills, including the safe use of science equipment"
+  },
+  {
+   "id": "nic-ks3-e3fd4cb994",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Organisms and Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Interdependence of plants and animals"
+  },
+  {
+   "id": "nic-ks3-ee660a202d",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Organisms and Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Cells, genes and reproduction"
+  },
+  {
+   "id": "nic-ks3-6021784dc5",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Organisms and Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Healthy body and mind"
+  },
+  {
+   "id": "nic-ks3-9d455c938b",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Chemical and material behaviour",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Atoms and chemical changes"
+  },
+  {
+   "id": "nic-ks3-e98db113d3",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Chemical and material behaviour",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Structures, properties, uses of materials"
+  },
+  {
+   "id": "nic-ks3-ea3d75398b",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Chemical and material behaviour",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Elements, compounds and mixtures"
+  },
+  {
+   "id": "nic-ks3-31f1e9572e",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Forces and energy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Forces and energy transfer"
+  },
+  {
+   "id": "nic-ks3-207a925f3a",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Forces and energy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Using electricity"
+  },
+  {
+   "id": "nic-ks3-97fcfa3b4a",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Forces and energy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Sound and light"
+  },
+  {
+   "id": "nic-ks3-4f8df7e3d3",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Earth and Universe",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "The environment and human influences"
+  },
+  {
+   "id": "nic-ks3-559a3a50d8",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Science: Earth and Universe",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "The solar system and universe."
+  },
+  {
+   "id": "nic-ks3-795864281c",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Technology and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Design - identifying problems; investigating, generating, developing, modelling and evaluating design proposals; giving consideration to form, function and safety"
+  },
+  {
+   "id": "nic-ks3-633c6083dc",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Technology and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Communication - use of free-hand sketching and formal drawing techniques and ICT tools (including 3D modelling)"
+  },
+  {
+   "id": "nic-ks3-a5b0521cb2",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Technology and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Manufacturing - selecting and using materials fit for purpose; safe use of a range of tools and processes appropriate to materials, demonstrating accuracy and quality of outcome"
+  },
+  {
+   "id": "nic-ks3-2c0a100f15",
+   "code": "",
+   "subject": "Science and Technology",
+   "strand": "Technology and Design",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Control - incorporate control systems, such as mechanical, electronic or computer-based, in products and understand how these can be employed to achieve desired effects."
+  },
+  {
+   "id": "nic-ks3-a2b1107f7a",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Work in the Local and Global Economy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Describe different types of work and investigate the range of employment in the local area, including any changes in employment trends, taking account of the implications for career planning."
+  },
+  {
+   "id": "nic-ks3-21def1f151",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Work in the Local and Global Economy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the local impact of the global market."
+  },
+  {
+   "id": "nic-ks3-8271426148",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Work in the Local and Global Economy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate how technology is affecting life and work."
+  },
+  {
+   "id": "nic-ks3-493ae00e56",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Work in the Local and Global Economy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate how an employer might deal with issues affecting work."
+  },
+  {
+   "id": "nic-ks3-d1e2a45013",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Work in the Local and Global Economy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate how environmental considerations are affecting work and work practices."
+  },
+  {
+   "id": "nic-ks3-1efe27ba38",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Work in the Local and Global Economy",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate how work organisations contribute to the community."
+  },
+  {
+   "id": "nic-ks3-4105eddbdc",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Career Management",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Assess personal skills and achievements to date; identify areas of interest and set targets for self-improvement."
+  },
+  {
+   "id": "nic-ks3-7e436fa5a0",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Career Management",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the changing concept of career."
+  },
+  {
+   "id": "nic-ks3-8691f0d31d",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Career Management",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Engage in the personal career planning process to investigate and reach decisions about post-14 options, recognising that attitudes to work will change over time and are influenced by family and community values."
+  },
+  {
+   "id": "nic-ks3-5d8a662597",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Career Management",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Practise presentational and self-marketing skills."
+  },
+  {
+   "id": "nic-ks3-d4a5323e7b",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Career Management",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate a variety of both familiar and unfamiliar jobs."
+  },
+  {
+   "id": "nic-ks3-c110e18216",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Career Management",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Make use of appropriate information, advice and guidance to inform career management."
+  },
+  {
+   "id": "nic-ks3-2c112bdb07",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Enterprise and Entrepreneurship",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Identify and practise the skills and attributes which make one enterprising."
+  },
+  {
+   "id": "nic-ks3-ca29834115",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Enterprise and Entrepreneurship",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Understand the importance of innovation and develop strategies to promote an entrepreneurial spirit, considering possible implications for career planning."
+  },
+  {
+   "id": "nic-ks3-48bdeace59",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Enterprise and Entrepreneurship",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Find out what makes an entrepreneur and develop an awareness of the challenges and benefits of building your own business."
+  },
+  {
+   "id": "nic-ks3-f02b2f25e6",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Employability: Enterprise and Entrepreneurship",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the range of small businesses in the life of the community and consider possible implications for career planning."
+  },
+  {
+   "id": "nic-ks3-429a090fc6",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Diversity and Inclusion",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate factors that influence individual and group identity."
+  },
+  {
+   "id": "nic-ks3-4a2db7325f",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Diversity and Inclusion",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate ways in which individuals and groups express their identity."
+  },
+  {
+   "id": "nic-ks3-2efec2de35",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Diversity and Inclusion",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate how and why conflict, including prejudice, stereotyping, sectarianism and racism may arise in the community."
+  },
+  {
+   "id": "nic-ks3-813958156d",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Diversity and Inclusion",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate ways of managing conflict and promoting community relations, reconciliation."
+  },
+  {
+   "id": "nic-ks3-80bcb0ec0c",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Human Rights and Social Responsibility",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate why it is important to uphold human rights standards in modern democratic societies, including meeting basic needs, protecting individuals and groups of people."
+  },
+  {
+   "id": "nic-ks3-cd44ab84d5",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Human Rights and Social Responsibility",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate key human rights principles"
+  },
+  {
+   "id": "nic-ks3-70caec0b56",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Human Rights and Social Responsibility",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate why different rights must be limited or balanced in our society."
+  },
+  {
+   "id": "nic-ks3-8ded5b8354",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Human Rights and Social Responsibility",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate local and global scenarios where human rights have been seriously infringed."
+  },
+  {
+   "id": "nic-ks3-9bdd2ba5c6",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Equality and Social Justice",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore how inequalities can arise in society including how and why some people may experience inequality or discrimination on the basis of their group identity."
+  },
+  {
+   "id": "nic-ks3-2551f98bf9",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Equality and Social Justice",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate how and why some people may experience inequality/social exclusion on the basis of their material circumstances in local and global contexts."
+  },
+  {
+   "id": "nic-ks3-b351cdb789",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Equality and Social Justice",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the work of inter-governmental, governmental and non governmental organisations (NGO) which aim to promote equality and social justice."
+  },
+  {
+   "id": "nic-ks3-018f5d93a8",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Democracy and Active Participation",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the basic characteristics of democracy."
+  },
+  {
+   "id": "nic-ks3-60e5390b80",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Democracy and Active Participation",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate various ways to participate in school and society."
+  },
+  {
+   "id": "nic-ks3-ee2f944056",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Democracy and Active Participation",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate why rules and laws are needed, how they are enforced and how breaches of the law affect the community."
+  },
+  {
+   "id": "nic-ks3-1df2d2774a",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Local and Global Citizenship: Democracy and Active Participation",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate an issue from a range of viewpoints and suggest action that might be taken to improve or resolve the situation."
+  },
+  {
+   "id": "nic-ks3-cefe8ef5ba",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Self Awareness",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore and express a sense of self."
+  },
+  {
+   "id": "nic-ks3-f6ed490048",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Self Awareness",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore personal morals, values and beliefs."
+  },
+  {
+   "id": "nic-ks3-5d11ef091f",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Self Awareness",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the influences on a young person."
+  },
+  {
+   "id": "nic-ks3-18b39faa44",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Self Awareness",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the different ways to develop self-esteem."
+  },
+  {
+   "id": "nic-ks3-b067137e8a",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Self Awareness",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop skills and strategies to improve own learning."
+  },
+  {
+   "id": "nic-ks3-fa05722dee",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Receive training in (i) cardiopulmonary resuscitation (CPR); and (ii) automatic external defibrillator (AED) awareness."
+  },
+  {
+   "id": "nic-ks3-e1a29e836f",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the concept of Health as the development of a whole person."
+  },
+  {
+   "id": "nic-ks3-f12c254162",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the influences on physical and emotional /mental personal health."
+  },
+  {
+   "id": "nic-ks3-4e5c0e2d5d",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop understanding about, and strategies to manage, the effects of change on body, mind and behaviour."
+  },
+  {
+   "id": "nic-ks3-45174f4687",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the effects on the body of legal and illegal substances and the risks and consequences of their misuse."
+  },
+  {
+   "id": "nic-ks3-ad4441f133",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop preventative strategies in relation to accidents in the home, school and on the road."
+  },
+  {
+   "id": "nic-ks3-715499f577",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Personal Health",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop strategies to promote personal safety."
+  },
+  {
+   "id": "nic-ks3-e7cf93fbb7",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the qualities of relationships including friendship."
+  },
+  {
+   "id": "nic-ks3-2c5d0b2feb",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the qualities of a loving, respectful relationship."
+  },
+  {
+   "id": "nic-ks3-9f6bfe2b01",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop coping strategies to deal with challenging relationship scenarios."
+  },
+  {
+   "id": "nic-ks3-0b4eee84b0",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop strategies to avoid and resolve conflict."
+  },
+  {
+   "id": "nic-ks3-787a0b1b02",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the implications of sexual maturation."
+  },
+  {
+   "id": "nic-ks3-59dd67e7db",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the emotional, social and moral implications of early sexual activity."
+  },
+  {
+   "id": "nic-ks3-e634bb64ff",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Personal Development: Relationships",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Receive age-appropriate, comprehensive and scientifically accurate education on sexual and reproductive health and rights covering prevention of early pregnancy and access to abortion."
+  },
+  {
+   "id": "nic-ks3-a369b1ec0f",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Healthy Eating",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop practical skills in the safe, hygienic, healthy and creative use of foods to plan, prepare, cook and serve a range of meals."
+  },
+  {
+   "id": "nic-ks3-13226500e6",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Healthy Eating",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop the practical skills in the safe use of a range of utensils and appliances in the preparation, cooking and serving of a variety of dishes."
+  },
+  {
+   "id": "nic-ks3-9b4ab67757",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Healthy Eating",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate the impact of storage, preparation and cooking on food."
+  },
+  {
+   "id": "nic-ks3-956d7149b9",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Healthy Eating",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore ways to achieve a healthy diet."
+  },
+  {
+   "id": "nic-ks3-d0e5d29ba3",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Home and Family Life",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore the roles and responsibilities of individuals within a variety of home and family structures."
+  },
+  {
+   "id": "nic-ks3-434c6892aa",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Home and Family Life",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop awareness of parenting skills."
+  },
+  {
+   "id": "nic-ks3-44bcf2634b",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Home and Family Life",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate some of the changing needs of family members at different stages of the life cycle."
+  },
+  {
+   "id": "nic-ks3-28b2d0b78e",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Home and Family Life",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Explore strategies to manage family scenarios."
+  },
+  {
+   "id": "nic-ks3-cf64a36c18",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Independent Living",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop a range of skills to promote independence through planning, managing and using resources."
+  },
+  {
+   "id": "nic-ks3-2e31c74aa3",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Independent Living",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate a range of factors that influence consumer choices and decisions."
+  },
+  {
+   "id": "nic-ks3-c6c1afe8fb",
+   "code": "",
+   "subject": "Learning for Life and Work",
+   "strand": "Home Economics: Independent Living",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Investigate consumer rights, responsibilities and support available in a range of scenarios."
+  },
+  {
+   "id": "nic-ks3-d7d8dbc000",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Increase their knowledge, understanding and skills through frequent and regular participation in a balanced programme of Athletics, Games (invasion, fielding/striking and net/wall), Gymnastics, Swimming"
+  },
+  {
+   "id": "nic-ks3-b4ebe7f820",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Practise, refine and develop skills and specific techniques and use these with consistency"
+  },
+  {
+   "id": "nic-ks3-da8de9a751",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Experience, monitor and understand a range of short-term effects of exercise on the body systems including cardiovascular and musculo-skeletal systems"
+  },
+  {
+   "id": "nic-ks3-9861ec1a57",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Monitor and evaluate their own activity levels over a period of time and plan how they can fulfil the activity recommendations for health"
+  },
+  {
+   "id": "nic-ks3-3d4e15d2d9",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop their knowledge of safe practices and procedures when taking part in sport and physical activity"
+  },
+  {
+   "id": "nic-ks3-75cc6a276a",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop the skills and capabilities required to analyse and improve their own and others’ work"
+  },
+  {
+   "id": "nic-ks3-73d7b4c3f0",
+   "code": "",
+   "subject": "Physical Education",
+   "strand": "Physical Education",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "Develop the skills and capabilities required to work effectively with others in tasks which require co-operation, creativity, problem solving, planning and team work."
+  }
+ ]
+}

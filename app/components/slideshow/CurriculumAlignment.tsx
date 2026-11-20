@@ -14,6 +14,7 @@ import {
   type FrameworkId,
 } from "@/app/lib/standards";
 import type { AlignStatement } from "@/app/lib/standards/align";
+import { suggestBody, suggestKey } from "@/app/lib/standards/suggest";
 import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import {
   CURRICULUM_YEARS,
@@ -75,6 +76,9 @@ interface Props {
   noun?: "deck" | "worksheet";
   /** The curriculum to align to (id or label). Defaults to the teacher's. */
   curriculum?: string;
+  /** The subject the teacher typed (the worksheet's Subject field), which
+   *  narrows the topic matcher's candidates. Never sent for England. */
+  subject?: string;
 }
 
 /** Subjects in the order the data first lists them. */
@@ -93,6 +97,7 @@ export default function CurriculumAlignment({
   disabled,
   noun = "deck",
   curriculum,
+  subject,
 }: Props) {
   const teacher = useTeacherCurriculum();
   const curriculumId = curriculum || teacher.id;
@@ -106,6 +111,9 @@ export default function CurriculumAlignment({
   const stage = england ? stageForYear(year) : null;
 
   const [statements, setStatements] = useState<AlignStatement[] | null>(null);
+  // The curriculum and year the list in hand was loaded for: after a switch the
+  // old list stays until the new one arrives, and must not be matched against.
+  const [listFor, setListFor] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [query, setQuery] = useState("");
@@ -124,7 +132,7 @@ export default function CurriculumAlignment({
       ? loadStatements(year as CurriculumYear)
       : loadStandardsFor(curriculumId, year).then((r) => r.statements);
     load
-      .then((list) => { if (!cancelled) setStatements(list); })
+      .then((list) => { if (!cancelled) { setStatements(list); setListFor(`${curriculumId}::${year}`); } })
       .catch(() => { if (!cancelled) setStatements([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -159,12 +167,14 @@ export default function CurriculumAlignment({
 
   // Pre-tick the best match for the topic, once per topic and year, and only
   // while the teacher has not chosen anything themselves.
+  // Not before the teacher's curriculum is known: the hook starts on England,
+  // and the slides wizard opens before the profile loads.
   const suggestedFor = useRef("");
   useEffect(() => {
-    if (!checked || !covered || !statements?.length || !topic.trim()) return;
+    if (!checked || !covered || !statements?.length || listFor !== `${curriculumId}::${year}`) return;
     if (value.subject || value.statementIds.length) return;
-    const key = `${year}::${topic.trim().toLowerCase()}`;
-    if (suggestedFor.current === key) return;
+    const key = suggestKey({ curriculumKnown: Boolean(curriculum) || teacher.loaded, curriculumId, year, topic });
+    if (!key || suggestedFor.current === key) return;
     suggestedFor.current = key;
     let cancelled = false;
     setSuggesting(true);
@@ -173,7 +183,7 @@ export default function CurriculumAlignment({
         const res = await fetch("/api/suggest-subject", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic: topic.trim(), year, curriculumId: england ? undefined : cur?.id }),
+          body: JSON.stringify(suggestBody({ topic: topic.trim(), year, england, curriculumId: cur?.id, subject })),
         });
         if (!res.ok || cancelled) return;
         const pick = (await res.json()) as { subject: string; strand: string; statementIds: string[] };
@@ -191,7 +201,7 @@ export default function CurriculumAlignment({
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checked, covered, statements, topic, year]);
+  }, [checked, covered, statements, listFor, topic, year, curriculumId, teacher.loaded]);
 
   // England's helpers take its own statement type; the shape they read
   // (subject, strand, text, id) is the same for every framework.
