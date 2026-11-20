@@ -19,7 +19,7 @@ import { useBadgeProgress } from "@/app/lib/useBadgeProgress";
 import { usePlanBadge } from "@/app/lib/usePlanBadge";
 import { useAccountAccess } from "@/app/lib/useAccountAccess";
 import { chipLabel } from "@/app/lib/plan-badge";
-import { usePinnedTools } from "@/app/lib/usePinnedTools";
+import { useFavouriteTools } from "@/app/lib/useFavouriteTools";
 import { isNavActive } from "@/app/lib/navActive";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
 import { meterState, meterValue } from "@/app/lib/resource-meter";
@@ -90,9 +90,9 @@ export default function SideNavV2({
       : null;
   const [topUpOpen, setTopUpOpen] = useState(false);
 
-  // Pinned tools — a shared store, kept in sync with the Library page live.
-  const pinnedHrefs = usePinnedTools();
-  const pinnedTools = pinnedHrefs.flatMap((href) => {
+  // Starred tools: the teacher's profile, kept in sync with the Make page live.
+  const favouriteHrefs = useFavouriteTools();
+  const pinnedTools = favouriteHrefs.flatMap((href) => {
     const tool = V2_TOOLS.find((t) => t.href === href);
     return tool ? [tool] : [];
   });
@@ -287,10 +287,10 @@ export default function SideNavV2({
           })}
         </nav>
 
-        {/* Pinned from the Make page. */}
+        {/* Starred on the Make page. */}
         {pinnedTools.length > 0 && (
-          <div className={styles.pinned}>
-            <span className={styles.pinnedHead}>Pinned</span>
+          <div className={styles.pinned} data-testid="nav-favourites">
+            <span className={styles.pinnedHead}>Favourites</span>
             {pinnedTools.map((tool) => (
               <Link key={tool.href} href={tool.href} className={styles.pinnedItem} data-tip={tool.name}>
                 <ToolTile icon={tool.icon} solid={toolSolid(tool)} size="xs" />

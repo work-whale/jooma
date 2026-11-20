@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SignOut, ShieldCheck, ChartBar, UserCircle, Crown, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { createClient } from "@/app/lib/auth/client";
+import { resetFavouriteTools } from "@/app/lib/useFavouriteTools";
 import Avatar from "@/app/components/ui/Avatar";
 import {
   useProfileIdentity,
@@ -108,6 +109,8 @@ export function useAccount(): Account {
     // Drop the cached name and photo, so signing in as someone else on the same
     // tab does not flash the previous teacher's avatar before their own loads.
     clearProfileIdentity();
+    // Same for the starred tools, on a shared school computer.
+    resetFavouriteTools();
     router.push("/login");
     router.refresh();
   };

@@ -513,7 +513,7 @@ export default function TodayView({
                     type="button"
                     className={styles.rowShare}
                     onClick={() => setSharing(run)}
-                    aria-label={`Share ${title} with colleagues`}
+                    aria-label={`Share ${title}`}
                   >
                     <ShareNetwork />
                   </button>
@@ -561,6 +561,7 @@ export default function TodayView({
         onClose={() => setSharing(null)}
         runId={sharing?.id}
         runTitle={sharing?.title?.trim() || "Untitled"}
+        toolSlug={sharing?.tool_slug}
       />
     </div>
   );

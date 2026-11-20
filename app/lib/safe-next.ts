@@ -31,8 +31,10 @@ export const SIGNED_IN_HOME = "/dashboard";
  * invite link sends someone to sign in and come straight back. Everything else
  * keeps landing where it always has, so adding this changed nothing for anyone
  * outside the programme. Widen the prefix list here, nowhere else.
+ *
+ * /share is a shared resource: "Sign in to save a copy" comes back to it.
  */
-const HONOURED_NEXT = ["/ambassador", "/pricing"];
+const HONOURED_NEXT = ["/ambassador", "/pricing", "/share"];
 
 export function honouredNextPath(next: string | null | undefined): string | null {
   const path = safeNextPath(next, "");

@@ -219,8 +219,8 @@ test.describe("V2 fixes", () => {
     await page.getByRole("button", { name: "Downloadable lesson menu" }).click();
 
     // All five items the handover specifies, Download included.
-    for (const item of ["Edit", "Share with colleagues", "Move to folder", "Download", "Delete"]) {
-      await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+    for (const item of ["Edit", "Share", "Move to folder", "Download", "Delete"]) {
+      await expect(page.getByRole("menuitem", { name: item, exact: true })).toBeVisible();
     }
   });
 

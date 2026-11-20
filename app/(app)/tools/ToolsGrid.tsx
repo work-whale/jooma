@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { MagnifyingGlass, PushPin } from "@phosphor-icons/react/dist/ssr";
+import { MagnifyingGlass, Star } from "@phosphor-icons/react/dist/ssr";
 import { useAppShell } from "@/app/components/v2/AppShellContext";
 import { ToolTile } from "@/app/components/v2/Squircle";
-import { V2_TOOLS, V2_CATEGORIES, toolSolid, type V2Tool } from "@/app/lib/tools";
-import { usePinnedTools, togglePin } from "@/app/lib/usePinnedTools";
+import { V2_TOOLS, categoriesAToZ, toolSolid, type V2Tool } from "@/app/lib/tools";
+import { useFavouriteTools, toggleFavouriteTool } from "@/app/lib/useFavouriteTools";
 import app from "@/app/components/v2/app.module.css";
 import styles from "./ToolsGrid.module.css";
 
@@ -20,7 +20,16 @@ import styles from "./ToolsGrid.module.css";
  *
  * No credit costs anywhere on these cards. Credits live in the sidebar meter
  * and on the account page, and nowhere else.
+ *
+ * Favourites sit on top (Slides, Worksheets and Comprehension until the
+ * teacher changes them), then the categories A to Z.
  */
+
+const CATEGORIES = categoriesAToZ();
+
+function toggleStar(href: string) {
+  void toggleFavouriteTool(href);
+}
 
 export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }) {
   useAppShell({ title: "Make" });
@@ -28,10 +37,9 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("all");
 
-  // Pinned tools live in a shared localStorage-backed store
-  // (useSyncExternalStore), so this grid and the sidebar stay in sync the
-  // instant a pin changes.
-  const pinnedHrefs = usePinnedTools();
+  // Starred tools, saved to the teacher's profile and shared with the
+  // sidebar, so both change the instant a star does.
+  const favouriteHrefs = useFavouriteTools();
 
   // Tools an admin has switched off in /admin/tools. Resolved on the server and
   // passed in, rather than fetched here: filtering client-side would render the
@@ -57,14 +65,15 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
 
   const sections = useMemo(
     () =>
-      V2_CATEGORIES.map((c) => ({
+      CATEGORIES.map((c) => ({
         ...c,
         tools: matches.filter((t) => t.category === c.id),
       })).filter((c) => c.tools.length > 0 && (category === "all" || category === c.id)),
     [matches, category],
   );
 
-  const pinned = matches.filter((t) => pinnedHrefs.includes(t.href));
+  // In the order they were starred, not the order of the tool list.
+  const favourites = favouriteHrefs.flatMap((href) => matches.filter((t) => t.href === href));
 
   return (
     // Marks the well wide: see .wrap:has() in app.module.css.
@@ -72,7 +81,7 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
       <div className={app.hello}>
         <h1>What would you like to make?</h1>
         <p className={app.helloSub}>
-          {available.length} tools, grouped by what they are for. Pin the ones you use most.
+          {available.length} tools, grouped by what they are for. Star the ones you use most.
         </p>
       </div>
 
@@ -101,7 +110,7 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
         >
           Everything
         </button>
-        {V2_CATEGORIES.map((c) => (
+        {CATEGORIES.map((c) => (
           <button
             key={c.id}
             type="button"
@@ -114,20 +123,20 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
         ))}
       </div>
 
-      {/* Pinned cuts across categories, so it sits above them and only while
-          showing everything — inside a single category it would repeat cards
-          already on screen a few rows down. */}
-      {category === "all" && pinned.length > 0 && (
-        <section className={styles.section}>
+      {/* Favourites cut across categories, so they sit above them and only
+          while showing everything: inside a single category they would repeat
+          cards already on screen a few rows down. */}
+      {category === "all" && favourites.length > 0 && (
+        <section className={styles.section} data-testid="favourites">
           <div className={styles.catHead}>
-            <h2>Pinned</h2>
+            <h2>Favourites</h2>
             <span className={styles.catCount}>
-              {pinned.length} {pinned.length === 1 ? "tool" : "tools"}
+              {favourites.length} {favourites.length === 1 ? "tool" : "tools"}
             </span>
           </div>
           <div className={styles.grid}>
-            {pinned.map((tool) => (
-              <ToolCard key={tool.href} tool={tool} pinned onTogglePin={togglePin} />
+            {favourites.map((tool) => (
+              <ToolCard key={tool.href} tool={tool} starred onToggleStar={toggleStar} />
             ))}
           </div>
         </section>
@@ -147,8 +156,8 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
                 key={tool.href}
                 tool={tool}
                 solid={section.solid}
-                pinned={pinnedHrefs.includes(tool.href)}
-                onTogglePin={togglePin}
+                starred={favouriteHrefs.includes(tool.href)}
+                onToggleStar={toggleStar}
               />
             ))}
           </div>
@@ -175,18 +184,18 @@ export default function ToolsGrid({ disabledSlugs }: { disabledSlugs: string[] }
 function ToolCard({
   tool,
   solid,
-  pinned,
-  onTogglePin,
+  starred,
+  onToggleStar,
 }: {
   tool: V2Tool;
   solid?: string;
-  pinned: boolean;
-  onTogglePin: (href: string) => void;
+  starred: boolean;
+  onToggleStar: (href: string) => void;
 }) {
   return (
-    // The Link is a SIBLING overlay, not a parent, so clicking the pin button
-    // never hits the anchor — which is what stops the page transition firing on
-    // a pin. `title` carries the full description: it is clamped to two lines,
+    // The Link is a SIBLING overlay, not a parent, so clicking the star
+    // never hits the anchor, which is what stops the page transition firing on
+    // a star. `title` carries the full description: it is clamped to two lines,
     // and the browser's own tooltip is how the rest is read.
     <div className={styles.card} title={tool.description}>
       <Link href={tool.href} aria-label={tool.name} className={styles.cardLink} />
@@ -201,13 +210,13 @@ function ToolCard({
 
       <button
         type="button"
-        onClick={() => onTogglePin(tool.href)}
-        title={pinned ? "Unpin" : "Pin to the sidebar"}
-        aria-label={pinned ? `Unpin ${tool.name}` : `Pin ${tool.name} to the sidebar`}
-        aria-pressed={pinned}
-        className={`${styles.pin} ${pinned ? styles.pinOn : ""}`}
+        onClick={() => onToggleStar(tool.href)}
+        title={starred ? "Remove from favourites" : "Add to favourites"}
+        aria-label={starred ? `Remove ${tool.name} from favourites` : `Add ${tool.name} to favourites`}
+        aria-pressed={starred}
+        className={`${styles.pin} ${starred ? styles.pinOn : ""}`}
       >
-        <PushPin weight={pinned ? "fill" : "regular"} className={styles.pinIcon} />
+        <Star weight={starred ? "fill" : "regular"} className={styles.pinIcon} />
       </button>
     </div>
   );
