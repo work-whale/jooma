@@ -7,7 +7,6 @@ import { renderLifecycleEmail } from "@/app/lib/lifecycle-emails";
 import type { LifecycleId } from "@/app/lib/lifecycle";
 import {
   LIFECYCLE_CATALOGUE,
-  LIFECYCLE_SETTING_KEY,
   sampleLifecycleVars,
   type LifecycleSwitch,
 } from "@/app/lib/lifecycle-switch";
@@ -16,8 +15,8 @@ import { Btn, C, Card, CardBody, CardHeader, CardTitle, Modal, Note, Tag, Toggle
 /*
  * The automatic teacher emails (Jooma 4.5 spec Step 6): one master switch and
  * an on/off per email, with a preview of each from sample values. Saved as
- * app_settings.lifecycle_emails through admin_set_setting (admin only, audit
- * logged); the lifecycle cron reads it every 15 minutes. Turning the master
+ * app_settings.lifecycle_emails through admin_set_lifecycle_emails (needs
+ * see_content, audit logged); the lifecycle cron reads it every 15 minutes. Turning the master
  * switch on asks first, because it starts real sends.
  */
 
@@ -31,13 +30,15 @@ export default function LifecycleEmailsCard({ initial, saved }: { initial: Lifec
 
   const save = async (next: LifecycleSwitch, done: string) => {
     setBusy(true);
-    const { error } = await createClient().rpc("admin_set_setting", {
-      p_key: LIFECYCLE_SETTING_KEY,
-      p_value: next,
+    // Its own RPC, not admin_set_setting: it needs see_content (the same as
+    // this card) and only takes known email ids (20261120000100).
+    const { error } = await createClient().rpc("admin_set_lifecycle_emails", {
+      p_enabled: next.enabled,
+      p_off: next.off,
     });
     setBusy(false);
     if (error) {
-      fire(error.message === "no such setting" ? "The switch is not set up on this database yet (migration 20261120000000)." : error.message);
+      fire(error.message === "no such setting" ? "The switch is not set up on this database yet (migrations 20261120000000 and 000100)." : error.message);
       return;
     }
     setSw(next);
@@ -73,7 +74,7 @@ export default function LifecycleEmailsCard({ initial, saved }: { initial: Lifec
         </p>
         {!saved && (
           <div className="mb-3">
-            <Note tone="warn">The switch is not set up on this database yet. Push migration 20261120000000 first.</Note>
+            <Note tone="warn">The switch is not set up on this database yet. Push migrations 20261120000000 and 20261120000100 first.</Note>
           </div>
         )}
         <div className="overflow-x-auto">

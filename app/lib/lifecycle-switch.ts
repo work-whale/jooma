@@ -8,8 +8,8 @@
  *
  * Safe by default, the opposite of settings.ts: anything unreadable or
  * malformed is OFF, because a bug here must never start mailing real
- * teachers. LIFECYCLE_EMAILS=off in Vercel stays as an emergency stop that
- * beats the admin switch. E16 (sent by hand from Admin, Plans) and the
+ * teachers. LIFECYCLE_EMAILS in Vercel, set to anything but "on", stays as an
+ * emergency stop that beats the admin switch. E16 (sent by hand from Admin, Plans) and the
  * Monday schools list are not lifecycle emails and ignore this.
  *
  * Pure.
@@ -42,8 +42,15 @@ export function lifecycleMaySend(
   id: LifecycleId,
   env: Record<string, string | undefined>,
 ): boolean {
-  if (env.LIFECYCLE_EMAILS === "off") return false;
+  if (emergencyStop(env)) return false;
   return sw.enabled && !sw.off.includes(id);
+}
+
+/** LIFECYCLE_EMAILS set to anything but "on" (any spelling of off, a typo)
+ *  stops every lifecycle email. Unset or "on" leaves it to the admin switch. */
+export function emergencyStop(env: Record<string, string | undefined>): boolean {
+  const v = (env.LIFECYCLE_EMAILS ?? "").trim().toLowerCase();
+  return v !== "" && v !== "on";
 }
 
 /** The emails as the admin page lists them, in the order a teacher meets them. */

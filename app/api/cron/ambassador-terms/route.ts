@@ -10,6 +10,7 @@ import {
   taxYearBounds,
 } from "@/app/lib/ambassador-commission";
 import { activityStage, reviewDeadline } from "@/app/lib/ambassador-activity";
+import { agreementInForce, clauseFiveFrom, type Acceptance } from "@/app/lib/ambassador-agreement-status";
 
 // Ends an ambassador's free Pro once their twelve months are up. Daily.
 //
@@ -338,7 +339,9 @@ interface ActivityRow {
 /**
  * Keeping your place (clause 5): a heads-up after one quiet month, Under review
  * after two, and both cleared once a new subscriber arrives. Only ambassadors
- * whose signed agreement has the clause; activityStage() reads the version.
+ * whose agreement in force has the clause; activityStage() reads the version.
+ * Someone who signed before clause 5 and accepted a later version is counted
+ * from the day they accepted, never from approval (clauseFiveFrom).
  */
 async function sendActivityNotices(now: Date): Promise<{ quiet: number; review: number; closed: number }> {
   const out = { quiet: 0, review: 0, closed: 0 };
@@ -357,18 +360,34 @@ async function sendActivityNotices(now: Date): Promise<{ quiet: number; review: 
   if (ambassadors.length === 0) return out;
 
   const ids = ambassadors.map((a) => a.id);
-  const [{ data: apps }, { data: referrals }] = await Promise.all([
+  const appIds = ambassadors.map((a) => a.application_id);
+  const [{ data: apps }, { data: referrals }, { data: acceptanceRows, error: acceptanceError }] = await Promise.all([
     supabaseAdmin
       .from("ambassador_applications")
       .select("id, agreement_version")
-      .in("id", ambassadors.map((a) => a.application_id)),
+      .in("id", appIds),
     supabaseAdmin
       .from("ambassador_referrals")
       .select("ambassador_id, user_id, first_paid_at")
       .in("ambassador_id", ids)
       .not("first_paid_at", "is", null),
+    supabaseAdmin
+      .from("ambassador_agreement_acceptances")
+      .select("application_id, version, signature_name, accepted_at")
+      .in("application_id", appIds),
   ]);
+  if (acceptanceError) {
+    // Without the acceptances a 0.3 signer who accepted 0.5 would read as
+    // exempt, which only ever errs towards sending nothing.
+    console.error("[cron/ambassador-terms] could not read agreement acceptances", acceptanceError);
+  }
   const versionByApp = new Map((apps ?? []).map((a) => [a.id, a.agreement_version as string | null]));
+  const acceptancesByApp = new Map<string, Acceptance[]>();
+  for (const r of acceptanceRows ?? []) {
+    const list = acceptancesByApp.get(r.application_id as string) ?? [];
+    list.push(r as Acceptance);
+    acceptancesByApp.set(r.application_id as string, list);
+  }
 
   // Who is paying today, by ambassador_referral_state()'s rule: a real Stripe
   // subscription on a paid plan, never a comp.
@@ -399,7 +418,7 @@ async function sendActivityNotices(now: Date): Promise<{ quiet: number; review: 
       approvedAt: new Date(a.approved_at),
       lastFirstPaidAt: last ? new Date(last) : null,
       activeSubscribers: mine.filter((r) => paying.has(r.user_id as string)).length,
-      agreementVersion: versionByApp.get(a.application_id) ?? null,
+      ...agreementFacts(versionByApp.get(a.application_id) ?? null, acceptancesByApp.get(a.application_id) ?? []),
       now,
     });
 
@@ -479,4 +498,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return run(req);
+}
+
+/** The version in force and, for an earlier signer, when clause 5 began. */
+function agreementFacts(signed: string | null, acceptances: Acceptance[]) {
+  return {
+    agreementVersion: signed ? agreementInForce(signed, acceptances).version : null,
+    clauseFiveFrom: clauseFiveFrom(signed, acceptances),
+  };
 }

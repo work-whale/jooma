@@ -14,8 +14,8 @@ import {
 } from './ambassador-commission';
 import { EXEMPT_OVER, REVIEW_DAYS } from './ambassador-activity';
 
-export const AGREEMENT_VERSION = '0.4';
-export const AGREEMENT_DATE = '21 October 2026';
+export const AGREEMENT_VERSION = '0.5';
+export const AGREEMENT_DATE = '20 November 2026';
 
 export interface Clause {
   heading: string;
@@ -35,7 +35,7 @@ export interface AgreementParty {
 export function agreementIntro(party: AgreementParty): string {
   const who = party.address ? `${party.name} of ${party.address}` : party.name;
   return (
-    `This agreement is between Jooma Ltd (company number to be inserted), registered in ` +
+    `This agreement is between Jooma Ltd (company number 17204207), registered in ` +
     `England and Wales, and ${who} ("the Ambassador").`
   );
 }
@@ -107,7 +107,7 @@ export function agreementClauses(party: AgreementParty): Clause[] {
       paragraphs: [],
       bullets: [
         'You stop being a Jooma Ambassador. The crown and verified badge come off your profile.',
-        'Your free Pro ends at the end of the month the removal takes effect, and your account moves to no plan. It stays open and nothing you have made is deleted, but you cannot create anything new until you choose a plan. We never charge you unless you choose one yourself.',
+        "Your free Pro ends at the end of the month the removal takes effect, and your account moves to the Free plan. It stays open, nothing you have made is deleted, and you can keep creating within the Free plan's allowance. We never charge you unless you choose a paid plan yourself.",
         `Everyone already signed up on your code keeps paying you, at the same rates, for the rest of your ${months}. You keep the dashboard and statements so you can watch it.`,
         'Your balance is paid in full at the next payout whatever the amount.',
       ],
@@ -149,7 +149,7 @@ export function agreementClauses(party: AgreementParty): Clause[] {
     {
       heading: '11. Your free Pro account',
       paragraphs: [
-        'Provided for the length of this agreement, for your own teaching use. It is not transferable. When this agreement ends, your account moves to no plan. It stays open and nothing you have made is deleted, but you cannot create anything new until you choose a plan. We never charge you unless you choose one yourself.',
+        "Provided for the length of this agreement, for your own teaching use. It is not transferable. When this agreement ends, your account moves to the Free plan. It stays open, nothing you have made is deleted, and you can keep creating within the Free plan's allowance. We never charge you unless you choose a paid plan yourself.",
       ],
     },
     {
@@ -159,13 +159,19 @@ export function agreementClauses(party: AgreementParty): Clause[] {
       ],
     },
     {
-      heading: '13. Changes to the rates',
+      heading: '13. Your rates are fixed',
       paragraphs: [
-        "We may change the commission rates with 60 days' written notice. Payments already earned keep the rate they were earned at. If you do not accept a change, you may end this agreement and we will pay your balance in full.",
+        'The rates in clause 4 are the rates you signed up on, and they are fixed for the whole of this agreement. We will not change them while it runs. If you continue after it ends, any new agreement will set out its rates before you sign it.',
       ],
     },
     {
-      heading: '14. Law',
+      heading: '14. Your content',
+      paragraphs: [
+        'Anything you make to promote Jooma, such as posts, videos and resources, is yours. You do not need our approval before you post, provided clauses 9 and 10 are kept. We will ask you before we reshare or reuse any of it, and we will credit you when we do.',
+      ],
+    },
+    {
+      heading: '15. Law',
       paragraphs: [
         'This agreement is governed by the law of England and Wales, and the courts of England and Wales have exclusive jurisdiction.',
       ],

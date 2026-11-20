@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { sendBroadcastEmail } from "@/app/lib/email";
 import { dropOptedOutMarketing, dueEmails, e11Due, eventEmails, isMarketingKey, type LifecycleTeacher } from "@/app/lib/lifecycle";
-import { LIFECYCLE_SETTING_KEY, lifecycleMaySend, parseLifecycleSwitch, type LifecycleSwitch } from "@/app/lib/lifecycle-switch";
+import { LIFECYCLE_SETTING_KEY, emergencyStop, lifecycleMaySend, parseLifecycleSwitch, type LifecycleSwitch } from "@/app/lib/lifecycle-switch";
 import { ideaFor, pickIdea, type Idea } from "@/app/lib/e10-ideas";
 import { signUnsubToken, unsubSecret } from "@/app/lib/unsub-link";
 import { lifecycleOutgoing, renderLifecycleEmail, type LifecycleVars } from "@/app/lib/lifecycle-emails";
@@ -61,7 +61,7 @@ const DAY_KEY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" });
 async function run(): Promise<{ enabled: boolean; due: number; sent: number; failed: number }> {
   const sw = await readSwitch();
   const may = (id: Parameters<typeof lifecycleMaySend>[1]) => lifecycleMaySend(sw, id, process.env);
-  const enabled = sw.enabled && process.env.LIFECYCLE_EMAILS !== "off";
+  const enabled = sw.enabled && !emergencyStop(process.env);
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://jooma.ai";
   const started = Date.now();
   const now = new Date();

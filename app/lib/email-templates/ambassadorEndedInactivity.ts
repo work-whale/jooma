@@ -43,7 +43,7 @@ export function ambassadorEndedInactivityTemplate(
     <p ${P}>What happens now:</p>
     <ul style="margin:0 0 16px 0;padding-left:20px;color:#3C3552;font-size:15px;line-height:1.6;">
       <li>you are no longer a Jooma Ambassador, and the crown and verified badge come off your profile;</li>
-      <li>your free Pro ends on ${proEnds}, and your account moves to no plan. It stays open and nothing you have made is deleted, but you cannot create anything new until you choose a plan. We never charge you unless you choose one yourself;</li>
+      <li>your free Pro ends on ${proEnds}, and your account moves to the Free plan. It stays open, nothing you have made is deleted, and you can keep creating within the Free plan's allowance. We never charge you unless you choose a paid plan yourself;</li>
       <li>everyone already on your code keeps paying you, at the same rates, until ${agreementEnds}. Your dashboard and statements stay so you can watch it;</li>
       <li>your balance is paid in full at the next payout, whatever the amount.</li>
     </ul>

@@ -10,6 +10,7 @@ import {
 import { profileMobile } from "@/app/lib/dial-codes";
 import { grantApplicantTrial } from "@/app/lib/ambassador-pro";
 import { AGREEMENT_VERSION } from "@/app/lib/ambassador-agreement";
+import { signerIp } from "@/app/lib/signer-ip";
 import { sendTemplate } from "@/app/lib/email";
 import { isUndeliverable } from "@/app/lib/email-templates/broadcast";
 
@@ -34,17 +35,6 @@ import { isUndeliverable } from "@/app/lib/email-templates/broadcast";
 //
 // Once it is in, an account with no plan gets Standard free while we review
 // (grantApplicantTrial).
-
-/** The real peer is the LAST x-forwarded-for entry: Vercel appends it, so a
- *  spoofed header only adds hops in front of it. */
-function clientIp(req: NextRequest): string | null {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) {
-    const parts = fwd.split(",").map((p) => p.trim()).filter(Boolean);
-    if (parts.length) return parts[parts.length - 1].slice(0, 64);
-  }
-  return req.headers.get("x-real-ip")?.slice(0, 64) ?? null;
-}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -107,7 +97,7 @@ export async function POST(req: NextRequest) {
     payload: {
       ...result.payload,
       agreement_version: AGREEMENT_VERSION,
-      signed_ip: clientIp(req),
+      signed_ip: signerIp(req),
       signed_user_agent: req.headers.get("user-agent") ?? null,
     },
   });

@@ -4,7 +4,9 @@ import { AGREEMENT_VERSION } from "@/app/lib/ambassador-agreement";
 import { daysUntil } from "@/app/lib/plan-badge";
 import AgreementText from "@/app/components/ambassador/AgreementText";
 import s from "@/app/components/ambassador/programme.module.css";
-import { agreementLive, loadAmbassadorContext, loadDetails } from "../data";
+import { agreementLive, loadAgreementState, loadAmbassadorContext, loadDetails } from "../data";
+import { MIN_VERSION, versionAtLeast } from "@/app/lib/ambassador-activity";
+import AcceptAgreement from "./AcceptAgreement";
 import { Metric, Panel, longDate } from "../parts";
 import { EndAgreement, PrintButton } from "./AgreementActions";
 
@@ -13,8 +15,11 @@ import { EndAgreement, PrintButton } from "./AgreementActions";
 export const dynamic = "force-dynamic";
 
 export default async function AmbassadorAgreement() {
-  const ctx = await loadAmbassadorContext();
-  const details = await loadDetails();
+  const [ctx, details, agreement] = await Promise.all([
+    loadAmbassadorContext(),
+    loadDetails(),
+    loadAgreementState(),
+  ]);
   if (!ctx.ambassador && !details) redirect("/ambassador");
 
   const a = ctx.ambassador;
@@ -35,9 +40,24 @@ export default async function AmbassadorAgreement() {
   const name = details ? `${details.first_name} ${details.last_name}` : a?.full_name ?? "";
   const reminder = ends ? new Date(ends.getTime() - 30 * 86_400_000) : null;
 
+  const inForce = agreement.inForce;
+  const accepted = inForce?.acceptedAt ? inForce : null;
+
   return (
     <div className={a ? undefined : `${s.wrap} ${s.narrow}`}>
-      <Panel title="Your signed agreement" first right={<PrintButton />}>
+      {agreement.offer && inForce && (
+        <div id="accept">
+          <Panel title={`Accept version ${AGREEMENT_VERSION} of the agreement`} first>
+            <AcceptAgreement
+              onVersion={inForce.version}
+              fullName={name}
+              bringsClauseFive={!versionAtLeast(inForce.version, MIN_VERSION)}
+            />
+          </Panel>
+        </div>
+      )}
+
+      <Panel title="Your signed agreement" first={!agreement.offer} right={<PrintButton />}>
         <div className={s.mgrid} style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
           <Metric
             icon={<Signature size={14} weight="fill" />}
@@ -71,7 +91,7 @@ export default async function AmbassadorAgreement() {
 
       <Panel
         title="What you signed"
-        right={<span className={`${s.badge} ${s.bRev}`}>Version {details?.agreement_version ?? AGREEMENT_VERSION}</span>}
+        right={<span className={`${s.badge} ${s.bRev}`}>Version {inForce?.version ?? AGREEMENT_VERSION}</span>}
       >
         <div className={s.contract} style={{ maxHeight: 420 }} data-testid="signed-agreement">
           <AgreementText
@@ -82,10 +102,17 @@ export default async function AmbassadorAgreement() {
             }}
           />
         </div>
-        {details && details.agreement_version !== AGREEMENT_VERSION && (
+        {accepted && details && (
+          <p className={s.muted} style={{ fontSize: ".82rem" }} data-testid="accepted-note">
+            You accepted version {accepted.version} on {longDate(accepted.acceptedAt!)}, as {accepted.signatureName}.
+            Your first signature, on version {details.agreement_version}, is kept on file too.
+          </p>
+        )}
+        {inForce && inForce.version !== AGREEMENT_VERSION && (
           <p className={s.muted} style={{ fontSize: ".82rem" }}>
-            You signed version {details.agreement_version}. The text above is the current version;
-            ask us for a copy of the one you signed.
+            You are on version {inForce.version}. The text above is version {AGREEMENT_VERSION}
+            {agreement.offer ? ", which you can accept at the top of this page" : ""}. Until you do, version{" "}
+            {inForce.version} applies; ask us for a copy of it.
           </p>
         )}
       </Panel>
@@ -95,7 +122,7 @@ export default async function AmbassadorAgreement() {
           <p className={s.muted}>
             You can leave with 30 days&apos; notice at any time. Your balance is paid in full at the
             next payout whatever the amount. Your free Pro ends with the notice period and your
-            account moves to no plan. We never charge you unless you choose a plan yourself.
+            account moves to the Free plan. We never charge you unless you choose a paid plan yourself.
           </p>
           <EndAgreement requestedAt={a.end_requested_at} />
         </Panel>

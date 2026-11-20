@@ -3,6 +3,12 @@ import { cache } from "react";
 import { createClient } from "@/app/lib/auth/server";
 import type { LedgerRow } from "@/app/lib/ambassador-commission";
 import { reviewTrialEnd } from "@/app/lib/plans";
+import {
+  agreementInForce,
+  offerNewAgreement,
+  type Acceptance,
+  type AgreementInForce,
+} from "@/app/lib/ambassador-agreement-status";
 
 // Everything the ambassador's pages read, through definer functions scoped to
 // the caller (supabase/migrations/20261014000000_ambassador_programme_v2.sql).
@@ -145,6 +151,34 @@ export const loadDetails = cache(async (): Promise<MyDetails | null> => {
   const supabase = await createClient();
   const { data } = await supabase.rpc("my_ambassador_details");
   return ((Array.isArray(data) ? data[0] : null) ?? null) as MyDetails | null;
+});
+
+export interface MyAgreementState {
+  /** The version on the application, signed when they applied. */
+  signedVersion: string | null;
+  inForce: AgreementInForce | null;
+  /** Offer the current version in place of an older one (offerNewAgreement). */
+  offer: boolean;
+}
+
+/** Which agreement they are on, and whether to offer them the current one. */
+export const loadAgreementState = cache(async (): Promise<MyAgreementState> => {
+  const ctx = await loadAmbassadorContext();
+  if (!ctx.user) return { signedVersion: null, inForce: null, offer: false };
+  const supabase = await createClient();
+  const [details, { data: rows }] = await Promise.all([
+    loadDetails(),
+    supabase.rpc("my_ambassador_agreement_acceptances"),
+  ]);
+  const signedVersion = details?.agreement_version ?? null;
+  const inForce = signedVersion ? agreementInForce(signedVersion, (rows ?? []) as Acceptance[]) : null;
+  const offer = offerNewAgreement({
+    ambassador: ctx.ambassador,
+    applicationStatus: ctx.application?.status ?? null,
+    inForceVersion: inForce?.version ?? null,
+    now: new Date(),
+  });
+  return { signedVersion, inForce, offer };
 });
 
 /** An agreement still running: approved, not paused, end date not passed. */

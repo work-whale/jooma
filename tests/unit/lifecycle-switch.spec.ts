@@ -53,6 +53,18 @@ test.describe("lifecycleMaySend", () => {
     expect(lifecycleMaySend(on, "E1", { LIFECYCLE_EMAILS: "off" })).toBe(false);
   });
 
+  // Security review (20 Nov): only the exact "off" stopped, so a typo like
+  // "Off" or "false" let emails through. Anything set but "on" now stops.
+  test("any value but empty or on is a stop, whatever its spelling", () => {
+    for (const v of ["Off", "OFF", " off ", "false", "0", "no", "stop"]) {
+      expect(lifecycleMaySend(on, "E1", { LIFECYCLE_EMAILS: v }), v).toBe(false);
+    }
+    expect(lifecycleMaySend(on, "E1", { LIFECYCLE_EMAILS: "on" })).toBe(true);
+    expect(lifecycleMaySend(on, "E1", { LIFECYCLE_EMAILS: " ON " })).toBe(true);
+    expect(lifecycleMaySend(on, "E1", { LIFECYCLE_EMAILS: "" })).toBe(true);
+    expect(lifecycleMaySend(on, "E1", {})).toBe(true);
+  });
+
   test("the old LIFECYCLE_EMAILS=on does not start sending by itself", () => {
     expect(lifecycleMaySend({ enabled: false, off: [] }, "E1", { LIFECYCLE_EMAILS: "on" })).toBe(false);
   });
@@ -80,4 +92,15 @@ test.describe("the admin list", () => {
       expect(e.when.length, e.id).toBeGreaterThan(3);
     }
   });
+});
+
+// Security review (20 Nov): admin_set_lifecycle_emails refuses unknown ids,
+// so the database's list must be exactly the code's, or a real email could
+// never be switched off (or a stray id be stored).
+test("the database's list of email ids is the code's", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const sql: string = require("node:fs").readFileSync("supabase/migrations/20261120000100_lifecycle_switch_guard.sql", "utf8");
+  const list = /v_known\s+text\[\]\s*:=\s*array\[([^\]]+)\]/.exec(sql)?.[1] ?? "";
+  const ids = [...list.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  expect(ids.sort()).toEqual([...LIFECYCLE_IDS].sort());
 });
