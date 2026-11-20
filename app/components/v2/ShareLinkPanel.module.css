@@ -1,0 +1,202 @@
+/* Share by link, the Link side of ShareModal. Tokens as in ShareModal.module.css. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.explain {
+  font-size: 0.85rem;
+  color: var(--j-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.note {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--j-deep);
+  background: var(--j-tint);
+  border-radius: var(--j-r);
+  padding: 9px 12px;
+  margin: 0;
+}
+
+.error {
+  font-size: 0.83rem;
+  color: var(--j-orange-ink);
+  margin: 0;
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.87rem;
+  color: var(--j-muted);
+  margin: 0;
+  padding: 18px 0;
+}
+
+.spin {
+  width: 16px;
+  height: 16px;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.make {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--j-purple);
+  color: #fff;
+  border: 0;
+  border-radius: var(--j-pill);
+  padding: 11px 20px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .make:hover {
+    background: var(--j-deep);
+  }
+}
+
+.make:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.urlRow {
+  display: flex;
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  background: var(--j-bg);
+  border: 1px solid var(--j-line-2);
+  border-radius: var(--j-r);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--j-ink);
+}
+
+.url:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+/* Three across on a phone, so all five fit in two rows without scrolling. */
+.targets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  min-height: 48px;
+  background: var(--j-card);
+  border: 1px solid var(--j-line-2);
+  border-radius: var(--j-r);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--j-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .target:hover {
+    border-color: var(--j-lilac-2);
+    color: var(--j-deep);
+  }
+}
+
+.target:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
+.targetIcon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--j-tint);
+  color: var(--j-deep);
+  font-size: 19px;
+}
+
+.targetIcon svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* Each app in its own colour, so they are told apart at a glance. */
+.whatsapp .targetIcon {
+  background: #25d366;
+  color: #fff;
+}
+
+.viber .targetIcon {
+  background: #7360f2;
+  color: #fff;
+}
+
+.messenger .targetIcon {
+  background: #0a7cff;
+  color: #fff;
+}
+
+.instagram .targetIcon {
+  background: linear-gradient(45deg, #f09433, #dc2743 50%, #bc1888);
+  color: #fff;
+}
+
+.off {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--j-orange-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.off:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

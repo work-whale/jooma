@@ -103,6 +103,11 @@ export const PUBLIC_PATHS = [
   // a session before anything else.
   "/create",
   "/made",
+  // A resource a teacher shared by link (WhatsApp, Viber...). The page reads
+  // it through public_resource_link(), which returns only a live link to a
+  // classroom resource, with named columns and no owner. Saving a copy is a
+  // separate definer function that needs a session.
+  "/share",
   "/api/try",
   // The public page for each tool, and their index. Information only: the
   // tools themselves stay under /tools, behind a session.

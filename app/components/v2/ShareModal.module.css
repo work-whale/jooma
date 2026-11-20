@@ -47,6 +47,41 @@
   margin: 0 0 16px;
 }
 
+/* Colleagues | Link, for a classroom resource. */
+.sides {
+  display: flex;
+  gap: 4px;
+  background: var(--j-bg);
+  border-radius: var(--j-pill);
+  padding: 4px;
+  margin: 4px 0 16px;
+}
+
+.side {
+  flex: 1;
+  border: 0;
+  background: none;
+  border-radius: var(--j-pill);
+  padding: 8px 12px;
+  min-height: 40px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--j-muted);
+  cursor: pointer;
+}
+
+.sideOn {
+  background: var(--j-card);
+  color: var(--j-deep);
+  box-shadow: 0 1px 3px rgba(29, 23, 48, 0.12);
+}
+
+.side:focus-visible {
+  outline: 2px solid var(--j-purple);
+  outline-offset: 2px;
+}
+
 /* What is being shared, when the resource is already decided. Named so the
    teacher can see they picked the right thing before they pick a person. */
 .subject {

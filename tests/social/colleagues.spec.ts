@@ -155,7 +155,7 @@ test.describe("Colleagues", () => {
     // is labelled "<title> menu" by the Menu component, so name it exactly
     // rather than matching /menu/i, which also hits the nav.
     await page.getByRole("button", { name: "Alice's rivers lesson menu" }).click();
-    await page.getByRole("menuitem", { name: /share with colleagues/i }).click();
+    await page.getByRole("menuitem", { name: "Share", exact: true }).click();
 
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
@@ -414,7 +414,8 @@ test.describe("Colleagues", () => {
     // The restructure risk: Share must be reachable, and must not have eaten
     // the row's own click target.
     const share = page.getByRole("button", {
-      name: "Share Alice's topic overview with colleagues",
+      name: "Share Alice's topic overview",
+      exact: true,
     });
     await expect(share).toBeAttached();
     await share.click();

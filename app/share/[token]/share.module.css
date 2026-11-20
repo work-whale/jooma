@@ -1,0 +1,50 @@
+/* The shared resource page. Most of it borrows /made's styles; this is the
+   save row under the heading. */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.save {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--j-purple);
+  border: 0;
+  border-radius: var(--j-pill);
+  padding: 10px 20px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .save:hover {
+    background: var(--j-deep);
+  }
+}
+
+.save:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.signin {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--j-deep);
+  background: var(--j-tint);
+  border-radius: var(--j-pill);
+  padding: 10px 20px;
+  text-decoration: none;
+}

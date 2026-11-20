@@ -728,6 +728,7 @@ function Library() {
         onClose={() => setSharing(null)}
         runId={sharing?.id}
         runTitle={sharing?.title?.trim() || "Untitled"}
+        toolSlug={sharing?.tool_slug}
       />
     </div>
   );
@@ -1011,7 +1012,7 @@ function ResourceItem({
               onShare();
             }}
           >
-            Share with colleagues
+            Share
           </MenuItem>
           {homepage !== undefined && (
             <MenuItem

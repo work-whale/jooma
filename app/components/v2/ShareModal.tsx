@@ -14,6 +14,8 @@ import { listRecentRuns, type ToolRun } from "@/app/lib/toolRuns";
 import { displayName, initialsOf } from "@/app/lib/colleagueDisplay";
 import { v2ToolForSlug, toolSolid } from "@/app/lib/tools";
 import { typeLabel } from "@/app/lib/toolRunDisplay";
+import { isShareableSlug } from "@/app/lib/resource-links";
+import ShareLinkPanel from "./ShareLinkPanel";
 import styles from "./ShareModal.module.css";
 import { useFocusTrap } from "@/app/lib/useFocusTrap";
 
@@ -30,6 +32,10 @@ import { useFocusTrap } from "@/app/lib/useFocusTrap";
  * and the resource is picked. The picklist markup and the "Share with N" /
  * "Select someone" button are identical either way, which is the part worth
  * sharing; only the list being chosen from differs.
+ *
+ * From a resource that is a classroom resource (isShareableSlug), a second
+ * side: Link, a public link for WhatsApp, Viber, Messenger and Instagram. See
+ * ShareLinkPanel. Anything holding pupil or staff details never shows it.
  */
 
 interface ShareModalProps {
@@ -39,6 +45,8 @@ interface ShareModalProps {
   runId?: string;
   /** Shown under the heading so it is clear what is being sent. */
   runTitle?: string | null;
+  /** The resource's tool. A classroom resource also offers a public link. */
+  toolSlug?: string;
   /** The colleague to share with. Omit to have the teacher pick. */
   recipient?: ColleagueProfile;
   /** Fired after a successful share, with how many colleagues received it. */
@@ -63,9 +71,13 @@ function ShareDialog({
   onClose,
   runId,
   runTitle,
+  toolSlug,
   recipient,
   onShared,
 }: Omit<ShareModalProps, "open">) {
+  const canLink = !recipient && !!runId && !!toolSlug && isShareableSlug(toolSlug);
+  const [side, setSide] = useState<"colleagues" | "link">("colleagues");
+  const onLink = canLink && side === "link";
   // Which side is being chosen. A fixed recipient means the teacher picks a
   // resource; otherwise they pick colleagues.
   const picking: "resources" | "colleagues" = recipient ? "resources" : "colleagues";
@@ -188,15 +200,43 @@ function ShareDialog({
     >
       <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="share-title" className={styles.modal}>
         <h2 id="share-title" className={styles.title} tabIndex={-1} ref={headingRef}>
-          {recipient ? `Share with ${displayName(recipient)}` : "Share with colleagues"}
+          {recipient ? `Share with ${displayName(recipient)}` : canLink ? "Share" : "Share with colleagues"}
         </h2>
-        <p className={styles.sub}>
-          They get a copy in their library. Yours stays untouched.
-        </p>
+
+        {canLink && (
+          <div className={styles.sides} role="tablist" aria-label="Share how">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={side === "colleagues"}
+              className={`${styles.side} ${side === "colleagues" ? styles.sideOn : ""}`}
+              onClick={() => setSide("colleagues")}
+            >
+              Colleagues
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={side === "link"}
+              className={`${styles.side} ${side === "link" ? styles.sideOn : ""}`}
+              onClick={() => setSide("link")}
+            >
+              Link
+            </button>
+          </div>
+        )}
+
+        {!onLink && (
+          <p className={styles.sub}>
+            They get a copy in their library. Yours stays untouched.
+          </p>
+        )}
 
         {runTitle ? <p className={styles.subject}>{runTitle}</p> : null}
 
-        {loading ? (
+        {onLink ? (
+          <ShareLinkPanel runId={runId!} title={runTitle?.trim() || "A resource"} />
+        ) : loading ? (
           <p className={styles.state} role="status">
             <CircleNotch className={styles.spin} />
             Loading
@@ -259,12 +299,19 @@ function ShareDialog({
           </>
         )}
 
-        {error ? (
+        {error && !onLink ? (
           <p className={styles.error} role="status">
             {error}
           </p>
         ) : null}
 
+        {onLink ? (
+          <div className={styles.foot}>
+            <button type="button" className={styles.cancel} onClick={onClose}>
+              Done
+            </button>
+          </div>
+        ) : (
         <div className={styles.foot}>
           <button type="button" className={styles.cancel} onClick={onClose}>
             Cancel
@@ -278,6 +325,7 @@ function ShareDialog({
             {busy ? "Sharing" : count > 0 ? `Share with ${count}` : "Select someone"}
           </button>
         </div>
+        )}
       </div>
     </div>,
     document.body,

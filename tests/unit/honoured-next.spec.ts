@@ -32,3 +32,10 @@ test("unsafe paths are refused", () => {
   expect(honouredNextPath("/pricing?x=@evil.com")).toBeNull();
   expect(honouredNextPath("https://evil.com")).toBeNull();
 });
+
+// A teacher signing in to save a copy of a shared resource comes back to it.
+test("a shared resource page, and not a look-alike", () => {
+  expect(honouredNextPath("/share/AbCdEfGhIjKlMnOpQrSt-_")).toBe("/share/AbCdEfGhIjKlMnOpQrSt-_");
+  expect(honouredNextPath("/shareevil")).toBeNull();
+  expect(honouredNextPath("/share-x/abc")).toBeNull();
+});

@@ -10,11 +10,11 @@
 // effect is keyed on pathname, which doesn't change when you save on the page
 // you're already on — so the bar kept the old photo until the teacher navigated.
 //
-// Same shape as usePinnedTools: useSyncExternalStore so reads are SSR-safe (no
+// Same shape as useFavouriteTools: useSyncExternalStore so reads are SSR-safe (no
 // hydration mismatch, no setState-in-effect) and every consumer updates the
 // instant the value changes.
 //
-// In memory rather than localStorage, unlike the pins: the profiles row is the
+// In memory rather than localStorage, unlike the favourites cache: the profiles row is the
 // source of truth here, this is only a live cache of it for the current tab, and
 // persisting it would mean a stale photo could outlive a sign-out.
 

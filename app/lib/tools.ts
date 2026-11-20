@@ -37,6 +37,15 @@ export const V2_CATEGORIES = [
 
 export type V2CategoryId = (typeof V2_CATEGORIES)[number]["id"];
 
+/**
+ * The categories A to Z by name, for the Make page's sections and chips.
+ * A sorted copy: V2_CATEGORIES keeps its own order for Jo's composer and the
+ * public /teacher-tools page.
+ */
+export function categoriesAToZ(): (typeof V2_CATEGORIES)[number][] {
+  return [...V2_CATEGORIES].sort((a, b) => a.name.localeCompare(b.name, "en-GB"));
+}
+
 export interface V2Meta {
   /** Short display name, e.g. "Slides". */
   name: string;

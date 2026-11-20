@@ -22,7 +22,7 @@ import { createClient } from "@/app/lib/auth/client";
  * the profile header and collection) and they are siblings, so this is a
  * module-level store rather than per-component state: one load, one evaluation,
  * one claim, however many mount. Same shape as useProfileIdentity and
- * usePinnedTools, and useSyncExternalStore for the same reasons — SSR-safe
+ * useFavouriteTools, and useSyncExternalStore for the same reasons — SSR-safe
  * reads, no setState in an effect, and every consumer updates together.
  *
  * It also owns the run history, which Today and the profile header each used to
