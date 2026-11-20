@@ -95,7 +95,7 @@ export default async function AmbassadorAgreement() {
           <p className={s.muted}>
             You can leave with 30 days&apos; notice at any time. Your balance is paid in full at the
             next payout whatever the amount. Your free Pro ends with the notice period and your
-            account moves to no plan. We never charge you unless you choose a plan yourself.
+            account moves to the Free plan. We never charge you unless you choose a paid plan yourself.
           </p>
           <EndAgreement requestedAt={a.end_requested_at} />
         </Panel>

@@ -13,7 +13,7 @@ export const PLAN_NAME: Record<string, string> = {
   standard: "Standard",
   pro: "Pro",
   max: "Max",
-  free: "No plan",
+  free: "Free",
 };
 
 export function PlanSwatch({ plan }: { plan: string | null }) {

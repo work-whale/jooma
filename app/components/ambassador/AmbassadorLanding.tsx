@@ -128,7 +128,7 @@ export default function AmbassadorLanding({ signedIn }: { signedIn: boolean }) {
             <h2 className={s.h1} style={{ fontSize: "1.9rem" }}>
               What you earn, written down.
             </h2>
-            <p>No tiers to climb, no targets to hit. The rate is the rate from your first sign-up.</p>
+            <p>No tiers to climb, no targets to hit. The rate you sign up on is fixed for your whole agreement.</p>
           </div>
           <div className={s.scrollX}>
             <table className={s.rates}>
