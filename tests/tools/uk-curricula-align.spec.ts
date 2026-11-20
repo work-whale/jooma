@@ -7,6 +7,7 @@ import { alignmentMode } from "@/app/lib/standards";
 import primary from "@/app/lib/national-curriculum/data/primary.json";
 import cfeFirst from "@/app/lib/standards/data/cfe-first.json";
 import nicKs1 from "@/app/lib/standards/data/nic-ks1.json";
+import nicKs3 from "@/app/lib/standards/data/nic-ks3.json";
 import { admin, createAdmin, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
@@ -23,7 +24,8 @@ import { admin, createAdmin, deleteTeacher, setPlan, signIn, type TestTeacher } 
  *     the level and the Open Government Licence credit, and what is sent is
  *     the outcome word for word with its code
  *   - a Northern Ireland teacher does the same with the statutory requirements
- *     (Foundation Stage to Key Stage 2: Year 1 to Year 7), and Reception says
+ *     (Foundation Stage to Key Stage 4: Year 1 to Year 11; a Year 8 teacher
+ *     gets Key Stage 3, never the Learning Outcomes list), and Reception says
  *     there is nothing to align to
  *   - the statements are separate chunks, fetched only when the card opens
  *
@@ -133,7 +135,7 @@ test("a Scotland, Wales or Northern Ireland teacher is never shown England's sta
 test("a Scotland teacher's slides wizard still offers the UK years, Year 12 and 13 included", async ({ page }) => {
   const t = await teacherOn("scotland", "UkSlides");
   await signIn(page, t);
-  await noSuggestions(page);
+  const asked = await noSuggestions(page);
   await page.goto(`/tools/slideshow?prefill=${encodePrefill({ slug: "slideshow", fields: { topic: "Volcanoes", year: "Year 4" } })}`, NAV);
   const wizard = page.getByRole("dialog");
   await expect(wizard).toBeVisible(NAV);
@@ -151,6 +153,10 @@ test("a Scotland teacher's slides wizard still offers the UK years, Year 12 and 
   const card = page.getByTestId("curriculum-alignment");
   await card.getByRole("button", { name: /Align to curriculum/ }).click();
   await expect(card.getByLabel("Year", { exact: true }).locator("option:checked")).toHaveText("First level · Year 4", NAV);
+  // Regression (live run, 2026-11-20): the card asked before the profile loaded, with
+  // England's body, and never again for Scotland. Every ask is Scotland's.
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  for (const a of asked) expect(a).toEqual({ topic: "Volcanoes", year: "Year 4", curriculumId: "scotland" });
   await expect(card.getByLabel("Subject")).toContainText("Numeracy and mathematics", NAV);
   await expect(card).not.toContainText("National Curriculum in England");
   await shot(page, "slides-scotland-card", card);
@@ -180,7 +186,7 @@ test("a Scotland teacher aligns a worksheet to Curriculum for Excellence, with l
 
   // The topic matcher was asked about Scotland, not England.
   await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
-  expect(asked[0]).toMatchObject({ curriculumId: "scotland", year: "Year 4" });
+  expect(asked[0]).toMatchObject({ curriculumId: "scotland", year: "Year 4", subject: "Maths" });
 
   const year = card.getByLabel("Year", { exact: true });
   await expect(year).toHaveValue("Year 4");
@@ -226,7 +232,7 @@ test("a Northern Ireland teacher aligns a worksheet to the statutory requirement
   await card.getByRole("button", { name: /Align to curriculum/ }).click();
   await expect(card.getByTestId("curriculum-alignment-name")).toHaveText("Northern Ireland Curriculum", NAV);
   await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
-  expect(asked[0]).toMatchObject({ curriculumId: "northern-ireland", year: "Year 3" });
+  expect(asked[0]).toMatchObject({ curriculumId: "northern-ireland", year: "Year 3", subject: "Maths" });
 
   const year = card.getByLabel("Year", { exact: true });
   await expect(year).toHaveValue("Year 3");
@@ -248,6 +254,55 @@ test("a Northern Ireland teacher aligns a worksheet to the statutory requirement
   expect(align).toMatchObject({ curriculumName: "Northern Ireland Curriculum statutory requirements", countryName: "Northern Ireland", stage: "Key Stage 1", year: "Year 3" });
   // No code: the Order has none, so the text goes as it stands.
   expect(align.statements[0].text).toBe(req.text);
+});
+
+test("a Northern Ireland Year 8 teacher aligns a worksheet to the Key Stage 3 minimum content", async ({ page }) => {
+  const t = await teacherOn("northern-ireland", "UkNiKs3");
+  await signIn(page, t);
+  const req = (nicKs3 as { statements: { id: string; subject: string; strand: string; text: string }[] }).statements.find(
+    (x) => x.text === "Cells, genes and reproduction",
+  )!;
+  const asked: Record<string, unknown>[] = [];
+  await page.route("**/api/suggest-subject", (route) => {
+    asked.push(route.request().postDataJSON());
+    return route.fulfill({ json: { subject: req.subject, strand: req.strand, statementIds: [req.id] } });
+  });
+  const sent = await capture(page, "/api/worksheet-generator");
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Northern Ireland Curriculum", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Year 8");
+  await page.getByLabel("Subject", { exact: true }).fill("Science");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Cells and microscopes");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toHaveText("Northern Ireland Curriculum", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ curriculumId: "northern-ireland", year: "Year 8", subject: "Science" });
+
+  const year = card.getByLabel("Year", { exact: true });
+  await expect(year).toHaveValue("Year 8");
+  await expect(year.locator("option:checked")).toHaveText("Key Stage 3 · Year 8");
+  // The Key Stage 3 Areas of Learning, not Key Stage 1 and 2's.
+  const subjects = card.getByLabel("Subject");
+  await expect(subjects).toContainText("Environment and Society", NAV);
+  await expect(subjects).toContainText("Learning for Life and Work");
+  await expect(subjects).not.toContainText("The World Around Us");
+  await expect(card.getByTestId("curriculum-credits")).toContainText("Curriculum Minimum Content");
+
+  const tick = card.getByRole("checkbox", { name: /Cells, genes and reproduction/ });
+  await expect(tick).toHaveAttribute("aria-checked", "true", NAV);
+  // Never the Learning Outcomes list repeated under every subject.
+  await expect(card).not.toContainText("research and manage information effectively");
+  await expect(card).not.toContainText("National Curriculum in England");
+  await shot(page, "worksheet-northern-ireland-year8", card);
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { curriculumName: string; stage: string; year: string; subject: string; statements: { text: string }[] };
+  expect(align).toMatchObject({ curriculumName: "Northern Ireland Curriculum statutory requirements", stage: "Key Stage 3", year: "Year 8", subject: "Science and Technology" });
+  expect(align.statements).toEqual([{ id: req.id, text: "Cells, genes and reproduction" }]);
 });
 
 test("a Northern Ireland teacher in Reception is told there is nothing to align to, not shown another year", async ({ page }) => {

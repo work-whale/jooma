@@ -274,6 +274,7 @@ export default function WorksheetGeneratorForm({
                 checked={alignCurriculum}
                 onCheckedChange={setAlignCurriculum}
                 topic={learningObjective}
+                subject={subject}
                 stepYear={mixed ? "" : yearGroup}
                 value={curSelection}
                 onChange={(next, selected) => { setCurSelection(next); setCurStatements(selected); }}

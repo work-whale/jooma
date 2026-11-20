@@ -34,5 +34,7 @@ export const FRAMEWORK_CREDIT: Record<FrameworkId, string> = {
   "nic-fs": NIC_CREDIT,
   "nic-ks1": NIC_CREDIT,
   "nic-ks2": NIC_CREDIT,
+  "nic-ks3": NIC_CREDIT,
+  "nic-ks4": NIC_CREDIT,
 };
 

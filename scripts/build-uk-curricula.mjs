@@ -93,10 +93,30 @@
  * write the Areas and their contributory elements. Trailing list punctuation
  * (";", "; and", ", and", ":") is removed from items. Ids are the stage and the
  * first 10 hex characters of sha1(subject, strand, text); the Order has no codes.
- * Not built: Key Stage 3 and 4 (Parts 5 and 6), whose content is prose under
- * objectives, not itemised statements, so reading it would mean merging and
- * choosing. tests/unit/uk-curricula-data.spec.ts counts the list items of
- * each Part straight off the XML and holds them equal to the statements'.
+ * tests/unit/uk-curricula-data.spec.ts counts the list items of each Part
+ * straight off the XML and holds them equal to the statements'.
+ *
+ * Key Stage 3 (Part 5, owner's decision 2026-11-20): each subject is a table.
+ * Its statements are the bullets of the "Knowledge, Understanding and Skills"
+ * column (first column, first body row): plain paragraphs after a lead-in, not
+ * list items. Never the Objective 1 to 3 columns, nor the "Learning Outcomes"
+ * list repeated under every subject. Learning for Life and Work's tables have
+ * no such column: each key concept ("Career Management") has its own "Pupils
+ * should have opportunities to:" list, which is read the same way, the concept
+ * added to the strand. Subject = the Area of Learning (Part 1's table), strand
+ * = the table title's contributory element ("English with Media Education").
+ * Inside a cell: a paragraph with a list straight after it is one statement,
+ * "<paragraph> (a) ... (b) ...", as in Parts 2 to 4; a capitalised paragraph
+ * with no end punctuation before a list is a sub-heading (Science's "Organisms
+ * and Health") added to the strand, each list item a statement; a paragraph
+ * ending ":" followed by paragraphs ending "," (Science's methods) takes those
+ * paragraphs, and the one after the last comma, as its lettered parts; any
+ * other paragraph ending ":" is a lead-in. The Music table is titled "ART AND
+ * DESIGN: MUSIC" in the Order; Music is an element of The Arts in Part 1.
+ *
+ * Key Stage 4 (Part 6): the Order sets minimum content for Learning for Life
+ * and Work and Physical Education only. Each is a list; a Learning for Life and
+ * Work item names its element ("Employability") and holds that element's list.
  *
  * Wales: not built. The Hwb terms limit downloads to educational use and bar
  * commercial reuse, modification and scraping; see docs/uk-curricula-build.md.
@@ -521,8 +541,8 @@ const NIC_CREDIT =
 const NI_DIR = "docs/standards/uk/northern-ireland";
 const NI_XML = `${NI_DIR}/nisr-2007-46-schedule-2.xml`;
 
-/** The stages built: Parts 2 to 4 of Schedule 2. Key Stages 3 and 4 (Parts 5
- *  and 6) are not: they are prose under objectives, not itemised statements. */
+/** Parts 2 to 4 of Schedule 2, read as lists. Key Stages 3 and 4 (Parts 5
+ *  and 6) are read by northernIrelandUpper below. */
 const NI_STAGES = [
   { id: "nic-fs", part: 2, group: "At Foundation Stage:", ages: [5, 6] },
   { id: "nic-ks1", part: 3, group: "At Key Stages 1 and 2:", ages: [7, 8] },
@@ -752,8 +772,176 @@ function northernIreland() {
   }
 }
 
+/** Key Stages 3 and 4 (Parts 5 and 6). See the header. */
+const NI_UPPER = [
+  { id: "nic-ks3", part: 5, group: "At Key Stage 3:", ages: [12, 13, 14] },
+  { id: "nic-ks4", part: 6, group: "At Key Stage 4:", ages: [15] },
+];
+
+// A lettered part also loses a final comma: in Parts 5 and 6 commas end some
+// list items ("drawing and graphic media,") as semicolons end others.
+const lettered = (parts) => parts.map((t, i) => `(${String.fromCharCode(97 + i)}) ${stripListEnd(t).replace(/,$/, "")}`).join(" ");
+
+/** The statements of one "Knowledge, Understanding and Skills" cell (or a Learning
+ *  for Life and Work key concept's cell). The first paragraph is the lead-in. */
+function readKusCell(td, subject, strand, leadins) {
+  const nodes = td.children.filter((c) => typeof c !== "string");
+  const out = [];
+  const push = (strand_, text) => out.push({ subject, strand: strand_, text: cap(text) });
+  const lead = clean(textOf(nodes[0] ?? { children: [] }));
+  if (nodes[0]?.name !== "Para" || !/:$/.test(lead)) throw new Error(`${strand}: the cell does not open with a lead-in: ${lead.slice(0, 80)}`);
+  leadins.push(lead);
+  for (let i = 1; i < nodes.length; i++) {
+    const n = nodes[i];
+    const next = nodes[i + 1];
+    if (n.name !== "Para") throw new Error(`${strand}: a ${n.name} with no paragraph before it`);
+    const t = clean(textOf(n));
+    if (!t) continue;
+    if (next?.name === "UnorderedList") {
+      const parts = kids(next, "ListItem").map((li) => clean(textOf(li)));
+      if (!parts.length) throw new Error(`${strand}: an empty list after ${t}`);
+      if (/^[A-Z]/.test(t) && !/[.:;,]$/.test(t)) for (const part of parts) push(`${strand}: ${t}`, stripListEnd(part));
+      else push(strand, `${t.replace(/;$/, "")} ${lettered(parts)}`);
+      i++;
+      continue;
+    }
+    if (/:$/.test(t)) {
+      const after = [];
+      let j = i + 1;
+      while (nodes[j]?.name === "Para" && /,$/.test(clean(textOf(nodes[j])))) after.push(clean(textOf(nodes[j++])));
+      if (after.length) {
+        if (nodes[j]?.name !== "Para") throw new Error(`${strand}: the comma list after ${t} has no last part`);
+        after.push(clean(textOf(nodes[j])));
+        push(strand, `${t} ${lettered(after)}`);
+        i = j;
+        continue;
+      }
+      leadins.push(t);
+      continue;
+    }
+    push(strand, stripListEnd(t));
+  }
+  return out;
+}
+
+/** "LANGUAGE AND LITERACY: English with Media Education" as an Area and a strand. */
+function tableArea(title, areas, known) {
+  const [left, right] = title.split(/:\s*/);
+  const area = areas.find((a) => a.area.toLowerCase() === left.toLowerCase());
+  if (area) return { subject: area.area, strand: right ? titleCase(right, known) : area.area };
+  // "ART AND DESIGN: MUSIC": the Area whose element it is.
+  const owner = right && areas.find((a) => a.elements.some((e) => e.toLowerCase() === right.toLowerCase()));
+  if (owner) return { subject: owner.area, strand: owner.elements.find((e) => e.toLowerCase() === right.toLowerCase()) };
+  throw new Error(`No Area of Learning for the table "${title}"`);
+}
+
+function keyStage3(part, areas, known, leadins) {
+  const out = [];
+  const tables = [];
+  const walk = (n) => {
+    if (typeof n === "string") return;
+    if (n.name === "Tabular") { tables.push(n); return; }
+    for (const c of n.children) walk(c);
+  };
+  walk(part);
+  for (const tab of tables) {
+    const title = clean(textOf(kids(tab, "Title")[0] ?? { children: [] }));
+    const { subject, strand } = tableArea(title, areas, known);
+    const table = find(tab, "xhtml:table");
+    const thead = find(table, "xhtml:thead");
+    const rows = kids(find(table, "xhtml:tbody"), "xhtml:tr");
+    if (thead && /Knowledge, Understanding and Skills/.test(clean(textOf(thead)))) {
+      out.push(...readKusCell(kids(rows[0], "xhtml:td")[0], subject, strand, leadins));
+      continue;
+    }
+    // Learning for Life and Work: key concepts across the first row, their lists below.
+    const concepts = kids(rows[0], "xhtml:td").map((td) => clean(textOf(kids(td, "Para")[0] ?? { children: [] })));
+    const listRow = rows.find((r) => clean(textOf(kids(kids(r, "xhtml:td")[0] ?? { children: [] }, "Para")[0] ?? { children: [] })) === "Pupils should have opportunities to:");
+    if (!listRow) throw new Error(`${title}: no Knowledge, Understanding and Skills column and no key concept lists`);
+    const cells = kids(listRow, "xhtml:td");
+    if (cells.length !== concepts.length || concepts.some((c) => !c)) throw new Error(`${title}: ${concepts.length} key concepts but ${cells.length} lists`);
+    cells.forEach((td, c) => out.push(...readKusCell(td, subject, `${strand}: ${concepts[c]}`, leadins)));
+  }
+  return out;
+}
+
+function keyStage4(part, areas) {
+  const out = [];
+  const areaNames = areas.map((a) => a.area);
+  let area = null;
+  const walk = (n) => {
+    if (typeof n === "string") return;
+    if (n.name === "Title") {
+      const t = clean(textOf(n));
+      const hit = areaNames.find((a) => a.toLowerCase() === t.toLowerCase());
+      if (hit) area = areas.find((a) => a.area === hit);
+      return;
+    }
+    if (n.name === "UnorderedList") {
+      if (!area) throw new Error("Key Stage 4: a list before any Area");
+      for (const li of kids(n, "ListItem")) {
+        const head = clean(textOf(kids(li, "Para")[0] ?? { children: [] }));
+        const element = area.elements.find((e) => e.toLowerCase() === head.toLowerCase());
+        const nested = find(li, "UnorderedList");
+        if (element) {
+          if (!nested) throw new Error(`Key Stage 4: ${element} has no list`);
+          for (const sub of kids(nested, "ListItem")) out.push({ subject: area.area, strand: element, text: cap(itemText(sub)) });
+        } else {
+          out.push({ subject: area.area, strand: area.area, text: cap(itemText(li)) });
+        }
+      }
+      return;
+    }
+    for (const c of n.children) walk(c);
+  };
+  walk(part);
+  return out;
+}
+
+function northernIrelandUpper() {
+  const root = parseXml(readFileSync(NI_XML, "utf8"));
+  const parts = [];
+  const collect = (n) => {
+    if (typeof n === "string") return;
+    if (n.name === "Part") { parts.push(n); return; }
+    for (const c of n.children) collect(c);
+  };
+  collect(root);
+  const areaTables = areasOf(root);
+  for (const stage of NI_UPPER) {
+    const areas = areaTables[stage.group];
+    if (!areas) throw new Error(`No Part 1 table for ${stage.group}`);
+    const known = [...areas.map((a) => a.area), ...areas.flatMap((a) => a.elements)];
+    const leadins = [];
+    const list = stage.part === 5 ? keyStage3(parts[4], areas, known, leadins) : keyStage4(parts[5], areas);
+    if (process.argv.includes("--leadins")) console.log(`${stage.id} lead-ins:\n${leadins.map((t) => `  ${t.slice(0, 150)}`).join("\n")}`);
+    const seen = new Set();
+    const statements = list.map((s) => {
+      const id = `${stage.id}-${sha1(`${s.subject}|${s.strand}|${s.text}`).slice(0, 10)}`;
+      if (seen.has(id)) throw new Error(`Duplicate statement in ${stage.id}: ${s.subject} / ${s.strand}: ${s.text.slice(0, 60)}`);
+      seen.add(id);
+      return { id, code: "", subject: s.subject, strand: s.strand, ages: stage.ages, text: s.text };
+    });
+    write(stage.id, {
+      source: {
+        title: "The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007, Schedule 2",
+        file: `${NI_DIR}/`,
+        url: "https://www.legislation.gov.uk/nisr/2007/46/schedule/2",
+        credit: NIC_CREDIT,
+      },
+      statements,
+    });
+    const by = {};
+    for (const s of statements) by[`${s.subject} > ${s.strand.split(": ")[0]}`] = (by[`${s.subject} > ${s.strand.split(": ")[0]}`] ?? 0) + 1;
+    console.log(`${stage.id}: ${statements.length} statements, ${leadins.length} lead-ins\n${Object.entries(by).map(([k, v]) => `  ${k}: ${v}`).join("\n")}`);
+  }
+}
+
 if (nation === "scotland") await scotland();
-else if (nation === "northern-ireland") northernIreland();
+else if (nation === "northern-ireland") {
+  northernIreland();
+  northernIrelandUpper();
+}
 else if (nation === "wales") {
   console.error("Wales is not built: the Hwb terms bar commercial reuse and scraping. See docs/uk-curricula-build.md (WALES_PERMISSION).");
   process.exit(1);

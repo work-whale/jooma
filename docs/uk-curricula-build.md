@@ -227,3 +227,200 @@ We have not copied or stored any of the Hwb text. We would be glad to send a sam
 Thank you for your time.
 
 [Name], [role], Jooma Ltd, [email]
+
+## 11. Session 2 (2026-11-20): topic matcher size, Northern Ireland Key Stages 3 and 4, live runs
+
+Owner's decisions of 2026-11-20, built on the working tree of `staging` (last pushed commit e131117). Nothing committed or pushed. Staging only: the one production call was a read-only SELECT of `tool_settings` (11.4).
+
+### 11.1 Topic matcher: filter by subject, and a hard cap
+
+**Why.** `/api/suggest-subject` sent every statement of the year to the model: 567 for Scotland Years 8 to 10, 130,018 characters (about 33,000 tokens). Guests can call it.
+
+**What changed.** A new pure module, `app/lib/standards/suggest.ts`:
+
+- `filterBySubject(statements, subject, topic)` maps what the teacher typed to the curriculum's own subjects. For example, "Maths" becomes "Numeracy and mathematics" (Scotland) or "Mathematics and Numeracy" (Northern Ireland). "English" becomes "Literacy and English" or "Language and Literacy". "Science" becomes "Sciences", or "The World Around Us" at NI Key Stages 1 and 2.
+  - It tries the typed subject first, then the lesson topic, then falls back to every statement.
+  - It never returns an empty list for a non-empty year.
+  - Targets are tried in tiers. "Music" means Music in England and "Expressive arts" in Scotland, never both.
+- `capCandidates` keeps at most `MAX_CANDIDATES` (150) statements, whatever the filter did. It keeps the ones sharing the most words with the topic, in the list's order.
+- `suggestPrompt` cuts the numbered list so the system and user messages together stay under `MAX_PROMPT_CHARS` (50,000, about 12,000 tokens). The topic is cut to 300 characters and the year to 40.
+- `resolvePicks` maps the model's numbers into the candidates actually sent, not the whole year. Numbers that are out of range, zero, negative, fractional, repeated or not numbers are dropped.
+- `suggestBody` is what the card posts.
+  - England: exactly as before, `{ topic, year }` once JSON drops the undefined id, with or without a subject.
+  - Any other curriculum: adds `subject`, but only when the card has one.
+
+The route uses these functions. The card has a new optional `subject` prop. The worksheet passes its Subject field. The slides wizard has no subject field, so its body is unchanged.
+
+**Sizes now**, for Scotland's Third and fourth level (567 statements, 130,018 characters before):
+
+| Teacher typed | Statements sent | Characters |
+|---|---|---|
+| "Maths" | 66 | 16,330 |
+| no subject, topic matches nothing | 150 | about 34,000 |
+
+**Tests first.** `tests/unit/suggest-candidates.spec.ts` was written first and ran red (the module was missing). It is now **24 passed**. One fix on the way: my test assumed "fraction" appears late in the list, which is wrong. The late words are "photosynthesis" and "algorithms".
+
+The tests cover:
+- each nation, England (Year 4 and Reception), the US (Common Core maths and ELA) and Australia
+- no match, an empty subject, and a subject the year lacks (French at NI Key Stage 1)
+- word boundaries ("Earth" is not "Art")
+- the subject winning over the topic
+- the cap, and the prompt length with 2,000 long statements
+- pick mapping, and the request body
+
+### 11.2 Regression found by the live run: the card asked before the teacher's curriculum was known
+
+The first live run failed on the Scotland deck.
+
+**What went wrong.** In the slides wizard, the card asked the matcher with England's body (`{ topic, year }`, no curriculum). `useTeacherCurriculum` starts as `{ id: "england", loaded: false }`, and the wizard opens before the profile has loaded. The card then marked that topic and year as asked, so it never asked again for Scotland. A Scottish or NI teacher lost the automatic pick, and the call ran on England's list. The worksheet was not affected, because it passes its curriculum in.
+
+**Fix.**
+- `suggestKey()` (unit-tested, red then green) returns null until the curriculum is known: either a curriculum prop, or the hook's `loaded`. The key now includes the curriculum id.
+- The card also checks that the list it holds was loaded for this curriculum and year (`listFor`). It never matches against the previous curriculum's list during a switch.
+
+**E2E.** The Scotland slides test in `tests/tools/uk-curricula-align.spec.ts` now asserts that every matcher call is `{ topic: "Volcanoes", year: "Year 4", curriculumId: "scotland" }`. It **failed on the old build** (missing `curriculumId`) and passes on the fixed one.
+
+### 11.3 Northern Ireland Key Stages 3 and 4
+
+**Source:** the same XML, `docs/standards/uk/northern-ireland/nisr-2007-46-schedule-2.xml`. I checked its sha256 (`c63af56f40de2b8caead22e492d50e02658aa169e952a4850b1d66e29ab18091`), so no refetch was needed.
+
+**New ids:**
+
+| Id | Ages | Years | Stage label |
+|---|---|---|---|
+| `nic-ks3` | 12, 13, 14 | 8 to 10 | Key Stage 3 |
+| `nic-ks4` | 15 | 11 | Key Stage 4 |
+
+Year 12 and Year 13 (age 16 and up) have nothing.
+
+**What the source holds.** I read it before building anything.
+
+- **Part 5 (Key Stage 3)** has 16 subject tables.
+  - **Twelve have a "Knowledge, Understanding and Skills" column.** It is the first column of the first body row: a lead-in paragraph, then bullet paragraphs, as the owner described. Those bullets are the statements. The Objective 1 to 3 columns and the "Learning Outcomes" row are never read.
+  - **Learning for Life and Work has no such column.** Its 4 tables are Employability, Local and Global Citizenship, Personal Development and Home Economics. Each has 3 or 4 key concepts across the top (for example "Career Management"). Under each concept is a short prose note, then a "Pupils should have opportunities to:" bullet list, which is the minimum content.
+  - **OWNER DECISION:** I built these lists (61 statements) and left out the prose notes. The key concept goes in the strand, for example "Employability: Career Management". The lists are statutory content, word for word, not invented. But they do not sit under a "Knowledge, Understanding and Skills" heading, so you may prefer to drop them. To drop them: in `keyStage3()` in `scripts/build-uk-curricula.mjs`, skip tables without that heading, and update the pinned counts.
+- **Part 6 (Key Stage 4)** has no subject tables. The Order says: "In addition to the Minimum Content for Learning and Life and Work and Physical Education, schools will be required to provide pupils with access to..."
+  - So Key Stage 4 minimum content exists **only for Learning for Life and Work and Physical Education**, as real list items. That is what `nic-ks4` holds.
+  - **English, Mathematics, the sciences, history, geography, languages and the arts have no Key Stage 4 list in the Order.** As instructed, I did not invent one. A Year 11 teacher sees only Learning for Life and Work and Physical Education.
+  - Correction to section 2: it called Part 6's 26 list items "generic Learning Outcomes". That was wrong. They are this minimum content.
+
+**Statements per subject:**
+
+| Stage | Area of Learning (subject) | Strand (element) | Statements |
+|---|---|---|---|
+| Key Stage 3 | Language and Literacy (21) | English with Media Education | 11 |
+| | | Irish with Media Education in Irish-speaking schools | 10 |
+| | Mathematics and Numeracy (5) | Mathematics with Financial Capability | 5 |
+| | Modern Languages (10) | Modern Languages | 10 |
+| | The Arts (23) | Art and Design / Music / Drama | 5 / 8 / 10 |
+| | Environment and Society (8) | History / Geography | 3 / 5 |
+| | Science and Technology (19) | Science (4, plus 11 under its four sub-headings) / Technology and Design | 15 / 4 |
+| | Learning for Life and Work (61) | Employability / Local and Global Citizenship / Personal Development / Home Economics | 16 / 15 / 19 / 11 |
+| | Physical Education (7) | Physical Education | 7 |
+| | **Total** | | **154** |
+| Key Stage 4 | Learning for Life and Work (19) | Employability / Personal Development / Local and Global Citizenship | 6 / 7 / 6 |
+| | Physical Education (5) | Physical Education | 5 |
+| | **Total** | | **24** |
+
+**Reading rules.** These are also in the script header. Otherwise only the normalisations in section 4 apply.
+
+- **Lead-ins are dropped.** A cell's first paragraph is its lead-in. 26 were dropped: 12 subject cells, 13 key concept cells, and Science's "learn about:".
+- **A paragraph followed directly by a list becomes one statement**, written `<paragraph> (a) ... (b) ...` as in Parts 2 to 4. For example: "Investigate the past and its impact on our world today through an understanding of: (a) different perspectives and interpretations (b) cause and effect ...". Maths' "knowledge and understanding of (a) Number (b) Algebra ..." is read the same way.
+- **A capitalised paragraph with no end punctuation before a list is a sub-heading**, added to the strand. This applies to Science's "Organisms and Health", "Chemical and material behaviour", "Forces and energy" and "Earth and Universe". Each list item is then its own statement, for example "Cells, genes and reproduction".
+- **Science's methods are three paragraphs ending in commas, after a colon.** They become one lettered statement: "Develop skills in scientific methods of enquiry ...: (a) planning for investigations (b) obtaining evidence (c) presenting and interpreting results".
+- **New normalisation:** a lettered part loses a final comma. In Parts 5 and 6, commas end some list items the way semicolons end others. For example, "(a) drawing and graphic media, (b) ..." becomes "(a) drawing and graphic media (b) ...".
+- **The Music table is titled "ART AND DESIGN: MUSIC" in the Order.** Part 1 lists Music under The Arts, so its subject is The Arts.
+- **"Irish with Media Education in Irish-speaking schools" is included.** It is a Key Stage 3 element in Part 1's table and is written in English. Scotland's Gaelic-medium documents were a separate Gaelic-language source, so the cases differ. OWNER DECISION if you want them treated the same.
+- **Amendment text is kept**, as for Parts 2 to 4. For example, Personal Health includes "Receive training in (i) cardiopulmonary resuscitation (CPR); and (ii) automatic external defibrillator (AED) awareness."
+- **The existing NI files did not change.** Rebuilding Northern Ireland rewrote `nic-fs`, `nic-ks1` and `nic-ks2` byte for byte the same; git shows no change.
+
+**Wiring.** `FrameworkId`, `FRAMEWORK_NAME`, `FRAMEWORK_AGES`, `loadFramework`, `FRAMEWORK_STAGE`, the credits (the same OGL credit), the permissions, the registry (`northern-ireland` now uses all five frameworks) and the provenance note.
+
+**Tests.** The alignment and data tests were edited first and ran red, because the data files did not exist yet. They now check:
+- Years 1 to 11 are covered, and each age from 5 to 15 has exactly one stage.
+- Year 8 sends "Key Stage 3", Year 11 sends "Key Stage 4", and Year 12 sends nothing.
+- Subjects per stage match Part 1, and strands are the elements named in the table titles.
+- Known statements are word for word.
+- Refusals: no statement contains a Learning Outcomes item, Objective column text, a key concept note or a lead-in.
+- An independent second reading of every Knowledge, Understanding and Skills cell straight off the XML: every piece is in a statement or strand, or is one of the 26 lead-ins.
+- Key Stage 4 is covered by the existing leaf count: Part 6 has 26 leaves, and all 26 are covered.
+
+Fixes on the way, all in the tests, none in the data:
+- The first green run found two miscounts of mine: 16 tables, not 15; 26 lead-ins, not 25.
+- One refusal phrase was too broad: PE's real bullet contains "work effectively with others".
+
+**Mutation check:** deleting "Cells, genes and reproduction" and changing one word of a Drama statement made 5 tests fail. I restored the file afterwards.
+
+**E2E.**
+- New test in `tests/tools/uk-curricula-align.spec.ts`: an NI Year 8 teacher, on their saved curriculum.
+  - The card shows "Key Stage 3 · Year 8".
+  - Key Stage 3 Areas are listed, and The World Around Us is not.
+  - No Learning Outcomes text appears.
+  - The matcher is asked with `subject: "Science"`.
+  - The statement is sent word for word with stage "Key Stage 3".
+- The Scotland and NI worksheet tests now also assert `subject: "Maths"` in the matcher request.
+
+### 11.4 Live run on staging (real models, nothing mocked)
+
+**Model settings check first.** I re-diffed `tool_settings`: staging and production are identical for all 50 slugs (model, effort, verbosity, enabled). Models that ran:
+- `worksheet-generator` and `generate-slideshow`: gpt-5.6-luna, low effort, medium verbosity
+- `suggest-subject`: gpt-4o-mini
+
+**Spec:** `tests/tools/uk-curricula-live.spec.ts`, skipped unless `LIVE_MODEL=1`. Run it with:
+
+    LIVE_MODEL=1 npx playwright test tests/tools/uk-curricula-live --workers=2
+
+**Result: 4 passed** on the second run, after the 11.2 fix. The first run had 2 passed and 2 failed: the bug in 11.2, and a username clash between my own throwaway test teachers.
+
+Each case below ticked the statement and checked three key terms in the output.
+
+| Case | Matcher's own pick (real model) | Sent | Follows the statement | Renders | Cost |
+|---|---|---|---|---|---|
+| Scotland worksheet, Year 4, Maths, "Place value in whole numbers" | MNU 1-02a, alone | "MNU 1-02a: I have investigated how whole numbers are constructed ...", with "First level" | yes, 3 of 3 (place value, digit, zero). Objective: "explain how whole numbers are constructed and how a digit's place gives it its value, including the importance of zero" | yes | $0.0018 |
+| Scotland deck, Year 4 | MNU 1-02a, alone | same | yes, 3 of 3. 12 slides, for example "Your Place-Value Toolkit: Digit, Place, Value, Zero" | yes, "Deck ready" | $0.0048 |
+| NI worksheet, Year 3, Maths, "Simple everyday fractions" | "Recognise and use simple everyday fractions.", alone | same, with "Key Stage 1" | yes, 3 of 3 (half, quarter, fraction). Objective: "I am learning to recognise and use simple everyday fractions." | yes | $0.0019 |
+| NI deck, Year 3 | same, alone | same | yes, 3 of 3. 12 slides | yes | $0.0054 |
+
+**Cost: $0.0139 (about 1.1p)** for the second run, read from `token_usage`.
+- The decks used web pictures. No generated-picture cost (`asset_cost`) was logged within the wait.
+- The first run spent about the same again (two worksheets and part of a deck), so the session's total live spend is under 3p.
+
+Screenshots and `results.json` are in `docs/screenshots/2026-11-20-uk-curricula/live/` (gitignored).
+
+### 11.5 Commands and results (final)
+
+| Check | Result |
+|---|---|
+| `pnpm test:unit` | **2327 passed**, 0 failed (was 2298) |
+| `npx tsc --noEmit -p .` | clean |
+| `node scripts/check-language.mjs` | passed |
+| `npx eslint .` | **17 errors**, the same 17 as before, none in touched files. 43 warnings, one fewer than before (I removed an unused parameter I had added) |
+| Curriculum E2E (`uk-curricula-align`, `slideshow-curriculum`, `curricula-standards`) | **13 of 13 passed** |
+| Dash check | no en or em dash in any file written or changed |
+
+The E2E ran on a fresh `next build` served through `scripts/with-staging-env.sh`, with 0 production references in `.next/server`. England's slides body is still asserted exactly: `[{ topic: "Fractions", year: "Year 4" }]`.
+
+### 11.6 Files
+
+New: `app/lib/standards/suggest.ts`, `app/lib/standards/data/nic-ks3.json`, `app/lib/standards/data/nic-ks4.json`, `tests/unit/suggest-candidates.spec.ts`, `tests/tools/uk-curricula-live.spec.ts`.
+
+Modified:
+- app: `app/api/suggest-subject/route.ts`, `app/components/slideshow/CurriculumAlignment.tsx`, `app/components/forms/WorksheetGeneratorForm.tsx`
+- standards: `app/lib/standards/index.ts`, `credits.ts`, `permissions.ts`
+- curricula: `app/lib/curricula/types.ts`, `uk.ts`, `provenance.ts`
+- build: `scripts/build-uk-curricula.mjs`
+- tests: `tests/unit/uk-curricula-alignment.spec.ts`, `tests/unit/uk-curricula-data.spec.ts`, `tests/unit/standards.spec.ts`, `tests/tools/uk-curricula-align.spec.ts`
+- this file
+
+### 11.7 Left untested, and why
+
+- **The route with a real guest.** Prompt building, the cap and pick mapping are pure functions with unit tests; the route only wires them together. Guest access is unchanged (`proxy.ts`, `generation-guard`).
+- **The matcher's accuracy across many topics.** Four live calls each picked the target; I ran no wider sample.
+- **The matcher's latency on the largest list.** Not timed, but the prompt is now at most about a third of its old size.
+- **Wales:** not this session.
+
+### 11.8 Owner decisions open
+
+1. **Keep Learning for Life and Work at Key Stage 3 (61 statements)?** Recommended: yes. It is statutory minimum content, and a teacher of those subjects has nothing else to align to.
+2. **Keep "Irish with Media Education in Irish-speaking schools"?** Recommended: yes, as its own strand.
+3. **Should Year 12 also show the Key Stage 4 list?** Year 12 is NI's second Key Stage 4 year. Today it shows nothing, because Key Stage 4 was specified as age 15 only.

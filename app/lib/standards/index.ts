@@ -14,7 +14,7 @@
  *                          Third and fourth), built by scripts/build-uk-curricula.mjs
  *   - data/nic-*.json      Northern Ireland: the statutory requirements of the
  *                          Education (Curriculum Minimum Content) Order 2007 for
- *                          the Foundation Stage, Key Stage 1 and Key Stage 2
+ *                          the Foundation Stage and Key Stages 1 to 4
  *
  * Statements carry the AGES they apply to, not a grade name, so one file
  * serves "Grade 3" in Texas and "Year 3" in Queensland alike: a year's age
@@ -67,6 +67,8 @@ export const FRAMEWORK_NAME: Record<FrameworkId, string> = {
   "nic-fs": "Northern Ireland Curriculum statutory requirements",
   "nic-ks1": "Northern Ireland Curriculum statutory requirements",
   "nic-ks2": "Northern Ireland Curriculum statutory requirements",
+  "nic-ks3": "Northern Ireland Curriculum statutory requirements",
+  "nic-ks4": "Northern Ireland Curriculum statutory requirements",
 };
 
 /** The ages each framework has statements for. */
@@ -86,10 +88,14 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   // ages of the England-named years. Foundation Stage = Years 1 and 2, Key Stage
   // 1 = Years 3 and 4, Key Stage 2 = Years 5 to 7. NI pupils are a year younger
   // than England's at the same number; if NI gets its own year list, shift these
-  // down by one. Key Stages 3 and 4 are not built.
+  // down by one.
   "nic-fs": [5, 6],
   "nic-ks1": [7, 8],
   "nic-ks2": [9, 10, 11],
+  // Key Stage 3 = Years 8 to 10, Key Stage 4 = Year 11 (NI Key Stage 4 is Years 11
+  // and 12; the Order's Key Stage 4 content is offered for Year 11 only).
+  "nic-ks3": [12, 13, 14],
+  "nic-ks4": [15],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched
@@ -118,6 +124,10 @@ export async function loadFramework(id: FrameworkId): Promise<FrameworkData> {
       return (await import("./data/nic-ks1.json")).default as unknown as FrameworkData;
     case "nic-ks2":
       return (await import("./data/nic-ks2.json")).default as unknown as FrameworkData;
+    case "nic-ks3":
+      return (await import("./data/nic-ks3.json")).default as unknown as FrameworkData;
+    case "nic-ks4":
+      return (await import("./data/nic-ks4.json")).default as unknown as FrameworkData;
   }
 }
 
@@ -184,6 +194,8 @@ export const FRAMEWORK_STAGE: Partial<Record<FrameworkId, string>> = {
   "nic-fs": "Foundation Stage",
   "nic-ks1": "Key Stage 1",
   "nic-ks2": "Key Stage 2",
+  "nic-ks3": "Key Stage 3",
+  "nic-ks4": "Key Stage 4",
 };
 
 /** The stage a curriculum's year falls in ("First level", "Key Stage 1"), for

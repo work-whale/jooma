@@ -20,6 +20,8 @@ import cfeThirdFourth from "@/app/lib/standards/data/cfe-third-fourth.json";
 import nicFs from "@/app/lib/standards/data/nic-fs.json";
 import nicKs1 from "@/app/lib/standards/data/nic-ks1.json";
 import nicKs2 from "@/app/lib/standards/data/nic-ks2.json";
+import nicKs3 from "@/app/lib/standards/data/nic-ks3.json";
+import nicKs4 from "@/app/lib/standards/data/nic-ks4.json";
 
 /*
  * The data behind "Align to curriculum" for Scotland and Northern Ireland,
@@ -47,11 +49,13 @@ const DATA: Partial<Record<FrameworkId, FrameworkData>> = {
   "nic-fs": nicFs as FrameworkData,
   "nic-ks1": nicKs1 as FrameworkData,
   "nic-ks2": nicKs2 as FrameworkData,
+  "nic-ks3": nicKs3 as FrameworkData,
+  "nic-ks4": nicKs4 as FrameworkData,
 };
 const ALL = Object.keys(DATA) as FrameworkId[];
 const CFE = ["cfe-early", "cfe-first", "cfe-second", "cfe-third-fourth"] as const;
 /** Frameworks built by scripts/build-uk-curricula.mjs: they follow its text rules. */
-const NIC = ["nic-fs", "nic-ks1", "nic-ks2"] as const;
+const NIC = ["nic-fs", "nic-ks1", "nic-ks2", "nic-ks3", "nic-ks4"] as const;
 const UK_BUILT: FrameworkId[] = [...CFE, ...NIC];
 const get = (f: FrameworkId) => DATA[f]!;
 
@@ -384,7 +388,7 @@ test.describe("Scotland against the PDFs", () => {
 const NI_XML = "docs/standards/uk/northern-ireland/nisr-2007-46-schedule-2.xml";
 const nic = () => NIC.flatMap((f) => get(f).statements);
 /** Where each stage sits in the Order: Part 2, 3 and 4 of Schedule 2. */
-const NI_PART: Record<(typeof NIC)[number], number> = { "nic-fs": 2, "nic-ks1": 3, "nic-ks2": 4 };
+const NI_PART: Record<(typeof NIC)[number], number> = { "nic-fs": 2, "nic-ks1": 3, "nic-ks2": 4, "nic-ks3": 5, "nic-ks4": 6 };
 const AREAS_FS = [
   "Language and Literacy",
   "Mathematics and Numeracy",
@@ -401,6 +405,87 @@ const AREAS_KS = [
   "Personal Development and Mutual Understanding",
   "Physical Education",
 ];
+/** Part 1's Areas of Learning at Key Stage 3, in its order. */
+const AREAS_KS3 = [
+  "Language and Literacy",
+  "Mathematics and Numeracy",
+  "Modern Languages",
+  "The Arts",
+  "Environment and Society",
+  "Science and Technology",
+  "Learning for Life and Work",
+  "Physical Education",
+];
+/** At Key Stage 4 the Order sets minimum content for these two only. */
+const KS3_COUNTS: Record<string, number> = {
+  "Language and Literacy": 21,
+  "Mathematics and Numeracy": 5,
+  "Modern Languages": 10,
+  "The Arts": 23,
+  "Environment and Society": 8,
+  "Science and Technology": 19,
+  "Learning for Life and Work": 61,
+  "Physical Education": 7,
+};
+const KS3_LEADINS = 26;
+const AREAS_KS4 = ["Learning for Life and Work", "Physical Education"];
+const AREAS_FOR: Record<(typeof NIC)[number], string[]> = {
+  "nic-fs": AREAS_FS,
+  "nic-ks1": AREAS_KS,
+  "nic-ks2": AREAS_KS,
+  "nic-ks3": AREAS_KS3,
+  "nic-ks4": AREAS_KS4,
+};
+/** A strand at Key Stage 3 and 4 is the subject's contributory element, as the
+ *  table title names it, then a key concept or sub-heading where the Order has one. */
+const ELEMENTS_KS3 = [
+  "English with Media Education",
+  "Irish with Media Education in Irish-speaking schools",
+  "Mathematics with Financial Capability",
+  "Modern Languages",
+  "Art and Design",
+  "Music",
+  "Drama",
+  "History",
+  "Geography",
+  "Science",
+  "Technology and Design",
+  "Employability",
+  "Local and Global Citizenship",
+  "Personal Development",
+  "Home Economics",
+  "Physical Education",
+];
+const ELEMENTS_KS4 = ["Employability", "Personal Development", "Local and Global Citizenship", "Physical Education"];
+
+/** The text pieces of one table cell of the Order: every <Text>, cleaned. */
+const cellTexts = (cell: string) =>
+  [...cell.matchAll(/<Text>([\s\S]*?)<\/Text>/g)]
+    .map((m) => m[1].replace(/<CommentaryRef[^>]*\/>/g, "").replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&#(\d+);/g, (_, d: string) => String.fromCodePoint(Number(d))))
+    .map((t) => t.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
+/**
+ * Part 5's minimum content, read straight off the XML a second way: for each
+ * subject table, the "Knowledge, Understanding and Skills" cell (first column,
+ * first body row); for Learning for Life and Work, whose tables have no such
+ * column, each key concept's "Pupils should have opportunities to:" cell.
+ */
+function ks3Cells(): { title: string; cells: string[][] }[] {
+  const part5 = readFileSync(NI_XML, "utf8").split(/<Part /)[5].replace(/<Commentaries[\s\S]*$/, "");
+  return part5
+    .split(/<Tabular\b/)
+    .slice(1)
+    .map((t) => {
+      const title = cellTexts(t.match(/<Title>([\s\S]*?)<\/Title>/)![0].replace(/Title>/g, "Text>"))[0];
+      const thead = t.match(/<xhtml:thead>([\s\S]*?)<\/xhtml:thead>/)?.[1] ?? "";
+      const rows = (t.match(/<xhtml:tbody>([\s\S]*?)<\/xhtml:tbody>/)?.[1] ?? "").split(/<xhtml:tr\b/).slice(1);
+      const cellsOf = (row: string) => row.split(/<xhtml:td\b/).slice(1).map(cellTexts);
+      if (/Knowledge, Understanding and Skills/.test(thead)) return { title, cells: [cellsOf(rows[0])[0]] };
+      const row = rows.map(cellsOf).find((cells) => cells[0]?.[0] === "Pupils should have opportunities to:")!;
+      return { title, cells: row };
+    });
+}
 
 /** The Order's XML as text, one string per Part, tags gone and entities read. */
 function orderParts(): string[] {
@@ -439,15 +524,14 @@ const leavesOf = (text: string) => (text.match(/\([a-z]\) /g) ?? [""]).length;
 test.describe("Northern Ireland", () => {
   test("subjects are the Areas of Learning the Order names for that stage", () => {
     for (const f of NIC) {
-      const expected = f === "nic-fs" ? AREAS_FS : AREAS_KS;
-      expect([...new Set(get(f).statements.map((s) => s.subject))], f).toEqual(expected);
+      expect([...new Set(get(f).statements.map((s) => s.subject))], f).toEqual(AREAS_FOR[f]);
     }
   });
 
   test("the Order's own table names those Areas for the stages", () => {
     skipWithout(NI_XML);
     const part1 = orderParts()[0];
-    for (const name of new Set([...AREAS_FS, ...AREAS_KS])) expect(letters(part1).includes(letters(name)), name).toBe(true);
+    for (const name of new Set([...AREAS_FS, ...AREAS_KS, ...AREAS_KS3])) expect(letters(part1).includes(letters(name)), name).toBe(true);
     // Foundation Stage has Physical Development and Movement, the Key Stages Physical Education.
     expect(letters(part1).includes(letters("Physical Development and Movement"))).toBe(true);
   });
@@ -462,11 +546,108 @@ test.describe("Northern Ireland", () => {
     }
   });
 
-  test("counts are pinned to the build, and Key Stages 3 and 4 are not here", () => {
+  test("counts are pinned to the build", () => {
     expect(get("nic-fs").statements).toHaveLength(239);
     expect(get("nic-ks1").statements).toHaveLength(150);
     expect(get("nic-ks2").statements).toHaveLength(150);
-    expect(Object.keys(DATA).filter((f) => f.startsWith("nic-")).sort()).toEqual(["nic-fs", "nic-ks1", "nic-ks2"]);
+    const by = (f: FrameworkId) => {
+      const out: Record<string, number> = {};
+      for (const s of get(f).statements) out[s.subject] = (out[s.subject] ?? 0) + 1;
+      return out;
+    };
+    expect(by("nic-ks3")).toEqual(KS3_COUNTS);
+    expect(by("nic-ks4")).toEqual({ "Learning for Life and Work": 19, "Physical Education": 5 });
+    expect(Object.keys(DATA).filter((f) => f.startsWith("nic-")).sort()).toEqual(["nic-fs", "nic-ks1", "nic-ks2", "nic-ks3", "nic-ks4"]);
+  });
+
+  test("Key Stage 3 and 4 strands are the subject's element, then its key concept or sub-heading", () => {
+    for (const [f, elements] of [["nic-ks3", ELEMENTS_KS3], ["nic-ks4", ELEMENTS_KS4]] as const) {
+      const firsts = new Set(get(f).statements.map((s) => s.strand.split(": ")[0]));
+      expect([...firsts].filter((x) => !elements.includes(x)), f).toEqual([]);
+      expect(elements.filter((x) => !firsts.has(x)), f).toEqual([]);
+    }
+    const strands = new Set(get("nic-ks3").statements.map((s) => s.strand));
+    // Science's sub-headings and the Learning for Life and Work key concepts.
+    for (const x of ["Science: Organisms and Health", "Science: Earth and Universe", "Employability: Career Management", "Local and Global Citizenship: Democracy and Active Participation"]) {
+      expect(strands.has(x), x).toBe(true);
+    }
+    // The Order titles the Music table "ART AND DESIGN: MUSIC"; Music is an element of The Arts.
+    expect(get("nic-ks3").statements.filter((s) => s.strand === "Music").every((s) => s.subject === "The Arts")).toBe(true);
+  });
+
+  test("Key Stage 3 and 4, known requirements word for word", () => {
+    const ks3 = get("nic-ks3").statements;
+    const find = (t: string) => ks3.find((s) => s.text === t);
+    expect(find("Talking, to include debate, role play, interviews, presentations and group discussions")).toMatchObject({
+      subject: "Language and Literacy",
+      strand: "English with Media Education",
+    });
+    expect(find("Cells, genes and reproduction")).toMatchObject({ subject: "Science and Technology", strand: "Science: Organisms and Health" });
+    // A lead-in with a list straight after it: its parts lettered, as Parts 2 to 4 do.
+    expect(
+      find("Investigate the past and its impact on our world today through an understanding of: (a) different perspectives and interpretations (b) cause and effect (c) continuity and change (d) progression and regression"),
+    ).toMatchObject({ subject: "Environment and Society", strand: "History" });
+    // Science's three methods are separate paragraphs in the Order, each ending in a comma.
+    expect(
+      find("Develop skills in scientific methods of enquiry to further scientific knowledge and understanding: (a) planning for investigations (b) obtaining evidence (c) presenting and interpreting results"),
+    ).toMatchObject({ strand: "Science" });
+    expect(find("Explore the changing concept of career.")).toMatchObject({ subject: "Learning for Life and Work", strand: "Employability: Career Management" });
+    const ks4 = get("nic-ks4").statements;
+    expect(ks4.find((s) => s.text === "Explore self employment and identify relevant sources of support")).toMatchObject({
+      subject: "Learning for Life and Work",
+      strand: "Employability",
+    });
+    expect(ks4.find((s) => s.text.startsWith("Plan and participate"))!.text).toBe(
+      "Plan and participate in a regular, frequent and balanced programme of physical activity that: (a) develops their interests and talents (b) extends their knowledge, understanding and skills (c) contributes to, and helps sustain, a healthy and active lifestyle",
+    );
+  });
+
+  test("Key Stage 3 and 4 never take the Learning Outcomes, the Objective columns, the concept notes or a lead-in", () => {
+    const bad = [
+      // The Learning Outcomes list repeated under every subject.
+      "research and manage information effectively",
+      "Work effectively with others;",
+      "demonstrate self management",
+      "show deeper understanding by thinking critically",
+      // The Objective 1 to 3 columns.
+      "Explore and respond to others",
+      "Investigate the importance of communication skills",
+      // A key concept's note (prose, not a list).
+      "allows young people opportunities",
+      // Lead-ins.
+      "Pupils should have opportunities",
+      "Pupil should be enabled",
+      "Pupils should be enabled",
+      "Through engagement with a range of stimuli",
+      "Learn about",
+    ];
+    // "work effectively with others" is also in a real PE bullet, so the Learning
+    // Outcomes item is matched whole.
+    for (const f of ["nic-ks3", "nic-ks4"] as const) {
+      expect(get(f).statements.some((s) => s.text === "Work effectively with others"), f).toBe(false);
+      for (const s of get(f).statements) for (const b of bad) expect(s.text, `${s.id}: ${b}`).not.toContain(b);
+    }
+  });
+
+  test("Key Stage 3: every piece of every Knowledge, Understanding and Skills cell is in a statement, or is its lead-in", () => {
+    skipWithout(NI_XML);
+    const tables = ks3Cells();
+    expect(tables.map((t) => t.title)).toHaveLength(16);
+    const ours = get("nic-ks3").statements.map((s) => letters(`${s.strand} ${s.text}`));
+    const missing: string[] = [];
+    const leadins: string[] = [];
+    for (const t of tables) {
+      for (const cell of t.cells) {
+        cell.forEach((piece, i) => {
+          // The cell's opening line, and "learn about:" before Science's sub-headings.
+          if ((i === 0 && /:$/.test(piece)) || piece === "learn about:") return leadins.push(piece);
+          if (!ours.some((o) => o.includes(letters(piece)))) missing.push(`${t.title}: ${piece}`);
+        });
+      }
+    }
+    expect(missing).toEqual([]);
+    // One lead-in per cell: 12 subject cells and 13 key concept cells (Employability 3, Citizenship 4, Personal Development 3, Home Economics 3), plus "learn about:".
+    expect(leadins).toHaveLength(KS3_LEADINS);
   });
 
   test("known requirements, word for word", () => {
@@ -537,12 +718,13 @@ test.describe("Northern Ireland", () => {
     skipWithout(NI_XML);
     const xml = readFileSync(NI_XML, "utf8").split(/<Part /).slice(1);
     for (const f of NIC) {
+      if (f === "nic-ks3") continue;
       const fromXml = leafItems(xml[NI_PART[f] - 1].replace(/<Commentaries[\s\S]*$/, ""));
       const ours = get(f).statements.reduce((n, s) => n + leavesOf(s.text), 0);
       expect(ours, f).toBe(fromXml);
     }
-    // Key Stages 3 and 4 hold list items too (146 and 26) that are not statements by
-    // themselves: they are the same skills lists under every subject.
+    // Part 5's list items are partly the Learning Outcomes repeated under every
+    // subject (not statements), so Key Stage 3 is checked cell by cell above.
     expect(leafItems(xml[4])).toBe(146);
     expect(leafItems(xml[5])).toBe(26);
   });
