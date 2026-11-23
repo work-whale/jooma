@@ -153,8 +153,9 @@ test.describe("renderBroadcast", () => {
 
 test.describe("layout", () => {
   // The transactional emails call layout() with no options. Adding the options
-  // must not change a byte of what they send.
-  test("with no options, matches the output from before options existed", () => {
+  // must not change a byte of what they send. The one deliberate change since
+  // is the header: the wordmark image replaced the text "Jooma" (24 Nov).
+  test("with no options, matches the expected shell exactly", () => {
     const year = new Date().getFullYear();
     const before = `<!DOCTYPE html>
 <html>
@@ -170,7 +171,7 @@ test.describe("layout", () => {
         <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
           <tr>
             <td align="center" style="padding-bottom:26px;">
-              <a href="https://www.jooma.ai" style="text-decoration:none;font-size:22px;font-weight:800;color:#5B2ED6;letter-spacing:-0.5px;">Jooma</a>
+              <a href="https://www.jooma.ai" style="text-decoration:none;"><img src="https://www.jooma.ai/logo/Jooma-logo-v2-128.png" width="96" height="32" alt="Jooma" style="display:block;margin:0 auto;border:0;outline:none;width:96px;height:32px;color:#5B2ED6;font-size:22px;font-weight:800;" /></a>
             </td>
           </tr>
           <tr>

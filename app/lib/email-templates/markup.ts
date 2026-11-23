@@ -56,6 +56,18 @@ export function interpolate(template: string, params: Record<string, string>): s
   return template.replace(/\{\{(\w+)\}\}/g, (_, k) => params[k] ?? "");
 }
 
+/**
+ * The Jooma wordmark as a PNG (382x128, shown at 96x32).
+ *
+ * PNG, not SVG, because Gmail and Outlook do not render SVG in email.
+ * app/components/v2/Wordmark.tsx is the SVG source of the same mark.
+ *
+ * Absolute and on the canonical public domain on purpose: staging and preview
+ * domains can sit behind Vercel protection, and an email is opened weeks after
+ * it was sent, so the image must live somewhere that stays public.
+ */
+export const WORDMARK_SRC = "https://www.jooma.ai/logo/Jooma-logo-v2-128.png";
+
 export interface LayoutOptions {
   /** The grey line an inbox shows after the subject. Hidden in the body. */
   preheader?: string;
@@ -64,13 +76,16 @@ export interface LayoutOptions {
   footerHtml?: string;
 }
 
-/** Shared shell for every email: accent bar, logo, card, footer.
+/** Shared shell for every email: accent bar, wordmark, card, footer.
  *  Table-based and inline-styled because that is what email clients render.
  *
- *  With no options the output is exactly what it was before options existed,
- *  so the transactional emails do not change by a byte. */
+ *  The options only add a preheader and footer lines; with none, the shell is
+ *  exactly the one the transactional emails have always sent, apart from the
+ *  header, which since 24 Nov is the wordmark image (it was the word "Jooma"
+ *  in text). The alt text keeps the brand readable when images are blocked. */
 export function layout(content: string, opts: LayoutOptions = {}): string {
   const base = siteUrl();
+  const header = `<a href="${base}" style="text-decoration:none;"><img src="${WORDMARK_SRC}" width="96" height="32" alt="Jooma" style="display:block;margin:0 auto;border:0;outline:none;width:96px;height:32px;color:#5B2ED6;font-size:22px;font-weight:800;" /></a>`;
   const preheader = opts.preheader
     ? `
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(opts.preheader)}</div>`
@@ -93,7 +108,7 @@ export function layout(content: string, opts: LayoutOptions = {}): string {
         <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
           <tr>
             <td align="center" style="padding-bottom:26px;">
-              <a href="${base}" style="text-decoration:none;font-size:22px;font-weight:800;color:#5B2ED6;letter-spacing:-0.5px;">Jooma</a>
+              ${header}
             </td>
           </tr>
           <tr>
