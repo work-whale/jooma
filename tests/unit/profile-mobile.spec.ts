@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { dialPrefix, profileMobile } from "@/app/lib/dial-codes";
+import { COUNTRIES, dialPrefix, profileMobile } from "@/app/lib/dial-codes";
 
 /*
  * profiles.dial_code holds the country ("GB"), not the prefix. The ambassador
@@ -32,5 +32,32 @@ test.describe("profileMobile", () => {
     expect(profileMobile("GB", "")).toBe("");
     expect(profileMobile(null, null)).toBe("");
     expect(profileMobile(null, "07700 900412")).toBe("07700900412");
+  });
+});
+
+test.describe("the African countries", () => {
+  const AFRICA = [
+    ["South Africa", "ZA", "+27"],
+    ["Nigeria", "NG", "+234"],
+    ["Ghana", "GH", "+233"],
+    ["Kenya", "KE", "+254"],
+    ["Uganda", "UG", "+256"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of AFRICA) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number gets the country prefix and loses its leading 0", () => {
+    expect(profileMobile("NG", "0803 123 4567")).toBe("+2348031234567");
+    expect(profileMobile("GH", "024 123 4567")).toBe("+233241234567");
+    expect(profileMobile("KE", "0712 345678")).toBe("+254712345678");
+    expect(profileMobile("UG", "0772 123456")).toBe("+256772123456");
+    expect(profileMobile("ZA", "082 123 4567")).toBe("+27821234567");
   });
 });

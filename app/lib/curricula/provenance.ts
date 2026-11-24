@@ -442,4 +442,29 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://www.alberta.ca/curriculum-subject-areas",
     notes: "ATA: K to 6 social studies Grades 4 to 6 mandatory September 2026. Alberta: Grades 7 to 9 maths, social studies, career education and financial literacy, PE and wellness piloted 2026-27 (98 boards), mandatory September 2027. Grades 7 to 9 science mandatory September 2028 per the Western Standard only. PATs from reference knowledge.",
   },
+  "south-africa": {
+    sheetRow: { tab: "Countries", name: "South Africa" },
+    source: "https://www.education.gov.za/Curriculum/CurriculumAssessmentPolicyStatements(CAPS).aspx",
+    notes: "Africa build (2026-11-25). Confirmed in the Step 0 check: CAPS for Grades R to 12 is in force (phased in from 2012 to 2014 by grade band, so the version is dated 2012-01-01); the DBE's \"curriculum strengthening\" of CAPS (up to 20% new content, aimed at full implementation by 2027) has no fixed date, so no second version yet; Whole School Evaluation; the National Senior Certificate at Grade 12. Reference (workbook and general knowledge, not re-opened on the official site): SACE standards, the Quality Management System, SIAS and White Paper 6 wording, the Birth to Four framework name, the seven-level scale, and the Grade R start age (5 because the year starts in January, so it lines up with England's Year 1, not Reception). Licence: closed. The DBE's Creative Commons notice allows non-commercial reuse only; permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "kenya": {
+    sheetRow: { tab: "Countries", name: "Kenya" },
+    source: "https://kicd.ac.ke/",
+    notes: "Africa build (2026-11-25). Confirmed in the Step 0 check: Competency-Based Education from PP1, with Senior School (Grade 10) from January 2026 and Grades 11 and 12 in 2027 and 2028; KPSEA in Grade 6 and KJSEA in Grade 9; KCSE continues only for the last 8-4-4 cohorts. Confirmed 2026-11-25: the KJSEA eight-level scale (EE1 to BE2), from KNEC as reported in December 2025. Reference (workbook and general knowledge, not re-opened on the official site): EARC, IEP and TPAD wording, the Directorate of Quality Assurance and Standards, the three-term year. Licence: closed (KICD documents are all rights reserved); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "nigeria": {
+    sheetRow: { tab: "Countries", name: "Nigeria" },
+    source: "https://nerdc.gov.ng/content_manager/cd.html",
+    notes: "Africa build (2026-11-25). Confirmed in the Step 0 check: the revised Basic and Senior Secondary curriculum from 2025-26 in Primary 1, Primary 4, JSS 1 and SS 1, rolling up year by year to 2027-28 (the one version's label says so); BECE at JSS 3 and WASSCE and NECO SSCE at SS 3. Reference (workbook and general knowledge, not re-opened on the official site): the Federal Education Quality Assurance Service name, the National Policy on Special Needs Education, the TRCN standards, ECCDE. No attainment scale: none was confirmed. Licence: closed (NERDC reserves all rights); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "ghana": {
+    sheetRow: { tab: "Countries", name: "Ghana" },
+    source: "https://nacca.gov.gh/",
+    notes: "Africa build (2026-11-25). The workbook row was never checked against an official source, so almost all of this is Reference (general knowledge and the Step 0 notes): the Standards-Based Curriculum for KG to B6, the Common Core Programme for B7 to B9 and the new Senior High School curriculum from 2024-25; BECE and WASSCE; NaSIA; the Inclusive Education Policy; the National Teachers' Standards. Confirmed in Step 0 only that NaCCA owns the curriculum text. No attainment scale: the SBC proficiency labels could not be confirmed. Licence: closed (NaCCA PDFs are all rights reserved and the Ministry says no one may commercialise the curriculum); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "uganda": {
+    sheetRow: { tab: "Countries", name: "Uganda" },
+    source: "https://ncdc.go.ug/",
+    notes: "Africa build (2026-11-25). Confirmed 2026-11-25: the UCE is 20% school-based assessment and 80% examination; the Directorate of Education Standards inspects. Confirmed in the Step 0 check: a revised primary curriculum is planned from 2028 starting P1 to P3 if approved (no version added until it is). Reference (workbook and general knowledge, not re-opened on the official site): the competency-based Lower Secondary Curriculum from 2020, the aligned A-level curriculum, the UNEB exams, the Learning Framework for Early Childhood Development, the term dates. No teacher standards or attainment scale: none was confirmed. Licence: unclear (no reuse statement found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

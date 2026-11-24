@@ -111,3 +111,31 @@ Carried into Step 2:
 - The country list (`COUNTRIES` in `app/lib/dial-codes.ts`, shared with the phone dial-code picker and pinned by `tests/unit/profile-mobile.spec.ts`) offers IN, MY, SG, HK, AE and ZA but not PK, PH, NG, GH, KE, UG, MT, JM or TT. Add each with its region's entries.
 - `COUNTRY_DEFAULT` in `app/lib/curricula/index.ts` maps only GB, JE, GG, IM and GI. Each Stage 2 country gets a row when its entry is built, so a teacher who picks the country is offered its curriculum.
 - The anon check asserts the five switches are off on staging; update it when a region is switched on there for the E2E.
+
+## 2. Step 2: Africa (2026-11-25)
+
+Built by Sonnet, reviewed by Opus. Not committed.
+
+- Five entries in the `africa` region, in `app/lib/curricula/africa.ts`: South Africa (CAPS, Grade R to 12), Kenya (CBE, PP1 to Grade 12), Nigeria (NERDC, Primary 1 to SS 3), Ghana (NaCCA, KG 1 to SHS 3) and Uganda (NCDC, P1 to S6). All `defaultLanguage: "en-GB"`, `verifiedOn: "2026-11-25"`, one version each (the label names the rollout where one is under way). Appended to `CURRICULA_REGISTRY` after Canada.
+- `PROVENANCE`: one row each on the Countries tab, with notes saying which facts were confirmed in Step 0 or on 2026-11-25 and which are Reference, plus the licence verdict (profile only, no statements). Ghana's row says almost all of it is Reference because the workbook row was never checked.
+- `COUNTRY_DEFAULT`: ZA, KE, NG, GH, UG. `COUNTRIES` in `app/lib/dial-codes.ts`: Nigeria +234, Ghana +233, Kenya +254, Uganda +256 added after South Africa (ZA was already there).
+- No other code enumerates curriculum ids or regions, so nothing else changed. The UK-only tools are hidden by the existing generic rule, now also pinned for the five ids.
+- Workbook: `node scripts/curricula-status.mjs` run; the five Africa rows are Verified with their ids. Countries line: Live 4, Verified 11, See the USA by state tab 1, See the Canada tab 1, See the Australia tab 1, Out of scope (stage 2) 10, Out of scope (stage 3) 59.
+- Grade R age note: the plan said Grade R lines up with Reception. The entry has Grade R at age 5 because the South African year starts in January, so by age it lines up with England's Year 1, not Reception (age 4). PP1 (Kenya) and KG 1 (Ghana) are 4 and do line up with Reception. Pinned in a test.
+- Uganda S6 is age 18 and England's list stops at 17. The age helpers only remap Northern Ireland, so every Africa year comes back unchanged and nothing throws; `readingStageFor` reads S6 as KS2 skills.
+- The generated instruction always prints the UK terms being replaced ("instead of Ofsted: ..."), so the "no Ofsted, GCSE, Key Stage, EYFS, SENCO" test looks at what is said about the system, with those labels removed. Nigeria, Ghana and Uganda have no attainment line, so their text has no WTS, EXS or GDS at all. Uganda also has no teacher standards line (none was confirmed).
+- The worksheet request carries the prompt label (`curriculum: "South African Curriculum (CAPS)"`), not a `curriculumId` field; the server reads the label back as the id (existing behaviour, covered by the parse tests).
+
+Tests:
+
+- Unit: 19 new tests, 17 of them red before the build (12 in `curricula.spec.ts`, 3 in `curricula-choice.spec.ts`, 2 in `profile-mobile.spec.ts`); the other 2 passed at once because they guard behaviour that was already right and must keep holding (with Africa off a Kenyan starts on England; Africa never changes the output language). After the build: the three specs 80 of 80, full `pnpm test:unit` 2,422 passed (2,403 before), including `curriculum-golden.spec.ts` unchanged.
+- E2E (model mocked, staging, production build on :3000 through `scripts/with-staging-env.sh`): new case in `tests/profile/curriculum.spec.ts` passes; the whole file passes 8 of 8. A plain teacher sees Africa only with `curricula_africa` on, picks South Africa, the five UK-only tools are missing, the year list runs Grade R to Grade 12 with no Reception or Year 4, and the request carries the label and "Grade R". The switch is turned off in `finally` and in `afterAll`.
+- `scripts/verify-curriculum-profile.mjs`: 21 of 21 after the E2E, so `curricula_africa` is off on staging again (it needed no change).
+- Language check passes; the changed files lint clean.
+
+Left open:
+
+- Reference facts for all five (see each provenance row) are still to be confirmed against the official sites; the reviewer checks them.
+- No live model spec yet; the reviewer decides after review.
+- Production: the switch stays off until Step 4.
+- Before and after screenshots of the picker and year list not taken in this step.

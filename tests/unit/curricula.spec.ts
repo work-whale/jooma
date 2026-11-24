@@ -423,3 +423,252 @@ test.describe("the research workbook", () => {
     expect(Object.keys(PROVENANCE).sort()).toEqual(CURRICULA_REGISTRY.map((c) => c.id).sort());
   });
 });
+
+// ── Africa (Stage 2, Step 2) ───────────────────────────────────────────────
+
+import { englandYearAge, englandYearFor, yearForEnglandYear } from "@/app/lib/curricula/england-years";
+import { TOOL_SCOPE, hiddenToolSlugs, isToolHiddenFor, readingStageFor } from "@/app/lib/curricula/tool-scope";
+import { TOOLS } from "@/app/lib/tools";
+
+const AFRICA_IDS = ["south-africa", "kenya", "nigeria", "ghana", "uganda"] as const;
+type AfricaId = (typeof AFRICA_IDS)[number];
+
+/** Year labels and starting ages, as the Step 0 check and the plan give them. */
+const seq = (prefix: string, sep: string, from: number, to: number, firstAge: number) =>
+  Array.from({ length: to - from + 1 }, (_, i) => ({ label: `${prefix}${sep}${from + i}`, age: firstAge + i }));
+const AFRICA_YEARS: Record<AfricaId, { label: string; age: number }[]> = {
+  "south-africa": [{ label: "Grade R", age: 5 }, ...seq("Grade", " ", 1, 12, 6)],
+  kenya: [{ label: "PP1", age: 4 }, { label: "PP2", age: 5 }, ...seq("Grade", " ", 1, 12, 6)],
+  nigeria: [...seq("Primary", " ", 1, 6, 6), ...seq("JSS", " ", 1, 3, 12), ...seq("SS", " ", 1, 3, 15)],
+  ghana: [
+    { label: "KG 1", age: 4 },
+    { label: "KG 2", age: 5 },
+    ...seq("B", "", 1, 6, 6),
+    { label: "JHS 1 (B7)", age: 12 },
+    { label: "JHS 2 (B8)", age: 13 },
+    { label: "JHS 3 (B9)", age: 14 },
+    ...seq("SHS", " ", 1, 3, 15),
+  ],
+  uganda: [...seq("P", "", 1, 7, 6), ...seq("S", "", 1, 6, 13)],
+};
+
+const PLACE: Record<AfricaId, { country: string; place: string }> = {
+  "south-africa": { country: "ZA", place: "South Africa" },
+  kenya: { country: "KE", place: "Kenya" },
+  nigeria: { country: "NG", place: "Nigeria" },
+  ghana: { country: "GH", place: "Ghana" },
+  uganda: { country: "UG", place: "Uganda" },
+};
+
+test.describe("the Africa curricula", () => {
+  test("the five exist in the Africa region, in this order, and nothing else is in it", () => {
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "africa").map((c) => c.id)).toEqual([...AFRICA_IDS]);
+    for (const id of AFRICA_IDS) {
+      const c = getCurriculum(id)!;
+      expect(c, id).toBeDefined();
+      expect(c.region, id).toBe("africa");
+      expect(c.country, id).toBe(PLACE[id].country);
+      expect(c.place, id).toBe(PLACE[id].place);
+      expect(c.verifiedOn, id).toBe("2026-11-25");
+      expect(c.defaultLanguage, id).toBe("en-GB");
+      expect(LANGUAGES.some((l) => l.code === c.defaultLanguage), id).toBe(true);
+      expect(c.versions.length, id).toBe(1);
+      expect(c.alignment, `${id} has no statements (licence closed)`).toBeUndefined();
+    }
+  });
+
+  test("names, prompt labels and the one dated version", () => {
+    const expected: Record<AfricaId, [string, string, string, string]> = {
+      "south-africa": ["South Africa: CAPS (National Curriculum Statement Grades R to 12)", "South African Curriculum (CAPS)", "National Curriculum Statement Grades R to 12 (CAPS)", "2012-01-01"],
+      kenya: ["Kenya: Competency-Based Education (KICD)", "Kenyan Competency-Based Curriculum (CBE)", "Competency-Based Education (CBE), with Senior School rolling up from Grade 10 in 2026 to Grade 12 in 2028", "2017-01-01"],
+      nigeria: ["Nigeria: Basic and Senior Secondary Education Curriculum (NERDC)", "Nigerian Curriculum (NERDC)", "Revised Basic and Senior Secondary Education Curriculum, from 2025-26 in Primary 1, Primary 4, JSS 1 and SS 1 and rolling up year by year", "2025-09-01"],
+      ghana: ["Ghana: Standards-Based Curriculum (NaCCA)", "Ghanaian Curriculum (NaCCA)", "Standards-Based Curriculum (KG to B6), Common Core Programme (B7 to B9) and the Senior High School curriculum (from 2024-25)", "2019-09-01"],
+      uganda: ["Uganda: National Curriculum (NCDC)", "Ugandan Curriculum (NCDC)", "Primary curriculum (thematic in P1 to P3) and the competency-based Lower Secondary Curriculum (from 2020), with the aligned A-level curriculum", "2020-02-01"],
+    };
+    for (const id of AFRICA_IDS) {
+      const c = getCurriculum(id)!;
+      const [name, promptLabel, versionLabel, from] = expected[id];
+      expect(c.name, id).toBe(name);
+      expect(c.promptLabel, id).toBe(promptLabel);
+      expect(c.versions, id).toEqual([{ label: versionLabel, inForceFrom: from }]);
+      expect(currentVersion(c).label, id).toBe(versionLabel);
+      expect(parseCurriculum(promptLabel), id).toBe(id);
+    }
+  });
+
+  test("each year list is exactly the one the sources give, one age per year", () => {
+    for (const id of AFRICA_IDS) {
+      const years = yearsFor(id);
+      expect(years, id).toEqual(AFRICA_YEARS[id]);
+      for (let i = 1; i < years.length; i++) expect(years[i].age - years[i - 1].age, `${id} ${years[i].label}`).toBe(1);
+    }
+    expect(yearsFor("south-africa").map((y) => y.label)).toEqual(["Grade R", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"]);
+    expect(AFRICA_IDS.map((id) => yearsFor(id).length)).toEqual([13, 14, 12, 14, 13]);
+    // A year from another list is not offered here.
+    expect(yearIfOffered("south-africa", "Year 5")).toBe("");
+    expect(yearIfOffered("kenya", "PP1")).toBe("PP1");
+    expect(yearIfOffered("nigeria", "PP1")).toBe("");
+    expect(yearIfOffered("ghana", "JHS 1 (B7)")).toBe("JHS 1 (B7)");
+    expect(yearIfOffered("uganda", "S6")).toBe("S6");
+    expect(yearIfOffered("uganda", "SS 3")).toBe("");
+  });
+
+  test("each has a provenance row naming its own workbook row and source, and says what was checked", () => {
+    const expected: Record<AfricaId, [string, string]> = {
+      "south-africa": ["South Africa", "https://www.education.gov.za/Curriculum/CurriculumAssessmentPolicyStatements(CAPS).aspx"],
+      kenya: ["Kenya", "https://kicd.ac.ke/"],
+      nigeria: ["Nigeria", "https://nerdc.gov.ng/content_manager/cd.html"],
+      ghana: ["Ghana", "https://nacca.gov.gh/"],
+      uganda: ["Uganda", "https://ncdc.go.ug/"],
+    };
+    for (const id of AFRICA_IDS) {
+      const p = PROVENANCE[id];
+      expect(p, id).toBeDefined();
+      expect(p.sheetRow, id).toEqual({ tab: "Countries", name: expected[id][0] });
+      expect(p.source, id).toBe(expected[id][1]);
+      // Says which facts were confirmed and which are reference knowledge, and the licence verdict.
+      expect(p.notes, id).toMatch(/Reference/);
+      expect(p.notes, id).toMatch(/licen[cs]e/i);
+      expect(p.notes, id).toMatch(/permission/i);
+      expect(p.notes, id).not.toMatch(/[–—]/);
+    }
+    expect(PROVENANCE["south-africa"].notes).toMatch(/2012/);
+    expect(PROVENANCE.ghana.notes).toMatch(/never checked|not checked/i);
+  });
+
+  test("the region switch shows them to a teacher only when Africa is on", () => {
+    const ids = (regions: string[], admin = false) => visibleCurricula(regions, admin).filter((c) => (AFRICA_IDS as readonly string[]).includes(c.id)).map((c) => c.id);
+    expect(ids(["africa"])).toEqual([...AFRICA_IDS]);
+    expect(ids([])).toEqual([]);
+    expect(ids(["asia", "europe", "caribbean", "middle-east", "usa"])).toEqual([]);
+    expect(ids([], true)).toEqual([...AFRICA_IDS]);
+    expect(regionSettingKey("africa")).toBe("curricula_africa");
+    // Only Africa on: the UK five plus the five, and no other region leaks in.
+    expect(visibleCurricula(["africa"], false).map((c) => c.id)).toEqual([...UK_CURRICULUM_IDS, ...AFRICA_IDS]);
+  });
+
+  test("an id is accepted exactly, and look-alikes are not", () => {
+    for (const id of AFRICA_IDS) expect(parseCurriculum(id), id).toBe(id);
+    for (const junk of ["South Africa", "south africa", "south_africa", "South-Africa", "kenya ", " kenya", "KENYA", "Kenya", "nigeria;", "ghana\n", "Uganda", "south-africa-caps", "za", "ke"]) {
+      expect(parseCurriculum(junk), junk).toBeNull();
+    }
+    expect(requestCurriculum({ curriculumId: "kenya" })).toBe("kenya");
+    expect(requestCurriculum({ curriculumId: "KENYA", curriculum: "Ugandan Curriculum (NCDC)" })).toBe("uganda");
+    expect(isUkCurriculum("kenya")).toBe(false);
+    expect(curriculumFormState("ghana")).toEqual({ curriculumId: "ghana" });
+  });
+
+  test("every one hides every UK-only tool and keeps a universal one", () => {
+    const ukOnly = Object.entries(TOOL_SCOPE).filter(([, s]) => s === "uk-only").map(([k]) => k);
+    expect(ukOnly.length).toBe(5);
+    expect(TOOLS.length).toBeGreaterThan(ukOnly.length);
+    for (const id of AFRICA_IDS) {
+      expect(hiddenToolSlugs(id).sort(), id).toEqual([...ukOnly].sort());
+      for (const slug of ukOnly) expect(isToolHiddenFor(slug, id), `${id} ${slug}`).toBe(true);
+      expect(isToolHiddenFor("worksheet-generator", id), id).toBe(false);
+      expect(isToolHiddenFor("phonics-support", id), id).toBe(false);
+    }
+  });
+
+  test("the prompt names the system's own exams and inspection body", () => {
+    const expected: Record<AfricaId, { exams: RegExp[]; inspection: string; headteacher: string }> = {
+      "south-africa": { exams: [/\bNSC\b/, /matric/], inspection: "Whole School Evaluation", headteacher: "principal" },
+      kenya: { exams: [/\bKJSEA\b/, /\bKPSEA\b/], inspection: "Directorate of Quality Assurance and Standards", headteacher: "headteacher (principal in a secondary or senior school)" },
+      nigeria: { exams: [/\bBECE\b/, /\bWASSCE\b/, /\bNECO\b/], inspection: "Federal Education Quality Assurance Service", headteacher: "head teacher (principal in a secondary school)" },
+      ghana: { exams: [/\bBECE\b/, /\bWASSCE\b/], inspection: "National Schools Inspectorate Authority (NaSIA)", headteacher: "headteacher" },
+      uganda: { exams: [/\bPLE\b/, /\bUCE\b/, /\bUACE\b/], inspection: "Directorate of Education Standards (DES)", headteacher: "headteacher" },
+    };
+    for (const id of AFRICA_IDS) {
+      const text = curriculumInstruction(id);
+      for (const re of expected[id].exams) expect(text, `${id} ${re}`).toMatch(re);
+      expect(text, id).toContain(expected[id].inspection);
+      expect(text, id).toContain(`instead of headteacher: ${expected[id].headteacher}.`);
+      expect(text, id).toContain(PLACE[id].place);
+      expect(text, id).toContain(getCurriculum(id)!.context!);
+    }
+  });
+
+  test("the prompt keeps no England framing and names no other country's body", () => {
+    // The "instead of X:" labels name the UK terms being replaced, so look at
+    // what is said about this system, not at those labels.
+    const own = (text: string) => text.split("\n").map((l) => (l.startsWith("- instead of ") ? l.slice(l.indexOf(": ") + 2) : l)).join("\n");
+    const UK_WORDS = [/Ofsted/, /GCSE/, /Key Stage/, /EYFS/, /SENCO/, /\bSATs\b/, /National Curriculum in England/, /\bWTS\b/, /\bEXS\b/, /\bGDS\b/];
+    const OWN_BODIES: Record<AfricaId, RegExp[]> = {
+      "south-africa": [/\bCAPS\b/, /\bSACE\b/, /\bNSC\b/, /\bSIAS\b/],
+      kenya: [/\bKICD\b/, /\bKNEC\b/, /\bKPSEA\b/, /\bKJSEA\b/, /\bKCSE\b/, /\bTSC\b/, /\bTPAD\b/],
+      nigeria: [/\bNERDC\b/, /\bNECO\b/, /\bTRCN\b/, /\bECCDE\b/],
+      ghana: [/\bNaCCA\b/, /\bNaSIA\b/],
+      uganda: [/\bNCDC\b/, /\bUNEB\b/, /\bPLE\b/, /\bUCE\b/, /\bUACE\b/, /\bDES\b/],
+    };
+    for (const id of AFRICA_IDS) {
+      const text = own(curriculumInstruction(id));
+      for (const re of UK_WORDS) expect(text, `${id} ${re}`).not.toMatch(re);
+      for (const other of AFRICA_IDS.filter((o) => o !== id)) {
+        expect(text, `${id} names ${other}`).not.toContain(PLACE[other].place);
+        for (const re of OWN_BODIES[other]) expect(text, `${id} has ${other}'s ${re}`).not.toMatch(re);
+      }
+      // The instruction really did name its own system.
+      for (const re of OWN_BODIES[id]) expect(curriculumInstruction(id), `${id} ${re}`).toMatch(re);
+    }
+  });
+
+  test("only the systems with a confirmed attainment scale name one", () => {
+    const withScale = ["south-africa", "kenya"];
+    for (const id of AFRICA_IDS) {
+      const text = curriculumInstruction(id);
+      expect(getCurriculum(id)!.terms?.attainment !== undefined, id).toBe(withScale.includes(id));
+      expect(/instead of the WTS, EXS and GDS bands:/.test(text), id).toBe(withScale.includes(id));
+      // The UK band names appear only as the label of a replaced term, once each.
+      expect(text.match(/\b(WTS|EXS|GDS)\b/g)?.length ?? 0, id).toBe(withScale.includes(id) ? 3 : 0);
+    }
+    expect(curriculumInstruction("south-africa")).toContain("Level 7 (outstanding achievement, 80 to 100%)");
+    expect(curriculumInstruction("kenya")).toContain("EE1 down to BE2");
+    for (const id of ["nigeria", "ghana", "uganda"]) {
+      for (const band of ["WTS", "EXS", "GDS"]) expect(curriculumInstruction(id), `${id} ${band}`).not.toContain(band);
+    }
+    // Uganda has no teacher standards line: none was confirmed.
+    expect(getCurriculum("uganda")!.terms?.teacherStandards).toBeUndefined();
+    expect(curriculumInstruction("uganda")).not.toContain("instead of the Teachers' Standards");
+  });
+
+  test("the school-year context is the right one for each country", () => {
+    expect(getCurriculum("south-africa")!.context).toMatch(/January to December in four terms/);
+    expect(getCurriculum("kenya")!.context).toMatch(/January to November in three terms/);
+    expect(getCurriculum("nigeria")!.context).toMatch(/September to July in three terms/);
+    expect(getCurriculum("uganda")!.context).toMatch(/February to December in three terms/);
+    expect(getCurriculum("ghana")!.context).toMatch(/Ghanaian places, names and cedi/);
+    expect(getCurriculum("south-africa")!.context).toMatch(/rand/);
+    expect(getCurriculum("nigeria")!.context).toMatch(/naira/);
+    expect(getCurriculum("kenya")!.context).toMatch(/shilling/);
+    expect(getCurriculum("uganda")!.context).toMatch(/shilling/);
+  });
+
+  test("age boundaries: Grade R lines up with England's Year 1, PP1 and KG 1 with Reception, S6 has no England year", () => {
+    const age = (id: string, label: string) => yearsFor(id).find((y) => y.label === label)?.age;
+    // The South African school year starts in January, so Grade R pupils are 5 at the start, as in England's Year 1.
+    expect(age("south-africa", "Grade R")).toBe(englandYearAge("Year 1"));
+    expect(age("south-africa", "Grade R")).not.toBe(englandYearAge("Reception"));
+    expect(age("kenya", "PP1")).toBe(englandYearAge("Reception"));
+    expect(age("ghana", "KG 1")).toBe(englandYearAge("Reception"));
+    expect(age("kenya", "PP2")).toBe(englandYearAge("Year 1"));
+    expect(age("ghana", "KG 2")).toBe(englandYearAge("Year 1"));
+    expect(age("nigeria", "Primary 1")).toBe(englandYearAge("Year 2"));
+    // Uganda S6 is 18; England's list stops at 17, so nothing lines up and nothing throws.
+    expect(age("uganda", "S6")).toBe(18);
+    expect(englandYearAge("Year 13")).toBe(17);
+    expect(() => englandYearFor("uganda", "S6")).not.toThrow();
+    expect(englandYearFor("uganda", "S6")).toBe("S6");
+    expect(yearForEnglandYear("uganda", "Year 13")).toBe("Year 13");
+    for (const id of AFRICA_IDS) {
+      for (const y of yearsFor(id)) {
+        expect(englandYearFor(id, y.label), `${id} ${y.label}`).toBe(y.label);
+        expect(yearForEnglandYear(id, y.label), `${id} ${y.label}`).toBe(y.label);
+      }
+    }
+    // Reading skills go by age: Grade R and Grade 1 (5 and 6) get the KS1 skills, Grade 2 (7) does not.
+    expect(readingStageFor("Grade R", false, "south-africa")).toBe("ks1");
+    expect(readingStageFor("Grade 1", false, "south-africa")).toBe("ks1");
+    expect(readingStageFor("Grade 2", false, "south-africa")).toBe("ks2");
+    expect(readingStageFor("S6", false, "uganda")).toBe("ks2");
+  });
+});

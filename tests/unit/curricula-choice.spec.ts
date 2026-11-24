@@ -155,3 +155,38 @@ test.describe("the language a curriculum brings with it", () => {
     expect(languageAfterChoosing("nonsense", null)).toBeNull();
   });
 });
+
+test.describe("Africa: starting a teacher on their own country's curriculum", () => {
+  const COUNTRY_TO_ID = { ZA: "south-africa", KE: "kenya", NG: "nigeria", GH: "ghana", UG: "uganda" } as const;
+  const africaOn = visibleCurricula(["africa"], false);
+
+  test("each country's own curriculum is the start when Africa is offered", () => {
+    for (const [country, id] of Object.entries(COUNTRY_TO_ID)) expect(inferCurriculum({ country }, africaOn), country).toBe(id);
+  });
+
+  test("with Africa off, or only another region on, they start on England", () => {
+    for (const offered of [visibleCurricula([], false), visibleCurricula(["asia", "europe", "usa"], false)]) {
+      for (const country of Object.keys(COUNTRY_TO_ID)) expect(inferCurriculum({ country }, offered), country).toBe("england");
+    }
+  });
+
+  test("the country must match exactly, and a saved browser choice still wins", () => {
+    for (const country of ["ke", "KEN", "Kenya", " KE", "ZZ", "EG"]) expect(inferCurriculum({ country }, africaOn), country).toBe("england");
+    expect(inferCurriculum({ savedLabel: "Ugandan Curriculum (NCDC)", country: "KE" }, africaOn)).toBe("uganda");
+    // A saved Africa choice is ignored when Africa is no longer offered.
+    expect(inferCurriculum({ savedLabel: "Ugandan Curriculum (NCDC)", country: "UG" }, visibleCurricula([], false))).toBe("england");
+  });
+
+  test("the picker lists Africa after the UK, in order, and an admin sees it with the switch off", () => {
+    const groups = pickerGroups(africaOn);
+    expect(groups.map((g) => g.region)).toEqual(["uk", "africa"]);
+    expect(groups[1].label).toBe("Africa");
+    expect(groups[1].curricula.map((c) => c.id)).toEqual(["south-africa", "kenya", "nigeria", "ghana", "uganda"]);
+    expect(pickerGroups(visibleCurricula([], false)).map((g) => g.region)).toEqual(["uk"]);
+    expect(pickerGroups(visibleCurricula([], true)).some((g) => g.region === "africa")).toBe(true);
+  });
+
+  test("choosing one leaves the output language alone (British English)", () => {
+    for (const id of Object.values(COUNTRY_TO_ID)) expect(languageAfterChoosing(id, null), id).toBeNull();
+  });
+});

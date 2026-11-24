@@ -58,6 +58,8 @@ async function payingTeacher(name: string) {
 
 const people: TestTeacher[] = [];
 test.afterAll(async () => {
+  // The Africa test switches its region on; make sure it is off again whatever happened.
+  await admin.from("app_settings").update({ value: false }).eq("key", "curricula_africa");
   for (const p of people) await deleteTeacher(p);
 });
 
@@ -225,4 +227,51 @@ test("a US teacher picks their state, and their tools use grades", async ({ page
   await page.locator("[data-jo-generate]").click();
   await expect.poll(() => sent.length, NAV).toBe(1);
   expect(sent[0]).toMatchObject({ curriculum: "Texas: TEKS (Texas Essential Knowledge and Skills)", yearGroup: "Grade 3" });
+});
+
+test("a South African teacher picks their curriculum, sees Grade R to Grade 12 and no UK-only tools", async ({ page }) => {
+  const t = await payingTeacher("CurrAfrica");
+  people.push(t);
+  await signIn(page, t);
+  try {
+    await admin.from("app_settings").update({ value: true }).eq("key", "curricula_africa");
+    await page.goto("/profile?section=curriculum", NAV);
+
+    // A plain teacher (not an admin) is offered Africa only because the switch is on.
+    const region = page.getByTestId("curriculum-region");
+    await expect(region).toBeEnabled(NAV);
+    await expect(region.locator("option")).toContainText(["United Kingdom", "Africa"]);
+    await region.selectOption("africa");
+    const picker = page.getByTestId("curriculum-picker");
+    await expect(picker.locator("option:not([disabled])")).toHaveCount(5);
+    await picker.selectOption("south-africa");
+    await page.getByTestId("curriculum-save").click();
+    await expect(page.getByTestId("curriculum-status")).toContainText("Saved", NAV);
+    expect((await profileRow(t.id)).curriculum_id).toBe("south-africa");
+
+    // The five UK-only tools are not offered.
+    await page.goto("/tools", NAV);
+    await expect(page.locator('a[href="/tools/worksheet-generator"]').first()).toBeVisible(NAV);
+    for (const slug of ["pupil-premium-planner", "inspection-prep", "ect-report-writer", "eyfs-planner", "eyfs-action-plan"]) {
+      await expect(page.locator(`a[href="/tools/${slug}"]`), slug).toHaveCount(0);
+    }
+
+    // A tool starts from it, lists Grade R to Grade 12 and no England years, and sends it.
+    const sent = await capture(page, "/api/worksheet-generator");
+    await page.goto("/tools/worksheet-generator", NAV);
+    await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("South African Curriculum (CAPS)", NAV);
+    const year = page.getByLabel("Year group", { exact: true });
+    await expect(year.locator("option")).toContainText(["Grade R", "Grade 1", "Grade 6", "Grade 12"]);
+    await expect(year.locator("option", { hasText: "Reception" })).toHaveCount(0);
+    await expect(year.locator("option", { hasText: "Year 4" })).toHaveCount(0);
+    await year.selectOption("Grade R");
+    await page.getByLabel("Subject", { exact: true }).fill("Mathematics");
+    await page.getByLabel("Learning objective", { exact: true }).fill("Counting to 10");
+    await page.locator("[data-jo-generate]").click();
+    await expect.poll(() => sent.length, NAV).toBe(1);
+    // The form sends the prompt label, which the server reads back as the id "south-africa".
+    expect(sent[0]).toMatchObject({ curriculum: "South African Curriculum (CAPS)", yearGroup: "Grade R" });
+  } finally {
+    await admin.from("app_settings").update({ value: false }).eq("key", "curricula_africa");
+  }
 });

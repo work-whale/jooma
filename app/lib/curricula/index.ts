@@ -16,6 +16,7 @@
  */
 
 import type { Curriculum, CurriculumVersion, Region, RegionId, YearOption } from "./types";
+import { AFRICA_CURRICULA } from "./africa";
 import { AUSTRALIA_NZ_CURRICULA } from "./australia-nz";
 import { BRITISH_ISLES_CURRICULA } from "./british-isles";
 import { CANADA_CURRICULA } from "./canada";
@@ -43,7 +44,7 @@ export const REGIONS: readonly Region[] = [
   { id: "middle-east", label: "Middle East" },
 ];
 
-export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA];
+export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA, ...AFRICA_CURRICULA];
 
 export const UK_CURRICULUM_IDS = ["england", "england-eyfs", "scotland", "wales", "northern-ireland"] as const;
 
@@ -223,6 +224,11 @@ const COUNTRY_DEFAULT: Record<string, string> = {
   GG: "guernsey",
   IM: "isle-of-man",
   GI: "gibraltar",
+  ZA: "south-africa",
+  KE: "kenya",
+  NG: "nigeria",
+  GH: "ghana",
+  UG: "uganda",
 };
 
 /**
