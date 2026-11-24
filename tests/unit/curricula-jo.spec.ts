@@ -27,6 +27,16 @@ test("Jo's lists start with exactly today's UK values, then every other system's
     for (const y of c.years) expect(JO_YEAR_VALUES).toContain(y.label);
   }
   expect(new Set(JO_YEAR_VALUES).size).toBe(JO_YEAR_VALUES.length);
+  expect(JO_YEAR_VALUES).toContain("Year 14");
+});
+
+test("an NI teacher's prefill keeps NI's own year, and fits England-only years by age", () => {
+  const ni = "northern-ireland";
+  const base = { curriculum: "2014 National Curriculum" };
+  expect(fit({ ...base, yearGroup: "Year 4" }, ni, "a fractions worksheet")).toEqual({ curriculum: "Northern Ireland Curriculum", yearGroup: "Year 4" });
+  expect(fit({ ...base, yearGroup: "Reception" }, ni, "a fractions worksheet")).toEqual({ curriculum: "Northern Ireland Curriculum", yearGroup: "Year 1" });
+  expect(fit({ ...base, yearGroup: "Year 12" }, ni, "a fractions worksheet")).toEqual({ curriculum: "Northern Ireland Curriculum", yearGroup: "Year 12" });
+  expect(fit({ ...base, yearGroup: "Year 6" }, ni, "KS2 SATs practice")).toEqual({ ...base, yearGroup: "Year 6" });
 });
 
 test("an England teacher's prefill is left exactly as Jo made it", () => {
@@ -88,6 +98,11 @@ test("the slides wizard's year is fitted too, for a teacher outside the UK", () 
   expect(fit({ topic: "Volcanoes", year: "Adult learners" }, "us-ca", "x")).toEqual({ topic: "Volcanoes", year: "Adult learners" });
   // UK-like teachers keep the wizard's own list.
   for (const t of ["england", "scotland", "jersey", null]) expect(fit({ topic: "Volcanoes", year: "Year 4" }, t, "x")).toEqual({ topic: "Volcanoes", year: "Year 4" });
+  // Northern Ireland lists its own years: England's Reception is its Year 1, and its own labels are kept.
+  expect(fit({ topic: "Volcanoes", year: "Reception" }, "northern-ireland", "x")).toEqual({ topic: "Volcanoes", year: "Year 1" });
+  for (const y of ["Year 4", "Year 13", "Year 14", "Adult learners"]) expect(fit({ topic: "Volcanoes", year: y }, "northern-ireland", "x"), y).toEqual({ topic: "Volcanoes", year: y });
+  // England's reading of a label, not Northern Ireland's: England's Year 12 starts at 16 (Grade 11), NI's at 15.
+  expect(fit({ topic: "Volcanoes", year: "Year 12" }, "us-ca", "x")).toEqual({ topic: "Volcanoes", year: "Grade 11" });
   // England's Year 13 starts at 17, which is Year 12 in Queensland.
   expect(fit({ topic: "Volcanoes", year: "Year 13" }, "au-qld", "x")).toEqual({ topic: "Volcanoes", year: "Year 12" });
   // No year at that age: dropped, so the wizard shows "Any year".

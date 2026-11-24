@@ -5,15 +5,24 @@ import type { Curriculum, YearOption } from "./types";
  * value the old Curriculum dropdown sent (app/lib/formOptions.ts), and they add
  * no prompt override, so a UK teacher's generations are unchanged.
  *
- * They keep England's year names (Nursery to Year 11) for all five, as the
- * forms always have. Scotland's P1 to S6 and Northern Ireland's numbering are
- * a later, deliberate change, not a side effect of this one.
+ * England, EYFS, Scotland and Wales (and the four islands, in british-isles.ts)
+ * share England's year names (Nursery to Year 11) by reference. Northern
+ * Ireland has its own numbering: Year N starts at age N + 3, there is no
+ * Reception, GCSEs are taken in Year 12 and the sixth form is Years 13 and 14
+ * (owner, 2026-11-24). Scotland's P1 to S6 is still a later, deliberate change.
  */
 
 export const UK_YEARS: YearOption[] = [
   { label: "Nursery", age: 3 },
   { label: "Reception", age: 4 },
   ...Array.from({ length: 11 }, (_, i) => ({ label: `Year ${i + 1}`, age: i + 5 })),
+];
+
+/** Northern Ireland's years: Nursery (3), then Year 1 (P1, age 4) to Year 14
+ *  (age 17). No Reception. */
+export const NI_YEARS: YearOption[] = [
+  { label: "Nursery", age: 3 },
+  ...Array.from({ length: 14 }, (_, i) => ({ label: `Year ${i + 1}`, age: i + 4 })),
 ];
 
 export const UK_CURRICULA: Curriculum[] = [
@@ -75,7 +84,7 @@ export const UK_CURRICULA: Curriculum[] = [
     name: "Northern Ireland Curriculum",
     promptLabel: "Northern Ireland Curriculum",
     versions: [{ label: "Northern Ireland Curriculum (2007)", inForceFrom: "2007-09-01" }],
-    years: UK_YEARS,
+    years: NI_YEARS,
     defaultLanguage: "en-GB",
     alignment: { frameworks: ["nic-fs", "nic-ks1", "nic-ks2", "nic-ks3", "nic-ks4"], adapted: false },
   },

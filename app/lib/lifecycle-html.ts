@@ -1,18 +1,26 @@
-// The plain HTML the 4.5 lifecycle and launch-day emails share: a heading, one
-// paragraph, one button, and the footer link: email settings on account mail,
-// unsubscribe on marketing.
+// The HTML the 4.5 lifecycle and launch-day emails share: a heading, one
+// paragraph, one button, and the footer link (email settings on account mail,
+// unsubscribe on marketing).
+//
+// It is built from the same pieces as every older Jooma email (layout(),
+// button(), H1, P in email-templates/markup.ts), so these emails wear the same
+// shell: accent bar, white card, purple button, copyright footer. The header
+// shows the wordmark image. markup.ts has no server-only import, so this stays
+// usable from unit tests and the admin preview.
+
+import { H1, P, button, escapeHtml, layout } from "@/app/lib/email-templates/markup";
 
 export function lifecycleHtml(
   subject: string,
   body: string,
-  button: string,
+  buttonLabel: string,
   url: string,
   footerUrl: string,
   footerLabel = "Email settings",
+  opts: { preheader?: string } = {},
 ): string {
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#1D1730;max-width:560px;margin:0 auto;padding:24px">
-<h1 style="font-size:22px">${esc(subject)}</h1><p style="font-size:16px;line-height:1.5">${esc(body)}</p>
-<p><a href="${url}" style="display:inline-block;background:#1E1138;color:#fff;padding:12px 20px;border-radius:12px;text-decoration:none">${esc(button)}</a></p>
-<p style="font-size:12px;color:#8E87A4"><a href="${footerUrl}" style="color:#8E87A4">${esc(footerLabel)}</a></p></body></html>`;
+  const content = `<h1 ${H1}>${escapeHtml(subject)}</h1>
+<p ${P}>${escapeHtml(body)}</p>${button(escapeHtml(buttonLabel), escapeHtml(url))}`;
+  const footerHtml = `<a href="${escapeHtml(footerUrl)}" style="color:#6D6683;text-decoration:underline;">${escapeHtml(footerLabel)}</a>`;
+  return layout(content, { preheader: opts.preheader, footerHtml });
 }

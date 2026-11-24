@@ -13,8 +13,10 @@ import {
   requestCurriculum,
   visibleCurricula,
   withCurriculum,
+  yearIfOffered,
   yearsFor,
 } from "@/app/lib/curricula";
+import { UK_YEARS } from "@/app/lib/curricula/uk";
 import { CURRICULA as FORM_CURRICULA, YEAR_GROUPS } from "@/app/lib/formOptions";
 import { PROVENANCE } from "@/app/lib/curricula/provenance";
 import { LANGUAGES, languageInstruction, withLanguage } from "@/app/lib/languages";
@@ -45,8 +47,53 @@ test.describe("the registry", () => {
     expect(uk.map((c) => c.promptLabel)).toEqual(FORM_CURRICULA.map((c) => c.value));
   });
 
-  test("every UK curriculum offers exactly today's year groups", () => {
-    for (const id of UK_CURRICULUM_IDS) expect(yearsFor(id).map((y) => y.label)).toEqual(YEAR_GROUPS);
+  test("England, EYFS, Scotland and Wales offer exactly today's year groups, on the shared list", () => {
+    for (const id of ["england", "england-eyfs", "scotland", "wales"]) {
+      expect(getCurriculum(id)!.years, id).toBe(UK_YEARS);
+      expect(yearsFor(id).map((y) => y.label), id).toEqual(YEAR_GROUPS);
+    }
+  });
+
+  test("England's year list is byte for byte what it was", () => {
+    expect(JSON.stringify(UK_YEARS)).toBe(
+      '[{"label":"Nursery","age":3},{"label":"Reception","age":4},{"label":"Year 1","age":5},{"label":"Year 2","age":6},{"label":"Year 3","age":7},{"label":"Year 4","age":8},{"label":"Year 5","age":9},{"label":"Year 6","age":10},{"label":"Year 7","age":11},{"label":"Year 8","age":12},{"label":"Year 9","age":13},{"label":"Year 10","age":14},{"label":"Year 11","age":15}]',
+    );
+    for (const id of ["jersey", "guernsey", "isle-of-man", "gibraltar"]) expect(getCurriculum(id)!.years, id).toBe(UK_YEARS);
+  });
+
+  test("Northern Ireland has its own year list", () => {
+    const expected = [
+      { label: "Nursery", age: 3 },
+      { label: "Year 1", age: 4 },
+      { label: "Year 2", age: 5 },
+      { label: "Year 3", age: 6 },
+      { label: "Year 4", age: 7 },
+      { label: "Year 5", age: 8 },
+      { label: "Year 6", age: 9 },
+      { label: "Year 7", age: 10 },
+      { label: "Year 8", age: 11 },
+      { label: "Year 9", age: 12 },
+      { label: "Year 10", age: 13 },
+      { label: "Year 11", age: 14 },
+      { label: "Year 12", age: 15 },
+      { label: "Year 13", age: 16 },
+      { label: "Year 14", age: 17 },
+    ];
+    expect(yearsFor("northern-ireland")).toEqual(expected);
+    expect(yearsFor("Northern Ireland Curriculum")).toEqual(expected);
+    expect(yearsFor("northern-ireland").map((y) => y.label)).not.toContain("Reception");
+    const age = (l: string) => yearsFor("northern-ireland").find((y) => y.label === l)?.age;
+    expect(["Nursery", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 7", "Year 8", "Year 10", "Year 11", "Year 12", "Year 13", "Year 14"].map(age)).toEqual([3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17]);
+  });
+
+  test("a stored year is shown only if the curriculum offers it", () => {
+    expect(yearIfOffered("northern-ireland", "Reception")).toBe("");
+    expect(yearIfOffered("Northern Ireland Curriculum", "Year 12")).toBe("Year 12");
+    expect(yearIfOffered("northern-ireland", "Nursery")).toBe("Nursery");
+    expect(yearIfOffered("2014 National Curriculum", "Year 12")).toBe("");
+    expect(yearIfOffered("england", "Reception")).toBe("Reception");
+    expect(yearIfOffered("scotland", "Year 14")).toBe("");
+    expect(yearIfOffered("", "Year 4")).toBe("Year 4");
   });
 
   test("every entry is complete", () => {

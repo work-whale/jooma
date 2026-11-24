@@ -16,6 +16,7 @@ import { keyStageFor, type KeyStage } from "@/app/lib/comprehension-domains";
 import { DIFFERENTIATION_BANDS } from "@/app/lib/differentiation";
 import { EXAM_STYLES, type ExamStyle } from "@/app/lib/sheets/exam-styles";
 
+import { englandYearFor, yearForEnglandYear } from "./england-years";
 import { getCurriculum } from "./index";
 
 export type ToolScope = "universal" | "adapts" | "uk-only";
@@ -107,11 +108,19 @@ export function examStylesFor(curriculumId: unknown): ExamStyle[] {
 }
 
 /** Which set of reading skills (the KS1 or KS2 content domains) fits a year.
- *  The UK rule is unchanged; any other system goes by age: KS1's skills for
- *  pupils starting the year aged 5 or 6. */
+ *  The UK rule is England's labels, read at the same age for Northern Ireland
+ *  (its Year 2 and Year 3 get KS1's skills); any other system goes by age:
+ *  KS1's skills for pupils starting the year aged 5 or 6. */
 export function readingStageFor(yearGroup: string, mixed: boolean, curriculumId: unknown): KeyStage {
   const c = getCurriculum(curriculumId);
-  if (!c || ukLike(c.id)) return keyStageFor(yearGroup, mixed);
+  if (!c) return keyStageFor(yearGroup, mixed);
+  if (ukLike(c.id)) return keyStageFor(englandYearFor(c.id, yearGroup), mixed);
   const age = c.years.find((y) => y.label === yearGroup)?.age;
   return !mixed && (age === 5 || age === 6) ? "ks1" : "ks2";
+}
+
+/** The year an exam style sets when picked (the KS2 styles: Year 6), in the
+ *  teacher's own year names; null when the style is for several years. */
+export function examStyleYearFor(style: Pick<ExamStyle, "years">, curriculumId: unknown): string | null {
+  return style.years.length === 1 ? yearForEnglandYear(curriculumId, style.years[0]) : null;
 }

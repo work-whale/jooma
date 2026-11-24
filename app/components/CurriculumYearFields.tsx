@@ -3,7 +3,7 @@
 import { useCallback, useId, useState } from "react";
 
 import CurriculumOptions from "@/app/components/CurriculumOptions";
-import { getCurriculum, yearsFor } from "@/app/lib/curricula";
+import { getCurriculum, yearIfOffered, yearsFor } from "@/app/lib/curricula";
 import { useLocalStorage } from "@/app/lib/useLocalStorage";
 import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 
@@ -29,7 +29,7 @@ export function useFormCurriculum() {
 export function useCurriculumYear() {
   const [curriculum, setCurriculum] = useFormCurriculum();
   const [storedYear, setYearGroup] = useLocalStorage("ll:yearGroup", "");
-  const yearGroup = yearsFor(curriculum).some((y) => y.label === storedYear) ? storedYear : "";
+  const yearGroup = yearIfOffered(curriculum, storedYear);
   return { curriculum, setCurriculum, yearGroup, setYearGroup };
 }
 

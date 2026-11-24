@@ -9,17 +9,22 @@
  *   - the England default becomes the teacher's own curriculum, unless what
  *     they said names England's (a KS2 SATs paper, a GCSE, the EYFS)
  *   - the year becomes the one at the same age in that curriculum ("Year 4",
- *     age 8, is 3rd Class in Ireland), or is dropped if there is none
+ *     age 8, is 3rd Class in Ireland), or is dropped if there is none, except
+ *     that a label the teacher's list already has is kept ("Year 4" to a
+ *     Northern Ireland teacher is NI's Year 4)
  *
  * Shared by client and server: no server-only imports.
  */
 
-import { CURRICULA_REGISTRY, getCurriculum, yearsFor } from "./index";
+import { englandYearAge } from "./england-years";
+import { CURRICULA_REGISTRY, getCurriculum, usesUkYearList, yearsFor } from "./index";
 
 /** Every curriculum label, the UK five first (today's enum, unchanged). */
 export const JO_CURRICULUM_VALUES: string[] = CURRICULA_REGISTRY.map((c) => c.promptLabel);
 
-/** Every year label, England's first (today's enum, unchanged). */
+/** Every year label, England's first (today's enum, unchanged: the first 13
+ *  entries are exactly YEAR_GROUPS). Northern Ireland's "Year 12", "Year 13"
+ *  and "Year 14" follow England's years. */
 export const JO_YEAR_VALUES: string[] = [...new Set(CURRICULA_REGISTRY.flatMap((c) => c.years.map((y) => y.label)))];
 
 const ENGLAND_DEFAULT = "england";
@@ -27,8 +32,10 @@ const ENGLAND_DEFAULT = "england";
 /** What the teacher said names England's curriculum or assessments. */
 const NAMES_ENGLAND = /\b(england|english national curriculum|national curriculum|key stage|ks ?[1-5]|eyfs|early years foundation stage|gcses?|sats|ofsted)\b/i;
 
-/** The age a year label means: the UK reading first, as Jo is told. */
+/** The age a year label means: England's reading first, as Jo is told. */
 function ageOf(label: string): number | undefined {
+  const england = englandYearAge(label);
+  if (england !== undefined) return england;
   for (const c of CURRICULA_REGISTRY) {
     const y = c.years.find((v) => v.label === label);
     if (y) return y.age;
@@ -63,13 +70,13 @@ export function fitPrefillToCurriculum(fields: Record<string, unknown>, teacherC
 
 /**
  * The slides wizard has no curriculum field, only `year`, from its own list:
- * England's years for a UK-like teacher, the teacher's own years (plus adult
- * learners) for anyone else (GenerateModal). Jo fills it with England's names,
+ * England's years for a teacher on England's list, the teacher's own years
+ * (plus adult learners) for anyone else, Northern Ireland included (GenerateModal). Jo fills it with England's names,
  * so outside the UK the year becomes the one at the same age, or is dropped.
  */
 function fitWizardYear(fields: Record<string, unknown>, teacherCurriculum: unknown): void {
   const teacher = getCurriculum(teacherCurriculum);
-  if (!teacher || teacher.region === "uk" || teacher.region === "british-isles") return;
+  if (!teacher || usesUkYearList(teacher.id)) return;
   if (typeof fields.year !== "string" || fields.year === "Adult learners") return;
   if (teacher.years.some((y) => y.label === fields.year)) return;
   const age = ageOf(fields.year);

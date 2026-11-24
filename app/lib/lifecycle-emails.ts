@@ -271,7 +271,7 @@ export function lifecycleOutgoing(
   return {
     rendered: {
       subject: m.subject,
-      html: lifecycleHtml(m.subject, m.body, m.button, base + m.path, base + m.footerPath, m.footerLabel),
+      html: lifecycleHtml(m.subject, m.body, m.button, base + m.path, base + m.footerPath, m.footerLabel, { preheader: m.preheader }),
       text: `${m.body}\n\n${m.button}: ${base}${m.path}\n\n${m.footerLabel}: ${base}${m.footerPath}`,
     },
     opts: { purpose: "lifecycle", oneClickUrl: m.oneClickPath ? base + m.oneClickPath : null },

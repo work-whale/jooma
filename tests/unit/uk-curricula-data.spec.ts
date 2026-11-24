@@ -93,9 +93,28 @@ test.describe("every framework's data", () => {
         }
       }
     }
-    // The UK nations teach to 15 here: nothing older.
-    for (const f of UK_BUILT) for (const s of get(f).statements) if (Math.max(...s.ages) > 15) bad.push(`${s.id}: older than 15`);
+    // The UK nations teach to 15 here (NI Key Stage 4 is Years 11 and 12, ages 14 and 15).
+    for (const f of UK_BUILT) {
+      for (const s of get(f).statements) if (Math.max(...s.ages) > 15) bad.push(`${s.id}: older than 15`);
+    }
+    // Every Key Stage 4 statement is offered in both Key Stage 4 years.
+    for (const s of get("nic-ks4").statements) if (s.ages.join() !== "14,15") bad.push(`${s.id}: ages ${s.ages.join()}, not 14,15`);
+    // Every NI statement carries exactly its stage's ages, as the app reads them.
+    for (const f of NIC) {
+      for (const s of get(f).statements) if (s.ages.join() !== FRAMEWORK_AGES[f].join()) bad.push(`${s.id}: ages ${s.ages.join()}, not ${FRAMEWORK_AGES[f].join()}`);
+    }
     expect(bad).toEqual([]);
+  });
+
+  test("the build script writes the ages the app expects", () => {
+    const script = readFileSync("scripts/build-uk-curricula.mjs", "utf8");
+    const parse = (a: string) => a.split(",").map((n) => Number(n.trim()));
+    const nic = [...script.matchAll(/\{ id: "(nic-[a-z0-9]+)", part: \d, group: "[^"]+", ages: \[([\d, ]+)\] \}/g)];
+    expect(nic).toHaveLength(5);
+    for (const [, id, ages] of nic) expect(parse(ages), id).toEqual([...FRAMEWORK_AGES[id as FrameworkId]]);
+    const cfe = [...script.matchAll(/"(cfe-[a-z-]+)": \[([\d, ]+)\]/g)];
+    expect(cfe).toHaveLength(4);
+    for (const [, id, ages] of cfe) expect(parse(ages), id).toEqual([...FRAMEWORK_AGES[id as FrameworkId]]);
   });
 
   test("text is clean", () => {

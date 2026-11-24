@@ -79,10 +79,15 @@ test.describe("the slideshow tool Jo opens", () => {
     expect(prefill!.fields.year).toBe("Adult learners");
   });
 
+  test("Year 14 is Northern Ireland's sixth form, and the wizard can render it", () => {
+    const prefill = validatePrefill({ slug: "slideshow", fields: { topic: "Careers", year: "Year 14" } });
+    expect(prefill!.fields.year).toBe("Year 14");
+  });
+
   test("a year the wizard cannot render is dropped, not passed through", () => {
     const prefill = validatePrefill({
       slug: "slideshow",
-      fields: { topic: "Fractions", year: "Year 14" },
+      fields: { topic: "Fractions", year: "Year 15" },
     });
 
     // The topic still opens the tool; only the impossible year is discarded.

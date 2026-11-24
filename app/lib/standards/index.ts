@@ -18,7 +18,7 @@
  *
  * Statements carry the AGES they apply to, not a grade name, so one file
  * serves "Grade 3" in Texas and "Year 3" in Queensland alike: a year's age
- * comes from the curriculum registry.
+ * comes from the curriculum registry (Northern Ireland's own year list included).
  *
  * Which curricula use which data is the registry's `alignment` field. England
  * (and the islands that teach its curriculum) keep app/lib/national-curriculum.
@@ -84,18 +84,15 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   "cfe-first": [6, 7, 8],
   "cfe-second": [9, 10, 11],
   "cfe-third-fourth": [12, 13, 14],
-  // Northern Ireland, by year number (Year 3 there is Year 3 here): the registry
-  // ages of the England-named years. Foundation Stage = Years 1 and 2, Key Stage
-  // 1 = Years 3 and 4, Key Stage 2 = Years 5 to 7. NI pupils are a year younger
-  // than England's at the same number; if NI gets its own year list, shift these
-  // down by one.
-  "nic-fs": [5, 6],
-  "nic-ks1": [7, 8],
-  "nic-ks2": [9, 10, 11],
-  // Key Stage 3 = Years 8 to 10, Key Stage 4 = Year 11 (NI Key Stage 4 is Years 11
-  // and 12; the Order's Key Stage 4 content is offered for Year 11 only).
-  "nic-ks3": [12, 13, 14],
-  "nic-ks4": [15],
+  // Northern Ireland has its own year list (Year N starts at age N + 3). Foundation
+  // Stage = Years 1 and 2, Key Stage 1 = Years 3 and 4, Key Stage 2 = Years 5 to 7,
+  // Key Stage 3 = Years 8 to 10, Key Stage 4 = Years 11 and 12 (owner, 2026-11-24).
+  // Nursery, Year 13 and Year 14 have no statutory statements.
+  "nic-fs": [4, 5],
+  "nic-ks1": [6, 7],
+  "nic-ks2": [8, 9, 10],
+  "nic-ks3": [11, 12, 13],
+  "nic-ks4": [14, 15],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched
@@ -158,6 +155,13 @@ export function alignmentYears(c: Curriculum): YearOption[] {
   return c.years.filter((y) => ages.has(y.age));
 }
 
+/** The frameworks that cover a curriculum's year, by the year's registry age.
+ *  Empty for a year the curriculum does not list. Pure. */
+export function frameworksForYear(c: Curriculum | null | undefined, year: string): FrameworkId[] {
+  const age = c?.years.find((y) => y.label === year)?.age;
+  return age === undefined ? [] : usableFrameworks(c).filter((f) => FRAMEWORK_AGES[f].includes(age));
+}
+
 /** A year's statements, from frameworks already loaded. Pure. */
 export function statementsForAge(data: FrameworkData[], age: number): Statement[] {
   return data.flatMap((d) => d.statements.filter((s) => s.ages.includes(age)));
@@ -167,7 +171,7 @@ export function statementsForAge(data: FrameworkData[], age: number): Statement[
 export async function loadStandardsFor(curriculum: unknown, year: string): Promise<{ statements: Statement[]; frameworks: FrameworkId[] }> {
   const c = getCurriculum(curriculum);
   const age = c?.years.find((y) => y.label === year)?.age;
-  const frameworks = usableFrameworks(c).filter((f) => age !== undefined && FRAMEWORK_AGES[f].includes(age));
+  const frameworks = frameworksForYear(c, year);
   if (!c || age === undefined || frameworks.length === 0) return { statements: [], frameworks: [] };
   const data = await Promise.all(frameworks.map(loadFramework));
   return { statements: statementsForAge(data, age), frameworks };
@@ -203,8 +207,7 @@ export const FRAMEWORK_STAGE: Partial<Record<FrameworkId, string>> = {
 export function alignmentStageLabel(c: Curriculum, yearLabel: string): string | null {
   const age = c.years.find((y) => y.label === yearLabel)?.age;
   if (age === undefined) return null;
-  const stages = usableFrameworks(c)
-    .filter((f) => FRAMEWORK_AGES[f].includes(age))
+  const stages = frameworksForYear(c, yearLabel)
     .map((f) => FRAMEWORK_STAGE[f])
     .filter((s): s is string => !!s);
   return stages.length ? [...new Set(stages)].join(" and ") : null;
