@@ -20,6 +20,7 @@ import {
  */
 
 const ALL_ON = REGIONS.map((r) => r.id);
+const STAGE2 = ["africa", "asia", "caribbean", "europe", "middle-east"] as const;
 
 test.describe("the region switches", () => {
   test("each region has one app_settings key, and the UK has none", () => {
@@ -37,6 +38,42 @@ test.describe("the region switches", () => {
       { key: "signups_open", value: true },
     ];
     expect(regionsFromSettings(rows)).toEqual(["british-isles"]);
+  });
+
+  test("the five Stage 2 regions have their own keys", () => {
+    expect(regionSettingKey("middle-east")).toBe("curricula_middle_east");
+    for (const id of ["africa", "asia", "caribbean", "europe"] as const) expect(regionSettingKey(id)).toBe(`curricula_${id}`);
+  });
+
+  test("each Stage 2 region is on only for a row that is exactly true, and switches on nothing else", () => {
+    for (const id of STAGE2) {
+      const key = regionSettingKey(id)!;
+      expect(regionsFromSettings([{ key, value: true }]), id).toEqual([id]);
+      for (const value of [false, "true", 1, "on", null, undefined, {}, [true]]) {
+        expect(regionsFromSettings([{ key, value }]), `${id} ${JSON.stringify(value)}`).toEqual([]);
+      }
+      // Only that row is present: no other region comes on with it.
+      expect(regionsFromSettings([{ key, value: true }, ...STAGE2.filter((o) => o !== id).map((o) => ({ key: regionSettingKey(o)!, value: false }))]), id).toEqual([id]);
+    }
+    expect(regionsFromSettings([]), "missing rows").toEqual([]);
+    expect(regionsFromSettings(STAGE2.map((id) => ({ key: regionSettingKey(id)!, value: true })))).toEqual(
+      REGIONS.filter((r) => (STAGE2 as readonly string[]).includes(r.id)).map((r) => r.id),
+    );
+  });
+
+  test("a malformed row cannot switch a Stage 2 region on", () => {
+    const rows = [null, "curricula_asia", { value: true }, { key: 7, value: true }, { key: "curricula_asia" }, { key: "Curricula_Asia", value: true }, { key: "curricula-asia", value: true }];
+    expect(regionsFromSettings(rows as never)).toEqual([]);
+    expect(regionsFromSettings({ key: "curricula_asia", value: true } as never)).toEqual([]);
+  });
+
+  test("a Stage 2 region with no curricula yet never appears in the picker", () => {
+    const groups = pickerGroups(visibleCurricula(ALL_ON, true));
+    for (const id of STAGE2) {
+      const has = CURRICULA_REGISTRY.some((c) => c.region === id && c.verifiedOn);
+      expect(groups.some((g) => g.region === id), id).toBe(has);
+    }
+    for (const g of groups) expect(g.curricula.length, g.region).toBeGreaterThan(0);
   });
 
   test("no rows, or junk, switches nothing on", () => {

@@ -7,7 +7,9 @@
  * WHAT THIS IS FOR
  *
  * supabase/migrations/20261114000000_curricula.sql adds two self-service
- * columns to profiles and six region switches read through public_settings().
+ * columns to profiles and six region switches read through public_settings();
+ * 20261124000000_curricula_stage2_regions.sql adds five more (Africa, Asia,
+ * Caribbean, Europe, Middle East), all off.
  * This asserts:
  *
  *   - a teacher sets and reads their own curriculum
@@ -15,8 +17,9 @@
  *   - the format check refuses junk ids, and null is allowed
  *   - the new columns did not open a way round the privileged-column guard
  *     (plan still cannot be changed in the same update)
- *   - anon and teachers read the six switches through public_settings(), and
- *     that function still returns nothing beyond its named keys
+ *   - anon and teachers read the six switches, and the five Stage 2 ones (all
+ *     off on staging), through public_settings(), and that function returns
+ *     nothing beyond its named keys
  *   - a teacher cannot flip a region switch
  *
  * HOW IT PROVES ANYTHING
@@ -79,7 +82,15 @@ const SWITCHES = [
   "curricula_usa",
   "curricula_canada",
 ];
-const PUBLIC_KEYS = new Set(["signups_open", "maintenance_mode", "google_signin", ...SWITCHES]);
+// Added by 20261124000000_curricula_stage2_regions.sql: Stage 2 regions, off.
+const STAGE2_SWITCHES = [
+  "curricula_africa",
+  "curricula_asia",
+  "curricula_caribbean",
+  "curricula_europe",
+  "curricula_middle_east",
+];
+const PUBLIC_KEYS = new Set(["signups_open", "maintenance_mode", "google_signin", ...SWITCHES, ...STAGE2_SWITCHES]);
 
 async function signIn(person) {
   const client = createClient(URL, ANON, { auth: { persistSession: false } });
@@ -176,7 +187,12 @@ async function main() {
   ]) {
     const { data, error } = await client.rpc("public_settings");
     const keys = (data ?? []).map((r) => r.key);
-    check(`${who} reads all six switches`, !error && SWITCHES.every((k) => keys.includes(k)), error?.message ?? keys.join(", "));
+    check(`${who} reads all six first-stage switches`, !error && SWITCHES.every((k) => keys.includes(k)), error?.message ?? keys.join(", "));
+    check(
+      `${who} reads the five Stage 2 switches, all off`,
+      !error && STAGE2_SWITCHES.every((k) => (data ?? []).some((r) => r.key === k && r.value === false)),
+      JSON.stringify((data ?? []).filter((r) => STAGE2_SWITCHES.includes(r.key))),
+    );
     check(`${who} reads nothing beyond the named keys`, keys.every((k) => PUBLIC_KEYS.has(k)), keys.join(", "));
   }
   {

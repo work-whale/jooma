@@ -10,6 +10,7 @@ import {
   getCurriculum,
   isUkCurriculum,
   parseCurriculum,
+  regionSettingKey,
   requestCurriculum,
   visibleCurricula,
   withCurriculum,
@@ -138,6 +139,98 @@ test.describe("the registry", () => {
     // With every region switched on, only checked entries appear.
     const all = visibleCurricula(REGIONS.map((r) => r.id), false);
     for (const c of all) if (c.region !== "uk") expect(c.verifiedOn, c.id).toBeTruthy();
+  });
+});
+
+test.describe("the Stage 2 regions", () => {
+  const NEW = [
+    ["africa", "Africa"],
+    ["asia", "Asia"],
+    ["caribbean", "Caribbean"],
+    ["europe", "Europe"],
+    ["middle-east", "Middle East"],
+  ] as const;
+
+  test("REGIONS lists each new region exactly once, with its label, after Canada and in this order", () => {
+    for (const [id, label] of NEW) {
+      const found = REGIONS.filter((r) => r.id === id);
+      expect(found, id).toHaveLength(1);
+      expect(found[0].label, id).toBe(label);
+    }
+    const ids = REGIONS.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.slice(ids.indexOf("canada") + 1)).toEqual(NEW.map(([id]) => id));
+  });
+
+  test("every region's setting key is unique and has a migration (so a region cannot be added in code alone)", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const sql = await readFile("supabase/migrations/20261124000000_curricula_stage2_regions.sql", "utf8");
+    const base = await readFile("supabase/migrations/20261114000000_curricula.sql", "utf8");
+    const keys = REGIONS.map((r) => regionSettingKey(r.id)).filter((k): k is string => k !== null);
+    expect(new Set(keys).size).toBe(keys.length);
+    const whitelist = (text: string) => {
+      const m = text.match(/where s\.key in \(([\s\S]*?)\)\s*;/);
+      expect(m, "public_settings key list").not.toBeNull();
+      return [...m![1].matchAll(/'([^']+)'/g)].map((x) => x[1]);
+    };
+    const latest = whitelist(sql);
+    // The newest definition replaces the older one, so it must hold every key.
+    for (const k of keys) expect(latest, k).toContain(k);
+    for (const k of whitelist(base)) expect(latest, `kept ${k}`).toContain(k);
+    expect(new Set(latest).size, "no duplicates").toBe(latest.length);
+    // Every key is seeded in one of the two migrations, off.
+    for (const k of keys) {
+      const seeded = new RegExp(`\\('${k}',\\s*'(?:[^']|'')*',\\s*'(?:[^']|'')*',\\s*'curricula',\\s*'false'::jsonb,\\s*\\d+\\)`).test(sql + base);
+      expect(seeded, `${k} seeded false`).toBe(true);
+    }
+  });
+
+  test("the Stage 2 migration seeds the five keys OFF, names them one by one, and never uses like", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const sql = await readFile("supabase/migrations/20261124000000_curricula_stage2_regions.sql", "utf8");
+    for (const [id] of NEW) {
+      const key = regionSettingKey(id)!;
+      expect(sql, key).toMatch(new RegExp(`\\('${key}',\\s*'(?:[^']|'')*',\\s*'(?:[^']|'')*',\\s*'curricula',\\s*'false'::jsonb,\\s*\\d+\\)`));
+      expect(sql.match(new RegExp(`'${key}'`, "g"))?.length, `${key} seeded once and listed once`).toBe(2);
+    }
+    expect(sql).not.toMatch(/\blike\b/i);
+    expect(sql).not.toMatch(/'true'::jsonb|\btrue::jsonb/i);
+    expect(sql).toMatch(/on conflict \(key\) do nothing/i);
+    expect(sql).toMatch(/security definer/i);
+    expect(sql).toMatch(/set search_path = public/i);
+    expect(sql).toMatch(/revoke execute on function public_settings\(\) from public/i);
+    expect(sql).toMatch(/grant execute on function public_settings\(\) to anon, authenticated/i);
+    expect(sql).not.toMatch(/[–—]/);
+  });
+
+  test("the sort order and labels match the plan", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const sql = await readFile("supabase/migrations/20261124000000_curricula_stage2_regions.sql", "utf8");
+    const expected: Record<string, [string, number]> = {
+      curricula_africa: ["Africa", 7],
+      curricula_asia: ["Asia", 8],
+      curricula_caribbean: ["Caribbean", 9],
+      curricula_europe: ["Europe (Malta)", 10],
+      curricula_middle_east: ["Middle East", 11],
+    };
+    for (const [key, [label, sort]] of Object.entries(expected)) {
+      expect(sql, key).toMatch(new RegExp(`\\('${key}',\\s*'${label.replace(/[()]/g, "\\$&")}',\\s*'(?:[^']|'')*',\\s*'curricula',\\s*'false'::jsonb,\\s*${sort}\\)`));
+    }
+  });
+});
+
+test.describe("Scotland and Northern Ireland have been checked against their sources", () => {
+  test("each carries a real ISO verifiedOn date", () => {
+    for (const id of ["scotland", "northern-ireland"]) {
+      const v = getCurriculum(id)!.verifiedOn;
+      expect(v, id).toMatch(ISO_DATE);
+      expect(Number.isNaN(Date.parse(v!)), id).toBe(false);
+      expect(new Date(v!).toISOString().slice(0, 10), id).toBe(v);
+    }
+  });
+
+  test("every UK curriculum has a verifiedOn date", () => {
+    for (const id of UK_CURRICULUM_IDS) expect(getCurriculum(id)!.verifiedOn, id).toMatch(ISO_DATE);
   });
 });
 

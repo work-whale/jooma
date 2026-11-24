@@ -62,6 +62,7 @@ export const UK_CURRICULA: Curriculum[] = [
     versions: [{ label: "Curriculum for Excellence", inForceFrom: "2010-08-01" }],
     years: UK_YEARS,
     defaultLanguage: "en-GB",
+    verifiedOn: "2026-11-20",
     alignment: { frameworks: ["cfe-early", "cfe-first", "cfe-second", "cfe-third-fourth"], adapted: false },
   },
   {
@@ -86,6 +87,7 @@ export const UK_CURRICULA: Curriculum[] = [
     versions: [{ label: "Northern Ireland Curriculum (2007)", inForceFrom: "2007-09-01" }],
     years: NI_YEARS,
     defaultLanguage: "en-GB",
+    verifiedOn: "2026-11-20",
     alignment: { frameworks: ["nic-fs", "nic-ks1", "nic-ks2", "nic-ks3", "nic-ks4"], adapted: false },
   },
 ];

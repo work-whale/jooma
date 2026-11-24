@@ -36,6 +36,11 @@ export const REGIONS: readonly Region[] = [
   { id: "australia-nz", label: "Australia and New Zealand" },
   { id: "usa", label: "United States" },
   { id: "canada", label: "Canada" },
+  { id: "africa", label: "Africa" },
+  { id: "asia", label: "Asia" },
+  { id: "caribbean", label: "Caribbean" },
+  { id: "europe", label: "Europe" },
+  { id: "middle-east", label: "Middle East" },
 ];
 
 export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA];
