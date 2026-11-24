@@ -7,8 +7,10 @@
  *   - data/ccss-math.json  Common Core mathematics, K to 8 and high school
  *   - data/ccss-ela.json   Common Core English language arts, K to 12
  *   - data/ngss.json       NGSS performance expectations, K to 12
- *   - data/ac9.json        Australian Curriculum v9.0 English, Mathematics and
- *                          Science content descriptions, Foundation to Year 10
+ *   - data/ac9.json        Australian Curriculum v9.0 content descriptions,
+ *                          Foundation to Year 10: English, Mathematics, Science,
+ *                          Humanities and Social Sciences, The Arts, Technologies
+ *                          and Health and Physical Education (not Languages)
  *   - data/cfe-*.json      Scotland: Curriculum for Excellence experiences and
  *                          outcomes, one file per level (Early, First, Second,
  *                          Third and fourth), built by scripts/build-uk-curricula.mjs

@@ -46,10 +46,18 @@ const TEXT_CHARS = 220;
 interface Concept {
   typed: RegExp;
   tiers: RegExp[];
+  /** Set this concept aside for a typed text that means something narrower in
+   *  this curriculum ("digital technologies" is not Design and Technologies). */
+  skip?: (typed: string, subjects: string[]) => boolean;
 }
 
 const WIDER_WORLD = /social studies|world around us|environment and society|understanding the world/i;
 const WIDER_ARTS = /expressive|\bthe arts\b/i;
+// Australia: Humanities and Social Sciences is one subject from Foundation to Year 6, then
+// History, Geography, Civics and Citizenship and Economics and Business from Year 7.
+const HASS = /humanities and social sciences/i;
+const HASS_SECONDARY = /^(history|geography|civics and citizenship|economics and business)$/i;
+const PE_TIERS = [/physical education|physical development/i, /health and wellbeing/i];
 
 const CONCEPTS: Concept[] = [
   { typed: /\b(maths?|mathematics|numeracy|arithmetic|algebra|geometry|statistics)\b/i, tiers: [/math|numeracy/i] },
@@ -57,25 +65,44 @@ const CONCEPTS: Concept[] = [
     typed: /\b(english|literacy|reading|writing|phonics|spelling|grammar|ela|language arts|literature)\b/i,
     tiers: [/\benglish\b|literacy|language arts|communication and language/i],
   },
-  { typed: /\b(sciences?|scientific|biology|chemistry|physics)\b/i, tiers: [/scien/i, WIDER_WORLD] },
-  { typed: /\b(history|historical)\b/i, tiers: [/\bhistory\b/i, WIDER_WORLD] },
-  { typed: /\b(geography|geographical)\b/i, tiers: [/\bgeography\b/i, WIDER_WORLD] },
-  { typed: /\bsocial studies\b/i, tiers: [WIDER_WORLD] },
-  { typed: /\b(art|drawing|painting|sculpture)\b/i, tiers: [/^art\b|\bart and design\b/i, WIDER_ARTS] },
+  {
+    typed: /\b(sciences?|scientific|biology|chemistry|physics)\b/i,
+    // Typing "Humanities and Social Sciences" does not mean Science.
+    tiers: [/(?<!social )scien/i, WIDER_WORLD],
+    skip: (typed) => HASS.test(typed),
+  },
+  { typed: /\b(history|historical)\b/i, tiers: [/\bhistory\b/i, WIDER_WORLD, HASS] },
+  { typed: /\b(geography|geographical)\b/i, tiers: [/\bgeography\b/i, WIDER_WORLD, HASS] },
+  { typed: /\bsocial studies\b/i, tiers: [WIDER_WORLD, HASS] },
+  { typed: /\b(hass|humanities)\b/i, tiers: [HASS, HASS_SECONDARY] },
+  { typed: /\b(civics|citizenship)\b/i, tiers: [/civics and citizenship/i, HASS] },
+  { typed: /\b(economics|economy|business)\b/i, tiers: [/economics and business/i, HASS] },
+  { typed: /\b(art|drawing|painting|sculpture)\b/i, tiers: [/^art\b|\bart and design\b/i, /visual arts/i, WIDER_ARTS] },
+  { typed: /\bvisual arts\b/i, tiers: [/visual arts/i] },
+  { typed: /\bmedia\b/i, tiers: [/media arts/i] },
   { typed: /\b(music|musical)\b/i, tiers: [/\bmusic\b/i, WIDER_ARTS] },
   { typed: /\b(drama|dance)\b/i, tiers: [/\b(drama|dance)\b/i, WIDER_ARTS] },
   {
     typed: /\b(pe|p\.e\.|physical education|sports?|gymnastics|athletics)\b/i,
-    tiers: [/physical education|physical development/i, /health and wellbeing/i],
+    tiers: PE_TIERS,
   },
+  // "P.E." ends in a dot, so the word boundary above never sees it.
+  { typed: /(?:^|[^a-z])p\.e\.(?:$|[^a-z])/i, tiers: PE_TIERS },
+  // Australia's Health and Physical Education is one subject.
+  { typed: /\b(health|healthy|wellbeing|well-being)\b/i, tiers: [/health and physical education/i] },
   {
     typed: /\b(pshe|pshce|rshe|rse|pdmu|wellbeing|well-being|health|citizenship|personal development)\b/i,
     tiers: [/personal development|personal, social|health and wellbeing|learning for life/i],
   },
   // "RE" only as a word on its own: "re-telling" is not religious education.
   { typed: /\b(re(?![-\w])|r\.e\.|rme|rerc|religious|religions?)\b/i, tiers: [/religio/i] },
-  { typed: /\b(computing|computer science|ict|coding|programming)\b/i, tiers: [/computing/i, /technolog/i] },
-  { typed: /\b(design and technology|d&t|dt|technology|technologies)\b/i, tiers: [/design and technology|technology and design/i, /technolog/i] },
+  { typed: /\b(computing|computer science|ict|coding|programming)\b/i, tiers: [/computing/i, /digital technolog/i, /technolog/i] },
+  { typed: /\bdigital tech(nology|nologies)?\b/i, tiers: [/digital technolog/i] },
+  {
+    typed: /\b(design and technology|d&t|dt|technology|technologies)\b/i,
+    tiers: [/design and technolog|technology and design/i, /technolog/i],
+    skip: (typed, subjects) => /digital tech/i.test(typed) && subjects.some((x) => /digital technolog/i.test(x)),
+  },
   {
     typed: /\b(french|spanish|german|italian|mandarin|chinese|japanese|polish|urdu|mfl|modern languages?|languages)\b/i,
     tiers: [/modern languages|^languages$/i],
@@ -91,7 +118,7 @@ export function matchingSubjects(typed: string | null | undefined, subjects: str
   if (!text) return [];
   const hit = new Set<string>();
   for (const c of CONCEPTS) {
-    if (!c.typed.test(text)) continue;
+    if (!c.typed.test(text) || c.skip?.(text, subjects)) continue;
     for (const tier of c.tiers) {
       const found = subjects.filter((s) => tier.test(s));
       if (found.length) {

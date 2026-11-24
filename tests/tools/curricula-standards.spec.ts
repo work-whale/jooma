@@ -121,3 +121,42 @@ test("the slides wizard offers the teacher's own year names, and Jo's year is fi
   await expect(page.getByRole("button", { name: "Adult learners", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Year 4", exact: true })).toHaveCount(0);
 });
+
+test("a Queensland Year 4 teacher aligns a worksheet to a Humanities and Social Sciences statement, with its id sent and ACARA credited", async ({ page }) => {
+  const t = await teacherOn("au-qld", "StdQldHass");
+  await signIn(page, t);
+  const sent = await capture(page, "/api/worksheet-generator");
+  const asked = await noSuggestions(page);
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue(/^Queensland: /, NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Year 4");
+  await page.getByLabel("Subject", { exact: true }).fill("HASS");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Why the first British colony was set up in 1788");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toContainText("Queensland", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ year: "Year 4", curriculumId: "au-qld", subject: "HASS" });
+
+  // Year 4 lists the new learning areas beside English, Mathematics and Science.
+  const subject = card.getByLabel("Subject");
+  await expect(subject.locator("option")).toContainText(["Humanities and Social Sciences", "Music", "Health and Physical Education", "Digital Technologies"], NAV);
+  await subject.selectOption("Humanities and Social Sciences");
+
+  const colony = card.getByRole("checkbox", { name: /The causes of the establishment of the first British colony in Australia in 1788/ });
+  await expect(colony).toContainText("AC9HS4K02");
+  await colony.click();
+  await expect(colony).toHaveAttribute("aria-checked", "true");
+
+  // The ACARA credit shows under the card.
+  await expect(card.getByTestId("curriculum-credits")).toContainText("Australian Curriculum, Assessment and Reporting Authority");
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { statements: { id: string; text: string }[]; year: string };
+  expect(align.year).toBe("Year 4");
+  expect(align.statements.map((s) => s.id)).toEqual(["ac9-ac9hs4k02"]);
+  expect(align.statements[0].text).toMatch(/^AC9HS4K02: The causes of the establishment of the first British colony/);
+});

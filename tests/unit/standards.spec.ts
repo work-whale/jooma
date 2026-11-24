@@ -19,7 +19,7 @@ import ac9 from "@/app/lib/standards/data/ac9.json";
 
 /*
  * The published standards outside England: Common Core, NGSS and the
- * Australian Curriculum v9.0, built by scripts/build-standards.mjs.
+ * Australian Curriculum v9.0 (all learning areas but Languages), built by scripts/build-standards.mjs.
  *
  * Checked here: the shape of the data, the counts the published documents
  * have, every statement word for word against its source, and which curricula
@@ -74,8 +74,10 @@ test.describe("the data", () => {
     expect(DATA["ccss-ela"].statements.length).toBe(455);
     // Common Core maths: K to 8 and high school, as printed with codes.
     expect(DATA["ccss-math"].statements.length).toBeGreaterThanOrEqual(380);
-    // Australian Curriculum v9.0 English, Mathematics and Science, F to 10.
-    expect(DATA.ac9.statements.length).toBe(676);
+    // Australian Curriculum v9.0, Foundation to Year 10: English, Mathematics, Science (676), then
+    // Humanities and Social Sciences, The Arts, Technologies and Health and Physical Education
+    // (719 more). Languages are not included. The split by area is in ac9-areas.spec.ts.
+    expect(DATA.ac9.statements.length).toBe(1395);
   });
 
   test("known statements landed in the right grade", () => {
