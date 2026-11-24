@@ -1,4 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { admin, createAdmin, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
@@ -19,6 +21,14 @@ const NAV = { timeout: 120_000 };
 
 function encodePrefill(prefill: { slug: string; fields: Record<string, unknown> }): string {
   return Buffer.from(JSON.stringify(prefill), "utf8").toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** A screenshot for the owner, only when SHOTS_DIR is set (gitignored folder). */
+async function shot(page: Page, name: string, target = page.locator("body")) {
+  const dir = process.env.SHOTS_DIR;
+  if (!dir) return;
+  mkdirSync(dir, { recursive: true });
+  await target.screenshot({ path: join(dir, `${name}.png`) });
 }
 
 async function capture(page: Page, path: string) {
@@ -129,7 +139,7 @@ test("a Queensland Year 4 teacher aligns a worksheet to a Humanities and Social 
   const asked = await noSuggestions(page);
 
   await page.goto("/tools/worksheet-generator", NAV);
-  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue(/^Queensland: /, NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Australian Curriculum v9.0 (Queensland)", NAV);
   await page.getByLabel("Year group", { exact: true }).selectOption("Year 4");
   await page.getByLabel("Subject", { exact: true }).fill("HASS");
   await page.getByLabel("Learning objective", { exact: true }).fill("Why the first British colony was set up in 1788");
@@ -140,15 +150,23 @@ test("a Queensland Year 4 teacher aligns a worksheet to a Humanities and Social 
   await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
   expect(asked[0]).toMatchObject({ year: "Year 4", curriculumId: "au-qld", subject: "HASS" });
 
-  // Year 4 lists the new learning areas beside English, Mathematics and Science.
+  // Year 4 lists the new learning areas after English, Mathematics and Science, and none of
+  // the Years 7 to 10 subjects (History, Geography, Civics, Economics) or any language.
   const subject = card.getByLabel("Subject");
-  await expect(subject.locator("option")).toContainText(["Humanities and Social Sciences", "Music", "Health and Physical Education", "Digital Technologies"], NAV);
+  await expect(subject.locator("option")).toHaveText(
+    [
+      "Select subject", "English", "Mathematics", "Science", "Humanities and Social Sciences", "Health and Physical Education",
+      "Design and Technologies", "Digital Technologies", "Dance", "Drama", "Media Arts", "Music", "Visual Arts",
+    ],
+    NAV,
+  );
   await subject.selectOption("Humanities and Social Sciences");
 
   const colony = card.getByRole("checkbox", { name: /The causes of the establishment of the first British colony in Australia in 1788/ });
   await expect(colony).toContainText("AC9HS4K02");
   await colony.click();
   await expect(colony).toHaveAttribute("aria-checked", "true");
+  await shot(page, "worksheet-queensland-year4-hass", card);
 
   // The ACARA credit shows under the card.
   await expect(card.getByTestId("curriculum-credits")).toContainText("Australian Curriculum, Assessment and Reporting Authority");

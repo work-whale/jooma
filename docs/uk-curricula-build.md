@@ -585,9 +585,23 @@ Each run against `ac9-areas.spec.ts`, `standards.spec.ts` (and `suggest-candidat
 
 - The real matcher's choices across many topics (needs `LIVE_MODEL`).
 - The card's look with about twice as many statements at a Year 7 list (not checked in a browser; no per-subject filter was added).
-- A real `next build` chunk size.
-- The AU E2E is written but not run.
+- A real `next build` chunk size (since measured: see 14.8).
+- The AU E2E is written but not run (since run: see 14.8).
 
 ### 14.7 The Languages note
 
 The align card has only one generic "not available yet" note (for a curriculum with no data) and no per-curriculum note mechanism, so no "Languages are not listed yet" line was added. Adding one would be new UI.
+
+### 14.8 Verification on the owner's PC (2026-11-24, Opus)
+
+Run on `staging` against the staging database, `next build` plus `next start` on localhost:3000 through `scripts/with-staging-env.sh`.
+
+- **NI handover (section 13).** The four curriculum E2E files first gave 18 passed, 1 failed: "a Northern Ireland Year 12 teacher aligns a worksheet to Key Stage 4" picked the KS2 SATs style before the teacher's curriculum had loaded, so the year read England's list (Year 6). The app was right: once the test waits for the curriculum, the style sets NI Year 7 (3 of 3 repeats pass). Test fix only, commit `fae7c60`.
+- **NI source XML.** Present on the PC, sha256 `c63af56f...091` as expected. `node scripts/build-uk-curricula.mjs --nation=northern-ireland` gives no content change (line endings only, restored), so the hand-edited ages match the script. The 5 XML tests run and pass.
+- **Australia data, checked independently** (a separate script, not the build code): all 1,395 non-Languages content descriptions in the workbook are in `ac9.json` with the same code and ages and every source word present; none missing, none extra, no duplicate ids, no en or em dashes. The first 676 statements are byte for byte the same as before, in the same order.
+- **Extra mutation (lead):** dropping the HASS fallback for "history" makes 1 test fail.
+- **Chunk size from `next build`:** the `ac9` data chunk goes from 185,919 to 382,311 bytes raw, 32,112 to 59,332 gzipped. It loads only when an Australian teacher opens the card. Under the 150 KB gzip line, so no split.
+- **The AU E2E needed two test fixes**, both wrong guesses in the test, not app bugs: the curriculum select reads "Australian Curriculum v9.0 (Queensland)", not "Queensland: ..."; and the subject list assertion had the subjects out of order. It now pins the exact Year 4 list (English, Mathematics, Science, Humanities and Social Sciences, Health and Physical Education, Design and Technologies, Digital Technologies, Dance, Drama, Media Arts, Music, Visual Arts), which also proves no Years 7 to 10 subject or language appears at Year 4. A screenshot is taken when `SHOTS_DIR` is set.
+- **Results:** `pnpm test:unit` 2,393 passed, 0 failed; the four curriculum E2E files 20 passed; `tsc` clean; eslint clean on the touched specs; language check passed.
+- **Screenshots** (gitignored): `docs/screenshots/2026-11-ni-years/` (NI and Scotland) and `docs/screenshots/2026-11-24-au-learning-areas/worksheet-queensland-year4-hass.png`. No "before" shot for Australia: the old build was not kept.
+- **Still untested:** the real matcher on many topics (`LIVE_MODEL`), and the card at Year 7 with about 140 statements (it already has a subject select and a search box, so no filter was added).
