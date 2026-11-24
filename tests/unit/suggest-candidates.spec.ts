@@ -95,7 +95,7 @@ test.describe("filterBySubject: the teacher's subject narrows the candidates", (
   });
 
   test("Northern Ireland, Key Stage 1 (Year 3)", async () => {
-    const all = await year(["nic-ks1"], 7);
+    const all = await year(["nic-ks1"], 6);
     expect(subjectsOf(filterBySubject(all, "Maths"))).toEqual(["Mathematics and Numeracy"]);
     expect(subjectsOf(filterBySubject(all, "English"))).toEqual(["Language and Literacy"]);
     // Science, history and geography are all The World Around Us at this stage.
@@ -137,7 +137,7 @@ test.describe("filterBySubject: the teacher's subject narrows the candidates", (
       expect(filterBySubject(all, typed), String(typed)).toEqual(all);
     }
     // French is a real subject, but NI Key Stage 1 has no languages: all of it.
-    const ni = await year(["nic-ks1"], 7);
+    const ni = await year(["nic-ks1"], 6);
     expect(filterBySubject(ni, "French")).toEqual(ni);
     // An empty list stays empty.
     expect(filterBySubject([], "Maths")).toEqual([]);

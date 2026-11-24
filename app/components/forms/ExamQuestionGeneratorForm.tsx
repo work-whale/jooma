@@ -19,7 +19,7 @@ import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parseSheet } from "@/app/lib/sheets/normalize";
 import { isQuestion } from "@/app/lib/sheets/types";
 import { DEFAULT_EXAM_STYLE, examStyle, isExamStyle, offersTier, styleFromExamType } from "@/app/lib/sheets/exam-styles";
-import { examStylesFor } from "@/app/lib/curricula/tool-scope";
+import { examStyleYearFor, examStylesFor } from "@/app/lib/curricula/tool-scope";
 
 const TOOL_SLUG = "exam-question-generator";
 
@@ -81,7 +81,8 @@ export default function ExamQuestionGeneratorForm({
     const next = examStyle(id);
     setStyleId(next.id);
     setMinutes(next.minutes);
-    if (next.years.length === 1) { setYearGroup(next.years[0]); setMixed(false); }
+    const y = examStyleYearFor(next, curriculum);
+    if (y) { setYearGroup(y); setMixed(false); }
   };
 
   const restore = (run: ToolRun) => {

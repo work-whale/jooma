@@ -21,7 +21,7 @@ import { BRITISH_ISLES_CURRICULA } from "./british-isles";
 import { CANADA_CURRICULA } from "./canada";
 import { INTERNATIONAL_CURRICULA } from "./international";
 import { IRELAND_CURRICULA } from "./ireland";
-import { UK_CURRICULA } from "./uk";
+import { UK_CURRICULA, UK_YEARS } from "./uk";
 import { USA_CURRICULA } from "./usa";
 // Relative, so scripts/curricula-status.mjs can load the registry in plain Node.
 import { NGSS_NAME_BLOCKED } from "../standards/permissions";
@@ -50,12 +50,12 @@ for (const c of CURRICULA_REGISTRY) {
 const UK_IDS = new Set<string>(UK_CURRICULUM_IDS);
 const REGION_IDS = new Set<string>(REGIONS.map((r) => r.id));
 
-/** True when the slides wizard offers the UK year list (Nursery to Year 13,
- *  plus Adult learners): every UK and island curriculum, and a guest or an
- *  unknown value. Every other system lists its own year names. */
+/** True when the slides wizard offers England's year list (Nursery to Year 13,
+ *  plus Adult learners): every curriculum on that list, and a guest or an
+ *  unknown value. Northern Ireland and every non-UK system list their own names. */
 export function usesUkYearList(value: unknown): boolean {
   const c = getCurriculum(value);
-  return !c || c.region === "uk" || c.region === "british-isles";
+  return !c || c.years === UK_YEARS;
 }
 
 /** A known curriculum id, from an id or a label a form has sent; null for
@@ -96,6 +96,12 @@ export function currentVersion(entry: Pick<Curriculum, "versions">, now: Date = 
 /** The years a curriculum offers, in order. Unknown ids get England's. */
 export function yearsFor(value: unknown): YearOption[] {
   return (getCurriculum(value) ?? UK_CURRICULA[0]).years;
+}
+
+/** The stored year if this curriculum offers it, else "". A year saved under
+ *  another list (an NI teacher's old "Reception") is never shown or sent. */
+export function yearIfOffered(curriculum: unknown, year: string): string {
+  return yearsFor(curriculum).some((y) => y.label === year) ? year : "";
 }
 
 /**

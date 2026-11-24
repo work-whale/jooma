@@ -16,6 +16,7 @@ import ThemePicker from "./ThemePicker";
 import CurriculumAlignment, { EMPTY_SELECTION, type CurriculumSelection } from "./CurriculumAlignment";
 import { alignParamFor, type AlignStatement } from "@/app/lib/standards/align";
 import { usesUkYearList } from "@/app/lib/curricula";
+import { englandYearFor } from "@/app/lib/curricula/england-years";
 import { useTeacherCurriculum } from "@/app/lib/useTeacherCurriculum";
 import { useTypingPlaceholder } from "@/app/lib/useTypingPlaceholder";
 import PlaceholderOverlay from "@/app/components/fields/PlaceholderOverlay";
@@ -190,9 +191,9 @@ export default function GenerateModal({
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const inline = variant === "page";
 
-  // The year list follows the teacher's school system: today's list for the
-  // UK and the islands, their own year names (plus adult learners) elsewhere.
-  // A guest has no curriculum and gets the UK list.
+  // The year list follows the teacher's school system: England's list for
+  // England, EYFS, Scotland, Wales, the islands and a guest; their own year
+  // names (plus adult learners) elsewhere, Northern Ireland included.
   const teacherCurriculum = useTeacherCurriculum();
   const yearOptions =
     guest || usesUkYearList(teacherCurriculum.id)
@@ -1311,7 +1312,7 @@ export default function GenerateModal({
               <button
                 type="button"
                 onClick={() => {
-                  if (!themeTouched) setThemeId(DEFAULT_THEME_FOR_FAMILY[defaultFamilyForYear(year)]);
+                  if (!themeTouched) setThemeId(DEFAULT_THEME_FOR_FAMILY[defaultFamilyForYear(englandYearFor(teacherCurriculum.id, year))]);
                   setStep(3);
                 }}
                 disabled={busy}

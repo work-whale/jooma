@@ -10,6 +10,7 @@ import {
   themeDesign,
 } from "@/app/lib/slideshowThemes";
 import { renderSlide, rerenderSlideWithTheme, type SlideSpec } from "@/app/lib/slideshow-layouts";
+import { englandYearFor } from "@/app/lib/curricula/england-years";
 import { GOOGLE_FONTS } from "@/app/components/editor/googleFonts";
 import type { ShapeType } from "@/app/lib/presentations";
 
@@ -182,3 +183,11 @@ function contrast(a: string, b: string): number {
   const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 }
+
+test("the wizard's theme default follows the year's age in Northern Ireland", () => {
+  // NI Year 7 is P7 (age 10), primary, so it opens on Playful like England's Year 6.
+  expect(defaultFamilyForYear(englandYearFor("northern-ireland", "Year 7"))).toBe("playful");
+  expect(defaultFamilyForYear(englandYearFor("northern-ireland", "Year 8"))).toBe("professional");
+  expect(defaultFamilyForYear(englandYearFor("northern-ireland", "Year 1"))).toBe("playful");
+  expect(defaultFamilyForYear(englandYearFor("england", "Year 7"))).toBe("professional");
+});

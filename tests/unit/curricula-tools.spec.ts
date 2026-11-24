@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { CURRICULA_REGISTRY, UK_CURRICULUM_IDS } from "@/app/lib/curricula";
+import { CURRICULA_REGISTRY, UK_CURRICULUM_IDS, getCurriculum } from "@/app/lib/curricula";
 import { TOOL_SCOPE, hiddenToolSlugs, isToolHiddenFor, showsUkPhonicsSchemes } from "@/app/lib/curricula/tool-scope";
 import { TOOLS } from "@/app/lib/tools";
 
@@ -58,7 +58,9 @@ test("the DfE phonics scheme list is offered only where England's schemes are ta
 
 // ── Options that change with the school system ─────────────────────────────
 
-import { bandsFor, examStylesFor, readingStageFor } from "@/app/lib/curricula/tool-scope";
+import { bandsFor, examStyleYearFor, examStylesFor, readingStageFor } from "@/app/lib/curricula/tool-scope";
+import { englandYearFor, yearForEnglandYear } from "@/app/lib/curricula/england-years";
+import { YEAR_GROUPS } from "@/app/lib/formOptions";
 import { DIFFERENTIATION_BANDS, DIFFERENTIATION_VALUES } from "@/app/lib/differentiation";
 import { EXAM_STYLES } from "@/app/lib/sheets/exam-styles";
 import { keyStageFor } from "@/app/lib/comprehension-domains";
@@ -97,7 +99,7 @@ test.describe("reading domains", () => {
   test("a UK teacher's key stage is exactly what it was", () => {
     for (const y of ["Nursery", "Reception", "Year 1", "Year 2", "Year 3", "Year 6", "Year 11", ""]) {
       for (const mixed of [false, true]) {
-        for (const id of [...UK_CURRICULUM_IDS, null]) expect(readingStageFor(y, mixed, id), `${y} ${mixed}`).toBe(keyStageFor(y, mixed));
+        for (const id of ["england", "england-eyfs", "scotland", "wales", "jersey", null]) expect(readingStageFor(y, mixed, id), `${y} ${mixed}`).toBe(keyStageFor(y, mixed));
       }
     }
   });
@@ -110,5 +112,50 @@ test.describe("reading domains", () => {
     expect(readingStageFor("Stage 3", false, "cambridge-primary")).toBe("ks2");
     expect(readingStageFor("1st Class", true, "ireland")).toBe("ks2");
     expect(readingStageFor("Not a year", false, "ireland")).toBe("ks2");
+  });
+});
+
+test.describe("Northern Ireland's own year list", () => {
+  const NI = "northern-ireland";
+
+  test("Northern Ireland reads its year at England's age", () => {
+    const stage = (y: string, mixed = false, id: string = NI) => readingStageFor(y, mixed, id);
+    expect(["Nursery", "Year 1", "Year 2", "Year 3", "Year 4", "Year 12", ""].map((y) => stage(y))).toEqual(["ks2", "ks2", "ks1", "ks1", "ks2", "ks2", "ks2"]);
+    expect(stage("Year 2", true)).toBe("ks2");
+    expect(stage("Year 3", true)).toBe("ks2");
+    for (const y of ["Nursery", "Year 1", "Year 2", "Year 3", "Year 4", "Year 12", ""]) {
+      expect(stage(y, false, "Northern Ireland Curriculum"), y).toBe(stage(y));
+    }
+  });
+
+  test("the helper remaps only Northern Ireland", () => {
+    const e = (y: string) => englandYearFor(NI, y);
+    expect(["Nursery", "Year 1", "Year 2", "Year 3", "Year 7", "Year 8", "Year 11", "Year 12", "Year 13", "Year 14", "Reception"].map(e)).toEqual([
+      "Nursery", "Reception", "Year 1", "Year 2", "Year 6", "Year 7", "Year 10", "Year 11", "Year 12", "Year 13", "Reception",
+    ]);
+    const n = (y: string) => yearForEnglandYear(NI, y);
+    expect(["Reception", "Year 6", "Year 11", "Nursery", "Year 13"].map(n)).toEqual(["Year 1", "Year 7", "Year 12", "Nursery", "Year 14"]);
+    for (const l of getCurriculum(NI)!.years.map((y) => y.label)) expect(n(e(l)), l).toBe(l);
+    // Every other curriculum, a guest and junk are left exactly as they are.
+    for (const c of CURRICULA_REGISTRY.filter((x) => x.id !== NI)) {
+      for (const l of [...c.years.map((y) => y.label), ...YEAR_GROUPS]) {
+        expect(englandYearFor(c.id, l), `${c.id} ${l}`).toBe(l);
+        expect(yearForEnglandYear(c.id, l), `${c.id} ${l}`).toBe(l);
+      }
+    }
+    for (const id of [null, "", "nonsense"]) {
+      for (const l of YEAR_GROUPS) {
+        expect(englandYearFor(id, l)).toBe(l);
+        expect(yearForEnglandYear(id, l)).toBe(l);
+      }
+    }
+  });
+
+  test("a KS2 style sets the teacher's own Year 6", () => {
+    const s = EXAM_STYLES.find((x) => x.id === "ks2-maths-arithmetic")!;
+    for (const id of ["england", "scotland", "wales", "jersey", null]) expect(examStyleYearFor(s, id), String(id)).toBe("Year 6");
+    expect(examStyleYearFor(s, NI)).toBe("Year 7");
+    const g = EXAM_STYLES.find((x) => x.id === "gcse-aqa")!;
+    for (const id of ["england", "scotland", "wales", "jersey", NI, null]) expect(examStyleYearFor(g, id), String(id)).toBeNull();
   });
 });

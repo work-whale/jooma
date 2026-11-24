@@ -117,7 +117,8 @@
  * Key Stage 4 (Part 6): the Order sets minimum content for Learning for Life
  * and Work and Physical Education only. Each is a list; a Learning for Life and
  * Work item names its element ("Employability") and holds that element's list.
- * NI Key Stage 4 is Years 11 and 12, so its statements carry ages 15 and 16.
+ * NI Key Stage 4 is Years 11 and 12, so its statements carry ages 14 and 15 (NI's own
+ * year list: Year N starts at age N + 3).
  *
  * Wales: not built. The Hwb terms limit downloads to educational use and bar
  * commercial reuse, modification and scraping; see docs/uk-curricula-build.md.
@@ -545,9 +546,9 @@ const NI_XML = `${NI_DIR}/nisr-2007-46-schedule-2.xml`;
 /** Parts 2 to 4 of Schedule 2, read as lists. Key Stages 3 and 4 (Parts 5
  *  and 6) are read by northernIrelandUpper below. */
 const NI_STAGES = [
-  { id: "nic-fs", part: 2, group: "At Foundation Stage:", ages: [5, 6] },
-  { id: "nic-ks1", part: 3, group: "At Key Stages 1 and 2:", ages: [7, 8] },
-  { id: "nic-ks2", part: 4, group: "At Key Stages 1 and 2:", ages: [9, 10, 11] },
+  { id: "nic-fs", part: 2, group: "At Foundation Stage:", ages: [4, 5] },
+  { id: "nic-ks1", part: 3, group: "At Key Stages 1 and 2:", ages: [6, 7] },
+  { id: "nic-ks2", part: 4, group: "At Key Stages 1 and 2:", ages: [8, 9, 10] },
 ];
 
 function decodeEntities(s) {
@@ -775,8 +776,8 @@ function northernIreland() {
 
 /** Key Stages 3 and 4 (Parts 5 and 6). See the header. */
 const NI_UPPER = [
-  { id: "nic-ks3", part: 5, group: "At Key Stage 3:", ages: [12, 13, 14] },
-  { id: "nic-ks4", part: 6, group: "At Key Stage 4:", ages: [15, 16] },
+  { id: "nic-ks3", part: 5, group: "At Key Stage 3:", ages: [11, 12, 13] },
+  { id: "nic-ks4", part: 6, group: "At Key Stage 4:", ages: [14, 15] },
 ];
 
 // A lettered part also loses a final comma: in Parts 5 and 6 commas end some

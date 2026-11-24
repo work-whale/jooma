@@ -8,6 +8,7 @@ import primary from "@/app/lib/national-curriculum/data/primary.json";
 import cfeFirst from "@/app/lib/standards/data/cfe-first.json";
 import nicKs1 from "@/app/lib/standards/data/nic-ks1.json";
 import nicKs3 from "@/app/lib/standards/data/nic-ks3.json";
+import nicKs4 from "@/app/lib/standards/data/nic-ks4.json";
 import { admin, createAdmin, deleteTeacher, setPlan, signIn, type TestTeacher } from "../support/users";
 
 /*
@@ -18,15 +19,17 @@ import { admin, createAdmin, deleteTeacher, setPlan, signIn, type TestTeacher } 
  *
  *   - a teacher on one of the three is never shown England's statements: they
  *     see their own, or an honest "not available yet" note (Wales has none yet)
- *   - the slides wizard keeps the UK year list for them (Year 12, Year 13,
- *     Adult learners), and shows the Scottish level beside the year
+ *   - the slides wizard keeps the UK year list for Scotland (Year 12, Year 13,
+ *     Adult learners, and no Year 14), lists Northern Ireland's own years
+ *     (Nursery, Year 1 to Year 14, Adult learners, no Reception), and shows the
+ *     Scottish level or the Northern Irish stage beside the year
  *   - a Scotland teacher aligns a worksheet to Curriculum for Excellence, with
  *     the level and the Open Government Licence credit, and what is sent is
  *     the outcome word for word with its code
  *   - a Northern Ireland teacher does the same with the statutory requirements
- *     (Foundation Stage to Key Stage 4: Year 1 to Year 11; a Year 8 teacher
- *     gets Key Stage 3, never the Learning Outcomes list), and Reception says
- *     there is nothing to align to
+ *     (Foundation Stage to Key Stage 4: Year 1 to Year 12, NI's own year list;
+ *     a Year 8 teacher gets Key Stage 3, never the Learning Outcomes list),
+ *     and Nursery and Year 13 say there is nothing to align to
  *   - the statements are separate chunks, fetched only when the card opens
  *
  * Teachers are admins so their regions need not be switched on. Generation and
@@ -145,6 +148,9 @@ test("a Scotland teacher's slides wizard still offers the UK years, Year 12 and 
   await expect(page.getByRole("button", { name: "Year 12", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Year 13", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Adult learners", exact: true })).toBeVisible();
+  // The UK list is unchanged for Scotland: Reception is there, Northern Ireland's Year 14 is not.
+  await expect(page.getByRole("button", { name: "Reception", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Year 14", exact: true })).toHaveCount(0);
   await shot(page, "slides-scotland-years");
 
   // Step two: the card names the level beside the year, and lists Scottish areas.
@@ -305,21 +311,102 @@ test("a Northern Ireland Year 8 teacher aligns a worksheet to the Key Stage 3 mi
   expect(align.statements).toEqual([{ id: req.id, text: "Cells, genes and reproduction" }]);
 });
 
-test("a Northern Ireland teacher in Reception is told there is nothing to align to, not shown another year", async ({ page }) => {
+test("a Northern Ireland teacher's year list has no Reception, and Nursery and Year 13 say there is nothing to align to", async ({ page }) => {
   const t = await teacherOn("northern-ireland", "UkNiRec");
   await signIn(page, t);
   await noSuggestions(page);
   await page.goto("/tools/worksheet-generator", NAV);
   await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Northern Ireland Curriculum", NAV);
-  await page.getByLabel("Year group", { exact: true }).selectOption("Reception");
+  const years = page.getByLabel("Year group", { exact: true });
+  await expect(years.locator("option")).toHaveText(["Select year group", "Nursery", ...Array.from({ length: 14 }, (_, i) => `Year ${i + 1}`)]);
+  await expect(years.locator("option", { hasText: "Reception" })).toHaveCount(0);
+
+  await years.selectOption("Nursery");
   await page.getByLabel("Subject", { exact: true }).fill("Maths");
   await page.getByLabel("Learning objective", { exact: true }).fill("Counting");
   const card = page.getByTestId("curriculum-alignment");
   await card.getByRole("button", { name: /Align to curriculum/ }).click();
-  await expect(card.getByTestId("curriculum-not-covered")).toContainText("Reception", NAV);
+  await expect(card.getByTestId("curriculum-not-covered")).toContainText("Nursery", NAV);
   await expect(card.getByLabel("Subject")).toHaveCount(0);
   await expect(card).not.toContainText("National Curriculum in England");
-  await shot(page, "worksheet-northern-ireland-reception", card);
+  await shot(page, "worksheet-northern-ireland-nursery", card);
+
+  await years.selectOption("Year 13");
+  await expect(card.getByTestId("curriculum-not-covered")).toContainText("Year 13", NAV);
+  await expect(card.getByLabel("Subject")).toHaveCount(0);
+});
+
+test("a Northern Ireland Year 12 teacher aligns a worksheet to Key Stage 4", async ({ page }) => {
+  const t = await teacherOn("northern-ireland", "UkNiKs4");
+  await signIn(page, t);
+  const req = (nicKs4 as { statements: { id: string; subject: string; strand: string; text: string }[] }).statements.find(
+    (x) => x.text.includes("xplore self employment"),
+  )!;
+  const asked: Record<string, unknown>[] = [];
+  await page.route("**/api/suggest-subject", (route) => {
+    asked.push(route.request().postDataJSON());
+    return route.fulfill({ json: { subject: req.subject, strand: req.strand, statementIds: [req.id] } });
+  });
+  const sent = await capture(page, "/api/worksheet-generator");
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Northern Ireland Curriculum", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Year 12");
+  await page.getByLabel("Subject", { exact: true }).fill("Careers");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Self employment");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toHaveText("Northern Ireland Curriculum", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ curriculumId: "northern-ireland", year: "Year 12" });
+
+  const year = card.getByLabel("Year", { exact: true });
+  await expect(year.locator("option:checked")).toHaveText("Key Stage 4 · Year 12", NAV);
+  const subjects = card.getByLabel("Subject");
+  await expect(subjects).toContainText("Learning for Life and Work", NAV);
+  await expect(subjects).toContainText("Physical Education");
+  await expect(subjects).not.toContainText("Language and Literacy");
+  await expect(card).not.toContainText("National Curriculum in England");
+  await shot(page, "worksheet-northern-ireland-year12", card);
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { stage: string; year: string; subject: string; strand: string; statements: { id: string; text: string }[] };
+  expect(align).toMatchObject({ stage: "Key Stage 4", year: "Year 12", subject: "Learning for Life and Work", strand: "Employability" });
+  expect(align.statements).toEqual([{ id: req.id, text: req.text }]);
+
+  // A KS2 SATs style sets the teacher's own Year 6, which is Year 7 in Northern Ireland.
+  await page.goto("/tools/exam-question-generator", NAV);
+  await page.getByTestId("exam-style").selectOption({ label: "KS2 SATs style: maths arithmetic" });
+  await expect(page.getByLabel("Year group", { exact: true })).toHaveValue("Year 7");
+});
+
+test("a Northern Ireland teacher's slides wizard offers NI's own years", async ({ page }) => {
+  const t = await teacherOn("northern-ireland", "UkNiSlides");
+  await signIn(page, t);
+  const asked = await noSuggestions(page);
+  await page.goto(`/tools/slideshow?prefill=${encodePrefill({ slug: "slideshow", fields: { topic: "Careers", year: "Year 12" } })}`, NAV);
+  const wizard = page.getByRole("dialog");
+  await expect(wizard).toBeVisible(NAV);
+  const pill = wizard.getByRole("button", { name: "Year 12" });
+  await expect(pill).toBeVisible();
+  await pill.click();
+  for (const y of ["Nursery", "Year 1", "Year 14", "Adult learners"]) {
+    await expect(page.getByRole("button", { name: y, exact: true }), y).toBeVisible();
+  }
+  await expect(page.getByRole("button", { name: "Reception", exact: true })).toHaveCount(0);
+  await shot(page, "slides-northern-ireland-years");
+
+  await page.getByRole("button", { name: "Year 12", exact: true }).last().click();
+  await wizard.getByRole("button", { name: /^Continue/ }).click();
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByLabel("Year", { exact: true }).locator("option:checked")).toHaveText("Key Stage 4 · Year 12", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  for (const a of asked) expect(a).toEqual({ topic: "Careers", year: "Year 12", curriculumId: "northern-ireland" });
+  await expect(card).not.toContainText("National Curriculum in England");
+  await shot(page, "slides-northern-ireland-card", card);
 });
 
 test("the statements download only when the card opens", async ({ page }) => {

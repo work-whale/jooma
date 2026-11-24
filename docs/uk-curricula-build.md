@@ -11,7 +11,7 @@ Before: a Scotland, Wales or Northern Ireland teacher who opened "Align to curri
 
 - **Early / First / Second / Third and fourth level** (Scotland): Scotland's own stages of Curriculum for Excellence. Early = nursery to the first year of primary (P1), First = P2 to P4, Second = P5 to P7, Third and fourth = S1 to S3 (the first three years of secondary, ages about 12 to 15). S4 onwards is the "senior phase" (exam courses), which has no outcomes of this kind.
 - **Es and Os**: Experiences and Outcomes, Scotland's curriculum statements, written as "I can ..." or "I have ..." sentences. Each has a code such as `MNU 1-02a` (area, level digit, number, letter).
-- **Foundation Stage / Key Stage 1 / Key Stage 2** (Northern Ireland): school stages. Foundation Stage = the first two years of primary (NI Years 1 and 2), Key Stage 1 = Years 3 and 4, Key Stage 2 = Years 5 to 7, Key Stage 3 = Years 8 to 10, Key Stage 4 = Years 11 and 12.
+- **Foundation Stage / Key Stage 1 / Key Stage 2** (Northern Ireland): school stages. Foundation Stage = the first two years of primary (NI Years 1 and 2), Key Stage 1 = Years 3 and 4, Key Stage 2 = Years 5 to 7, Key Stage 3 = Years 8 to 10, Key Stage 4 = Years 11 and 12. NI Year N starts at age N + 3 (Year 1 is P1, age 4), and NI has no Reception.
 - **Area of Learning** (Northern Ireland): a subject group such as "Language and Literacy" or "The World Around Us".
 - **The Order**: The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007, the law that sets what NI schools must teach.
 - **OGL**: Open Government Licence v3.0, the UK government's licence that allows free reuse, including commercial reuse, if you credit the source.
@@ -33,7 +33,7 @@ Before: a Scotland, Wales or Northern Ireland teacher who opened "Align to curri
 
 The six decisions you confirmed (all the plan's defaults):
 
-1. **NI year mapping by year number.** An NI teacher who picks Year 3 gets NI Year 3 (Key Stage 1). To change it later: shift every `nic-*` entry in `FRAMEWORK_AGES` (`app/lib/standards/index.ts`) down by one.
+1. **NI year mapping by year number.** An NI teacher who picks Year 3 gets NI Year 3 (Key Stage 1). To change it later: shift every `nic-*` entry in `FRAMEWORK_AGES` (`app/lib/standards/index.ts`) down by one. Done 2026-11-24, see section 13.
 2. **Wales skipped.** No Hwb page was fetched, nothing Welsh ships. Draft email in section 10.
 3. **Scotland Benchmarks excluded.**
 4. **Gaelic-medium documents excluded** ("Literacy and Gaidhlig" and every "(Gaelic)" translation). Gaelic (learners), which is taught in English, is included.
@@ -202,7 +202,7 @@ Screenshots (gitignored): `docs/screenshots/2026-11-20-uk-curricula/before/` (En
 4. **Topic matcher size** for Scotland Years 8 to 10: ask the model to pick the subject first, or send only the subject the teacher typed, before sending 567 statements.
 5. **Production:** the fix and the data ship together when this branch is merged. The UK region switches are already on in production. Check one Scotland and one NI account after release.
 6. Optional: one `LIVE_MODEL=1` run for a Scottish and an NI worksheet to see real output with the statements quoted.
-7. If NI gets its own year list later (NI Year 1 starts at age 4), shift the `nic-*` ages down by one.
+7. If NI gets its own year list later (NI Year 1 starts at age 4), shift the `nic-*` ages down by one. Done 2026-11-24, see section 13.
 8. Scotland's curriculum is under review (Curriculum Improvement Cycle) and the NI Order was amended in 2022 and 2023: the source copies carry their fetch date and sha256; re-run `node scripts/build-uk-curricula.mjs --nation=scotland` (or `northern-ireland`) when a source changes. A changed statement gets a new id (NI) or keeps its code (Scotland); an old saved run quietly drops a tick it can no longer find.
 9. Existing saved runs of Scotland, Wales and NI teachers hold England statement ids. They are now ignored (nothing is sent), which is intended and covered by a unit test.
 
@@ -441,9 +441,89 @@ Modified:
 
 ### 12.2 Carried into Stage 2
 
-- **NI's own year list** (Years 1 to 14, GCSEs in Year 12). Year 12 then shows Key Stage 4 with no data change. It also changes every NI tool's Year group list, Jo's prefills and how tools read the year by age, so it needs its own plan.
+- **NI's own year list** (Years 1 to 14, GCSEs in Year 12). Year 12 then shows Key Stage 4 with no data change. It also changes every NI tool's Year group list, Jo's prefills and how tools read the year by age, so it needs its own plan. Done 2026-11-24, see section 13.
 - **Wales:** the permission email in section 10 is still not sent; `WALES_PERMISSION:` is empty.
 - **NGSS:** off until WestEd and the National Academies Press agree. Twelve states have no statements until then (Alabama, Alaska, Arkansas, Georgia, Indiana, Minnesota, Missouri, Nebraska, Oklahoma, South Carolina, Tennessee, West Virginia).
 - **No statements yet** for Texas, Florida, Virginia, Ireland, New Zealand, Ontario, British Columbia and Alberta, and for Australian learning areas other than English, Mathematics and Science.
 - **Release checks:** switch on the regions outside the UK when ready; check one Scotland and one NI account after release; run `node scripts/curricula-status.mjs` to bring the workbook up to date; add a `verifiedOn` date for Scotland and Northern Ireland.
 - **Untested** (sections 8 and 11.7): matcher accuracy across many topics and its latency on the largest list.
+
+## 13. Stage 2 (2026-11-24): Northern Ireland's own year list
+
+### 13.1 What changed for teachers
+
+A Northern Ireland teacher now sees NI's own years in every tool with a curriculum field and in the slides wizard (the report writer and the timetable keep England's list, see 13.4): Nursery, then Year 1 to Year 14, with no Reception. Existing labels keep their meaning (Years 1 to 11 sit under the same stage on the alignment card as before). Year 12 gains Key Stage 4. Years 13 and 14 are new and have no stage. A saved "Reception" is never shown or sent for an NI teacher: the select shows "Select year group" until a year is picked.
+
+### 13.2 The NI year list
+
+`NI_YEARS` in `app/lib/curricula/uk.ts`: Nursery (3), Year 1 (4), Year 2 (5), ..., Year 12 (15), Year 13 (16), Year 14 (17). Year N starts at age N + 3. England, EYFS, Scotland, Wales and the four islands keep `UK_YEARS` by reference.
+
+| NI year | Age | Stage on the card | England year at that age |
+|---|---|---|---|
+| Nursery | 3 | none | Nursery |
+| Year 1 | 4 | Foundation Stage | Reception |
+| Year 2 | 5 | Foundation Stage | Year 1 |
+| Year 3 | 6 | Key Stage 1 | Year 2 |
+| Year 4 | 7 | Key Stage 1 | Year 3 |
+| Year 5 | 8 | Key Stage 2 | Year 4 |
+| Year 6 | 9 | Key Stage 2 | Year 5 |
+| Year 7 | 10 | Key Stage 2 | Year 6 |
+| Year 8 | 11 | Key Stage 3 | Year 7 |
+| Year 9 | 12 | Key Stage 3 | Year 8 |
+| Year 10 | 13 | Key Stage 3 | Year 9 |
+| Year 11 | 14 | Key Stage 4 | Year 10 |
+| Year 12 | 15 | Key Stage 4 | Year 11 |
+| Year 13 | 16 | none | Year 12 |
+| Year 14 | 17 | none | Year 13 |
+
+New `FRAMEWORK_AGES`: `nic-fs` [4, 5], `nic-ks1` [6, 7], `nic-ks2` [8, 9, 10], `nic-ks3` [11, 12, 13], `nic-ks4` [14, 15].
+
+### 13.3 How the data changed
+
+The five `nic-*.json` files were changed with one script that sets each statement's `ages` (key order kept, output `JSON.stringify(d, null, 1) + "\n"`, which round-trips the files byte for byte). Check: only age number lines differ (0 other changed lines), statement counts stay 239, 150, 150, 154 and 24. `scripts/build-uk-curricula.mjs` carries the same ages. The NI source XML is not in this checkout, so `--nation=northern-ireland` was NOT re-run; with the XML in place it should give no diff (ids are a hash of subject, strand and text). The owner should run it once the XML is back.
+
+### 13.4 The England-label helper
+
+`app/lib/curricula/england-years.ts` (`englandYearAge`, `englandYearFor`, `yearForEnglandYear`) reads an NI year at England's age for rules written against England's labels. Every other curriculum, a guest and an unknown value come back unchanged. `index.ts` does not import it (no cycle).
+
+| Place | Decision |
+|---|---|
+| `readingStageFor` | Mapped (NI Year 2 and 3 get KS1 reading domains) |
+| `ExamQuestionGeneratorForm.pickStyle` via `examStyleYearFor` | Mapped (a KS2 style sets NI Year 7) |
+| `GenerateModal` theme default | Mapped |
+| `jo.ts` `ageOf` and `fitWizardYear` | Fixed (England's reading first; `usesUkYearList`) |
+| `alignmentYears`, `alignmentStageLabel`, `loadStandardsFor`, `suggestionSource`, `alignParamFor` | Registry age, correct through `NI_YEARS` and `FRAMEWORK_AGES` |
+| `national-curriculum/*` | Only in England mode, never NI: untouched |
+| `sheets/context.ts`, `sheets/puzzles/level.ts`, `quiz/quiz.ts` theme | Left (cosmetic defaults, follow-up) |
+| `reports/reports.ts`, `ReportWriterForm`, timetable year lists | Left (not curriculum-aware for any system) |
+| `exam-styles.ts` `GCSE_YEARS`, `lesson-handoffs.ts`, `seo/tool-pages.ts` | Left |
+
+### 13.5 Slides wizard
+
+NI gets its own list plus Adult learners (16 options, no Reception), as every non-UK system does. `usesUkYearList` is now true exactly when the curriculum's years are `UK_YEARS` (or the curriculum is unknown). A guest and every other UK or island curriculum keep the UK list.
+
+### 13.6 Saved data
+
+No migration. A saved NI "Reception" (browser `ll:yearGroup` or a restored run) is hidden by `yearIfOffered` and never sent. Old NI Years 1 to 11 keep their meaning and stage. A restored NI Year 1 or Year 3 comprehension run whose key stage flips has its domains cleared once by the form's existing effect. A timetable slot saved as "Reception" opens Lesson Plan with a blank year. Jo maps "Reception" to NI "Year 1".
+
+### 13.7 Prompts
+
+No prompt file changed. `tests/unit/curriculum-golden.spec.ts` passed unregenerated (no `UPDATE_GOLDEN`). NI Years 12 to 14 give new strings of the same shape.
+
+### 13.8 Tests
+
+Edited or added in `tests/unit/`: `curricula.spec.ts`, `uk-curricula-alignment.spec.ts`, `uk-curricula-data.spec.ts` (including a test that reads the build script's ages), `curricula-tools.spec.ts`, `slide-theme-families.spec.ts`, `curricula-jo.spec.ts`, `slideshow-prefill.spec.ts`, `suggest-candidates.spec.ts`. They were run red first (16 failures in the files that could load, plus two files that could not load the new module).
+
+Mutation checks (each restored): M1 `nic-ks4` back to [15, 16] failed 9; M2 NI back on `UK_YEARS` failed 16; M3 `englandYearFor` identity failed 3; M4 `yearForEnglandYear` identity failed 2; M5 `usesUkYearList` back to the region test failed 2; M6 `ageOf` without `englandYearAge` failed 2; M7 JSON restored from git failed 3; M8 one script age left at [15, 16] failed 1; M9 `yearIfOffered` always returns the year failed 1.
+
+E2E edits are written in `tests/tools/uk-curricula-align.spec.ts` (NI list without Reception, Nursery and Year 13 notes, a Year 12 Key Stage 4 worksheet plus the KS2 style setting Year 7, the NI slides wizard, Scotland unchanged) but were NOT run: this container has no `.env.local`. Run: `npx playwright test tests/tools/uk-curricula-align.spec.ts tests/tools/slideshow-curriculum.spec.ts tests/tools/curricula-standards.spec.ts tests/tools/curricula-tools.spec.ts` against staging on `localhost:3000`.
+
+Left untested: the model's reading of "Year 12" or "Year 14" for NI (no prompt changed, no `LIVE_MODEL` run); the sheet theme, puzzle and report defaults; the timetable and report writer lists; the `ll:yearGroup` hook itself (its rule is tested through `yearIfOffered`); the wizard theme wiring (tested through the helper); all E2E.
+
+### 13.9 Owner questions, with the defaults used
+
+1. Years 13 and 14 on NI's list: yes; the card says there is nothing to align to.
+2. NI reading domains by age (NI Year 1 gets KS2, Years 2 and 3 get KS1): yes.
+3. An NI age hint in prompts: no (it would break the UK byte-for-byte golden).
+4. KS2 SATs styles stay on offer to NI; the year they set is now NI Year 7.
+5. Sheet theme and puzzle level, report writer phase and timetable year list still read England's labels: left as a follow-up.
