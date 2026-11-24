@@ -92,10 +92,12 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   "nic-fs": [5, 6],
   "nic-ks1": [7, 8],
   "nic-ks2": [9, 10, 11],
-  // Key Stage 3 = Years 8 to 10, Key Stage 4 = Year 11 (NI Key Stage 4 is Years 11
-  // and 12; the Order's Key Stage 4 content is offered for Year 11 only).
+  // Key Stage 3 = Years 8 to 10, Key Stage 4 = Years 11 and 12 (owner's decision
+  // of 2026-11-24: Year 12 is NI's second Key Stage 4 year, so it gets the same
+  // list). NI's year list stops at Year 11 for now, so Year 12 shows it once NI
+  // has its own year list.
   "nic-ks3": [12, 13, 14],
-  "nic-ks4": [15],
+  "nic-ks4": [15, 16],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched

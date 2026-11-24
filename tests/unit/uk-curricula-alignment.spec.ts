@@ -305,24 +305,35 @@ test.describe("Northern Ireland", () => {
     expect(["Year 5", "Year 6", "Year 7"].map(stage)).toEqual(Array(3).fill("Key Stage 2"));
     expect(["Year 8", "Year 9", "Year 10"].map(stage)).toEqual(Array(3).fill("Key Stage 3"));
     expect(stage("Year 11")).toBe("Key Stage 4");
-    // The nursery years are before the Foundation Stage; Year 12 on (age 16) is past Key Stage 4 here.
+    // The nursery years are before the Foundation Stage. Year 12 is not in NI's year
+    // list yet (it shares England's, which stops at Year 11), so it has no stage today.
     expect(["Nursery", "Reception", "Year 12", "Year 13"].map(stage)).toEqual(Array(4).fill(null));
     expect(["Nursery", "Reception", "Year 12", "Year 13", "Adult learners"].filter((y) => labels.includes(y))).toEqual([]);
   });
 
-  test("every age from 5 to 15 has exactly one stage, and none outside it has any", () => {
-    for (let age = 5; age <= 15; age++) {
+  test("Year 12 gets Key Stage 4 as soon as NI's year list has it, and Year 13 never does", () => {
+    // NI Key Stage 4 is Years 11 and 12 (owner's decision, 2026-11-24). NI's own year
+    // list is a later change; this stands in for it with Year 12 at age 16.
+    const withYear12 = { ...ni(), years: [...ni().years, { label: "Year 12", age: 16 }, { label: "Year 13", age: 17 }] };
+    expect(alignmentYears(withYear12).map((y) => y.label)).toContain("Year 12");
+    expect(alignmentYears(withYear12).map((y) => y.label)).not.toContain("Year 13");
+    expect(alignmentStageLabel(withYear12, "Year 12")).toBe("Key Stage 4");
+    expect(alignmentStageLabel(withYear12, "Year 13")).toBeNull();
+  });
+
+  test("every age from 5 to 16 has exactly one stage, and none outside it has any", () => {
+    for (let age = 5; age <= 16; age++) {
       expect(NIC_IDS.filter((f) => FRAMEWORK_AGES[f].includes(age)), `age ${age}`).toHaveLength(1);
     }
-    for (const age of [3, 4, 16, 17, 18]) expect(NIC_IDS.some((f) => FRAMEWORK_AGES[f].includes(age)), `age ${age}`).toBe(false);
+    for (const age of [3, 4, 17, 18]) expect(NIC_IDS.some((f) => FRAMEWORK_AGES[f].includes(age)), `age ${age}`).toBe(false);
     const stageAt = (age: number) => NIC_IDS.find((f) => FRAMEWORK_AGES[f].includes(age));
-    expect([6, 7, 8, 9, 11, 12, 13, 14, 15].map(stageAt)).toEqual(["nic-fs", "nic-ks1", "nic-ks1", "nic-ks2", "nic-ks2", "nic-ks3", "nic-ks3", "nic-ks3", "nic-ks4"]);
+    expect([6, 7, 8, 9, 11, 12, 13, 14, 15, 16].map(stageAt)).toEqual(["nic-fs", "nic-ks1", "nic-ks1", "nic-ks2", "nic-ks2", "nic-ks3", "nic-ks3", "nic-ks3", "nic-ks4", "nic-ks4"]);
   });
 
   test("a Northern Irish year lists only Northern Irish statements of its own stage", () => {
     const data = usable(ni()).map((f) => NIC[f as (typeof NIC_IDS)[number]]);
     expect(data).toHaveLength(5);
-    for (let age = 5; age <= 15; age++) {
+    for (let age = 5; age <= 16; age++) {
       const list = statementsForAge(data, age);
       expect(list.length, `age ${age}`).toBeGreaterThan(0);
       const stage = NIC_IDS.find((f) => FRAMEWORK_AGES[f].includes(age))!;
@@ -331,7 +342,12 @@ test.describe("Northern Ireland", () => {
         expect(englandIds.has(s.id), s.id).toBe(false);
       }
     }
-    expect(statementsForAge(data, 16)).toEqual([]);
+    // Year 12 (age 16) gets exactly Year 11's list: all of Key Stage 4 and nothing else.
+    const ids = (age: number) => statementsForAge(data, age).map((s) => s.id);
+    expect(ids(16)).toEqual(ids(15));
+    expect(ids(16)).toEqual(NIC["nic-ks4"].statements.map((s) => s.id));
+    expect(ids(16)).toHaveLength(24);
+    expect(statementsForAge(data, 17)).toEqual([]);
     expect(statementsForAge(data, 4)).toEqual([]);
   });
 
@@ -363,6 +379,8 @@ test.describe("Northern Ireland", () => {
     const ks4 = [nicText("nic-ks4", "xplore self employment")];
     const p4 = alignParamFor("northern-ireland", true, "Year 11", sel0, ks4)!;
     expect(p4).toMatchObject({ stage: "Key Stage 4", year: "Year 11", subject: "Learning for Life and Work", strand: "Employability" });
+    // A Key Stage 3 statement is never offered at Year 12's age.
+    expect(statementsForAge([NIC["nic-ks3"]], 16)).toEqual([]);
     // The card lists by age, so a Key Stage 3 statement is never offered in Year 3, nor a
     // Key Stage 1 one in Year 8.
     expect(statementsForAge([NIC["nic-ks3"]], 7)).toEqual([]);
@@ -381,9 +399,11 @@ test.describe("Northern Ireland", () => {
     const one = [nicText("nic-ks1", "Use prepositions to state position")];
     expect(alignParamFor("northern-ireland", false, "Year 3", sel0, one)).toBeUndefined();
     expect(alignParamFor("northern-ireland", true, "Year 3", sel0, [])).toBeUndefined();
-    // Reception has no Foundation Stage statements here; Year 12 is past Key Stage 4.
+    // Reception has no Foundation Stage statements here. Year 12 is not in NI's year
+    // list yet, so nothing is sent for it; Year 13 is past Key Stage 4.
     expect(alignParamFor("northern-ireland", true, "Reception", sel0, one)).toBeUndefined();
     expect(alignParamFor("northern-ireland", true, "Year 12", sel0, [nicText("nic-ks4", "xplore self employment")])).toBeUndefined();
+    expect(alignParamFor("northern-ireland", true, "Year 13", sel0, [nicText("nic-ks4", "xplore self employment")])).toBeUndefined();
     // England's and Scotland's statements are not Northern Ireland's, and the other way round.
     expect(alignParamFor("northern-ireland", true, "Year 3", sel0, englandStatements)).toBeUndefined();
     expect(alignParamFor("northern-ireland", true, "Year 4", sel0, [byCode("MNU 1-02a")])).toBeUndefined();

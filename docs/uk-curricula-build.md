@@ -424,3 +424,26 @@ Modified:
 1. **Keep Learning for Life and Work at Key Stage 3 (61 statements)?** Recommended: yes. It is statutory minimum content, and a teacher of those subjects has nothing else to align to.
 2. **Keep "Irish with Media Education in Irish-speaking schools"?** Recommended: yes, as its own strand.
 3. **Should Year 12 also show the Key Stage 4 list?** Year 12 is NI's second Key Stage 4 year. Today it shows nothing, because Key Stage 4 was specified as age 15 only.
+
+## 12. Owner decisions of 2026-11-24, and what carries into Stage 2
+
+### 12.1 The three open decisions from 11.8
+
+1. **Learning for Life and Work at Key Stage 3: kept** (61 statements). No change.
+2. **"Irish with Media Education in Irish-speaking schools": kept** as its own strand. No change.
+3. **Year 12 shows the Key Stage 4 list: yes, once Year 12 exists for NI.**
+   - Found while building it: NI shares England's year list (`UK_YEARS`, Nursery to Year 11), so no NI form offers Year 12. Adding age 16 alone shows a teacher nothing.
+   - Owner's choice: tag the data now and give NI its own year list in Stage 2.
+   - Done now: `nic-ks4` covers ages 15 and 16 in `FRAMEWORK_AGES` and in the build script, and every statement in `nic-ks4.json` carries `ages: [15, 16]`. Only the `ages` lines changed; ids and text are the same.
+   - The NI source XML is not in this checkout, and legislation.gov.uk was blocked from the session that made the change, so the JSON was edited to the exact output the script gives (it writes `ages: stage.ages`, and ids never depend on ages). Re-running `node scripts/build-uk-curricula.mjs --nation=northern-ireland` with the XML in place should give no diff.
+   - Tests: ages 5 to 16 each have exactly one NI stage; age 16 lists exactly the 24 Key Stage 4 statements; Year 12 is not on NI's list today and sends nothing; with Year 12 (age 16) added to the list, it is offered under "Key Stage 4" and Year 13 is not. Mutation check: putting `nic-ks4` back to `[15]` makes 4 tests fail.
+   - Checks: `pnpm test:unit` 2343 passed, 5 skipped (the NI XML tests, source missing); `tsc` clean; language check passed; eslint clean on the touched files. No E2E was run: nothing a teacher sees changes until NI has a Year 12.
+
+### 12.2 Carried into Stage 2
+
+- **NI's own year list** (Years 1 to 14, GCSEs in Year 12). Year 12 then shows Key Stage 4 with no data change. It also changes every NI tool's Year group list, Jo's prefills and how tools read the year by age, so it needs its own plan.
+- **Wales:** the permission email in section 10 is still not sent; `WALES_PERMISSION:` is empty.
+- **NGSS:** off until WestEd and the National Academies Press agree. Twelve states have no statements until then (Alabama, Alaska, Arkansas, Georgia, Indiana, Minnesota, Missouri, Nebraska, Oklahoma, South Carolina, Tennessee, West Virginia).
+- **No statements yet** for Texas, Florida, Virginia, Ireland, New Zealand, Ontario, British Columbia and Alberta, and for Australian learning areas other than English, Mathematics and Science.
+- **Release checks:** switch on the regions outside the UK when ready; check one Scotland and one NI account after release; run `node scripts/curricula-status.mjs` to bring the workbook up to date; add a `verifiedOn` date for Scotland and Northern Ireland.
+- **Untested** (sections 8 and 11.7): matcher accuracy across many topics and its latency on the largest list.

@@ -93,8 +93,13 @@ test.describe("every framework's data", () => {
         }
       }
     }
-    // The UK nations teach to 15 here: nothing older.
-    for (const f of UK_BUILT) for (const s of get(f).statements) if (Math.max(...s.ages) > 15) bad.push(`${s.id}: older than 15`);
+    // The UK nations teach to 15 here, except NI Key Stage 4, which is Years 11 and 12 (ages 15 and 16).
+    for (const f of UK_BUILT) {
+      const oldest = f === "nic-ks4" ? 16 : 15;
+      for (const s of get(f).statements) if (Math.max(...s.ages) > oldest) bad.push(`${s.id}: older than ${oldest}`);
+    }
+    // Every Key Stage 4 statement is offered in both Key Stage 4 years.
+    for (const s of get("nic-ks4").statements) if (s.ages.join() !== "15,16") bad.push(`${s.id}: ages ${s.ages.join()}, not 15,16`);
     expect(bad).toEqual([]);
   });
 
