@@ -378,6 +378,8 @@ test("a Northern Ireland Year 12 teacher aligns a worksheet to Key Stage 4", asy
 
   // A KS2 SATs style sets the teacher's own Year 6, which is Year 7 in Northern Ireland.
   await page.goto("/tools/exam-question-generator", NAV);
+  // The profile's curriculum arrives after the page opens; a style picked before it reads England's list.
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Northern Ireland Curriculum", NAV);
   await page.getByTestId("exam-style").selectOption({ label: "KS2 SATs style: maths arithmetic" });
   await expect(page.getByLabel("Year group", { exact: true })).toHaveValue("Year 7");
 });

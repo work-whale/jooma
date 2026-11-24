@@ -28,8 +28,11 @@
  *       statements, assessment boundaries or foundation boxes).
  *   - AC9_curriculum_workbook.xlsx
  *       Australian Curriculum v9.0, ACARA's curriculum workbook from
- *       https://www.australiancurriculum.edu.au/downloads (CC BY 4.0). English,
- *       Mathematics and Science content descriptions, Foundation to Year 10.
+ *       https://www.australiancurriculum.edu.au/downloads (CC BY 4.0). Content
+ *       descriptions, Foundation to Year 10, for English, Mathematics, Science,
+ *       Humanities and Social Sciences, The Arts, Technologies and Health and
+ *       Physical Education. Languages are left out on purpose. A two-year band
+ *       ("Years 3 and 4") gives both ages.
  *
  * Text is kept verbatim apart from: a capital first letter, collapsed
  * whitespace, and en and em dashes written as hyphens (the brand avoids them in
@@ -315,6 +318,28 @@ const plainMath = (s) =>
       .trim(),
   );
 
+/** The workbook's Subject column, as a teacher knows it: "HASS F-6" is
+ *  Humanities and Social Sciences, and the Years 7 to 10 subjects lose their
+ *  "7-10" ("History 7-10" is History). The rest stay as they are. */
+const AC9_SUBJECT = (name) => (name === "HASS F-6" ? "Humanities and Social Sciences" : name.replace(/\s+7-10$/, ""));
+
+/** The ages a workbook level covers: "Foundation Year" is 5, "Year N" is N + 5,
+ *  and a two-year band ("Years 3 and 4") is both ages, [8, 9]. null for
+ *  anything else. */
+function ac9Ages(level) {
+  if (level === "Foundation Year") return [5];
+  const one = level.match(/^Year (\d+)$/);
+  if (one) return [Number(one[1]) + 5];
+  const band = level.match(/^Years (\d+) and (\d+)$/);
+  if (band && Number(band[2]) === Number(band[1]) + 1) return [Number(band[1]) + 5, Number(band[2]) + 5];
+  return null;
+}
+
+/** Every learning area but Languages. Languages (1,283 statements, two
+ *  sequences per language that overlap at the same year) are left out on
+ *  purpose: the owner's decision, 2026-11-24. */
+const AC9_AREAS = ["English", "Mathematics", "Science", "Humanities and Social Sciences", "The Arts", "Technologies", "Health and Physical Education"];
+
 async function ac9() {
   const zip = await JSZip.loadAsync(readFileSync(`${SRC}/AC9_curriculum_workbook.xlsx`));
   const M = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -334,26 +359,31 @@ async function ac9() {
       cells[c[1]] = unesc(/t="s"/.test(c[2]) && v !== undefined ? shared[Number(v)] : (inline ?? v ?? ""));
     }
     const area = cells.A;
-    if (!["English", "Mathematics", "Science"].includes(area)) continue;
-    const key = `${area}|${cells.C ?? ""}`;
+    if (!AC9_AREAS.includes(area)) continue;
+    // The strand in force is kept per subject AND level: Dance and Music, or
+    // History and Geography, repeat their own strand rows at the same level.
+    const key = `${area}|${cells.B ?? ""}|${cells.C ?? ""}`;
     if (cells.H) ctx[key] = { strand: cells.H, sub: "" };
     if (cells.I) ctx[key] = { ...(ctx[key] ?? { strand: "" }), sub: cells.I };
     const code = cells.E ?? "";
     if (!/^AC9[A-Z]+\w*\d$/.test(code) || !cells.J || cells.K) continue;
     const level = cells.C ?? "";
-    const yr = level === "Foundation Year" ? 0 : Number(level.match(/^Year (\d+)$/)?.[1] ?? NaN);
-    if (Number.isNaN(yr)) continue;
+    const ages = ac9Ages(level);
+    if (!ages) continue;
     const where = ctx[key] ?? { strand: "", sub: "" };
     out.push({
       id: `ac9-${code.toLowerCase()}`,
       code,
-      subject: area === "Mathematics" ? "Mathematics" : area,
+      subject: AC9_SUBJECT(cells.B ?? area),
       strand: clean([where.strand, where.sub].filter(Boolean).join(": ")),
-      ages: [yr + 5],
+      ages,
       text: cap(clean(plainMath(cells.J.replace(/<[^>]+>/g, " ")))),
     });
   }
-  return out;
+  // English, Mathematics and Science keep their place at the front (and so
+  // their order on the card); the other learning areas follow in workbook order.
+  const first = (s) => (["English", "Mathematics", "Science"].includes(s.subject) ? 0 : 1);
+  return out.sort((a, b) => first(a) - first(b));
 }
 
 // ── Write ──────────────────────────────────────────────────────────────────
@@ -379,7 +409,8 @@ const SOURCES = {
       "NGSS is a registered trademark of WestEd. Neither WestEd nor the lead states and partners that developed the Next Generation Science Standards were involved in the production of this product, and do not endorse it.",
   },
   ac9: {
-    title: "Australian Curriculum v9.0 (English, Mathematics, Science)",
+    title:
+      "Australian Curriculum v9.0 (English, Mathematics, Science, Humanities and Social Sciences, The Arts, Technologies, Health and Physical Education; Languages are not included)",
     file: "docs/standards/AC9_curriculum_workbook.xlsx",
     url: "https://www.australiancurriculum.edu.au/",
     credit:

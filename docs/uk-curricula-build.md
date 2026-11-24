@@ -527,3 +527,81 @@ Left untested: the model's reading of "Year 12" or "Year 14" for NI (no prompt c
 3. An NI age hint in prompts: no (it would break the UK byte-for-byte golden).
 4. KS2 SATs styles stay on offer to NI; the year they set is now NI Year 7.
 5. Sheet theme and puzzle level, report writer phase and timetable year list still read England's labels: left as a follow-up.
+
+## 14. Stage 3 Phase A (2026-11-24): Australia's other learning areas
+
+### 14.1 What changed
+
+- `scripts/build-standards.mjs` (`ac9()`): takes every learning area of the ACARA v9.0 workbook except Languages. Two-year bands ("Years 3 and 4") give both ages, so a band is [8, 9]; Foundation is [5]; "Year N" is [N + 5]. The subject is the workbook's Subject column, with "HASS F-6" written as "Humanities and Social Sciences" and the "7-10" suffix dropped ("History 7-10" is History). The strand in force is now kept per learning area, subject and level, so Dance and Music (or History and Geography) at the same level never share a strand. The English, Mathematics and Science statements stay first in the file, in their old order, and the new ones follow, so the data diff is a pure append plus the new source title.
+- `app/lib/standards/data/ac9.json`: 676 became 1,395 statements. One framework id (`ac9`), one file. The source title now names the learning areas and says "Languages are not included". The credit text is identical.
+- `app/lib/standards/suggest.ts` (topic matcher): the subject words teachers type now reach the new subjects: HASS and humanities, history and geography (Humanities and Social Sciences before Year 7, History and Geography from Year 7), civics, citizenship, economics, business, art and visual art, media, health and wellbeing, digital technology and coding (Digital Technologies only), design and technology and D&T (Design and Technologies only). "Science" does not pick up "Humanities and Social Sciences" (its name contains "Sciences"), and typing "Humanities and Social Sciences" does not pick up Science. "P.E." was never reachable (the word boundary cannot see a trailing dot); it is now, for every curriculum. Every new rule only adds a target that no other curriculum has, so England, the US, Scotland and Northern Ireland pick the same subjects as before (pinned in the new spec).
+- Header comments in `scripts/build-standards.mjs` and `app/lib/standards/index.ts` updated.
+
+### 14.2 Counts
+
+| Learning area | Statements |
+| --- | --- |
+| English, Mathematics, Science (unchanged) | 676 |
+| Humanities and Social Sciences (HASS F to 6 89, Civics and Citizenship 42, Economics and Business 40, Geography 57, History 105) | 333 |
+| The Arts (Dance, Drama, Media Arts, Music, Visual Arts, 33 each) | 165 |
+| Technologies (Design and Technologies 51, Digital Technologies 73) | 124 |
+| Health and Physical Education | 97 |
+| Total | 1,395 |
+
+Languages (1,283) are left out, as the owner decided. Every code in the file is a content description: no elaboration, no Languages row. One workbook code, AC9HH9K014 (History Year 9), is spelled with a stray zero in ACARA's own sheet; it is kept as published.
+
+### 14.3 File size
+
+| | Raw | Gzip |
+| --- | --- | --- |
+| `ac9.json` before | 215,873 bytes | 32,597 bytes |
+| `ac9.json` after | 446,368 bytes | 60,481 bytes |
+
+The gzipped file is well under the 150 KB split line in the plan (section 2.2), so the file was not split. A real `next build` chunk comparison was not run in this phase.
+
+### 14.4 Tests
+
+Written first, run red, then built to green.
+
+- New `tests/unit/ac9-areas.spec.ts` (34 tests): counts per area and per subject; a sha256 of the sorted `id|text` lines of the 676 old statements (taken before the change), and a second hash over code, subject, strand and ages; bands, Foundation and Year N ages; every age 5 to 15; no Languages and no elaboration; the subject set; the source title and credit; coverage of every age by every new subject; strands per subject (History against Geography, Design and Technologies against Digital Technologies, Dance against Music, and every statement against the workbook's own strand rows); the matcher cases above, the fallback for an unknown subject, and one US, Scottish, Northern Irish and English case unchanged.
+- `tests/unit/standards.spec.ts`: the pinned total is now 1,395.
+- `tests/unit/curriculum-golden.spec.ts`: passes without UPDATE_GOLDEN, so no prompt changed.
+- Red count before building: 25 failed (24 in the new spec, 1 pinned total), 44 passed (the regression and guard tests, which must pass before and after).
+- Green: full `pnpm test:unit` is 2,388 passed, 0 failed, 5 skipped.
+- One E2E added to `tests/tools/curricula-standards.spec.ts` (Queensland Year 4, HASS statement ticked, its id in the request, ACARA credit shown). It has not been run here.
+
+### 14.5 Mutation checks
+
+Each run against `ac9-areas.spec.ts`, `standards.spec.ts` (and `suggest-candidates.spec.ts` for d), then restored.
+
+| Mutation | Tests that failed |
+| --- | --- |
+| a. parser skips banded levels | 15 |
+| b. Year N ages shifted by one | 9 |
+| c. "HASS F-6" not renamed | 9 |
+| d. the PE synonym removed from the matcher | 4 |
+
+### 14.6 Left untested
+
+- The real matcher's choices across many topics (needs `LIVE_MODEL`).
+- The card's look with about twice as many statements at a Year 7 list (not checked in a browser; no per-subject filter was added).
+- A real `next build` chunk size (since measured: see 14.8).
+- The AU E2E is written but not run (since run: see 14.8).
+
+### 14.7 The Languages note
+
+The align card has only one generic "not available yet" note (for a curriculum with no data) and no per-curriculum note mechanism, so no "Languages are not listed yet" line was added. Adding one would be new UI.
+
+### 14.8 Verification on the owner's PC (2026-11-24, Opus)
+
+Run on `staging` against the staging database, `next build` plus `next start` on localhost:3000 through `scripts/with-staging-env.sh`.
+
+- **NI handover (section 13).** The four curriculum E2E files first gave 18 passed, 1 failed: "a Northern Ireland Year 12 teacher aligns a worksheet to Key Stage 4" picked the KS2 SATs style before the teacher's curriculum had loaded, so the year read England's list (Year 6). The app was right: once the test waits for the curriculum, the style sets NI Year 7 (3 of 3 repeats pass). Test fix only, commit `fae7c60`.
+- **NI source XML.** Present on the PC, sha256 `c63af56f...091` as expected. `node scripts/build-uk-curricula.mjs --nation=northern-ireland` gives no content change (line endings only, restored), so the hand-edited ages match the script. The 5 XML tests run and pass.
+- **Australia data, checked independently** (a separate script, not the build code): all 1,395 non-Languages content descriptions in the workbook are in `ac9.json` with the same code and ages and every source word present; none missing, none extra, no duplicate ids, no en or em dashes. The first 676 statements are byte for byte the same as before, in the same order.
+- **Extra mutation (lead):** dropping the HASS fallback for "history" makes 1 test fail.
+- **Chunk size from `next build`:** the `ac9` data chunk goes from 185,919 to 382,311 bytes raw, 32,112 to 59,332 gzipped. It loads only when an Australian teacher opens the card. Under the 150 KB gzip line, so no split.
+- **The AU E2E needed two test fixes**, both wrong guesses in the test, not app bugs: the curriculum select reads "Australian Curriculum v9.0 (Queensland)", not "Queensland: ..."; and the subject list assertion had the subjects out of order. It now pins the exact Year 4 list (English, Mathematics, Science, Humanities and Social Sciences, Health and Physical Education, Design and Technologies, Digital Technologies, Dance, Drama, Media Arts, Music, Visual Arts), which also proves no Years 7 to 10 subject or language appears at Year 4. A screenshot is taken when `SHOTS_DIR` is set.
+- **Results:** `pnpm test:unit` 2,393 passed, 0 failed; the four curriculum E2E files 20 passed; `tsc` clean; eslint clean on the touched specs; language check passed.
+- **Screenshots** (gitignored): `docs/screenshots/2026-11-ni-years/` (NI and Scotland) and `docs/screenshots/2026-11-24-au-learning-areas/worksheet-queensland-year4-hass.png`. No "before" shot for Australia: the old build was not kept.
+- **Still untested:** the real matcher on many topics (`LIVE_MODEL`), and the card at Year 7 with about 140 statements (it already has a subject select and a search box, so no filter was added).
