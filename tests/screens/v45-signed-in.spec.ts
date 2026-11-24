@@ -111,6 +111,12 @@ for (const [label, viewport] of [["desktop", DESKTOP], ["phone", PHONE]] as cons
       await signIn(page, t3);
       const prefill = Buffer.from(JSON.stringify({ slug: "slideshow", fields: { topic: "Volcanoes" } }), "utf8").toString("base64url");
       await page.goto(`/tools/slideshow?prefill=${prefill}`);
+      // clearCookies above also cleared the cookie choice, and on a phone the
+      // banner sits over the wizard's Continue button.
+      const banner = page.getByTestId("cookie-banner");
+      if (await banner.waitFor({ state: "visible", timeout: 5_000 }).then(() => true, () => false)) {
+        await banner.getByRole("button", { name: "Reject" }).click();
+      }
       const wizard = page.getByRole("dialog");
       await wizard.getByRole("button", { name: /^Continue$/ }).click(NAV);
       await wizard.getByRole("button", { name: /Image source/ }).click();
