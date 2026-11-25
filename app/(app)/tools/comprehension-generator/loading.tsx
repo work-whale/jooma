@@ -81,7 +81,7 @@ export default function Loading() {
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-gray-800">Topic or prompt</label>
               <div className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-300 bg-white">
-                e.g. "The life cycle of a monarch butterfly"
+                e.g. &quot;The life cycle of a monarch butterfly&quot;
               </div>
             </div>
 

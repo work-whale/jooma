@@ -24,6 +24,8 @@ export interface PendingInvite {
  */
 export default function PendingInvites({ invites }: { invites: PendingInvite[] }) {
   const [open, setOpen] = useState(true);
+  // Read once on mount (Date.now() is impure, so not in the render body).
+  const [now] = useState(() => Date.now());
   const [revoking, setRevoking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -92,7 +94,7 @@ export default function PendingInvites({ invites }: { invites: PendingInvite[] }
                     </Tag>
                   </td>
                   <td className="px-4 py-2.5 whitespace-nowrap" style={{ color: C.muted }}>
-                    {new Date(inv.expires_at).getTime() < Date.now() ? (
+                    {new Date(inv.expires_at).getTime() < now ? (
                       // An expired link can't be accepted, so say so rather
                       // than leaving the admin to wonder why nothing happened.
                       <span style={{ color: C.danger }}>

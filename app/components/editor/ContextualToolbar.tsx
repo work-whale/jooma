@@ -697,6 +697,10 @@ export default function ContextualToolbar({
   onSwapImage,
   onReplaceAudio,
 }: Props) {
+  // File input ref for the Swap Image button (image toolbar only). Declared
+  // before the early returns so the hook runs on every render.
+  const swapInputRef = useRef<HTMLInputElement>(null);
+
   if (!selection) return null;
 
   // Slides have a fundamentally different toolset (background, no lock/delete);
@@ -762,9 +766,6 @@ export default function ContextualToolbar({
   const svgColors = isSvg && im ? extractSvgColors(im.src).slice(0, 6) : [];
 
   const locked = !!(t?.locked || sh?.locked || im?.locked || v?.locked);
-
-  // File input ref for the Swap Image button (image toolbar only).
-  const swapInputRef = useRef<HTMLInputElement>(null);
 
   const handleSwapFile = (file: File) => {
     const reader = new FileReader();

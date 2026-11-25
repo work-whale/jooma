@@ -65,7 +65,9 @@ function ModalShell({
    * rejection, just a promise that never settles. Cost an afternoon.
    */
   const cancelRef = useRef(onCancel);
-  cancelRef.current = onCancel;
+  useEffect(() => {
+    cancelRef.current = onCancel;
+  });
 
   useEffect(() => {
     returnTo.current = document.activeElement as HTMLElement | null;

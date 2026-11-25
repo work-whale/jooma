@@ -52,7 +52,9 @@ export default function PresentationViewer({ slides, startIndex = 0, themeId, on
   // the overlay would linger on top of the page after Escape. `onClose` is
   // held in a ref so re-renders don't re-trigger the fullscreen request.
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
   useEffect(() => {
     // Track entry via the actual fullscreenchange events rather than the
     // requestFullscreen() promise — the promise can resolve after the first
