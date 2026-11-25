@@ -21,6 +21,9 @@ import {
   intervalFromStripe,
   reasonFromBilling,
   refundOptions,
+  REFUND_WINDOWS,
+  topUpLeftForPack,
+  windowEnd,
   type ChargeFacts,
   type RefundOption,
 } from "@/app/lib/refund-policy";
@@ -186,6 +189,20 @@ export async function adviseCharges(
     }
   }
 
+  // The resources packs still inside their refund window and not refunded.
+  // Each is judged against the pool minus all the others (topUpLeftForPack),
+  // so one unspent pool is never counted twice.
+  const packsInWindow = charges
+    .filter((c) => {
+      const p = piOf(c) ? purchases.get(piOf(c)!) : undefined;
+      return (
+        p?.kind === "resources_topup" &&
+        c.amount_refunded === 0 &&
+        now.getTime() <= windowEnd(new Date(c.created * 1000), REFUND_WINDOWS.topUpDays).getTime()
+      );
+    })
+    .map((c) => ({ chargeId: c.id, units: purchases.get(piOf(c)!)!.units }));
+
   const out = new Map<string, ChargeAdvice>();
   await Promise.all(
     charges.map(async (c) => {
@@ -232,7 +249,10 @@ export async function adviseCharges(
           amountRefunded: c.amount_refunded,
           periodEnd: null,
           spentSinceCharge: null,
-          topUp: resources && poolLeft !== null ? { units: purchase.units, left: poolLeft } : null,
+          topUp:
+            resources && poolLeft !== null
+              ? { units: purchase.units, left: topUpLeftForPack(c.id, packsInWindow, poolLeft) }
+              : null,
         };
       } else {
         facts = {

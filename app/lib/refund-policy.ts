@@ -235,6 +235,27 @@ export function daysInWords(n: number): string {
   return WORDS[n] ?? String(n);
 }
 
+/**
+ * How much of the unspent top up pool can be counted for ONE pack.
+ *
+ * The pool is shared, so two packs bought in the same window cannot each be
+ * judged against the whole of it: 500 + 500 bought with 600 left would pass
+ * both checks while 400 was spent. Every other pack still in its window and
+ * not refunded is set aside first, so the packs only qualify together when
+ * the pool covers all of them. A refund deletes its grant, so the next load
+ * reads the smaller pool and the rest are judged again from there.
+ */
+export function topUpLeftForPack(
+  chargeId: string,
+  packsInWindow: { chargeId: string; units: number }[],
+  poolLeft: number,
+): number {
+  const others = packsInWindow
+    .filter((p) => p.chargeId !== chargeId)
+    .reduce((sum, p) => sum + p.units, 0);
+  return Math.max(0, poolLeft - others);
+}
+
 export interface PurchaseRow {
   user_id: string;
   units: number;

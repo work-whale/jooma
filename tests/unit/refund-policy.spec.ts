@@ -10,6 +10,7 @@ import {
   intervalFromStripe,
   refundOptions,
   topUpGrantToReverse,
+  topUpLeftForPack,
   unusedWholeMonths,
   windowEnd,
   type ChargeFacts,
@@ -493,5 +494,46 @@ test.describe("reading Stripe's words", () => {
     expect(intervalFromStripe("year")).toBe("year");
     expect(intervalFromStripe("week")).toBeNull();
     expect(intervalFromStripe(null)).toBeNull();
+  });
+});
+
+test.describe("two top ups judged against one shared pool", () => {
+  // Security review, 26 Nov: each pack used to be checked against the WHOLE
+  // pool, so 500 + 500 with 600 left offered both while 400 had been spent.
+  const packs = [
+    { chargeId: "ch_a", units: 500 },
+    { chargeId: "ch_b", units: 500 },
+  ];
+  const offered = (left: number) =>
+    refundOptions(
+      {
+        kind: "topup",
+        interval: null,
+        reason: null,
+        chargedAt: new Date("2026-11-20T10:00:00Z"),
+        amount: 249,
+        amountRefunded: 0,
+        periodEnd: null,
+        spentSinceCharge: null,
+        topUp: { units: 500, left },
+      },
+      new Date("2026-11-22T10:00:00Z"),
+    ).some((o) => o.rule === "topup_unspent");
+
+  test("part of the pool spent: neither pack is offered", () => {
+    expect(topUpLeftForPack("ch_a", packs, 600)).toBe(100);
+    expect(topUpLeftForPack("ch_b", packs, 600)).toBe(100);
+    expect(offered(topUpLeftForPack("ch_a", packs, 600))).toBe(false);
+    expect(offered(topUpLeftForPack("ch_b", packs, 600))).toBe(false);
+  });
+
+  test("the whole pool unspent: both are offered", () => {
+    expect(offered(topUpLeftForPack("ch_a", packs, 1000))).toBe(true);
+    expect(offered(topUpLeftForPack("ch_b", packs, 1000))).toBe(true);
+  });
+
+  test("a single pack keeps the whole pool, and the result never goes below zero", () => {
+    expect(topUpLeftForPack("ch_a", [packs[0]], 600)).toBe(600);
+    expect(topUpLeftForPack("ch_a", packs, 200)).toBe(0);
   });
 });

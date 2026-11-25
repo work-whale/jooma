@@ -1443,10 +1443,10 @@ async function reverseResourcesTopUp(paymentIntentId: string) {
     .select("id, user_id, kind, amount, granted_by, created_at")
     .eq("user_id", purchase.user_id)
     .eq("kind", "resources_topup");
-  if (readErr) {
-    console.error("[stripe/webhook] could not read grants to reverse a resources top up", readErr);
-    return;
-  }
+  // A database error must not leave the resources with a refunded teacher:
+  // throw, the handler answers 500 and Stripe retries. A retry is safe, since
+  // a grant already deleted is simply not found the second time.
+  if (readErr) throw readErr;
 
   const grantId = topUpGrantToReverse(
     { user_id: purchase.user_id, units: purchase.units, created_at: purchase.created_at },
@@ -1457,7 +1457,7 @@ async function reverseResourcesTopUp(paymentIntentId: string) {
     return;
   }
   const { error } = await supabaseAdmin.from("allowance_grants").delete().eq("id", grantId);
-  if (error) console.error("[stripe/webhook] could not reverse resources top up", error);
+  if (error) throw error;
 }
 
 export async function POST(req: NextRequest) {
