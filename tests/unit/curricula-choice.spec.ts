@@ -226,3 +226,57 @@ test.describe("Asia: starting a teacher on their own country's curriculum", () =
     for (const id of Object.values(COUNTRY_TO_ID)) expect(languageAfterChoosing(id, "fr-FR"), id).toBeNull();
   });
 });
+
+test.describe("Caribbean and Malta: starting a teacher on their own country's curriculum", () => {
+  const COUNTRY_TO_ID = { JM: "jamaica", TT: "trinidad-and-tobago", MT: "malta" } as const;
+  const caribbeanOn = visibleCurricula(["caribbean"], false);
+  const europeOn = visibleCurricula(["europe"], false);
+
+  test("each country's own curriculum is the start when its region is offered", () => {
+    expect(inferCurriculum({ country: "JM" }, caribbeanOn)).toBe("jamaica");
+    expect(inferCurriculum({ country: "TT" }, caribbeanOn)).toBe("trinidad-and-tobago");
+    expect(inferCurriculum({ country: "MT" }, europeOn)).toBe("malta");
+    const both = visibleCurricula(["caribbean", "europe"], false);
+    for (const [country, id] of Object.entries(COUNTRY_TO_ID)) expect(inferCurriculum({ country }, both), country).toBe(id);
+  });
+
+  test("with the region off, or only the other one on, they start on England (Malta is not offered with only the Caribbean on, and the reverse)", () => {
+    for (const offered of [visibleCurricula([], false), visibleCurricula(["africa", "asia", "usa"], false)]) {
+      for (const country of Object.keys(COUNTRY_TO_ID)) expect(inferCurriculum({ country }, offered), country).toBe("england");
+    }
+    expect(inferCurriculum({ country: "MT" }, caribbeanOn)).toBe("england");
+    expect(inferCurriculum({ country: "JM" }, europeOn)).toBe("england");
+    expect(inferCurriculum({ country: "TT" }, europeOn)).toBe("england");
+  });
+
+  test("the country must match exactly, and a saved browser choice still wins", () => {
+    const both = visibleCurricula(["caribbean", "europe"], false);
+    for (const country of ["jm", "JAM", "Jamaica", " TT", "tt", "TTO", "mt", "MLT", "Malta", "BB", "CY"]) expect(inferCurriculum({ country }, both), country).toBe("england");
+    expect(inferCurriculum({ savedLabel: "Maltese Curriculum (National Curriculum Framework)", country: "JM" }, both)).toBe("malta");
+    expect(inferCurriculum({ savedLabel: "Jamaican Curriculum (National Standards Curriculum)", country: "MT" }, both)).toBe("jamaica");
+    // A saved choice is ignored when its region is no longer offered.
+    expect(inferCurriculum({ savedLabel: "Maltese Curriculum (National Curriculum Framework)", country: "MT" }, caribbeanOn)).toBe("england");
+    expect(inferCurriculum({ savedLabel: "Jamaican Curriculum (National Standards Curriculum)", country: "JM" }, visibleCurricula([], false))).toBe("england");
+  });
+
+  test("the picker lists each region after the UK, in the REGIONS order, and an admin sees both with the switches off", () => {
+    const groups = pickerGroups(visibleCurricula(["caribbean", "europe"], false));
+    expect(groups.map((g) => g.region)).toEqual(["uk", "caribbean", "europe"]);
+    expect(groups[1].label).toBe("Caribbean");
+    expect(groups[1].curricula.map((c) => c.id)).toEqual(["jamaica", "trinidad-and-tobago"]);
+    expect(groups[2].label).toBe("Europe");
+    expect(groups[2].curricula.map((c) => c.id)).toEqual(["malta"]);
+    expect(pickerGroups(caribbeanOn).map((g) => g.region)).toEqual(["uk", "caribbean"]);
+    expect(pickerGroups(europeOn).map((g) => g.region)).toEqual(["uk", "europe"]);
+    const admin = pickerGroups(visibleCurricula([], true)).map((g) => g.region);
+    expect(admin).toContain("caribbean");
+    expect(admin).toContain("europe");
+  });
+
+  test("none of them brings another output language with it, and a stored choice is never overridden", () => {
+    for (const id of Object.values(COUNTRY_TO_ID)) {
+      expect(languageAfterChoosing(id, null), id).toBeNull();
+      expect(languageAfterChoosing(id, "fr-FR"), id).toBeNull();
+    }
+  });
+});

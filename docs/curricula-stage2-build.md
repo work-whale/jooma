@@ -165,3 +165,32 @@ Left open:
 - No live model spec yet; the reviewer decides after review.
 - Production: the `curricula_asia` switch stays off until Step 4.
 - Before and after screenshots not taken in this step.
+
+## 4. Step 2: Caribbean and Malta (2026-11-25)
+
+Built by Sonnet, reviewed by Opus. Not committed.
+
+- Three entries: Jamaica and Trinidad and Tobago in the `caribbean` region (`app/lib/curricula/caribbean.ts`) and Malta in the `europe` region (`app/lib/curricula/europe.ts`). All `verifiedOn: "2026-11-25"`, `defaultLanguage: "en-GB"`, one version each. Appended to `CURRICULA_REGISTRY` after Asia, Caribbean then Europe. Both switches stay off (Step 4 turns them on).
+- `PROVENANCE`: one row each on the Countries tab ("Jamaica", "Trinidad and Tobago", "Malta"). All three workbook rows were never checked against an official source, so each row says so. Jamaica's row records the one Step 0 fact: the NSC was modified for 2025-26 (Grades 1 to 9) after Hurricane Melissa (Bulletin 141), for one year only, so it is a note and not a version. Everything else is Reference. Licence: Jamaica closed, Trinidad and Tobago and Malta unclear (profile only, no statements).
+- `COUNTRY_DEFAULT`: JM, TT, MT. `COUNTRIES` in `app/lib/dial-codes.ts`: none of the three was there, so all were added: Malta +356 after Austria, Jamaica and Trinidad and Tobago after Canada, both +1 (see below).
+- No other code enumerates curriculum ids or regions, so nothing else changed. The UK-only tools are hidden by the existing generic rule, now also pinned for the three ids.
+- Shared CXC exams: Jamaica and Trinidad and Tobago both name CXC, CSEC and CAPE, so the tests require them in both and forbid only each country's own other bodies (Jamaica: PEP, NSC, NEI, Early Childhood Commission, Special Education Unit; Trinidad and Tobago: SEA, ECCE, Student Support Services, Division of School Supervision).
+- The "SEC" name clash: Malta's MATSEC Secondary Education Certificate and Singapore's Singapore-Cambridge Secondary Education Certificate share a name. The cross-country checks use the distinctive tokens "MATSEC" and "Singapore-Cambridge", never "SEC" (the Asia test's `\bSEC\b` for Singapore still holds, because "MATSEC" does not match it and Malta is not in the Asia list).
+- Region isolation: Malta is not offered with only the Caribbean on, nor Jamaica or Trinidad and Tobago with only Europe on (a Maltese teacher with the Caribbean on, or a Jamaican with Europe on, starts on England).
+- No attainment scale for any of the three (none confirmed), so no WTS, EXS or GDS appears. Only Jamaica has teacher standards.
+- Age notes: Malta Year 1 to Year 11 are ages 5 to 15, the same as England's Year 1 to Year 11; Kindergarten 1 and 2 (3 and 4) line up with Nursery and Reception. Trinidad and Tobago's Infants 1 (5) lines up with Year 1 and Jamaica's Grade 1 (6) with Year 2. Jamaica Grade 13 and Trinidad and Tobago Form 6 Upper are 18 and England's list stops at 17, so nothing lines up and nothing throws.
+- Workbook after `node scripts/curricula-status.mjs`: the three Countries rows are Verified (`[jamaica]`, `[trinidad-and-tobago]`, `[malta]`). Countries: Live 4, Verified 20, See the USA by state tab 1, See the Canada tab 1, See the Australia tab 1, Out of scope (stage 3) 59, Out of scope (stage 2) 1 (the United Arab Emirates).
+
+Tests:
+
+- Unit: 21 new tests, 19 of them red before the build (14 in `curricula.spec.ts`, 3 in `curricula-choice.spec.ts`, 2 in `profile-mobile.spec.ts`); the other 2 passed at once because they guard behaviour that was already right (with the regions off the three countries start on England; no output language changes). After the build the three specs 122 of 122 and the full `pnpm test:unit` 2,464 of 2,464 (2,443 before), including `curriculum-golden.spec.ts` unchanged.
+- No E2E, no dev server, no live model run: the South Africa E2E already covers the picker path for a Stage 2 region.
+- Language check passes; the changed files lint clean.
+
+Left open:
+
+- Reference facts for all three (see each provenance row) are still to be confirmed against the official sites; the reviewer checks them.
+- Dial codes (Opus review): Jamaica and Trinidad and Tobago use +1, like the United States and Canada, because numbers there are written with the area code (876, 868); +1876 would have doubled it. The picker stores the country, so the shared +1 is fine.
+- No live model spec yet; the reviewer decides after review.
+- Production: the `curricula_caribbean` and `curricula_europe` switches stay off until Step 4.
+- Before and after screenshots not taken in this step.

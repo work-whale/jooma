@@ -88,3 +88,31 @@ test.describe("the Asian countries", () => {
     expect(profileMobile("IN", "98765 43210")).toBe("+919876543210");
   });
 });
+
+test.describe("Jamaica, Trinidad and Tobago and Malta", () => {
+  const CE = [
+    // Both are +1 like the United States and Canada: numbers are written with
+    // their area code (876, 868), so a "+1876" prefix would double it.
+    ["Jamaica", "JM", "+1"],
+    ["Trinidad and Tobago", "TT", "+1"],
+    ["Malta", "MT", "+356"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of CE) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number gets the country prefix", () => {
+    expect(profileMobile("JM", "(876) 555 1234")).toBe("+18765551234");
+    expect(profileMobile("TT", "868-555-1234")).toBe("+18685551234");
+    expect(profileMobile("MT", "7912 3456")).toBe("+35679123456");
+    // The United States and Canada keep +1 alone, untouched by the new codes.
+    expect(dialPrefix("US")).toBe("+1");
+    expect(dialPrefix("CA")).toBe("+1");
+  });
+});

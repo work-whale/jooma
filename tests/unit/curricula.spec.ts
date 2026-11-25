@@ -987,3 +987,312 @@ test.describe("the Asia curricula", () => {
     }
   });
 });
+
+// ── Caribbean and Europe (Stage 2, Step 2) ─────────────────────────────────
+
+const CARIBBEAN_IDS = ["jamaica", "trinidad-and-tobago"] as const;
+const EUROPE_IDS = ["malta"] as const;
+const CE_IDS = [...CARIBBEAN_IDS, ...EUROPE_IDS] as const;
+type CeId = (typeof CE_IDS)[number];
+
+const CE_PLACE: Record<CeId, { region: string; country: string; place: string; sheetName: string; name: string; promptLabel: string; source: string }> = {
+  jamaica: {
+    region: "caribbean",
+    country: "JM",
+    place: "Jamaica",
+    sheetName: "Jamaica",
+    name: "Jamaica: National Standards Curriculum (Ministry of Education)",
+    promptLabel: "Jamaican Curriculum (National Standards Curriculum)",
+    source: "https://moey.gov.jm/",
+  },
+  "trinidad-and-tobago": {
+    region: "caribbean",
+    country: "TT",
+    place: "Trinidad and Tobago",
+    sheetName: "Trinidad and Tobago",
+    name: "Trinidad and Tobago: National Curriculum (Ministry of Education)",
+    promptLabel: "Trinidad and Tobago Curriculum (Ministry of Education)",
+    source: "https://www.moe.gov.tt/",
+  },
+  malta: {
+    region: "europe",
+    country: "MT",
+    place: "Malta",
+    sheetName: "Malta",
+    name: "Malta: National Curriculum Framework (Ministry for Education)",
+    promptLabel: "Maltese Curriculum (National Curriculum Framework)",
+    source: "https://education.gov.mt/",
+  },
+};
+
+const CE_YEARS: Record<CeId, { label: string; age: number }[]> = {
+  jamaica: seq("Grade", " ", 1, 13, 6),
+  "trinidad-and-tobago": [
+    { label: "Infants 1", age: 5 },
+    { label: "Infants 2", age: 6 },
+    ...seq("Standard", " ", 1, 5, 7),
+    ...seq("Form", " ", 1, 5, 12),
+    { label: "Form 6 Lower", age: 17 },
+    { label: "Form 6 Upper", age: 18 },
+  ],
+  malta: [{ label: "Kindergarten 1", age: 3 }, { label: "Kindergarten 2", age: 4 }, ...seq("Year", " ", 1, 11, 5)],
+};
+
+const ASIA_PLACES = ["India", "Pakistan", "Philippines", "Malaysia", "Singapore", "Hong Kong"];
+
+test.describe("the Caribbean and Malta curricula", () => {
+  test("Jamaica and Trinidad and Tobago are the Caribbean, Malta is Europe, and nothing else is in either", () => {
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "caribbean").map((c) => c.id)).toEqual([...CARIBBEAN_IDS]);
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "europe").map((c) => c.id)).toEqual([...EUROPE_IDS]);
+    for (const id of CE_IDS) {
+      const c = getCurriculum(id)!;
+      expect(c, id).toBeDefined();
+      expect(c.region, id).toBe(CE_PLACE[id].region);
+      expect(c.country, id).toBe(CE_PLACE[id].country);
+      expect(c.place, id).toBe(CE_PLACE[id].place);
+      expect(c.verifiedOn, id).toBe("2026-11-25");
+      expect(c.defaultLanguage, id).toBe("en-GB");
+      expect(LANGUAGES.some((l) => l.code === c.defaultLanguage), id).toBe(true);
+      expect(c.alignment, `${id} has no statements (licence closed or unclear)`).toBeUndefined();
+    }
+    // They sit after Asia in the registry, Caribbean before Europe.
+    const order = CURRICULA_REGISTRY.map((c) => c.id);
+    expect(order.slice(order.indexOf("hong-kong") + 1)).toEqual([...CE_IDS]);
+  });
+
+  test("names, prompt labels and the one version each", () => {
+    const versions: Record<CeId, { label: string; inForceFrom: string }[]> = {
+      jamaica: [{ label: "National Standards Curriculum (NSC) for Grades 1 to 9, with CXC syllabuses (CSEC and CAPE) from Grade 10", inForceFrom: "2016-09-01" }],
+      "trinidad-and-tobago": [{ label: "Ministry of Education primary curriculum guides (2013) and the secondary curriculum, with CXC syllabuses (CSEC and CAPE) from Form 4", inForceFrom: "2013-09-01" }],
+      malta: [{ label: "National Curriculum Framework (2012) and the Learning Outcomes Framework (from 2018)", inForceFrom: "2012-09-01" }],
+    };
+    for (const id of CE_IDS) {
+      const c = getCurriculum(id)!;
+      expect(c.name, id).toBe(CE_PLACE[id].name);
+      expect(c.promptLabel, id).toBe(CE_PLACE[id].promptLabel);
+      expect(c.versions, id).toEqual(versions[id]);
+      expect(parseCurriculum(CE_PLACE[id].promptLabel), id).toBe(id);
+      // One-version systems never change, whatever the date.
+      const label = (d: string) => currentVersion(c, new Date(`${d}T12:00:00Z`)).label;
+      expect(label("2030-01-01"), id).toBe(versions[id][0].label);
+      expect(label("2026-11-25"), id).toBe(versions[id][0].label);
+    }
+  });
+
+  test("each year list is exactly the one the sources give, and ages never go down", () => {
+    for (const id of CE_IDS) {
+      const years = yearsFor(id);
+      expect(years, id).toEqual(CE_YEARS[id]);
+      for (let i = 1; i < years.length; i++) expect(years[i].age - years[i - 1].age, `${id} ${years[i].label}`).toBeGreaterThanOrEqual(0);
+    }
+    expect(CE_IDS.map((id) => yearsFor(id).length)).toEqual([13, 14, 13]);
+    const firstLast = (id: CeId) => [yearsFor(id)[0], yearsFor(id).at(-1)!].map((y) => `${y.label}:${y.age}`);
+    expect(firstLast("jamaica")).toEqual(["Grade 1:6", "Grade 13:18"]);
+    expect(firstLast("trinidad-and-tobago")).toEqual(["Infants 1:5", "Form 6 Upper:18"]);
+    expect(firstLast("malta")).toEqual(["Kindergarten 1:3", "Year 11:15"]);
+    // A year from another list is not offered here.
+    expect(yearIfOffered("jamaica", "Grade 13")).toBe("Grade 13");
+    expect(yearIfOffered("jamaica", "Form 1")).toBe("");
+    expect(yearIfOffered("jamaica", "Year 7")).toBe("");
+    expect(yearIfOffered("trinidad-and-tobago", "Standard 5")).toBe("Standard 5");
+    expect(yearIfOffered("trinidad-and-tobago", "Grade 5")).toBe("");
+    expect(yearIfOffered("trinidad-and-tobago", "Form 6 Upper")).toBe("Form 6 Upper");
+    expect(yearIfOffered("malta", "Kindergarten 1")).toBe("Kindergarten 1");
+    expect(yearIfOffered("malta", "Year 11")).toBe("Year 11");
+    expect(yearIfOffered("malta", "Year 12")).toBe("");
+    expect(yearIfOffered("malta", "Reception")).toBe("");
+  });
+
+  test("each has a provenance row naming its own workbook row, and says what was checked", () => {
+    for (const id of CE_IDS) {
+      const p = PROVENANCE[id];
+      expect(p, id).toBeDefined();
+      expect(p.sheetRow, id).toEqual({ tab: "Countries", name: CE_PLACE[id].sheetName });
+      expect(p.source, id).toBe(CE_PLACE[id].source);
+      expect(p.notes, id).toMatch(/Reference/);
+      expect(p.notes, id).toMatch(/licen[cs]e/i);
+      expect(p.notes, id).toMatch(/permission/i);
+      expect(p.notes, id).toMatch(/never checked|not checked/i);
+      expect(p.notes, id).not.toMatch(/[–—]/);
+    }
+    expect(PROVENANCE.jamaica.notes).toMatch(/Bulletin 141/);
+    expect(PROVENANCE.jamaica.notes).toMatch(/Hurricane Melissa/);
+    expect(PROVENANCE.jamaica.notes).toMatch(/closed/i);
+    expect(PROVENANCE["trinidad-and-tobago"].notes).toMatch(/unclear/i);
+    expect(PROVENANCE.malta.notes).toMatch(/unclear/i);
+    expect(PROVENANCE.malta.notes).toMatch(/copyright/i);
+  });
+
+  test("each region switch shows only its own country: Malta is not offered with only the Caribbean on, and the reverse", () => {
+    const ids = (regions: string[], admin = false) => visibleCurricula(regions, admin).filter((c) => (CE_IDS as readonly string[]).includes(c.id)).map((c) => c.id);
+    expect(ids(["caribbean"])).toEqual([...CARIBBEAN_IDS]);
+    expect(ids(["europe"])).toEqual([...EUROPE_IDS]);
+    expect(ids(["caribbean", "europe"])).toEqual([...CE_IDS]);
+    expect(ids([])).toEqual([]);
+    expect(ids(["africa", "asia", "middle-east", "usa", "canada"])).toEqual([]);
+    expect(ids([], true)).toEqual([...CE_IDS]);
+    expect(regionSettingKey("caribbean")).toBe("curricula_caribbean");
+    expect(regionSettingKey("europe")).toBe("curricula_europe");
+    expect(visibleCurricula(["caribbean"], false).map((c) => c.id)).toEqual([...UK_CURRICULUM_IDS, ...CARIBBEAN_IDS]);
+    expect(visibleCurricula(["europe"], false).map((c) => c.id)).toEqual([...UK_CURRICULUM_IDS, ...EUROPE_IDS]);
+  });
+
+  test("an id is accepted exactly, and look-alikes are not", () => {
+    for (const id of CE_IDS) expect(parseCurriculum(id), id).toBe(id);
+    for (const junk of ["Jamaica", "JAMAICA", "jamaican", "trinidad", "Trinidad and Tobago", "trinidad_and_tobago", "trinidad-and-tobago ", "trinidad-tobago", "tt", "TT", "MALTA", "Malta", "maltese", " malta", "malta;", "jm", "mt"]) {
+      expect(parseCurriculum(junk), junk).toBeNull();
+    }
+    expect(requestCurriculum({ curriculumId: "malta" })).toBe("malta");
+    expect(requestCurriculum({ curriculumId: "MALTA", curriculum: "Jamaican Curriculum (National Standards Curriculum)" })).toBe("jamaica");
+    expect(isUkCurriculum("jamaica")).toBe(false);
+    expect(isUkCurriculum("malta")).toBe(false);
+    expect(curriculumFormState("trinidad-and-tobago")).toEqual({ curriculumId: "trinidad-and-tobago" });
+  });
+
+  test("every one hides every UK-only tool and keeps a universal one", () => {
+    const ukOnly = Object.entries(TOOL_SCOPE).filter(([, s]) => s === "uk-only").map(([k]) => k);
+    expect(ukOnly.length).toBe(5);
+    for (const id of CE_IDS) {
+      expect(hiddenToolSlugs(id).sort(), id).toEqual([...ukOnly].sort());
+      for (const slug of ukOnly) expect(isToolHiddenFor(slug, id), `${id} ${slug}`).toBe(true);
+      expect(isToolHiddenFor("worksheet-generator", id), id).toBe(false);
+      expect(isToolHiddenFor("phonics-support", id), id).toBe(false);
+    }
+  });
+
+  test("the prompt names the system's own exams, inspection body and head of school", () => {
+    const expected: Record<CeId, { exams: RegExp[]; inspection: string; headteacher: string }> = {
+      jamaica: { exams: [/\bPEP\b/, /Primary Exit Profile/, /\bCSEC\b/, /\bCAPE\b/, /\bCXC\b/, /Grades 4 to 6/], inspection: "National Education Inspectorate (NEI)", headteacher: "principal" },
+      "trinidad-and-tobago": {
+        exams: [/\bSEA\b/, /Secondary Entrance Assessment/, /\bCSEC\b/, /\bCAPE\b/, /\bCXC\b/, /Standard 5/],
+        inspection: "Division of School Supervision and Management",
+        headteacher: "principal",
+      },
+      malta: { exams: [/\bMATSEC\b/, /End of Primary Benchmark/, /Year 6/, /Year 11/, /Intermediate and Advanced level/], inspection: "Quality Assurance Department", headteacher: "head of school" },
+    };
+    for (const id of CE_IDS) {
+      const text = curriculumInstruction(id);
+      for (const re of expected[id].exams) expect(text, `${id} ${re}`).toMatch(re);
+      expect(text, id).toContain(expected[id].inspection);
+      expect(text, id).toContain(`instead of headteacher: ${expected[id].headteacher}.`);
+      expect(text, id).toContain(CE_PLACE[id].place);
+      expect(text, id).toContain(getCurriculum(id)!.context!);
+    }
+    expect(curriculumInstruction("jamaica")).toContain("the Jamaica Teaching Council's professional standards");
+    expect(curriculumInstruction("jamaica")).toContain("Early Childhood Commission");
+    expect(curriculumInstruction("jamaica")).toContain("Individual Education Plan");
+    expect(curriculumInstruction("trinidad-and-tobago")).toContain("Student Support Services Division");
+    expect(curriculumInstruction("trinidad-and-tobago")).toContain("Early Childhood Care and Education (ECCE)");
+    expect(curriculumInstruction("malta")).toContain("Learning Support Educators (LSEs)");
+    expect(curriculumInstruction("malta")).toContain("Inclusion Coordinator (INCO)");
+    expect(curriculumInstruction("malta")).toContain("Individual Educational Programme (IEP)");
+  });
+
+  test("Jamaica and Trinidad and Tobago share the CXC exams, and each names only its own other bodies", () => {
+    // CXC, CSEC and CAPE belong to both, so neither forbids them in the other.
+    for (const id of CARIBBEAN_IDS) {
+      const text = curriculumInstruction(id);
+      for (const re of [/\bCXC\b/, /\bCSEC\b/, /\bCAPE\b/, /Caribbean Examinations Council/]) expect(text, `${id} ${re}`).toMatch(re);
+    }
+    const jamaica = ownText(curriculumInstruction("jamaica"));
+    const tt = ownText(curriculumInstruction("trinidad-and-tobago"));
+    for (const re of [/Trinidad/, /Tobago/, /\bSEA\b/, /Secondary Entrance Assessment/, /Division of School Supervision/, /Student Support Services/, /\bECCE\b/, /\bForm [1-6]\b/, /\bStandard [1-5]\b/, /Infants/]) {
+      expect(jamaica, `Jamaica has ${re}`).not.toMatch(re);
+    }
+    for (const re of [/Jamaica/, /\bPEP\b/, /Primary Exit Profile/, /\bNEI\b/, /National Education Inspectorate/, /\bNSC\b/, /Early Childhood Commission/, /Special Education Unit/, /Teaching Council/, /\bGrade \d/]) {
+      expect(tt, `Trinidad and Tobago has ${re}`).not.toMatch(re);
+    }
+    // Each says its own system.
+    for (const re of [/\bPEP\b/, /\bNEI\b/, /\bNSC\b/, /Early Childhood Commission/, /Special Education Unit/, /Teaching Council/]) expect(jamaica, `Jamaica ${re}`).toMatch(re);
+    for (const re of [/\bSEA\b/, /Division of School Supervision/, /Student Support Services/, /\bECCE\b/, /Infants 1 and 2/]) expect(tt, `Trinidad and Tobago ${re}`).toMatch(re);
+  });
+
+  test("Malta and Singapore both have a Secondary Education Certificate, so they are told apart by MATSEC and Singapore-Cambridge", () => {
+    const malta = curriculumInstruction("malta");
+    const singapore = curriculumInstruction("singapore");
+    expect(malta).toMatch(/\bMATSEC\b/);
+    expect(malta).not.toContain("Singapore");
+    expect(malta).not.toMatch(/\bSEAB\b/);
+    expect(singapore).toContain("Singapore-Cambridge");
+    expect(singapore).not.toMatch(/MATSEC/);
+    expect(singapore).not.toContain("Malta");
+    for (const id of CARIBBEAN_IDS) expect(curriculumInstruction(id), id).not.toMatch(/MATSEC|Singapore-Cambridge/);
+  });
+
+  test("the prompt keeps no England framing and names no other country's body", () => {
+    const UK_WORDS = [/Ofsted/, /GCSE/, /Key Stage/, /EYFS/, /\bSENCO\b/, /\bSATs\b/, /National Curriculum in England/, /\bWTS\b/, /\bEXS\b/, /\bGDS\b/];
+    const OWN: Record<CeId, RegExp[]> = {
+      jamaica: [/\bPEP\b/, /\bNSC\b/, /\bNEI\b/, /Early Childhood Commission/, /Special Education Unit/],
+      "trinidad-and-tobago": [/\bSEA\b/, /\bECCE\b/, /Student Support Services/, /Division of School Supervision/],
+      malta: [/\bMATSEC\b/, /\bNCF\b/, /\bLSEs?\b/, /\bINCO\b/, /\bIEP\b/, /Quality Assurance Department/, /End of Primary Benchmark/],
+    };
+    for (const id of CE_IDS) {
+      const text = ownText(curriculumInstruction(id));
+      for (const re of UK_WORDS) expect(text, `${id} ${re}`).not.toMatch(re);
+      for (const other of CE_IDS.filter((o) => o !== id)) {
+        expect(text, `${id} names ${other}`).not.toContain(CE_PLACE[other].place);
+        for (const re of OWN[other]) expect(text, `${id} has ${other}'s ${re}`).not.toMatch(re);
+      }
+      for (const place of [...AFRICA_PLACES, ...ASIA_PLACES]) expect(text, `${id} names ${place}`).not.toContain(place);
+      // The instruction really did name its own system.
+      for (const re of OWN[id]) expect(curriculumInstruction(id), `${id} ${re}`).toMatch(re);
+    }
+    // Malta has no Caribbean exams.
+    expect(curriculumInstruction("malta")).not.toMatch(/\bCXC\b|\bCSEC\b|\bCAPE\b|Caribbean|Jamaic|Trinidad/);
+  });
+
+  test("none has an attainment scale, so no UK band name appears at all", () => {
+    for (const id of CE_IDS) {
+      const text = curriculumInstruction(id);
+      expect(getCurriculum(id)!.terms?.attainment, id).toBeUndefined();
+      expect(/instead of the WTS, EXS and GDS bands:/.test(text), id).toBe(false);
+      for (const band of ["WTS", "EXS", "GDS"]) expect(text, `${id} ${band}`).not.toContain(band);
+    }
+    // Only Jamaica has teacher standards.
+    expect(getCurriculum("jamaica")!.terms?.teacherStandards).toBeDefined();
+    expect(getCurriculum("trinidad-and-tobago")!.terms?.teacherStandards).toBeUndefined();
+    expect(getCurriculum("malta")!.terms?.teacherStandards).toBeUndefined();
+  });
+
+  test("the school-year context is the right one for each country", () => {
+    expect(getCurriculum("jamaica")!.context).toMatch(/September to July in three terms/);
+    expect(getCurriculum("jamaica")!.context).toMatch(/Jamaican Patois/);
+    expect(getCurriculum("jamaica")!.context).toMatch(/Jamaican dollar/);
+    expect(getCurriculum("trinidad-and-tobago")!.context).toMatch(/September to July in three terms/);
+    expect(getCurriculum("trinidad-and-tobago")!.context).toMatch(/TT dollar/);
+    expect(getCurriculum("malta")!.context).toMatch(/late September to June/);
+    expect(getCurriculum("malta")!.context).toMatch(/Maltese and English are both official languages/);
+    expect(getCurriculum("malta")!.context).toMatch(/State, Church and independent schools/);
+    expect(getCurriculum("malta")!.context).toMatch(/euro/);
+  });
+
+  test("age boundaries: Malta lines up with England by age, and Grade 13 and Form 6 Upper break nothing", () => {
+    const age = (id: string, label: string) => yearsFor(id).find((y) => y.label === label)?.age;
+    // Malta Year 1 to Year 11 line up with England's Year 1 to Year 11 (5 to 15).
+    for (let n = 1; n <= 11; n++) expect(age("malta", `Year ${n}`), `Year ${n}`).toBe(englandYearAge(`Year ${n}`));
+    expect(age("malta", "Year 1")).toBe(5);
+    expect(age("malta", "Year 6")).toBe(10);
+    expect(age("malta", "Year 11")).toBe(15);
+    expect(age("malta", "Kindergarten 1")).toBe(englandYearAge("Nursery"));
+    expect(age("malta", "Kindergarten 2")).toBe(englandYearAge("Reception"));
+    // Trinidad and Tobago's Infants 1 starts at England's Year 1 age.
+    expect(age("trinidad-and-tobago", "Infants 1")).toBe(englandYearAge("Year 1"));
+    expect(age("jamaica", "Grade 1")).toBe(englandYearAge("Year 2"));
+    // Jamaica Grade 13 and Trinidad and Tobago Form 6 Upper are 18; England's list stops at 17.
+    expect(age("jamaica", "Grade 13")).toBe(18);
+    expect(age("trinidad-and-tobago", "Form 6 Upper")).toBe(18);
+    expect(englandYearAge("Year 13")).toBe(17);
+    expect(() => englandYearFor("jamaica", "Grade 13")).not.toThrow();
+    expect(englandYearFor("jamaica", "Grade 13")).toBe("Grade 13");
+    expect(() => englandYearFor("trinidad-and-tobago", "Form 6 Upper")).not.toThrow();
+    expect(englandYearFor("trinidad-and-tobago", "Form 6 Upper")).toBe("Form 6 Upper");
+    expect(readingStageFor("Grade 13", false, "jamaica")).toBe("ks2");
+    expect(readingStageFor("Form 6 Upper", false, "trinidad-and-tobago")).toBe("ks2");
+    for (const id of CE_IDS) {
+      for (const y of yearsFor(id)) {
+        expect(englandYearFor(id, y.label), `${id} ${y.label}`).toBe(y.label);
+        expect(yearForEnglandYear(id, y.label), `${id} ${y.label}`).toBe(y.label);
+      }
+    }
+  });
+});
