@@ -10,6 +10,11 @@ const SECOND_LABEL: Partial<Record<RegionId, string>> = {
   canada: "Province or territory",
   "australia-nz": "State or country",
   international: "Programme",
+  africa: "Country",
+  asia: "Country",
+  caribbean: "Country",
+  europe: "Country",
+  "middle-east": "Country",
 };
 
 /**

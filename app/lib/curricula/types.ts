@@ -6,7 +6,7 @@
 
 /** A group of curricula switched on together (app_settings.curriculum_regions).
  *  "uk" is the five curricula Jooma has always had and is never switched off. */
-export type RegionId = "uk" | "british-isles" | "ireland" | "international" | "australia-nz" | "usa" | "canada";
+export type RegionId = "uk" | "british-isles" | "ireland" | "international" | "australia-nz" | "usa" | "canada" | "africa" | "asia" | "caribbean" | "europe" | "middle-east";
 
 export interface Region {
   id: RegionId;

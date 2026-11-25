@@ -16,11 +16,16 @@
  */
 
 import type { Curriculum, CurriculumVersion, Region, RegionId, YearOption } from "./types";
+import { AFRICA_CURRICULA } from "./africa";
+import { ASIA_CURRICULA } from "./asia";
 import { AUSTRALIA_NZ_CURRICULA } from "./australia-nz";
 import { BRITISH_ISLES_CURRICULA } from "./british-isles";
 import { CANADA_CURRICULA } from "./canada";
+import { CARIBBEAN_CURRICULA } from "./caribbean";
+import { EUROPE_CURRICULA } from "./europe";
 import { INTERNATIONAL_CURRICULA } from "./international";
 import { IRELAND_CURRICULA } from "./ireland";
+import { MIDDLE_EAST_CURRICULA } from "./middle-east";
 import { UK_CURRICULA, UK_YEARS } from "./uk";
 import { USA_CURRICULA } from "./usa";
 // Relative, so scripts/curricula-status.mjs can load the registry in plain Node.
@@ -36,9 +41,14 @@ export const REGIONS: readonly Region[] = [
   { id: "australia-nz", label: "Australia and New Zealand" },
   { id: "usa", label: "United States" },
   { id: "canada", label: "Canada" },
+  { id: "africa", label: "Africa" },
+  { id: "asia", label: "Asia" },
+  { id: "caribbean", label: "Caribbean" },
+  { id: "europe", label: "Europe" },
+  { id: "middle-east", label: "Middle East" },
 ];
 
-export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA];
+export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA, ...AFRICA_CURRICULA, ...ASIA_CURRICULA, ...CARIBBEAN_CURRICULA, ...EUROPE_CURRICULA, ...MIDDLE_EAST_CURRICULA];
 
 export const UK_CURRICULUM_IDS = ["england", "england-eyfs", "scotland", "wales", "northern-ireland"] as const;
 
@@ -218,6 +228,21 @@ const COUNTRY_DEFAULT: Record<string, string> = {
   GG: "guernsey",
   IM: "isle-of-man",
   GI: "gibraltar",
+  ZA: "south-africa",
+  KE: "kenya",
+  NG: "nigeria",
+  GH: "ghana",
+  UG: "uganda",
+  IN: "india-cbse",
+  PK: "pakistan",
+  PH: "philippines",
+  MY: "malaysia",
+  SG: "singapore",
+  HK: "hong-kong",
+  JM: "jamaica",
+  TT: "trinidad-and-tobago",
+  MT: "malta",
+  AE: "uae-moe",
 };
 
 /**

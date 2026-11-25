@@ -29,8 +29,12 @@ export const KS2_DOMAINS: readonly ContentDomain[] = [
 
 export type KeyStage = "ks1" | "ks2";
 
+/** KS1's skills for Nursery, Reception, Year 1 and Year 2 (ages 3 to 7), KS2's
+ *  for everything else and for any mixed-year class. */
+const KS1_YEARS: readonly string[] = ["Nursery", "Reception", "Year 1", "Year 2"];
+
 export function keyStageFor(yearGroup: string, mixed: boolean): KeyStage {
-  return !mixed && (yearGroup === "Year 1" || yearGroup === "Year 2") ? "ks1" : "ks2";
+  return !mixed && KS1_YEARS.includes(yearGroup) ? "ks1" : "ks2";
 }
 
 export function domainsFor(ks: KeyStage): readonly ContentDomain[] {

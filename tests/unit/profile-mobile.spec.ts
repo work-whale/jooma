@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { dialPrefix, profileMobile } from "@/app/lib/dial-codes";
+import { COUNTRIES, dialPrefix, profileMobile } from "@/app/lib/dial-codes";
 
 /*
  * profiles.dial_code holds the country ("GB"), not the prefix. The ambassador
@@ -32,5 +32,98 @@ test.describe("profileMobile", () => {
     expect(profileMobile("GB", "")).toBe("");
     expect(profileMobile(null, null)).toBe("");
     expect(profileMobile(null, "07700 900412")).toBe("07700900412");
+  });
+});
+
+test.describe("the African countries", () => {
+  const AFRICA = [
+    ["South Africa", "ZA", "+27"],
+    ["Nigeria", "NG", "+234"],
+    ["Ghana", "GH", "+233"],
+    ["Kenya", "KE", "+254"],
+    ["Uganda", "UG", "+256"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of AFRICA) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number gets the country prefix and loses its leading 0", () => {
+    expect(profileMobile("NG", "0803 123 4567")).toBe("+2348031234567");
+    expect(profileMobile("GH", "024 123 4567")).toBe("+233241234567");
+    expect(profileMobile("KE", "0712 345678")).toBe("+254712345678");
+    expect(profileMobile("UG", "0772 123456")).toBe("+256772123456");
+    expect(profileMobile("ZA", "082 123 4567")).toBe("+27821234567");
+  });
+});
+
+test.describe("the Asian countries", () => {
+  const ASIA = [
+    ["India", "IN", "+91"],
+    ["Pakistan", "PK", "+92"],
+    ["Philippines", "PH", "+63"],
+    ["Malaysia", "MY", "+60"],
+    ["Singapore", "SG", "+65"],
+    ["Hong Kong", "HK", "+852"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of ASIA) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number gets the country prefix and loses its leading 0", () => {
+    expect(profileMobile("PK", "0300 1234567")).toBe("+923001234567");
+    expect(profileMobile("PH", "0917 123 4567")).toBe("+639171234567");
+    expect(profileMobile("MY", "012 345 6789")).toBe("+60123456789");
+    expect(profileMobile("IN", "98765 43210")).toBe("+919876543210");
+  });
+});
+
+test.describe("Jamaica, Trinidad and Tobago and Malta", () => {
+  const CE = [
+    // Both are +1 like the United States and Canada: numbers are written with
+    // their area code (876, 868), so a "+1876" prefix would double it.
+    ["Jamaica", "JM", "+1"],
+    ["Trinidad and Tobago", "TT", "+1"],
+    ["Malta", "MT", "+356"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of CE) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number gets the country prefix", () => {
+    expect(profileMobile("JM", "(876) 555 1234")).toBe("+18765551234");
+    expect(profileMobile("TT", "868-555-1234")).toBe("+18685551234");
+    expect(profileMobile("MT", "7912 3456")).toBe("+35679123456");
+    // The United States and Canada keep +1 alone, untouched by the new codes.
+    expect(dialPrefix("US")).toBe("+1");
+    expect(dialPrefix("CA")).toBe("+1");
+  });
+});
+
+test.describe("the United Arab Emirates", () => {
+  test("is offered once, with +971", () => {
+    expect(COUNTRIES.filter((c) => c.code === "AE")).toEqual([{ name: "United Arab Emirates", code: "AE", dial: "+971" }]);
+    expect(dialPrefix("AE")).toBe("+971");
+  });
+
+  test("a local number gets the country prefix", () => {
+    expect(profileMobile("AE", "50 123 4567")).toBe("+971501234567");
   });
 });
