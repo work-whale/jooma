@@ -501,8 +501,8 @@ test.describe("two top ups judged against one shared pool", () => {
   // Security review, 26 Nov: each pack used to be checked against the WHOLE
   // pool, so 500 + 500 with 600 left offered both while 400 had been spent.
   const packs = [
-    { chargeId: "ch_a", units: 500 },
-    { chargeId: "ch_b", units: 500 },
+    { id: "ch_a", units: 500 },
+    { id: "ch_b", units: 500 },
   ];
   const offered = (left: number) =>
     refundOptions(

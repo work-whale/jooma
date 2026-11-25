@@ -246,12 +246,12 @@ export function daysInWords(n: number): string {
  * reads the smaller pool and the rest are judged again from there.
  */
 export function topUpLeftForPack(
-  chargeId: string,
-  packsInWindow: { chargeId: string; units: number }[],
+  id: string,
+  packsInWindow: { id: string; units: number }[],
   poolLeft: number,
 ): number {
   const others = packsInWindow
-    .filter((p) => p.chargeId !== chargeId)
+    .filter((p) => p.id !== id)
     .reduce((sum, p) => sum + p.units, 0);
   return Math.max(0, poolLeft - others);
 }

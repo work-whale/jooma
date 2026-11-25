@@ -22,6 +22,7 @@ import {
   reasonFromBilling,
   refundOptions,
   REFUND_WINDOWS,
+  topUpGrantToReverse,
   topUpLeftForPack,
   windowEnd,
   type ChargeFacts,
@@ -142,6 +143,42 @@ async function topUpPoolLeft(userId: string, now: Date): Promise<number | null> 
   return balance(acc, { spent, topupsBought }).topupLeft;
 }
 
+/** The teacher's resources packs bought inside the top up refund window that
+ *  still have their bought grant, keyed by payment intent. Throws on a read
+ *  error, so the caller can withhold the rule rather than guess. */
+async function livePacksInWindow(userId: string, now: Date): Promise<{ id: string; units: number }[]> {
+  // A day of slack: the exact window is checked per pack below.
+  const since = new Date(now.getTime() - (REFUND_WINDOWS.topUpDays + 2) * 86_400_000).toISOString();
+  const [purchases, grants] = await Promise.all([
+    supabaseAdmin
+      .from("topup_purchases")
+      .select("user_id, units, created_at, stripe_payment_intent_id")
+      .eq("user_id", userId)
+      .eq("kind", "resources_topup")
+      .gte("created_at", since),
+    supabaseAdmin
+      .from("allowance_grants")
+      .select("id, user_id, kind, amount, granted_by, created_at")
+      .eq("user_id", userId)
+      .eq("kind", "resources_topup")
+      .is("granted_by", null),
+  ]);
+  if (purchases.error) throw purchases.error;
+  if (grants.error) throw grants.error;
+
+  return (purchases.data ?? [])
+    .filter(
+      (p) =>
+        p.stripe_payment_intent_id &&
+        now.getTime() <= windowEnd(new Date(p.created_at), REFUND_WINDOWS.topUpDays).getTime() &&
+        topUpGrantToReverse(
+          { user_id: p.user_id, units: Number(p.units), created_at: p.created_at },
+          (grants.data ?? []).map((g) => ({ ...g, amount: Number(g.amount) })),
+        ) !== null,
+    )
+    .map((p) => ({ id: p.stripe_payment_intent_id as string, units: Number(p.units) }));
+}
+
 /**
  * Advice for each charge, by charge id. A charge that nothing could be learned
  * about is still given an entry (kind "other"), so the fault option is always
@@ -189,19 +226,22 @@ export async function adviseCharges(
     }
   }
 
-  // The resources packs still inside their refund window and not refunded.
-  // Each is judged against the pool minus all the others (topUpLeftForPack),
-  // so one unspent pool is never counted twice.
-  const packsInWindow = charges
-    .filter((c) => {
-      const p = piOf(c) ? purchases.get(piOf(c)!) : undefined;
-      return (
-        p?.kind === "resources_topup" &&
-        c.amount_refunded === 0 &&
-        now.getTime() <= windowEnd(new Date(c.created * 1000), REFUND_WINDOWS.topUpDays).getTime()
-      );
-    })
-    .map((c) => ({ chargeId: c.id, units: purchases.get(piOf(c)!)!.units }));
+  // Every resources pack still inside its refund window whose resources the
+  // teacher still holds (a live bought grant; a full refund deletes it, a
+  // partial one does not). Read from the database, not from the Stripe list
+  // above, which stops at 10 charges and could miss a pack. Each pack is then
+  // judged against the pool minus all the others (topUpLeftForPack), so one
+  // unspent pool is never counted twice. Keyed by payment intent.
+  let packsInWindow: { id: string; units: number }[] = [];
+  if (poolLeft !== null) {
+    try {
+      packsInWindow = await livePacksInWindow(userId, now);
+    } catch (err) {
+      console.error("[refund-facts] packs in window", err);
+      // Unknown which packs share the pool: withhold the top up rule.
+      poolLeft = null;
+    }
+  }
 
   const out = new Map<string, ChargeAdvice>();
   await Promise.all(
@@ -251,7 +291,7 @@ export async function adviseCharges(
           spentSinceCharge: null,
           topUp:
             resources && poolLeft !== null
-              ? { units: purchase.units, left: topUpLeftForPack(c.id, packsInWindow, poolLeft) }
+              ? { units: purchase.units, left: topUpLeftForPack(pi!, packsInWindow, poolLeft) }
               : null,
         };
       } else {

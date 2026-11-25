@@ -1351,9 +1351,6 @@ async function syncRefund(charge: Stripe.Charge) {
   // end. Only unspent credit is removed — see below.
   if (paymentIntentId) {
     await reverseTopUpCredit(paymentIntentId, charge.amount);
-    // And the 4.5 resources pack, which reverseTopUpCredit cannot see: it only
-    // matches the old credit_gbp grants. See reverseResourcesTopUp.
-    await reverseResourcesTopUp(paymentIntentId);
   }
 
   // A refunded subscription payment un-owes any ambassador payout it created.
@@ -1370,6 +1367,13 @@ async function syncRefund(charge: Stripe.Charge) {
       .map((r) => (r as { stripe_invoice_id?: string | null }).stripe_invoice_id)
       .filter((id): id is string => typeof id === "string" && id.length > 0),
   );
+
+  // And the 4.5 resources pack, which reverseTopUpCredit cannot see: it only
+  // matches the old credit_gbp grants. LAST, because it throws on a database
+  // error (so Stripe retries) and must not skip the reversals above.
+  if (paymentIntentId) {
+    await reverseResourcesTopUp(paymentIntentId);
+  }
 }
 
 /**
