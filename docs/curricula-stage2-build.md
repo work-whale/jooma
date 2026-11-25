@@ -194,3 +194,30 @@ Left open:
 - No live model spec yet; the reviewer decides after review.
 - Production: the `curricula_caribbean` and `curricula_europe` switches stay off until Step 4.
 - Before and after screenshots not taken in this step.
+
+## 5. Step 2: Middle East, and the live check (2026-11-25)
+
+Built by Sonnet, reviewed by Opus. Not committed.
+
+- One entry: `uae-moe` in the `middle-east` region (`app/lib/curricula/middle-east.ts`), the Ministry of Education national curriculum only (owner decision: private-school teachers pick the curriculum their school follows, England, US, IB or CBSE, which already exist; no KHDA, ADEK or SPEA entries). `verifiedOn: "2026-11-25"`, `defaultLanguage: "en-GB"`, one version (from 2025-08-25, the label names the Artificial Intelligence subject in 2025-26 and the merged Artificial Intelligence and Technology subject from 2026-27). Years KG1 (4), KG2 (5), Grade 1 (6) to Grade 12 (17). Appended to `CURRICULA_REGISTRY` after Malta, so Stage 2 now has all fifteen entries.
+- `PROVENANCE`: one row on the Countries tab ("United Arab Emirates"). Confirmed: the EmSAT cancelled for Grade 12 (WAM, November 2024) and the Artificial Intelligence subject dates (workbook, checked 13 November). Reference: inspection wording, students of determination and the IEP, the Teacher Licensing System, the Kindergarten curriculum, the Cycle stages, the school year. Licence: closed, profile only, no statements.
+- `COUNTRY_DEFAULT`: AE. `COUNTRIES` already had the UAE at +971, so no change (pinned by a test).
+- Workbook rule in `scripts/curricula-status.mjs` (`defaultStatus`, tab "Other split systems"): the United Arab Emirates rows are told apart by column B. "Federal (public schools)" gives "Covered by uae-moe"; the Dubai, Abu Dhabi and Sharjah private-school rows (column B contains "private schools") give "Covered by existing curricula (England, US, IB, CBSE)". No row says "Out of scope (stage 2)" any more.
+- Workbook after `node scripts/curricula-status.mjs` (and `--check`): Countries: Live 4, Verified 21, See the USA by state tab 1, See the Canada tab 1, See the Australia tab 1, Out of scope (stage 3) 59. Other split systems: Out of scope (stage 3) 14, Covered by india-cbse 1, Covered by india-cbse (NCERT books) 1, Out of scope (later) 3, Covered by uae-moe 1, Covered by existing curricula (England, US, IB, CBSE) 3.
+- Age notes: KG1 (4) lines up with Reception and KG2 (5) with Year 1. Grade 12 is 17, the same as England's Year 13, so nothing throws.
+- An earlier Caribbean test pinned "Malta is the last registry entry"; it now pins "Malta is the last of the Caribbean and Europe entries" because the UAE follows.
+
+Tests:
+
+- Unit: 19 new tests (12 in `curricula.spec.ts`, 5 in `curricula-choice.spec.ts`, 2 in `profile-mobile.spec.ts`). 14 were red before the build (11 in `curricula.spec.ts`, 3 in `curricula-choice.spec.ts`); the rest passed at once because they guard behaviour that was already right (with the region off a teacher in the UAE starts on England; no output language changes; AE already dialled +971; and the "no England framing" prompt test, which is vacuous until the entry exists and is backed by the exact-wording test). Red run: 2,469 passed, 14 failed. After the build: full `pnpm test:unit` 2,483 of 2,483, including `curriculum-golden.spec.ts` unchanged. A registry-wide test pins that all five Stage 2 regions have a verified curriculum and that the fifteen Stage 2 ids are exactly south-africa, kenya, nigeria, ghana, uganda, india-cbse, pakistan, philippines, malaysia, singapore, hong-kong, jamaica, trinidad-and-tobago, malta, uae-moe.
+- Language check passes; the changed files lint clean.
+- Live (`tests/tools/curricula-stage2-live.spec.ts`, skipped unless `LIVE_MODEL=1`): production build on :3000 through `scripts/with-staging-env.sh`, a plain paying teacher per region, the region switch on for the test and off again in `finally` and `afterAll`, one real Mathematics worksheet ("Adding fractions with the same denominator") each. All five pass (2.4 minutes): South Africa Grade 4, India (CBSE) Class 4, Jamaica Grade 4, Malta Year 4 and the UAE Grade 4. Each request carried the curriculum label and year, the worksheet rendered, and the text had no "Key Stage", "Ofsted" or "KS2" and, except Malta, no "Year 4" style year name. Nothing borderline in the opening of any of them (the headers read "GRADE 4", "CLASS 4", "YEAR 4"; Malta's title even says "Fraction Pizzas in Malta"). The model gave maths fractions with no local colour in most cases, so the live run proves the prompt is accepted and the framing is not England's, not that the exams or bodies are named. The server was stopped afterwards.
+- `scripts/verify-curriculum-profile.mjs`: 21 of 21 after the live run, so all five Stage 2 switches are off on staging.
+
+Left open:
+
+- Reference facts (see the provenance row) are still to be confirmed against the Ministry site; the reviewer checks them.
+- Production: the `curricula_middle_east` switch stays off until Step 4.
+- Before and after screenshots not taken in this step.
+
+Step 2 is complete: all fifteen Stage 2 entries are built and verified, with a live check on five of them. Step 4 (the release) is next, with the owner.

@@ -98,7 +98,15 @@ function defaultStatus(tab, cells) {
         if (part.startsWith("NCERT")) return "Covered by india-cbse (NCERT books)";
         return "Out of scope (later)";
       }
-      return name === "United Arab Emirates" ? "Out of scope (stage 2)" : "Out of scope (stage 3)";
+      // The UAE rows are told apart by column B: the federal public schools follow
+      // the Ministry curriculum; the private schools follow England, US, IB or CBSE.
+      if (name === "United Arab Emirates") {
+        const part = cells.B ?? "";
+        if (part.startsWith("Federal")) return "Covered by uae-moe";
+        if (part.includes("private schools")) return "Covered by existing curricula (England, US, IB, CBSE)";
+        return "Out of scope (stage 2)";
+      }
+      return "Out of scope (stage 3)";
     }
     case "International":
       if (name === "British curriculum schools abroad") return "Live (uses England)";

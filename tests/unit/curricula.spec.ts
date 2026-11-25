@@ -1055,9 +1055,9 @@ test.describe("the Caribbean and Malta curricula", () => {
       expect(LANGUAGES.some((l) => l.code === c.defaultLanguage), id).toBe(true);
       expect(c.alignment, `${id} has no statements (licence closed or unclear)`).toBeUndefined();
     }
-    // They sit after Asia in the registry, Caribbean before Europe.
+    // They sit after Asia in the registry, Caribbean before Europe (the Middle East follows).
     const order = CURRICULA_REGISTRY.map((c) => c.id);
-    expect(order.slice(order.indexOf("hong-kong") + 1)).toEqual([...CE_IDS]);
+    expect(order.slice(order.indexOf("hong-kong") + 1, order.indexOf("malta") + 1)).toEqual([...CE_IDS]);
   });
 
   test("names, prompt labels and the one version each", () => {
@@ -1294,5 +1294,166 @@ test.describe("the Caribbean and Malta curricula", () => {
         expect(yearForEnglandYear(id, y.label), `${id} ${y.label}`).toBe(y.label);
       }
     }
+  });
+});
+
+// ── The Middle East: the United Arab Emirates (Stage 2, Step 2) ────────────
+
+const UAE_VERSION_LABEL =
+  "Ministry of Education national curriculum, Kindergarten to Grade 12, with Artificial Intelligence compulsory from 2025-26 and merged with Design, Innovation and Computer Science into one Artificial Intelligence and Technology subject from 2026-27";
+
+test.describe("the United Arab Emirates curriculum", () => {
+  test("uae-moe is the only entry in the middle-east region, with the right identity", () => {
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "middle-east").map((c) => c.id)).toEqual(["uae-moe"]);
+    const c = getCurriculum("uae-moe")!;
+    expect(c).toBeDefined();
+    expect(c.region).toBe("middle-east");
+    expect(c.country).toBe("AE");
+    expect(c.place).toBe("United Arab Emirates");
+    expect(c.name).toBe("United Arab Emirates: Ministry of Education curriculum");
+    expect(c.promptLabel).toBe("UAE Ministry of Education Curriculum");
+    expect(c.verifiedOn).toBe("2026-11-25");
+    expect(c.defaultLanguage).toBe("en-GB");
+    expect(LANGUAGES.some((l) => l.code === c.defaultLanguage)).toBe(true);
+    expect(c.alignment, "no statements (source closed)").toBeUndefined();
+    expect(c.versions).toEqual([{ label: UAE_VERSION_LABEL, inForceFrom: "2025-08-25" }]);
+    expect(parseCurriculum("UAE Ministry of Education Curriculum")).toBe("uae-moe");
+    // One version: the label never changes, whatever the date.
+    expect(currentVersion(c, new Date("2030-01-01T12:00:00Z")).label).toBe(UAE_VERSION_LABEL);
+    expect(currentVersion(c, new Date("2026-11-25T12:00:00Z")).label).toBe(UAE_VERSION_LABEL);
+    // It sits after Malta, at the end of the registry.
+    expect(CURRICULA_REGISTRY.at(-1)!.id).toBe("uae-moe");
+    expect(CURRICULA_REGISTRY.at(-2)!.id).toBe("malta");
+  });
+
+  test("the year list runs KG1 (4) to Grade 12 (17), exactly", () => {
+    const years = yearsFor("uae-moe");
+    expect(years).toEqual([{ label: "KG1", age: 4 }, { label: "KG2", age: 5 }, ...seq("Grade", " ", 1, 12, 6)]);
+    expect(years.length).toBe(14);
+    expect(`${years[0].label}:${years[0].age}`).toBe("KG1:4");
+    expect(`${years.at(-1)!.label}:${years.at(-1)!.age}`).toBe("Grade 12:17");
+    for (let i = 1; i < years.length; i++) expect(years[i].age - years[i - 1].age).toBeGreaterThanOrEqual(0);
+    expect(yearIfOffered("uae-moe", "KG1")).toBe("KG1");
+    expect(yearIfOffered("uae-moe", "Grade 12")).toBe("Grade 12");
+    expect(yearIfOffered("uae-moe", "Grade 13")).toBe("");
+    expect(yearIfOffered("uae-moe", "Grade 0")).toBe("");
+    expect(yearIfOffered("uae-moe", "Reception")).toBe("");
+    expect(yearIfOffered("uae-moe", "Year 4")).toBe("");
+    expect(yearIfOffered("uae-moe", "KG 1")).toBe("");
+  });
+
+  test("the provenance row names its workbook row and says what was checked", () => {
+    const p = PROVENANCE["uae-moe"];
+    expect(p).toBeDefined();
+    expect(p.sheetRow).toEqual({ tab: "Countries", name: "United Arab Emirates" });
+    expect(p.source).toBe("https://www.moe.gov.ae/");
+    expect(p.notes).toMatch(/Reference/);
+    expect(p.notes).toMatch(/EmSAT/);
+    expect(p.notes).toMatch(/licen[cs]e/i);
+    expect(p.notes).toMatch(/permission/i);
+    expect(p.notes).toMatch(/KHDA|ADEK|SPEA/);
+    expect(p.notes).not.toMatch(/[–—]/);
+  });
+
+  test("only the middle-east switch shows it", () => {
+    const ids = (regions: string[], admin = false) => visibleCurricula(regions, admin).filter((c) => c.id === "uae-moe").map((c) => c.id);
+    expect(ids(["middle-east"])).toEqual(["uae-moe"]);
+    expect(ids([])).toEqual([]);
+    expect(ids(["africa", "asia", "caribbean", "europe", "usa", "canada"])).toEqual([]);
+    expect(ids([], true)).toEqual(["uae-moe"]);
+    expect(regionSettingKey("middle-east")).toBe("curricula_middle_east");
+    expect(visibleCurricula(["middle-east"], false).map((c) => c.id)).toEqual([...UK_CURRICULUM_IDS, "uae-moe"]);
+  });
+
+  test("an id is accepted exactly, and look-alikes are not", () => {
+    expect(parseCurriculum("uae-moe")).toBe("uae-moe");
+    for (const junk of ["UAE", "uae", "uae_moe", "UAE-MOE", "uae-moe ", " uae-moe", "uae-moe;", "United Arab Emirates", "Emirati", "uae-khda", "uae-adek", "uae-moe-2", "ae"]) {
+      expect(parseCurriculum(junk), junk).toBeNull();
+    }
+    expect(requestCurriculum({ curriculumId: "uae-moe" })).toBe("uae-moe");
+    expect(requestCurriculum({ curriculumId: "UAE-MOE", curriculum: "UAE Ministry of Education Curriculum" })).toBe("uae-moe");
+    expect(isUkCurriculum("uae-moe")).toBe(false);
+    expect(curriculumFormState("uae-moe")).toEqual({ curriculumId: "uae-moe" });
+  });
+
+  test("it hides every UK-only tool and keeps a universal one", () => {
+    const ukOnly = Object.entries(TOOL_SCOPE).filter(([, s]) => s === "uk-only").map(([k]) => k);
+    expect(ukOnly.length).toBe(5);
+    expect(hiddenToolSlugs("uae-moe").sort()).toEqual([...ukOnly].sort());
+    for (const slug of ukOnly) expect(isToolHiddenFor(slug, "uae-moe"), slug).toBe(true);
+    expect(isToolHiddenFor("worksheet-generator", "uae-moe")).toBe(false);
+    expect(isToolHiddenFor("phonics-support", "uae-moe")).toBe(false);
+  });
+
+  test("the prompt names the Ministry's own exams, cycles, inspection and inclusion wording", () => {
+    const text = curriculumInstruction("uae-moe");
+    expect(text).toContain("United Arab Emirates: Ministry of Education curriculum");
+    expect(text).toContain("United Arab Emirates");
+    expect(text).toContain("the national curriculum of the UAE Ministry of Education (MoE)");
+    expect(text).toContain("Kindergarten (KG1 and KG2), Cycle 1 (Grades 1 to 4), Cycle 2 (Grades 5 to 8) and Cycle 3 (Grades 9 to 12, in the General and Advanced streams)");
+    expect(text).toContain("the EmSAT is no longer required at Grade 12 (cancelled in November 2024)");
+    expect(text).toMatch(/Ministry's centrally set end-of-term examinations/);
+    expect(text).toContain("the Ministry of Education's school inspection and evaluation");
+    expect(text).toContain("inclusive education for students of determination, with an Individual Education Plan (IEP)");
+    expect(text).toContain("the UAE Teacher Licensing System and its professional standards for teachers");
+    expect(text).toContain("the Ministry's Kindergarten curriculum (KG1 and KG2)");
+    expect(text).toContain("instead of headteacher: principal.");
+    expect(text).toContain(getCurriculum("uae-moe")!.context!);
+    expect(text).toMatch(/Arabic, Islamic Education and Moral, Social and Cultural Studies are compulsory/);
+    expect(text).toMatch(/dirham/);
+  });
+
+  test("the prompt keeps no England framing and names no other Stage 2 country or body", () => {
+    const text = ownText(curriculumInstruction("uae-moe"));
+    for (const re of [/Ofsted/, /GCSE/, /Key Stage/, /EYFS/, /\bSENCO\b/, /\bSATs\b/, /National Curriculum in England/, /\bWTS\b/, /\bEXS\b/, /\bGDS\b/]) expect(text, `${re}`).not.toMatch(re);
+    for (const place of [...AFRICA_PLACES, ...ASIA_PLACES, "Jamaica", "Trinidad", "Tobago", "Malta"]) expect(text, place).not.toContain(place);
+    for (const re of [/\bCXC\b/, /\bCSEC\b/, /\bCAPE\b/, /MATSEC/, /Singapore-Cambridge/, /\bCBSE\b/, /\bCAPS\b/, /\bNERDC\b/, /\bNaCCA\b/, /\bKCSE\b/, /\bPEP\b/, /\bSEA\b/, /\bNEI\b/]) expect(text, `${re}`).not.toMatch(re);
+    // The private-school regulators are deliberately not entries.
+    for (const re of [/\bKHDA\b/, /\bADEK\b/, /\bSPEA\b/, /Knowledge and Human Development Authority/]) expect(curriculumInstruction("uae-moe"), `${re}`).not.toMatch(re);
+  });
+
+  test("no attainment scale, so no UK band name appears at all", () => {
+    const text = curriculumInstruction("uae-moe");
+    expect(getCurriculum("uae-moe")!.terms?.attainment).toBeUndefined();
+    expect(/instead of the WTS, EXS and GDS bands:/.test(text)).toBe(false);
+    for (const band of ["WTS", "EXS", "GDS"]) expect(text).not.toContain(band);
+  });
+
+  test("the school-year context says Arabic and English, Emirati places and dirhams", () => {
+    const ctx = getCurriculum("uae-moe")!.context!;
+    expect(ctx).toMatch(/Public schools teach in Arabic, with English taught from Kindergarten/);
+    expect(ctx).toMatch(/late August to early July/);
+    expect(ctx).toMatch(/Emirati places, names and dirham amounts/);
+  });
+
+  test("age boundaries: KG1 and KG2 line up with Reception and Year 1, Grade 12 (17) breaks nothing", () => {
+    const age = (label: string) => yearsFor("uae-moe").find((y) => y.label === label)?.age;
+    expect(age("KG1")).toBe(englandYearAge("Reception"));
+    expect(age("KG2")).toBe(englandYearAge("Year 1"));
+    expect(age("Grade 1")).toBe(englandYearAge("Year 2"));
+    expect(age("Grade 12")).toBe(englandYearAge("Year 13"));
+    for (const y of yearsFor("uae-moe")) {
+      expect(() => englandYearFor("uae-moe", y.label), y.label).not.toThrow();
+      expect(englandYearFor("uae-moe", y.label), y.label).toBe(y.label);
+      expect(yearForEnglandYear("uae-moe", y.label), y.label).toBe(y.label);
+    }
+    expect(readingStageFor("Grade 12", false, "uae-moe")).toBe("ks2");
+  });
+});
+
+test.describe("Stage 2 as a whole", () => {
+  test("every Stage 2 region has at least one verified curriculum, and the fifteen ids are exactly the planned ones", () => {
+    const stage2 = ["africa", "asia", "caribbean", "europe", "middle-east"];
+    for (const region of stage2) {
+      expect(CURRICULA_REGISTRY.some((c) => c.region === region && c.verifiedOn), region).toBe(true);
+    }
+    const ids = CURRICULA_REGISTRY.filter((c) => stage2.includes(c.region)).map((c) => c.id);
+    expect([...ids].sort()).toEqual(
+      [
+        "south-africa", "kenya", "nigeria", "ghana", "uganda", "india-cbse", "pakistan", "philippines", "malaysia", "singapore", "hong-kong", "jamaica", "trinidad-and-tobago", "malta", "uae-moe",
+      ].sort(),
+    );
+    expect(ids.length).toBe(15);
+    for (const id of ids) expect(getCurriculum(id)!.verifiedOn, id).toBe("2026-11-25");
   });
 });

@@ -280,3 +280,40 @@ test.describe("Caribbean and Malta: starting a teacher on their own country's cu
     }
   });
 });
+
+test.describe("Middle East: starting a teacher on their own country's curriculum", () => {
+  const on = visibleCurricula(["middle-east"], false);
+
+  test("a teacher in the UAE starts on uae-moe when the region is offered", () => {
+    expect(inferCurriculum({ country: "AE" }, on)).toBe("uae-moe");
+    expect(inferCurriculum({ country: "AE" }, visibleCurricula(ALL_ON, false))).toBe("uae-moe");
+  });
+
+  test("with the region off, or only others on, they start on England", () => {
+    for (const offered of [visibleCurricula([], false), visibleCurricula(["africa", "asia", "caribbean", "europe", "usa"], false)]) {
+      expect(inferCurriculum({ country: "AE" }, offered)).toBe("england");
+    }
+    // Other countries do not get it.
+    for (const country of ["SA", "QA", "KW", "OM", "BH", "EG"]) expect(inferCurriculum({ country }, on), country).toBe("england");
+  });
+
+  test("the country must match exactly, and a saved browser choice still wins only when offered", () => {
+    for (const country of ["ae", "ARE", "UAE", "United Arab Emirates", " AE", "AE "]) expect(inferCurriculum({ country }, on), country).toBe("england");
+    expect(inferCurriculum({ savedLabel: "UAE Ministry of Education Curriculum", country: "GB" }, on)).toBe("uae-moe");
+    expect(inferCurriculum({ savedLabel: "UAE Ministry of Education Curriculum", country: "AE" }, visibleCurricula([], false))).toBe("england");
+  });
+
+  test("the picker lists the Middle East after the UK, an admin sees it with the switch off", () => {
+    const groups = pickerGroups(on);
+    expect(groups.map((g) => g.region)).toEqual(["uk", "middle-east"]);
+    expect(groups[1].label).toBe("Middle East");
+    expect(groups[1].curricula.map((c) => c.id)).toEqual(["uae-moe"]);
+    expect(pickerGroups(visibleCurricula([], true)).map((g) => g.region)).toContain("middle-east");
+    expect(pickerGroups(visibleCurricula(ALL_ON, true)).map((g) => g.region).at(-1)).toBe("middle-east");
+  });
+
+  test("it brings no other output language with it, and a stored choice is never overridden", () => {
+    expect(languageAfterChoosing("uae-moe", null)).toBeNull();
+    expect(languageAfterChoosing("uae-moe", "fr-FR")).toBeNull();
+  });
+});

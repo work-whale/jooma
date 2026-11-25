@@ -116,3 +116,14 @@ test.describe("Jamaica, Trinidad and Tobago and Malta", () => {
     expect(dialPrefix("CA")).toBe("+1");
   });
 });
+
+test.describe("the United Arab Emirates", () => {
+  test("is offered once, with +971", () => {
+    expect(COUNTRIES.filter((c) => c.code === "AE")).toEqual([{ name: "United Arab Emirates", code: "AE", dial: "+971" }]);
+    expect(dialPrefix("AE")).toBe("+971");
+  });
+
+  test("a local number gets the country prefix", () => {
+    expect(profileMobile("AE", "50 123 4567")).toBe("+971501234567");
+  });
+});
