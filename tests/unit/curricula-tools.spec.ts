@@ -113,6 +113,73 @@ test.describe("reading domains", () => {
     expect(readingStageFor("1st Class", true, "ireland")).toBe("ks2");
     expect(readingStageFor("Not a year", false, "ireland")).toBe("ks2");
   });
+
+  // Regression: a child who starts the year under 5 was given the KS2 skills
+  // (summarising, language choices, comparison). Any year at age 6 or under
+  // gets the KS1 skills; 7 and over stays KS2.
+  const UNDER_FIVES: [string, string][] = [
+    ["england", "Nursery"],
+    ["england", "Reception"],
+    ["england-eyfs", "Nursery"],
+    ["england-eyfs", "Reception"],
+    ["kenya", "PP1"],
+    ["ghana", "KG 1"],
+    ["ireland", "Junior Infants"],
+    ["india-cbse", "Nursery"],
+    ["india-cbse", "LKG"],
+    ["malta", "Kindergarten 1"],
+    ["malta", "Kindergarten 2"],
+    ["uae-moe", "KG1"],
+    ["ca-on", "Junior Kindergarten"],
+    ["us-al", "Pre-K"],
+    ["northern-ireland", "Nursery"],
+    ["northern-ireland", "Year 1"],
+  ];
+
+  test("children who start the year under 5 get the KS1 skills", () => {
+    for (const [id, year] of UNDER_FIVES) {
+      expect(readingStageFor(year, false, id), `${id} ${year}`).toBe("ks1");
+    }
+  });
+
+  test("a mixed-year class always gets the KS2 skills, even in the youngest year", () => {
+    for (const [id, year] of UNDER_FIVES) {
+      expect(readingStageFor(year, true, id), `${id} ${year} mixed`).toBe("ks2");
+    }
+  });
+
+  test("the first year starting at age 7 stays KS2, and an unknown year stays KS2", () => {
+    expect(readingStageFor("2nd Class", false, "ireland")).toBe("ks2");
+    expect(readingStageFor("Grade 2", false, "south-africa")).toBe("ks2");
+    expect(readingStageFor("Class 2", false, "india-cbse")).toBe("ks2");
+    expect(readingStageFor("Grade 2", false, "us-al")).toBe("ks2");
+    expect(readingStageFor("Year 3", false, "england")).toBe("ks2");
+    expect(readingStageFor("Year 4", false, "northern-ireland")).toBe("ks2");
+    expect(readingStageFor("Pre-K", false, "ireland")).toBe("ks2");
+    expect(readingStageFor("", false, "kenya")).toBe("ks2");
+  });
+
+  test("every year in every other system follows its age: 6 or under is KS1, 7 or over is KS2", () => {
+    let underFive = 0;
+    for (const c of others) {
+      for (const y of c.years) {
+        expect(readingStageFor(y.label, false, c.id), `${c.id} ${y.label} (${y.age})`).toBe(y.age <= 6 ? "ks1" : "ks2");
+        expect(readingStageFor(y.label, true, c.id), `${c.id} ${y.label} mixed`).toBe("ks2");
+        if (y.age < 5) underFive++;
+      }
+    }
+    // Guards the sweep itself: it must really include children under 5.
+    expect(underFive).toBeGreaterThan(20);
+  });
+
+  test("England's Reception and Nursery use the KS1 skills, a mixed class does not", () => {
+    for (const y of ["Nursery", "Reception"]) {
+      expect(keyStageFor(y, false), y).toBe("ks1");
+      expect(keyStageFor(y, true), y).toBe("ks2");
+    }
+    expect(keyStageFor("Year 3", false)).toBe("ks2");
+    expect(keyStageFor("", false)).toBe("ks2");
+  });
 });
 
 test.describe("Northern Ireland's own year list", () => {
@@ -120,7 +187,7 @@ test.describe("Northern Ireland's own year list", () => {
 
   test("Northern Ireland reads its year at England's age", () => {
     const stage = (y: string, mixed = false, id: string = NI) => readingStageFor(y, mixed, id);
-    expect(["Nursery", "Year 1", "Year 2", "Year 3", "Year 4", "Year 12", ""].map((y) => stage(y))).toEqual(["ks2", "ks2", "ks1", "ks1", "ks2", "ks2", "ks2"]);
+    expect(["Nursery", "Year 1", "Year 2", "Year 3", "Year 4", "Year 12", ""].map((y) => stage(y))).toEqual(["ks1", "ks1", "ks1", "ks1", "ks2", "ks2", "ks2"]);
     expect(stage("Year 2", true)).toBe("ks2");
     expect(stage("Year 3", true)).toBe("ks2");
     for (const y of ["Nursery", "Year 1", "Year 2", "Year 3", "Year 4", "Year 12", ""]) {

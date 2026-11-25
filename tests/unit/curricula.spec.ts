@@ -670,6 +670,10 @@ test.describe("the Africa curricula", () => {
     expect(readingStageFor("Grade 1", false, "south-africa")).toBe("ks1");
     expect(readingStageFor("Grade 2", false, "south-africa")).toBe("ks2");
     expect(readingStageFor("S6", false, "uganda")).toBe("ks2");
+    // Kenya's PP1 (age 4) is under 5 and gets the KS1 skills too.
+    expect(readingStageFor("PP1", false, "kenya")).toBe("ks1");
+    expect(readingStageFor("PP1", true, "kenya")).toBe("ks2");
+    expect(readingStageFor("Grade 2", false, "kenya")).toBe("ks2");
   });
 });
 
@@ -937,6 +941,10 @@ test.describe("the Asia curricula", () => {
     expect(getCurriculum("malaysia")!.context).toMatch(/ringgit/);
     expect(getCurriculum("singapore")!.context).toMatch(/January to November in four terms/);
     expect(getCurriculum("singapore")!.context).toMatch(/Mother Tongue/);
+    // Fact check 2026-11-25: MOE now calls the Allied Educators (Learning and
+    // Behavioural Support) SEN Officers (MOE parliamentary reply, 9 May 2023).
+    expect(curriculumInstruction("singapore")).toContain("Special Educational Needs Officers (SEN Officers)");
+    expect(curriculumInstruction("singapore")).not.toMatch(/Allied Educator|Learning and Behavioural Support/);
     expect(getCurriculum("hong-kong")!.context).toMatch(/September to July/);
     expect(getCurriculum("hong-kong")!.context).toMatch(/Hong Kong dollar/);
   });
@@ -1121,6 +1129,12 @@ test.describe("the Caribbean and Malta curricula", () => {
     expect(PROVENANCE["trinidad-and-tobago"].notes).toMatch(/unclear/i);
     expect(PROVENANCE.malta.notes).toMatch(/unclear/i);
     expect(PROVENANCE.malta.notes).toMatch(/copyright/i);
+    // The six rows the workbook never checked were checked before release.
+    for (const id of ["singapore", "hong-kong", "ghana", "malta", "jamaica", "trinidad-and-tobago"]) {
+      expect(PROVENANCE[id].notes, id).toMatch(/Fact check 2026-11-25: /);
+    }
+    expect(PROVENANCE.malta.notes).toMatch(/Benchmark.*ended after 2023/);
+    expect(PROVENANCE.singapore.notes).toMatch(/SEN Officers/);
   });
 
   test("each region switch shows only its own country: Malta is not offered with only the Caribbean on, and the reverse", () => {
@@ -1168,7 +1182,11 @@ test.describe("the Caribbean and Malta curricula", () => {
         inspection: "Division of School Supervision and Management",
         headteacher: "principal",
       },
-      malta: { exams: [/\bMATSEC\b/, /End of Primary Benchmark/, /Year 6/, /Year 11/, /Intermediate and Advanced level/], inspection: "Quality Assurance Department", headteacher: "head of school" },
+      malta: {
+        exams: [/\bMATSEC\b/, /national annual examinations in Years 4 to 6/, /End-of-Primary Examination in Year 6/, /Year 11/, /Intermediate and Advanced level/],
+        inspection: "Directorate for Quality and Standards in Education (DQSE)",
+        headteacher: "head of school",
+      },
     };
     for (const id of CE_IDS) {
       const text = curriculumInstruction(id);
@@ -1186,6 +1204,11 @@ test.describe("the Caribbean and Malta curricula", () => {
     expect(curriculumInstruction("malta")).toContain("Learning Support Educators (LSEs)");
     expect(curriculumInstruction("malta")).toContain("Inclusion Coordinator (INCO)");
     expect(curriculumInstruction("malta")).toContain("Individual Educational Programme (IEP)");
+    // Fact check 2026-11-25: the Year 6 Benchmark ended after 2023 (Eurydice), and
+    // external reviews are the DQSE's (Education Act, Cap. 605), not a "Quality Assurance Department".
+    expect(curriculumInstruction("malta")).not.toMatch(/Benchmark/);
+    expect(curriculumInstruction("malta")).not.toContain("Quality Assurance Department");
+    expect(curriculumInstruction("malta")).toContain("National Quality Standards");
   });
 
   test("Jamaica and Trinidad and Tobago share the CXC exams, and each names only its own other bodies", () => {
@@ -1224,7 +1247,7 @@ test.describe("the Caribbean and Malta curricula", () => {
     const OWN: Record<CeId, RegExp[]> = {
       jamaica: [/\bPEP\b/, /\bNSC\b/, /\bNEI\b/, /Early Childhood Commission/, /Special Education Unit/],
       "trinidad-and-tobago": [/\bSEA\b/, /\bECCE\b/, /Student Support Services/, /Division of School Supervision/],
-      malta: [/\bMATSEC\b/, /\bNCF\b/, /\bLSEs?\b/, /\bINCO\b/, /\bIEP\b/, /Quality Assurance Department/, /End of Primary Benchmark/],
+      malta: [/\bMATSEC\b/, /\bNCF\b/, /\bLSEs?\b/, /\bINCO\b/, /\bIEP\b/, /\bDQSE\b/, /End-of-Primary Examination/],
     };
     for (const id of CE_IDS) {
       const text = ownText(curriculumInstruction(id));

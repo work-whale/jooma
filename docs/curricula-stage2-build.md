@@ -68,7 +68,7 @@ Exams, inspection and other terms for `terms` (Reference unless marked; the revi
 | Singapore | PSLE (P6), O and N Level to 2026 then SEC (Confirmed), A Level (JC2) | MOE School Excellence Model (self-evaluation and external validation) | principal |
 | Hong Kong | TSA; HKDSE (S6) by HKEAA | EDB External School Review | principal |
 | UAE | National assessments; EmSAT cancelled for Grade 12 (Confirmed) | MoE school inspection (federal schools) | principal |
-| Malta | SEC by MATSEC (Year 11); MATSEC A level and Intermediate | Quality Assurance Department | head of school |
+| Malta | SEC by MATSEC (Year 11); MATSEC A level and Intermediate; Years 4 to 6 national annual exams (Benchmark ended after 2023) | DQSE external reviews (fact check 2026-11-25) | head of school |
 | Jamaica | PEP (Grade 6), CSEC (Grade 11), CAPE | National Education Inspectorate | principal |
 | Trinidad and Tobago | SEA (Standard 5), CSEC, CAPE | Division of School Supervision | principal |
 

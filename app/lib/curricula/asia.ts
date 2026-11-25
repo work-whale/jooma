@@ -148,7 +148,7 @@ export const ASIA_CURRICULA: Curriculum[] = [
       stages: "primary (Primary 1 to 6), secondary (Secondary 1 to 4 or 5, with subjects taken at G1, G2 or G3 under Full Subject-Based Banding) and pre-university (Junior College 1 and 2)",
       exams: "the Primary School Leaving Examination (PSLE) at the end of Primary 6; GCE O-Level and N-Level until 2026 and the Singapore-Cambridge Secondary Education Certificate (SEC) from 2027; GCE A-Level at the end of JC 2; all run by SEAB",
       inspection: "the School Excellence Model: school self-evaluation with external validation by MOE",
-      send: "special educational needs support in mainstream schools from Allied Educators (Learning and Behavioural Support), with special education (SPED) schools for higher needs",
+      send: "special educational needs support in mainstream schools from Special Educational Needs Officers (SEN Officers), with special education (SPED) schools for higher needs",
       teacherStandards: "the Singapore Teacher Growth Model",
       earlyYears: "the Nurturing Early Learners (NEL) Framework for preschool (Kindergarten 1 and 2)",
       attainment: "PSLE Achievement Levels, from AL1 (highest) to AL8",

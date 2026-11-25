@@ -165,6 +165,16 @@ test.describe("comprehension default domains (regression)", () => {
     expect(defaultDomainCodes("Year 5", false)).toEqual(["2a", "2b", "2c", "2d", "2e", "2f", "2g", "2h"]);
     expect(defaultDomainCodes("", true)).toHaveLength(8);
   });
+
+  // Children under 5 (England's Nursery and Reception) read with the KS1 skills.
+  test("Reception and Nursery start with the five KS1 domains", () => {
+    expect(keyStageFor("Reception", false)).toBe("ks1");
+    expect(keyStageFor("Nursery", false)).toBe("ks1");
+    expect(keyStageFor("Reception", true)).toBe("ks2");
+    expect(defaultDomainCodes("Reception", false)).toEqual(["1a", "1b", "1c", "1d", "1e"]);
+    expect(defaultDomainCodes("Nursery", false)).toEqual(["1a", "1b", "1c", "1d", "1e"]);
+    expect(defaultDomainCodes("Reception", true)).toHaveLength(8);
+  });
 });
 
 test.describe("slideshow prefill year (regression)", () => {

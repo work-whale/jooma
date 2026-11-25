@@ -26,8 +26,8 @@ export const EUROPE_CURRICULA: Curriculum[] = [
     terms: {
       curriculum: "the National Curriculum Framework (NCF 2012) and the Learning Outcomes Framework, set by the Ministry for Education",
       stages: "the Early Years cycle (Kindergarten to Year 2), Junior Years (Years 3 to 6) and Secondary Years (Years 7 to 11: middle school, then secondary school)",
-      exams: "the End of Primary Benchmark in Year 6 and the MATSEC Secondary Education Certificate examinations at the end of Year 11, then MATSEC Intermediate and Advanced level at sixth form",
-      inspection: "the Quality Assurance Department's external reviews of schools",
+      exams: "school assessment with national annual examinations in Years 4 to 6 (the End-of-Primary Examination in Year 6), the MATSEC Secondary Education Certificate examinations at the end of Year 11, then MATSEC Intermediate and Advanced level at sixth form",
+      inspection: "external reviews of schools by the Directorate for Quality and Standards in Education (DQSE), against the National Quality Standards",
       send: "inclusive education with Learning Support Educators (LSEs), an Inclusion Coordinator (INCO) and an Individual Educational Programme (IEP)",
       earlyYears: "the Early Years cycle of the National Curriculum Framework (Kindergarten to Year 2)",
       headteacher: "head of school",

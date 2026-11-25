@@ -12,13 +12,14 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
  *   LIVE_MODEL=1 npx playwright test tests/tools/curricula-stage2-live --workers=1
  *
  * A mock never proves the model accepts the prompt, so this makes one real
- * generation for each of South Africa, India (CBSE), Jamaica, Malta and the
- * UAE, as a plain paying teacher whose region switch is turned on for the
- * test and off again in `finally` and `afterAll`. Checked: the worksheet
- * request carries the curriculum, the response parses and the worksheet
- * renders, and the text never falls back to England's framing ("Key Stage",
- * "Ofsted", "KS2") or England's year names ("Year 4"), except Malta, which
- * really does call its years "Year 4".
+ * generation for each of South Africa, India (CBSE), Jamaica, Malta, the
+ * UAE, the Philippines and Singapore, as a plain paying teacher whose region
+ * switch is turned on for the test and off again in `finally` and `afterAll`.
+ * Checked: the worksheet request carries the curriculum, the response parses
+ * and the worksheet renders, and the text never falls back to England's
+ * framing ("Key Stage", "Ofsted", "KS2") or England's year names ("Year 4"),
+ * except Malta, which really does call its years "Year 4", and the
+ * Philippines, which really does have "Key Stage" 1 to 4.
  *
  * Re-diff tool_settings (staging against production) before trusting a run.
  * A results file goes to docs/screenshots/2026-11-25-curricula-stage2-live/.
@@ -29,11 +30,14 @@ const LIVE = { timeout: 420_000 };
 const OUT = join(process.cwd(), "docs", "screenshots", "2026-11-25-curricula-stage2-live");
 
 const CASES = [
-  { id: "south-africa", region: "africa", label: "South African Curriculum (CAPS)", year: "Grade 4", yearNamesAreEngland: false },
-  { id: "india-cbse", region: "asia", label: "Indian Curriculum (CBSE)", year: "Class 4", yearNamesAreEngland: false },
-  { id: "jamaica", region: "caribbean", label: "Jamaican Curriculum (National Standards Curriculum)", year: "Grade 4", yearNamesAreEngland: false },
-  { id: "malta", region: "europe", label: "Maltese Curriculum (National Curriculum Framework)", year: "Year 4", yearNamesAreEngland: true },
-  { id: "uae-moe", region: "middle-east", label: "UAE Ministry of Education Curriculum", year: "Grade 4", yearNamesAreEngland: false },
+  { id: "south-africa", region: "africa", label: "South African Curriculum (CAPS)", year: "Grade 4", yearNamesAreEngland: false, keyStageIsReal: false },
+  { id: "india-cbse", region: "asia", label: "Indian Curriculum (CBSE)", year: "Class 4", yearNamesAreEngland: false, keyStageIsReal: false },
+  { id: "jamaica", region: "caribbean", label: "Jamaican Curriculum (National Standards Curriculum)", year: "Grade 4", yearNamesAreEngland: false, keyStageIsReal: false },
+  { id: "malta", region: "europe", label: "Maltese Curriculum (National Curriculum Framework)", year: "Year 4", yearNamesAreEngland: true, keyStageIsReal: false },
+  { id: "uae-moe", region: "middle-east", label: "UAE Ministry of Education Curriculum", year: "Grade 4", yearNamesAreEngland: false, keyStageIsReal: false },
+  // The Philippines really has "Key Stage 1 to 4" (Grades 4 to 6 are Key Stage 2), so only England's "KS2" shorthand is banned there.
+  { id: "philippines", region: "asia", label: "Philippine Curriculum (MATATAG, DepEd)", year: "Grade 4", yearNamesAreEngland: false, keyStageIsReal: true },
+  { id: "singapore", region: "asia", label: "Singapore Curriculum (MOE)", year: "Primary 4", yearNamesAreEngland: false, keyStageIsReal: false },
 ] as const;
 
 const SWITCH_KEYS = [...new Set(CASES.map((c) => `curricula_${c.region.replace(/-/g, "_")}`))];
@@ -79,7 +83,7 @@ for (const c of CASES) {
       results.push({ case: c.id, chars: text.length, excerpt: text.slice(0, 900) });
 
       expect(text.length).toBeGreaterThan(300);
-      expect(text).not.toMatch(/Key Stage/);
+      if (!c.keyStageIsReal) expect(text).not.toMatch(/Key Stage/);
       expect(text).not.toMatch(/Ofsted/);
       expect(text).not.toMatch(/KS2/);
       if (!c.yearNamesAreEngland) expect(text).not.toMatch(/\bYear [0-9]/);

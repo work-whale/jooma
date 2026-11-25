@@ -109,14 +109,16 @@ export function examStylesFor(curriculumId: unknown): ExamStyle[] {
 
 /** Which set of reading skills (the KS1 or KS2 content domains) fits a year.
  *  The UK rule is England's labels, read at the same age for Northern Ireland
- *  (its Year 2 and Year 3 get KS1's skills); any other system goes by age:
- *  KS1's skills for pupils starting the year aged 5 or 6. */
+ *  (its Nursery, Year 1, Year 2 and Year 3 get KS1's skills); any other system
+ *  goes by age: KS1's skills for a known year whose pupils start it aged 6 or
+ *  under (so a 3 or 4 year old in Kenya's PP1 or Ireland's Junior Infants is
+ *  included), KS2's from age 7, for an unknown year label, and for a mixed class. */
 export function readingStageFor(yearGroup: string, mixed: boolean, curriculumId: unknown): KeyStage {
   const c = getCurriculum(curriculumId);
   if (!c) return keyStageFor(yearGroup, mixed);
   if (ukLike(c.id)) return keyStageFor(englandYearFor(c.id, yearGroup), mixed);
   const age = c.years.find((y) => y.label === yearGroup)?.age;
-  return !mixed && (age === 5 || age === 6) ? "ks1" : "ks2";
+  return !mixed && age !== undefined && age <= 6 ? "ks1" : "ks2";
 }
 
 /** The year an exam style sets when picked (the KS2 styles: Year 6), in the
