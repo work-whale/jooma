@@ -101,6 +101,38 @@ test.describe("signed in", () => {
     await page.getByRole("button", { name: "Jump to section" }).first().click();
     await expect(page.locator("#outline-hover-panel")).toContainText("Vocabulary");
   });
+
+  test("the passage length follows the year until the teacher types their own", async ({ page }) => {
+    await signIn(page, teacher);
+
+    let sent: Record<string, unknown> | null = null;
+    await page.route("**/api/comprehension-generator", (route) => {
+      sent = route.request().postDataJSON();
+      return route.fulfill({ status: 200, headers: { "content-type": "text/plain; charset=utf-8" }, body: JSON.stringify(GENERATED) });
+    });
+
+    await page.goto("/tools/comprehension-generator");
+    await page.getByLabel("Curriculum").selectOption("2014 National Curriculum");
+    await page.getByLabel("Year group").selectOption("Reception");
+    await page.getByRole("button", { name: "Generate for me" }).click();
+    const words = page.getByLabel("Passage length (approx. words)");
+    await expect(words).toHaveValue("100");
+
+    // The 100 is what goes to the model, not just what the box shows.
+    await page.getByPlaceholder(/monarch butterfly/).fill("Ducks");
+    await page.getByRole("button", { name: /^1a/ }).click();
+    await page.locator("[data-jo-generate]").click();
+    await expect(page.getByTestId("sheet-document")).toHaveAttribute("data-ready", "true", NAV);
+    expect(sent).toMatchObject({ yearGroup: "Reception", passageWordCount: 100 });
+
+    // Their own number is kept when the year changes; an untouched one is not.
+    await words.fill("250");
+    await words.blur();
+    await page.getByLabel("Year group").selectOption("Year 3");
+    await expect(words).toHaveValue("250");
+    await page.getByLabel("Year group").selectOption("Reception");
+    await expect(words).toHaveValue("250");
+  });
 });
 
 test.describe("a visitor's free try", () => {

@@ -16,7 +16,7 @@ import { keyStageFor, type KeyStage } from "@/app/lib/comprehension-domains";
 import { DIFFERENTIATION_BANDS } from "@/app/lib/differentiation";
 import { EXAM_STYLES, type ExamStyle } from "@/app/lib/sheets/exam-styles";
 
-import { englandYearFor, yearForEnglandYear } from "./england-years";
+import { englandYearAge, englandYearFor, yearForEnglandYear } from "./england-years";
 import { getCurriculum } from "./index";
 
 export type ToolScope = "universal" | "adapts" | "uk-only";
@@ -119,6 +119,26 @@ export function readingStageFor(yearGroup: string, mixed: boolean, curriculumId:
   if (ukLike(c.id)) return keyStageFor(englandYearFor(c.id, yearGroup), mixed);
   const age = c.years.find((y) => y.label === yearGroup)?.age;
   return !mixed && age !== undefined && age <= 6 ? "ks1" : "ks2";
+}
+
+/** The comprehension passage length a year starts at, in words, by the age its
+ *  pupils start the year: 3 or 4 -> 100, 5 -> 150, 6 -> 200, 7 or more -> 300.
+ *  300 too for a mixed class, an empty year and a label the list does not have.
+ *  The age is read as readingStageFor reads it: England's labels for the UK and
+ *  the islands (Northern Ireland through its own list), the curriculum's own
+ *  year list for any other system. Only a default: the teacher can type any
+ *  length. */
+export function suggestedPassageWords(yearGroup: string, mixed: boolean, curriculumId: unknown): number {
+  if (mixed) return 300;
+  const c = getCurriculum(curriculumId);
+  const age = !c || ukLike(c.id)
+    ? englandYearAge(englandYearFor(c?.id, yearGroup))
+    : c.years.find((y) => y.label === yearGroup)?.age;
+  if (age === undefined) return 300;
+  if (age <= 4) return 100;
+  if (age === 5) return 150;
+  if (age === 6) return 200;
+  return 300;
 }
 
 /** The year an exam style sets when picked (the KS2 styles: Year 6), in the

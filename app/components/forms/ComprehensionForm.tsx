@@ -16,7 +16,7 @@ import type { ToolRun } from "@/app/lib/toolRuns";
 import PrefilledBadge from "@/app/components/assistant/PrefilledBadge";
 import { useToolLaunch, type ToolLaunchParams } from "@/app/lib/useToolLaunch";
 import { domainsFor } from "@/app/lib/comprehension-domains";
-import { readingStageFor } from "@/app/lib/curricula/tool-scope";
+import { readingStageFor, suggestedPassageWords } from "@/app/lib/curricula/tool-scope";
 import { readSheetStream } from "@/app/lib/sheets/client-stream";
 import { parsePictures, type SheetPictures } from "@/app/lib/sheets/picture-options";
 import { fillGeneratedPictures } from "@/app/lib/sheets/pictures";
@@ -115,6 +115,21 @@ export default function ComprehensionForm({
     }
   }, [ks]);
 
+  // The passage length follows the year (a Reception child is not handed 300
+  // words), until the teacher types their own, or a saved run or Jo sets one.
+  // Reset clears that. Runs on mount too, so a year kept from last visit gets
+  // its own default.
+  const suggestedWords = suggestedPassageWords(yearGroup, mixed, curriculum);
+  const wordsTouchedRef = useRef(false);
+  useEffect(() => {
+    if (!wordsTouchedRef.current) setPassageWordCount(String(suggestedWords));
+  }, [suggestedWords]);
+  const changePassageWords = (v: string) => {
+    // A blur that clamps to the same value is not the teacher choosing one.
+    if (v !== passageWordCount) wordsTouchedRef.current = true;
+    setPassageWordCount(v);
+  };
+
   const toggleDomain = (code: string) =>
     setContentDomains((prev) => prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]);
 
@@ -143,6 +158,7 @@ export default function ComprehensionForm({
     setTextSource((i.textSource as "generate" | "own" | "") ?? "");
     setTopic((i.topic as string) ?? "");
     setOwnText((i.ownText as string) ?? "");
+    wordsTouchedRef.current = true;
     setPassageWordCount((i.passageWordCount as string) ?? "300");
     setComplexity((i.complexity as Complexity) ?? "Standard");
     setContentDomains((i.contentDomains as string[]) ?? []);
@@ -174,8 +190,10 @@ export default function ComprehensionForm({
       },
       numQuestions: (v) => setNumQuestions(v as number),
       // Snapped to the control's 50 word steps, within its 100 to 800 range.
-      passageWordCount: (v) =>
-        setPassageWordCount(String(Math.min(800, Math.max(100, Math.round(Number(v) / 50) * 50)))),
+      passageWordCount: (v) => {
+        wordsTouchedRef.current = true;
+        setPassageWordCount(String(Math.min(800, Math.max(100, Math.round(Number(v) / 50) * 50))));
+      },
       complexity: (v) => setComplexity(v as Complexity),
       // Never on a free try: differentiation is behind sign up there.
       differentiate: (v) => { if (!guest) setDifferentiate(v as Differentiate); },
@@ -361,12 +379,12 @@ export default function ComprehensionForm({
                 </div>
                 <WordCountField
                   value={passageWordCount}
-                  onChange={setPassageWordCount}
+                  onChange={changePassageWords}
                   label="Passage length (approx. words)"
                   min={100}
                   max={800}
                   step={50}
-                  defaultValue={300}
+                  defaultValue={suggestedWords}
                 />
               </>
             )}
@@ -517,7 +535,7 @@ export default function ComprehensionForm({
                   setContentDomains([]); setQuestionTypes([]);
                   setNumQuestions(5); setIncludeAnswerKey(true);
                   setDifferentiate("no"); setDifferentiationLevels([]);
-                  setTopic(""); setPassageWordCount("300"); setOwnText(""); setPictures(null);
+                  wordsTouchedRef.current = false; setTopic(""); setPassageWordCount("300"); setOwnText(""); setPictures(null);
                   setResult(null); setRunId(null); setError(null); setConfirmingReset(false);
                 }}
                 onCancel={() => setConfirmingReset(false)}

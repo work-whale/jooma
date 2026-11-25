@@ -129,7 +129,7 @@ export function comprehensionMessages(body: GenerateRequest):
 
   const passageLines =
     textSource === "generate"
-      ? `- Write an original, engaging passage on: "${topic}", of about ${words} words, for ${complexity.toLowerCase()} readers in ${yearGroup}. Continuous prose in 3 to 7 paragraphs, no lists. Accurate if non-fiction; crafted, with character and detail, if fiction. Varied sentences and rich but accessible vocabulary.
+      ? `- Write an original, engaging passage on: "${topic}", of about ${words} words, for ${complexity.toLowerCase()} readers in ${yearGroup}. Continuous prose in ${words < 200 ? "1 to 3 short paragraphs" : "3 to 7 paragraphs"}, no lists. Accurate if non-fiction; crafted, with character and detail, if fiction. Varied sentences and rich but accessible vocabulary.
 - sections, in this order:
   1. A section titled "Read the text" (emoji 📖, instruction "Read the text carefully, then answer the questions.") holding ONE passage block (its title and paragraphs), then a wordbank block titled "Key words" with 4 to 6 challenging words from the passage.
 ${domainSections}`
