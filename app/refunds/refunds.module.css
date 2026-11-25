@@ -1,0 +1,557 @@
+/*
+ * The refund policy page, ported from docs/18-jooma-refund-policy.html.
+ *
+ * Everything hangs off .page, so none of it can leak into the rest of the app.
+ * globals.css sets colour and font on `body` and gives headings a family, so
+ * the element resets below sit inside :where() (zero specificity) and the class
+ * rules that follow override them by order, not by weight.
+ */
+
+.page {
+  --canvas: #f7f5fc;
+  --card: #ffffff;
+  --line: #ece8f4;
+  --line-2: #ded8ee;
+  --ink: #1d1730;
+  --body: #453e5e;
+  --muted: #5f5876;
+  --faint: #8e87a4;
+  --res: #5b2ed6;
+  --res-soft: #f0ebfd;
+  --deep: #3a1c8f;
+  --chrome: #1e1138;
+  --lilac: #cdbcf7;
+  --pic: #c2551f;
+  --pic-soft: #fbeee6;
+  --yes: #0f8a63;
+  --yes-soft: #e6f4ee;
+  --no: #9a3050;
+  --no-soft: #fbeaef;
+  --r: 14px;
+  --r-lg: 20px;
+  --pill: 999px;
+  --read: 68ch;
+
+  min-height: 100dvh;
+  background: var(--canvas);
+  color: var(--body);
+  font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.68;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page :where(*) {
+  box-sizing: border-box;
+}
+.page :where(h1, h2, h3) {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.page :where(p) {
+  margin: 0;
+}
+.page :where(a) {
+  color: var(--res);
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(91, 46, 214, 0.3);
+}
+.page :where(a:hover) {
+  border-bottom-color: var(--res);
+}
+.page :where(svg) {
+  display: block;
+}
+.page :where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.page :where(strong) {
+  color: var(--ink);
+  font-weight: 800;
+}
+.page :focus-visible {
+  outline: 3px solid var(--res);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page :where(*) {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* chrome */
+.top {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.topIn {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 0;
+  color: var(--ink);
+}
+.mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+.back {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+  border: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.back:hover {
+  color: var(--ink);
+}
+.back svg {
+  width: 15px;
+  height: 15px;
+  transform: rotate(90deg);
+}
+
+/* masthead */
+.mast {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 62px 24px 0;
+}
+.kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--res-soft);
+  color: var(--deep);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 7px 14px;
+  border-radius: var(--pill);
+  margin-bottom: 22px;
+}
+.kind svg {
+  width: 15px;
+  height: 15px;
+}
+.mast h1 {
+  font-size: clamp(2.1rem, 5.4vw, 3.15rem);
+  max-width: 19ch;
+}
+.lede {
+  font-size: 1.12rem;
+  color: var(--muted);
+  margin-top: 20px;
+  max-width: var(--read);
+  line-height: 1.62;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+  margin-top: 26px;
+  font-size: 0.84rem;
+  color: var(--faint);
+}
+.meta b {
+  color: var(--body);
+  font-weight: 600;
+}
+
+/* the summary: the part most people read, so it answers first */
+.tldr {
+  max-width: 1080px;
+  margin: 40px auto 0;
+  padding: 0 24px;
+}
+.tldrIn {
+  background: var(--chrome);
+  border-radius: var(--r-lg);
+  padding: 38px 40px;
+  color: #ede7fb;
+  box-shadow: 0 30px 70px -44px rgba(29, 23, 48, 0.6);
+}
+.tldr h2 {
+  color: #fff;
+  font-size: 1.26rem;
+  letter-spacing: -0.02em;
+}
+.sub {
+  color: var(--lilac);
+  font-size: 0.93rem;
+  margin-top: 8px;
+  max-width: 58ch;
+}
+.rules {
+  margin-top: 26px;
+  display: grid;
+  gap: 2px;
+}
+.rule {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+  padding: 15px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rule:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.rule .ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.1);
+}
+.rule .ic svg {
+  width: 17px;
+  height: 17px;
+  color: #d8ccf8;
+}
+.rule b {
+  display: block;
+  color: #fff;
+  font-size: 0.97rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.rule span {
+  display: block;
+  color: var(--lilac);
+  font-size: 0.9rem;
+  line-height: 1.56;
+  margin-top: 3px;
+}
+
+/* body */
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 60px 24px 20px;
+  display: grid;
+  grid-template-columns: 1fr 206px;
+  gap: 56px;
+  align-items: start;
+}
+.doc {
+  min-width: 0;
+  max-width: var(--read);
+}
+
+/* the header is sticky at 66px, so an anchor jump would land underneath it */
+.cl,
+.ask {
+  scroll-margin-top: 88px;
+}
+.cl {
+  padding: 34px 0;
+  border-top: 1px solid var(--line-2);
+}
+.cl:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.no {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--faint);
+  letter-spacing: 0.02em;
+}
+.cl h2 {
+  font-size: 1.42rem;
+  margin-top: 5px;
+  letter-spacing: -0.025em;
+}
+.vd {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  padding: 6px 13px;
+  border-radius: var(--pill);
+}
+.vd svg {
+  width: 14px;
+  height: 14px;
+}
+.y {
+  background: var(--yes-soft);
+  color: var(--yes);
+}
+.n {
+  background: var(--no-soft);
+  color: var(--no);
+}
+.p {
+  background: var(--res-soft);
+  color: var(--deep);
+}
+.cl p {
+  margin-top: 15px;
+}
+.cl h3 {
+  font-size: 1rem;
+  margin-top: 24px;
+  letter-spacing: -0.01em;
+}
+
+.pts {
+  margin-top: 16px;
+  display: grid;
+  gap: 11px;
+}
+.pts li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  font-size: 0.97rem;
+}
+.pts li svg {
+  width: 17px;
+  height: 17px;
+  margin-top: 5px;
+  flex: none;
+}
+.pts li.ptYes svg {
+  color: var(--yes);
+}
+.pts li.ptNo svg {
+  color: var(--no);
+}
+
+/* the two credit colours keep their one meaning each, here as well. an
+   inline-flex box sits off the baseline and drags the line box taller than its
+   neighbours, so it is nudged down to sit level with the running text */
+.pic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: -0.18em;
+  font-weight: 800;
+  font-size: 0.84rem;
+  padding: 2px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  background: var(--pic-soft);
+  color: var(--pic);
+}
+.pic svg {
+  width: 13px;
+  height: 13px;
+}
+
+.aside {
+  margin-top: 20px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-left: 4px solid var(--res);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 18px 22px;
+}
+.cl .aside p {
+  margin: 0;
+  font-size: 0.93rem;
+}
+
+/* contents rail */
+.rail {
+  position: sticky;
+  top: 94px;
+  font-size: 0.87rem;
+}
+.railLbl {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-bottom: 12px;
+}
+.rail a {
+  display: block;
+  padding: 7px 0 7px 14px;
+  color: var(--muted);
+  border: 0;
+  border-left: 2px solid var(--line-2);
+  line-height: 1.4;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.rail a:hover {
+  color: var(--ink);
+}
+.rail a.on {
+  color: var(--res);
+  border-left-color: var(--res);
+  font-weight: 600;
+}
+
+/* how to ask */
+.ask {
+  max-width: 1080px;
+  margin: 26px auto 0;
+  padding: 0 24px 80px;
+}
+.askIn {
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: 34px 38px;
+  max-width: var(--read);
+}
+.ask h2 {
+  font-size: 1.24rem;
+}
+.ask p {
+  margin-top: 12px;
+  font-size: 0.97rem;
+}
+.mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  background: var(--res);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.97rem;
+  padding: 13px 22px;
+  border-radius: var(--pill);
+  border: 0;
+}
+.mail:hover {
+  background: var(--deep);
+}
+.mail svg {
+  width: 17px;
+  height: 17px;
+}
+.need {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.needLbl {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--faint);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.need ul {
+  margin-top: 11px;
+  display: grid;
+  gap: 7px;
+}
+.need li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  font-size: 0.93rem;
+}
+.need li svg {
+  width: 15px;
+  height: 15px;
+  margin-top: 5px;
+  color: var(--res);
+}
+
+.foot {
+  border-top: 1px solid var(--line);
+  background: var(--card);
+}
+.footIn {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 30px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--faint);
+}
+.foot a {
+  color: var(--muted);
+  border: 0;
+}
+.foot a:hover {
+  color: var(--ink);
+}
+.foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .wrap {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-top: 48px;
+  }
+  .rail {
+    display: none;
+  }
+}
+@media (max-width: 620px) {
+  .page {
+    font-size: 15.5px;
+  }
+  .topIn,
+  .mast,
+  .tldr,
+  .wrap,
+  .ask,
+  .footIn {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .mast {
+    padding-top: 44px;
+  }
+  .tldrIn {
+    padding: 28px 22px;
+    border-radius: var(--r);
+  }
+  .askIn {
+    padding: 26px 22px;
+  }
+  .rule {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

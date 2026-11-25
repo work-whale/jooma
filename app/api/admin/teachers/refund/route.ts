@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminRoute } from "@/app/lib/auth/admin-route";
 import { supabaseAdmin } from "@/app/lib/supabase-admin";
 import { stripe } from "@/app/lib/stripe";
+import { adviseCharges } from "@/app/lib/refund-facts";
+import { auditReason, parseRule } from "@/app/lib/refund-policy";
 
 // Refunds a charge for a teacher.
 //
@@ -40,17 +42,32 @@ export async function GET(req: NextRequest) {
 
   try {
     const charges = await stripe.charges.list({ customer, limit: 10 });
+    const refundable = charges.data.filter((c) => c.status === "succeeded" && c.amount > c.amount_refunded);
+
+    // What the refund policy allows for each charge. Best effort: the list
+    // loads without it, and adviseCharges never throws (it falls back to the
+    // fault option, which is always on offer). The console only ADVISES; POST
+    // below never refuses on policy grounds.
+    let advice: Awaited<ReturnType<typeof adviseCharges>> = new Map();
+    try {
+      advice = await adviseCharges(userId, customer, refundable);
+    } catch (err) {
+      console.error("[admin/refund] advice", err);
+    }
+
     return NextResponse.json({
-      charges: charges.data
-        .filter((c) => c.status === "succeeded" && c.amount > c.amount_refunded)
-        .map((c) => ({
+      charges: refundable.map((c) => {
+        const a = advice.get(c.id);
+        return {
           id: c.id,
           amount: c.amount,
           amountRefunded: c.amount_refunded,
           currency: c.currency,
           created: c.created,
           description: c.description,
-        })),
+          ...(a ? { label: a.label, facts: a.facts, options: a.options, inPolicy: a.inPolicy } : {}),
+        };
+      }),
     });
   } catch (err) {
     console.error("[admin/refund] list", err);
@@ -70,6 +87,14 @@ export async function POST(req: NextRequest) {
     typeof body?.amountPence === "number" && Number.isFinite(body.amountPence)
       ? Math.round(body.amountPence)
       : null;
+  // Which policy rule the admin picked, if any. Advisory only: it goes in the
+  // audit trail, and a value that is present but not a rule is a bad request
+  // rather than something to quietly drop.
+  const rule = body?.rule === undefined || body?.rule === null ? null : parseRule(body.rule);
+  if (body?.rule !== undefined && body?.rule !== null && rule === null) {
+    return NextResponse.json({ error: "That is not a refund rule." }, { status: 400 });
+  }
+  const interval = body?.interval === "month" || body?.interval === "year" ? body.interval : null;
 
   if (!userId || !chargeId) {
     return NextResponse.json({ error: "userId and chargeId are required." }, { status: 400 });
@@ -82,6 +107,8 @@ export async function POST(req: NextRequest) {
   if (!customer) {
     return NextResponse.json({ error: "This teacher has no Stripe customer." }, { status: 400 });
   }
+  // "Clause 3: <what the admin wrote>" when a policy rule was picked.
+  const logged = auditReason(rule, interval, reason);
 
   try {
     // Re-fetch and verify the charge belongs to THIS teacher. The client sends
@@ -116,14 +143,18 @@ export async function POST(req: NextRequest) {
       charge: chargeId,
       amount,
       reason: "requested_by_customer",
-      metadata: { jooma_admin: gate.user.id, jooma_reason: reason },
+      metadata: {
+        jooma_admin: gate.user.id,
+        jooma_reason: logged,
+        ...(rule ? { jooma_rule: rule } : {}),
+      },
     });
 
     await gate.supabase.rpc("admin_log_refund", {
       uid: userId,
       p_charge_id: chargeId,
       p_amount_pence: amount,
-      p_reason: reason,
+      p_reason: logged,
     });
 
     return NextResponse.json({ ok: true, refundId: refund.id, amount });

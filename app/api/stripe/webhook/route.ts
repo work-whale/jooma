@@ -7,6 +7,7 @@ import { planInForce } from "@/app/lib/account-plan";
 import { planAfterStripeEvent, planChangeKind } from "@/app/lib/billing-rules";
 import { recordAppEvent } from "@/app/lib/app-events";
 import { topUpGrant } from "@/app/lib/topups-v45";
+import { topUpGrantToReverse } from "@/app/lib/refund-policy";
 import type { AccountPlan } from "@/app/lib/plan-config";
 import { commissionForInvoice, periodOf } from "@/app/lib/ambassador-commission";
 import { discountsForInterval } from "@/app/lib/ambassador-discount";
@@ -1350,6 +1351,9 @@ async function syncRefund(charge: Stripe.Charge) {
   // end. Only unspent credit is removed — see below.
   if (paymentIntentId) {
     await reverseTopUpCredit(paymentIntentId, charge.amount);
+    // And the 4.5 resources pack, which reverseTopUpCredit cannot see: it only
+    // matches the old credit_gbp grants. See reverseResourcesTopUp.
+    await reverseResourcesTopUp(paymentIntentId);
   }
 
   // A refunded subscription payment un-owes any ambassador payout it created.
@@ -1406,6 +1410,54 @@ async function reverseTopUpCredit(paymentIntentId: string, amountPence: number) 
       .eq("id", grants[0].id);
     if (error) console.error("[stripe/webhook] could not reverse top-up credit", error);
   }
+}
+
+/**
+ * Take back the resources a refunded 4.5 top up gave.
+ *
+ * The refund policy (clause 5) refunds a top up only while it is unspent, so
+ * when the money goes back the resources must go too, or the teacher keeps
+ * resources they are no longer paying for. Before this, a refunded
+ * `resources_topup` kept its grant, because reverseTopUpCredit only looks for
+ * the old `credit_gbp` kind.
+ *
+ * The grant has no link to the purchase row, so it is found the same way
+ * reverseTopUpCredit finds its own: same user, same units, bought rather than
+ * granted by an admin, created in the same minute (topUpGrantToReverse). Full
+ * refunds only, which is all syncRefund reaches this from; an admin refunding
+ * part of a top up leaves the resources alone. Deleting the grant lowers the
+ * pool my_resources() reads, so a goodwill grant and spend already made are
+ * untouched.
+ */
+async function reverseResourcesTopUp(paymentIntentId: string) {
+  const { data: purchase } = await supabaseAdmin
+    .from("topup_purchases")
+    .select("user_id, units, created_at")
+    .eq("stripe_payment_intent_id", paymentIntentId)
+    .eq("kind", "resources_topup")
+    .maybeSingle();
+  if (!purchase) return;
+
+  const { data: grants, error: readErr } = await supabaseAdmin
+    .from("allowance_grants")
+    .select("id, user_id, kind, amount, granted_by, created_at")
+    .eq("user_id", purchase.user_id)
+    .eq("kind", "resources_topup");
+  if (readErr) {
+    console.error("[stripe/webhook] could not read grants to reverse a resources top up", readErr);
+    return;
+  }
+
+  const grantId = topUpGrantToReverse(
+    { user_id: purchase.user_id, units: purchase.units, created_at: purchase.created_at },
+    grants ?? [],
+  );
+  if (!grantId) {
+    console.warn("[stripe/webhook] refunded resources top up had no matching grant", paymentIntentId);
+    return;
+  }
+  const { error } = await supabaseAdmin.from("allowance_grants").delete().eq("id", grantId);
+  if (error) console.error("[stripe/webhook] could not reverse resources top up", error);
 }
 
 export async function POST(req: NextRequest) {

@@ -86,7 +86,7 @@ test.describe("SEO basics, signed out", () => {
   test("the footer's refunds link goes to a page that exists", async ({ page }) => {
     await page.goto("/");
     const link = page.getByRole("link", { name: "Refunds and cancellation" });
-    await expect(link).toHaveAttribute("href", "/terms#payment");
+    await expect(link).toHaveAttribute("href", "/refunds");
   });
 
   test("off production, robots.txt keeps every crawler out", async ({ request }) => {

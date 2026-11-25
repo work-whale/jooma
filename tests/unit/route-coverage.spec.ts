@@ -59,6 +59,9 @@ test("private pages and the API need a session", () => {
 test("public pages, and URLs nothing serves, do not", () => {
   expect(needsSession("/")).toBe(false);
   expect(needsSession("/terms")).toBe(false);
+  // The refund policy is a public page, linked from the footer of every public page.
+  expect(isPublic("/refunds")).toBe(true);
+  expect(needsSession("/refunds")).toBe(false);
   expect(needsSession("/made/some-deck")).toBe(false);
   expect(needsSession("/ambassador/join")).toBe(false);
   expect(needsSession("/api/try/worksheet")).toBe(false);
@@ -66,7 +69,7 @@ test("public pages, and URLs nothing serves, do not", () => {
   expect(needsSession("/api/consent")).toBe(false);
   // The point of the change: these fall through to the 404 page.
   expect(needsSession("/this-does-not-exist")).toBe(false);
-  expect(needsSession("/refunds")).toBe(false);
+  expect(needsSession("/no-such-page-either")).toBe(false);
   expect(needsSession("/manifest.webmanifest")).toBe(false);
 });
 
