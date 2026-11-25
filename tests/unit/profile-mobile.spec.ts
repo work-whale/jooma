@@ -61,3 +61,30 @@ test.describe("the African countries", () => {
     expect(profileMobile("ZA", "082 123 4567")).toBe("+27821234567");
   });
 });
+
+test.describe("the Asian countries", () => {
+  const ASIA = [
+    ["India", "IN", "+91"],
+    ["Pakistan", "PK", "+92"],
+    ["Philippines", "PH", "+63"],
+    ["Malaysia", "MY", "+60"],
+    ["Singapore", "SG", "+65"],
+    ["Hong Kong", "HK", "+852"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of ASIA) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number gets the country prefix and loses its leading 0", () => {
+    expect(profileMobile("PK", "0300 1234567")).toBe("+923001234567");
+    expect(profileMobile("PH", "0917 123 4567")).toBe("+639171234567");
+    expect(profileMobile("MY", "012 345 6789")).toBe("+60123456789");
+    expect(profileMobile("IN", "98765 43210")).toBe("+919876543210");
+  });
+});

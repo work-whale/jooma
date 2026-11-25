@@ -672,3 +672,318 @@ test.describe("the Africa curricula", () => {
     expect(readingStageFor("S6", false, "uganda")).toBe("ks2");
   });
 });
+
+// ── Asia (Stage 2, Step 2) ─────────────────────────────────────────────────
+
+const ASIA_IDS = ["india-cbse", "pakistan", "philippines", "malaysia", "singapore", "hong-kong"] as const;
+type AsiaId = (typeof ASIA_IDS)[number];
+
+const ASIA_PLACE: Record<AsiaId, { country: string; place: string; language: string; sheetName: string }> = {
+  "india-cbse": { country: "IN", place: "India", language: "en-GB", sheetName: "India" },
+  pakistan: { country: "PK", place: "Pakistan", language: "en-GB", sheetName: "Pakistan" },
+  philippines: { country: "PH", place: "Philippines", language: "en-US", sheetName: "Philippines" },
+  malaysia: { country: "MY", place: "Malaysia", language: "en-GB", sheetName: "Malaysia" },
+  singapore: { country: "SG", place: "Singapore", language: "en-GB", sheetName: "Singapore" },
+  "hong-kong": { country: "HK", place: "Hong Kong", language: "en-GB", sheetName: "Hong Kong" },
+};
+
+const ASIA_YEARS: Record<AsiaId, { label: string; age: number }[]> = {
+  "india-cbse": [{ label: "Nursery", age: 3 }, { label: "LKG", age: 4 }, { label: "UKG", age: 5 }, ...seq("Class", " ", 1, 12, 6)],
+  pakistan: [{ label: "ECE", age: 5 }, ...seq("Grade", " ", 1, 12, 6)],
+  philippines: [{ label: "Kindergarten", age: 5 }, ...seq("Grade", " ", 1, 12, 6)],
+  malaysia: [{ label: "Preschool", age: 5 }, ...seq("Year", " ", 1, 6, 6), ...seq("Form", " ", 1, 5, 12), { label: "Form 6 Lower", age: 17 }, { label: "Form 6 Upper", age: 18 }],
+  singapore: [...seq("Primary", " ", 1, 6, 6), ...seq("Secondary", " ", 1, 4, 12), { label: "Secondary 5", age: 16 }, { label: "JC 1", age: 16 }, { label: "JC 2", age: 17 }],
+  "hong-kong": [...seq("P", "", 1, 6, 6), ...seq("S", "", 1, 6, 12)],
+};
+
+const AFRICA_PLACES = ["South Africa", "Kenya", "Nigeria", "Ghana", "Uganda"];
+
+/** What the prompt says about the system itself, without the "instead of X:" labels that name the UK terms being replaced. */
+const ownText = (text: string) => text.split("\n").map((l) => (l.startsWith("- instead of ") ? l.slice(l.indexOf(": ") + 2) : l)).join("\n");
+
+test.describe("the Asia curricula", () => {
+  test("the six exist in the Asia region, in this order, and nothing else is in it", () => {
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "asia").map((c) => c.id)).toEqual([...ASIA_IDS]);
+    for (const id of ASIA_IDS) {
+      const c = getCurriculum(id)!;
+      expect(c, id).toBeDefined();
+      expect(c.region, id).toBe("asia");
+      expect(c.country, id).toBe(ASIA_PLACE[id].country);
+      expect(c.place, id).toBe(ASIA_PLACE[id].place);
+      expect(c.verifiedOn, id).toBe("2026-11-25");
+      expect(c.defaultLanguage, id).toBe(ASIA_PLACE[id].language);
+      expect(LANGUAGES.some((l) => l.code === c.defaultLanguage), id).toBe(true);
+      expect(c.alignment, `${id} has no statements (licence closed or unclear)`).toBeUndefined();
+    }
+  });
+
+  test("names, prompt labels and the dated versions", () => {
+    const expected: Record<AsiaId, [string, string, { label: string; inForceFrom: string }[]]> = {
+      "india-cbse": [
+        "India: CBSE (NCERT)",
+        "Indian Curriculum (CBSE)",
+        [
+          { label: "CBSE Curriculum 2025-26 (under NCF-SE 2023)", inForceFrom: "2025-04-01" },
+          { label: "CBSE Curriculum 2026-27 (under NCF-SE 2023), with new NCERT textbooks in Class 9 and a three-language rule from Class 6", inForceFrom: "2026-04-01" },
+        ],
+      ],
+      pakistan: [
+        "Pakistan: National Curriculum of Pakistan",
+        "National Curriculum of Pakistan",
+        [
+          { label: "National Curriculum of Pakistan 2022-23 (provinces adopt and adapt it)", inForceFrom: "2023-04-01" },
+          { label: "New National Curriculum of Pakistan 2026 for early childhood to Grade 5 (provinces set their own start, Punjab from April 2027), with the 2022-23 curriculum for Grades 6 to 12", inForceFrom: "2027-04-01" },
+        ],
+      ],
+      philippines: [
+        "Philippines: MATATAG Curriculum (DepEd)",
+        "Philippine Curriculum (MATATAG, DepEd)",
+        [{ label: "MATATAG Curriculum (Kindergarten to Grade 10) and the Strengthened Senior High School Curriculum (Grade 11 from 2026-27, Grade 12 from 2027-28)", inForceFrom: "2024-07-29" }],
+      ],
+      malaysia: [
+        "Malaysia: KSSR and KSSM (Ministry of Education)",
+        "Malaysian Curriculum (KSSR and KSSM)",
+        [
+          { label: "KSSR (2017 revision) for primary and KSSM for secondary", inForceFrom: "2017-01-01" },
+          { label: "Kurikulum Persekolahan 2027 (KP2027) in Year 1 and Form 1, rolling up year by year, with KSSR and KSSM in the other years", inForceFrom: "2027-01-01" },
+        ],
+      ],
+      singapore: [
+        "Singapore: MOE syllabuses",
+        "Singapore Curriculum (MOE)",
+        [
+          { label: "MOE syllabuses with Full Subject-Based Banding, and GCE O-Level and N-Level examinations", inForceFrom: "2024-01-01" },
+          { label: "MOE syllabuses with Full Subject-Based Banding, and the Singapore-Cambridge Secondary Education Certificate (SEC) in place of O-Level and N-Level", inForceFrom: "2027-01-01" },
+        ],
+      ],
+      "hong-kong": [
+        "Hong Kong: Curriculum guides (Education Bureau)",
+        "Hong Kong Curriculum (EDB)",
+        [{ label: "Curriculum Development Council guides, with Primary Science and Primary Humanities replacing General Studies from 2025-26 at P1 and P4 and in all primary years by 2027-28", inForceFrom: "2025-09-01" }],
+      ],
+    };
+    for (const id of ASIA_IDS) {
+      const c = getCurriculum(id)!;
+      const [name, promptLabel, versions] = expected[id];
+      expect(c.name, id).toBe(name);
+      expect(c.promptLabel, id).toBe(promptLabel);
+      expect(c.versions, id).toEqual(versions);
+      expect(parseCurriculum(promptLabel), id).toBe(id);
+    }
+  });
+
+  test("each year list is exactly the one the sources give, and ages never go down", () => {
+    for (const id of ASIA_IDS) {
+      const years = yearsFor(id);
+      expect(years, id).toEqual(ASIA_YEARS[id]);
+      for (let i = 1; i < years.length; i++) expect(years[i].age - years[i - 1].age, `${id} ${years[i].label}`).toBeGreaterThanOrEqual(0);
+    }
+    expect(ASIA_IDS.map((id) => yearsFor(id).length)).toEqual([15, 13, 13, 14, 13, 12]);
+    const firstLast = (id: AsiaId) => [yearsFor(id)[0], yearsFor(id).at(-1)!].map((y) => `${y.label}:${y.age}`);
+    expect(firstLast("india-cbse")).toEqual(["Nursery:3", "Class 12:17"]);
+    expect(firstLast("pakistan")).toEqual(["ECE:5", "Grade 12:17"]);
+    expect(firstLast("philippines")).toEqual(["Kindergarten:5", "Grade 12:17"]);
+    expect(firstLast("malaysia")).toEqual(["Preschool:5", "Form 6 Upper:18"]);
+    expect(firstLast("singapore")).toEqual(["Primary 1:6", "JC 2:17"]);
+    expect(firstLast("hong-kong")).toEqual(["P1:6", "S6:17"]);
+    // A year from another list is not offered here.
+    expect(yearIfOffered("india-cbse", "Grade 5")).toBe("");
+    expect(yearIfOffered("india-cbse", "LKG")).toBe("LKG");
+    expect(yearIfOffered("pakistan", "Class 5")).toBe("");
+    expect(yearIfOffered("malaysia", "Form 6 Upper")).toBe("Form 6 Upper");
+    expect(yearIfOffered("singapore", "JC 1")).toBe("JC 1");
+    expect(yearIfOffered("hong-kong", "Primary 1")).toBe("");
+    expect(yearIfOffered("philippines", "ECE")).toBe("");
+  });
+
+  test("each has a provenance row naming its own workbook row, and says what was checked", () => {
+    const sources: Record<AsiaId, string> = {
+      "india-cbse": "https://cbseacademic.nic.in/",
+      pakistan: "https://ncc.gov.pk/",
+      philippines: "https://www.deped.gov.ph/",
+      malaysia: "https://www.moe.gov.my/",
+      singapore: "https://www.moe.gov.sg/",
+      "hong-kong": "https://www.edb.gov.hk/",
+    };
+    for (const id of ASIA_IDS) {
+      const p = PROVENANCE[id];
+      expect(p, id).toBeDefined();
+      expect(p.sheetRow, id).toEqual({ tab: "Countries", name: ASIA_PLACE[id].sheetName });
+      expect(p.source, id).toBe(sources[id]);
+      expect(p.notes, id).toMatch(/Reference/);
+      expect(p.notes, id).toMatch(/licen[cs]e/i);
+      expect(p.notes, id).toMatch(/permission/i);
+      expect(p.notes, id).not.toMatch(/[–—]/);
+    }
+    expect(PROVENANCE.singapore.notes).toMatch(/never checked|not checked/i);
+    expect(PROVENANCE["hong-kong"].notes).toMatch(/never checked|not checked/i);
+    expect(PROVENANCE["india-cbse"].notes).toMatch(/13 Nov/);
+  });
+
+  test("the region switch shows them to a teacher only when Asia is on", () => {
+    const ids = (regions: string[], admin = false) => visibleCurricula(regions, admin).filter((c) => (ASIA_IDS as readonly string[]).includes(c.id)).map((c) => c.id);
+    expect(ids(["asia"])).toEqual([...ASIA_IDS]);
+    expect(ids([])).toEqual([]);
+    expect(ids(["africa", "europe", "caribbean", "middle-east", "usa"])).toEqual([]);
+    expect(ids([], true)).toEqual([...ASIA_IDS]);
+    expect(regionSettingKey("asia")).toBe("curricula_asia");
+    expect(visibleCurricula(["asia"], false).map((c) => c.id)).toEqual([...UK_CURRICULUM_IDS, ...ASIA_IDS]);
+  });
+
+  test("an id is accepted exactly, and look-alikes are not", () => {
+    for (const id of ASIA_IDS) expect(parseCurriculum(id), id).toBe(id);
+    for (const junk of ["India", "india", "hong kong", "hongkong", "HONG-KONG", "Hong-Kong", "india_cbse", "india-cbse ", " pakistan", "Pakistan", "PHILIPPINES", "malaysia;", "singapore\n", "in", "hk", "sg", "india-cbse-ncert"]) {
+      expect(parseCurriculum(junk), junk).toBeNull();
+    }
+    expect(requestCurriculum({ curriculumId: "malaysia" })).toBe("malaysia");
+    expect(requestCurriculum({ curriculumId: "MALAYSIA", curriculum: "Singapore Curriculum (MOE)" })).toBe("singapore");
+    expect(isUkCurriculum("singapore")).toBe(false);
+    expect(curriculumFormState("hong-kong")).toEqual({ curriculumId: "hong-kong" });
+  });
+
+  test("every one hides every UK-only tool and keeps a universal one", () => {
+    const ukOnly = Object.entries(TOOL_SCOPE).filter(([, s]) => s === "uk-only").map(([k]) => k);
+    expect(ukOnly.length).toBe(5);
+    for (const id of ASIA_IDS) {
+      expect(hiddenToolSlugs(id).sort(), id).toEqual([...ukOnly].sort());
+      for (const slug of ukOnly) expect(isToolHiddenFor(slug, id), `${id} ${slug}`).toBe(true);
+      expect(isToolHiddenFor("worksheet-generator", id), id).toBe(false);
+      expect(isToolHiddenFor("phonics-support", id), id).toBe(false);
+    }
+  });
+
+  test("the prompt names the system's own exams, inspection body and head of school", () => {
+    const expected: Record<AsiaId, { exams: RegExp[]; inspection: string; headteacher: string }> = {
+      "india-cbse": { exams: [/CBSE board examinations/, /Class 10 and Class 12/], inspection: "CBSE affiliation and inspection under the CBSE Affiliation Bye-Laws", headteacher: "principal" },
+      pakistan: { exams: [/\bSSC\b/, /\bHSSC\b/, /\bBISE\b/, /\bFBISE\b/], inspection: "Federal Directorate of Education", headteacher: "headteacher (principal in a secondary or higher secondary school)" },
+      philippines: { exams: [/\bNAT\b/, /National Achievement Test/], inspection: "School-Based Management (SBM) assessment", headteacher: "school head (principal)" },
+      malaysia: { exams: [/\bSPM\b/, /\bSTPM\b/, /\bPBD\b/, /UPSR and PT3 have been abolished/], inspection: "Jemaah Nazir dan Jaminan Kualiti (JNJK)", headteacher: "guru besar (head teacher) in primary and pengetua (principal) in secondary" },
+      singapore: { exams: [/\bPSLE\b/, /\bSEC\b/, /GCE O-Level and N-Level until 2026/, /\bSEAB\b/], inspection: "School Excellence Model", headteacher: "principal" },
+      "hong-kong": { exams: [/\bHKDSE\b/, /\bTSA\b/, /\bHKEAA\b/], inspection: "External School Review", headteacher: "principal" },
+    };
+    for (const id of ASIA_IDS) {
+      const text = curriculumInstruction(id);
+      for (const re of expected[id].exams) expect(text, `${id} ${re}`).toMatch(re);
+      expect(text, id).toContain(expected[id].inspection);
+      expect(text, id).toContain(`instead of headteacher: ${expected[id].headteacher}.`);
+      expect(text, id).toContain(ASIA_PLACE[id].place);
+      expect(text, id).toContain(getCurriculum(id)!.context!);
+    }
+  });
+
+  test("the prompt keeps no England framing and names no other country's body", () => {
+    // "Key Stage" and "SENCO" are real words in two of these systems and are
+    // checked in their own test below; everything else here is England's.
+    const UK_WORDS = [/Ofsted/, /GCSE/, /EYFS/, /\bSATs\b/, /National Curriculum in England/, /\bWTS\b/, /\bEXS\b/, /\bGDS\b/];
+    const OWN_BODIES: Record<AsiaId, RegExp[]> = {
+      "india-cbse": [/\bCBSE\b/, /\bNCERT\b/, /\bNCF-SE\b/, /\bCWSN\b/, /\bCPD\b/, /\bNCF-FS\b/],
+      pakistan: [/\bSSC\b/, /\bHSSC\b/, /\bBISE\b/, /\bFBISE\b/, /\bECE\b/, /\bECCE\b/],
+      philippines: [/\bDepEd\b/, /\bMATATAG\b/, /\bNAT\b/, /\bSBM\b/, /\bPPST\b/, /Republic Act 11650/],
+      malaysia: [/\bKSSR\b/, /\bKSSM\b/, /\bSPM\b/, /\bSTPM\b/, /\bJNJK\b/, /\bPPKI\b/, /\bKSPK\b/, /\bKP2027\b/],
+      singapore: [/\bPSLE\b/, /\bSEAB\b/, /\bSPED\b/, /\bMOE\b/, /\bNEL\b/],
+      "hong-kong": [/\bHKDSE\b/, /\bHKEAA\b/, /\bEDB\b/, /\bTSA\b/],
+    };
+    for (const id of ASIA_IDS) {
+      const text = ownText(curriculumInstruction(id));
+      for (const re of UK_WORDS) expect(text, `${id} ${re}`).not.toMatch(re);
+      for (const other of ASIA_IDS.filter((o) => o !== id)) {
+        expect(text, `${id} names ${other}`).not.toContain(ASIA_PLACE[other].place);
+        for (const re of OWN_BODIES[other]) expect(text, `${id} has ${other}'s ${re}`).not.toMatch(re);
+      }
+      for (const place of AFRICA_PLACES) expect(text, `${id} names ${place}`).not.toContain(place);
+      // The instruction really did name its own system.
+      for (const re of OWN_BODIES[id]) expect(curriculumInstruction(id), `${id} ${re}`).toMatch(re);
+    }
+  });
+
+  test("Key Stage and SENCO are real words only where the system itself uses them", () => {
+    const usesKeyStage = ["philippines", "hong-kong"];
+    for (const id of ASIA_IDS) {
+      const text = ownText(curriculumInstruction(id));
+      expect(/Key Stage/.test(text), `${id} Key Stage`).toBe(usesKeyStage.includes(id));
+      expect(/\bSENCO\b/.test(text), `${id} SENCO`).toBe(id === "hong-kong");
+    }
+    expect(curriculumInstruction("philippines")).toContain("Key Stage 1 (Kindergarten to Grade 3), Key Stage 2 (Grades 4 to 6)");
+    expect(curriculumInstruction("hong-kong")).toContain("Key Stage 1 (P1 to P3), Key Stage 2 (P4 to P6)");
+    expect(curriculumInstruction("hong-kong")).toContain("Special Educational Needs Coordinator (SENCO)");
+  });
+
+  test("only the systems with an attainment scale name one", () => {
+    const withScale = ["india-cbse", "philippines", "malaysia", "singapore"];
+    for (const id of ASIA_IDS) {
+      const text = curriculumInstruction(id);
+      expect(getCurriculum(id)!.terms?.attainment !== undefined, id).toBe(withScale.includes(id));
+      expect(/instead of the WTS, EXS and GDS bands:/.test(text), id).toBe(withScale.includes(id));
+      // The UK band names appear only as the label of a replaced term, once each.
+      expect(text.match(/\b(WTS|EXS|GDS)\b/g)?.length ?? 0, id).toBe(withScale.includes(id) ? 3 : 0);
+    }
+    for (const id of ["pakistan", "hong-kong"]) {
+      for (const band of ["WTS", "EXS", "GDS"]) expect(curriculumInstruction(id), `${id} ${band}`).not.toContain(band);
+    }
+    expect(curriculumInstruction("india-cbse")).toContain("from A1 (highest) to E");
+    expect(curriculumInstruction("philippines")).toContain("Outstanding (90 to 100)");
+    expect(curriculumInstruction("malaysia")).toContain("TP1 to TP6");
+    expect(curriculumInstruction("singapore")).toContain("from AL1 (highest) to AL8");
+  });
+
+  test("the school-year context is the right one for each country", () => {
+    expect(getCurriculum("india-cbse")!.context).toMatch(/April to March/);
+    expect(getCurriculum("india-cbse")!.context).toMatch(/rupee/);
+    expect(getCurriculum("pakistan")!.context).toMatch(/April/);
+    expect(getCurriculum("pakistan")!.context).toMatch(/rupee/);
+    expect(getCurriculum("philippines")!.context).toMatch(/June to April in four quarters/);
+    expect(getCurriculum("philippines")!.context).toMatch(/peso/);
+    expect(getCurriculum("malaysia")!.context).toMatch(/January to December/);
+    expect(getCurriculum("malaysia")!.context).toMatch(/ringgit/);
+    expect(getCurriculum("singapore")!.context).toMatch(/January to November in four terms/);
+    expect(getCurriculum("singapore")!.context).toMatch(/Mother Tongue/);
+    expect(getCurriculum("hong-kong")!.context).toMatch(/September to July/);
+    expect(getCurriculum("hong-kong")!.context).toMatch(/Hong Kong dollar/);
+  });
+
+  test("versions switch on the day the new one starts, not the day before", () => {
+    const on = (id: string, date: string) => currentVersion(getCurriculum(id)!, new Date(`${date}T12:00:00Z`)).label;
+    const v = (id: string, i: number) => getCurriculum(id)!.versions[i].label;
+    expect(on("india-cbse", "2026-03-31")).toBe(v("india-cbse", 0));
+    expect(on("india-cbse", "2026-04-01")).toBe(v("india-cbse", 1));
+    expect(on("pakistan", "2027-03-31")).toBe(v("pakistan", 0));
+    expect(on("pakistan", "2027-04-01")).toBe(v("pakistan", 1));
+    expect(on("malaysia", "2026-12-31")).toBe(v("malaysia", 0));
+    expect(on("malaysia", "2027-01-01")).toBe(v("malaysia", 1));
+    expect(on("singapore", "2026-12-31")).toBe(v("singapore", 0));
+    expect(on("singapore", "2027-01-01")).toBe(v("singapore", 1));
+    // And the prompt carries the version in force on the day it is built.
+    expect(curriculumInstruction("singapore", new Date("2026-12-31T12:00:00Z"))).toContain("and GCE O-Level and N-Level examinations)");
+    expect(curriculumInstruction("singapore", new Date("2027-01-01T12:00:00Z"))).toContain("in place of O-Level and N-Level)");
+    // One-version systems never change.
+    expect(on("philippines", "2030-01-01")).toBe(v("philippines", 0));
+    expect(on("hong-kong", "2030-01-01")).toBe(v("hong-kong", 0));
+  });
+
+  test("age boundaries: LKG lines up with Reception, repeated ages and Form 6 Upper break nothing", () => {
+    const age = (id: string, label: string) => yearsFor(id).find((y) => y.label === label)?.age;
+    expect(age("india-cbse", "LKG")).toBe(englandYearAge("Reception"));
+    expect(age("india-cbse", "UKG")).toBe(englandYearAge("Year 1"));
+    expect(age("india-cbse", "Nursery")).toBe(englandYearAge("Nursery"));
+    // Singapore: Secondary 5 and JC 1 are both 16, so two years share an age.
+    expect(age("singapore", "Secondary 5")).toBe(16);
+    expect(age("singapore", "JC 1")).toBe(16);
+    expect(age("singapore", "Secondary 4")).toBe(15);
+    expect(() => englandYearFor("singapore", "JC 1")).not.toThrow();
+    expect(englandYearFor("singapore", "JC 1")).toBe("JC 1");
+    expect(englandYearFor("singapore", "Secondary 5")).toBe("Secondary 5");
+    expect(readingStageFor("JC 1", false, "singapore")).toBe("ks2");
+    // Malaysia Form 6 Upper is 18; England's list stops at 17, so nothing lines up and nothing throws.
+    expect(age("malaysia", "Form 6 Upper")).toBe(18);
+    expect(englandYearAge("Year 13")).toBe(17);
+    expect(() => englandYearFor("malaysia", "Form 6 Upper")).not.toThrow();
+    expect(englandYearFor("malaysia", "Form 6 Upper")).toBe("Form 6 Upper");
+    expect(readingStageFor("Form 6 Upper", false, "malaysia")).toBe("ks2");
+    for (const id of ASIA_IDS) {
+      for (const y of yearsFor(id)) {
+        expect(englandYearFor(id, y.label), `${id} ${y.label}`).toBe(y.label);
+        expect(yearForEnglandYear(id, y.label), `${id} ${y.label}`).toBe(y.label);
+      }
+    }
+  });
+});

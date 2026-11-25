@@ -190,3 +190,39 @@ test.describe("Africa: starting a teacher on their own country's curriculum", ()
     for (const id of Object.values(COUNTRY_TO_ID)) expect(languageAfterChoosing(id, null), id).toBeNull();
   });
 });
+
+test.describe("Asia: starting a teacher on their own country's curriculum", () => {
+  const COUNTRY_TO_ID = { IN: "india-cbse", PK: "pakistan", PH: "philippines", MY: "malaysia", SG: "singapore", HK: "hong-kong" } as const;
+  const asiaOn = visibleCurricula(["asia"], false);
+
+  test("each country's own curriculum is the start when Asia is offered", () => {
+    for (const [country, id] of Object.entries(COUNTRY_TO_ID)) expect(inferCurriculum({ country }, asiaOn), country).toBe(id);
+  });
+
+  test("with Asia off, or only another region on, they start on England", () => {
+    for (const offered of [visibleCurricula([], false), visibleCurricula(["africa", "europe", "usa"], false)]) {
+      for (const country of Object.keys(COUNTRY_TO_ID)) expect(inferCurriculum({ country }, offered), country).toBe("england");
+    }
+  });
+
+  test("the country must match exactly, and a saved browser choice still wins", () => {
+    for (const country of ["in", "IND", "India", " IN", "hk", "HKG", "CN", "JP"]) expect(inferCurriculum({ country }, asiaOn), country).toBe("england");
+    expect(inferCurriculum({ savedLabel: "Singapore Curriculum (MOE)", country: "IN" }, asiaOn)).toBe("singapore");
+    // A saved Asia choice is ignored when Asia is no longer offered.
+    expect(inferCurriculum({ savedLabel: "Singapore Curriculum (MOE)", country: "SG" }, visibleCurricula([], false))).toBe("england");
+  });
+
+  test("the picker lists Asia after the UK, in order, and an admin sees it with the switch off", () => {
+    const groups = pickerGroups(asiaOn);
+    expect(groups.map((g) => g.region)).toEqual(["uk", "asia"]);
+    expect(groups[1].label).toBe("Asia");
+    expect(groups[1].curricula.map((c) => c.id)).toEqual(["india-cbse", "pakistan", "philippines", "malaysia", "singapore", "hong-kong"]);
+    expect(pickerGroups(visibleCurricula([], true)).some((g) => g.region === "asia")).toBe(true);
+  });
+
+  test("only the Philippines brings American English with it, and a stored choice is never overridden", () => {
+    expect(languageAfterChoosing("philippines", null)).toBe("en-US");
+    for (const id of ["india-cbse", "pakistan", "malaysia", "singapore", "hong-kong"]) expect(languageAfterChoosing(id, null), id).toBeNull();
+    for (const id of Object.values(COUNTRY_TO_ID)) expect(languageAfterChoosing(id, "fr-FR"), id).toBeNull();
+  });
+});

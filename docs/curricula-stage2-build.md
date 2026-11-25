@@ -139,3 +139,29 @@ Left open:
 - No live model spec yet; the reviewer decides after review.
 - Production: the switch stays off until Step 4.
 - Before and after screenshots of the picker and year list not taken in this step.
+
+## 3. Step 2: Asia (2026-11-25)
+
+Built by Sonnet, reviewed by Opus. Not committed.
+
+- Six entries in the `asia` region, in `app/lib/curricula/asia.ts`: India (CBSE, Nursery to Class 12), Pakistan (ECE to Grade 12), the Philippines (Kindergarten to Grade 12), Malaysia (Preschool to Form 6 Upper), Singapore (Primary 1 to JC 2) and Hong Kong (P1 to S6). All `verifiedOn: "2026-11-25"`, `defaultLanguage: "en-GB"` except the Philippines (`en-US`). Appended to `CURRICULA_REGISTRY` after Africa. Two versions each for India (2026-04-01), Pakistan (2027-04-01), Malaysia (2027-01-01) and Singapore (2027-01-01); one for the Philippines and Hong Kong (the label names the rollout).
+- `PROVENANCE`: one row each on the Countries tab (names "India", "Pakistan", "Philippines", "Malaysia", "Singapore", "Hong Kong"), saying what was confirmed and what is Reference, plus the licence verdict (all profile only). Singapore and Hong Kong say the workbook row was never checked, so almost all of each is Reference.
+- `COUNTRY_DEFAULT`: IN, PK, PH, MY, SG, HK. `COUNTRIES` in `app/lib/dial-codes.ts`: Pakistan +92, Philippines +63 and Malaysia +60 added after India. The step brief said Malaysia was already there; it was not, so it was added too (IN, SG and HK were already there).
+- No other code enumerates curriculum ids or regions, so nothing else changed. The UK-only tools are hidden by the existing generic rule, now also pinned for the six ids.
+- Deliberate exceptions to "no England framing": the Philippines and Hong Kong use "Key Stage" for their own stages, and Hong Kong has a SENCO. The tests assert those words are present in their own text and absent from the other four. Pakistan and Hong Kong have no attainment line, so their text has no WTS, EXS or GDS at all.
+- Workbook rule in `scripts/curricula-status.mjs` (`defaultStatus`, tab "Other split systems"): the India rows are told apart by column B ("Part of the system"), matched by prefix. "CBSE" gives "Covered by india-cbse", "NCERT" gives "Covered by india-cbse (NCERT books)", and "CISCE", "State boards (30+)" and "NIOS" give "Out of scope (later)". The United Arab Emirates rows stay "Out of scope (stage 2)". The script has no exports to unit test, so it was checked by running it and reading the `--check` output.
+- Workbook after `node scripts/curricula-status.mjs`: Countries: Live 4, Verified 17, See the USA by state tab 1, See the Canada tab 1, See the Australia tab 1, Out of scope (stage 3) 59, Out of scope (stage 2) 4. Other split systems: Out of scope (stage 3) 14, Covered by india-cbse 1, Covered by india-cbse (NCERT books) 1, Out of scope (later) 3, Out of scope (stage 2) 4.
+- Age notes: LKG (4) lines up with Reception and UKG (5) with Year 1. Singapore Secondary 5 and JC 1 are both 16 (two routes after Secondary 4), so ages repeat there and never go down. Malaysia Form 6 Upper is 18 and England's list stops at 17, so nothing lines up and nothing throws.
+
+Tests:
+
+- Unit: 20 new tests, all red before the build (14 in `curricula.spec.ts`, 4 in `curricula-choice.spec.ts`, 2 in `profile-mobile.spec.ts`; the fifth choice test, "with Asia off they start on England", passed at once because it guards behaviour that was already right). After the build the full `pnpm test:unit` passed 2,443 of 2,443 (2,423 passed and 20 failed before it), including `curriculum-golden.spec.ts` unchanged.
+- No E2E this region: the South Africa E2E already covers the picker path for a Stage 2 region. No dev server and no live model run.
+- Language check passes; the changed files lint clean.
+
+Left open:
+
+- Reference facts for all six (see each provenance row) are still to be confirmed against the official sites; the reviewer checks them.
+- No live model spec yet; the reviewer decides after review.
+- Production: the `curricula_asia` switch stays off until Step 4.
+- Before and after screenshots not taken in this step.

@@ -467,4 +467,34 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://ncdc.go.ug/",
     notes: "Africa build (2026-11-25). Confirmed 2026-11-25: the UCE is 20% school-based assessment and 80% examination; the Directorate of Education Standards inspects. Confirmed in the Step 0 check: a revised primary curriculum is planned from 2028 starting P1 to P3 if approved (no version added until it is). Reference (workbook and general knowledge, not re-opened on the official site): the competency-based Lower Secondary Curriculum from 2020, the aligned A-level curriculum, the UNEB exams, the Learning Framework for Early Childhood Development, the term dates. No teacher standards or attainment scale: none was confirmed. Licence: unclear (no reuse statement found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
   },
+  "india-cbse": {
+    sheetRow: { tab: "Countries", name: "India" },
+    source: "https://cbseacademic.nic.in/",
+    notes: "Asia build (2026-11-25). Confirmed in the Step 0 check: NCF-SE 2023 and the CBSE 2026-27 changes (new NCERT textbooks in Class 9, a three-language rule from Class 6), from the workbook row checked 13 Nov; the 2025-26 version is the one before it. Reference (workbook and general knowledge, not re-opened on the official site): the Affiliation Bye-Laws wording, the CWSN wording, the 50 hours of CPD a year, the A1 to E scale, NCF-FS 2022, and the stage names. Licence: closed. NCERT prohibits republishing and use in digital content packages or software, and no CBSE policy was found; permission request to CBSE (and NCERT for the NCF text) on docs/curricula-permissions.md. Profile only, no statements. On the Other split systems tab, the CBSE and NCERT rows are covered by this entry; CISCE, State boards and NIOS are out of scope for now.",
+  },
+  "pakistan": {
+    sheetRow: { tab: "Countries", name: "Pakistan" },
+    source: "https://ncc.gov.pk/",
+    notes: "Asia build (2026-11-25). Confirmed in the Step 0 check: the New National Curriculum of Pakistan 2026 for early childhood to Grade 5 from 2027-28, with Punjab starting on 1 April 2027 (the second version's label says the provinces set their own start). Reference (workbook and general knowledge, not re-opened on the official site): the starting ages (ECE 5, Grade 1 6), the inspection wording, the SEN wording, the National Professional Standards for Teachers, the SSC and HSSC boards, the April start. No attainment scale: none was confirmed. Licence: unclear (no reuse statement found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "philippines": {
+    sheetRow: { tab: "Countries", name: "Philippines" },
+    source: "https://www.deped.gov.ph/",
+    notes: "Asia build (2026-11-25). Confirmed 2026-11-25: Key Stage 1 is Kindergarten to Grade 3 and Key Stage 2 is Grades 4 to 6 (DepEd MATATAG FAQ). Confirmed in the Step 0 check: MATATAG covers Kindergarten to Grade 10 now (the last phase, Grades 6, 9 and 10, started in 2026-27) and the Strengthened Senior High School curriculum starts in Grade 11 in 2026-27 and Grade 12 in 2027-28. Reference (workbook and general knowledge, not re-opened on the official site): the National Achievement Test, School-Based Management assessment, RA 11650 wording, the PPST, the grading descriptors, the June to April year. Licence: closed until DepEd approves. RA 8293 s.176 leaves no copyright in government works but needs the agency's prior approval to exploit one for profit; permission request on docs/curricula-permissions.md (likely the easiest yes). Profile only, no statements.",
+  },
+  "malaysia": {
+    sheetRow: { tab: "Countries", name: "Malaysia" },
+    source: "https://www.moe.gov.my/",
+    notes: "Asia build (2026-11-25). Confirmed in the Step 0 check: the KP2027 rollout (Year 1 and Form 1 from 2027, rolling up year by year, preschool in 2026). Confirmed 2026-11-25: the school year returned to a January start in 2026 (KPM calendar, reported 28 Oct 2025). Reference (workbook and general knowledge, not re-opened on the official site): the Jemaah Nazir (JNJK) inspectorate, PPKI and the Inclusive Education Programme, Standard Guru Malaysia, the TP1 to TP6 mastery levels, KSPK, SPM and STPM, the abolition of UPSR and PT3. Licence: unclear (no reuse statement found for the DSKP documents); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "singapore": {
+    sheetRow: { tab: "Countries", name: "Singapore" },
+    source: "https://www.moe.gov.sg/",
+    notes: "Asia build (2026-11-25). Confirmed in the Step 0 check: the Singapore-Cambridge Secondary Education Certificate (SEC) replaces the O-Level and N-Level from 2027, with 2026 the last O-Level and N-Level year (SEAB), so the second version starts on 2027-01-01. The workbook row was never checked against an official source, so the rest is Reference (general knowledge): the PSLE Achievement Levels, the School Excellence Model, Allied Educators and SPED, the Teacher Growth Model, the NEL Framework, the Mother Tongue arrangement. Secondary 5 and JC 1 share age 16 (two routes after Secondary 4). Licence: closed. The MOE site reserves all rights and its own licences are for non-commercial educational use only; permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "hong-kong": {
+    sheetRow: { tab: "Countries", name: "Hong Kong" },
+    source: "https://www.edb.gov.hk/",
+    notes: "Asia build (2026-11-25). Confirmed in the Step 0 check: Primary Science and Primary Humanities replace General Studies from 2025-26 at P1 and P4 and in all primary years by 2027-28 (EDB circular). The workbook row was never checked against an official source, so the rest is Reference (general knowledge): the four key stages, the TSA and HKDSE, the School Development and Accountability framework and External School Review, the Whole School Approach and the SENCO, T-standard+, the Kindergarten Education Curriculum Guide (2017), Citizenship and Social Development replacing Liberal Studies in 2021. Key Stage and SENCO are real terms in Hong Kong, so they appear in its prompt on purpose. No attainment scale: none was confirmed. Licence: closed. The EDB allows download only for personal or non-commercial internal use; permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

@@ -89,8 +89,17 @@ function defaultStatus(tab, cells) {
     case "Canada":
       if (name === "Yukon" || name === "Northwest Territories") return "Covered by ca-bc (BC's curriculum)";
       return NEXT_CANADA.has(name) ? "Not started" : "Out of scope (later)";
-    case "Other split systems":
-      return name === "India" || name === "United Arab Emirates" ? "Out of scope (stage 2)" : "Out of scope (stage 3)";
+    case "Other split systems": {
+      // India's rows are told apart by column B ("Part of the system"): CBSE and
+      // NCERT are covered by india-cbse; the other boards come later.
+      if (name === "India") {
+        const part = cells.B ?? "";
+        if (part.startsWith("CBSE")) return "Covered by india-cbse";
+        if (part.startsWith("NCERT")) return "Covered by india-cbse (NCERT books)";
+        return "Out of scope (later)";
+      }
+      return name === "United Arab Emirates" ? "Out of scope (stage 2)" : "Out of scope (stage 3)";
+    }
     case "International":
       if (name === "British curriculum schools abroad") return "Live (uses England)";
       return NEXT_INTERNATIONAL.test(name) ? "Not started" : "Out of scope (later)";
