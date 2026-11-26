@@ -70,21 +70,7 @@ export default function RefundsPage() {
       <header className={s.top}>
         <div className={s.topIn}>
           <Link className={s.logo} href="/" aria-label="Jooma home">
-            <svg className={s.mark} viewBox="0 0 100 100" aria-hidden="true">
-              <defs>
-                <clipPath id="refunds-sq" clipPathUnits="objectBoundingBox">
-                  <path d="M0,0.5 C0,0.115 0.115,0 0.5,0 C0.885,0 1,0.115 1,0.5 C1,0.885 0.885,1 0.5,1 C0.115,1 0,0.885 0,0.5 Z" />
-                </clipPath>
-              </defs>
-              <g clipPath="url(#refunds-sq)">
-                <rect width="100" height="100" fill="#5B2ED6" />
-                <path
-                  d="M62 24v34c0 11-8 18-19 18-9 0-16-5-18-13l11-4c1 4 4 6 7 6 4 0 6-3 6-7V33H41V24z"
-                  fill="#fff"
-                />
-              </g>
-            </svg>
-            <Wordmark height={17} />
+            <Wordmark height={26} />
           </Link>
           <Link className={s.back} href="/">
             <CaretDown weight="fill" aria-hidden="true" /> Back to Jooma

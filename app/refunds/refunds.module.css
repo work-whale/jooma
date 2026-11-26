@@ -108,14 +108,8 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 11px;
   border: 0;
-  color: var(--ink);
-}
-.mark {
-  width: 34px;
-  height: 34px;
-  flex: none;
+  color: var(--j-purple);
 }
 .back {
   font-size: 0.88rem;
