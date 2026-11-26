@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Wordmark from "@/app/components/v2/Wordmark";
 import { FRAMEWORK_CREDIT } from "@/app/lib/standards/credits";
 import { FRAMEWORK_PERMITTED } from "@/app/lib/standards/permissions";
@@ -23,7 +24,7 @@ export default function TermsPage() {
         <h1 className="text-4xl font-semibold tracking-tight mb-2" style={{ color: "var(--j-purple)" }}>
           Terms of Service
         </h1>
-        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 19 November 2026</p>
+        <p className="text-sm mb-10" style={{ color: "#7a604a" }}>Last updated: 26 November 2026</p>
 
         <div className="rounded-2xl p-8 space-y-8" style={{ backgroundColor: "var(--j-card)" }}>
 
@@ -71,7 +72,7 @@ export default function TermsPage() {
             <p>Jooma is offered through a free plan and through paid plans billed monthly or yearly, at the pricing displayed on our website at the time of purchase. The free plan gives a set number of resources each week, and files exported on it carry a Jooma mark. Paid plans give a set number of resources each month, and paid plans may buy top ups. A small number of free tries on our website need no account.</p>
             <p>A new account gets a free trial of the Pro plan for 10 days, ending at 23:59 UK time on the tenth day after signing up. We do not ask for payment details to start it, and nothing is charged during or after it unless you choose a plan. When the trial ends, your account moves to the free plan. If you choose a plan during the trial, your subscription starts and the plan&apos;s fee is charged on that day, and any time left on your free trial ends. The free trial is available once per email address.</p>
             <p>Subscriptions renew automatically at the end of each billing period, monthly or yearly, unless cancelled before the renewal date. You can cancel at any time from your account. You keep your plan until the end of the period already paid for, and your account then moves to the free plan. Unused resources do not carry over from one period to the next; resources from top ups do not expire.</p>
-            <p>All fees are quoted in GBP and are inclusive of VAT where applicable. Refunds are provided at our discretion, except where required by law.</p>
+            <p>All fees are quoted in GBP and are inclusive of VAT where applicable. When we give refunds, and how to ask for one, is set out in our <Link href="/refunds" className="underline">Refunds and cancellations</Link> policy. Nothing in it takes away your rights under law.</p>
           </Section>
 
           <Section title="8. Availability and Changes">

@@ -2,10 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import type { RefundOption } from "@/app/lib/refund-policy";
+import { usePermissions } from "./usePermissions";
 
 // Charges come from Stripe, not our invoices mirror — see the refund route for
 // why. Refunds are per-charge and deliberately not a bulk action: each one
 // wants a human looking at what's being sent back.
+//
+// The refund policy (docs/18-jooma-refund-policy.html, /refunds) is shown as
+// ADVICE: each charge says what it was and whether it is inside the policy's
+// windows, and the admin can pick the rule that applies to pre-fill the amount
+// and the reason. Nothing here, and nothing in the route, stops a refund the
+// policy does not cover: clause 9 says "write to us anyway".
 
 interface Charge {
   id: string;
@@ -14,6 +22,18 @@ interface Charge {
   currency: string;
   created: number;
   description: string | null;
+  // From the policy engine. Absent when the route could not work them out, in
+  // which case the modal behaves as it always did.
+  label?: string;
+  inPolicy?: boolean;
+  options?: RefundOption[];
+  facts?: { kind: "subscription" | "topup" | "other"; interval: "month" | "year" | null };
+}
+
+/** The clause behind the green chip: the first plain window that applies. */
+function windowClause(c: Charge): number | null {
+  const o = c.options?.find((x) => x.rule !== "our_fault" && x.rule !== "yearly_unused_months");
+  return o ? o.clause : null;
 }
 
 const fieldClass =
@@ -43,8 +63,18 @@ export default function RefundModal({
   const [partial, setPartial] = useState(false);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  // The policy rule picked for the selected charge ("" = none, my own reason).
+  const [rule, setRule] = useState<string>("");
+  // The reason text we filled in ourselves, so picking another rule can swap it
+  // without overwriting something the admin typed.
+  const [prefilled, setPrefilled] = useState("");
+  const [endPlan, setEndPlan] = useState(false);
+  // Set once a refund has gone through but the plan could not be ended, so the
+  // button cannot be pressed again and refund a second time.
+  const [done, setDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { can } = usePermissions();
 
   useEffect(() => {
     let cancelled = false;
@@ -67,10 +97,47 @@ export default function RefundModal({
 
   const selected = charges?.find((c) => c.id === chargeId) ?? null;
   const refundable = selected ? selected.amount - selected.amountRefunded : 0;
+  const chosen = selected?.options?.find((o) => o.rule === rule) ?? null;
+  const canEndPlan = selected?.facts?.kind === "subscription" && can("change_plan");
+
+  // Picking a rule sets the amount (a part refund when the rule is for less
+  // than what is left) and pre-fills the reason with the rule's own words.
+  const pickRule = (value: string, forCharge: string) => {
+    setRule(value);
+    const c = charges?.find((x) => x.id === forCharge);
+    const o = c?.options?.find((x) => x.rule === value);
+    if (!o || !c) {
+      setPartial(false);
+      setAmount("");
+      if (reason === prefilled) {
+        setReason("");
+        setPrefilled("");
+      }
+      return;
+    }
+    if (o.amount < c.amount - c.amountRefunded) {
+      setPartial(true);
+      setAmount((o.amount / 100).toFixed(2));
+    } else {
+      setPartial(false);
+      setAmount("");
+    }
+    if (reason === "" || reason === prefilled) {
+      setReason(o.label);
+      setPrefilled(o.label);
+    }
+  };
+
+  // Picking another charge drops a rule picked for the last one.
+  const pickCharge = (id: string) => {
+    setChargeId(id);
+    pickRule("", id);
+    setEndPlan(false);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chargeId || !reason.trim() || saving) return;
+    if (!chargeId || !reason.trim() || saving || done) return;
     setSaving(true);
     setError(null);
     const res = await fetch("/api/admin/teachers/refund", {
@@ -82,6 +149,9 @@ export default function RefundModal({
         reason: reason.trim(),
         // Omitted means "refund the full remaining amount" server-side.
         amountPence: partial ? Math.round(Number(amount) * 100) : undefined,
+        // Which policy rule this was, for the audit log. Omitted for "my own reason".
+        rule: rule || undefined,
+        interval: selected?.facts?.interval ?? undefined,
       }),
     });
     const json = await res.json().catch(() => ({}));
@@ -90,9 +160,31 @@ export default function RefundModal({
       setSaving(false);
       return;
     }
-    onRefunded(
-      `Refunded ${money(json.amount, selected?.currency ?? "gbp")}.`,
-    );
+    const refunded = `Refunded ${money(json.amount, selected?.currency ?? "gbp")}.`;
+
+    // Optionally end the plan too, once the money is on its way back. Only
+    // offered to admins who may change plans; the route checks that again.
+    if (endPlan && canEndPlan) {
+      const planRes = await fetch("/api/admin/teachers/change-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, plan: "free", reason: reason.trim(), immediate: true }),
+      });
+      const planJson = await planRes.json().catch(() => ({}));
+      if (!planRes.ok) {
+        // The refund is already made, so say so and stop: pressing the button
+        // again would refund a second time.
+        onRefunded(refunded);
+        setError(`Refunded, but the plan could not be ended: ${planJson.error ?? "unknown error"}`);
+        setDone(true);
+        setSaving(false);
+        return;
+      }
+      onRefunded(`${refunded} Their plan has ended.`);
+      onClose();
+      return;
+    }
+    onRefunded(refunded);
     onClose();
   };
 
@@ -101,7 +193,7 @@ export default function RefundModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <form
         onSubmit={submit}
-        className="relative z-10 w-full max-w-md rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[85vh]"
+        className="relative z-10 w-full max-w-lg rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[85vh]"
         style={{ borderColor: "#EAE6F5", backgroundColor: "#FFFFFF" }}
       >
         <div className="flex items-start gap-3 p-5 pb-4 border-b" style={{ borderColor: "#EAE6F5" }}>
@@ -136,38 +228,113 @@ export default function RefundModal({
           ) : (
             <>
               <div className="space-y-1.5">
-                {charges.map((c) => (
+                {charges.map((c) => {
+                  const clause = windowClause(c);
+                  return (
+                    <label
+                      key={c.id}
+                      className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 cursor-pointer"
+                      style={{
+                        borderColor: chargeId === c.id ? "#1D1730" : "#EAE6F5",
+                        backgroundColor: chargeId === c.id ? "#FAF9FC" : "#fff",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="charge"
+                        checked={chargeId === c.id}
+                        onChange={() => pickCharge(c.id)}
+                      />
+                      <span className="flex-1 min-w-0">
+                        <span
+                          className="flex items-center gap-x-2 gap-y-1 flex-wrap text-sm font-semibold"
+                          style={{ color: "#1D1730" }}
+                        >
+                          <span>
+                            {money(c.amount - c.amountRefunded, c.currency)}
+                            {c.amountRefunded > 0 && (
+                              <span className="font-normal" style={{ color: "#6D6683" }}>
+                                {" "}
+                                left of {money(c.amount, c.currency)}
+                              </span>
+                            )}
+                          </span>
+                          {c.label && (
+                            <span className="font-normal" style={{ color: "#3C3552" }}>
+                              {c.label}
+                            </span>
+                          )}
+                          {c.options && (
+                            <span
+                              data-testid="policy-chip"
+                              className="text-[11px] font-semibold rounded-full px-2 py-0.5"
+                              style={
+                                c.inPolicy
+                                  ? { backgroundColor: "#E6F4EE", color: "#0F8A63" }
+                                  : { backgroundColor: "#F1EFF6", color: "#6D6683" }
+                              }
+                            >
+                              {c.inPolicy && clause ? `In policy: clause ${clause}` : "Outside the windows"}
+                            </span>
+                          )}
+                        </span>
+                        <span className="block text-xs font-mono truncate" style={{ color: "#6D6683" }}>
+                          {new Date(c.created * 1000).toLocaleDateString("en-GB")} · {c.description ?? c.id}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {selected?.options && selected.options.length > 0 && (
+                <fieldset className="space-y-1.5" data-testid="policy-options">
+                  <legend className="block text-xs font-semibold mb-1.5" style={{ color: "#3C3552" }}>
+                    What the refund policy allows
+                  </legend>
+                  {selected.options.map((o) => (
+                    <label
+                      key={o.rule}
+                      className="flex items-start gap-2.5 rounded-xl border px-3 py-2 cursor-pointer"
+                      style={{
+                        borderColor: rule === o.rule ? "#1D1730" : "#EAE6F5",
+                        backgroundColor: rule === o.rule ? "#FAF9FC" : "#fff",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="rule"
+                        className="mt-1"
+                        checked={rule === o.rule}
+                        onChange={() => pickRule(o.rule, chargeId)}
+                      />
+                      <span className="flex-1 min-w-0 text-sm" style={{ color: "#1D1730" }}>
+                        <span className="font-semibold">{o.label}</span>
+                        <span className="font-normal" style={{ color: "#6D6683" }}>
+                          {" "}
+                          · {money(o.amount, selected.currency)}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
                   <label
-                    key={c.id}
-                    className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 cursor-pointer"
+                    className="flex items-center gap-2.5 rounded-xl border px-3 py-2 cursor-pointer text-sm"
                     style={{
-                      borderColor: chargeId === c.id ? "#1D1730" : "#EAE6F5",
-                      backgroundColor: chargeId === c.id ? "#FAF9FC" : "#fff",
+                      borderColor: rule === "" ? "#1D1730" : "#EAE6F5",
+                      backgroundColor: rule === "" ? "#FAF9FC" : "#fff",
+                      color: "#3C3552",
                     }}
                   >
-                    <input
-                      type="radio"
-                      name="charge"
-                      checked={chargeId === c.id}
-                      onChange={() => setChargeId(c.id)}
-                    />
-                    <span className="flex-1 min-w-0">
-                      <span className="block text-sm font-semibold" style={{ color: "#1D1730" }}>
-                        {money(c.amount - c.amountRefunded, c.currency)}
-                        {c.amountRefunded > 0 && (
-                          <span className="font-normal" style={{ color: "#6D6683" }}>
-                            {" "}
-                            left of {money(c.amount, c.currency)}
-                          </span>
-                        )}
-                      </span>
-                      <span className="block text-xs font-mono truncate" style={{ color: "#6D6683" }}>
-                        {new Date(c.created * 1000).toLocaleDateString("en-GB")} · {c.description ?? c.id}
-                      </span>
-                    </span>
+                    <input type="radio" name="rule" checked={rule === ""} onChange={() => pickRule("", chargeId)} />
+                    <span>Another reason, I will set the amount</span>
                   </label>
-                ))}
-              </div>
+                  {chosen?.note && (
+                    <p className="text-xs" style={{ color: "#6D6683" }} data-testid="policy-note">
+                      {chosen.note}
+                    </p>
+                  )}
+                </fieldset>
+              )}
 
               <label className="flex items-center gap-2 text-sm" style={{ color: "#3C3552" }}>
                 <input
@@ -210,6 +377,13 @@ export default function RefundModal({
                   style={fieldStyle}
                 />
               </div>
+
+              {canEndPlan && (
+                <label className="flex items-center gap-2 text-sm" style={{ color: "#3C3552" }}>
+                  <input type="checkbox" checked={endPlan} onChange={(e) => setEndPlan(e.target.checked)} />
+                  <span>Also end their plan now</span>
+                </label>
+              )}
             </>
           )}
 
@@ -227,11 +401,11 @@ export default function RefundModal({
             className="text-sm font-semibold rounded-xl border px-4 py-2 transition-colors hover:bg-black/5"
             style={{ borderColor: "#EAE6F5", color: "#1D1730" }}
           >
-            Cancel
+            {done ? "Close" : "Cancel"}
           </button>
           <button
             type="submit"
-            disabled={!chargeId || !reason.trim() || saving}
+            disabled={!chargeId || !reason.trim() || saving || done}
             className="text-sm font-semibold rounded-xl px-4 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-40"
             style={{ backgroundColor: "#B3261E" }}
           >

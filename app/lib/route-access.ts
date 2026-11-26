@@ -34,6 +34,9 @@ export const PUBLIC_PATHS = [
   "/auth",
   "/terms",
   "/privacy",
+  // The refund policy: linked from the footer of every public page, and Stripe
+  // and anyone deciding whether to pay need to read it before they have an account.
+  "/refunds",
   // What Jooma is, and the plain English data protection page for schools.
   "/about",
   "/trust",

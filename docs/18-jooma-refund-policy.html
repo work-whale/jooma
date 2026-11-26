@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refunds and cancellations · Jooma</title>
+<meta name="description" content="When Jooma gives your money back, how to ask, and how long it takes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F7F5FC; --card:#FFFFFF; --line:#ECE8F4; --line-2:#DED8EE;
+  --ink:#1D1730; --body:#453E5E; --muted:#5F5876; --faint:#8E87A4;
+  --res:#5B2ED6; --res-soft:#F0EBFD; --deep:#3A1C8F; --chrome:#1E1138; --lilac:#CDBCF7;
+  --pic:#C2551F; --pic-soft:#FBEEE6;
+  --yes:#0F8A63; --yes-soft:#E6F4EE; --no:#9A3050; --no-soft:#FBEAEF;
+  --r:14px; --r-lg:20px; --pill:999px;
+  --read:68ch;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--canvas);color:var(--body);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+  font-size:16px;line-height:1.68;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;color:var(--ink);font-weight:800;letter-spacing:-.03em;line-height:1.15}
+p{margin:0}
+a{color:var(--res);text-decoration:none;border-bottom:1.5px solid rgba(91,46,214,.3)}
+a:hover{border-bottom-color:var(--res)}
+svg{display:block}
+ul,ol{margin:0;padding:0;list-style:none}
+strong{color:var(--ink);font-weight:800}
+:focus-visible{outline:3px solid var(--res);outline-offset:3px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ───────────────────────── chrome ───────────────────────── */
+.top{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+.top-in{max-width:1080px;margin:0 auto;padding:0 24px;height:66px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{display:flex;align-items:center;gap:11px;border:0}
+.logo .m{width:34px;height:34px;flex:none}
+.logo svg.wm{height:17px;width:auto;color:var(--ink)}
+.back{font-size:.88rem;font-weight:600;color:var(--muted);border:0;display:flex;align-items:center;gap:7px}
+.back:hover{color:var(--ink)}
+.back svg{width:15px;height:15px;transform:rotate(90deg)}
+
+/* ───────────────────────── masthead ───────────────────────── */
+.mast{max-width:1080px;margin:0 auto;padding:62px 24px 0}
+.mast .kind{display:inline-flex;align-items:center;gap:8px;background:var(--res-soft);color:var(--deep);
+  font-size:.78rem;font-weight:800;padding:7px 14px;border-radius:var(--pill);margin-bottom:22px}
+.mast .kind svg{width:15px;height:15px}
+.mast h1{font-size:clamp(2.1rem,5.4vw,3.15rem);max-width:19ch}
+.mast .lede{font-size:1.12rem;color:var(--muted);margin-top:20px;max-width:var(--read);line-height:1.62}
+.mast .meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:26px;font-size:.84rem;color:var(--faint)}
+.mast .meta b{color:var(--body);font-weight:600}
+
+/* ───────── the summary. the part most people will read, so it answers first ───────── */
+.tldr{max-width:1080px;margin:40px auto 0;padding:0 24px}
+.tldr-in{background:var(--chrome);border-radius:var(--r-lg);padding:38px 40px;color:#EDE7FB;
+  box-shadow:0 30px 70px -44px rgba(29,23,48,.6)}
+.tldr h2{color:#fff;font-size:1.26rem;letter-spacing:-.02em}
+.tldr .sub{color:var(--lilac);font-size:.93rem;margin-top:8px;max-width:58ch}
+.rules{margin-top:26px;display:grid;gap:2px}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;
+  padding:15px 0;border-top:1px solid rgba(255,255,255,.1)}
+.rule:first-child{border-top:0;padding-top:4px}
+.rule .ic{width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;
+  background:rgba(255,255,255,.1)}
+.rule .ic svg{width:17px;height:17px;color:#D8CCF8}
+.rule b{display:block;color:#fff;font-size:.97rem;font-weight:800;letter-spacing:-.01em}
+.rule span{display:block;color:var(--lilac);font-size:.9rem;line-height:1.56;margin-top:3px}
+
+/* ───────────────────────── body ───────────────────────── */
+.wrap{max-width:1080px;margin:0 auto;padding:60px 24px 20px;
+  display:grid;grid-template-columns:1fr 206px;gap:56px;align-items:start}
+.doc{min-width:0;max-width:var(--read)}
+
+/* clause numbering is for citing, so it is real content, not decoration */
+/* the header is sticky at 66px, so an anchor jump would land underneath it */
+.cl,#ask{scroll-margin-top:88px}
+.cl{padding:34px 0;border-top:1px solid var(--line-2)}
+.cl:first-child{border-top:0;padding-top:0}
+.cl > .no{font-size:.8rem;font-weight:800;color:var(--faint);letter-spacing:.02em}
+.cl h2{font-size:1.42rem;margin-top:5px;letter-spacing:-.025em}
+.cl .vd{display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+  font-size:.86rem;font-weight:800;padding:6px 13px;border-radius:var(--pill)}
+.cl .vd svg{width:14px;height:14px}
+.vd.y{background:var(--yes-soft);color:var(--yes)}
+.vd.n{background:var(--no-soft);color:var(--no)}
+.vd.p{background:var(--res-soft);color:var(--deep)}
+.cl p{margin-top:15px}
+.cl h3{font-size:1rem;margin-top:24px;letter-spacing:-.01em}
+
+.pts{margin-top:16px;display:grid;gap:11px}
+.pts li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;font-size:.97rem}
+.pts li svg{width:17px;height:17px;margin-top:5px;flex:none}
+.pts li.y svg{color:var(--yes)} .pts li.n svg{color:var(--no)}
+
+/* the two credit colours keep their one meaning each, here as well */
+/* an inline-flex box sits off the baseline and drags the line-box taller than its
+   neighbours, so these are nudged back down to sit level with the running text */
+.cost,.pic{display:inline-flex;align-items:center;gap:6px;vertical-align:-.18em;
+  font-weight:800;font-size:.84rem;padding:2px 9px;border-radius:8px;white-space:nowrap}
+.cost{background:var(--res-soft);color:var(--deep)}
+.pic{background:var(--pic-soft);color:var(--pic)}
+.cost svg,.pic svg{width:13px;height:13px}
+
+.aside{margin-top:20px;background:var(--card);border:1px solid var(--line-2);
+  border-left:4px solid var(--res);border-radius:0 var(--r) var(--r) 0;padding:18px 22px}
+.aside p{margin:0;font-size:.93rem}
+.aside p + p{margin-top:10px}
+
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:.93rem}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{font-size:.76rem;font-weight:800;color:var(--faint);letter-spacing:.07em;
+  text-transform:uppercase;border-bottom:1px solid var(--line-2)}
+td b{white-space:nowrap}
+tr:last-child td{border-bottom:0}
+
+/* ───────────────────────── contents rail ───────────────────────── */
+.rail{position:sticky;top:94px;font-size:.87rem}
+.rail .lbl{font-size:.72rem;font-weight:800;color:var(--faint);letter-spacing:.1em;
+  text-transform:uppercase;padding-bottom:12px}
+.rail a{display:block;padding:7px 0 7px 14px;color:var(--muted);border:0;border-left:2px solid var(--line-2);
+  line-height:1.4;transition:color .15s,border-color .15s}
+.rail a:hover{color:var(--ink)}
+.rail a.on{color:var(--res);border-left-color:var(--res);font-weight:600}
+
+/* ───────────────────────── ask ───────────────────────── */
+.ask{max-width:1080px;margin:26px auto 0;padding:0 24px 80px}
+.ask-in{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-lg);
+  padding:34px 38px;max-width:var(--read)}
+.ask h2{font-size:1.24rem}
+.ask p{margin-top:12px;font-size:.97rem}
+.mail{display:inline-flex;align-items:center;gap:10px;margin-top:20px;background:var(--res);color:#fff;
+  font-weight:800;font-size:.97rem;padding:13px 22px;border-radius:var(--pill);border:0}
+.mail:hover{background:var(--deep)}
+.mail svg{width:17px;height:17px}
+.need{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.need .lbl{font-size:.76rem;font-weight:800;color:var(--faint);letter-spacing:.07em;text-transform:uppercase}
+.need ul{margin-top:11px;display:grid;gap:7px}
+.need li{display:grid;grid-template-columns:auto 1fr;gap:10px;font-size:.93rem}
+.need li svg{width:15px;height:15px;margin-top:5px;color:var(--res)}
+
+.foot{border-top:1px solid var(--line);background:var(--card)}
+.foot-in{max-width:1080px;margin:0 auto;padding:30px 24px;display:flex;flex-wrap:wrap;
+  gap:14px 28px;align-items:center;justify-content:space-between;font-size:.85rem;color:var(--faint)}
+.foot a{color:var(--muted);border:0}
+.foot a:hover{color:var(--ink)}
+.foot nav{display:flex;flex-wrap:wrap;gap:20px}
+
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr;gap:0;padding-top:48px}
+  .rail{display:none}
+}
+@media(max-width:620px){
+  body{font-size:15.5px}
+  .top-in,.mast,.tldr,.wrap,.ask,.foot-in{padding-left:18px;padding-right:18px}
+  .mast{padding-top:44px}
+  .tldr-in{padding:28px 22px;border-radius:var(--r)}
+  .ask-in{padding:26px 22px}
+  .rule{grid-template-columns:1fr;gap:10px}
+  table{font-size:.88rem} th,td{padding:10px 8px}
+  td b{white-space:normal}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="/" aria-label="Jooma home">
+      <svg class="m" viewBox="0 0 100 100" aria-hidden="true">
+        <defs><clipPath id="sq" clipPathUnits="objectBoundingBox">
+          <path d="M0,0.5 C0,0.115 0.115,0 0.5,0 C0.885,0 1,0.115 1,0.5 C1,0.885 0.885,1 0.5,1 C0.115,1 0,0.885 0,0.5 Z"/>
+        </clipPath></defs>
+        <g clip-path="url(#sq)"><rect width="100" height="100" fill="#5B2ED6"/>
+          <path d="M62 24v34c0 11-8 18-19 18-9 0-16-5-18-13l11-4c1 4 4 6 7 6 4 0 6-3 6-7V33H41V24z" fill="#fff"/>
+        </g>
+      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3036 967" role="img" aria-label="Jooma"><g transform="translate(65,745) scale(1,-1)" fill="currentColor"><path transform="translate(0,0)" d="M-11 -222Q-26 -222 -40.5 -220.5Q-55 -219 -65 -217V-89Q-48 -92 -31 -92Q12 -92 33.5 -74.0Q55 -56 55 -20V546H205V-20Q205 -84 179.5 -129.5Q154 -175 105.5 -198.5Q57 -222 -11 -222ZM55 595V745H205V595Z"/><path transform="translate(248,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(887,0)" d="M326 -12Q245 -12 178.5 25.0Q112 62 72.5 126.5Q33 191 33 273Q33 356 72.5 420.0Q112 484 178.5 521.0Q245 558 326 558Q407 558 473.0 521.0Q539 484 578.5 420.0Q618 356 618 273Q618 191 578.5 126.5Q539 62 473.0 25.0Q407 -12 326 -12ZM326 123Q367 123 397.5 142.0Q428 161 445.5 195.0Q463 229 463 273Q463 317 445.5 350.5Q428 384 397.5 403.5Q367 423 326 423Q285 423 254.0 403.5Q223 384 205.5 350.5Q188 317 188 273Q188 229 205.5 195.0Q223 161 254.0 142.0Q285 123 326 123Z"/><path transform="translate(1526,0)" d="M55 0V546H195V413L180 435Q192 498 238.0 528.0Q284 558 348 558Q416 558 467.5 523.5Q519 489 532 431L489 427Q516 494 566.0 526.0Q616 558 683 558Q742 558 787.5 532.0Q833 506 859.0 459.5Q885 413 885 351V0H735V319Q735 351 723.5 374.0Q712 397 691.0 410.0Q670 423 640 423Q611 423 589.5 410.0Q568 397 556.5 374.0Q545 351 545 319V0H395V319Q395 351 383.5 374.0Q372 397 351.0 410.0Q330 423 300 423Q271 423 249.5 410.0Q228 397 216.5 374.0Q205 351 205 319V0Z"/><path transform="translate(2443,0)" d="M224 -12Q165 -12 122.0 7.0Q79 26 56.0 61.5Q33 97 33 146Q33 192 54.0 227.5Q75 263 118.5 287.0Q162 311 227 321L394 348V238L254 213Q222 207 205.0 192.5Q188 178 188 151Q188 126 207.0 112.0Q226 98 254 98Q291 98 319.0 114.0Q347 130 362.5 157.5Q378 185 378 218V360Q378 391 353.5 412.0Q329 433 287 433Q247 433 216.5 411.0Q186 389 172 353L52 410Q68 456 103.0 489.0Q138 522 187.0 540.0Q236 558 294 558Q363 558 416.0 533.0Q469 508 498.5 463.5Q528 419 528 360V0H388V88L422 94Q398 58 369.0 34.5Q340 11 304.0 -0.5Q268 -12 224 -12Z"/></g></svg>
+    </a>
+    <a class="back" href="/"><i data-i="caret-down" aria-hidden="true"></i> Back to Jooma</a>
+  </div>
+</header>
+
+<section class="mast">
+  <span class="kind"><i data-i="receipt" aria-hidden="true"></i> Refunds and cancellations</span>
+  <h1>If Jooma is not right for you, we give your money back.</h1>
+  <p class="lede">This page says exactly when, without the hedging. We would rather hand back
+    a subscription than have you feel stuck with one, and we would rather you told us why than
+    quietly resented us.</p>
+  <ul class="meta">
+    <li><b>Applies to</b> individual teacher subscriptions</li>
+    <li><b>Last updated</b> 25 November 2026</li>
+    <li><b>Schools and trusts</b> see clause 8</li>
+  </ul>
+</section>
+
+<section class="tldr">
+  <div class="tldr-in">
+    <h2>The short version</h2>
+    <p class="sub">Five rules cover almost every situation. The clauses below only add detail.</p>
+    <ul class="rules">
+      <li class="rule">
+        <span class="ic"><i data-i="clock" aria-hidden="true"></i></span>
+        <div><b>Fourteen days on any payment, no reason needed</b>
+          <span>Monthly or yearly. Write to us within 14 days of a charge and we refund it.</span></div>
+      </li>
+      <li class="rule">
+        <span class="ic"><i data-i="credit-card" aria-hidden="true"></i></span>
+        <div><b>A renewal you did not mean to pay comes back in full</b>
+          <span>Up to 30 days, as long as you have not used the plan since that payment.
+            Forgetting to cancel is not a thing we charge you for.</span></div>
+      </li>
+      <li class="rule">
+        <span class="ic"><i data-i="shield-check" aria-hidden="true"></i></span>
+        <div><b>If the fault is ours, you are refunded whatever the date</b>
+          <span>Charged twice, charged on a cancelled plan, or Jooma was not working. No time limit on that.</span></div>
+      </li>
+      <li class="rule">
+        <span class="ic"><i data-i="coins" aria-hidden="true"></i></span>
+        <div><b>Anything you made is yours to keep</b>
+          <span>A refund does not take your lessons away. Unspent top ups are refundable, spent ones are not.</span></div>
+      </li>
+      <li class="rule">
+        <span class="ic"><i data-i="sparkle" aria-hidden="true"></i></span>
+        <div><b>You can try Jooma for 10 days before paying anything</b>
+          <span>Ten days of Pro, 300 resources, no card. Most people never need this page.</span></div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<div class="wrap">
+<main class="doc">
+
+  <section class="cl" id="c1">
+    <p class="no">Clause 1</p>
+    <h2>Your legal rights come first</h2>
+    <p>Nothing on this page takes away a right you have by law. If this policy and the law
+      disagree, the law wins and we will apply it without being argued into it.</p>
+    <p>If you are a consumer buying from us online in the UK, that includes a 14 day right to
+      change your mind under the Consumer Contracts Regulations 2013, and the right to a repeat
+      performance or a price reduction if what we supplied was not of satisfactory quality, not
+      fit for purpose, or not as described, under the Consumer Rights Act 2015.</p>
+    <p>If you buy through the Apple App Store, Apple takes the payment and Apple handles the
+      refund. We cannot process it for you, though we can tell you what to ask for. Everything
+      else on this page you take up with us directly.</p>
+  </section>
+
+  <section class="cl" id="c2">
+    <p class="no">Clause 2</p>
+    <h2>The 10 day trial, which is why this page is rarely needed</h2>
+    <span class="vd p"><i data-i="sparkle" aria-hidden="true"></i> No card, nothing to refund</span>
+    <p>Every new account gets 10 days of Pro with 300 resources and no card details. When the
+      10 days end you are moved to the free plan rather than charged. Your library stays with
+      you. Nobody is ever locked out of work they have already made.</p>
+    <p>So by the time you pay us anything, you have made real lessons with the real product for
+      a fortnight. We would rather you spent that fortnight deciding than spent it reading this.</p>
+  </section>
+
+  <section class="cl" id="c3">
+    <p class="no">Clause 3</p>
+    <h2>Monthly plans</h2>
+    <span class="vd y"><i data-i="check" aria-hidden="true"></i> Full refund within 14 days</span>
+    <p>Write to us within 14 days of any monthly payment and we refund that payment in full. We
+      do not count what you used, we do not ask you to justify it, and we do not offer you three
+      alternatives first. One short message is enough.</p>
+    <p>After 14 days a monthly payment is not automatically refundable, because you have had most
+      of the month. Cancel instead and you keep the plan until the period you have paid for runs
+      out. Nothing further is taken.</p>
+    <div class="aside">
+      <p><strong>On the half price first month.</strong> If you took Pro at £3.99 for your first
+        month, that is what we refund. The discount is a one off, so if you come back later the
+        price is the standard one.</p>
+    </div>
+  </section>
+
+  <section class="cl" id="c4">
+    <p class="no">Clause 4</p>
+    <h2>Yearly plans</h2>
+    <span class="vd y"><i data-i="check" aria-hidden="true"></i> Full refund within 14 days</span>
+    <p>Within 14 days of a yearly payment we refund it in full. We do not count what you used
+      first. A yearly plan is a bigger commitment than a monthly one, so if anything the 14 days
+      matter more here, and we are not going to hand them back to you with a deduction attached.</p>
+    <p>The lessons you made during those 14 days stay in your library. We are not going to take
+      work off a teacher because they asked for their money back.</p>
+
+    <h3>After the first 14 days</h3>
+    <p>A yearly plan is not refundable by default once the 14 days have passed, because the low
+      yearly price is the whole reason it is low. But teaching is not a stable job to hold, and
+      we would rather be asked than have you write us off:</p>
+    <ul class="pts">
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>You are leaving teaching, or taking long term
+        leave, and write to tell us</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>Your school or trust has bought a licence that
+        now covers you</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>You have been made redundant</span></li>
+    </ul>
+    <p>In those cases write to us and we will refund the whole months you have not used. We do
+      not ask for evidence. We are aware that trusting people here costs us a little money and
+      we have decided we would rather pay it.</p>
+  </section>
+
+  <section class="cl" id="c5">
+    <p class="no">Clause 5</p>
+    <h2>Top ups</h2>
+    <span class="vd p"><i data-i="coins" aria-hidden="true"></i> Refundable while unspent</span>
+    <p>A top up is refundable in full for 14 days as long as you have not spent any of it. Once
+      you start spending a top up it is not refundable, because what you bought has been
+      delivered and is sitting in your library.</p>
+    <p>Top up resources do not expire and do not disappear at the end of the month. They sit
+      underneath your monthly allowance and are only touched once the allowance is gone. If you
+      cancel your plan, any unspent top up resources stay on your account and still work.</p>
+    <div class="aside">
+      <p><strong>One thing worth knowing before you top up.</strong>
+        <span class="pic"><i data-i="sparkle" aria-hidden="true"></i>Picture slideshows</span> cost
+        considerably more than text resources, so a top up bought for picture work goes faster than
+        the same top up spent on worksheets. The counter in your dashboard shows both separately,
+        and we would rather you saw that before you bought than after.</p>
+    </div>
+  </section>
+
+  <section class="cl" id="c6">
+    <p class="no">Clause 6</p>
+    <h2>A renewal you did not mean to pay</h2>
+    <span class="vd y"><i data-i="check" aria-hidden="true"></i> Full refund within 30 days</span>
+    <p>If your plan renewed and you had meant to cancel, tell us within 30 days of that payment
+      and we refund it in full, provided you have not used the plan since it was taken. There is
+      nothing to explain and no form to fill in.</p>
+    <p>We also do not think it is your job to remember. We email you before a yearly plan renews
+      and before any price changes. If one of those emails did not arrive, that is on us, and
+      clause 7 applies.</p>
+  </section>
+
+  <section class="cl" id="c7">
+    <p class="no">Clause 7</p>
+    <h2>When the fault is ours</h2>
+    <span class="vd y"><i data-i="shield-check" aria-hidden="true"></i> Always refunded, no time limit</span>
+    <p>Some things are not a change of mind, they are a mistake, and the 14 and 30 day limits on
+      this page do not apply to them:</p>
+    <ul class="pts">
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>You were charged twice for the same period</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>You were charged after cancelling</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>You were charged a price you had not agreed to</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>Jooma was unavailable or broken for a meaningful
+        stretch of the period you paid for</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>Resources were deducted for something that failed
+        to generate, which we return to your balance as well</span></li>
+    </ul>
+    <p>Write to us and we will fix it. If we got it wrong we will say so plainly rather than
+      calling it a goodwill gesture.</p>
+  </section>
+
+  <section class="cl" id="c8">
+    <p class="no">Clause 8</p>
+    <h2>Schools, trusts and other organisations</h2>
+    <span class="vd p"><i data-i="buildings" aria-hidden="true"></i> Separate terms apply</span>
+    <p>Buying for a school, a trust or a local authority is a business purchase, so consumer
+      cancellation rights do not apply and your written agreement with us governs instead. As a
+      default, where that agreement says nothing else:</p>
+    <ul class="pts">
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>Full refund within 30 days of the invoice date
+        if no staff accounts have been activated</span></li>
+      <li class="y"><i data-i="check" aria-hidden="true"></i><span>After that, a refund of the whole months not yet
+        used, at the per seat rate you agreed</span></li>
+      <li class="n"><i data-i="x" aria-hidden="true"></i><span>Onboarding and training fees are not refundable once
+        the onboarding has been delivered. If it has been booked but not delivered, it is refunded in full</span></li>
+      <li class="n"><i data-i="x" aria-hidden="true"></i><span>Seats removed partway through a term are not refunded
+        individually. They are freed for someone else to use</span></li>
+    </ul>
+    <p>If a teacher at your school is already paying for Jooma personally when you buy a licence,
+      tell us and we will refund the unused part of their personal subscription. They should not
+      be paying twice for a decision made above them.</p>
+  </section>
+
+  <section class="cl" id="c9">
+    <p class="no">Clause 9</p>
+    <h2>What we do not refund</h2>
+    <span class="vd n"><i data-i="x" aria-hidden="true"></i> The short list</span>
+    <ul class="pts">
+      <li class="n"><i data-i="x" aria-hidden="true"></i><span>Top ups you have started spending, under clause 5.
+        The lessons they produced stay in your library either way</span></li>
+      <li class="n"><i data-i="x" aria-hidden="true"></i><span>Periods already served, beyond the windows set out
+        above</span></li>
+      <li class="n"><i data-i="x" aria-hidden="true"></i><span>Accounts closed by us for serious misuse, such as
+        sharing one login across a staff room or reselling what Jooma produces</span></li>
+    </ul>
+    <p>That is the whole list. If something has gone wrong and it is not on this page, write to
+      us anyway. A policy cannot anticipate every situation and we would rather hear about it
+      than have you assume the answer is no.</p>
+  </section>
+
+</main>
+
+<nav class="rail" aria-label="On this page">
+  <p class="lbl">On this page</p>
+  <a href="#c1">1 · Your legal rights</a>
+  <a href="#c2">2 · The 10 day trial</a>
+  <a href="#c3">3 · Monthly plans</a>
+  <a href="#c4">4 · Yearly plans</a>
+  <a href="#c5">5 · Top ups</a>
+  <a href="#c6">6 · Unwanted renewals</a>
+  <a href="#c7">7 · When it is our fault</a>
+  <a href="#c8">8 · Schools and trusts</a>
+  <a href="#c9">9 · What we do not refund</a>
+  <a href="#ask">How to ask</a>
+</nav>
+</div>
+
+<section class="ask" id="ask">
+  <div class="ask-in">
+    <h2>How to ask, and how long it takes</h2>
+    <p>One email. No form, no phone queue, no retention script. A person reads it and answers
+      within <strong>two working days</strong>, and once approved the money goes back to the card
+      you paid with, which takes <strong>five to ten working days</strong> to appear depending on
+      your bank.</p>
+    <p>You do not have to tell us why. If you want to, we read every one of those, and it is the
+      most useful post we get.</p>
+    <a class="mail" href="mailto:hello@jooma.ai?subject=Refund%20request">
+      <i data-i="envelope-simple" aria-hidden="true"></i> hello@jooma.ai</a>
+    <div class="need">
+      <p class="lbl">Helpful to include</p>
+      <ul>
+        <li><i data-i="check" aria-hidden="true"></i><span>The email address on your Jooma account</span></li>
+        <li><i data-i="check" aria-hidden="true"></i><span>Roughly when you were charged, if you know</span></li>
+        <li><i data-i="check" aria-hidden="true"></i><span>Whether you want the plan cancelled as well, or kept
+          running to the end of the period</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="foot-in">
+    <p>© 2026 Jooma. Built for teachers.</p>
+    <nav>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="mailto:hello@jooma.ai">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+var I = {"clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm56,112H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>","receipt":"<path d=\"M216,40H40A16,16,0,0,0,24,56V208a8,8,0,0,0,11.58,7.15L64,200.94l28.42,14.21a8,8,0,0,0,7.16,0L128,200.94l28.42,14.21a8,8,0,0,0,7.16,0L192,200.94l28.42,14.21A8,8,0,0,0,232,208V56A16,16,0,0,0,216,40ZM176,144H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Zm0-32H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Z\"/>","credit-card":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM136,176H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm64,0H168a8,8,0,0,1,0-16h32a8,8,0,0,1,0,16ZM32,88V64H224V88Z\"/>","buildings":"<path d=\"M239.73,208H224V96a16,16,0,0,0-16-16H164a4,4,0,0,0-4,4V208H144V32.41a16.43,16.43,0,0,0-6.16-13,16,16,0,0,0-18.72-.69L39.12,72A16,16,0,0,0,32,85.34V208H16.27A8.18,8.18,0,0,0,8,215.47,8,8,0,0,0,16,224H240a8,8,0,0,0,8-8.53A8.18,8.18,0,0,0,239.73,208ZM76,184a8,8,0,0,1-8.53,8A8.18,8.18,0,0,1,60,183.72V168.27A8.19,8.19,0,0,1,67.47,160,8,8,0,0,1,76,168Zm0-56a8,8,0,0,1-8.53,8A8.19,8.19,0,0,1,60,127.72V112.27A8.19,8.19,0,0,1,67.47,104,8,8,0,0,1,76,112Zm40,56a8,8,0,0,1-8.53,8,8.18,8.18,0,0,1-7.47-8.26V168.27a8.19,8.19,0,0,1,7.47-8.26,8,8,0,0,1,8.53,8Zm0-56a8,8,0,0,1-8.53,8,8.19,8.19,0,0,1-7.47-8.26V112.27a8.19,8.19,0,0,1,7.47-8.26,8,8,0,0,1,8.53,8Z\"/>","envelope-simple":"<path d=\"M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48Zm-8,144H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z\"/>","check":"<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z\"/>","coins":"<path d=\"M184,89.57V84c0-25.08-37.83-44-88-44S8,58.92,8,84v40c0,20.89,26.25,37.49,64,42.46V172c0,25.08,37.83,44,88,44s88-18.92,88-44V132C248,111.3,222.58,94.68,184,89.57ZM56,146.87C36.41,141.4,24,132.39,24,124V109.93c8.16,5.78,19.09,10.44,32,13.57Zm80-23.37c12.91-3.13,23.84-7.79,32-13.57V124c0,8.39-12.41,17.4-32,22.87Zm-16,71.37C100.41,189.4,88,180.39,88,172v-4.17c2.63.1,5.29.17,8,.17,3.88,0,7.67-.13,11.39-.35A121.92,121.92,0,0,0,120,171.41Zm0-44.62A163,163,0,0,1,96,152a163,163,0,0,1-24-1.75V126.46A183.74,183.74,0,0,0,96,128a183.74,183.74,0,0,0,24-1.54Zm64,48a165.45,165.45,0,0,1-48,0V174.4a179.48,179.48,0,0,0,24,1.6,183.74,183.74,0,0,0,24-1.54ZM232,172c0,8.39-12.41,17.4-32,22.87V171.5c12.91-3.13,23.84-7.79,32-13.57Z\"/>","shield-check":"<path d=\"M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z\"/>","x":"<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM181.66,170.34a8,8,0,0,1-11.32,11.32L128,139.31,85.66,181.66a8,8,0,0,1-11.32-11.32L116.69,128,74.34,85.66A8,8,0,0,1,85.66,74.34L128,116.69l42.34-42.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","question":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,168a12,12,0,1,1,12-12A12,12,0,0,1,128,192Zm8-48.72V144a8,8,0,0,1-16,0v-8a8,8,0,0,1,8-8c13.23,0,24-9,24-20s-10.77-20-24-20-24,9-24,20v4a8,8,0,0,1-16,0v-4c0-19.85,17.94-36,40-36s40,16.15,40,36C168,125.38,154.24,139.93,136,143.28Z\"/>","sparkle":"<path d=\"M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z\"/>","caret-down":"<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z\"/>"};
+function paintIcons(root){
+  (root||document).querySelectorAll('i[data-i]').forEach(function(el){
+    var d = I[el.getAttribute('data-i')];
+    if(!d) return;
+    var s = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    s.setAttribute('viewBox','0 0 256 256');
+    s.setAttribute('fill','currentColor');
+    s.setAttribute('aria-hidden','true');
+    // the class has to be carried over by hand. the <i> is replaced, not wrapped,
+    // so anything styling it by class is lost unless it is copied here.
+    if(el.className) s.setAttribute('class', el.className);
+    // the values in I are complete <path .../> markup, not bare d attributes.
+    // wrapping them in another <path d="..."> leaves a stray "/> text node on the page.
+    s.innerHTML = d;
+    el.replaceWith(s);
+  });
+}
+paintIcons();
+
+// highlight the clause you are reading in the rail
+(function(){
+  var links = [].slice.call(document.querySelectorAll('.rail a'));
+  var targets = links.map(function(a){ return document.querySelector(a.getAttribute('href')) })
+                     .filter(Boolean);
+  if(!('IntersectionObserver' in window) || !targets.length) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      links.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href') === '#'+e.target.id) });
+    });
+  }, { rootMargin: '-80px 0px -72% 0px' });
+  targets.forEach(function(t){ io.observe(t) });
+})();
+</script>
+</body>
+</html>

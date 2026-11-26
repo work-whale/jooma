@@ -14,11 +14,9 @@ import styles from "./SiteFooter.module.css";
  * addresses (support@, schools@) never existed, and a mailto collects none of
  * the fields needed to qualify a school lead. /contact is in PUBLIC_PATHS.
  *
- * Refunds and cancellation points at the terms section that covers both,
- * because /refunds does not exist yet (and now answers with a 404 rather than
- * the login page, so a broken link there would be a broken link). Stripe will
- * ask for a refund policy page. When it is built, point this at it and add it
- * to PUBLIC_PATHS in app/lib/route-access.ts and to the sitemap.
+ * Refunds and cancellation points at /refunds, the public policy page (Stripe
+ * asks for one). It is in PUBLIC_PATHS in app/lib/route-access.ts and the
+ * sitemap, so a signed out visitor and a crawler can both reach it.
  */
 const COLUMNS = [
   {
@@ -47,7 +45,7 @@ const COLUMNS = [
       { href: "/trust", label: "Trust and data" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms" },
-      { href: "/terms#payment", label: "Refunds and cancellation" },
+      { href: "/refunds", label: "Refunds and cancellation" },
       { href: "#cookie-settings", label: "Cookie settings" },
     ],
   },

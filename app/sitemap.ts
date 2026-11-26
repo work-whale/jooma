@@ -65,6 +65,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    {
+      url: `${base}/refunds`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
     // The public tool pages: the ones that can rank for a tool's name. Read
     // from the same list the pages are built from, so a page cannot exist
     // without being listed or be listed without existing.
