@@ -21,7 +21,8 @@
 // added cells, rows and column widths is left byte for byte as it was.
 //
 // "Live" for a region outside the UK means its app_settings switch is on, which
-// this script cannot see, so it is passed with --live.
+// this script cannot see, so it is passed with --live. A Stage 3 entry also
+// needs its batch switch on, so list the batch too: --live=middle-east,s3-a.
 
 import { registerHooks } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
@@ -119,7 +120,7 @@ function defaultStatus(tab, cells) {
 function entryStatus(c) {
   if (c.region === "uk") return "Live";
   if (!c.verifiedOn) return "Built";
-  return live.has(c.region) ? "Live" : "Verified";
+  return live.has(c.region) && (!c.release || live.has(c.release)) ? "Live" : "Verified";
 }
 
 const RANK = ["Built", "Verified", "Live"];

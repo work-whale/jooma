@@ -1049,9 +1049,10 @@ const CE_YEARS: Record<CeId, { label: string; age: number }[]> = {
 const ASIA_PLACES = ["India", "Pakistan", "Philippines", "Malaysia", "Singapore", "Hong Kong"];
 
 test.describe("the Caribbean and Malta curricula", () => {
-  test("Jamaica and Trinidad and Tobago are the Caribbean, Malta is Europe, and nothing else is in either", () => {
-    expect(CURRICULA_REGISTRY.filter((c) => c.region === "caribbean").map((c) => c.id)).toEqual([...CARIBBEAN_IDS]);
-    expect(CURRICULA_REGISTRY.filter((c) => c.region === "europe").map((c) => c.id)).toEqual([...EUROPE_IDS]);
+  test("Jamaica and Trinidad and Tobago are the Caribbean, Malta is Europe, and nothing else from Stage 2 is in either", () => {
+    // Stage 3 entries (with a release) may share a region; they have their own spec.
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "caribbean" && !c.release).map((c) => c.id)).toEqual([...CARIBBEAN_IDS]);
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "europe" && !c.release).map((c) => c.id)).toEqual([...EUROPE_IDS]);
     for (const id of CE_IDS) {
       const c = getCurriculum(id)!;
       expect(c, id).toBeDefined();
@@ -1326,8 +1327,9 @@ const UAE_VERSION_LABEL =
   "Ministry of Education national curriculum, Kindergarten to Grade 12, with Artificial Intelligence compulsory from 2025-26 and merged with Design, Innovation and Computer Science into one Artificial Intelligence and Technology subject from 2026-27";
 
 test.describe("the United Arab Emirates curriculum", () => {
-  test("uae-moe is the only entry in the middle-east region, with the right identity", () => {
-    expect(CURRICULA_REGISTRY.filter((c) => c.region === "middle-east").map((c) => c.id)).toEqual(["uae-moe"]);
+  test("uae-moe is the only Stage 2 entry in the middle-east region, with the right identity", () => {
+    // Stage 3 batch A shares the region behind its own release switch (curricula-stage3-a.spec.ts).
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "middle-east" && !c.release).map((c) => c.id)).toEqual(["uae-moe"]);
     const c = getCurriculum("uae-moe")!;
     expect(c).toBeDefined();
     expect(c.region).toBe("middle-east");
@@ -1344,9 +1346,10 @@ test.describe("the United Arab Emirates curriculum", () => {
     // One version: the label never changes, whatever the date.
     expect(currentVersion(c, new Date("2030-01-01T12:00:00Z")).label).toBe(UAE_VERSION_LABEL);
     expect(currentVersion(c, new Date("2026-11-25T12:00:00Z")).label).toBe(UAE_VERSION_LABEL);
-    // It sits after Malta, at the end of the registry.
-    expect(CURRICULA_REGISTRY.at(-1)!.id).toBe("uae-moe");
-    expect(CURRICULA_REGISTRY.at(-2)!.id).toBe("malta");
+    // It sits after Malta, at the end of the Stage 2 registry (Stage 3 entries follow it).
+    const stage12 = CURRICULA_REGISTRY.filter((e) => !e.release);
+    expect(stage12.at(-1)!.id).toBe("uae-moe");
+    expect(stage12.at(-2)!.id).toBe("malta");
   });
 
   test("the year list runs KG1 (4) to Grade 12 (17), exactly", () => {
@@ -1470,7 +1473,8 @@ test.describe("Stage 2 as a whole", () => {
     for (const region of stage2) {
       expect(CURRICULA_REGISTRY.some((c) => c.region === region && c.verifiedOn), region).toBe(true);
     }
-    const ids = CURRICULA_REGISTRY.filter((c) => stage2.includes(c.region)).map((c) => c.id);
+    // Stage 2 entries carry no release; Stage 3 ones in the same regions do.
+    const ids = CURRICULA_REGISTRY.filter((c) => stage2.includes(c.region) && !c.release).map((c) => c.id);
     expect([...ids].sort()).toEqual(
       [
         "south-africa", "kenya", "nigeria", "ghana", "uganda", "india-cbse", "pakistan", "philippines", "malaysia", "singapore", "hong-kong", "jamaica", "trinidad-and-tobago", "malta", "uae-moe",

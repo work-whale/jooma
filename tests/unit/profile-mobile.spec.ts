@@ -127,3 +127,34 @@ test.describe("the United Arab Emirates", () => {
     expect(profileMobile("AE", "50 123 4567")).toBe("+971501234567");
   });
 });
+
+test.describe("Stage 3 batch A: the Gulf, the Middle East and Türkiye", () => {
+  const A = [
+    ["Saudi Arabia", "SA", "+966"],
+    ["Qatar", "QA", "+974"],
+    ["Kuwait", "KW", "+965"],
+    ["Oman", "OM", "+968"],
+    ["Bahrain", "BH", "+973"],
+    ["Jordan", "JO", "+962"],
+    ["Egypt", "EG", "+20"],
+    ["Israel", "IL", "+972"],
+    ["Türkiye", "TR", "+90"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of A) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number drops its trunk 0 behind the country prefix", () => {
+    expect(profileMobile("SA", "050 123 4567")).toBe("+966501234567");
+    expect(profileMobile("EG", "010 1234 5678")).toBe("+201012345678");
+    expect(profileMobile("TR", "0532 123 45 67")).toBe("+905321234567");
+    // Gulf numbers have no trunk 0 and are kept whole.
+    expect(profileMobile("QA", "3312 3456")).toBe("+97433123456");
+  });
+});

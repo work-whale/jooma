@@ -5,6 +5,10 @@ import type { Curriculum, YearOption } from "./types";
  * Profile only: the National Curriculum Framework is copyright of the Ministry
  * and no reuse terms were found, so there are no statements
  * (docs/curricula-permissions.md).
+ *
+ * Türkiye is Stage 3 batch A (checked 2026-11-27, docs/curricula-stage3-build.md):
+ * under Europe as the workbook files it, shown only once batch A is switched
+ * on. Profile only: its programmes are not open for commercial use.
  */
 
 /** "Year 1" .. "Year 11", one age per year. */
@@ -35,5 +39,35 @@ export const EUROPE_CURRICULA: Curriculum[] = [
     context:
       "The school year runs from late September to June. Maltese and English are both official languages and both are taught; many subjects are taught in English. State, Church and independent schools all follow the National Curriculum Framework. Use Maltese places, names and euro amounts where a local example helps.",
     verifiedOn: "2026-11-25",
+  },
+  {
+    id: "turkey",
+    region: "europe",
+    release: "s3-a",
+    country: "TR",
+    place: "Türkiye",
+    name: "Türkiye: Ministry of National Education curriculum (Türkiye Century Education Model)",
+    promptLabel: "Turkish National Curriculum (Türkiye Century Education Model)",
+    versions: [
+      {
+        label:
+          "Türkiye Century Education Model (Maarif Modeli) in preschool, Grades 1, 2, 3, 5, 6, 7, the high school preparatory year and Grades 9, 10 and 11; Grades 4, 8 and 12 stay on the previous programmes in 2026-27",
+        inForceFrom: "2026-09-01",
+      },
+      { label: "Türkiye Century Education Model (Maarif Modeli) in every grade", inForceFrom: "2027-09-01" },
+    ],
+    years: [{ label: "Preschool", age: 5 }, ...numbered("Grade", 1, 12, 6)],
+    defaultLanguage: "en-GB",
+    terms: {
+      curriculum: "the teaching programmes of the Ministry of National Education (MEB), under the Türkiye Century Education Model",
+      stages:
+        "preschool, primary school (ilkokul, Grades 1 to 4), middle school (ortaokul, Grades 5 to 8) and high school (lise, Grades 9 to 12, some with a preparatory year)",
+      exams: "the LGS (high school entrance exam, end of Grade 8) and the YKS (university entrance exam); from 2028 their questions are skill-based and set in context",
+      earlyYears: "the MEB preschool education programme",
+      headteacher: "school principal (okul müdürü)",
+    },
+    context:
+      "Schools teach in Turkish, with English taught as a subject. The Türkiye Century Education Model treats knowledge, skills, values and dispositions together and asks pupils to apply what they learn. Use Turkish places, names and lira amounts where a local example helps.",
+    verifiedOn: "2026-11-27",
   },
 ];

@@ -517,4 +517,49 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://www.moe.gov.ae/",
     notes: "Middle East build (2026-11-25). Confirmed: the EmSAT was cancelled for Grade 12 (WAM, November 2024), so the exams line says it is no longer required; Artificial Intelligence became compulsory in 2025-26 and merges with Design, Innovation and Computer Science into one Artificial Intelligence and Technology subject from 2026-27 (workbook, checked 13 November). Reference (general knowledge, not re-opened on the official site): the inspection and evaluation wording, inclusive education for students of determination with an Individual Education Plan, the UAE Teacher Licensing System, the Kindergarten curriculum (KG1 and KG2), the Cycle 1 to 3 stages and the General and Advanced streams, Arabic taught with English from Kindergarten, Arabic, Islamic Education and Moral, Social and Cultural Studies compulsory, the late August to early July year. Only the Ministry of Education curriculum is an entry (owner decision): private-school teachers pick the curriculum their school follows (England, US, IB or CBSE), so there are no KHDA, ADEK or SPEA entries. No attainment scale: none was confirmed. Licence: closed (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
   },
+  "saudi-arabia": {
+    sheetRow: { tab: "Countries", name: "Saudi Arabia" },
+    source: "https://www.moe.gov.sa/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: two semesters from 2025-26 for four years (Gulf News); 50 AI units and 22 updated subjects in 2026-27; NAFS in Grades 3, 6 and 9 set by ETEC (ETEC school guide 2026); ETEC school evaluation and performance cards (ETEC); the Secondary Tracks System and its five tracks, Qudurat and Tahsili; state-school English uses McGraw-Hill's Super Goal and Mega Goal books, so American English is the default. Reference (secondary sites): KG1 to KG3 at ages 3 to 5, Primary 1 to 6, Intermediate 7 to 9, the late August start. The version date is the start of 2026-27 rounded to the first of the month. No SEN or teacher standards line: none was confirmed. Licence: closed (the Ministry portal's terms say its materials are for educational, not-for-profit use); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "qatar": {
+    sheetRow: { tab: "Countries", name: "Qatar" },
+    source: "https://www.edu.gov.qa/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: Primary 1 to 6, Preparatory 7 to 9, Secondary 10 to 12 (Hukoomi, the government portal); AI, data science and financial literacy added and one unified Grade 10 science for 2026-27; private schools teach Arabic, Islamic Studies and Qatar History to the national standards (Qatar Tribune). Reference: KG1 and KG2, the Grade 12 Secondary School Certificate examinations. A new General Framework for the National Curriculum is being written, with no date. No inspection or SEN line: none was confirmed. Licence: unclear (no reuse terms found; Law No. 7 of 2002 allows teaching use only without commercial gain); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "kuwait": {
+    sheetRow: { tab: "Countries", name: "Kuwait" },
+    source: "https://www.moe.edu.kw/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: the new competency-based curriculum for Grades 1 to 9 from 2025-26 (Kuwait Times, Times Kuwait); Kindergarten, Primary 1 to 5, Intermediate 6 to 9, Secondary 10 to 12; the 2026-27 calendar (mid-September start, first-term and end-of-year exams, Grade 12 finals). Reference: KG1 and KG2 at 4 and 5. No inspection or SEN line: none was confirmed. Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "oman": {
+    sheetRow: { tab: "Countries", name: "Oman" },
+    source: "https://home.moe.gov.om/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: Cambridge-based mathematics and science in Grades 1 to 12 (TIMSS 2023 encyclopedia); Basic Education Cycle 1 (1 to 4), Cycle 2 (5 to 10), Post-Basic (11 and 12); separate schools for boys and girls from Cycle 2; the General Education Diploma with external Grade 12 exams each semester; the Ministries of Education and Higher Education merged on 12 January 2026 (Royal Decree 14/2026), still called the Ministry of Education. Reference: KG1 and KG2 at 4 and 5. The version date is the start of 2026-27 rounded to the first of the month. No inspection or SEN line: none was confirmed. Licence: unclear (no reuse terms found), and the Cambridge maths and science text belongs to Cambridge University Press and Assessment, not the Ministry; permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "bahrain": {
+    sheetRow: { tab: "Countries", name: "Bahrain" },
+    source: "https://www.moe.gov.bh/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: BQA National Examinations in Grade 9 (Arabic, English, mathematics, science; government schools) and Grade 12 (Arabic, English, mathematical skills; compulsory in government schools, optional in private) (BQA FAQ and schedule); BQA school reviews (BQA annual report 2025). Reference: Primary 1 to 6, Intermediate 7 to 9, Secondary 10 to 12; kindergartens are private, so the year list starts at Grade 1. No SEN line: none was confirmed. Licence: unclear (no reuse terms found for the curriculum); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "jordan": {
+    sheetRow: { tab: "Countries", name: "Jordan" },
+    source: "https://www.nccd.gov.jo/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: the two-year Tawjihi over Grades 11 and 12 from 2024-25, first graduates 2026, Grade 11 about 30% and Grade 12 about 70%; NCCD's new textbooks and the digital skills curriculum for Grades 1 to 12 from 2025-26. Reference: KG1 and KG2, Basic Education 1 to 10, academic and vocational streams. No inspection or SEN line: none was confirmed. Licence: closed (NCCD's notice says viewing its textbooks is no licence to copy, publish or exploit them commercially); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "egypt": {
+    sheetRow: { tab: "Countries", name: "Egypt" },
+    source: "https://moe.gov.eg/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: KG1 and KG2, Primary 1 to 6, Preparatory 1 to 3, Secondary 1 to 3 (workbook and several sources); the optional Egyptian Baccalaureate (Law 169 of 2025) from the Secondary 1 cohort of 2025-26, first exams in 2027, alongside Thanaweya Amma (Ahram, AACRAO); 99% opt-in for 2026-27 (EnterpriseAM); Egyptian-Japanese schools follow Education 2.0. Reference: the Basic Education Completion Certificate after Preparatory 3. No inspection or SEN line: none was confirmed. Licence: closed (Ministry textbooks: all rights reserved, no reproduction without prior written permission); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "israel": {
+    sheetRow: { tab: "Countries", name: "Israel" },
+    source: "https://pop.education.gov.il/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Confirmed: preprimary ages 3 to 6, primary Grades 1 to 6 (about a quarter of primary schools run 1 to 8), lower secondary 7 to 9, upper secondary 10 to 12, the Ministry's compulsory core curriculum and the Bagrut (TIMSS 2019 and PIRLS 2021 encyclopedias); Meitzav suspended by the minister in 2026 (Times of Israel). Reference: the separate streams (state, state-religious, Arab, Haredi). The kindergarten years are named by age, since the Hebrew names do not translate. No inspection or SEN line: none was confirmed. Licence: closed (the Ministry's terms of use: copyright of the State of Israel, no copying or redistribution without prior written agreement); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "turkey": {
+    sheetRow: { tab: "Countries", name: "Turkey (Türkiye)" },
+    source: "https://tymm.meb.gov.tr/",
+    notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Under Europe, as the workbook files it, but released with batch A. Confirmed: in 2026-27 the Türkiye Century Education Model covers preschool, Grades 1 to 3, 5 to 7, the prep year and 9 to 11, while 4, 8 and 12 stay on the old programmes; LGS and YKS continue, with skill-based questions from 2028; Grade 1 entry at 69 months (MEB Eurydice). Reference: the 2027-28 start date for the all-grades version (1 September used), the ilkokul, ortaokul and lise names. No inspection or SEN line: none was confirmed. Licence: closed (MEB says copyright follows Law 5846 and permission must be asked; no open licence found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

@@ -277,6 +277,17 @@ const COUNTRY_DEFAULT: Record<string, string> = {
   TT: "trinidad-and-tobago",
   MT: "malta",
   AE: "uae-moe",
+  // Stage 3 batch A: picked only once the batch is offered (inferCurriculum
+  // returns an offered id or England).
+  SA: "saudi-arabia",
+  QA: "qatar",
+  KW: "kuwait",
+  OM: "oman",
+  BH: "bahrain",
+  JO: "jordan",
+  EG: "egypt",
+  IL: "israel",
+  TR: "turkey",
 };
 
 /**

@@ -48,6 +48,15 @@ export const COUNTRIES: Country[] = [
   { name: "Hong Kong", code: "HK", dial: "+852" },
   { name: "Japan", code: "JP", dial: "+81" },
   { name: "United Arab Emirates", code: "AE", dial: "+971" },
+  { name: "Saudi Arabia", code: "SA", dial: "+966" },
+  { name: "Qatar", code: "QA", dial: "+974" },
+  { name: "Kuwait", code: "KW", dial: "+965" },
+  { name: "Oman", code: "OM", dial: "+968" },
+  { name: "Bahrain", code: "BH", dial: "+973" },
+  { name: "Jordan", code: "JO", dial: "+962" },
+  { name: "Egypt", code: "EG", dial: "+20" },
+  { name: "Israel", code: "IL", dial: "+972" },
+  { name: "Türkiye", code: "TR", dial: "+90" },
 ];
 
 export const DEFAULT_DIAL_CODE = "GB";
