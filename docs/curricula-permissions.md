@@ -44,5 +44,14 @@ Use the draft in `docs/curricula-gaps-plan.md` section 7, filling in the curricu
 | 24 | Malta: Learning Outcomes Framework | 2 | Permission | Ministry for Education | Not sent |
 | 25 | Jamaica: National Standards Curriculum | 2 | Permission | Ministry of Education, Skills, Youth and Information | Not sent |
 | 26 | Trinidad and Tobago: national curriculum | 2 | Permission | Ministry of Education | Not sent |
+| 27 | Saudi Arabia: Ministry of Education curriculum | 3 | Permission | Ministry of Education | Not sent |
+| 28 | Qatar: National Curriculum Standards | 3 | Permission | Ministry of Education and Higher Education | Not sent |
+| 29 | Kuwait: national curriculum | 3 | Permission | Ministry of Education | Not sent |
+| 30 | Oman: Ministry curriculum (its own subjects; maths and science are Cambridge's) | 3 | Permission | Ministry of Education | Not sent |
+| 31 | Bahrain: Ministry curriculum | 3 | Permission | Ministry of Education | Not sent |
+| 32 | Jordan: NCCD curricula | 3 | Permission | National Center for Curriculum Development | Not sent |
+| 33 | Egypt: Education 2.0 and secondary curricula | 3 | Permission | Ministry of Education and Technical Education | Not sent |
+| 34 | Israel: Ministry curricula | 3 | Prior written agreement (Ministry terms of use) | Ministry of Education | Not sent |
+| 35 | Turkey: Türkiye Century Education Model programmes | 3 | Permission | MEB, Board of Education (Talim ve Terbiye Kurulu) | Not sent |
 
-Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1.
+Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: section A.1).

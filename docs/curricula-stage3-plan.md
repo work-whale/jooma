@@ -25,13 +25,13 @@ Stage 2 is released (2026-11-27): merged to master (PR #125), migration `2026112
 
 | Batch | Switch | Picker heading (region) | Entries |
 |---|---|---|---|
-| A. Gulf and Middle East | `curricula_s3_middle_east` | Middle East | Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt, Israel, Turkey (Türkiye) |
-| B. Asia | `curricula_s3_asia` | Asia | China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Bangladesh, Sri Lanka, Nepal |
-| C. Europe | `curricula_s3_europe` | Europe | Austria, Belgium, Bulgaria, Croatia, Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, Iceland, Italy, Latvia, Lithuania, Netherlands, Norway, Poland, Portugal, Romania, Serbia, Slovakia, Slovenia, Spain, Sweden, Switzerland, Ukraine |
-| D. Latin America | `curricula_s3_latin_america` | Latin America (new region) | Argentina, Brazil, Chile, Colombia, Mexico, Peru |
-| E. Africa | `curricula_s3_africa` | Africa | Ethiopia, Rwanda, Tanzania, Zambia, Zimbabwe |
+| A. Gulf and Middle East | `curricula_s3_a` | Middle East (Turkey: Europe, as in the workbook) | Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt, Israel, Turkey (Türkiye) |
+| B. Asia | `curricula_s3_b` | Asia | China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Bangladesh, Sri Lanka, Nepal |
+| C. Europe | `curricula_s3_c` | Europe | Austria, Belgium, Bulgaria, Croatia, Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, Iceland, Italy, Latvia, Lithuania, Netherlands, Norway, Poland, Portugal, Romania, Serbia, Slovakia, Slovenia, Spain, Sweden, Switzerland, Ukraine |
+| D. Latin America | `curricula_s3_d` | Latin America (new region) | Argentina, Brazil, Chile, Colombia, Mexico, Peru |
+| E. Africa | `curricula_s3_e` | Africa | Ethiopia, Rwanda, Tanzania, Zambia, Zimbabwe |
 
-59 entries in total. Europe is the largest batch (29 countries) and may be split in two when we get there. The split systems (Germany's Länder, Swiss cantons, Belgium's communities, Spain's autonomous communities) are a question for batch C, not now (section 6).
+59 entries in total. Switches are named by batch letter, not region, because Turkey is in batch A but under the Europe heading (decided in `docs/curricula-stage3-build.md` A.8). Europe is the largest batch (29 countries) and may be split in two when we get there. The split systems (Germany's Länder, Swiss cantons, Belgium's communities, Spain's autonomous communities) are a question for batch C, not now (section 6).
 
 **Why the switch is separate from the region.** Today `region` decides both the picker heading and the switch. If batch A used a new region, Saudi Arabia would sit under a different heading from the UAE. So Step 1 adds an optional `release` field to `Curriculum`: an entry shows to a teacher only when its region switch AND its release switch are on. Picker headings stay geographic. After a batch is released and settled, its `release` field can be dropped and its switch retired.
 
@@ -60,8 +60,7 @@ Done for a batch when every row has a source link, a check date and a licence ve
 ### Step 1: plumbing (once, before batch A builds)
 
 - `Curriculum.release?: ReleaseId` and `RELEASES` (the five Stage 3 switches); `offeredCurricula` and `parseCurriculum` require region AND release on for non-admins; admins still see everything.
-- `RegionId` gains `latin-america` (its switch `curricula_latin_america`, seeded true, since it only gates Stage 3 entries that also have their own release switch).
-- **Staging migration** (Claude writes and applies it to staging; owner pushes to production): seed the five `curricula_s3_*` keys false and `curricula_latin_america` true, and add all six to the `public_settings()` whitelist.
+- **Staging migration** (Claude writes and applies it to staging; owner pushes to production): seed the five `curricula_s3_*` keys false and add them to the `public_settings()` whitelist. The `latin-america` region is added with batch D, not here (build log A.8).
 - Admin > Settings > Curricula by region lists the release switches under their own heading ("Stage 3 releases").
 - Picker: check each country's ISO code is offered on the profile and complete-profile screens.
 
