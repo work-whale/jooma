@@ -8,6 +8,17 @@
  *  "uk" is the five curricula Jooma has always had and is never switched off. */
 export type RegionId = "uk" | "british-isles" | "ireland" | "international" | "australia-nz" | "usa" | "canada" | "africa" | "asia" | "caribbean" | "europe" | "middle-east";
 
+/** A Stage 3 batch, switched on as one (docs/curricula-stage3-build.md A.8).
+ *  Separate from the region so picker headings stay geographic: Turkey sits
+ *  under Europe but ships with batch A. */
+export type ReleaseId = "s3-a" | "s3-b" | "s3-c" | "s3-d" | "s3-e";
+
+export interface Release {
+  id: ReleaseId;
+  /** What the admin console calls it. */
+  label: string;
+}
+
 export interface Region {
   id: RegionId;
   /** What the admin console and the picker call it. */
@@ -65,6 +76,9 @@ export interface Curriculum {
   /** Stable id, stored on the profile and sent as `curriculumId`. Never renamed. */
   id: string;
   region: RegionId;
+  /** A Stage 3 batch. Set, a teacher sees the entry only when this release is
+   *  on as well as the region. Dropped once the batch is released and settled. */
+  release?: ReleaseId;
   /** ISO 3166-1 alpha-2 (GB, US, AU), or INT for an international programme. */
   country: string;
   /** State, province or board, where the country is split. */

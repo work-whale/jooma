@@ -25,6 +25,7 @@ import {
   languageAfterChoosing,
   parseCurriculum,
   regionsFromSettings,
+  releasesFromSettings,
   visibleCurricula,
   type Curriculum,
   type RegionId,
@@ -93,9 +94,10 @@ async function load(): Promise<void> {
   try {
     const [{ data: auth }, settings] = await Promise.all([supabase.auth.getUser(), supabase.rpc("public_settings")]);
     const regionsOn = regionsFromSettings(settings.error ? [] : settings.data);
+    const releasesOn = releasesFromSettings(settings.error ? [] : settings.data);
     const user = auth.user;
     if (!user) {
-      publish({ loaded: true, regionsOn, offered: visibleCurricula(regionsOn, false) });
+      publish({ loaded: true, regionsOn, offered: visibleCurricula(regionsOn, false, releasesOn) });
       return;
     }
     userId = user.id;
@@ -117,7 +119,7 @@ async function load(): Promise<void> {
     }
 
     const isAdmin = row?.is_admin === true;
-    const offered = visibleCurricula(regionsOn, isAdmin);
+    const offered = visibleCurricula(regionsOn, isAdmin, releasesOn);
     const saved = parseCurriculum(row?.curriculum_id);
 
     if (saved && offered.some((c) => c.id === saved)) {

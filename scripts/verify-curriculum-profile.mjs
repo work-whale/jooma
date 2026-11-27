@@ -9,7 +9,9 @@
  * supabase/migrations/20261114000000_curricula.sql adds two self-service
  * columns to profiles and six region switches read through public_settings();
  * 20261124000000_curricula_stage2_regions.sql adds five more (Africa, Asia,
- * Caribbean, Europe, Middle East), all off.
+ * Caribbean, Europe, Middle East), all off; and
+ * 20261127000000_curricula_stage3_releases.sql adds five Stage 3 batch
+ * switches (curricula_s3_a to _e), all off.
  * This asserts:
  *
  *   - a teacher sets and reads their own curriculum
@@ -20,7 +22,8 @@
  *   - anon and teachers read the six switches, and the five Stage 2 ones (all
  *     off on staging), through public_settings(), and that function returns
  *     nothing beyond its named keys
- *   - a teacher cannot flip a region switch
+ *   - they read the five Stage 3 batch switches, all off
+ *   - a teacher cannot flip a region switch or a batch switch
  *
  * HOW IT PROVES ANYTHING
  *
@@ -90,7 +93,9 @@ const STAGE2_SWITCHES = [
   "curricula_europe",
   "curricula_middle_east",
 ];
-const PUBLIC_KEYS = new Set(["signups_open", "maintenance_mode", "google_signin", ...SWITCHES, ...STAGE2_SWITCHES]);
+// Added by 20261127000000_curricula_stage3_releases.sql: Stage 3 batches, off.
+const STAGE3_RELEASES = ["curricula_s3_a", "curricula_s3_b", "curricula_s3_c", "curricula_s3_d", "curricula_s3_e"];
+const PUBLIC_KEYS = new Set(["signups_open", "maintenance_mode", "google_signin", ...SWITCHES, ...STAGE2_SWITCHES, ...STAGE3_RELEASES]);
 
 async function signIn(person) {
   const client = createClient(URL, ANON, { auth: { persistSession: false } });
@@ -193,12 +198,22 @@ async function main() {
       !error && STAGE2_SWITCHES.every((k) => (data ?? []).some((r) => r.key === k && r.value === false)),
       JSON.stringify((data ?? []).filter((r) => STAGE2_SWITCHES.includes(r.key))),
     );
+    check(
+      `${who} reads the five Stage 3 batch switches, all off`,
+      !error && STAGE3_RELEASES.every((k) => (data ?? []).some((r) => r.key === k && r.value === false)),
+      JSON.stringify((data ?? []).filter((r) => STAGE3_RELEASES.includes(r.key))),
+    );
     check(`${who} reads nothing beyond the named keys`, keys.every((k) => PUBLIC_KEYS.has(k)), keys.join(", "));
   }
   {
     const { error } = await ada.rpc("admin_set_setting", { p_key: "curricula_usa", p_value: true });
     const { data } = await admin.from("app_settings").select("value").eq("key", "curricula_usa").single();
     check("a teacher cannot switch a region on", Boolean(error) && data.value === false, error ? JSON.stringify(data) : "rpc went through");
+  }
+  {
+    const { error } = await ada.rpc("admin_set_setting", { p_key: "curricula_s3_a", p_value: true });
+    const { data } = await admin.from("app_settings").select("value").eq("key", "curricula_s3_a").single();
+    check("a teacher cannot switch a Stage 3 batch on", Boolean(error) && data.value === false, error ? JSON.stringify(data) : "rpc went through");
   }
 }
 

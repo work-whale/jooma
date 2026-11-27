@@ -15,7 +15,7 @@
  * Shared by client and server: no server-only imports.
  */
 
-import type { Curriculum, CurriculumVersion, Region, RegionId, YearOption } from "./types";
+import type { Curriculum, CurriculumVersion, Region, RegionId, Release, ReleaseId, YearOption } from "./types";
 import { AFRICA_CURRICULA } from "./africa";
 import { ASIA_CURRICULA } from "./asia";
 import { AUSTRALIA_NZ_CURRICULA } from "./australia-nz";
@@ -31,7 +31,7 @@ import { USA_CURRICULA } from "./usa";
 // Relative, so scripts/curricula-status.mjs can load the registry in plain Node.
 import { NGSS_NAME_BLOCKED } from "../standards/permissions";
 
-export type { Curriculum, CurriculumVersion, FrameworkId, LocalTerms, Region, RegionId, YearOption } from "./types";
+export type { Curriculum, CurriculumVersion, FrameworkId, LocalTerms, Region, RegionId, Release, ReleaseId, YearOption } from "./types";
 
 export const REGIONS: readonly Region[] = [
   { id: "uk", label: "United Kingdom" },
@@ -48,6 +48,15 @@ export const REGIONS: readonly Region[] = [
   { id: "middle-east", label: "Middle East" },
 ];
 
+/** The Stage 3 batches, each with its own switch (curricula_s3_a and on). */
+export const RELEASES: readonly Release[] = [
+  { id: "s3-a", label: "Stage 3 batch A: Gulf, Middle East and Türkiye" },
+  { id: "s3-b", label: "Stage 3 batch B: Asia" },
+  { id: "s3-c", label: "Stage 3 batch C: Europe" },
+  { id: "s3-d", label: "Stage 3 batch D: Latin America" },
+  { id: "s3-e", label: "Stage 3 batch E: Africa" },
+];
+
 export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA, ...AFRICA_CURRICULA, ...ASIA_CURRICULA, ...CARIBBEAN_CURRICULA, ...EUROPE_CURRICULA, ...MIDDLE_EAST_CURRICULA];
 
 export const UK_CURRICULUM_IDS = ["england", "england-eyfs", "scotland", "wales", "northern-ireland"] as const;
@@ -59,6 +68,7 @@ for (const c of CURRICULA_REGISTRY) {
 }
 const UK_IDS = new Set<string>(UK_CURRICULUM_IDS);
 const REGION_IDS = new Set<string>(REGIONS.map((r) => r.id));
+const RELEASE_IDS = new Set<string>(RELEASES.map((r) => r.id));
 
 /** True when the slides wizard offers England's year list (Nursery to Year 13,
  *  plus Adult learners): every curriculum on that list, and a guest or an
@@ -125,17 +135,23 @@ export function curriculumFormState(value: unknown): { curriculumId?: string } {
 }
 
 /**
- * The curricula a teacher may pick. UK ones always; any other only when its
- * region is switched on (or the viewer is an admin) AND it has been checked
- * against its official source.
+ * Whether a teacher may pick `c`. UK ones always; any other only when it has
+ * been checked against its official source AND (for an admin, always) its
+ * region is switched on, plus its release when it belongs to a Stage 3 batch.
  */
-export function visibleCurricula(regionsOn: readonly string[], isAdmin: boolean): Curriculum[] {
-  const on = new Set(regionsOn.filter((r) => REGION_IDS.has(r)));
-  return CURRICULA_REGISTRY.filter((c) => {
-    if (c.region === "uk") return true;
-    if (!c.verifiedOn) return false;
-    return isAdmin || on.has(c.region);
-  });
+export function isOffered(c: Curriculum, regionsOn: readonly string[], releasesOn: readonly string[], isAdmin: boolean): boolean {
+  if (c.region === "uk") return true;
+  if (!c.verifiedOn) return false;
+  if (isAdmin) return true;
+  if (!regionsOn.includes(c.region)) return false;
+  return !c.release || releasesOn.includes(c.release);
+}
+
+/** The curricula a teacher may pick, in registry order (see isOffered). */
+export function visibleCurricula(regionsOn: readonly string[], isAdmin: boolean, releasesOn: readonly string[] = []): Curriculum[] {
+  const regions = regionsOn.filter((r) => REGION_IDS.has(r));
+  const releases = releasesOn.filter((r) => RELEASE_IDS.has(r));
+  return CURRICULA_REGISTRY.filter((c) => isOffered(c, regions, releases, isAdmin));
 }
 
 const TERM_LINES: [keyof NonNullable<Curriculum["terms"]>, string][] = [
@@ -217,6 +233,24 @@ export function regionsFromSettings(rows: unknown): RegionId[] {
     const key = regionSettingKey(r.id);
     return key !== null && on.has(key);
   }).map((r) => r.id);
+}
+
+/** The app_settings key that switches a Stage 3 batch on. */
+export function releaseSettingKey(release: ReleaseId): string {
+  return `curricula_${release.replace(/-/g, "_")}`;
+}
+
+/** The Stage 3 batches switched on, from public_settings() rows. Exactly
+ *  `true` only, as for regions. */
+export function releasesFromSettings(rows: unknown): ReleaseId[] {
+  if (!Array.isArray(rows)) return [];
+  const on = new Set(
+    rows
+      .filter((r): r is { key: string; value: unknown } => !!r && typeof r === "object" && typeof (r as { key?: unknown }).key === "string")
+      .filter((r) => r.value === true)
+      .map((r) => r.key),
+  );
+  return RELEASES.filter((r) => on.has(releaseSettingKey(r.id))).map((r) => r.id);
 }
 
 // ── A teacher's starting curriculum ────────────────────────────────────────

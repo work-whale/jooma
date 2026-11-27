@@ -34,6 +34,8 @@ const SECTION_TITLE: Record<string, string> = {
   general: "General",
   // One switch per region (app/lib/curricula). The UK curricula need none.
   curricula: "Curricula by region",
+  // One switch per Stage 3 batch; a batch also needs its region on.
+  curricula_releases: "Curricula: Stage 3 releases",
 };
 
 // Settings that persist correctly and are shown honestly, but that nothing
