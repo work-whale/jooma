@@ -148,3 +148,89 @@ Owner asked for Opus to build the whole of Stage 3 itself (no Sonnet subagents).
 - **Tests:** unit 2,627 passed (new: `curricula-releases.spec.ts`, `curricula-stage3-a.spec.ts`, batch A in `profile-mobile.spec.ts`); E2E `tests/profile/curriculum-stage3.spec.ts` plus `curriculum.spec.ts` 10/10; live `tests/tools/curricula-stage3-a-live.spec.ts`. Screenshots in `docs/screenshots/2026-11-27-curricula-stage3/` (gitignored): the Middle East picker with batch A off and on, and the new Admin section.
 - **Not tested:** live output for the other seven countries (Egypt and Türkiye stand in); a live run with a non-English output language on a batch A curriculum (the message order is unit tested instead).
 - **Release:** `docs/curricula-stage3-release-checklist.md`.
+
+## Batch B, Step 0: source and licence check (Opus, 2026-11-27)
+
+Same method as batch A. "Confirmed" means a source below says it; "Reference" means general knowledge or a secondary site.
+
+### B.1 Licence verdicts
+
+| Country | Body | What we found | Verdict |
+|---|---|---|---|
+| Japan | MEXT | MEXT's website terms follow the Government of Japan Standard Terms of Use 2.0: commercial use allowed with credit, compatible with CC BY 4.0. The Course of Study is MEXT's own text (Japanese) | **Open** (owner to decide whether to build statements) |
+| Taiwan | Ministry of Education; NAER | NAER and the Ministry publish all site content under the Open Government Data License, version 1 (free, non-exclusive, commercial use with credit) | **Open** (owner to decide) |
+| South Korea | Ministry of Education; NCIC (KICE) | NCIC marks the curriculum documents KOGL Type 2: credit, **no commercial use**; the same on data.go.kr | Closed: ask |
+| Vietnam | MOET | The General Education Programme was issued as Circular 32/2018/TT-BGDDT. IP Law Article 15 puts legal normative and administrative documents outside copyright | **Open by statute** (owner to decide; no licence to point to, only the law) |
+| China | Ministry of Education | Copyright Law Article 5 excludes documents of an administrative nature issued by state organs, but the curriculum standards are also sold as books by a university press; whether the standards count is not settled | Unclear: ask |
+| Indonesia | Kemendikdasmen (BSKAP) | Copyright Law 28/2014 Article 42: no copyright in laws and regulations. The learning outcomes (Capaian Pembelajaran) are set by a decision of the head of BSKAP; whether a decision counts as a regulation is not settled | Unclear: ask |
+| Thailand | OBEC | No reuse terms found | Unclear: ask |
+| Sri Lanka | NIE; Ministry of Education | No reuse terms found | Unclear: ask |
+| Nepal | Curriculum Development Centre | No reuse terms found | Unclear: ask |
+| Bangladesh | NCTB | No reuse terms found | Unclear: ask (and see B.5) |
+
+**Result:** two sources are open by licence (Japan, Taiwan) and one by statute (Vietnam). Under the plan these come back to the owner before any statements are built. Batch B ships profiles first either way.
+
+### B.2 Versions and dated changes
+
+| Country | In force today | Dated change ahead | Registry versions |
+|---|---|---|---|
+| China | Compulsory education curriculum plan and standards (2022 edition), Grades 1 to 9, from autumn 2022; senior high standards (2017 edition, revised 2020) (Confirmed) | None fixed | One version |
+| Japan | Course of Study, 2017-18 revision: elementary from 2020, junior high 2021, senior high from 2022 (workbook) | Next Course of Study: Central Council report due in FY2026, elementary from 2030, junior high 2031 (Confirmed, several reports of the MEXT schedule) | One version; label names the 2030 change |
+| South Korea | 2022 Revised National Curriculum: in 2026 in Elementary 1 to 6, Middle 1 and 2, High 1 and 2; all grades in 2027 (Confirmed); high school credit system from 2025 | All grades from March 2027; integrated CSAT from the 2028 admission year | Two versions: 2026-03-01 (rolling) and 2027-03-01 (all grades) |
+| Taiwan | Curriculum Guidelines of 12-Year Basic Education ("108 curriculum"), since 2019 (Confirmed) | None found | One version |
+| Vietnam | General Education Programme 2018 in every grade since 2024-25; one national textbook series ("Connecting Knowledge with Life") from 2026-27 (Confirmed, VOV, VietnamNet) | Free textbooks for all by 2030 | One version |
+| Thailand | Basic Education Core Curriculum B.E. 2551 (2008, revised 2017) nationally; competency-based curriculum B.E. 2568 for Prathom 1 to 3 in schools that choose it, and a draft for Prathom 4 to 6 in 2026 (Confirmed, Thai PBS World, OBEC portal reports) | National date not fixed | One version, label names both |
+| Indonesia | Kurikulum Merdeka, national curriculum since 2024; Kurikulum 2013 allowed in some remote areas until 2026-27 (workbook, checked) | None (the Ministry says there is no new curriculum; deep learning is a teaching approach) | One version |
+| Sri Lanka | Old curriculum, except the new activity-based curriculum in Grade 1 from 2026 (Confirmed: reforms for other grades postponed to 2027) | New curriculum rolls on from 2027 (Grade 6 and up); new-format A/L in 2031 | One version; label names the rollout |
+| Nepal | National Curriculum Framework 2019 (CDC) (workbook) | None found | One version |
+| Bangladesh | 2012 curriculum at secondary (restored after 2024), 2022 curriculum at primary; revised SSC 2026 syllabus (workbook, Confirmed) | New curriculum planned: textbooks early 2027, full rollout 2028 | Held (B.5) |
+
+### B.3 Years and stages (age when pupils start the year)
+
+| Country | Years | Stages |
+|---|---|---|
+| China | Grades 1 to 9 (6), Senior High 1 to 3 (15) | Primary (Grades 1 to 6) and junior secondary (7 to 9) make up compulsory education; senior high school (Senior High 1 to 3) (Confirmed) |
+| Japan | Elementary 1 to 6 (6), Junior High 1 to 3 (12), Senior High 1 to 3 (15) | Elementary, junior high and senior high school; the year starts in April (Confirmed) |
+| South Korea | Elementary 1 to 6 (6), Middle 1 to 3 (12), High 1 to 3 (15) | Elementary, middle and high school; the year starts in March (workbook) |
+| Taiwan | Grades 1 to 12 (6) | Elementary (1 to 6), junior high (7 to 9), senior high and vocational high (10 to 12) (Reference) |
+| Vietnam | Grades 1 to 12 (6) | Primary (1 to 5), lower secondary (6 to 9), upper secondary (10 to 12); basic education (1 to 9) and career-oriented education (10 to 12) (Confirmed, Circular 32/2018) |
+| Thailand | Prathom 1 to 6 (6), Mathayom 1 to 6 (12) | Primary (Prathom 1 to 6), lower secondary (Mathayom 1 to 3), upper secondary (Mathayom 4 to 6) (workbook, Reference) |
+| Indonesia | Grades 1 to 12 (6) | SD (Grades 1 to 6), SMP (7 to 9), SMA or SMK (10 to 12); learning phases A (1 and 2), B (3 and 4), C (5 and 6), D (7 to 9), E (10), F (11 and 12) (workbook, Reference) |
+| Sri Lanka | Grades 1 to 13 (5) | Primary (1 to 5), junior secondary (6 to 9), senior secondary (10 and 11, O/L), collegiate (12 and 13, A/L) (Reference; Grade 1 at 5, Reference) |
+| Nepal | Grades 1 to 12 (5) | Basic education (1 to 8: primary 1 to 5, lower secondary 6 to 8), secondary (9 to 12: 9 and 10, then 11 and 12 in streams) (Confirmed, several sources; Grade 1 at 5, Reference) |
+
+### B.4 Terms
+
+| Country | Exams | Notes |
+|---|---|---|
+| China | zhongkao (senior high entrance exam) and gaokao (national college entrance exam) (Reference) | |
+| Japan | National Assessment of Academic Ability (Elementary 6 and Junior High 3), high school entrance exams, Common Test for University Admissions (Confirmed) | Special needs education: support rooms, special support classes, special needs schools (Confirmed) |
+| South Korea | CSAT (Suneung), integrated from the 2028 admission year (Confirmed) | High school credit system from 2025 (Confirmed) |
+| Taiwan | CAP (Comprehensive Assessment Program, end of junior high) and GSAT (General Scholastic Ability Test, January of Grade 12) (Confirmed) | |
+| Vietnam | National high school graduation examination (Confirmed) | |
+| Thailand | O-NET (Prathom 6, Mathayom 3, Mathayom 6, by NIETS); TCAS university admission with TGAT, TPAT and A-Level (Confirmed) | |
+| Indonesia | TKA (academic ability test) in Grades 6, 9 and 12, not a graduation requirement, merged with the National Assessment from 2026 (Confirmed, Kompas, Tempo) | |
+| Sri Lanka | Grade 5 Scholarship Examination, G.C.E. Ordinary Level (Grade 11), G.C.E. Advanced Level (Grade 13) (Confirmed) | School year runs January to December (Reference) |
+| Nepal | Basic Level Examination (Grade 8), Secondary Education Examination (SEE, Grade 10), NEB Grade 12 examinations (Confirmed) | |
+
+Every entry uses English words only in its terms (the Türkiye lesson), with romanised year names only where teachers use them (Prathom, Mathayom).
+
+### B.5 Bangladesh held
+
+The workbook's own note says: "Unsettled: wait until 2028 rollout is clearer." Secondary went back to the 2012 curriculum after 2024 while primary kept the 2022 one, and a new curriculum is planned for 2027-28. Bangladesh is not built in batch B unless the owner says otherwise.
+
+### B.6 Default spelling
+
+British English for all, except American English for Japan, South Korea and Taiwan, whose school English is taught in American English (Reference; owner can change).
+
+### B.7 Sources
+
+- Japan: [MEXT website usage policy](https://www.mext.go.jp/en/other/title01/detail01/1375290.htm); [Government of Japan Standard Terms of Use 2.0](https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/f7fde41d-ffca-4b2a-9b25-94b8a701a037/b33c8db5/20220706_resources_data_betten_03.pdf); [next Course of Study schedule](https://note.com/kyoikukogengaku/n/n1c09eda01993?hl=en); [National Assessment, Japan Times](https://www.japantimes.co.jp/news/2026/07/16/japan/japan-school-achievement-test-scores/)
+- South Korea: [2022 curriculum schedule, Asia Business Daily](https://www.asiae.co.kr/en/article/2022122211013751722); [NCIC copyright policy](https://ncic.re.kr/mbr/policy.do); [data.go.kr 15060742](https://www.data.go.kr/data/15060742/fileData.do); [CSAT 2028, JoongAng Daily](https://www.koreajoongangdaily.com/korea/govt-announces-major-overhaul-to-college-entrance-exam/10653959)
+- Taiwan: [NAER curriculum guidelines](https://www.naer.edu.tw/eng/PageSyllabus?fid=148); [NAER open information](https://www.naer.edu.tw/PageMenu?fid=231); [Open Government Data License v1](https://data.nat.gov.tw/license); [CAP](https://en.wikipedia.org/wiki/Comprehensive_Assessment_Program_for_Junior_High_School_Students)
+- Vietnam: [single textbook series, VOV](https://english.vov.vn/en/society/education-ministry-adopts-single-textbook-set-from-2026-2027-school-year-post1289123.vov); [Circular 32/2018](https://thuvienphapluat.vn/van-ban/EN/Giao-duc/Circular-32-2018-TT-BGDDT-promulgating-general-education-program/519827/tieng-anh.aspx); [IP Law, WIPO Lex](https://www.wipo.int/wipolex/en/legislation/details/12011)
+- China: [Copyright Law 2021, gov.cn](https://www.gov.cn/guoqing/2021-10/29/content_5647633.htm); [2022 standards](https://www.researchgate.net/publication/364968103_An_Interpretation_of_the_Revised_Compulsory_Education_Curriculum_Program_and_Standards_A_Revolution_in_China's_Compulsory_Education)
+- Thailand: [Thai PBS World](https://www.thaipbsworld.com/education/thai-schools-juggle-hot-potato-of-new-literacy-based-curriculum); [OBEC core curriculum B.E. 2551](https://academic.obec.go.th/images/document/1525235513_d_1.pdf); [O-NET and TCAS](https://educationbenchmark.com/education-systems/thailand-education-system/)
+- Indonesia: [TKA and AN from 2026, Kompas](https://www.kompas.com/edu/read/2025/12/22/165807271/mulai-2026-pemerintah-hapus-pelaksanaan-asesmen-nasional-integrasi-ke-tka); [Copyright Law Article 42](https://pasal.id/peraturan/uu/uu-no-28-tahun-2014/pasal-42)
+- Sri Lanka: [2026 circular, Newswire](https://www.newswire.lk/2026/01/02/new-education-reforms-2026-circular-issued/); [Ministry reform deck](https://moe.gov.lk/wp-content/uploads/2025/07/Education-Reforms-Sri-Lanka-PPT-for-Provincial-Awareness.pdf); [2026 in Sri Lanka](https://en.wikipedia.org/wiki/2026_in_Sri_Lanka)
+- Nepal: [Education in Nepal](https://en.wikipedia.org/wiki/Education_in_Nepal); [NEB](https://en.wikipedia.org/wiki/National_Examination_Board_(Nepal))

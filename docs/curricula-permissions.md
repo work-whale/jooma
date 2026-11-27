@@ -53,5 +53,12 @@ Use the draft in `docs/curricula-gaps-plan.md` section 7, filling in the curricu
 | 33 | Egypt: Education 2.0 and secondary curricula | 3 | Permission | Ministry of Education and Technical Education | Not sent |
 | 34 | Israel: Ministry curricula | 3 | Prior written agreement (Ministry terms of use) | Ministry of Education | Not sent |
 | 35 | Turkey: Türkiye Century Education Model programmes | 3 | Permission | MEB, Board of Education (Talim ve Terbiye Kurulu) | Not sent |
+| 36 | South Korea: 2022 Revised National Curriculum | 3 | Commercial use (NCIC marks it KOGL Type 2, non-commercial) | Ministry of Education; NCIC (KICE) | Not sent |
+| 37 | China: curriculum standards (2022 compulsory, 2017/2020 senior high) | 3 | Confirm Article 5 covers them, or permission | Ministry of Education | Not sent |
+| 38 | Indonesia: Kurikulum Merdeka learning outcomes | 3 | Confirm Article 42 covers the BSKAP decision, or permission | Kemendikdasmen, BSKAP | Not sent |
+| 39 | Thailand: Basic Education Core Curriculum | 3 | Permission | OBEC | Not sent |
+| 40 | Sri Lanka: NIE curriculum | 3 | Permission | National Institute of Education | Not sent |
+| 41 | Nepal: National Curriculum Framework | 3 | Permission | Curriculum Development Centre | Not sent |
+| 42 | Bangladesh: NCTB curriculum (entry held) | 3 | Permission | NCTB | Not sent |
 
-Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: section A.1).
+Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: section A.1; batch B: section B.1). Japan and Taiwan (open licences) and Vietnam (open by statute) are not on this list: they wait for the owner's decision on building statements.
