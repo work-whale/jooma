@@ -2,9 +2,9 @@
 
 For the owner, at a computer with the Supabase CLI and GitHub. About 20 minutes.
 
-What ships: nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), the five Stage 3 batch switches (all off), the nine countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 35).
+What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), the five Stage 3 batch switches (all off), seventeen new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 42).
 
-Nothing changes for teachers until step 4, except two small things that ship with the merge: the nine countries appear in the profile country list, and the prompt fix applies to every non-UK curriculum already live (tested: Stage 2 live run 7/7 after the fix).
+Nothing changes for teachers until step 4, except two small things that ship with the merge: the new countries appear in the profile country list, and the prompt fix applies to every non-UK curriculum already live (tested: Stage 2 live run 7/7 after the fix).
 
 ## 1. Before you start
 
