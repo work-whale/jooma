@@ -116,7 +116,7 @@ test.describe("Stage 3 batch A entries", () => {
     expect(stages("oman")).toMatch(/Cycle 1 \(Grades 1 to 4\), Cycle 2 \(Grades 5 to 10\) and Post-Basic Education \(Grades 11 and 12\)/);
     expect(stages("qatar")).toMatch(/Primary \(Grades 1 to 6\), Preparatory \(Grades 7 to 9\) and Secondary \(Grades 10 to 12\)/);
     expect(stages("saudi-arabia")).toMatch(/Secondary Tracks System/);
-    expect(stages("turkey")).toMatch(/ilkokul, Grades 1 to 4\), middle school \(ortaokul, Grades 5 to 8\) and high school \(lise, Grades 9 to 12/);
+    expect(stages("turkey")).toMatch(/primary school \(Grades 1 to 4\), middle school \(Grades 5 to 8\) and high school \(Grades 9 to 12/);
     expect(stages("israel")).toMatch(/Grades 7 to 9/);
   });
 
@@ -249,6 +249,60 @@ test.describe("starting curriculum by country", () => {
     for (const id of A_IDS) expect(parseCurriculum(id), id).toBe(id);
     for (const junk of ["Saudi Arabia", "saudi", "KSA", "SA", "Turkey", "türkiye", "turkiye", "TURKEY", "egypt ", " egypt", "israel;", "jordan-nccd", "oman-moe", "qatar_2026"]) {
       expect(parseCurriculum(junk), junk).toBeNull();
+    }
+  });
+});
+
+test.describe("the teaching language is context, not the output language", () => {
+  // Found by the live run (2026-11-27): Türkiye's worksheet came back in
+  // Turkish, half-mixed with English, because the curriculum message is the
+  // last system message and its context says "Schools teach in Turkish", while
+  // UK English adds no language message of its own.
+  const LINE = "This describes the school system only and does not change the output language. Write in the language the instructions above ask for; if they name no language other than English, write in English, even though schools here may teach in another language.";
+
+  test("every non-UK curriculum's instruction says so, after its context", () => {
+    for (const c of CURRICULA_REGISTRY) {
+      const text = curriculumInstruction(c.id);
+      if (c.region === "uk") continue;
+      expect(text, c.id).toContain(LINE);
+      if (c.context) expect(text.indexOf(LINE), c.id).toBeGreaterThan(text.indexOf(c.context));
+    }
+  });
+
+  test("Türkiye's terms carry no Turkish words, which pulled a live run into Turkish", () => {
+    const c = getCurriculum("turkey")!;
+    // "Türkiye" is the country's own English name; every other word is English.
+    for (const [key, value] of Object.entries(c.terms!)) expect(value.replace(/Türkiye/g, ""), key).not.toMatch(/[şğıçöüŞĞİÇÖÜ]|ilkokul|ortaokul|\blise\b|müdür/);
+    expect(c.context!).not.toMatch(/[şğıŞĞİ]/);
+  });
+
+  test("a UK curriculum still adds nothing", () => {
+    for (const id of ["england", "scotland", "wales", "northern-ireland", "england-eyfs"]) expect(curriculumInstruction(id), id).toBe("");
+  });
+});
+
+test.describe("a chosen output language still wins", () => {
+  // The line above defers to "the language the instructions above ask for", so
+  // the language message must come BEFORE the curriculum one wherever both are
+  // added. Every call site composes them as withCurriculum(withLanguage(...)).
+  test("composed as the routes do, the French instruction comes first and the curriculum defers to it", async () => {
+    const { withCurriculum } = await import("@/app/lib/curricula");
+    const { withLanguage } = await import("@/app/lib/languages");
+    const base = [{ role: "system", content: "Write in UK English." }, { role: "user", content: "A worksheet" }];
+    const messages = withCurriculum(withLanguage(base, "fr", "turkey"), "turkey");
+    const lang = messages.findIndex((m) => m.content.startsWith("OUTPUT LANGUAGE: French"));
+    const curr = messages.findIndex((m) => m.content.startsWith("SCHOOL SYSTEM:"));
+    expect(lang).toBeGreaterThan(-1);
+    expect(curr).toBeGreaterThan(lang);
+    expect(messages[curr].content).toContain("Write in the language the instructions above ask for");
+  });
+
+  test("no call site adds the curriculum before the language", () => {
+    const files = ["app/lib/usage.ts", "app/lib/slideshow-pipeline.ts"];
+    for (const f of files) {
+      const src = readFileSync(path.join(process.cwd(), f), "utf8");
+      expect(src, f).toContain("withCurriculum(withLanguage");
+      expect(src, f).not.toMatch(/withLanguage\(\s*withCurriculum/);
     }
   });
 });

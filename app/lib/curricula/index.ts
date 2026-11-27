@@ -181,6 +181,13 @@ export function curriculumInstruction(value: unknown, now: Date = new Date()): s
     `This teacher works ${where ? `in ${where} ` : ""}under the ${c.name}. Write for that system: use its year or grade names, its standards and its assessments exactly as its teachers and pupils know them. This overrides any earlier instruction that assumes a school in England or the UK.`,
   ];
   if (c.context) lines.push(c.context);
+  // This message comes after the language one (and UK English adds none), so a
+  // context line like "Schools teach in Turkish" was read as an order to write
+  // in Turkish. The output language is a separate setting; naming English
+  // outright held where "the language above" alone did not.
+  lines.push(
+    "This describes the school system only and does not change the output language. Write in the language the instructions above ask for; if they name no language other than English, write in English, even though schools here may teach in another language.",
+  );
   // NGSS is a trademark Jooma has no permission to use yet (see
   // app/lib/standards/permissions.ts), so the output must not name it.
   if (NGSS_NAME_BLOCKED && (c.alignment?.frameworks.includes("ngss") || /NGSS|Next Generation Science/i.test(c.context ?? ""))) {

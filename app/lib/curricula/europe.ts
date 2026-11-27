@@ -61,10 +61,10 @@ export const EUROPE_CURRICULA: Curriculum[] = [
     terms: {
       curriculum: "the teaching programmes of the Ministry of National Education (MEB), under the Türkiye Century Education Model",
       stages:
-        "preschool, primary school (ilkokul, Grades 1 to 4), middle school (ortaokul, Grades 5 to 8) and high school (lise, Grades 9 to 12, some with a preparatory year)",
+        "preschool, primary school (Grades 1 to 4), middle school (Grades 5 to 8) and high school (Grades 9 to 12, some with a preparatory year)",
       exams: "the LGS (high school entrance exam, end of Grade 8) and the YKS (university entrance exam); from 2028 their questions are skill-based and set in context",
       earlyYears: "the MEB preschool education programme",
-      headteacher: "school principal (okul müdürü)",
+      headteacher: "school principal",
     },
     context:
       "Schools teach in Turkish, with English taught as a subject. The Türkiye Century Education Model treats knowledge, skills, values and dispositions together and asks pupils to apply what they learn. Use Turkish places, names and lira amounts where a local example helps.",
