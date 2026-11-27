@@ -9,6 +9,8 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
  *   - with batch A on, a Saudi teacher picks their curriculum under Middle
  *     East, sees KG1 to Grade 12 and no UK-only tools, and a worksheet sends it
  *   - Türkiye is under Europe, next to Malta
+ *   - batch B: with Asia on, its nine wait for their own switch; then a
+ *     Japanese teacher sees Elementary 1 to Senior High 3
  *
  * Generation requests are answered by page.route: nothing reaches a model.
  * Every switch is put back to what it was, whatever happens.
@@ -17,7 +19,7 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
 
 test.setTimeout(240_000);
 const NAV = { timeout: 120_000 };
-const KEYS = ["curricula_middle_east", "curricula_europe", "curricula_s3_a"] as const;
+const KEYS = ["curricula_middle_east", "curricula_europe", "curricula_asia", "curricula_s3_a", "curricula_s3_b"] as const;
 
 const before: Record<string, unknown> = {};
 const people: TestTeacher[] = [];
@@ -121,4 +123,43 @@ test("with batch A on, a Saudi teacher picks their curriculum, sees KG1 to Grade
   await page.locator("[data-jo-generate]").click();
   await expect.poll(() => sent.length, NAV).toBe(1);
   expect(sent[0]).toMatchObject({ curriculum: "Saudi Ministry of Education Curriculum", yearGroup: "Grade 7" });
+});
+
+test("batch B: Asia shows its nine only with the batch B switch, and a Japanese teacher gets Japan's years", async ({ page }) => {
+  const t = await payingTeacher("CurrS3Japan");
+  await signIn(page, t);
+  await setSwitch("curricula_asia", true);
+  await setSwitch("curricula_s3_a", true);
+  await setSwitch("curricula_s3_b", false);
+
+  await page.goto("/profile?section=curriculum", NAV);
+  const region = page.getByTestId("curriculum-region");
+  await expect(region).toBeEnabled(NAV);
+  await region.selectOption("asia");
+  const picker = page.getByTestId("curriculum-picker");
+  // Batch A being on does not let batch B through: only the Stage 2 six.
+  await expect(picker.locator("option:not([disabled])")).toHaveCount(6);
+  await expect(picker.locator('option[value="japan"]')).toHaveCount(0);
+
+  await setSwitch("curricula_s3_b", true);
+  await page.reload();
+  await expect(region).toBeEnabled(NAV);
+  await region.selectOption("asia");
+  await expect(picker.locator("option:not([disabled])")).toHaveCount(15);
+  await picker.selectOption("japan");
+  await page.getByTestId("curriculum-save").click();
+  await expect(page.getByTestId("curriculum-status")).toContainText("Saved", NAV);
+
+  const sent = await capture(page, "/api/worksheet-generator");
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Japanese Course of Study (MEXT)", NAV);
+  const year = page.getByLabel("Year group", { exact: true });
+  await expect(year.locator("option")).toContainText(["Elementary 1", "Junior High 2", "Senior High 3"]);
+  await expect(year.locator("option", { hasText: "Year 4" })).toHaveCount(0);
+  await year.selectOption("Junior High 2");
+  await page.getByLabel("Subject", { exact: true }).fill("Science");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Plant cells and animal cells");
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBe(1);
+  expect(sent[0]).toMatchObject({ curriculum: "Japanese Course of Study (MEXT)", yearGroup: "Junior High 2" });
 });

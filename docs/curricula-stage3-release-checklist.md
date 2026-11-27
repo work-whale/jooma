@@ -1,4 +1,4 @@
-# Curricula Stage 3 batch A release checklist
+# Curricula Stage 3 release checklist (batches A and B)
 
 For the owner, at a computer with the Supabase CLI and GitHub. About 20 minutes.
 
@@ -38,8 +38,18 @@ The Middle East and Europe region switches are already on, so only the batch swi
 - [ ] Run `node scripts/curricula-status.mjs --live=uk,british-isles,ireland,international,australia-nz,usa,canada,africa,asia,caribbean,europe,middle-east,s3-a < /dev/null` and commit the workbook.
 - [ ] If anything looks wrong, turn the batch switch off; that hides all nine again. Tell Claude.
 
+## 5. Batch B (Asia), whenever you are ready
+
+Ships in the same merge as batch A, hidden behind its own switch. No migration of its own.
+
+- [ ] Admin > Settings > Curricula: Stage 3 releases: turn on "Stage 3 batch B: Asia".
+- [ ] As a teacher: Asia lists the Stage 2 six plus China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal (15).
+- [ ] Pick Japan; the worksheet year list runs Elementary 1 to Senior High 3. Make one worksheet: in English, no "Key Stage" or "Year 4".
+- [ ] Run the status script with `s3-b` added to `--live` and commit the workbook.
+- [ ] If anything looks wrong, turn the batch B switch off. Tell Claude.
+
 ## Known limits (fine to ship)
 
-- Every batch A teaching language (Arabic, Hebrew, Turkish) is not an output language yet, so all nine default to English (`docs/curricula-language-gaps.md`).
+- No batch A or B teaching language (Arabic, Hebrew, Turkish, Chinese, Japanese, Korean, Vietnamese, Thai, Indonesian, Sinhala, Tamil, Nepali) is an output language yet, so all eighteen default to English (`docs/curricula-language-gaps.md`).
 - Some terms (inspection, SEN) are left out where no source confirmed them, so prompts fall back to generic wording there.
 - Türkiye's all-grades version switches on 1 September 2027; the exact first day of 2027-28 is not yet published.
