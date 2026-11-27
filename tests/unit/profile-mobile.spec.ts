@@ -187,3 +187,37 @@ test.describe("Stage 3 batch B: Asia", () => {
     expect(profileMobile("ID", "0812 3456 7890")).toBe("+6281234567890");
   });
 });
+
+test.describe("Stage 3 batch C: the European countries not yet offered", () => {
+  const C = [
+    ["Bulgaria", "BG", "+359"],
+    ["Croatia", "HR", "+385"],
+    ["Cyprus", "CY", "+357"],
+    ["Czech Republic", "CZ", "+420"],
+    ["Estonia", "EE", "+372"],
+    ["Greece", "GR", "+30"],
+    ["Hungary", "HU", "+36"],
+    ["Iceland", "IS", "+354"],
+    ["Latvia", "LV", "+371"],
+    ["Lithuania", "LT", "+370"],
+    ["Romania", "RO", "+40"],
+    ["Serbia", "RS", "+381"],
+    ["Slovakia", "SK", "+421"],
+    ["Slovenia", "SI", "+386"],
+    ["Ukraine", "UA", "+380"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of C) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number drops its trunk 0 behind the country prefix", () => {
+    expect(profileMobile("UA", "067 123 4567")).toBe("+380671234567");
+    expect(profileMobile("RO", "0722 123 456")).toBe("+40722123456");
+  });
+});

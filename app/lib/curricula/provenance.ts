@@ -607,4 +607,149 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://moecdc.gov.np/",
     notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: basic education Grades 1 to 8 and secondary 9 to 12; the Basic Level Examination (Grade 8), the SEE (Grade 10) and the NEB Grade 12 examinations. Reference: the National Curriculum Framework 2019 (workbook), Grade 1 at age 5, the mid-April start (the version is dated to the start of 2076 BS). Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
   },
+  "austria": {
+    sheetRow: { tab: "Countries", name: "Austria" },
+    source: "https://www.bmb.gv.at/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the new curricula for Volksschule, Mittelschule and the AHS lower level, ascending from 2023-24 and in every grade by 2026-27; new AHS upper level curricula from 2027-28 (studium.at, meinbezirk.at). Reference: iKMPLUS in Grades 3, 4, 7 and 8, the standardised Matura, the two semesters. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "belgium": {
+    sheetRow: { tab: "Countries", name: "Belgium" },
+    source: "https://www.enseignement.be/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. One national entry for the three communities (owner). Confirmed: Flemish new minimum goals for Dutch, mathematics, and science and technology in kindergarten and Primary 1 to 3 from September 2026, all new primary goals from September 2027 (Klasse); the Flemish tests in Primary 6 from 2026 and Secondary 6 from 2027; the French Community common core reaching S1 in 2026-27, the CE1D last held in June 2027 (RTBF, L'Avenir). Reference: the CEB and CESS, the German-speaking Community framework plans. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "bulgaria": {
+    sheetRow: { tab: "Countries", name: "Bulgaria" },
+    source: "https://www.mon.bg/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Reference (workbook and general knowledge, not re-opened on the official site): the standards under the Preschool and School Education Act (2016), Grade 1 at age 7, the stages, the external assessments in Grades 4, 7 and 10 and the state matriculation exams. Confirmed: Bulgaria adopted the euro on 1 January 2026. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "croatia": {
+    sheetRow: { tab: "Countries", name: "Croatia" },
+    source: "https://mzom.gov.hr/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the State Matura with Croatian, mathematics and a foreign language compulsory (Ministry page, UCAS); the School for Life subject curricula in every grade since 2019-20 (workbook). Reference: Grade 1 at age 7, primary Grades 1 to 8, secondary 1 to 4. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "cyprus": {
+    sheetRow: { tab: "Countries", name: "Cyprus" },
+    source: "https://www.moec.gov.cy/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the Pancyprian examinations in 2026 (Cyprus Mail, Ministry statements); new curricula moving away from a material-based approach (Eurydice). Reference: Primary 1 to 6, Gymnasium 1 to 3, Lyceum 1 to 3, the many English-medium private schools (workbook note). The version is dated generically. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "czech-republic": {
+    sheetRow: { tab: "Countries", name: "Czech Republic" },
+    source: "https://msmt.gov.cz/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the revised RVP ZV, voluntary from September 2025 in Grades 1 and 6, compulsory from 2027-28 at least in Grade 1 and in every grade from 2031-32, with English from Grade 1 (MSMT, Eurydice). Reference: the single entrance exam and the maturita, the two stages of basic school. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "denmark": {
+    sheetRow: { tab: "Countries", name: "Denmark" },
+    source: "https://www.uvm.dk/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: since 1 January 2025 the knowledge and skills objectives in Common Objectives are advisory, the competence goals binding (uvm.dk); new simplified curricula planned from 2027-28 (secondary report). Reference: Grade 0 at 6, the leaving examinations, the August to June year, English from Grade 1. No national tests line: the tests are being replaced and nothing was confirmed. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "estonia": {
+    sheetRow: { tab: "Countries", name: "Estonia" },
+    source: "https://www.hm.ee/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the transition to Estonian-language education (Grades 1 and 4 from 2024, Grades 1 to 6 in 2026-27, complete by 2030) (Ministry, ERR); some state examinations electronic from 2027. Reference: the 2011 curricula, Grade 1 at age 7, the basic school final examinations and state examinations. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "finland": {
+    sheetRow: { tab: "Countries", name: "Finland" },
+    source: "https://www.oph.fi/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed (workbook, checked 13 Nov 2026): the 2014 core curriculum in use, the law amended on 15 June 2026, new core curricula due by the end of October 2027 (the workbook says wait for them; the current ones stay in force until then, so the profile is built now). Reference: pre-primary at 6, Grade 1 at 7, no national tests in basic education, the matriculation examination, compulsory education to 18. Licence: probably open (EDUFI publishes the core curricula through open ePerusteet interfaces) but no licence text was confirmed. Statements wait for the owner's decision (after the Stage 3 profiles, as for Japan and Taiwan). Profile only for now.",
+  },
+  "france": {
+    sheetRow: { tab: "Countries", name: "France" },
+    source: "https://www.education.gouv.fr/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed (workbook, checked 13 Nov 2026): the 2025 French and mathematics programmes for cycles 1 to 3; cycle 1 in full from 2026-27; cycle 4 French, mathematics and modern languages in 5e 2026, 4e 2027, 3e 2028; lycee mathematics in seconde and premiere 2026-27, terminale 2027-28. Reference: the national assessments, the brevet, the baccalaureat, the school year. Licence: open (official programmes are public information reusable with source and date under the code des relations entre le public et l'administration, and education.gouv.fr content is under the Etalab Licence Ouverte 2.0, commercial use allowed). Statements wait for the owner's decision (after the Stage 3 profiles, as for Japan and Taiwan). Profile only for now.",
+  },
+  "germany": {
+    sheetRow: { tab: "Countries", name: "Germany" },
+    source: "https://www.kmk.org/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. One national entry for the 16 Laender (owner); the prompt follows the Land if the teacher names it. Confirmed: VERA comparison tests in Grades 3 and 8, built on the KMK educational standards (KMK). Reference: Grundschule 1 to 4 (1 to 6 in Berlin and Brandenburg, workbook), the Sekundarstufen, the Abitur. The version is dated generically. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "greece": {
+    sheetRow: { tab: "Countries", name: "Greece" },
+    source: "https://www.minedu.gov.gr/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the Panhellenic examinations in 2026 and a national dialogue on a national baccalaureate that is not law (athens-times, balkanarena). Reference: the IEP curricula from 2021, Primary 1 to 6, Gymnasio and Lykeio 1 to 3. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "hungary": {
+    sheetRow: { tab: "Countries", name: "Hungary" },
+    source: "https://www.oktatas.hu/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: NAT 2020 and its framework curricula introduced in Grades 1, 5 and 9 from September 2020, then year by year (TIMSS 2023 and PIRLS 2021 encyclopedias). Reference: the national competence measurements and the erettsegi. Hungarian words kept out of the terms except the exam name, written without accents. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "iceland": {
+    sheetRow: { tab: "Countries", name: "Iceland" },
+    source: "https://www.stjornarradid.is/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the 2011 National Curriculum Guide (subject areas 2013); the standardised tests in Grades 4, 7 and 10 were not held and the new Matsferill toolkit is still being built, so no compulsory-school test is named (Althingi report 2024-25). Reference: three-year upper secondary, the studentsprof, English and Danish as subjects. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "italy": {
+    sheetRow: { tab: "Countries", name: "Italy" },
+    source: "https://www.mim.gov.it/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed (workbook, checked 13 Nov 2026): the new Indicazioni nazionali (DM 221 of 9 December 2025) from 2026-27 in infanzia and the first classes of primaria and secondaria di primo grado, rolling up; the 2012 Indicazioni end in 2028-29 and 2030-31; upper secondary on the 2010 Indicazioni for licei. Reference: the INVALSI grades, the two state exams. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "latvia": {
+    sheetRow: { tab: "Countries", name: "Latvia" },
+    source: "https://www.izm.gov.lv/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: Skola2030 in Grades 1, 4, 7 and 10 from 2020-21 and in every grade by 2022-23 (Eurydice, OECD); Grade 9 centralised examinations in Latvian and mathematics, the foreign language a monitoring test, natural sciences added from 2026-27 (LSM). Reference: Grade 1 at 7, the Grade 12 centralised examinations. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "lithuania": {
+    sheetRow: { tab: "Countries", name: "Lithuania" },
+    source: "https://www.smm.lt/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the updated general curricula in Grades 1, 3, 5, 7, 9 and gymnasium III from 2023-24 and in the rest from 2024-25 (TIMSS 2023 encyclopedia, Eurydice). Reference: Grade 1 at 7, the PUPP, the national achievement tests and the matura. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "netherlands": {
+    sheetRow: { tab: "Countries", name: "Netherlands" },
+    source: "https://www.slo.nl/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed (workbook, checked 13 Nov 2026): new kerndoelen for Dutch and mathematics in force on 1 August 2026, citizenship, digital literacy and other areas on 1 August 2027, the full new curriculum by 2031. Reference: Groep 1 at 4, VMBO, HAVO and VWO, the doorstroomtoets and central final examinations. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "norway": {
+    sheetRow: { tab: "Countries", name: "Norway" },
+    source: "https://www.udir.no/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: LK20 in force since 2020; national tests in Grades 5, 8 and 9; the Grade 10 exam; the six upper secondary pathways are a proposal for 2030 to 2033, not built in (Eurydice, NordiskPost). Reference: English from Grade 1, Bokmal and Nynorsk. Licence: open (Udir's curriculum data in Grep is under the Norwegian Licence for Open Government Data, NLOD, commercial use allowed with credit to data.udir.no). Statements wait for the owner's decision (after the Stage 3 profiles, as for Japan and Taiwan). Profile only for now.",
+  },
+  "poland": {
+    sheetRow: { tab: "Countries", name: "Poland" },
+    source: "https://www.gov.pl/web/edukacja",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed (workbook, checked 13 Nov 2026): the Reforma26 Kompas Jutra core curriculum from 1 September 2026 in preschool and Grades 1 and 4, then year by year, and in post-primary schools from 2027-28. Reference: Grade 1 at 7, liceum and technikum lengths, the egzamin osmoklasisty and the matura. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "portugal": {
+    sheetRow: { tab: "Countries", name: "Portugal" },
+    source: "https://www.dge.mec.pt/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the ModA monitoring tests in Grades 4 and 6, built on the Essential Learnings, the provas finais in Grade 9 and the exames nacionais in 2025-26 (Despacho 14616-A/2025, IAVE). Reference: the Students' Profile (2017), the three cycles of basic education. No dated change confirmed. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "romania": {
+    sheetRow: { tab: "Countries", name: "Romania" },
+    source: "https://www.edu.ro/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: new high school framework plans from Grade 9 in 2026-27, extended year by year (Romania Insider, Euronews Romania). Reference: the preparatory class at 6, the national assessments in Grades 2, 4 and 6, the Evaluarea Nationala and the baccalaureate. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "serbia": {
+    sheetRow: { tab: "Countries", name: "Serbia" },
+    source: "https://prosveta.gov.rs/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the Grade 8 final exam (mala matura) in Serbian or mother tongue, mathematics and an elective subject, counted with school grades for secondary entry (Ministry calendar 2025-26, B92). Reference: the two cycles, Secondary 1 to 4, minority-language teaching. A state matura was not confirmed, so it is not named. The version is dated generically. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "slovakia": {
+    sheetRow: { tab: "Countries", name: "Slovakia" },
+    source: "https://www.minedu.sk/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the new State Educational Programme approved in 2023, compulsory in every basic school from 2026-27 starting with Grade 1, with outcomes for Grades 3, 5 and 9 (Eurydice, RSI). Reference: Testovanie 9, the maturita, teaching in Hungarian in some areas. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "slovenia": {
+    sheetRow: { tab: "Countries", name: "Slovenia" },
+    source: "https://www.gov.si/drzavni-organi/ministrstva/ministrstvo-za-vzgojo-in-izobrazevanje/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: renewed curricula from 2026-27 in Grades 1, 4 and 7, in some cases Grade 6 (zastarse.si, Svet24). Reference: the NPZ in Grades 6 and 9, the general matura. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "spain": {
+    sheetRow: { tab: "Countries", name: "Spain" },
+    source: "https://www.educacionfpydeportes.gob.es/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. One national entry; the prompt follows the autonomous community if the teacher names it (owner). Confirmed: the PAU, the LOMLOE university entrance test since June 2025 (Royal Decree 534/2024; La Moncloa, universities' PAU 2026 guides). Reference: the LOMLOE Royal Decrees of 2022 in every stage since 2023-24 (workbook), the diagnostic assessments in Primary 4 and ESO 2, the co-official languages. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "sweden": {
+    sheetRow: { tab: "Countries", name: "Sweden" },
+    source: "https://www.skolverket.se/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed (workbook, checked 13 Nov 2026): Lgr22 and the revised Gy11 in use; a ten-year compulsory school with new curricula and a new grading system from autumn 2028 (the workbook says wait for them; the current ones stay in force until then, so the profile is built now). Reference: the preschool class at 6, the national tests in Grades 3, 6 and 9, grades A to F. Licence: open (Skolverket's Syllabus API for curricula and syllabuses is under CC0 1.0). Statements wait for the owner's decision (after the Stage 3 profiles, as for Japan and Taiwan). Profile only for now.",
+  },
+  "switzerland": {
+    sheetRow: { tab: "Countries", name: "Switzerland" },
+    source: "https://www.edk.ch/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. One national entry for the 26 cantons (owner); the prompt follows the canton if the teacher names it. Confirmed: Lehrplan 21 in force in all 21 German-speaking cantons, covering eleven years with two years of kindergarten, and the Plan d'etudes romand in the French-speaking cantons (lehrplan21.ch, Eurydice). Reference: the Piano di studio in Ticino, kindergarten from 4, cantonal tests, the Swiss Matura. Defaults to English: no single Jooma language fits every canton. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "ukraine": {
+    sheetRow: { tab: "Countries", name: "Ukraine" },
+    source: "https://mon.gov.ua/",
+    notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the profile upper secondary pilot in 150 lyceums from September 2026 and the nationwide start in Grade 10 from September 2027 (Ministry, ua.news); the NMT. Reference: NUS primary from 2018 and basic secondary from 2022 (workbook), the state final attestation, the move to twelve years. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

@@ -65,6 +65,21 @@ export const COUNTRIES: Country[] = [
   { name: "Indonesia", code: "ID", dial: "+62" },
   { name: "Sri Lanka", code: "LK", dial: "+94" },
   { name: "Nepal", code: "NP", dial: "+977" },
+  { name: "Bulgaria", code: "BG", dial: "+359" },
+  { name: "Croatia", code: "HR", dial: "+385" },
+  { name: "Cyprus", code: "CY", dial: "+357" },
+  { name: "Czech Republic", code: "CZ", dial: "+420" },
+  { name: "Estonia", code: "EE", dial: "+372" },
+  { name: "Greece", code: "GR", dial: "+30" },
+  { name: "Hungary", code: "HU", dial: "+36" },
+  { name: "Iceland", code: "IS", dial: "+354" },
+  { name: "Latvia", code: "LV", dial: "+371" },
+  { name: "Lithuania", code: "LT", dial: "+370" },
+  { name: "Romania", code: "RO", dial: "+40" },
+  { name: "Serbia", code: "RS", dial: "+381" },
+  { name: "Slovakia", code: "SK", dial: "+421" },
+  { name: "Slovenia", code: "SI", dial: "+386" },
+  { name: "Ukraine", code: "UA", dial: "+380" },
 ];
 
 export const DEFAULT_DIAL_CODE = "GB";

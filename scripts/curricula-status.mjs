@@ -107,6 +107,10 @@ function defaultStatus(tab, cells) {
         if (part.includes("private schools")) return "Covered by existing curricula (England, US, IB, CBSE)";
         return "Out of scope (stage 2)";
       }
+      // One national entry per country (owner, 2026-11-27): the Land, canton,
+      // community and region rows are covered by it.
+      const NATIONAL = { Germany: "germany", Switzerland: "switzerland", Belgium: "belgium", Spain: "spain" };
+      if (NATIONAL[name]) return `Covered by ${NATIONAL[name]} (one national entry)`;
       return "Out of scope (stage 3)";
     }
     case "International":
