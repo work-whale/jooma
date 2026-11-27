@@ -11,6 +11,9 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
  *   - Türkiye is under Europe, next to Malta
  *   - batch B: with Asia on, its nine wait for their own switch; then a
  *     Japanese teacher sees Elementary 1 to Senior High 3
+ *   - batch C: a French teacher who never chose a language is switched to
+ *     French on picking France, sees CP to Terminale, and the worksheet
+ *     request carries both
  *
  * Generation requests are answered by page.route: nothing reaches a model.
  * Every switch is put back to what it was, whatever happens.
@@ -19,7 +22,7 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
 
 test.setTimeout(240_000);
 const NAV = { timeout: 120_000 };
-const KEYS = ["curricula_middle_east", "curricula_europe", "curricula_asia", "curricula_s3_a", "curricula_s3_b"] as const;
+const KEYS = ["curricula_middle_east", "curricula_europe", "curricula_asia", "curricula_s3_a", "curricula_s3_b", "curricula_s3_c"] as const;
 
 const before: Record<string, unknown> = {};
 const people: TestTeacher[] = [];
@@ -162,4 +165,41 @@ test("batch B: Asia shows its nine only with the batch B switch, and a Japanese 
   await page.locator("[data-jo-generate]").click();
   await expect.poll(() => sent.length, NAV).toBe(1);
   expect(sent[0]).toMatchObject({ curriculum: "Japanese Course of Study (MEXT)", yearGroup: "Junior High 2" });
+});
+
+test("batch C: a French teacher picks France, is switched to French output, and sees CP to Terminale", async ({ page }) => {
+  const t = await payingTeacher("CurrS3France");
+  await signIn(page, t);
+  await setSwitch("curricula_europe", true);
+  await setSwitch("curricula_s3_a", false);
+  await setSwitch("curricula_s3_c", true);
+
+  await page.goto("/profile?section=curriculum", NAV);
+  // Never chose a language in this browser.
+  await page.evaluate(() => localStorage.removeItem("ll:language"));
+  await page.reload();
+  const region = page.getByTestId("curriculum-region");
+  await expect(region).toBeEnabled(NAV);
+  await region.selectOption("europe");
+  const picker = page.getByTestId("curriculum-picker");
+  // Malta plus the twenty-nine (Turkiye stays hidden with batch A off).
+  await expect(picker.locator("option:not([disabled])")).toHaveCount(30);
+  await expect(picker.locator('option[value="turkey"]')).toHaveCount(0);
+  await picker.selectOption("france");
+  await page.getByTestId("curriculum-save").click();
+  await expect(page.getByTestId("curriculum-status")).toContainText("Saved", NAV);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ll:language")), NAV).toBe(JSON.stringify("fr"));
+
+  const sent = await capture(page, "/api/worksheet-generator");
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("French National Curriculum (programmes scolaires)", NAV);
+  const year = page.getByLabel("Year group", { exact: true });
+  await expect(year.locator("option")).toContainText(["PS", "CP", "CM2", "6e", "Terminale"]);
+  await expect(year.locator("option", { hasText: "Year 4" })).toHaveCount(0);
+  await year.selectOption("CM1");
+  await page.getByLabel("Subject", { exact: true }).fill("Mathématiques");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Les fractions simples");
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBe(1);
+  expect(sent[0]).toMatchObject({ curriculum: "French National Curriculum (programmes scolaires)", yearGroup: "CM1", language: "fr" });
 });
