@@ -706,8 +706,9 @@ const AFRICA_PLACES = ["South Africa", "Kenya", "Nigeria", "Ghana", "Uganda"];
 const ownText = (text: string) => text.split("\n").map((l) => (l.startsWith("- instead of ") ? l.slice(l.indexOf(": ") + 2) : l)).join("\n");
 
 test.describe("the Asia curricula", () => {
-  test("the six exist in the Asia region, in this order, and nothing else is in it", () => {
-    expect(CURRICULA_REGISTRY.filter((c) => c.region === "asia").map((c) => c.id)).toEqual([...ASIA_IDS]);
+  test("the six exist in the Asia region, in this order, and nothing else from Stage 2 is in it", () => {
+    // Stage 3 batch B shares the region behind its own release switch (curricula-stage3-b.spec.ts).
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "asia" && !c.release).map((c) => c.id)).toEqual([...ASIA_IDS]);
     for (const id of ASIA_IDS) {
       const c = getCurriculum(id)!;
       expect(c, id).toBeDefined();
@@ -1065,7 +1066,7 @@ test.describe("the Caribbean and Malta curricula", () => {
       expect(c.alignment, `${id} has no statements (licence closed or unclear)`).toBeUndefined();
     }
     // They sit after Asia in the registry, Caribbean before Europe (the Middle East follows).
-    const order = CURRICULA_REGISTRY.map((c) => c.id);
+    const order = CURRICULA_REGISTRY.filter((c) => !c.release).map((c) => c.id);
     expect(order.slice(order.indexOf("hong-kong") + 1, order.indexOf("malta") + 1)).toEqual([...CE_IDS]);
   });
 

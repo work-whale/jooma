@@ -295,6 +295,16 @@ const COUNTRY_DEFAULT: Record<string, string> = {
   EG: "egypt",
   IL: "israel",
   TR: "turkey",
+  // Stage 3 batch B.
+  CN: "china",
+  JP: "japan",
+  KR: "south-korea",
+  TW: "taiwan",
+  VN: "vietnam",
+  TH: "thailand",
+  ID: "indonesia",
+  LK: "sri-lanka",
+  NP: "nepal",
 };
 
 /**

@@ -562,4 +562,49 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://tymm.meb.gov.tr/",
     notes: "Stage 3 batch A (2026-11-27), docs/curricula-stage3-build.md A.1 to A.7. Under Europe, as the workbook files it, but released with batch A. Confirmed: in 2026-27 the Türkiye Century Education Model covers preschool, Grades 1 to 3, 5 to 7, the prep year and 9 to 11, while 4, 8 and 12 stay on the old programmes; LGS and YKS continue, with skill-based questions from 2028; Grade 1 entry at 69 months (MEB Eurydice). Reference: the 2027-28 start date for the all-grades version (1 September used). The Turkish stage and job names (ilkokul, ortaokul, lise, okul müdürü) are left out on purpose: in the first live run they pulled the worksheet into Turkish. No inspection or SEN line: none was confirmed. Licence: closed (MEB says copyright follows Law 5846 and permission must be asked; no open licence found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
   },
+  "china": {
+    sheetRow: { tab: "Countries", name: "China" },
+    source: "https://www.moe.gov.cn/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the compulsory education curriculum plan and standards (2022 edition, 16 subjects) from autumn 2022, with core competencies first; senior high standards (2017 edition, revised 2020); Grades 1 to 9 compulsory, then senior high. Reference: the zhongkao and gaokao, provinces choosing approved textbooks. Licence: unclear (Copyright Law Article 5 excludes administrative documents of state organs, but the standards are also sold as books); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "japan": {
+    sheetRow: { tab: "Countries", name: "Japan" },
+    source: "https://www.mext.go.jp/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the 2017-18 Course of Study (elementary 2020, junior high 2021, senior high 2022, workbook); the next Course of Study planned for elementary from 2030 and junior high from 2031 (several reports of the MEXT schedule); the National Assessment of Academic Ability in Elementary 6 and Junior High 3; the Common Test for University Admissions; special needs education in regular classes, resource rooms, special support classes and special needs schools; the April start. Reference: three terms in most schools; American English as the school English. Licence: open (MEXT's site follows the Government of Japan Standard Terms of Use 2.0, commercial use allowed with credit, compatible with CC BY 4.0). Statements wait for the owner's decision. Profile only for now.",
+  },
+  "south-korea": {
+    sheetRow: { tab: "Countries", name: "South Korea" },
+    source: "https://ncic.re.kr/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the 2022 Revised National Curriculum rollout (Elementary 1 to 6, Middle 1 and 2, High 1 and 2 in 2026; every grade in 2027); the high school credit system from 2025; the integrated CSAT from the 2028 admission year. Reference: the March start and two semesters (workbook), English from Elementary 3, American English. Licence: closed (NCIC marks the curriculum documents KOGL Type 2, no commercial use, also on data.go.kr); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "taiwan": {
+    sheetRow: { tab: "Countries", name: "Taiwan" },
+    source: "https://www.naer.edu.tw/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the Curriculum Guidelines of 12-Year Basic Education (108 curriculum) since 2019, competency-based; the CAP at the end of junior high; the GSAT each January. Reference: the elementary, junior high and senior or vocational high stages; American English. Licence: open (NAER and the Ministry of Education publish their site content under the Open Government Data License, version 1, commercial use with credit). Statements wait for the owner's decision. Profile only for now.",
+  },
+  "vietnam": {
+    sheetRow: { tab: "Countries", name: "Vietnam" },
+    source: "https://moet.gov.vn/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the General Education Programme 2018 (Circular 32/2018/TT-BGDDT) in every grade; basic education Grades 1 to 9 and career-oriented education 10 to 12; one national textbook series, Connecting Knowledge with Life, from 2026-27 (VOV, VietnamNet); the national high school graduation examination. Reference: primary 1 to 5, lower secondary 6 to 9, upper secondary 10 to 12. Licence: open by statute (IP Law Article 15 puts legal and administrative documents, such as the Circular, outside copyright). Statements wait for the owner's decision. Profile only for now.",
+  },
+  "thailand": {
+    sheetRow: { tab: "Countries", name: "Thailand" },
+    source: "https://academic.obec.go.th/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the Basic Education Core Curriculum B.E. 2551 is still the national curriculum; the competency-based curriculum B.E. 2568 for Prathom 1 to 3 in schools that take it up, with a draft for Prathom 4 to 6 in 2026 (Thai PBS World, OBEC portal reports); O-NET in Prathom 6, Mathayom 3 and Mathayom 6; TCAS with TGAT, TPAT and A-Level. Reference: the Mathayom 1 to 3 and 4 to 6 split, the May start, the school director title. Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "indonesia": {
+    sheetRow: { tab: "Countries", name: "Indonesia" },
+    source: "https://kurikulum.kemendikdasmen.go.id/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: Kurikulum Merdeka as the national curriculum since 2024, Kurikulum 2013 allowed in some remote areas until 2026-27, and deep learning as a teaching approach, not a new curriculum (workbook, checked); the TKA in Grades 6, 9 and 12, not a graduation requirement, merged with the National Assessment from 2026 (Kompas, Tempo). Reference: SD, SMP and SMA or SMK, the phases A to F. Licence: unclear (Copyright Law 28/2014 Article 42 excludes laws and regulations; whether the BSKAP decision setting the learning outcomes counts is not settled); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "sri-lanka": {
+    sheetRow: { tab: "Countries", name: "Sri Lanka" },
+    source: "https://nie.lk/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the new activity-based curriculum in Grade 1 from 2026, with the reforms for other grades postponed to 2027 (Ministry circular, Newswire); the Grade 5 Scholarship Examination, O/L and A/L. Reference: Grade 1 at age 5, the primary, junior secondary, senior secondary and collegiate stages, the January to December year. Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "nepal": {
+    sheetRow: { tab: "Countries", name: "Nepal" },
+    source: "https://moecdc.gov.np/",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: basic education Grades 1 to 8 and secondary 9 to 12; the Basic Level Examination (Grade 8), the SEE (Grade 10) and the NEB Grade 12 examinations. Reference: the National Curriculum Framework 2019 (workbook), Grade 1 at age 5, the mid-April start (the version is dated to the start of 2076 BS). Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

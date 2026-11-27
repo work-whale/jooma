@@ -57,6 +57,14 @@ export const COUNTRIES: Country[] = [
   { name: "Egypt", code: "EG", dial: "+20" },
   { name: "Israel", code: "IL", dial: "+972" },
   { name: "Türkiye", code: "TR", dial: "+90" },
+  { name: "China", code: "CN", dial: "+86" },
+  { name: "South Korea", code: "KR", dial: "+82" },
+  { name: "Taiwan", code: "TW", dial: "+886" },
+  { name: "Vietnam", code: "VN", dial: "+84" },
+  { name: "Thailand", code: "TH", dial: "+66" },
+  { name: "Indonesia", code: "ID", dial: "+62" },
+  { name: "Sri Lanka", code: "LK", dial: "+94" },
+  { name: "Nepal", code: "NP", dial: "+977" },
 ];
 
 export const DEFAULT_DIAL_CODE = "GB";

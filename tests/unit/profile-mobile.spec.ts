@@ -158,3 +158,32 @@ test.describe("Stage 3 batch A: the Gulf, the Middle East and Türkiye", () => {
     expect(profileMobile("QA", "3312 3456")).toBe("+97433123456");
   });
 });
+
+test.describe("Stage 3 batch B: Asia", () => {
+  const B = [
+    ["China", "CN", "+86"],
+    ["Japan", "JP", "+81"],
+    ["South Korea", "KR", "+82"],
+    ["Taiwan", "TW", "+886"],
+    ["Vietnam", "VN", "+84"],
+    ["Thailand", "TH", "+66"],
+    ["Indonesia", "ID", "+62"],
+    ["Sri Lanka", "LK", "+94"],
+    ["Nepal", "NP", "+977"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of B) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number drops its trunk 0 behind the country prefix", () => {
+    expect(profileMobile("JP", "090 1234 5678")).toBe("+819012345678");
+    expect(profileMobile("KR", "010-1234-5678")).toBe("+821012345678");
+    expect(profileMobile("ID", "0812 3456 7890")).toBe("+6281234567890");
+  });
+});
