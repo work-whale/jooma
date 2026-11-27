@@ -60,5 +60,30 @@ Use the draft in `docs/curricula-gaps-plan.md` section 7, filling in the curricu
 | 40 | Sri Lanka: NIE curriculum | 3 | Permission | National Institute of Education | Not sent |
 | 41 | Nepal: National Curriculum Framework | 3 | Permission | Curriculum Development Centre | Not sent |
 | 42 | Bangladesh: NCTB curriculum (entry held) | 3 | Permission | NCTB | Not sent |
+| 43 | Austria: Lehrpläne | 3 | Permission | Federal Ministry of Education | Not sent |
+| 44 | Belgium: community goals (three communities) | 3 | Permission | Flemish, French and German-speaking Community education departments | Not sent |
+| 45 | Bulgaria: state educational standards | 3 | Permission | Ministry of Education and Science | Not sent |
+| 46 | Croatia: national subject curricula | 3 | Permission | Ministry of Science, Education and Youth | Not sent |
+| 47 | Cyprus: national curriculum | 3 | Permission | Ministry of Education, Sport and Youth | Not sent |
+| 48 | Czech Republic: RVP | 3 | Permission | Ministry of Education, Youth and Sports | Not sent |
+| 49 | Denmark: Common Objectives | 3 | Permission | Ministry of Children and Education | Not sent |
+| 50 | Estonia: national curricula | 3 | Permission | Ministry of Education and Research | Not sent |
+| 51 | Germany: KMK educational standards and Land curricula | 3 | Permission | KMK; Land ministries | Not sent |
+| 52 | Greece: national curricula | 3 | Permission | Ministry of Education; Institute of Educational Policy | Not sent |
+| 53 | Hungary: NAT 2020 | 3 | Permission | Ministry responsible for education | Not sent |
+| 54 | Iceland: National Curriculum Guide | 3 | Permission | Ministry of Education and Children | Not sent |
+| 55 | Italy: Indicazioni nazionali | 3 | Permission | Ministry of Education and Merit | Not sent |
+| 56 | Latvia: Skola2030 standards | 3 | Permission | Ministry of Education and Science | Not sent |
+| 57 | Lithuania: general curricula | 3 | Permission | Ministry of Education, Science and Sport | Not sent |
+| 58 | Netherlands: kerndoelen | 3 | Permission | Ministry of Education, Culture and Science; SLO | Not sent |
+| 59 | Poland: podstawa programowa | 3 | Permission | Ministry of National Education | Not sent |
+| 60 | Portugal: Aprendizagens Essenciais | 3 | Permission | Directorate-General for Education | Not sent |
+| 61 | Romania: framework plans and curricula | 3 | Permission | Ministry of Education and Research | Not sent |
+| 62 | Serbia: national curricula | 3 | Permission | Ministry of Education | Not sent |
+| 63 | Slovakia: State Educational Programme | 3 | Permission | Ministry of Education | Not sent |
+| 64 | Slovenia: national curricula | 3 | Permission | Ministry of Education | Not sent |
+| 65 | Spain: LOMLOE minimum teaching | 3 | Permission | Ministry of Education, Vocational Training and Sports | Not sent |
+| 66 | Switzerland: Lehrplan 21, PER, Piano di studio | 3 | Permission | D-EDK, CIIP, Canton of Ticino | Not sent |
+| 67 | Ukraine: New Ukrainian School standards | 3 | Permission | Ministry of Education and Science | Not sent |
 
-Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: section A.1; batch B: section B.1). Japan and Taiwan (open licences) and Vietnam (open by statute) are not on this list: they wait for the owner's decision on building statements.
+Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: A.1; batch B: B.1; batch C: C.1). Japan, Taiwan, Norway, Sweden and France (open licences), Finland (probably open) and Vietnam (open by statute) are not on this list: statements for them come after the Stage 3 profiles (owner, 2026-11-27).

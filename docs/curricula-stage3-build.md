@@ -243,3 +243,50 @@ British English for all, except American English for Japan, South Korea and Taiw
 - **Tests:** unit 2,646 passed (`curricula-stage3-b.spec.ts`; two Stage 2 Asia tests scoped to entries without a release; batch B in `profile-mobile.spec.ts`). E2E 11/11 (`curriculum-stage3.spec.ts` now also checks that batch A being on does not let batch B through, and a Japanese teacher's year list). Live `tests/tools/curricula-stage3-b-live.spec.ts`: Japan (Junior High 2), Thailand (Mathayom 2) and Sri Lanka (Grade 7), two runs each, 6/6 in English with no Japanese, Chinese, Thai or Sinhala script.
 - **Not tested:** live output for the other six (three stand in); the en-US default for Japan, South Korea and Taiwan beyond the unit check.
 - **Owner decisions (2026-11-27):** statements come after the Stage 3 profiles, Taiwan and Japan first (open licences, English translations exist); Vietnam is left out for now, since it rests only on reading a copyright law and Jooma has no lawyer. Bangladesh stays held until the 2028 rollout is clearer.
+
+## Batch C: Europe, Step 0 and build (Opus, 2026-11-27)
+
+Owner decision (2026-11-27): one national entry for each country. Germany, Switzerland, Belgium and Spain are not split; their prompts tell the model to follow the Land, canton, community or region when the teacher names one, and `scripts/curricula-status.mjs` marks their regional rows in "Other split systems" as covered by the national entry.
+
+### C.1 Licence verdicts
+
+| Verdict | Countries | Basis |
+|---|---|---|
+| **Open by licence** | Norway, Sweden, France | Norway: Udir's curriculum data (Grep) under the Norwegian Licence for Open Government Data, commercial use allowed with credit. Sweden: Skolverket's Syllabus API under CC0 1.0. France: official programmes are public information reusable with source and date (code des relations entre le public et l'administration), and education.gouv.fr content is under the Etalab Licence Ouverte 2.0 |
+| Probably open, not confirmed | Finland | EDUFI publishes the core curricula through open ePerusteet interfaces; no licence text found |
+| Unclear | the other 25 | No reuse terms found. Many European laws put official texts outside copyright (decrees, regulations), but that is not relied on, as for Vietnam |
+
+Following the owner's batch B decision, statements for the open sources wait until the Stage 3 profiles are done. Permission rows 43 to 67 cover the unclear ones.
+
+### C.2 Dated rollouts (Confirmed unless marked)
+
+| Country | Versions |
+|---|---|
+| France | 2026-09-01 (2025 French and maths for cycles 1 to 3; cycle 1 in full, 5e, seconde and première maths), 2027-09-01 (4e, terminale), 2028-09-01 (3e) (workbook, checked) |
+| Netherlands | 2026-08-01 (new kerndoelen for Dutch and maths), 2027-08-01 (citizenship, digital literacy and the rest; full by 2031) (workbook, checked) |
+| Poland | 2026-09-01 (Reforma26 in preschool, Grades 1 and 4), 2027-09-01 (post-primary) (workbook, checked) |
+| Czech Republic | 2025-09-01 (revised RVP ZV voluntary in Grades 1 and 6), 2027-09-01 (compulsory, every grade by 2031-32) (MSMT, Eurydice) |
+| Austria | 2026-09-01 (new curricula in every grade of VS, MS, AHS lower), 2027-09-01 (AHS upper level) |
+| Belgium | 2026-09-01 (Flemish minimum goals for Dutch, maths, science in kindergarten and Primary 1 to 3; French common core reaches S1), 2027-09-01 (all Flemish primary goals) |
+| Italy | 2026-09-01 (new Indicazioni from infanzia and first classes, rolling) (workbook, checked) |
+| Slovakia, Romania, Slovenia, Ukraine, Estonia | one 2026 version each naming the change: Slovak ŠVP compulsory from Grade 1; Romanian Grade 9 framework plans; Slovenian renewed curricula in Grades 1, 4, 7; Ukrainian profile lyceum pilot (150 lyceums) before the 2027 rollout; Estonian-language transition in Grades 1 to 6 |
+| Denmark, Sweden, Finland | one version naming the planned change (Denmark 2027-28, Sweden autumn 2028, Finland core curricula due October 2027). The workbook says to wait for Sweden's and Finland's new curricula; the current ones stay in force until then, so their profiles are built now |
+
+### C.3 Years
+
+Grade 1 at 7 for Bulgaria, Croatia, Estonia, Finland, Latvia, Lithuania, Poland, Romania (after a preparatory class at 6), Serbia, Sweden and Denmark (after Grade 0 at 6); at 6 elsewhere. France uses its own names (PS to Terminale); the Netherlands Groep 1 to 8 from age 4; Switzerland HarmoS 1 to 11 from age 4; Spain Primary, ESO and Bachillerato; Italy, Greece and Cyprus their three stages; Norway Vg1 to Vg3. Poland's five-year technikum and Austria's BHS are named in the stage line but stop at Secondary 4 and Grade 13, so no year starts after 18.
+
+### C.4 Languages
+
+France, Germany, Austria, Spain, Italy, Portugal, Poland, Sweden and Estonia default to their own language (a teacher who never chose one is switched on picking the curriculum). Every other country defaults to British English and is on `docs/curricula-language-gaps.md`; Switzerland and Belgium too, since no single Jooma language fits all their regions. English-default entries use plain English characters in their terms and context (unit test).
+
+### C.5 Fact check while building
+
+Every entry has at least one fact confirmed from a source. Seven were first written from the workbook alone and were then checked: Hungary (NAT 2020 in Grades 1, 5, 9 from 2020), Iceland (standardised tests not held; Matsferill still being built, so no test is named), Latvia (Grade 9 exams now Latvian and maths, natural sciences from 2026-27: corrected), Portugal (ModA tests in Grades 4 and 6, provas finais in Grade 9: corrected), Serbia (the Grade 8 final exam), Germany (VERA in Grades 3 and 8), Cyprus (the Pancyprian exams), Spain (the PAU under Royal Decree 534/2024), Switzerland (Lehrplan 21 in all 21 German-speaking cantons). Bulgaria adopted the euro on 1 January 2026, so its context uses euro amounts.
+
+### C.6 Tests
+
+- Unit 2,667 passed: `curricula-stage3-c.spec.ts` (29 entries, one national entry each, years, language defaults, picking France switches a teacher who never chose to French, English-only terms for English-default entries, exams unique to each country, no other country named, the dated rollouts, the switch), plus 15 countries in `profile-mobile.spec.ts`.
+- E2E 12/12: a French teacher picks France under Europe (30 offered with batch C on and batch A off), is switched to French, sees PS to Terminale, and the worksheet request carries `language: "fr"`.
+- Live `tests/tools/curricula-stage3-c-live.spec.ts`: France with French (in French, CM1, "J'apprends à"), Denmark and Switzerland in English. Final run 9/9 (three each). One earlier Denmark run failed a check that was too strict (single Danish letters, and "die", which is also an English word); its record was overwritten before it could be read, so the cause is not confirmed. The check now counts words only Danish, German or French use, and each run writes its own results file.
+- Not tested: live output for the other 26.

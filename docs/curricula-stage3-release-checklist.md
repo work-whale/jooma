@@ -1,8 +1,8 @@
-# Curricula Stage 3 release checklist (batches A and B)
+# Curricula Stage 3 release checklist (batches A, B and C)
 
 For the owner, at a computer with the Supabase CLI and GitHub. About 20 minutes.
 
-What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), the five Stage 3 batch switches (all off), seventeen new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 42).
+What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), batch C's twenty-nine European countries, the five Stage 3 batch switches (all off), thirty-two new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 67).
 
 Nothing changes for teachers until step 4, except two small things that ship with the merge: the new countries appear in the profile country list, and the prompt fix applies to every non-UK curriculum already live (tested: Stage 2 live run 7/7 after the fix).
 
@@ -48,8 +48,20 @@ Ships in the same merge as batch A, hidden behind its own switch. No migration o
 - [ ] Run the status script with `s3-b` added to `--live` and commit the workbook.
 - [ ] If anything looks wrong, turn the batch B switch off. Tell Claude.
 
+## 6. Batch C (Europe), whenever you are ready
+
+Ships in the same merge, hidden behind its own switch. No migration of its own.
+
+- [ ] Admin > Settings > Curricula: Stage 3 releases: turn on "Stage 3 batch C: Europe".
+- [ ] As a teacher: Europe lists Malta, Türkiye (if batch A is on) and the twenty-nine.
+- [ ] In a browser that never chose a language, pick France: output switches to French, and the worksheet year list runs PS to Terminale. Make one worksheet: in French.
+- [ ] Pick Denmark: output stays in English.
+- [ ] Run the status script with `s3-c` added to `--live` and commit the workbook.
+- [ ] If anything looks wrong, turn the batch C switch off. Tell Claude.
+
 ## Known limits (fine to ship)
 
 - No batch A or B teaching language (Arabic, Hebrew, Turkish, Chinese, Japanese, Korean, Vietnamese, Thai, Indonesian, Sinhala, Tamil, Nepali) is an output language yet, so all eighteen default to English (`docs/curricula-language-gaps.md`).
 - Some terms (inspection, SEN) are left out where no source confirmed them, so prompts fall back to generic wording there.
 - Türkiye's all-grades version switches on 1 September 2027; the exact first day of 2027-28 is not yet published.
+- Batch C: nine European countries default to their own language (France, Germany, Austria, Spain, Italy, Portugal, Poland, Sweden, Estonia) for teachers who never chose one; the other twenty, Belgium and Switzerland included, default to English.
