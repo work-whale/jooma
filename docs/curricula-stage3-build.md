@@ -361,3 +361,18 @@ None of these block the profiles; they matter only for statements later.
 1. Step 1 for batch D: region `latin-america` ("Latin America") in the region list and admin settings; staging migration seeding `curricula_latin-america` true and adding it to the `public_settings()` whitelist (`curricula_s3_d` is already seeded false by 20261127000000); the picker offers MX, BR, AR, CL, CO, PE.
 2. Step 2: six entries in `app/lib/curricula/latin-america.ts` with provenance rows, then the workbook refreshed.
 3. Tests first: `curricula-stage3-d.spec.ts` (six entries, years and ages, language defaults, the Latin American note only for `es`, no other country's exams named, Brazil's 2027 version picked on the day, region AND release gate), the definer check for the new key, E2E (a Mexican teacher under "Latin America" is switched to Spanish and the request carries `language: "es"`), and a live spec (Mexico in Spanish with Latin American usage, Brazil in Brazilian Portuguese, Chile with English chosen stays English).
+
+### D.8 Build (Opus, 2026-11-28)
+
+- Step 1: region `latin-america` ("Latin America") after Middle East; migration `20261128000000_curricula_latin_america.sql` seeds `curricula_latin_america` TRUE and adds it to `public_settings()` (applied to STAGING only through the CLI; the production push is the owner's, see the release checklist). Picker label "Country"; six dial codes.
+- Step 2: `app/lib/curricula/latin-america.ts`, six entries behind `release: "s3-d"`, provenance rows, workbook refreshed (Countries: 74 verified, 6 still out of scope: Bangladesh and batch E's five).
+- **Live run lesson.** The first build put "If you write in Spanish, use Latin American Spanish" in each Spanish entry's context line. The live check with English chosen made a Chile worksheet in Spanish (56 Spanish function words; only the objective stayed English). The context is part of the curriculum message, the LAST system message, so any mention of a language there pulls output into it, conditional or not. Fix: a new optional `languageNotes` field on `Curriculum`, keyed by language code, read only by `languageInstruction()` in `app/lib/languages.ts` for that output language. The curriculum message now says nothing about Spanish. Rule for later batches: never name an output language in `context`.
+
+### D.9 Tests
+
+- Unit 2,691 passed: `curricula-stage3-d.spec.ts` (region, its key and migration seeded on with batch D left off, six entries, years and ages, language defaults, the Latin American note only in the Spanish language instruction and never for English, Portuguese, Spain or England, no other country's exam or name, Brazil's 2027 version, Chile's and Peru's undated reviews, region AND release gate, admin view, country defaults, look-alike ids), six dial codes in `profile-mobile.spec.ts`, and the Stage 2 region tests now read the newest migration.
+- Definer check `scripts/verify-curriculum-profile.mjs` 27/27 on staging: anon and a teacher read `curricula_latin_america` as true and nothing beyond the named keys; a teacher cannot switch it off.
+- E2E `tests/profile/curriculum-stage3.spec.ts` 5/5 (batch D: the region is not offered with batch D off; with it on, a Mexican teacher picks Mexico from six, is switched to Spanish, sees Preescolar to Bachillerato, and the worksheet request carries `language: "es"` and `yearGroup: "Primaria 4"`).
+- Live `tests/tools/curricula-stage3-d-live.spec.ts`: first run 2/3 (the Chile failure above); after the fix 9/9 (three runs each): Mexico in Spanish with no vosotros forms or "ordenador", Brazil in Brazilian Portuguese, Chile with English chosen in English.
+- Not tested: live output for Argentina, Colombia and Peru (the same code path as Mexico and Chile).
+

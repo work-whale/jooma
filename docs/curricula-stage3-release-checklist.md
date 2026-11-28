@@ -1,8 +1,8 @@
-# Curricula Stage 3 release checklist (batches A, B and C)
+# Curricula Stage 3 release checklist (batches A, B, C and D)
 
 For the owner, at a computer with the Supabase CLI and GitHub. About 20 minutes.
 
-What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), batch C's twenty-nine European countries, the five Stage 3 batch switches (all off), thirty-two new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 67).
+What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), batch C's twenty-nine European countries, batch D's six under a new Latin America heading (Mexico, Brazil, Argentina, Chile, Colombia, Peru), the five Stage 3 batch switches (all off), the Latin America region switch (on, but it shows nothing until batch D is on), thirty-eight new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 71).
 
 Nothing changes for teachers until step 4, except two small things that ship with the merge: the new countries appear in the profile country list, and the prompt fix applies to every non-UK curriculum already live (tested: Stage 2 live run 7/7 after the fix).
 
@@ -13,14 +13,15 @@ Nothing changes for teachers until step 4, except two small things that ship wit
 - [ ] `node scripts/check-language.mjs` passes.
 - [ ] `node scripts/curricula-status.mjs --check < /dev/null` exits 0.
 
-## 2. Push the migration to production
+## 2. Push the migrations to production
 
-It adds five switches in a new Admin section ("Curricula: Stage 3 releases"), all off, renames the Europe switch label from "Europe (Malta)" to "Europe", and redefines `public_settings()` to return the five new keys. The live code ignores keys it does not know, so it is safe before or after the merge.
+There are two. The first adds five switches in a new Admin section ("Curricula: Stage 3 releases"), all off, renames the Europe switch label from "Europe (Malta)" to "Europe", and redefines `public_settings()` to return the five new keys. The live code ignores keys it does not know, so it is safe before or after the merge. The second (batch D) adds the Latin America region switch, ON, and adds it to `public_settings()`. It is safe on its own: every batch D entry also needs the batch D switch, which the first migration seeds off.
 
 - [ ] `supabase link --project-ref hhgfhhofbhzioywnppzr` and check `supabase/.temp/project-ref` says the production ref.
-- [ ] `supabase db push --dry-run` lists ONLY `20261127000000_curricula_stage3_releases.sql`. If it lists anything else, stop.
+- [ ] `supabase db push --dry-run` lists ONLY `20261127000000_curricula_stage3_releases.sql` and `20261128000000_curricula_latin_america.sql`. If it lists anything else, stop.
 - [ ] `supabase db push`.
 - [ ] In the SQL editor: `select key, value from app_settings where key like 'curricula_s3_%' order by key;` shows five rows, all false.
+- [ ] `select key, value from app_settings where key = 'curricula_latin_america';` shows one row, true.
 
 ## 3. Merge staging into master
 
@@ -59,9 +60,21 @@ Ships in the same merge, hidden behind its own switch. No migration of its own.
 - [ ] Run the status script with `s3-c` added to `--live` and commit the workbook.
 - [ ] If anything looks wrong, turn the batch C switch off. Tell Claude.
 
+## 7. Batch D (Latin America), whenever you are ready
+
+Ships in the same merge, hidden behind its own switch. Its region switch is already on from step 2.
+
+- [ ] Admin > Settings > Curricula: Stage 3 releases: turn on "Stage 3 batch D: Latin America".
+- [ ] As a teacher: a new Latin America heading lists Mexico, Brazil, Argentina, Chile, Colombia and Peru.
+- [ ] In a browser that never chose a language, pick Mexico: output switches to Spanish, and the year list runs Preescolar 1 to Bachillerato 3. Make one worksheet: in Spanish with Latin American wording (no "vosotros").
+- [ ] Choose English, pick Chile: the worksheet stays in English.
+- [ ] Run the status script with `latin-america,s3-d` added to `--live` and commit the workbook.
+- [ ] If anything looks wrong, turn the batch D switch off. Tell Claude.
+
 ## Known limits (fine to ship)
 
 - No batch A or B teaching language (Arabic, Hebrew, Turkish, Chinese, Japanese, Korean, Vietnamese, Thai, Indonesian, Sinhala, Tamil, Nepali) is an output language yet, so all eighteen default to English (`docs/curricula-language-gaps.md`).
 - Some terms (inspection, SEN) are left out where no source confirmed them, so prompts fall back to generic wording there.
 - Türkiye's all-grades version switches on 1 September 2027; the exact first day of 2027-28 is not yet published.
 - Batch C: nine European countries default to their own language (France, Germany, Austria, Spain, Italy, Portugal, Poland, Sweden, Estonia) for teachers who never chose one; the other twenty, Belgium and Switzerland included, default to English.
+- Batch D: Spanish output uses Spain's voice for speech (es-ES) and Latin American wording only in writing; Brazil uses Brazilian Portuguese. Mexico names no national test, because none is set now.
