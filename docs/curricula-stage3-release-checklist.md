@@ -1,8 +1,8 @@
-# Curricula Stage 3 release checklist (batches A, B, C and D)
+# Curricula Stage 3 release checklist (batches A to E)
 
 For the owner, at a computer with the Supabase CLI and GitHub. About 20 minutes.
 
-What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), batch C's twenty-nine European countries, batch D's six under a new Latin America heading (Mexico, Brazil, Argentina, Chile, Colombia, Peru), the five Stage 3 batch switches (all off), the Latin America region switch (on, but it shows nothing until batch D is on), thirty-eight new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 71).
+What ships: batch A's nine country profiles (Saudi Arabia, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt and Israel under Middle East; Türkiye under Europe), batch B's nine (China, Japan, South Korea, Taiwan, Vietnam, Thailand, Indonesia, Sri Lanka and Nepal under Asia), batch C's twenty-nine European countries, batch D's six under a new Latin America heading (Mexico, Brazil, Argentina, Chile, Colombia, Peru), batch E's five under Africa (Ethiopia, Rwanda, Tanzania, Zambia, Zimbabwe), the five Stage 3 batch switches (all off), the Latin America region switch (on, but it shows nothing until batch D is on), forty-three new countries in the profile country list, and one prompt fix for every non-UK curriculum (the school's teaching language no longer changes the output language). Profiles only: no official statements until permissions come back (`docs/curricula-permissions.md`, rows 27 to 76).
 
 Nothing changes for teachers until step 4, except two small things that ship with the merge: the new countries appear in the profile country list, and the prompt fix applies to every non-UK curriculum already live (tested: Stage 2 live run 7/7 after the fix).
 
@@ -71,6 +71,16 @@ Ships in the same merge, hidden behind its own switch. Its region switch is alre
 - [ ] Run the status script with `latin-america,s3-d` added to `--live` and commit the workbook.
 - [ ] If anything looks wrong, turn the batch D switch off. Tell Claude.
 
+## 8. Batch E (Africa), whenever you are ready
+
+Ships in the same merge, hidden behind its own switch. The Africa region is already on, and batch E has no migration of its own.
+
+- [ ] Admin > Settings > Curricula: Stage 3 releases: turn on "Stage 3 batch E: Africa".
+- [ ] As a teacher: Africa lists the Stage 2 five plus Ethiopia, Rwanda, Tanzania, Zambia and Zimbabwe (10).
+- [ ] Pick Tanzania; the worksheet year list runs Pre-primary, Standard 1 to 7 and Form 1 to 6. Make one worksheet: in English.
+- [ ] Run the status script with `s3-e` added to `--live` and commit the workbook.
+- [ ] If anything looks wrong, turn the batch E switch off. Tell Claude.
+
 ## Known limits (fine to ship)
 
 - No batch A or B teaching language (Arabic, Hebrew, Turkish, Chinese, Japanese, Korean, Vietnamese, Thai, Indonesian, Sinhala, Tamil, Nepali) is an output language yet, so all eighteen default to English (`docs/curricula-language-gaps.md`).
@@ -78,3 +88,4 @@ Ships in the same merge, hidden behind its own switch. Its region switch is alre
 - Türkiye's all-grades version switches on 1 September 2027; the exact first day of 2027-28 is not yet published.
 - Batch C: nine European countries default to their own language (France, Germany, Austria, Spain, Italy, Portugal, Poland, Sweden, Estonia) for teachers who never chose one; the other twenty, Belgium and Switzerland included, default to English.
 - Batch D: Spanish output uses Spain's voice for speech (es-ES) and Latin American wording only in writing; Brazil uses Brazilian Portuguese. Mexico names no national test, because none is set now.
+- Batch E: all five default to English. Tanzania and Zambia list old and new years side by side during their transitions (Standard 7 until 2027; Zambia's Grade 7 and Grades 10 to 12 until 2028).

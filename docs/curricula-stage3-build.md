@@ -376,3 +376,34 @@ None of these block the profiles; they matter only for statements later.
 - Live `tests/tools/curricula-stage3-d-live.spec.ts`: first run 2/3 (the Chile failure above); after the fix 9/9 (three runs each): Mexico in Spanish with no vosotros forms or "ordenador", Brazil in Brazilian Portuguese, Chile with English chosen in English.
 - Not tested: live output for Argentina, Colombia and Peru (the same code path as Mexico and Chile).
 
+## Batch E: Africa, Step 0 and build (Opus, 2026-11-28)
+
+The Africa region switch is already on (Stage 2), so batch E needs no migration: `curricula_s3_e` (seeded false by 20261127000000) alone holds the five back. All five default to British English: they teach in English at least from upper primary, and all are on `docs/curricula-language-gaps.md`. One national entry each; Tanzania's prompt follows Zanzibar's own system if the teacher names it.
+
+### E.1 Licence verdicts
+
+| Verdict | Countries | Basis |
+|---|---|---|
+| Closed | Tanzania | The curriculum documents are copyright of the Ministry of Education, Science and Technology and TIE (front matter); no reuse terms found. |
+| Unclear | Ethiopia, Rwanda, Zambia, Zimbabwe | No reuse terms found for MoE, REB, CDC or MoPSE documents. |
+
+Permission rows 72 to 76. No batch E source is open.
+
+### E.2 Versions, years and exams (Confirmed unless marked)
+
+| Country | Version | Years | Exams |
+|---|---|---|---|
+| Ethiopia | General Education Curriculum Framework (2020), rollout approved 2023-02-27, taught from 2023-24; Tigray adopted it in 2026 | Pre-primary 1 and 2 (5, 6), Grade 1 to 12 (7): primary 1 to 6, middle 7 and 8, secondary 9 to 12 | The Grade 12 Secondary School Leaving Certificate Examination (EAES), the single university entrance exam over Grades 9 to 12. Sources differ on which end-of-primary and middle exams are regional or national, so none is named by grade. |
+| Rwanda | Revised Competence-Based Curriculum: primary in full from September 2025; S4 pathways from 2026-27, S5 and S6 later | Nursery 1 to 3 (3), P1 to P6 (6), S1 to S6 (12) | NESA national examinations at the end of P6, S3 and S6; NESA also inspects schools. Sources differ on S6 in 2026-27, so the label says S5 and S6 follow later. |
+| Tanzania | Improved curriculum (Education and Training Policy 2014, 2023 edition), from 2024; in 2027 the last Standard VII and first Standard VI finish together; a second version on 2028-01-01 has the six-year primary in full | Pre-primary (5), Standard 1 to 7 (6), Form 1 to 6 (13) | NECTA: primary leaving, Form 2, Form 4 (CSEE), Form 6 (ACSEE) (Reference). Amali (vocational) stream piloted in 39 schools, national in 2028 (not in the profile yet). |
+| Zambia | Competence-Based Curriculum (2023 framework), 3-6-4-2, phased in from 2025 (ECE Level 1, Grade 1, Form 1); the 2013 curriculum's last Grade 7 and Grade 12 exams are in 2028; a second version on 2029-01-01 has the structure in full | ECE Level 1 to 3 (3), Grade 1 to 7 (6), Form 1 to 4 (12), then by age: Grade 10, Form 5, Grade 11, Form 6, Grade 12 (Grade 7 and 10 to 12 are the classes finishing on the 2013 curriculum) | ECZ: competence-based exams at primary, School Certificate and Advanced Level (first A level 2027); the last Junior Secondary exams were in 2025. |
+| Zimbabwe | Heritage-Based Curriculum Framework 2024 to 2030, in all schools, school-based projects in place of CALA | ECD A (4), ECD B (5), Grade 1 to 7 (6), Form 1 to 6 (13) | ZIMSEC Grade 7, O level and A level, projects counting as coursework. The 20/80 weighting appeared in one source only and is left out. |
+
+### E.3 Tests
+
+- Unit 2,711 passed: `curricula-stage3-e.spec.ts` (five entries after the Stage 2 five under Africa, years and ages, English default with no language switch and no language notes, ASCII-only terms, the gaps list, no context line asking for an output language, provenance, UK-only tools hidden, own exam body only, no other African country named, Tanzania's 2028 and Zambia's 2029 versions, the batch E gate with Africa on and off, admin view, country defaults, look-alike ids), five dial codes in `profile-mobile.spec.ts`. The Stage 2 Africa test now allows batch E after its five.
+- E2E `tests/profile/curriculum-stage3.spec.ts` 6/6 (batch E: Africa lists five with batch E off and ten with it on; a Tanzanian teacher picks Tanzania, keeps English, sees Pre-primary to Form 6, and the worksheet request carries `yearGroup: "Standard 4"`).
+- Live `tests/tools/curricula-stage3-e-live.spec.ts` 6/6 (two runs each): Tanzania Standard 4, Rwanda P4 and Zambia Form 2, all in English with no Kiswahili or Kinyarwanda drift.
+- Not tested: live output for Ethiopia and Zimbabwe (same code path).
+
+Stage 3 profiles are complete apart from Bangladesh (held). What is left across Stages 1 to 3 is collected in `docs/curricula-gaps-handover.md`.

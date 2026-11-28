@@ -89,5 +89,10 @@ Use the draft in `docs/curricula-gaps-plan.md` section 7, filling in the curricu
 | 69 | Chile: Bases Curriculares | 3 | Permission | Mineduc, Unidad de Curriculum y Evaluacion | Not sent |
 | 70 | Colombia: Estandares Basicos and DBA | 3 | Commercial use (portal allows personal, non-commercial use) | Ministerio de Educacion Nacional | Not sent |
 | 71 | Peru: CNEB | 3 | Permission | Minedu | Not sent |
+| 72 | Ethiopia: General Education Curriculum | 3 | Permission | Ministry of Education | Not sent |
+| 73 | Rwanda: Competence-Based Curriculum | 3 | Permission | Rwanda Basic Education Board (REB) | Not sent |
+| 74 | Tanzania: improved curriculum syllabuses | 3 | Permission (copyright of the Ministry and TIE) | Tanzania Institute of Education | Not sent |
+| 75 | Zambia: Competence-Based Curriculum | 3 | Permission | Curriculum Development Centre, Ministry of Education | Not sent |
+| 76 | Zimbabwe: Heritage-Based Curriculum | 3 | Permission | Ministry of Primary and Secondary Education | Not sent |
 
-Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: A.1; batch B: B.1; batch C: C.1; batch D: D.1). Japan, Taiwan, Norway, Sweden and France (open licences), Finland, Argentina and Brazil (probably open) and Vietnam (open by statute) are not on this list: statements for them come after the Stage 3 profiles (owner, 2026-11-27).
+Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: A.1; batch B: B.1; batch C: C.1; batch D: D.1; batch E: E.1). Japan, Taiwan, Norway, Sweden and France (open licences), Finland, Argentina and Brazil (probably open) and Vietnam (open by statute) are not on this list: statements for them come after the Stage 3 profiles (owner, 2026-11-27).
