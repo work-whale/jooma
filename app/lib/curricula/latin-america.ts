@@ -7,9 +7,9 @@ import type { Curriculum, YearOption } from "./types";
  * in the context line, and the prompt follows the teacher's one when named.
  *
  * Languages (owner, 2026-11-28): the five Spanish-speaking countries default
- * to Jooma's Spanish, and their context asks for Latin American usage when the
- * output is Spanish (it never sets the output language itself). Brazil
- * defaults to Brazilian Portuguese.
+ * to Jooma's Spanish, and ask for Latin American usage through languageNotes,
+ * which only the Spanish language instruction reads. Brazil defaults to
+ * Brazilian Portuguese.
  *
  * Profiles only: Argentina and Brazil look open (government site licences) and
  * wait for the owner; the other four are on docs/curricula-permissions.md.
@@ -20,7 +20,9 @@ function numbered(prefix: string, from: number, to: number, firstAge: number, su
   return Array.from({ length: to - from + 1 }, (_, i) => ({ label: `${prefix}${from + i}${suffix}`, age: firstAge + i }));
 }
 
-const LATAM_SPANISH = "If you write in Spanish, use Latin American Spanish as teachers here do (ustedes, not vosotros; computadora, not ordenador).";
+/** Read only when the output language is Spanish (languageNotes), never in the
+ *  curriculum message: there it pulled an English worksheet into Spanish. */
+const LATAM_SPANISH = { es: "Use Latin American Spanish, as teachers here do: ustedes, not vosotros; computadora, not ordenador." } as const;
 
 export const LATIN_AMERICA_CURRICULA: Curriculum[] = [
   {
@@ -44,7 +46,8 @@ export const LATIN_AMERICA_CURRICULA: Curriculum[] = [
       stages: "educación básica in phases: preescolar (Phase 2), primaria (Phases 3 to 5, two grades each) and secundaria (Phase 6), then the bachillerato (Bachillerato 1 to 3)",
       exams: "no national standardised test is currently set; universities set their own entrance exams, such as the EXANI-II",
     },
-    context: `The SEP sets one national plan and each state's schools adapt it; if the teacher names their state, follow it. Schools teach in Spanish, and Indigenous schools also in an Indigenous language such as Nahuatl. Use Mexican places, names and peso amounts where a local example helps. ${LATAM_SPANISH}`,
+    context: `The SEP sets one national plan and each state's schools adapt it; if the teacher names their state, follow it. Schools teach in Spanish, and Indigenous schools also in an Indigenous language such as Nahuatl. Use Mexican places, names and peso amounts where a local example helps.`,
+    languageNotes: LATAM_SPANISH,
     verifiedOn: "2026-11-28",
   },
   {
@@ -92,7 +95,8 @@ export const LATIN_AMERICA_CURRICULA: Curriculum[] = [
       stages: "nivel inicial (Sala de 4 and Sala de 5, compulsory from 4), nivel primario (Primaria 1 to 6) and nivel secundario (Secundaria 1 to 6)",
       exams: "the Aprender national assessments in Lengua and Matemática, in the 6th grade of primary and the last year of secondary",
     },
-    context: `Education is run by the 24 jurisdictions. About half of them, Buenos Aires City among them, use 7 years of primary and 5 of secondary instead of 6 and 6; if the teacher names their province, follow its structure and curriculum. Schools teach in Spanish. Use Argentine places, names and peso amounts where a local example helps. ${LATAM_SPANISH}`,
+    context: `Education is run by the 24 jurisdictions. About half of them, Buenos Aires City among them, use 7 years of primary and 5 of secondary instead of 6 and 6; if the teacher names their province, follow its structure and curriculum. Schools teach in Spanish. Use Argentine places, names and peso amounts where a local example helps.`,
+    languageNotes: LATAM_SPANISH,
     verifiedOn: "2026-11-28",
   },
   {
@@ -116,7 +120,8 @@ export const LATIN_AMERICA_CURRICULA: Curriculum[] = [
       stages: "educación parvularia (NT1 and NT2), educación básica (1º to 8º básico) and educación media (1º to 4º medio)",
       exams: "the SIMCE tests of the Agencia de Calidad de la Educación (4º and 8º básico and 2º medio), and the PAES for university entry",
     },
-    context: `Schools teach in Spanish. Use Chilean places, names and peso amounts where a local example helps. ${LATAM_SPANISH}`,
+    context: `Schools teach in Spanish. Use Chilean places, names and peso amounts where a local example helps.`,
+    languageNotes: LATAM_SPANISH,
     verifiedOn: "2026-11-28",
   },
   {
@@ -135,7 +140,8 @@ export const LATIN_AMERICA_CURRICULA: Curriculum[] = [
       stages: "preescolar (Transición), básica primaria (Grados 1 to 5), básica secundaria (Grados 6 to 9) and media (Grados 10 and 11)",
       exams: "the ICFES Pruebas Saber in Grados 3, 5 and 9, and Saber 11 at the end of school, used for university entry",
     },
-    context: `Schools teach in Spanish, and ethnic education schools also in an Indigenous or Creole language. Use Colombian places, names and peso amounts where a local example helps. ${LATAM_SPANISH}`,
+    context: `Schools teach in Spanish, and ethnic education schools also in an Indigenous or Creole language. Use Colombian places, names and peso amounts where a local example helps.`,
+    languageNotes: LATAM_SPANISH,
     verifiedOn: "2026-11-28",
   },
   {
@@ -154,7 +160,8 @@ export const LATIN_AMERICA_CURRICULA: Curriculum[] = [
       stages: "educación inicial (3 to 5 años), primaria (Primaria 1 to 6) and secundaria (Secundaria 1 to 5), in cycles I to VII",
       exams: "the ENLA national assessments (Evaluación Nacional de Logros de Aprendizaje), sample-based, in some grades of primaria and secundaria",
     },
-    context: `Schools teach in Spanish, and intercultural bilingual schools also in Quechua, Aymara or another native language. Use Peruvian places, names and sol amounts where a local example helps. ${LATAM_SPANISH}`,
+    context: `Schools teach in Spanish, and intercultural bilingual schools also in Quechua, Aymara or another native language. Use Peruvian places, names and sol amounts where a local example helps.`,
+    languageNotes: LATAM_SPANISH,
     verifiedOn: "2026-11-28",
   },
 ];

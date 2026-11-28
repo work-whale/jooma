@@ -18,6 +18,7 @@ import {
   visibleCurricula,
 } from "@/app/lib/curricula";
 import { PROVENANCE } from "@/app/lib/curricula/provenance";
+import { languageInstruction } from "@/app/lib/languages";
 import { TOOL_SCOPE, hiddenToolSlugs, isToolHiddenFor } from "@/app/lib/curricula/tool-scope";
 
 /*
@@ -113,14 +114,27 @@ test.describe("Stage 3 batch D entries", () => {
     expect(languageAfterChoosing("chile", "en-GB"), "a chosen language is kept").toBeNull();
   });
 
-  test("the Spanish ones ask for Latin American usage only when writing in Spanish; Brazil does not", () => {
+  // The first live run (2026-11-28) put the note in the context line, which is
+  // part of the LAST system message: with English chosen, a Chile worksheet
+  // came out in Spanish. So the note rides the Spanish language instruction,
+  // which exists only when the output is Spanish.
+  test("the Spanish ones ask for Latin American usage only inside the Spanish language instruction", () => {
     for (const id of SPANISH) {
-      const ctx = getCurriculum(id)!.context!;
-      expect(ctx, id).toMatch(/If you write in Spanish, use Latin American Spanish/);
-      expect(ctx, id).toMatch(/ustedes/);
-      expect(ctx, id).toMatch(/computadora/);
+      const es = languageInstruction("es", id);
+      expect(es, id).toMatch(/Latin American Spanish/);
+      expect(es, id).toMatch(/ustedes/);
+      expect(es, id).toMatch(/computadora/);
+      // Never in the curriculum message, which every output language gets.
+      expect(curriculumInstruction(id), id).not.toMatch(/Latin American Spanish|ustedes|vosotros|computadora/);
+      expect(getCurriculum(id)!.context!, id).not.toMatch(/write in Spanish/i);
+      // English or another language: no note at all.
+      expect(languageInstruction("en-GB", id), id).toBe("");
+      expect(languageInstruction("en-US", id), id).not.toMatch(/Spanish/);
+      expect(languageInstruction("pt-BR", id), id).not.toMatch(/Spanish|ustedes/);
     }
-    expect(getCurriculum("brazil")!.context!).not.toMatch(/Spanish/);
+    expect(languageInstruction("es", "brazil")).not.toMatch(/Latin American/);
+    expect(languageInstruction("es", "spain"), "Spain keeps its own Spanish").not.toMatch(/Latin American/);
+    expect(languageInstruction("es", "england")).not.toMatch(/Latin American/);
   });
 
   test("the regional systems are named for Argentina, Brazil and Mexico, and the model follows the teacher's one", () => {

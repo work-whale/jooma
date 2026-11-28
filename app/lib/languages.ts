@@ -95,6 +95,7 @@ export function languageInstruction(value: unknown, curriculum?: unknown): strin
     "Keep JSON keys, schema field names and enum values exactly as specified, in English.",
     "Any image search query or image description field stays in English, because the image search only understands English.",
     schoolContextLine(lang.promptName, curriculum),
+    ...languageNote(lang.code, curriculum),
     `Where the instructions above quote English wording for you to use, such as starting an objective with "I am learning to", that is the pattern, not the words: write its natural ${lang.promptName} equivalent instead.`,
     `Quoted text the teacher supplied stays as they wrote it; write everything around it in ${lang.promptName}.`,
   ].join(" ");
@@ -108,6 +109,15 @@ function schoolContextLine(promptName: string, curriculum: unknown): string {
     return `Keep the UK school context (year groups, key stages, GCSE and the named curriculum) and express it naturally in ${promptName}.`;
   }
   return `Keep the school context of the ${c.name} (its year or grade names, its assessments and its standards) and express it naturally in ${promptName}.`;
+}
+
+/** The curriculum's own line for this output language, if it has one (Latin
+ *  American Spanish for the Spanish-speaking Latin American systems). */
+function languageNote(code: string, curriculum: unknown): string[] {
+  const c = getCurriculum(curriculum);
+  if (!c || isUkCurriculum(c.id)) return [];
+  const note = c.languageNotes?.[code];
+  return note ? [note] : [];
 }
 
 /** For a spoken voice: the accent line used in place of the British one. */

@@ -14,6 +14,9 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
  *   - batch C: a French teacher who never chose a language is switched to
  *     French on picking France, sees CP to Terminale, and the worksheet
  *     request carries both
+ *   - batch D: with Latin America on and batch D off, the region is not
+ *     offered; with batch D on, a Mexican teacher picks Mexico, is switched
+ *     to Spanish, sees Preescolar to Bachillerato, and the request carries both
  *
  * Generation requests are answered by page.route: nothing reaches a model.
  * Every switch is put back to what it was, whatever happens.
@@ -22,7 +25,7 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
 
 test.setTimeout(240_000);
 const NAV = { timeout: 120_000 };
-const KEYS = ["curricula_middle_east", "curricula_europe", "curricula_asia", "curricula_s3_a", "curricula_s3_b", "curricula_s3_c"] as const;
+const KEYS = ["curricula_middle_east", "curricula_europe", "curricula_asia", "curricula_latin_america", "curricula_s3_a", "curricula_s3_b", "curricula_s3_c", "curricula_s3_d"] as const;
 
 const before: Record<string, unknown> = {};
 const people: TestTeacher[] = [];
@@ -53,7 +56,7 @@ test.beforeAll(async () => {
   const { data, error } = await admin.from("app_settings").select("key, value").in("key", [...KEYS]);
   if (error) throw new Error(error.message);
   for (const row of data ?? []) before[row.key] = row.value;
-  for (const key of KEYS) expect(before, `${key} exists on staging (migration 20261127000000)`).toHaveProperty(key);
+  for (const key of KEYS) expect(before, `${key} exists on staging (migrations 20261127000000 and 20261128000000)`).toHaveProperty(key);
 });
 
 test.afterAll(async () => {
@@ -202,4 +205,43 @@ test("batch C: a French teacher picks France, is switched to French output, and 
   await page.locator("[data-jo-generate]").click();
   await expect.poll(() => sent.length, NAV).toBe(1);
   expect(sent[0]).toMatchObject({ curriculum: "French National Curriculum (programmes scolaires)", yearGroup: "CM1", language: "fr" });
+});
+
+test("batch D: Latin America waits for its switch, then a Mexican teacher picks Mexico and is switched to Spanish", async ({ page }) => {
+  const t = await payingTeacher("CurrS3Mexico");
+  await signIn(page, t);
+  await setSwitch("curricula_latin_america", true);
+  await setSwitch("curricula_s3_d", false);
+
+  await page.goto("/profile?section=curriculum", NAV);
+  const region = page.getByTestId("curriculum-region");
+  await expect(region).toBeEnabled(NAV);
+  // The region is on but holds only batch D, so it has nothing to offer yet.
+  await expect(region.locator('option[value="latin-america"]')).toHaveCount(0);
+
+  await setSwitch("curricula_s3_d", true);
+  // Never chose a language in this browser.
+  await page.evaluate(() => localStorage.removeItem("ll:language"));
+  await page.reload();
+  await expect(region).toBeEnabled(NAV);
+  await region.selectOption("latin-america");
+  const picker = page.getByTestId("curriculum-picker");
+  await expect(picker.locator("option:not([disabled])")).toHaveCount(6);
+  await picker.selectOption("mexico");
+  await page.getByTestId("curriculum-save").click();
+  await expect(page.getByTestId("curriculum-status")).toContainText("Saved", NAV);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("ll:language")), NAV).toBe(JSON.stringify("es"));
+
+  const sent = await capture(page, "/api/worksheet-generator");
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Mexican Curriculum (Nueva Escuela Mexicana)", NAV);
+  const year = page.getByLabel("Year group", { exact: true });
+  await expect(year.locator("option")).toContainText(["Preescolar 1", "Primaria 4", "Secundaria 3", "Bachillerato 3"]);
+  await expect(year.locator("option", { hasText: "Year 4" })).toHaveCount(0);
+  await year.selectOption("Primaria 4");
+  await page.getByLabel("Subject", { exact: true }).fill("Matemáticas");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Fracciones con el mismo denominador");
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBe(1);
+  expect(sent[0]).toMatchObject({ curriculum: "Mexican Curriculum (Nueva Escuela Mexicana)", yearGroup: "Primaria 4", language: "es" });
 });

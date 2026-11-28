@@ -100,6 +100,12 @@ export interface Curriculum {
   terms?: LocalTerms;
   /** A line of context the model should know, in plain words. */
   context?: string;
+  /** Extra lines for one output language only, keyed by language code (for
+   *  example `es`: use Latin American Spanish). Added to that language's
+   *  instruction, never to the curriculum message, which every output
+   *  language gets: a Spanish usage note there pulled an English worksheet
+   *  into Spanish (docs/curricula-stage3-build.md, batch D live run). */
+  languageNotes?: Readonly<Record<string, string>>;
   /** ISO date someone opened the official source (provenance.ts) and
    *  confirmed the version and names.
    *  An entry outside the UK is never offered to teachers without it. */
