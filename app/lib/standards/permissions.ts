@@ -40,8 +40,16 @@ export const FRAMEWORK_PERMITTED = {
   // (https://www.mext.go.jp/en/other/title01/detail01/1375290.htm, checked
   // 2026-11-28). Excerpts in the original Japanese, credited in credits.ts.
   "jp-cos": true,
+  // Taiwan's Curriculum Guidelines of 12-Year Basic Education, on NAER's
+  // site: NAER's open data declaration grants all its site material free,
+  // non-exclusive and irrevocable, for any use including adaptation, with the
+  // source credited (https://www.naer.edu.tw/PageDoc?fid=324, checked
+  // 2026-11-28). Mandarin and mathematics in the original Chinese; English and
+  // science in NAER's official English translation. Credited in credits.ts.
+  "tw-108-zh": true,
+  "tw-108-en": true,
 } as const satisfies Record<
-  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos",
+  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en",
   boolean
 >;
 

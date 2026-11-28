@@ -332,6 +332,8 @@ test.describe("NGSS stays off until permission", () => {
       "nic-ks3": true,
       "nic-ks4": true,
       "jp-cos": true,
+      "tw-108-zh": true,
+      "tw-108-en": true,
     });
   });
 

@@ -116,7 +116,11 @@ const CONCEPTS: Concept[] = [
   // Subjects typed in Japanese or Chinese, which have no word boundaries.
   { typed: /算数|数学|數學/, tiers: [/math/i] },
   { typed: /理科|自然科学|自然科學/, tiers: [/(?<!social )scien/i] },
-  { typed: /英語/, tiers: [/\benglish\b/i] },
+  { typed: /英語|英文/, tiers: [/\benglish\b/i] },
+  // Taiwan's 國語文 is listed as "Mandarin". In England "Mandarin" or
+  // "Chinese" finds no such subject and stays a modern language (above).
+  { typed: /\b(mandarin|chinese)\b|國語|國文|国语|中文/i, tiers: [/^mandarin$/i] },
+  { typed: /自然/, tiers: [/(?<!social )scien/i] },
 ];
 
 /** The curriculum subjects (from `subjects`, in its order) the typed text

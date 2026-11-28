@@ -1,0 +1,7905 @@
+{
+ "source": {
+  "title": "Curriculum Guidelines of 12-Year Basic Education (Chinese), Ministry of Education, Taiwan (NAER)",
+  "file": "docs/standards/taiwan/",
+  "url": "https://www.naer.edu.tw/eng/PageSyllabus?fid=148",
+  "licence": "https://www.naer.edu.tw/PageDoc?fid=324",
+  "credit": "Curriculum Guidelines of 12-Year Basic Education (十二年國民基本教育課程綱要) for Mandarin (國語文) and mathematics (數學): Ministry of Education, Taiwan, published by the National Academy for Educational Research (NAER), https://www.naer.edu.tw/eng/PageSyllabus?fid=148. Statements are excerpts from the official Chinese text, edited by Jooma into a list. Used under NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324."
+ },
+ "statements": [
+  {
+   "id": "tw-108-zh-d6c10a8a34",
+   "code": "1-I-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "養成專心聆聽的習慣，尊重對方的發言。"
+  },
+  {
+   "id": "tw-108-zh-d21cde6801",
+   "code": "1-I-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "能學習聆聽不同的媒材，說出聆聽的內容。"
+  },
+  {
+   "id": "tw-108-zh-a7bb1cd99c",
+   "code": "1-I-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "能理解話語、詩歌、故事的訊息，有適切的表情跟肢體語言。"
+  },
+  {
+   "id": "tw-108-zh-218c704c57",
+   "code": "1-II-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "聆聽時能讓對方充分表達意見。"
+  },
+  {
+   "id": "tw-108-zh-e128f250c0",
+   "code": "1-II-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "具備聆聽不同媒材的基本能力。"
+  },
+  {
+   "id": "tw-108-zh-1e1b29f96c",
+   "code": "1-II-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "聽懂適合程度的詩歌、戲劇，並說出聆聽內容的要點。"
+  },
+  {
+   "id": "tw-108-zh-620ad84969",
+   "code": "1-II-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "根據話語情境，分辨內容是否切題，理解主要內容和情感，並與對方互動。"
+  },
+  {
+   "id": "tw-108-zh-299bb46f88",
+   "code": "1-III-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "能夠聆聽他人的發言，並簡要記錄。"
+  },
+  {
+   "id": "tw-108-zh-7317246ece",
+   "code": "1-III-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "根據演講、新聞話語情境及其情感，聽出不同語氣，理解對方所傳達的情意，表現適切的回應。"
+  },
+  {
+   "id": "tw-108-zh-cad94b9e80",
+   "code": "1-III-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "判斷聆聽內容的合理性，並分辨事實或意見。"
+  },
+  {
+   "id": "tw-108-zh-07199b0117",
+   "code": "1-III-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "結合科技與資訊，提升聆聽的效能。"
+  },
+  {
+   "id": "tw-108-zh-b1dfbf936d",
+   "code": "1-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "以同理心，聆聽各項發言，並加以記錄、歸納。"
+  },
+  {
+   "id": "tw-108-zh-5f08f7a925",
+   "code": "1-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "依據不同情境，分辨聲情意涵及表達技巧，適切回應。"
+  },
+  {
+   "id": "tw-108-zh-8c41ec78a3",
+   "code": "1-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "分辨聆聽內容的邏輯性，找出解決問題的方法。"
+  },
+  {
+   "id": "tw-108-zh-8e5434c2dc",
+   "code": "1-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "靈活應用科技與資訊，增進聆聽能力，加強互動學習效果。"
+  },
+  {
+   "id": "tw-108-zh-1334580acc",
+   "code": "1-V-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "面對不同的聆聽情境及文化差異，正確分析話語的訊息，並給予適切的回應。"
+  },
+  {
+   "id": "tw-108-zh-05d449f204",
+   "code": "1-V-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "聽懂各類文本聲情表達時所營構的時空氛圍與情感渲染。"
+  },
+  {
+   "id": "tw-108-zh-0d4c82cfd4",
+   "code": "1-V-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "能辨別聆聽內容的核心論點、議論立場及目的，並加以包容與尊重。"
+  },
+  {
+   "id": "tw-108-zh-dfea574baa",
+   "code": "1-V-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 聆聽",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "聆聽傳播應用文本並妥善運用，以加強人際溝通，提升生活品質。"
+  },
+  {
+   "id": "tw-108-zh-bf5f3632d9",
+   "code": "2-I-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "以正確發音流利的說出語意完整的話。"
+  },
+  {
+   "id": "tw-108-zh-9a48f841b2",
+   "code": "2-I-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "說出所聽聞的內容。"
+  },
+  {
+   "id": "tw-108-zh-ccad8231a6",
+   "code": "2-I-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "與他人交談時，能適當的提問、合宜的回答，並分享想法。"
+  },
+  {
+   "id": "tw-108-zh-4e82b7124b",
+   "code": "2-II-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "用清晰語音、適當語速和音量說話。"
+  },
+  {
+   "id": "tw-108-zh-89e0c2fd5e",
+   "code": "2-II-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "運用適當詞語、正確語法表達想法。"
+  },
+  {
+   "id": "tw-108-zh-ec5dd88f62",
+   "code": "2-II-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "把握說話的重點與順序，對談時能做適當的回應。"
+  },
+  {
+   "id": "tw-108-zh-4e332c049e",
+   "code": "2-II-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "樂於參加討論，提供個人的觀點和意見。"
+  },
+  {
+   "id": "tw-108-zh-ff50a35eb7",
+   "code": "2-II-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "與他人溝通時能注重禮貌，並養成說話負責的態度。"
+  },
+  {
+   "id": "tw-108-zh-5ac78e689c",
+   "code": "2-III-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "觀察生活情境的變化，培養個人感受和思維能力，積累說話材料。"
+  },
+  {
+   "id": "tw-108-zh-d336dfdf74",
+   "code": "2-III-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "從聽聞內容進行判斷和提問，並做合理的應對。"
+  },
+  {
+   "id": "tw-108-zh-7162ff7051",
+   "code": "2-III-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "靈活運用詞句和說話技巧，豐富表達內容。"
+  },
+  {
+   "id": "tw-108-zh-ea58e95334",
+   "code": "2-III-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "運用語調、表情和肢體等變化輔助口語表達。"
+  },
+  {
+   "id": "tw-108-zh-7e2247614d",
+   "code": "2-III-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "把握說話內容的主題、重要細節與結構邏輯。"
+  },
+  {
+   "id": "tw-108-zh-64c457e16a",
+   "code": "2-III-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "結合科技與資訊，提升表達的效能。"
+  },
+  {
+   "id": "tw-108-zh-d4afe56e60",
+   "code": "2-III-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "與他人溝通時能尊重不同意見。"
+  },
+  {
+   "id": "tw-108-zh-a6fb1ffffe",
+   "code": "2-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "掌握生活情境，適切表情達意，分享自身經驗。"
+  },
+  {
+   "id": "tw-108-zh-550cca0cc5",
+   "code": "2-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "有效把握聽聞內容的邏輯，做出提問或回饋。"
+  },
+  {
+   "id": "tw-108-zh-ebedb09f1f",
+   "code": "2-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "依理解的內容，明確表達意見，進行有條理的論辯，並注重言談禮貌。"
+  },
+  {
+   "id": "tw-108-zh-0305a052f7",
+   "code": "2-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "靈活運用科技與資訊，豐富表達內容。"
+  },
+  {
+   "id": "tw-108-zh-9abfb6ccfb",
+   "code": "2-IV-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "視不同情境，進行報告、評論、演說及論辯。"
+  },
+  {
+   "id": "tw-108-zh-39f6275b4b",
+   "code": "2-V-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "以邏輯性語言精確說出各類文本的文體特質、表現形式與題材內容。"
+  },
+  {
+   "id": "tw-108-zh-2167ba112b",
+   "code": "2-V-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "討論過程中，能適切陳述自身立場，歸納他人論點並給予回應，達成友善且平等的溝通。"
+  },
+  {
+   "id": "tw-108-zh-2cf5e750f6",
+   "code": "2-V-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "鑑別文本中立場相異的評述，說出個人見解，表達其中觀點相異之美。"
+  },
+  {
+   "id": "tw-108-zh-551b782e0b",
+   "code": "2-V-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "樂於參加討論，分享自身生命經驗及對文本藝術美感價值的共鳴。"
+  },
+  {
+   "id": "tw-108-zh-cf6fb342a2",
+   "code": "2-V-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "運用各類表演藝術的形式，進行文本的再詮釋。"
+  },
+  {
+   "id": "tw-108-zh-cc75a3bb3f",
+   "code": "2-V-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 口語表達",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "關懷生活環境的變化，同理他人處境，尊重不同社群文化，做出得體的應對。"
+  },
+  {
+   "id": "tw-108-zh-fa3a42dcbd",
+   "code": "3-I-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 標音符號與運用",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "正確認念、拼讀及書寫注音符號。"
+  },
+  {
+   "id": "tw-108-zh-c0c33abb2b",
+   "code": "3-I-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 標音符號與運用",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "運用注音符號輔助識字，也能利用國字鞏固注音符號的學習。"
+  },
+  {
+   "id": "tw-108-zh-fa96cad810",
+   "code": "3-I-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 標音符號與運用",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "運用注音符號表達想法，記錄訊息。"
+  },
+  {
+   "id": "tw-108-zh-57d632e04c",
+   "code": "3-I-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 標音符號與運用",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "利用注音讀物，學習閱讀，享受閱讀樂趣。"
+  },
+  {
+   "id": "tw-108-zh-4612828dac",
+   "code": "3-II-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 標音符號與運用",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "運用注音符號，理解生字新詞，提升閱讀效能。"
+  },
+  {
+   "id": "tw-108-zh-ffffc26856",
+   "code": "3-II-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 標音符號與運用",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "運用注音符號，檢索資訊，吸收新知。"
+  },
+  {
+   "id": "tw-108-zh-ad680da988",
+   "code": "4-I-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識常用國字至少1,000字，使用700字。"
+  },
+  {
+   "id": "tw-108-zh-7e0710a568",
+   "code": "4-I-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "利用部件、部首或簡單造字原理，輔助識字。"
+  },
+  {
+   "id": "tw-108-zh-1c18e47dca",
+   "code": "4-I-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "學習查字典的方法。"
+  },
+  {
+   "id": "tw-108-zh-9bda6ac4b5",
+   "code": "4-I-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "養成良好的書寫姿勢，並保持整潔的書寫習慣。"
+  },
+  {
+   "id": "tw-108-zh-21a18be83d",
+   "code": "4-I-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識基本筆畫、筆順，掌握運筆原則，寫出正確及工整的國字。"
+  },
+  {
+   "id": "tw-108-zh-3e904a50b6",
+   "code": "4-I-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "能因應需求，感受寫字的溝通功能與樂趣。"
+  },
+  {
+   "id": "tw-108-zh-37b0d257a1",
+   "code": "4-II-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "認識常用國字至少1,800字，使用1,200字。"
+  },
+  {
+   "id": "tw-108-zh-bd91f275b9",
+   "code": "4-II-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "利用共同部件，擴充識字量。"
+  },
+  {
+   "id": "tw-108-zh-065706b6a6",
+   "code": "4-II-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "會利用書面或數位方式查字辭典，並能利用字辭典，分辨字詞義。"
+  },
+  {
+   "id": "tw-108-zh-9172d37144",
+   "code": "4-II-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "能分辨形近、音近字詞，並正確使用。"
+  },
+  {
+   "id": "tw-108-zh-1d3a2d4e77",
+   "code": "4-II-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "利用字義推論詞義。"
+  },
+  {
+   "id": "tw-108-zh-ea0e157c98",
+   "code": "4-II-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "掌握偏旁變化和間架結構要領書寫正確及工整的硬筆字。"
+  },
+  {
+   "id": "tw-108-zh-9a1173bffe",
+   "code": "4-II-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "習寫以硬筆字為主，毛筆為輔，掌握楷書筆畫的書寫方法。"
+  },
+  {
+   "id": "tw-108-zh-bb1ce93938",
+   "code": "4-II-8",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "知道古今書法名家的故事。"
+  },
+  {
+   "id": "tw-108-zh-bab6c0c30b",
+   "code": "4-III-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識常用國字至少2,700字，使用2,200字。"
+  },
+  {
+   "id": "tw-108-zh-596dfa3a41",
+   "code": "4-III-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識文字的字形結構，運用字的部件了解文字的字音與字義。"
+  },
+  {
+   "id": "tw-108-zh-6addd27d71",
+   "code": "4-III-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "運用字辭典、成語辭典等，擴充詞彙，分辨詞義。"
+  },
+  {
+   "id": "tw-108-zh-4bd4c7c567",
+   "code": "4-III-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "精熟偏旁變化和間架結構要領書寫正確及工整的硬筆字。"
+  },
+  {
+   "id": "tw-108-zh-7ae40ef4d1",
+   "code": "4-III-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "習寫以硬筆字為主，毛筆為輔，掌握楷書形體結構的書寫方法。"
+  },
+  {
+   "id": "tw-108-zh-bba1e43dfd",
+   "code": "4-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識國字至少4,500字，使用3,500字。"
+  },
+  {
+   "id": "tw-108-zh-310be7e05d",
+   "code": "4-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識造字的原則，輔助識字，了解文字的形、音、義。"
+  },
+  {
+   "id": "tw-108-zh-d2747cd660",
+   "code": "4-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "能運用字典或辭典了解一字多音及一字多義的現象。"
+  },
+  {
+   "id": "tw-108-zh-f2763101d0",
+   "code": "4-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識各種書體，欣賞名家碑帖。"
+  },
+  {
+   "id": "tw-108-zh-ad257370f2",
+   "code": "4-IV-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "欣賞書法的行款和布局、行氣及風格。"
+  },
+  {
+   "id": "tw-108-zh-a8e0ec7895",
+   "code": "4-IV-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "能夠寫出正確美觀的硬筆字。"
+  },
+  {
+   "id": "tw-108-zh-5fe988219c",
+   "code": "4-V-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識六書的原則，了解字形、字音、字義的關係。"
+  },
+  {
+   "id": "tw-108-zh-814e6cccb4",
+   "code": "4-V-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 識字與寫字",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "深入鑑賞各體書法作品與名家碑帖。"
+  },
+  {
+   "id": "tw-108-zh-137322a33f",
+   "code": "5-I-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "以適切的速率正確地朗讀文本。"
+  },
+  {
+   "id": "tw-108-zh-4dbfe30301",
+   "code": "5-I-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識常用標點符號。"
+  },
+  {
+   "id": "tw-108-zh-e37ecd6768",
+   "code": "5-I-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "讀懂與學習階段相符的文本。"
+  },
+  {
+   "id": "tw-108-zh-3aa11c4a39",
+   "code": "5-I-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "了解文本中的重要訊息與觀點。"
+  },
+  {
+   "id": "tw-108-zh-5618caf965",
+   "code": "5-I-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識簡易的記敘、抒情及應用文本的特徵。"
+  },
+  {
+   "id": "tw-108-zh-4349ed94ce",
+   "code": "5-I-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "利用圖像、故事結構等策略，協助文本的理解與內容重述。"
+  },
+  {
+   "id": "tw-108-zh-0a801b96da",
+   "code": "5-I-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "運用簡單的預測、推論等策略，找出句子和段落明示的因果關係，理解文本內容。"
+  },
+  {
+   "id": "tw-108-zh-98106ea842",
+   "code": "5-I-8",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識圖書館(室)的功能。"
+  },
+  {
+   "id": "tw-108-zh-a76662617c",
+   "code": "5-I-9",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "喜愛閱讀，並樂於與他人分享閱讀心得。"
+  },
+  {
+   "id": "tw-108-zh-0bb0866fd6",
+   "code": "5-II-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "以適切的速率朗讀文本，表現抑揚頓挫與情感。"
+  },
+  {
+   "id": "tw-108-zh-df062635e6",
+   "code": "5-II-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解各種標點符號的用法。"
+  },
+  {
+   "id": "tw-108-zh-0d161390b1",
+   "code": "5-II-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "讀懂與學習階段相符的文本。"
+  },
+  {
+   "id": "tw-108-zh-51f5dd0d6f",
+   "code": "5-II-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "掌握句子和段落的意義與主要概念。"
+  },
+  {
+   "id": "tw-108-zh-5eb4d03085",
+   "code": "5-II-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "認識記敘、抒情、說明及應用文本的特徵。"
+  },
+  {
+   "id": "tw-108-zh-1e672ced6d",
+   "code": "5-II-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "運用適合學習階段的摘要策略，擷取大意。"
+  },
+  {
+   "id": "tw-108-zh-6ecf1ccea8",
+   "code": "5-II-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "就文本的觀點，找出支持的理由。"
+  },
+  {
+   "id": "tw-108-zh-4fe93b9584",
+   "code": "5-II-8",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "運用預測、推論、提問等策略，增進對文本的理解。"
+  },
+  {
+   "id": "tw-108-zh-a2937b776f",
+   "code": "5-II-9",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "覺察自己的閱讀理解情況，適時調整策略。"
+  },
+  {
+   "id": "tw-108-zh-6089e40389",
+   "code": "5-II-10",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "透過大量閱讀，體會閱讀的樂趣。"
+  },
+  {
+   "id": "tw-108-zh-497aeff6bf",
+   "code": "5-II-11",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "閱讀多元文本，以認識議題。"
+  },
+  {
+   "id": "tw-108-zh-9f4f90a93c",
+   "code": "5-II-12",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "主動參與班級、學校或社區的閱讀社群活動。"
+  },
+  {
+   "id": "tw-108-zh-226b53e629",
+   "code": "5-III-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "流暢朗讀各類文本，並表現抑揚頓挫的變化。"
+  },
+  {
+   "id": "tw-108-zh-aa2c50ab4d",
+   "code": "5-III-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解各種標點符號的用法與表達效果。"
+  },
+  {
+   "id": "tw-108-zh-2e3419ea13",
+   "code": "5-III-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "讀懂與學習階段相符的文本。"
+  },
+  {
+   "id": "tw-108-zh-6f2bf2fc0a",
+   "code": "5-III-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "區分文本中的客觀事實與主觀判斷之間的差別。"
+  },
+  {
+   "id": "tw-108-zh-d7bb42a32f",
+   "code": "5-III-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識議論文本的特徵。"
+  },
+  {
+   "id": "tw-108-zh-f68adacd6d",
+   "code": "5-III-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "熟習適合學習階段的摘要策略，擷取大意。"
+  },
+  {
+   "id": "tw-108-zh-1052708ca0",
+   "code": "5-III-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "連結相關的知識和經驗，提出自己的觀點，評述文本的內容。"
+  },
+  {
+   "id": "tw-108-zh-4e403735ff",
+   "code": "5-III-8",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "運用自我提問、推論等策略，推論文本隱含的因果訊息或觀點。"
+  },
+  {
+   "id": "tw-108-zh-fa6a38a170",
+   "code": "5-III-9",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "因應不同的目的，運用不同的閱讀策略。"
+  },
+  {
+   "id": "tw-108-zh-153dc7e3cf",
+   "code": "5-III-10",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "結合自己的特長和興趣，主動尋找閱讀材料。"
+  },
+  {
+   "id": "tw-108-zh-b24ab58683",
+   "code": "5-III-11",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "大量閱讀多元文本，辨識文本中議題的訊息或觀點。"
+  },
+  {
+   "id": "tw-108-zh-ef13fd34ee",
+   "code": "5-III-12",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "運用圖書館(室)、科技與網路，進行資料蒐集、解讀與判斷，提升多元文本的閱讀和應用能力。"
+  },
+  {
+   "id": "tw-108-zh-708d78b6cb",
+   "code": "5-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "比較不同標點符號的表達效果，流暢朗讀各類文本，並表現情感的起伏變化。"
+  },
+  {
+   "id": "tw-108-zh-c3506ac8c8",
+   "code": "5-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解各類文本的句子、段落與主要概念，指出寫作的目的與觀點。"
+  },
+  {
+   "id": "tw-108-zh-4a67ec1147",
+   "code": "5-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解各類文本內容、形式和寫作特色。"
+  },
+  {
+   "id": "tw-108-zh-d66c8bb930",
+   "code": "5-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "應用閱讀策略增進學習效能，整合跨領域知識轉化為解決問題的能力。"
+  },
+  {
+   "id": "tw-108-zh-e95bbc7e6c",
+   "code": "5-IV-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "大量閱讀多元文本，理解議題內涵及其與個人生活、社會結構的關聯性。"
+  },
+  {
+   "id": "tw-108-zh-8254f645a6",
+   "code": "5-IV-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "運用圖書館(室)、科技工具，蒐集資訊、組織材料，擴充閱讀視野。"
+  },
+  {
+   "id": "tw-108-zh-bb470cc2e1",
+   "code": "5-V-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "辨析文本的寫作主旨、風格、結構及寫作手法。"
+  },
+  {
+   "id": "tw-108-zh-ecde2da41b",
+   "code": "5-V-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "歸納文本中不同論點，形成個人的觀點，發展系統性思考以建立論述體系。"
+  },
+  {
+   "id": "tw-108-zh-929e015a9e",
+   "code": "5-V-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "大量閱讀多元文本，探討文本如何反應文化與社會現象中的議題，以拓展閱讀視野與生命意境。"
+  },
+  {
+   "id": "tw-108-zh-116ee7574d",
+   "code": "5-V-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "廣泛運用工具書及資訊網絡蒐集、分析資料，提高綜合學習和應用能力。"
+  },
+  {
+   "id": "tw-108-zh-ee593aee30",
+   "code": "5-V-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "主動思考與探索文本的意涵，建立終身學習能力。"
+  },
+  {
+   "id": "tw-108-zh-84a23fdcea",
+   "code": "5-V-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 閱讀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "在閱讀過程中認識多元價值、尊重多元文化，思考生活品質、人類發展及環境永續經營的意義與關係。"
+  },
+  {
+   "id": "tw-108-zh-0914f7667f",
+   "code": "6-I-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "根據表達需要，使用常用標點符號。"
+  },
+  {
+   "id": "tw-108-zh-daab56e72a",
+   "code": "6-I-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "透過閱讀及觀察，積累寫作材料。"
+  },
+  {
+   "id": "tw-108-zh-e11ad13506",
+   "code": "6-I-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "寫出語意完整的句子、主題明確的段落。"
+  },
+  {
+   "id": "tw-108-zh-e86f036fb3",
+   "code": "6-I-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "使用仿寫、接寫等技巧寫作。"
+  },
+  {
+   "id": "tw-108-zh-e8addffb03",
+   "code": "6-I-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "修改文句的錯誤。"
+  },
+  {
+   "id": "tw-108-zh-2896bc1a43",
+   "code": "6-I-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "培養寫作的興趣。"
+  },
+  {
+   "id": "tw-108-zh-c6129a9f0c",
+   "code": "6-II-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "根據表達需要，使用各種標點符號。"
+  },
+  {
+   "id": "tw-108-zh-2212018899",
+   "code": "6-II-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "培養感受力、想像力等寫作基本能力。"
+  },
+  {
+   "id": "tw-108-zh-52fa4e5d32",
+   "code": "6-II-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "學習審題、立意、選材、組織等寫作步驟。"
+  },
+  {
+   "id": "tw-108-zh-f96c4f5dc0",
+   "code": "6-II-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "書寫記敘、應用、說明事物的作品。"
+  },
+  {
+   "id": "tw-108-zh-bef2294b8a",
+   "code": "6-II-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "仿寫童詩。"
+  },
+  {
+   "id": "tw-108-zh-7b79cbd5fe",
+   "code": "6-II-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "運用改寫、縮寫、擴寫等技巧寫作。"
+  },
+  {
+   "id": "tw-108-zh-ac04e66493",
+   "code": "6-II-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "找出作品的錯誤，並加以修改。"
+  },
+  {
+   "id": "tw-108-zh-61e5d90b72",
+   "code": "6-II-8",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "養成寫作習慣。"
+  },
+  {
+   "id": "tw-108-zh-c58c2c1b58",
+   "code": "6-III-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "根據表達需要，使用適切的標點符號。"
+  },
+  {
+   "id": "tw-108-zh-97b021fbe9",
+   "code": "6-III-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "培養思考力、聯想力等寫作基本能力。"
+  },
+  {
+   "id": "tw-108-zh-4455801acf",
+   "code": "6-III-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "掌握寫作步驟，寫出表達清楚、段落分明、符合主題的作品。"
+  },
+  {
+   "id": "tw-108-zh-e7017b1662",
+   "code": "6-III-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "創作童詩及故事。"
+  },
+  {
+   "id": "tw-108-zh-82ec7bd6f6",
+   "code": "6-III-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "書寫說明事理、議論的作品。"
+  },
+  {
+   "id": "tw-108-zh-cb5690e966",
+   "code": "6-III-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "練習各種寫作技巧。"
+  },
+  {
+   "id": "tw-108-zh-7663cef14c",
+   "code": "6-III-7",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "修改、潤飾作品內容。"
+  },
+  {
+   "id": "tw-108-zh-50ad5540f4",
+   "code": "6-III-8",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "建立適切的寫作態度。"
+  },
+  {
+   "id": "tw-108-zh-64315b8599",
+   "code": "6-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "善用標點符號，增進情感表達及說服力。"
+  },
+  {
+   "id": "tw-108-zh-aed0a63cfc",
+   "code": "6-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "依據審題、立意、取材、組織、遣詞造句、修改潤飾，寫出結構完整、主旨明確、文辭優美的文章。"
+  },
+  {
+   "id": "tw-108-zh-6fe446d668",
+   "code": "6-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "靈活運用仿寫、改寫等技巧，增進寫作能力"
+  },
+  {
+   "id": "tw-108-zh-a8642d893b",
+   "code": "6-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "依據需求書寫各類文本。"
+  },
+  {
+   "id": "tw-108-zh-63fdf3fc4e",
+   "code": "6-IV-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "主動創作、自訂題目、闡述見解，並發表自己的作品。"
+  },
+  {
+   "id": "tw-108-zh-74e38823af",
+   "code": "6-IV-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "運用資訊科技編輯作品，發表個人見解、分享寫作樂趣。"
+  },
+  {
+   "id": "tw-108-zh-6e26b4a129",
+   "code": "6-V-1",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "深化寫作能力，根據生活的需求撰寫各類文本。"
+  },
+  {
+   "id": "tw-108-zh-6bd8da8335",
+   "code": "6-V-2",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "廣泛嘗試各種文體，發表感懷或見解。"
+  },
+  {
+   "id": "tw-108-zh-8c6c67faed",
+   "code": "6-V-3",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "熟練審題、立意、選材、組織等寫作步驟，寫出具說服力及感染力的文章。"
+  },
+  {
+   "id": "tw-108-zh-9c8f4b5ee4",
+   "code": "6-V-4",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "掌握各種文學表現手法，適切地敘寫，關懷當代議題，抒發個人情感，說明知識或議論事理。"
+  },
+  {
+   "id": "tw-108-zh-2d11e8504c",
+   "code": "6-V-5",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "運用各種寫作技巧，反覆推敲、修改以深化作品的內涵層次，提升藝術價值。"
+  },
+  {
+   "id": "tw-108-zh-1e0dfb88f5",
+   "code": "6-V-6",
+   "subject": "Mandarin",
+   "strand": "學習表現 寫作",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "觀摩跨文本、跨文類、跨文化作品，學習多元類型的創作。"
+  },
+  {
+   "id": "tw-108-zh-bccfe973fd",
+   "code": "Aa-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 標音符號",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "聲符、韻符、介符的正確發音和寫法。"
+  },
+  {
+   "id": "tw-108-zh-b6554afbce",
+   "code": "Aa-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 標音符號",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "聲調及其正確的標注方式。"
+  },
+  {
+   "id": "tw-108-zh-27ab736ce5",
+   "code": "Aa-I-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 標音符號",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "二拼音和三拼音的拼讀和書寫。"
+  },
+  {
+   "id": "tw-108-zh-bac08dbaf4",
+   "code": "Aa-I-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 標音符號",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "結合韻的拼讀和書寫。"
+  },
+  {
+   "id": "tw-108-zh-63da2e881f",
+   "code": "Aa-I-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 標音符號",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "標注注音符號的各類文本。"
+  },
+  {
+   "id": "tw-108-zh-3a46cbb64f",
+   "code": "Aa-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 標音符號",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "標注注音符號的各類文本。"
+  },
+  {
+   "id": "tw-108-zh-3afe8864a0",
+   "code": "Ab-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "1,000個常用字的字形、字音和字義。"
+  },
+  {
+   "id": "tw-108-zh-ee096846d2",
+   "code": "Ab-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "700個常用字的使用。"
+  },
+  {
+   "id": "tw-108-zh-33bca4058f",
+   "code": "Ab-I-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "常用字筆畫及部件的空間結構。"
+  },
+  {
+   "id": "tw-108-zh-cc91ec33c3",
+   "code": "Ab-I-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "常用字部首的表義（分類）功能。"
+  },
+  {
+   "id": "tw-108-zh-b940adb8f1",
+   "code": "Ab-I-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "1,500個常用語詞的認念。"
+  },
+  {
+   "id": "tw-108-zh-9884abcc7f",
+   "code": "Ab-I-6",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "1,000個常用語詞的使用。"
+  },
+  {
+   "id": "tw-108-zh-9fb06b55a9",
+   "code": "Ab-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "1,800個常用字的字形、字音和字義。"
+  },
+  {
+   "id": "tw-108-zh-4a135d86d0",
+   "code": "Ab-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "1,200個常用字的使用。"
+  },
+  {
+   "id": "tw-108-zh-663e05cc4f",
+   "code": "Ab-II-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "常用字部首及部件的表音及表義功能。"
+  },
+  {
+   "id": "tw-108-zh-1f9450cad9",
+   "code": "Ab-II-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "多音字及多義字。"
+  },
+  {
+   "id": "tw-108-zh-e44e5f6e72",
+   "code": "Ab-II-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "3,000個常用語詞的認念。"
+  },
+  {
+   "id": "tw-108-zh-54536c259e",
+   "code": "Ab-II-6",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "2,000個常用語詞的使用。"
+  },
+  {
+   "id": "tw-108-zh-fd5004e14d",
+   "code": "Ab-II-7",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "國字組成詞彙的構詞規則。"
+  },
+  {
+   "id": "tw-108-zh-af114f9547",
+   "code": "Ab-II-8",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "詞類的分辨。"
+  },
+  {
+   "id": "tw-108-zh-f4a7d9c3f2",
+   "code": "Ab-II-9",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "量詞的運用。"
+  },
+  {
+   "id": "tw-108-zh-178d97cb51",
+   "code": "Ab-II-10",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "字辭典的運用。"
+  },
+  {
+   "id": "tw-108-zh-49e9c90ee4",
+   "code": "Ab-II-11",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "筆墨紙硯的使用方法。"
+  },
+  {
+   "id": "tw-108-zh-28a5d5ec3b",
+   "code": "Ab-II-12",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "楷書基本筆畫運筆方法。"
+  },
+  {
+   "id": "tw-108-zh-191d1be4c7",
+   "code": "Ab-II-13",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "書法名家故事。"
+  },
+  {
+   "id": "tw-108-zh-1bd325ba6a",
+   "code": "Ab-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "2,700個常用字的字形、字音和字義。"
+  },
+  {
+   "id": "tw-108-zh-081fa1e1a6",
+   "code": "Ab-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "2,200個常用字的使用。"
+  },
+  {
+   "id": "tw-108-zh-2122e1695d",
+   "code": "Ab-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "常用字部首及部件的表音及表義功能。"
+  },
+  {
+   "id": "tw-108-zh-5e6364d3fb",
+   "code": "Ab-III-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "多音字及多義字。"
+  },
+  {
+   "id": "tw-108-zh-766ce1da9e",
+   "code": "Ab-III-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "4,500個常用語詞的認念。"
+  },
+  {
+   "id": "tw-108-zh-1cceae1c94",
+   "code": "Ab-III-6",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "3,700個常用語詞的使用。"
+  },
+  {
+   "id": "tw-108-zh-1e21c39249",
+   "code": "Ab-III-7",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "數位辭典的運用。"
+  },
+  {
+   "id": "tw-108-zh-3ab5a5f561",
+   "code": "Ab-III-8",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "詞類的分辨。"
+  },
+  {
+   "id": "tw-108-zh-770b7caae5",
+   "code": "Ab-III-9",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "楷書形體結構要領。"
+  },
+  {
+   "id": "tw-108-zh-10d003b5d7",
+   "code": "Ab-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "4,000個常用字的字形、字音和字義。"
+  },
+  {
+   "id": "tw-108-zh-fdb15b003d",
+   "code": "Ab-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "3,500個常用字的使用。"
+  },
+  {
+   "id": "tw-108-zh-96e97b4ce7",
+   "code": "Ab-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "基本的造字原則：象形、指事、會意、形聲。"
+  },
+  {
+   "id": "tw-108-zh-f71765924c",
+   "code": "Ab-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "6,500個常用語詞的認念。"
+  },
+  {
+   "id": "tw-108-zh-f523819541",
+   "code": "Ab-IV-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "5,000個常用語詞的使用。"
+  },
+  {
+   "id": "tw-108-zh-3d17363599",
+   "code": "Ab-IV-6",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "常用文言文的詞義及語詞結構。"
+  },
+  {
+   "id": "tw-108-zh-3da948f7a2",
+   "code": "Ab-IV-7",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "常用文言文的字詞、虛字、古今義變。"
+  },
+  {
+   "id": "tw-108-zh-f7d6b922d0",
+   "code": "Ab-IV-8",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各體書法與名家碑帖的認識與欣賞。"
+  },
+  {
+   "id": "tw-108-zh-b1202b3c51",
+   "code": "Ab-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "六書的基本原則。"
+  },
+  {
+   "id": "tw-108-zh-f86d212e18",
+   "code": "Ab-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文言文的詞義及語詞結構。"
+  },
+  {
+   "id": "tw-108-zh-1965cc0d67",
+   "code": "Ab-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文言文的字詞、虛字、古今義變。"
+  },
+  {
+   "id": "tw-108-zh-39f809ce0b",
+   "code": "Ab-V-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 字詞",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各體書法作品與名家碑帖的深入鑑賞。"
+  },
+  {
+   "id": "tw-108-zh-9e19774553",
+   "code": "Ac-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "常用標點符號。"
+  },
+  {
+   "id": "tw-108-zh-d9fc9ba7ae",
+   "code": "Ac-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "簡單的基本句型。"
+  },
+  {
+   "id": "tw-108-zh-9dce72c8dd",
+   "code": "Ac-I-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "基本文句的語氣與意義。"
+  },
+  {
+   "id": "tw-108-zh-3b1dc71992",
+   "code": "Ac-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各種標點符號的用法。"
+  },
+  {
+   "id": "tw-108-zh-bb80606418",
+   "code": "Ac-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各種基本句型。"
+  },
+  {
+   "id": "tw-108-zh-c73d7bcc20",
+   "code": "Ac-II-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "基礎複句的意義。"
+  },
+  {
+   "id": "tw-108-zh-fc5447badf",
+   "code": "Ac-II-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各類文句的語氣與意義。"
+  },
+  {
+   "id": "tw-108-zh-63c1b76f96",
+   "code": "Ac-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "標點符號在文本中的作用。"
+  },
+  {
+   "id": "tw-108-zh-0815bb8472",
+   "code": "Ac-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "基礎句型結構。"
+  },
+  {
+   "id": "tw-108-zh-a11be14aed",
+   "code": "Ac-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各種複句的意義。"
+  },
+  {
+   "id": "tw-108-zh-07d0e80037",
+   "code": "Ac-III-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各類文句表達的情感與意義。"
+  },
+  {
+   "id": "tw-108-zh-eba12e3c8f",
+   "code": "Ac-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "標點符號在文本中的不同效果。"
+  },
+  {
+   "id": "tw-108-zh-d9f691fc2f",
+   "code": "Ac-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "敘事、有無、判斷、表態等句型。"
+  },
+  {
+   "id": "tw-108-zh-49cb8ff143",
+   "code": "Ac-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "文句表達的邏輯與意義。"
+  },
+  {
+   "id": "tw-108-zh-e21e43537f",
+   "code": "Ac-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 句段",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文句的深層意涵與象徵意義。"
+  },
+  {
+   "id": "tw-108-zh-cbf788d9e9",
+   "code": "Ad-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "自然段。"
+  },
+  {
+   "id": "tw-108-zh-7de52ca66f",
+   "code": "Ad-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "篇章的大意。"
+  },
+  {
+   "id": "tw-108-zh-cdff22f7bc",
+   "code": "Ad-I-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "故事、童詩等。"
+  },
+  {
+   "id": "tw-108-zh-02716599bf",
+   "code": "Ad-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "意義段。"
+  },
+  {
+   "id": "tw-108-zh-e9ec0b6746",
+   "code": "Ad-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "篇章的大意、主旨與簡單結構。"
+  },
+  {
+   "id": "tw-108-zh-56491d5049",
+   "code": "Ad-II-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "故事、童詩、現代散文等。"
+  },
+  {
+   "id": "tw-108-zh-5218ef9887",
+   "code": "Ad-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "意義段與篇章結構。"
+  },
+  {
+   "id": "tw-108-zh-a01d17ba8a",
+   "code": "Ad-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "篇章的大意、主旨、結構與寓意。"
+  },
+  {
+   "id": "tw-108-zh-b9ada5a4eb",
+   "code": "Ad-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "故事、童詩、現代散文、少年小說、兒童劇等。"
+  },
+  {
+   "id": "tw-108-zh-2470667454",
+   "code": "Ad-III-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "古典詩文。"
+  },
+  {
+   "id": "tw-108-zh-be9f1ad4b2",
+   "code": "Ad-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "篇章的主旨、結構、寓意與分析。"
+  },
+  {
+   "id": "tw-108-zh-40acd44768",
+   "code": "Ad-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "新詩、現代散文、現代小說、劇本。"
+  },
+  {
+   "id": "tw-108-zh-f9ba70a3f7",
+   "code": "Ad-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "韻文：如古體詩、樂府詩、近體詩、詞、曲等。"
+  },
+  {
+   "id": "tw-108-zh-0115817c87",
+   "code": "Ad-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "非韻文：如古文、古典小說、語錄體、寓言等。"
+  },
+  {
+   "id": "tw-108-zh-a0ab51c657",
+   "code": "Ad-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "篇章的主旨、結構、寓意與評述。"
+  },
+  {
+   "id": "tw-108-zh-88d97ce2c7",
+   "code": "Ad-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "新詩、現代散文、現代小說、劇本。"
+  },
+  {
+   "id": "tw-108-zh-b040071d0b",
+   "code": "Ad-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "韻文：如辭賦、古體詩、樂府詩、近體詩、詞、散曲、戲曲等。"
+  },
+  {
+   "id": "tw-108-zh-d9be1e8deb",
+   "code": "Ad-V-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 篇章",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "非韻文：如古文、古典小說、語錄體、寓言等。"
+  },
+  {
+   "id": "tw-108-zh-8750c1a6f6",
+   "code": "Ba-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "順敘法。"
+  },
+  {
+   "id": "tw-108-zh-2192b4990d",
+   "code": "Ba-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "記敘文本的結構。"
+  },
+  {
+   "id": "tw-108-zh-82bb391d0e",
+   "code": "Ba-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "順敘與倒敘法。"
+  },
+  {
+   "id": "tw-108-zh-d2c3d52d4d",
+   "code": "Ba-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "順敘與倒敘法。"
+  },
+  {
+   "id": "tw-108-zh-387e9e95a9",
+   "code": "Ba-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "順敘、倒敘、插敘與補敘法。"
+  },
+  {
+   "id": "tw-108-zh-936e6dd091",
+   "code": "Ba-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各種描寫的作用及呈現的效果。"
+  },
+  {
+   "id": "tw-108-zh-bbd52c695f",
+   "code": "Ba-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "順敘、倒敘、插敘與補敘法。"
+  },
+  {
+   "id": "tw-108-zh-8f2a043b06",
+   "code": "Ba-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "人、事、時、地、物的細部描寫。"
+  },
+  {
+   "id": "tw-108-zh-c2dc80ba4f",
+   "code": "Ba-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 記敘文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "寫作手法與文學美感的呈現。"
+  },
+  {
+   "id": "tw-108-zh-3571c1d7ee",
+   "code": "Bb-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "自我情感的表達。"
+  },
+  {
+   "id": "tw-108-zh-d3ed3eacf0",
+   "code": "Bb-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "人際交流的情感。"
+  },
+  {
+   "id": "tw-108-zh-6f9bcdb4e0",
+   "code": "Bb-I-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "對物或自然的感受。"
+  },
+  {
+   "id": "tw-108-zh-03e1247655",
+   "code": "Bb-I-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "直接抒情。"
+  },
+  {
+   "id": "tw-108-zh-1a52e7ac73",
+   "code": "Bb-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "自我情感的表達。"
+  },
+  {
+   "id": "tw-108-zh-9c51dce2df",
+   "code": "Bb-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "人際交流的情感。"
+  },
+  {
+   "id": "tw-108-zh-626d317245",
+   "code": "Bb-II-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "對物或自然的情懷。"
+  },
+  {
+   "id": "tw-108-zh-8eceb138ef",
+   "code": "Bb-II-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "直接抒情。"
+  },
+  {
+   "id": "tw-108-zh-cef7327687",
+   "code": "Bb-II-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "藉由敘述事件與描寫景物間接抒情。"
+  },
+  {
+   "id": "tw-108-zh-ab7c284262",
+   "code": "Bb-II-6",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "抒情文本的結構。"
+  },
+  {
+   "id": "tw-108-zh-3801ce63d0",
+   "code": "Bb-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "自我情感的表達。"
+  },
+  {
+   "id": "tw-108-zh-574283103d",
+   "code": "Bb-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "人際交流的情感。"
+  },
+  {
+   "id": "tw-108-zh-a1fec850f9",
+   "code": "Bb-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "對物或自然的感悟。"
+  },
+  {
+   "id": "tw-108-zh-5fe4637f9b",
+   "code": "Bb-III-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "直接抒情。"
+  },
+  {
+   "id": "tw-108-zh-4298d18287",
+   "code": "Bb-III-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "藉由敘述事件與描寫景物間接抒情。"
+  },
+  {
+   "id": "tw-108-zh-5518997b36",
+   "code": "Bb-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自我及人際交流的感受。"
+  },
+  {
+   "id": "tw-108-zh-82e2e6672c",
+   "code": "Bb-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "對社會群體與家國民族情感的體會。"
+  },
+  {
+   "id": "tw-108-zh-3c37ea9e7c",
+   "code": "Bb-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "對物或自然以及生命的感悟。"
+  },
+  {
+   "id": "tw-108-zh-58de3fe0c8",
+   "code": "Bb-IV-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "直接抒情。"
+  },
+  {
+   "id": "tw-108-zh-488f063ee5",
+   "code": "Bb-IV-5",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "藉由敘述事件與描寫景物間接抒情。"
+  },
+  {
+   "id": "tw-108-zh-d8b7cb4c10",
+   "code": "Bb-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "自我及人際交流的感受。"
+  },
+  {
+   "id": "tw-108-zh-141ba0a2eb",
+   "code": "Bb-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "對社會群體與家國民族情感的體會。"
+  },
+  {
+   "id": "tw-108-zh-052a0f1a83",
+   "code": "Bb-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "對萬物之情、宇宙之愛的感悟。"
+  },
+  {
+   "id": "tw-108-zh-af0711a93a",
+   "code": "Bb-V-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 抒情文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "藉由敘述事件與描寫景物間接抒情。"
+  },
+  {
+   "id": "tw-108-zh-c2f3636af6",
+   "code": "Bc-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "具邏輯、客觀、理性的說明，如科學知識、產品、環境等文本。"
+  },
+  {
+   "id": "tw-108-zh-e2e7686511",
+   "code": "Bc-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "描述、列舉、因果等寫作手法。"
+  },
+  {
+   "id": "tw-108-zh-ec8b56bd3a",
+   "code": "Bc-II-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "數據、圖表、圖片、工具列等輔助說明。"
+  },
+  {
+   "id": "tw-108-zh-2a4da58a6e",
+   "code": "Bc-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "具邏輯、客觀、理性的說明，如科學知識、產品、環境等。"
+  },
+  {
+   "id": "tw-108-zh-41fd880a40",
+   "code": "Bc-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "描述、列舉、因果、問題解決、比較等寫作手法。"
+  },
+  {
+   "id": "tw-108-zh-976f79ad17",
+   "code": "Bc-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "數據、圖表、圖片、工具列等輔助說明。"
+  },
+  {
+   "id": "tw-108-zh-0edf46b879",
+   "code": "Bc-III-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "說明文本的結構。"
+  },
+  {
+   "id": "tw-108-zh-fcdab3df70",
+   "code": "Bc-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "具邏輯、客觀、理性的說明，如科學知識、產品、環境、制度等說明。"
+  },
+  {
+   "id": "tw-108-zh-c38c55ed2f",
+   "code": "Bc-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "描述、列舉、因果、問題解決、比較、分類、定義等寫作手法。"
+  },
+  {
+   "id": "tw-108-zh-4263aa113a",
+   "code": "Bc-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "數據、圖表、圖片、工具列等輔助說明。"
+  },
+  {
+   "id": "tw-108-zh-1ae445e563",
+   "code": "Bc-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "具邏輯、客觀、理性、知識的說明，如人權公約、百科全書、制度演變等。"
+  },
+  {
+   "id": "tw-108-zh-4595d3279a",
+   "code": "Bc-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "描述、列舉、因果、問題解決、比較、定義、引用、問答等寫作手法。"
+  },
+  {
+   "id": "tw-108-zh-12f551d041",
+   "code": "Bc-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 說明文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "數據、圖表、圖片、工具列等輔助說明。"
+  },
+  {
+   "id": "tw-108-zh-1737dc4b64",
+   "code": "Bd-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "以事實、理論為論據，達到說服、建構、批判等目的。"
+  },
+  {
+   "id": "tw-108-zh-b8cf61c7c0",
+   "code": "Bd-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "論證方式如舉例、正證、反證等。"
+  },
+  {
+   "id": "tw-108-zh-9403fc229b",
+   "code": "Bd-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "議論文本的結構。"
+  },
+  {
+   "id": "tw-108-zh-8c93270933",
+   "code": "Bd-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "以事實、理論為論據，達到說服、建構、批判等目的。"
+  },
+  {
+   "id": "tw-108-zh-789026123a",
+   "code": "Bd-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "論證方式如比較、比喻等。"
+  },
+  {
+   "id": "tw-108-zh-0bdcc2b0a3",
+   "code": "Bd-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "以事實、理論為論據，達到說服、建構、批判等目的。"
+  },
+  {
+   "id": "tw-108-zh-d0b6d4210e",
+   "code": "Bd-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 議論文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "論證方式如歸納、演繹、因果論證等。"
+  },
+  {
+   "id": "tw-108-zh-da3ad020ff",
+   "code": "Be-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "在生活應用方面，如自我介紹、日記的格式與寫作方法。"
+  },
+  {
+   "id": "tw-108-zh-37a16cc40a",
+   "code": "Be-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "在人際溝通方面，以書信、卡片等慣用語彙及書寫格式為主。"
+  },
+  {
+   "id": "tw-108-zh-c75e8ead3e",
+   "code": "Be-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "在生活應用方面，以日記、海報的格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-a9bfc1666a",
+   "code": "Be-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "在人際溝通方面，以書信、卡片、便條、啟事等慣用語彙及書寫格式為主。"
+  },
+  {
+   "id": "tw-108-zh-ee296b4490",
+   "code": "Be-II-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "在學習應用方面，以心得報告的寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-a829ecc905",
+   "code": "Be-II-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "應用文本的結構。"
+  },
+  {
+   "id": "tw-108-zh-5a1929c69b",
+   "code": "Be-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "在生活應用方面，以說明書、廣告、標語、告示、公約等格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-f3851110ad",
+   "code": "Be-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "在人際溝通方面，以通知、電子郵件便條等慣用語彙及書寫格式為主。"
+  },
+  {
+   "id": "tw-108-zh-2abfd5a54a",
+   "code": "Be-III-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "在學習應用方面，以簡報、讀書報告、演講稿等格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-209ac9fbfe",
+   "code": "Be-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "在生活應用方面，以自傳、簡報、新聞稿等格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-d035da4cd3",
+   "code": "Be-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "在人際溝通方面，以書信、便條、對聯等之慣用語彙與書寫格式為主。"
+  },
+  {
+   "id": "tw-108-zh-ff04de9c43",
+   "code": "Be-IV-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "在學習應用方面，以簡報、讀書報告、演講稿、劇本等格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-1c722f34aa",
+   "code": "Be-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "在生活應用方面，以自傳、新聞稿、報導、評論、等格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-bc6c76cba1",
+   "code": "Be-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "在人際溝通方面，以書信、便條、啟事、柬帖、對聯、題辭、慶賀文、祭弔文等慣用語彙與書寫格式為主。"
+  },
+  {
+   "id": "tw-108-zh-1988820533",
+   "code": "Be-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 應用文本",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "在學習應用方面，以簡報、讀書報告、演講稿、會議紀錄、劇本、小論文、計劃書、申請書等格式與寫作方法為主。"
+  },
+  {
+   "id": "tw-108-zh-4752f1f503",
+   "code": "Ca-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "各類文本中與日常生活相關的文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-78aa291499",
+   "code": "Ca-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各類文本中的飲食、服飾、交通工具、名勝古蹟及休閒娛樂等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-688746a735",
+   "code": "Ca-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各類文本中的飲食、服飾、建築形式、交通工具、名勝古蹟及休閒娛樂等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-08c1eafacf",
+   "code": "Ca-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各類文本中表現科技演進、環境發展的文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-b14e120dbe",
+   "code": "Ca-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各類文本中的飲食、服飾、建築形式、交通工具、名勝古蹟及休閒娛樂等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-a5e5788417",
+   "code": "Ca-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各類文本中表現科技文明演進、生存環境發展的文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-369927cbc0",
+   "code": "Ca-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中的飲食、服飾、建築形式、交通工具、名勝古蹟及休閒娛樂等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-cb4c9eadf0",
+   "code": "Ca-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中表現科技文明演進、生存環境發展的文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-f7b9b443af",
+   "code": "Ca-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 物質文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中物質形貌樣態的呈現方式與文本脈絡的關聯性。"
+  },
+  {
+   "id": "tw-108-zh-28146996cb",
+   "code": "Cb-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "各類文本中的親屬關係、道德倫理、儀式風俗等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-c8c96c407b",
+   "code": "Cb-I-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "各類文本中所反映的個人與家庭、鄉里的關係。"
+  },
+  {
+   "id": "tw-108-zh-54b9682588",
+   "code": "Cb-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各類文本中的親屬關係、道德倫理、儀式風俗等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-01234b8103",
+   "code": "Cb-II-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各類文本中所反映的個人與家庭、鄉里、國族及其他社群的關係。"
+  },
+  {
+   "id": "tw-108-zh-e2d4372494",
+   "code": "Cb-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各類文本中的親屬關係、道德倫理、儀式風俗、典章制度等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-5501330cd4",
+   "code": "Cb-III-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各類文本中所反映的個人與家庭、鄉里、國族及其他社群的關係。"
+  },
+  {
+   "id": "tw-108-zh-6df46757fc",
+   "code": "Cb-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各類文本中的親屬關係、道德倫理、儀式風俗、典章制度等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-aa57018518",
+   "code": "Cb-IV-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各類文本中所反映的個人與家庭、鄉里、國族及其他社群的關係。"
+  },
+  {
+   "id": "tw-108-zh-d8dd6afaa1",
+   "code": "Cb-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中的親屬關係、道德倫理、儀式風俗、典章制度等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-437cb048b5",
+   "code": "Cb-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中所反映的個人與家庭、鄉里、國族及其他社群的關係。"
+  },
+  {
+   "id": "tw-108-zh-26f92c918b",
+   "code": "Cb-V-3",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中所反映不同社群間的文化差異、交互影響等現象。"
+  },
+  {
+   "id": "tw-108-zh-a7cef1e893",
+   "code": "Cb-V-4",
+   "subject": "Mandarin",
+   "strand": "學習內容 社群文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本所呈現社群關係中的性別、權力等文化符碼。"
+  },
+  {
+   "id": "tw-108-zh-ce337df16d",
+   "code": "Cc-I-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 精神文化",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "各類文本中的藝術、信仰、思想等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-98ad1f5e35",
+   "code": "Cc-II-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 精神文化",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "各類文本中的藝術、信仰、思想等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-2abca591d2",
+   "code": "Cc-III-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 精神文化",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "各類文本中的藝術、信仰、思想等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-960e47e304",
+   "code": "Cc-IV-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 精神文化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "各類文本中的藝術、信仰、思想等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-a0eab9b351",
+   "code": "Cc-V-1",
+   "subject": "Mandarin",
+   "strand": "學習內容 精神文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中的藝術、信仰、思想等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-6c14ed7370",
+   "code": "Cc-V-2",
+   "subject": "Mandarin",
+   "strand": "學習內容 精神文化",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "各類文本中所反映的矛盾衝突、生命態度、天人關係等文化內涵。"
+  },
+  {
+   "id": "tw-108-zh-066a739333",
+   "code": "n-I-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "理解一千以內數的位值結構，據以做為四則運算之基礎。"
+  },
+  {
+   "id": "tw-108-zh-3c05393410",
+   "code": "n-I-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "理解加法和減法的意義，熟練基本加減法並能流暢計算。"
+  },
+  {
+   "id": "tw-108-zh-d62d446e85",
+   "code": "n-I-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "應用加法和減法的計算或估算於日常應用解題。"
+  },
+  {
+   "id": "tw-108-zh-9ceff7c85c",
+   "code": "n-I-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "理解乘法的意義，熟練十十乘法，並初步進行分裝與平分的除法活動。"
+  },
+  {
+   "id": "tw-108-zh-193ab58d0c",
+   "code": "n-I-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "在具體情境中，解決簡單兩步驟應用問題。"
+  },
+  {
+   "id": "tw-108-zh-f8064829e7",
+   "code": "n-I-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識單位分數。"
+  },
+  {
+   "id": "tw-108-zh-d1ad43ab34",
+   "code": "n-I-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "理解長度及其常用單位，並做實測、估測與計算。"
+  },
+  {
+   "id": "tw-108-zh-6f5d999a0c",
+   "code": "n-I-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識容量、重量、面積。"
+  },
+  {
+   "id": "tw-108-zh-a114dd6a5b",
+   "code": "n-I-9",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識時刻與時間常用單位。"
+  },
+  {
+   "id": "tw-108-zh-dc24f5f8a0",
+   "code": "s-I-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "從操作活動，初步認識物體與常見幾何形體的幾何特徵。"
+  },
+  {
+   "id": "tw-108-zh-8cee68c7bd",
+   "code": "r-I-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "學習數學語言中的運算符號、關係符號、算式約定。"
+  },
+  {
+   "id": "tw-108-zh-8c1a7bf321",
+   "code": "r-I-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識加法和乘法的運算規律。"
+  },
+  {
+   "id": "tw-108-zh-651f158bde",
+   "code": "r-I-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識加減互逆，並能應用與解題。"
+  },
+  {
+   "id": "tw-108-zh-335d0d42fb",
+   "code": "d-I-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "認識分類的模式，能主動蒐集資料、分類，並做簡單的呈現與說明。"
+  },
+  {
+   "id": "tw-108-zh-916d38b245",
+   "code": "n-II-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解一億以內數的位值結構，並據以作為各種運算與估算之基礎。"
+  },
+  {
+   "id": "tw-108-zh-e217c52f0b",
+   "code": "n-II-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "熟練較大位數之加、減、乘計算或估算，並能應用於日常解題。"
+  },
+  {
+   "id": "tw-108-zh-56904c4f8a",
+   "code": "n-II-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解除法的意義，能做計算與估算，並能應用於日常解題。"
+  },
+  {
+   "id": "tw-108-zh-0354d36580",
+   "code": "n-II-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "解決四則估算之日常應用問題。"
+  },
+  {
+   "id": "tw-108-zh-bbe50a9f50",
+   "code": "n-II-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "在具體情境中，解決兩步驟應用問題。"
+  },
+  {
+   "id": "tw-108-zh-cee3b71122",
+   "code": "n-II-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解同分母分數的加、減、整數倍的意義、計算與應用。認識等值分數的意義，並應用於認識簡單異分母分數之比較與加減的意義。"
+  },
+  {
+   "id": "tw-108-zh-fbb7b2852b",
+   "code": "n-II-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解小數的意義與位值結構，並能做加、減、整數倍的直式計算與應用。"
+  },
+  {
+   "id": "tw-108-zh-e7d7954ff6",
+   "code": "n-II-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "能在數線標示整數、分數、小數並做比較與加減，理解整數、分數、小數都是數。"
+  },
+  {
+   "id": "tw-108-zh-4abc86ab5f",
+   "code": "n-II-9",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解長度、角度、面積、容量、重量的常用單位與換算，培養量感與估測能力，並能做計算和應用解題。認識體積。"
+  },
+  {
+   "id": "tw-108-zh-40c8fb3aa8",
+   "code": "n-II-10",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解時間的加減運算，並應用於日常的時間加減問題。"
+  },
+  {
+   "id": "tw-108-zh-04fa10d481",
+   "code": "s-II-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解正方形和長方形的面積與周長公式與應用。"
+  },
+  {
+   "id": "tw-108-zh-233e234a85",
+   "code": "s-II-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "認識平面圖形全等的意義。"
+  },
+  {
+   "id": "tw-108-zh-9cae218fa4",
+   "code": "s-II-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "透過平面圖形的構成要素，認識常見三角形、常見四邊形與圓。"
+  },
+  {
+   "id": "tw-108-zh-8dbaf8cc9e",
+   "code": "s-II-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "在活動中，認識幾何概念的應用，如旋轉角、展開圖與空間形體。"
+  },
+  {
+   "id": "tw-108-zh-861c054ec5",
+   "code": "r-II-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解乘除互逆，並能應用與解題。"
+  },
+  {
+   "id": "tw-108-zh-8d2996c956",
+   "code": "r-II-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "認識一維及二維之數量模式，並能說明與簡單推理。"
+  },
+  {
+   "id": "tw-108-zh-2c08b2c314",
+   "code": "r-II-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解兩步驟問題的併式計算與四則混合計算之約定。"
+  },
+  {
+   "id": "tw-108-zh-b5bf67d579",
+   "code": "r-II-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "認識兩步驟計算中加減與部分乘除計算的規則並能應用。"
+  },
+  {
+   "id": "tw-108-zh-8f88aa9531",
+   "code": "r-II-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "理解以文字表示之數學公式。"
+  },
+  {
+   "id": "tw-108-zh-40559b355b",
+   "code": "d-II-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "報讀與製作一維表格、二維表格與長條圖，報讀折線圖，並據以做簡單推論。"
+  },
+  {
+   "id": "tw-108-zh-95b5461c59",
+   "code": "n-III-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解數的十進位的位值結構，並能據以延伸認識更大與更小的數。"
+  },
+  {
+   "id": "tw-108-zh-a920547e4c",
+   "code": "n-III-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "在具體情境中，解決三步驟以上之常見應用問題。"
+  },
+  {
+   "id": "tw-108-zh-b6c6daa15d",
+   "code": "n-III-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識因數、倍數、質數、最大公因數、最小公倍數的意義、計算與應用。"
+  },
+  {
+   "id": "tw-108-zh-08a4847a43",
+   "code": "n-III-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解約分、擴分、通分的意義，並應用於異分母分數的加減。"
+  },
+  {
+   "id": "tw-108-zh-3121d3cc80",
+   "code": "n-III-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解整數相除的分數表示的意義。"
+  },
+  {
+   "id": "tw-108-zh-f278461e3d",
+   "code": "n-III-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解分數乘法和除法的意義、計算與應用。"
+  },
+  {
+   "id": "tw-108-zh-6a808974c6",
+   "code": "n-III-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解小數乘法和除法的意義，能做直式計算與應用。"
+  },
+  {
+   "id": "tw-108-zh-782b023006",
+   "code": "n-III-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解以四捨五入取概數，並進行合理估算。"
+  },
+  {
+   "id": "tw-108-zh-7b2ee4ea98",
+   "code": "n-III-9",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解比例關係的意義，並能據以觀察、表述、計算與解題，如比率、比例尺、速度、基準量等。"
+  },
+  {
+   "id": "tw-108-zh-d6d91fbc32",
+   "code": "n-III-10",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "嘗試將較複雜的情境或模式中的數量關係以算式正確表述，並據以推理或解題。"
+  },
+  {
+   "id": "tw-108-zh-f857baa6e3",
+   "code": "n-III-11",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識量的常用單位及其換算，並處理相關的應用問題。"
+  },
+  {
+   "id": "tw-108-zh-f61aac0a82",
+   "code": "n-III-12",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解容量、容積和體積之間的關係，並做應用。"
+  },
+  {
+   "id": "tw-108-zh-0266b0e705",
+   "code": "s-III-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解三角形、平行四邊形與梯形的面積計算。"
+  },
+  {
+   "id": "tw-108-zh-78df371335",
+   "code": "s-III-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識圓周率的意義，理解圓面積、圓周長、扇形面積與弧長之計算方式。"
+  },
+  {
+   "id": "tw-108-zh-d711e722fa",
+   "code": "s-III-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "從操作活動，理解空間中面與面的關係與簡單立體形體的性質。"
+  },
+  {
+   "id": "tw-108-zh-a644220c34",
+   "code": "s-III-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解角柱（含正方體、長方體）與圓柱的體積與表面積的計算方式。"
+  },
+  {
+   "id": "tw-108-zh-c52af297db",
+   "code": "s-III-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "以簡單推理，理解幾何形體的性質。"
+  },
+  {
+   "id": "tw-108-zh-89a970746e",
+   "code": "s-III-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識線對稱的意義與其推論。"
+  },
+  {
+   "id": "tw-108-zh-11d3d26131",
+   "code": "s-III-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "認識平面圖形縮放的意義與應用。"
+  },
+  {
+   "id": "tw-108-zh-4e55990c17",
+   "code": "r-III-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "理解各種計算規則（含分配律），並協助四則混合計算與應用解題。"
+  },
+  {
+   "id": "tw-108-zh-92c354923c",
+   "code": "r-III-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "熟練數（含分數、小數）的四則混合計算。"
+  },
+  {
+   "id": "tw-108-zh-0a92186c90",
+   "code": "r-III-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 關係",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "觀察情境或模式中的數量關係，並用文字或符號正確表述，協助推理與解題。"
+  },
+  {
+   "id": "tw-108-zh-88b9bde0da",
+   "code": "d-III-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "報讀圓形圖，製作折線圖與圓形圖，並據以做簡單推論。"
+  },
+  {
+   "id": "tw-108-zh-e8a9f8435b",
+   "code": "d-III-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "能從資料或圖表的資料數據，解決關於「可能性」的簡單問題。"
+  },
+  {
+   "id": "tw-108-zh-d86532377e",
+   "code": "n-IV-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解因數、倍數、質數、最大公因數、最小公倍數的意義及熟練其計算，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-f15081e867",
+   "code": "n-IV-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解負數之意義、符號與在數線上的表示，並熟練其四則運算，且能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-8dee8932b7",
+   "code": "n-IV-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解非負整數次方的指數和指數律，應用於質因數分解與科學記號，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-f36b822279",
+   "code": "n-IV-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解比、比例式、正比、反比和連比的意義和推理，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-8a37741431",
+   "code": "n-IV-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解二次方根的意義、符號與根式的四則運算，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-e54c3406c8",
+   "code": "n-IV-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "應用十分逼近法估算二次方根的近似值，並能應用計算機計算、驗證與估算，建立對二次方根的數感。"
+  },
+  {
+   "id": "tw-108-zh-ab7cdd4464",
+   "code": "n-IV-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "辨識數列的規律性，以數學符號表徵生活中的數量關係與規律，認識等差數列與等比數列，並能依首項與公差或公比計算其他各項。"
+  },
+  {
+   "id": "tw-108-zh-3f65494b04",
+   "code": "n-IV-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解等差級數的求和公式，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-c7ba2cf790",
+   "code": "n-IV-9",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "使用計算機計算比值、複雜的數式、小數或根式等四則運算與三角比的近似值問題，並能理解計算機可能產生誤差。"
+  },
+  {
+   "id": "tw-108-zh-5a9f279fde",
+   "code": "s-IV-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解常用幾何形體的定義、符號、性質，並應用於幾何問題的解題。"
+  },
+  {
+   "id": "tw-108-zh-75986bd4a5",
+   "code": "s-IV-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解角的各種性質、三角形與凸多邊形的內角和外角的意義、三角形的外角和、與凸多邊形的內角和，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-aa9dc0eab1",
+   "code": "s-IV-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解兩條直線的垂直和平行的意義，以及各種性質，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-116eadfbbb",
+   "code": "s-IV-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解平面圖形全等的意義，知道圖形經平移、旋轉、鏡射後仍保持全等，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-d0c6b15947",
+   "code": "s-IV-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解線對稱的意義和線對稱圖形的幾何性質，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-e0e8cf2222",
+   "code": "s-IV-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解平面圖形相似的意義，知道圖形經縮放後其圖形相似，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-3375bed1c9",
+   "code": "s-IV-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解畢氏定理與其逆敘述，並能應用於數學解題與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-ef848e9909",
+   "code": "s-IV-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解特殊三角形（如正三角形、等腰三角形、直角三角形）、特殊四邊形（如正方形、矩形、平行四邊形、菱形、箏形、梯形）和正多邊形的幾何性質及相關問題。"
+  },
+  {
+   "id": "tw-108-zh-0126c8d968",
+   "code": "s-IV-9",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解三角形的邊角關係，利用邊角對應相等，判斷兩個三角形的全等，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-28b12f1862",
+   "code": "s-IV-10",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解三角形相似的性質，利用對應角相等或對應邊成比例，判斷兩個三角形的相似，並能應用於解決幾何與日常生活的問題。"
+  },
+  {
+   "id": "tw-108-zh-7677b6264e",
+   "code": "s-IV-11",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解三角形重心、外心、內心的意義和其相關性質。"
+  },
+  {
+   "id": "tw-108-zh-c67c1335d7",
+   "code": "s-IV-12",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解直角三角形中某一銳角的角度決定邊長的比值，認識這些比值的符號，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-3ba1b4fb5b",
+   "code": "s-IV-13",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解直尺、圓規操作過程的敘述，並應用於尺規作圖。"
+  },
+  {
+   "id": "tw-108-zh-1f060a8593",
+   "code": "s-IV-14",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識圓的相關概念（如半徑、弦、弧、弓形等）和幾何性質（如圓心角、圓周角、圓內接四邊形的對角互補等），並理解弧長、圓面積、扇形面積的公式。"
+  },
+  {
+   "id": "tw-108-zh-735cc78d72",
+   "code": "s-IV-15",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識線與線、線與平面在空間中的垂直關係和平行關係。"
+  },
+  {
+   "id": "tw-108-zh-e5e2ca9683",
+   "code": "s-IV-16",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解簡單的立體圖形及其三視圖與平面展開圖，並能計算立體圖形的表面積、側面積及體積。"
+  },
+  {
+   "id": "tw-108-zh-341fbe1818",
+   "code": "g-IV-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識直角坐標的意義與構成要素，並能報讀與標示坐標點，以及計算兩個坐標點的距離。"
+  },
+  {
+   "id": "tw-108-zh-dd7765081d",
+   "code": "g-IV-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "在直角坐標上能描繪與理解二元一次方程式的直線圖形，以及二元一次聯立方程式唯一解的幾何意義。"
+  },
+  {
+   "id": "tw-108-zh-461b836aac",
+   "code": "a-IV-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解並應用符號及文字敘述表達概念、運算、推理及證明。"
+  },
+  {
+   "id": "tw-108-zh-7e87053eee",
+   "code": "a-IV-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解一元一次方程式及其解的意義，能以等量公理與移項法則求解和驗算，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-ccc8810012",
+   "code": "a-IV-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解一元一次不等式的意義，並應用於標示數的範圍和其在數線上的圖形，以及使用不等式的數學符號描述情境，與人溝通。"
+  },
+  {
+   "id": "tw-108-zh-96c106dd95",
+   "code": "a-IV-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解二元一次聯立方程式及其解的意義，並能以代入消去法與加減消去法求解和驗算，以及能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-4c6139cc14",
+   "code": "a-IV-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "認識多項式及相關名詞，並熟練多項式的四則運算及運用乘法公式。"
+  },
+  {
+   "id": "tw-108-zh-5e27690ef8",
+   "code": "a-IV-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解一元二次方程式及其解的意義，能以因式分解和配方法求解和驗算，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-86772ee964",
+   "code": "f-IV-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解常數函數和一次函數的意義，能描繪常數函數和一次函數的圖形，並能運用到日常生活的情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-1bda2e7198",
+   "code": "f-IV-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解二次函數的意義，並能描繪二次函數的圖形。"
+  },
+  {
+   "id": "tw-108-zh-3d337dd481",
+   "code": "f-IV-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解二次函數的標準式，熟知開口方向、大小、頂點、對稱軸與極值等問題。"
+  },
+  {
+   "id": "tw-108-zh-c471b92c91",
+   "code": "d-IV-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解常用統計圖表，並能運用簡單統計量分析資料的特性及使用統計軟體的資訊表徵，與人溝通。"
+  },
+  {
+   "id": "tw-108-zh-868aec54a9",
+   "code": "d-IV-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "理解機率的意義，能以機率表示不確定性和以樹狀圖分析所有的可能性，並能應用機率到簡單的日常生活情境解決問題。"
+  },
+  {
+   "id": "tw-108-zh-0d194270e2",
+   "code": "n-V-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解實數與數線的關係，理解其十進位表示法的意義，理解整數、有理數、無理數的特質，並熟練其四則與次方運算，具備指數與對數的數感，能用區間描述數線上的範圍，能用實數描述現象並解決問題。"
+  },
+  {
+   "id": "tw-108-zh-fb9093feb5",
+   "code": "n-V-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "能熟練操作計算機，能判斷使用計算機的時機，理解計算機可能產生誤差，並能處理誤差。"
+  },
+  {
+   "id": "tw-108-zh-8983b0ea19",
+   "code": "n-V-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識複數，理解複數為平面上的數，理解並欣賞複數除了三一律以外，與實數完全相容。能操作複數之運算，能用以描述現象並解決問題。"
+  },
+  {
+   "id": "tw-108-zh-bb84f6462f",
+   "code": "n-V-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解絕對值應用在各種數與量之上的意義，能操作其運算，欣賞其一致性，並能用以描述現象及溝通。"
+  },
+  {
+   "id": "tw-108-zh-5d037954a0",
+   "code": "n-V-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "能察覺規律並以一般項或遞迴方式表現，進而熟悉級數的操作。理解數學歸納法的意義，並能用於數學論證。"
+  },
+  {
+   "id": "tw-108-zh-84c894d345",
+   "code": "n-V-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識命題，理解並欣賞邏輯相對於自然語言的一致性與精確性，並能用於溝通與推論。"
+  },
+  {
+   "id": "tw-108-zh-e7d0bfa5fd",
+   "code": "n-V-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識弧度量並能操作，理解並欣賞其作為角之度量的簡潔性。"
+  },
+  {
+   "id": "tw-108-zh-e373437afb",
+   "code": "n-V-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 數與量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識無窮的概念，理解並欣賞數學掌握無窮的方法。"
+  },
+  {
+   "id": "tw-108-zh-0bea0a8488",
+   "code": "s-V-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解三角比的意義，熟練其彼此關係與運算操作，能靈活應用於等式或函數，並能用以推論及解決問題。"
+  },
+  {
+   "id": "tw-108-zh-5f500971ae",
+   "code": "s-V-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 空間與形狀",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "察覺並理解空間的基本特質，以及空間中的點、直線與平面的關係。能在空間中認識特殊曲線，並能察覺與欣賞生活中的範例。"
+  },
+  {
+   "id": "tw-108-zh-0f0b002501",
+   "code": "g-V-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識直角坐標可以用數來表示平面與空間中的位置，可以經由向量觀念而做點的運算，理解並熟練其操作，並能用於溝通。"
+  },
+  {
+   "id": "tw-108-zh-b3f091324a",
+   "code": "g-V-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解並欣賞坐標平面上的圖形對稱性，並能用以溝通及推論。"
+  },
+  {
+   "id": "tw-108-zh-c125f4dc35",
+   "code": "g-V-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識極坐標，理解方位角、方向與斜率的關聯，能熟練地轉換表徵，並能用於溝通。"
+  },
+  {
+   "id": "tw-108-zh-e83144ef9e",
+   "code": "g-V-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解並欣賞幾何的性質可以透過坐標而轉化成數與式的關係，而數與式的代數操作也可以透過坐標產生對應的幾何意義，能熟練地轉換幾何與代數的表徵，並能用於推論及解決問題。"
+  },
+  {
+   "id": "tw-108-zh-eff6859223",
+   "code": "g-V-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 坐標幾何",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解並欣賞坐標系統可為幾何問題提供簡潔的算法，而坐標的平移與伸縮可以簡化代數問題，能熟練前述操作，並用以推論及解決問題。"
+  },
+  {
+   "id": "tw-108-zh-4a8a294e3c",
+   "code": "a-V-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解多項式、分式與根式對應實數之運算規則，理解指數、對數的運算規則，並能用於數學推論。"
+  },
+  {
+   "id": "tw-108-zh-374b2efebf",
+   "code": "a-V-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解並熟練多項式的運算操作，能靈活應用於等式或函數，並能用以推論及解決問題。"
+  },
+  {
+   "id": "tw-108-zh-0e8bb9826d",
+   "code": "a-V-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識矩陣，理解線性組合與矩陣運算的意涵，並能用以解決問題。"
+  },
+  {
+   "id": "tw-108-zh-5b9c7597c3",
+   "code": "a-V-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 代數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解不等式之解區域的意涵，並能用以解決問題。"
+  },
+  {
+   "id": "tw-108-zh-935a896ead",
+   "code": "f-V-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識函數，理解式與函數的關連並能靈活轉換，理解函數圖形的意義，並能用以溝通。"
+  },
+  {
+   "id": "tw-108-zh-4d69ad1de9",
+   "code": "f-V-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識多項式函數的圖形特徵，理解其特徵的意義，認識以多項式函數為數學模型的關係或現象，並能用以溝通和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-d48d4d8806",
+   "code": "f-V-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識三角函數的圖形特徵，理解其特徵的意義，認識以正弦函數為數學模型的週期性現象，並能用以溝通和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-20e023bd84",
+   "code": "f-V-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識指數與對數函數的圖形特徵，理解其特徵的意義，認識以指數函數為數學模型的成長或衰退現象，並能用以溝通和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-9b5375ec7f",
+   "code": "f-V-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解矩陣應用於線性映射的意義，並能用以溝通、推論和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-bb7802dbb7",
+   "code": "f-V-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識極限，理解微分與導數的意義，並能用以溝通和推論。"
+  },
+  {
+   "id": "tw-108-zh-e7d582a17b",
+   "code": "f-V-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解導函數的意義，熟練其操作，並能用以解決問題。"
+  },
+  {
+   "id": "tw-108-zh-e8e43f0b0b",
+   "code": "f-V-8",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識微分與積分互為逆運算，理解微積分基本定理的意義，並能用以推論。"
+  },
+  {
+   "id": "tw-108-zh-336cf8475a",
+   "code": "f-V-9",
+   "subject": "Mathematics",
+   "strand": "學習表現 函數",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解定積分的原理，並能用以溝通、推論和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-91d8c6036b",
+   "code": "d-V-1",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識集合，理解並欣賞集合語言的簡潔性，能操作集合的運算，能以文氏圖作為輔助，並能用於溝通與推論。"
+  },
+  {
+   "id": "tw-108-zh-ee672c3f66",
+   "code": "d-V-2",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "能判斷分析數據的時機，能選用適當的統計量作為描述數據的參數，理解數據分析可能產生的例外，並能處理例外。"
+  },
+  {
+   "id": "tw-108-zh-e415db0028",
+   "code": "d-V-3",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解事件的不確定性，並能以機率將之量化。理解機率的性質並能操作其運算，能用以溝通和推論。"
+  },
+  {
+   "id": "tw-108-zh-037be612fa",
+   "code": "d-V-4",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識隨機變數，理解其分布概念，理解其參數的意義與算法，並能用以推論和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-e2bf73967f",
+   "code": "d-V-5",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "能以機率檢核不確定之假設或推論的合理性。"
+  },
+  {
+   "id": "tw-108-zh-334023276c",
+   "code": "d-V-6",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "理解基本計數原理，能運用策略與原理，窮舉所有狀況。"
+  },
+  {
+   "id": "tw-108-zh-41ccfc2256",
+   "code": "d-V-7",
+   "subject": "Mathematics",
+   "strand": "學習表現 資料與不確定性",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "認識排列與組合的計數模型，理解其運算原理，並能用於溝通和解決問題。"
+  },
+  {
+   "id": "tw-108-zh-1bc2dfeb80",
+   "code": "N-1-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    6
+   ],
+   "text": "一百以內的數：含操作活動。用數表示多少與順序。結合數數、位值表徵、位值表。位值單位「個」和「十」。位值單位換算。認識0的位值意義。"
+  },
+  {
+   "id": "tw-108-zh-e66cb5b3ff",
+   "code": "N-1-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    6
+   ],
+   "text": "加法和減法：加法和減法的意義與應用。含「添加型」、「併加型」、「拿走型」、「比較型」等應用問題。加法和減法算式。"
+  },
+  {
+   "id": "tw-108-zh-1e0992a264",
+   "code": "N-1-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    6
+   ],
+   "text": "基本加減法：以操作活動為主。以熟練為目標。指1到10之數與1到10之數的加法，及反向的減法計算。"
+  },
+  {
+   "id": "tw-108-zh-2e8d842af7",
+   "code": "N-1-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    6
+   ],
+   "text": "解題：1元、5元、10元、50元、100元。以操作活動為主。數錢、換錢、找錢。"
+  },
+  {
+   "id": "tw-108-zh-5d21d0d513",
+   "code": "N-1-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    6
+   ],
+   "text": "長度（同S-1-1）：以操作活動為主。初步認識、直接比較、間接比較（含個別單位）。"
+  },
+  {
+   "id": "tw-108-zh-73fc846e86",
+   "code": "N-1-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    6
+   ],
+   "text": "日常時間用語：以操作活動為主。簡單日期報讀「幾月幾日」；「明天」、「今天」、「昨天」；「上午」、「中午」、「下午」、「晚上」。簡單時刻報讀「整點」與「半點」。"
+  },
+  {
+   "id": "tw-108-zh-b79ba578d3",
+   "code": "S-1-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    6
+   ],
+   "text": "長度（同N-1-5）：以操作活動為主。初步認識、直接比較、間接比較（含個別單位）。"
+  },
+  {
+   "id": "tw-108-zh-9519753434",
+   "code": "S-1-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    6
+   ],
+   "text": "形體的操作：以操作活動為主。描繪、複製、拼貼、堆疊。"
+  },
+  {
+   "id": "tw-108-zh-667750e3ce",
+   "code": "R-1-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    6
+   ],
+   "text": "算式與符號：含加減算式中的數、加號、減號、等號。以說、讀、聽、寫、做檢驗學生的理解。適用於後續階段。"
+  },
+  {
+   "id": "tw-108-zh-877b89a1a0",
+   "code": "R-1-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    6
+   ],
+   "text": "兩數相加的順序不影響其和：加法交換律。可併入其他教學活動。"
+  },
+  {
+   "id": "tw-108-zh-7a2ddbb981",
+   "code": "D-1-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    6
+   ],
+   "text": "簡單分類：以操作活動為主。能蒐集、分類、記錄、呈現日常生活物品，報讀、說明已處理好之分類。觀察分類的模式，知道同一組資料可有不同的分類方式。"
+  },
+  {
+   "id": "tw-108-zh-29571787ed",
+   "code": "N-2-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "一千以內的數：含位值積木操作活動。結合點數、位值表徵、位值表。位值單位「百」。位值單位換算。"
+  },
+  {
+   "id": "tw-108-zh-e707b70f69",
+   "code": "N-2-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "加減算式與直式計算：用位值理解多位數加減計算的原理與方法。初期可操作、橫式、直式等方法並陳，二年級最後歸結於直式計算，做為後續更大位數計算之基礎。直式計算的基礎為位值概念與基本加減法，教師須說明直式計算的合理性。"
+  },
+  {
+   "id": "tw-108-zh-e0bd86a75c",
+   "code": "N-2-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "解題：加減應用問題。加數、被加數、減數、被減數未知之應用解題。連結加與減的關係（R-2-4）。"
+  },
+  {
+   "id": "tw-108-zh-31aa31c670",
+   "code": "N-2-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "解題：簡單加減估算。具體生活情境。以百位數估算為主。"
+  },
+  {
+   "id": "tw-108-zh-1ca76cd33b",
+   "code": "N-2-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "解題：100元、500元、1000元。以操作活動為主兼及計算。容許多元策略，協助建立數感。包含已學習之更小幣值。"
+  },
+  {
+   "id": "tw-108-zh-eb10fd89f1",
+   "code": "N-2-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "乘法：乘法的意義與應用。在學習乘法過程，逐步發展「倍」的概念，做為統整乘法應用情境的語言。"
+  },
+  {
+   "id": "tw-108-zh-520da755a4",
+   "code": "N-2-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "十十乘法：乘除直式計算的基礎，以熟練為目標。"
+  },
+  {
+   "id": "tw-108-zh-e3bcf2c3b1",
+   "code": "N-2-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "解題：兩步驟應用問題（加、減、乘）。加減混合、加與乘、減與乘之應用解題。不含併式。不含連乘。"
+  },
+  {
+   "id": "tw-108-zh-39e0e5eab2",
+   "code": "N-2-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "解題：分裝與平分。以操作活動為主。除法前置經驗。理解分裝與平分之意義與方法。引導學生在解題過程，發現問題和乘法模式的關連。"
+  },
+  {
+   "id": "tw-108-zh-b7361e8cc1",
+   "code": "N-2-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "單位分數的認識：從等分配的活動（如摺紙）認識單部分為全部的「幾分之一」。知道日常語言「的一半」、「的二分之一」、「的四分之一」的溝通意義。在已等分割之格圖中，能說明一格為全部的「幾分之一」。"
+  },
+  {
+   "id": "tw-108-zh-1ab45e47d7",
+   "code": "N-2-11",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "長度：「公分」、「公尺」。實測、量感、估測與計算。單位換算。"
+  },
+  {
+   "id": "tw-108-zh-e26ed0c559",
+   "code": "N-2-12",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "容量、重量、面積：以操作活動為主。此階段量的教學應包含初步認識、直接比較、間接比較（含個別單位）。不同的量應分不同的單元學習。"
+  },
+  {
+   "id": "tw-108-zh-fb9f03bca2",
+   "code": "N-2-13",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "鐘面的時刻：以操作活動為主。以鐘面時針與分針之位置認識「幾時幾分」。含兩整時時刻之間的整時點數（時間加減的前置經驗）。"
+  },
+  {
+   "id": "tw-108-zh-78741225b1",
+   "code": "N-2-14",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    7
+   ],
+   "text": "時間：「年」、「月」、「星期」、「日」。理解所列時間單位之關係與約定。"
+  },
+  {
+   "id": "tw-108-zh-0f00f30465",
+   "code": "S-2-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    7
+   ],
+   "text": "物體之幾何特徵：以操作活動為主。進行辨認與描述之活動。藉由實際物體認識簡單幾何形體（包含平面圖形與立體形體），並連結幾何概念（如長、短、大、小等）。"
+  },
+  {
+   "id": "tw-108-zh-ecfae501cd",
+   "code": "S-2-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    7
+   ],
+   "text": "簡單幾何形體：以操作活動為主。包含平面圖形與立體形體。辨認與描述平面圖形與立體形體的幾何特徵並做分類。"
+  },
+  {
+   "id": "tw-108-zh-d9b165faa0",
+   "code": "S-2-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    7
+   ],
+   "text": "直尺操作：測量長度。報讀公分數。指定長度之線段作圖。"
+  },
+  {
+   "id": "tw-108-zh-bf3ffdc8e8",
+   "code": "S-2-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    7
+   ],
+   "text": "平面圖形的邊長：以操作活動與直尺實測為主。認識特殊幾何圖形的邊長關係。含周長的計算活動。"
+  },
+  {
+   "id": "tw-108-zh-5c84c24cd8",
+   "code": "S-2-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    7
+   ],
+   "text": "面積：以具體操作為主。初步認識、直接比較、間接比較（含個別單位）。"
+  },
+  {
+   "id": "tw-108-zh-5abe4c82eb",
+   "code": "R-2-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    7
+   ],
+   "text": "大小關係與遞移律：「>」與「<」符號在算式中的意義，大小的遞移關係。"
+  },
+  {
+   "id": "tw-108-zh-5e21a8cf5c",
+   "code": "R-2-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    7
+   ],
+   "text": "三數相加，順序改變不影響其和：加法交換律和結合律的綜合。可併入其他教學活動。"
+  },
+  {
+   "id": "tw-108-zh-c721b66f40",
+   "code": "R-2-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    7
+   ],
+   "text": "兩數相乘的順序不影響其積：乘法交換律。可併入其他教學活動。"
+  },
+  {
+   "id": "tw-108-zh-509535eba4",
+   "code": "R-2-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    7
+   ],
+   "text": "加法與減法的關係：加減互逆。應用於驗算與解題。"
+  },
+  {
+   "id": "tw-108-zh-6aefb9418a",
+   "code": "D-2-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    7
+   ],
+   "text": "分類與呈現：以操作活動為主。能蒐集、分類、記錄、呈現資料、生活物件或幾何形體。討論分類之中還可以再分類的情況。"
+  },
+  {
+   "id": "tw-108-zh-b453f7c524",
+   "code": "N-3-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "一萬以內的數：含位值積木操作活動。結合點數、位值表徵、位值表。位值單位「千」。位值單位換算。"
+  },
+  {
+   "id": "tw-108-zh-939a3e8c40",
+   "code": "N-3-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "加減直式計算：含加、減法多次進、退位。"
+  },
+  {
+   "id": "tw-108-zh-57880895d2",
+   "code": "N-3-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "乘以一位數：乘法直式計算。教師用位值的概念說明直式計算的合理性。被乘數為二、三位數。"
+  },
+  {
+   "id": "tw-108-zh-0a6cb4f370",
+   "code": "N-3-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "除法：除法的意義與應用。基於N-2-9之學習，透過幾個一數的解題方法，理解如何用乘法解決除法問題。熟練十十乘法範圍的除法，做為估商的基礎。"
+  },
+  {
+   "id": "tw-108-zh-c116772ab0",
+   "code": "N-3-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "除以一位數：除法直式計算。教師用位值的概念說明直式計算的合理性。被除數為二、三位數。"
+  },
+  {
+   "id": "tw-108-zh-8303dae35f",
+   "code": "N-3-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "解題：乘除應用問題。乘數、被乘數、除數、被除數未知之應用解題。連結乘與除的關係（R-3-1）。"
+  },
+  {
+   "id": "tw-108-zh-e518a981db",
+   "code": "N-3-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "解題：兩步驟應用問題（加減與除、連乘）。連乘、加與除、減與除之應用解題。不含併式。"
+  },
+  {
+   "id": "tw-108-zh-088e2d105d",
+   "code": "N-3-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "解題：四則估算。具體生活情境。較大位數之估算策略。能用估算檢驗計算結果的合理性。"
+  },
+  {
+   "id": "tw-108-zh-997e1dd025",
+   "code": "N-3-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "簡單同分母分數：結合操作活動與整數經驗。簡單同分母分數比較、加、減的意義。牽涉之分數與運算結果皆不超過2。以單位分數之點數為基礎，連結整數之比較、加、減。知道「和等於1」的意義。"
+  },
+  {
+   "id": "tw-108-zh-d247ed9145",
+   "code": "N-3-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "一位小數：認識小數與小數點。結合點數、位值表徵、位值表。位值單位「十分位」。位值單位換算。比較、加減（含直式計算）與解題。"
+  },
+  {
+   "id": "tw-108-zh-bdfda39483",
+   "code": "N-3-11",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "整數數線：認識數線，含報讀與標示。連結數序、長度、尺的經驗，理解在數線上做比較、加、減的意義。"
+  },
+  {
+   "id": "tw-108-zh-153e4e286c",
+   "code": "N-3-12",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "長度：「毫米」。實測、量感、估測與計算。單位換算。"
+  },
+  {
+   "id": "tw-108-zh-ffa6acc1b8",
+   "code": "N-3-13",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "角與角度（同S-3-1）：以具體操作為主。初步認識角和角度。角度的直接比較與間接比較。認識直角。"
+  },
+  {
+   "id": "tw-108-zh-b6cce2bd11",
+   "code": "N-3-14",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "面積：「平方公分」。實測、量感、估測與計算。"
+  },
+  {
+   "id": "tw-108-zh-50bcc90c40",
+   "code": "N-3-15",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "容量：「公升」、「毫升」。實測、量感、估測與計算。單位換算。"
+  },
+  {
+   "id": "tw-108-zh-1316dc8f85",
+   "code": "N-3-16",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "重量：「公斤」、「公克」。實測、量感、估測與計算。單位換算。"
+  },
+  {
+   "id": "tw-108-zh-3a60134e36",
+   "code": "N-3-17",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    8
+   ],
+   "text": "時間：「日」、「時」、「分」、「秒」。實測、量感、估測與計算。時間單位的換算。認識時間加減問題的類型。"
+  },
+  {
+   "id": "tw-108-zh-566a384c9b",
+   "code": "S-3-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    8
+   ],
+   "text": "角與角度（同N-3-13）：以具體操作為主。初步認識角和角度。角度的直接比較與間接比較。認識直角。"
+  },
+  {
+   "id": "tw-108-zh-1890f48ae8",
+   "code": "S-3-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    8
+   ],
+   "text": "正方形和長方形：以邊與角的特徵來定義正方形和長方形。"
+  },
+  {
+   "id": "tw-108-zh-bd6f68df43",
+   "code": "S-3-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    8
+   ],
+   "text": "圓：「圓心」、「圓周」、「半徑」與「直徑」。能使用圓規畫指定半徑的圓。"
+  },
+  {
+   "id": "tw-108-zh-f17f972828",
+   "code": "S-3-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    8
+   ],
+   "text": "幾何形體之操作：以操作活動為主。平面圖形的分割與重組。初步體驗展開圖如何黏合成立體形體。知道不同之展開圖可能黏合成同一形狀之立體形體。"
+  },
+  {
+   "id": "tw-108-zh-b3c1598375",
+   "code": "R-3-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    8
+   ],
+   "text": "乘法與除法的關係：乘除互逆。應用於驗算與解題。"
+  },
+  {
+   "id": "tw-108-zh-d1200b2a5a",
+   "code": "R-3-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    8
+   ],
+   "text": "數量模式與推理（I）：以操作活動為主。一維變化模式之觀察與推理，例如數列、一維圖表等。"
+  },
+  {
+   "id": "tw-108-zh-ac34f7823a",
+   "code": "D-3-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    8
+   ],
+   "text": "一維表格與二維表格：以操作活動為主。報讀、說明與製作生活中的表格。二維表格含列聯表。"
+  },
+  {
+   "id": "tw-108-zh-51ca8dba79",
+   "code": "N-4-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "一億以內的數：位值單位「萬」、「十萬」、「百萬」、「千萬」。建立應用大數時之計算習慣，如「30萬1200」與「21萬300」的加減法。"
+  },
+  {
+   "id": "tw-108-zh-112a6776a3",
+   "code": "N-4-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "較大位數之乘除計算：處理乘數與除數為多位數之乘除直式計算。教師用位值的概念說明直式計算的合理性。"
+  },
+  {
+   "id": "tw-108-zh-caaa5f9ef2",
+   "code": "N-4-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "解題：兩步驟應用問題（乘除，連除）。乘與除、連除之應用解題。"
+  },
+  {
+   "id": "tw-108-zh-5dc94b44f4",
+   "code": "N-4-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "解題：對大數取概數。具體生活情境。四捨五入法、無條件進入、無條件捨去。含運用概數做估算。近似符號「≈」的使用。"
+  },
+  {
+   "id": "tw-108-zh-dbbc96b85a",
+   "code": "N-4-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "同分母分數：一般同分母分數教學（包括「真分數」、「假分數」、「帶分數」名詞引入）。假分數和帶分數之變換。同分母分數的比較、加、減與整數倍。"
+  },
+  {
+   "id": "tw-108-zh-3189576c57",
+   "code": "N-4-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "等值分數：由操作活動中理解等值分數的意義。簡單異分母分數的比較、加、減的意義。簡單分數與小數的互換。"
+  },
+  {
+   "id": "tw-108-zh-bb8533d612",
+   "code": "N-4-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "二位小數：位值單位「百分位」。位值單位換算。比較、計算與解題。用直式計算二位小數的加、減與整數倍。"
+  },
+  {
+   "id": "tw-108-zh-1ee1520271",
+   "code": "N-4-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "數線與分數、小數：連結分小數長度量的經驗。以標記和簡單的比較與計算，建立整數、分數、小數一體的認識。"
+  },
+  {
+   "id": "tw-108-zh-9801262973",
+   "code": "N-4-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "長度：「公里」。生活實例之應用。含其他長度單位的換算與計算。"
+  },
+  {
+   "id": "tw-108-zh-054a36a584",
+   "code": "N-4-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "角度：「度」（同S-4-1）。量角器的操作。實測、估測與計算。以角的合成認識180度到360度之間的角度。「平角」、「周角」。指定角度作圖。"
+  },
+  {
+   "id": "tw-108-zh-80d5eea5e1",
+   "code": "N-4-11",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "面積：「平方公尺」。實測、量感、估測與計算。"
+  },
+  {
+   "id": "tw-108-zh-c725aa8373",
+   "code": "N-4-12",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "體積與「立方公分」：以具體操作為主。體積認識基於1立方公分之正方體。"
+  },
+  {
+   "id": "tw-108-zh-1f2414b22b",
+   "code": "N-4-13",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    9
+   ],
+   "text": "解題：日常生活的時間加減問題。跨時、跨午、跨日、24小時制。含時間單位換算。"
+  },
+  {
+   "id": "tw-108-zh-b20eab701e",
+   "code": "S-4-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "角度：「度」（同N-4-10）。量角器的操作。實測、估測與計算。以角的合成認識180度到360度之間的角度。「平角」、「周角」。指定角度作圖。"
+  },
+  {
+   "id": "tw-108-zh-912370fc7d",
+   "code": "S-4-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "解題：旋轉角。以具體操作為主，並結合計算。以鐘面為模型討論從始邊轉到終邊所轉的角度。旋轉有兩個方向：「順時針」、「逆時針」。「平角」、「周角」。"
+  },
+  {
+   "id": "tw-108-zh-5339ea85fd",
+   "code": "S-4-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "正方形與長方形的面積與周長：理解邊長與周長或面積的關係，並能理解其公式與應用。簡單複合圖形。"
+  },
+  {
+   "id": "tw-108-zh-7d70b9bc30",
+   "code": "S-4-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "體積：以具體操作為主。在活動中認識體積的意義與比較。認識1立方公分之正方體，能理解並計數正方體堆疊的體積。"
+  },
+  {
+   "id": "tw-108-zh-8d665df6d0",
+   "code": "S-4-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "垂直與平行：以具體操作為主。直角是90度。直角常用記號。垂直於一線的兩線相互平行。平行線間距離處處相等。作垂直線；作平行線。"
+  },
+  {
+   "id": "tw-108-zh-4730454224",
+   "code": "S-4-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "平面圖形的全等：以具體操作為主。形狀大小一樣的兩圖形全等。能用平移、旋轉、翻轉做全等疊合。全等圖形之對應角相等、對應邊相等。"
+  },
+  {
+   "id": "tw-108-zh-d3c15b984b",
+   "code": "S-4-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "三角形：以邊與角的特徵認識特殊三角形並能作圖。如正三角形、等腰三角形、直角三角形、銳角三角形、鈍角三角形。"
+  },
+  {
+   "id": "tw-108-zh-e2ccb1519d",
+   "code": "S-4-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    9
+   ],
+   "text": "四邊形：以邊與角的特徵（含平行）認識特殊四邊形並能作圖。如正方形、長方形、平行四邊形、菱形、梯形。"
+  },
+  {
+   "id": "tw-108-zh-6e5d2b3f6c",
+   "code": "R-4-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    9
+   ],
+   "text": "兩步驟問題併式：併式是代數學習的重要基礎。含四則混合計算的約定（由左往右算、先乘除後加減、括號先算）。學習逐次減項計算。"
+  },
+  {
+   "id": "tw-108-zh-8928382765",
+   "code": "R-4-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    9
+   ],
+   "text": "四則計算規律（I）：兩步驟計算規則。加減混合計算、乘除混合計算。在四則混合計算中運用數的運算性質。"
+  },
+  {
+   "id": "tw-108-zh-799aff01da",
+   "code": "R-4-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    9
+   ],
+   "text": "以文字表示數學公式：理解以文字和運算符號聯合表示的數學公式，並能應用公式。可併入其他教學活動（如S-4-3）。"
+  },
+  {
+   "id": "tw-108-zh-e9df7be93c",
+   "code": "R-4-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    9
+   ],
+   "text": "數量模式與推理（II）：以操作活動為主。二維變化模式之觀察與推理，如二維數字圖之推理。奇數與偶數，及其加、減、乘模式。"
+  },
+  {
+   "id": "tw-108-zh-b2b36a5ed0",
+   "code": "D-4-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    9
+   ],
+   "text": "報讀長條圖與折線圖以及製作長條圖：報讀與說明生活中的長條圖與折線圖。配合其他領域課程，學習製作長條圖。"
+  },
+  {
+   "id": "tw-108-zh-11ad6f469b",
+   "code": "N-5-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "十進位的位值系統：「兆位」至「千分位」。整合整數與小數。理解基於位值系統可延伸表示更大的數和更小的數。"
+  },
+  {
+   "id": "tw-108-zh-be9b1a3374",
+   "code": "N-5-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "解題：多步驟應用問題。除「平均」之外，原則上為三步驟解題應用。"
+  },
+  {
+   "id": "tw-108-zh-7b7d5b76f7",
+   "code": "N-5-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "公因數和公倍數：因數、倍數、公因數、公倍數、最大公因數、最小公倍數的意義。"
+  },
+  {
+   "id": "tw-108-zh-9cc5c8fbba",
+   "code": "N-5-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "異分母分數：用約分、擴分處理等值分數並做比較。用通分做異分母分數的加減。養成利用約分化簡分數計算習慣。"
+  },
+  {
+   "id": "tw-108-zh-1c09c065c6",
+   "code": "N-5-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "分數的乘法：整數乘以分數、分數乘以分數的意義。知道用約分簡化乘法計算。處理乘積一定比被乘數大的錯誤類型。透過分數計算的公式，知道乘法交換律在分數也成立。"
+  },
+  {
+   "id": "tw-108-zh-287b39937b",
+   "code": "N-5-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "整數相除之分數表示：從分裝（測量）和平分的觀點，分別說明整數相除為分數之意義與合理性。"
+  },
+  {
+   "id": "tw-108-zh-939e651184",
+   "code": "N-5-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "分數除以整數：分數除以整數的意義。最後將問題轉化為乘以單位分數。"
+  },
+  {
+   "id": "tw-108-zh-5935e33d30",
+   "code": "N-5-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "小數的乘法：整數乘以小數、小數乘以小數的意義。乘數為小數的直式計算。教師用位值的概念說明直式計算的合理性。處理乘積一定比被乘數大的錯誤類型。"
+  },
+  {
+   "id": "tw-108-zh-10b82540e0",
+   "code": "N-5-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "整數、小數除以整數（商為小數）：整數除以整數（商為小數）、小數除以整數的意義。教師用位值的概念說明直式計算的合理性。能用概數協助處理除不盡的情況。熟悉分母為2、4、5、8之真分數所對應的小數。"
+  },
+  {
+   "id": "tw-108-zh-93883a9802",
+   "code": "N-5-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "解題：比率與應用。整數相除的應用。含「百分率」、「折」、「成」。"
+  },
+  {
+   "id": "tw-108-zh-4c12f73c82",
+   "code": "N-5-11",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "解題：對小數取概數。具體生活情境。四捨五入法。知道商除不盡的處理。理解近似的意義。"
+  },
+  {
+   "id": "tw-108-zh-60cbe9a623",
+   "code": "N-5-12",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "面積：「公畝」、「公頃」、「平方公里」。生活實例之應用。含與「平方公尺」的換算與計算。使用概數。"
+  },
+  {
+   "id": "tw-108-zh-1c25e27c40",
+   "code": "N-5-13",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "重量：「公噸」。生活實例之應用。含與「公斤」的換算與計算。使用概數。"
+  },
+  {
+   "id": "tw-108-zh-4e26e75a73",
+   "code": "N-5-14",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "體積：「立方公尺」。簡單實測、量感、估測與計算。"
+  },
+  {
+   "id": "tw-108-zh-83b1945671",
+   "code": "N-5-15",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "解題：容積。容量、容積和體積間的關係。知道液體體積的意義。"
+  },
+  {
+   "id": "tw-108-zh-04fc02ba35",
+   "code": "N-5-16",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    10
+   ],
+   "text": "解題：時間的乘除問題。在分數和小數學習的範圍內，解決與時間相關的乘除問題。"
+  },
+  {
+   "id": "tw-108-zh-6177de9e2d",
+   "code": "S-5-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "三角形與四邊形的性質：操作活動與簡單推理。含三角形三內角和為180度。三角形任意兩邊和大於第三邊。平行四邊形的對邊相等、對角相等。"
+  },
+  {
+   "id": "tw-108-zh-1f8084f07e",
+   "code": "S-5-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "三角形與四邊形的面積：操作活動與推理。利用切割重組，建立面積公式，並能應用。"
+  },
+  {
+   "id": "tw-108-zh-460e4d9fe3",
+   "code": "S-5-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "扇形：扇形的定義。「圓心角」。扇形可視為圓的一部分。將扇形與分數結合（幾分之幾圓）。能畫出指定扇形。"
+  },
+  {
+   "id": "tw-108-zh-a4572f6b02",
+   "code": "S-5-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "線對稱：線對稱的意義。「對稱軸」、「對稱點」、「對稱邊」、「對稱角」。由操作活動知道特殊平面圖形的線對稱性質。利用線對稱做簡單幾何推理。製作或繪製線對稱圖形。"
+  },
+  {
+   "id": "tw-108-zh-7ca73e23ab",
+   "code": "S-5-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "正方體和長方體：計算正方體和長方體的體積與表面積。正方體與長方體的體積公式。"
+  },
+  {
+   "id": "tw-108-zh-e35b844d41",
+   "code": "S-5-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "空間中面與面的關係：以操作活動為主。生活中面與面平行或垂直的現象。正方體（長方體）中面與面的平行或垂直關係。用正方體（長方體）檢查面與面的平行與垂直。"
+  },
+  {
+   "id": "tw-108-zh-d1cc62ea87",
+   "code": "S-5-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    10
+   ],
+   "text": "球、柱體與錐體：以操作活動為主。認識球、（直）圓柱、（直）角柱、（直）角錐、（直）圓錐。認識柱體和錐體之構成要素與展開圖。檢查柱體兩底面平行；檢查柱體側面和底面垂直，錐體側面和底面不垂直。"
+  },
+  {
+   "id": "tw-108-zh-656be2e6a7",
+   "code": "R-5-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    10
+   ],
+   "text": "三步驟問題併式：建立將計算步驟併式的習慣，以三步驟為主。介紹「平均」。與分配律連結。"
+  },
+  {
+   "id": "tw-108-zh-433db8a5b3",
+   "code": "R-5-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    10
+   ],
+   "text": "四則計算規律（II）：乘除混合計算。「乘法對加法或減法的分配律」。將計算規律應用於簡化混合計算。熟練整數四則混合計算。"
+  },
+  {
+   "id": "tw-108-zh-3a0d64c4ee",
+   "code": "R-5-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    10
+   ],
+   "text": "以符號表示數學公式：國中代數的前置經驗。初步體驗符號之使用，隱含「符號代表數」、「符號與運算符號的結合」的經驗。應併入其他教學活動。"
+  },
+  {
+   "id": "tw-108-zh-1ac6f7f46d",
+   "code": "D-5-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    10
+   ],
+   "text": "製作折線圖：製作生活中的折線圖。"
+  },
+  {
+   "id": "tw-108-zh-a88ed874a8",
+   "code": "N-6-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "20以內的質數和質因數分解：小於20的質數與合數。2、3、5的質因數判別法。以短除法做質因數的分解。"
+  },
+  {
+   "id": "tw-108-zh-20e19e4288",
+   "code": "N-6-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "最大公因數與最小公倍數：質因數分解法與短除法。兩數互質。運用到分數的約分與通分。"
+  },
+  {
+   "id": "tw-108-zh-6f14e7bd2c",
+   "code": "N-6-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "分數的除法：整數除以分數、分數除以分數的意義。最後理解除以一數等於乘以其倒數之公式。"
+  },
+  {
+   "id": "tw-108-zh-1628d5c741",
+   "code": "N-6-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "小數的除法：整數除以小數、小數除以小數的意義。直式計算。教師用位值的概念說明直式計算的合理性。處理商一定比被除數小的錯誤類型。"
+  },
+  {
+   "id": "tw-108-zh-c189f22f26",
+   "code": "N-6-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "解題：整數、分數、小數的四則應用問題。二到三步驟的應用解題。含使用概數協助解題。"
+  },
+  {
+   "id": "tw-108-zh-cbcec02da6",
+   "code": "N-6-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "比與比值：異類量的比與同類量的比之比值的意義。理解相等的比中牽涉到的兩種倍數關係（比例思考的基礎）。解決比的應用問題。"
+  },
+  {
+   "id": "tw-108-zh-ec4da28662",
+   "code": "N-6-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "解題：速度。比和比值的應用。速度的意義。能做單位換算（大單位到小單位）。含不同時間區段的平均速度。含「距離＝速度×時間」公式。用比例思考協助解題。"
+  },
+  {
+   "id": "tw-108-zh-db0cee203e",
+   "code": "N-6-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "解題：基準量與比較量。比和比值的應用。含交換基準時之關係。"
+  },
+  {
+   "id": "tw-108-zh-600e5ee609",
+   "code": "N-6-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    11
+   ],
+   "text": "解題：由問題中的數量關係，列出恰當的算式解題（同R-6-4）。可包含（1）較複雜的模式（如座位排列模式）；（2）較複雜的計數：乘法原理、加法原理或其混合；（3）較複雜之情境：如年齡問題、流水問題、和差問題、雞兔問題。連結R-6-2、R-6-3。"
+  },
+  {
+   "id": "tw-108-zh-562001fa01",
+   "code": "S-6-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    11
+   ],
+   "text": "放大與縮小：比例思考的應用。「幾倍放大圖」、「幾倍縮小圖」。知道縮放時，對應角相等，對應邊成比例。"
+  },
+  {
+   "id": "tw-108-zh-54254878b4",
+   "code": "S-6-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    11
+   ],
+   "text": "解題：地圖比例尺。地圖比例尺之意義、記號與應用。地圖上兩邊長的比和實際兩邊長的比相等。"
+  },
+  {
+   "id": "tw-108-zh-bf673f3fc8",
+   "code": "S-6-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    11
+   ],
+   "text": "圓周率、圓周長、圓面積、扇形面積：用分割說明圓面積公式。求扇形弧長與面積。知道以下三個比相等：（1）圓心角：360；（2）扇形弧長：圓周長；（3）扇形面積：圓面積，但應用問題只處理用（1）求弧長或面積。"
+  },
+  {
+   "id": "tw-108-zh-754d582a08",
+   "code": "S-6-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    11
+   ],
+   "text": "柱體體積與表面積：含角柱和圓柱。利用簡單柱體，理解「柱體體積＝底面積×高」的公式。簡單複合形體體積。"
+  },
+  {
+   "id": "tw-108-zh-44af333008",
+   "code": "R-6-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    11
+   ],
+   "text": "數的計算規律：小學最後應認識（1）整數、小數、分數都是數，享有一樣的計算規律。（2）整數乘除計算及規律，因分數運算更容易理解。（3）逐漸體會乘法和除法的計算實為一體。併入其他教學活動。"
+  },
+  {
+   "id": "tw-108-zh-21604c4f96",
+   "code": "R-6-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    11
+   ],
+   "text": "數量關係：代數與函數的前置經驗。從具體情境或數量模式之活動出發，做觀察、推理、說明。"
+  },
+  {
+   "id": "tw-108-zh-054edfa946",
+   "code": "R-6-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    11
+   ],
+   "text": "數量關係的表示：代數與函數的前置經驗。將具體情境或模式中的數量關係，學習以文字或符號列出數量關係的關係式。"
+  },
+  {
+   "id": "tw-108-zh-a5012b8e8e",
+   "code": "R-6-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 關係",
+   "ages": [
+    11
+   ],
+   "text": "解題：由問題中的數量關係，列出恰當的算式解題（同N-6-9）。可包含（1）較複雜的模式（如座位排列模式）；（2）較複雜的計數：乘法原理、加法原理或其混合；（3）較複雜之情境：如年齡問題、流水問題、和差問題、雞兔問題。連結R-6-2、R-6-3。"
+  },
+  {
+   "id": "tw-108-zh-bf601262e2",
+   "code": "D-6-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    11
+   ],
+   "text": "圓形圖：報讀、說明與製作生活中的圓形圖。包含以百分率分配之圓形圖（製作時應提供學生已分成百格的圓形圖。）"
+  },
+  {
+   "id": "tw-108-zh-5c42df7082",
+   "code": "D-6-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    11
+   ],
+   "text": "解題：可能性。從統計圖表資料，回答可能性問題。機率前置經驗。「很有可能」、「很不可能」、「Ａ比Ｂ可能」。"
+  },
+  {
+   "id": "tw-108-zh-3ddd4d3c32",
+   "code": "N-7-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "100以內的質數：質數和合數的定義；質數的篩法。"
+  },
+  {
+   "id": "tw-108-zh-24723203cc",
+   "code": "N-7-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "質因數分解的標準分解式：質因數分解的標準分解式，並能用於求因數及倍數的問題。"
+  },
+  {
+   "id": "tw-108-zh-c50773ebd5",
+   "code": "N-7-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "負數與數的四則混合運算(含分數、小數)：使用「正、負」表徵生活中的量；相反數；數的四則混合運算。"
+  },
+  {
+   "id": "tw-108-zh-e84cf07cb8",
+   "code": "N-7-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "數的運算規律：交換律；結合律；分配律；−(𝑎 + 𝑏) =−𝑎−𝑏；−(𝑎−𝑏) = −𝑎 +𝑏。"
+  },
+  {
+   "id": "tw-108-zh-1707eea445",
+   "code": "N-7-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "數線：擴充至含負數的數線；比較數的大小；絕對值的意義；以|𝑎−𝑏|表示數線上兩點𝑎, 𝑏的距離。"
+  },
+  {
+   "id": "tw-108-zh-8eb7b3426f",
+   "code": "N-7-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "指數的意義：指數為非負整數的次方；𝑎≠ 0時𝑎⁰=1；同底數的大小比較；指數的運算。"
+  },
+  {
+   "id": "tw-108-zh-44f795cdf3",
+   "code": "N-7-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "指數律：以數字例表示「同底數的乘法指數律」（𝑎ᵐ×𝑎ⁿ=𝑎ᵐ⁺ⁿ、(𝑎ᵐ)ⁿ= 𝑎ᵐⁿ、(𝑎×𝑏)ⁿ= 𝑎ⁿ×𝑏ⁿ，其中𝑚, 𝑛為非負整數）；以數字例表示「同底數的除法指數律」（𝑎ᵐ÷𝑎ⁿ=𝑎ᵐ⁻ⁿ，其中𝑚≥𝑛且𝑚, 𝑛為非負整數）。"
+  },
+  {
+   "id": "tw-108-zh-4a6a4374a3",
+   "code": "N-7-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "科學記號：以科學記號表達正數，此數可以是很大的數（次方為正整數），也可以是很小的數（次方為負整數）。"
+  },
+  {
+   "id": "tw-108-zh-ce7729fc3d",
+   "code": "N-7-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    12
+   ],
+   "text": "比與比例式：比；比例式；正比；反比；相關之基本運算與應用問題，教學情境應以有意義之比值為例。"
+  },
+  {
+   "id": "tw-108-zh-0cb2d0b046",
+   "code": "S-7-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    12
+   ],
+   "text": "簡單圖形與幾何符號：點、線、線段、射線、角、三角形與其符號的介紹。"
+  },
+  {
+   "id": "tw-108-zh-f03811d209",
+   "code": "S-7-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    12
+   ],
+   "text": "三視圖：立體圖形的前視圖、上視圖、左（右）視圖。立體圖形限制內嵌於3×3×3的正方體且不得中空。"
+  },
+  {
+   "id": "tw-108-zh-250ec14cd6",
+   "code": "S-7-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    12
+   ],
+   "text": "垂直：垂直的符號；線段的中垂線；點到直線距離的意義。"
+  },
+  {
+   "id": "tw-108-zh-6342c8f57b",
+   "code": "S-7-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    12
+   ],
+   "text": "線對稱的性質：對稱線段等長；對稱角相等；對稱點的連線段會被對稱軸垂直平分。"
+  },
+  {
+   "id": "tw-108-zh-453b820cfd",
+   "code": "S-7-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    12
+   ],
+   "text": "線對稱的基本圖形：等腰三角形；正方形；菱形；箏形；正多邊形。"
+  },
+  {
+   "id": "tw-108-zh-7a925ad074",
+   "code": "G-7-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    12
+   ],
+   "text": "平面直角坐標系：以平面直角坐標系、方位距離標定位置；平面直角坐標系及其相關術語（縱軸、橫軸、象限）。"
+  },
+  {
+   "id": "tw-108-zh-11ba4d48dc",
+   "code": "A-7-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "代數符號：以代數符號表徵交換律、分配律、結合律；一次式的化簡及同類項；以符號記錄生活中的情境問題。"
+  },
+  {
+   "id": "tw-108-zh-a70fd2f194",
+   "code": "A-7-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "一元一次方程式的意義：一元一次方程式及其解的意義；具體情境中列出一元一次方程式。"
+  },
+  {
+   "id": "tw-108-zh-23768cd198",
+   "code": "A-7-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "一元一次方程式的解法與應用：等量公理；移項法則；驗算；應用問題。"
+  },
+  {
+   "id": "tw-108-zh-a3584320ed",
+   "code": "A-7-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "二元一次聯立方程式的意義：二元一次方程式及其解的意義；具體情境中列出二元一次方程式；二元一次聯立方程式及其解的意義；具體情境中列出二元一次聯立方程式。"
+  },
+  {
+   "id": "tw-108-zh-cd162a8315",
+   "code": "A-7-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "二元一次聯立方程式的解法與應用：代入消去法；加減消去法；應用問題。"
+  },
+  {
+   "id": "tw-108-zh-d2db22d6fa",
+   "code": "A-7-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "二元一次聯立方程式的幾何意義：𝑎𝑥+𝑏𝑦=𝑐的圖形；𝑦 = 𝑐的圖形（水平線）；𝑥 = 𝑐的圖形（鉛垂線）；二元一次聯立方程式的解只處理相交且只有一個交點的情況。"
+  },
+  {
+   "id": "tw-108-zh-3defb6852f",
+   "code": "A-7-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "一元一次不等式的意義：不等式的意義；具體情境中列出一元一次不等式。"
+  },
+  {
+   "id": "tw-108-zh-a274181d91",
+   "code": "A-7-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    12
+   ],
+   "text": "一元一次不等式的解與應用：單一的一元一次不等式的解；在數線上標示解的範圍；應用問題。"
+  },
+  {
+   "id": "tw-108-zh-4e9952e9af",
+   "code": "D-7-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    12
+   ],
+   "text": "統計圖表：蒐集生活中常見的數據資料，整理並繪製成含有原始資料或百分率的統計圖表：直方圖、長條圖、圓形圖、折線圖、列聯表。遇到複雜數據時可使用計算機輔助，教師可使用電腦應用軟體演示教授。"
+  },
+  {
+   "id": "tw-108-zh-d64709c7ef",
+   "code": "D-7-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    12
+   ],
+   "text": "統計數據：用平均數、中位數與眾數描述一組資料的特性；使用計算機的「M+」或「Σ」鍵計算平均數。"
+  },
+  {
+   "id": "tw-108-zh-0f3c43d7ce",
+   "code": "N-8-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    13
+   ],
+   "text": "二次方根：二次方根的意義；根式的化簡及四則運算。"
+  },
+  {
+   "id": "tw-108-zh-42a7a18a3a",
+   "code": "N-8-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    13
+   ],
+   "text": "二次方根的近似值：二次方根的近似值；二次方根的整數部分；十分逼近法。使用計算機√鍵。"
+  },
+  {
+   "id": "tw-108-zh-ca376dd870",
+   "code": "N-8-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    13
+   ],
+   "text": "認識數列：生活中常見的數列及其規律性（包括圖形的規律性）。"
+  },
+  {
+   "id": "tw-108-zh-680c389c6a",
+   "code": "N-8-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    13
+   ],
+   "text": "等差數列：等差數列；給定首項、公差計算等差數列的一般項。"
+  },
+  {
+   "id": "tw-108-zh-f968d1ec14",
+   "code": "N-8-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    13
+   ],
+   "text": "等差級數求和：等差級數求和公式；生活中相關的問題。"
+  },
+  {
+   "id": "tw-108-zh-76d84e4f0b",
+   "code": "N-8-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    13
+   ],
+   "text": "等比數列：等比數列；給定首項、公比計算等比數列的一般項。"
+  },
+  {
+   "id": "tw-108-zh-9b27c5819e",
+   "code": "S-8-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "角：角的種類；兩個角的關係（互餘、互補、對頂角、同位角、內錯角、同側內角）；角平分線的意義。"
+  },
+  {
+   "id": "tw-108-zh-a36f79c2c7",
+   "code": "S-8-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "凸多邊形的內角和：凸多邊形的意義；內角與外角的意義；凸多邊形的內角和公式；正𝑛邊形的每個內角度數。"
+  },
+  {
+   "id": "tw-108-zh-866cd62f85",
+   "code": "S-8-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "平行：平行的意義與符號；平行線截角性質；兩平行線間的距離處處相等。"
+  },
+  {
+   "id": "tw-108-zh-dee9f3288a",
+   "code": "S-8-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "全等圖形：全等圖形的意義（兩個圖形經過平移、旋轉或翻轉可以完全疊合）；兩個多邊形全等則其對應邊和對應角相等（反之亦然）。"
+  },
+  {
+   "id": "tw-108-zh-ee94372197",
+   "code": "S-8-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "三角形的全等性質：三角形的全等判定（SAS、SSS、ASA、AAS、RHS）；全等符號（≅）。"
+  },
+  {
+   "id": "tw-108-zh-ce31a3ca1d",
+   "code": "S-8-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "畢氏定理：畢氏定理（勾股弦定理、商高定理）的意義及其數學史；畢氏定理在生活上的應用；三邊長滿足畢氏定理的三角形必定是直角三角形。"
+  },
+  {
+   "id": "tw-108-zh-a1b38e5b58",
+   "code": "S-8-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "平面圖形的面積：正三角形的高與面積公式，及其相關之複合圖形的面積。"
+  },
+  {
+   "id": "tw-108-zh-0e6755fb2c",
+   "code": "S-8-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "三角形的基本性質：等腰三角形兩底角相等；非等腰三角形大角對大邊，大邊對大角；三角形兩邊和大於第三邊；外角等於其內對角和。"
+  },
+  {
+   "id": "tw-108-zh-573e9ce3a1",
+   "code": "S-8-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "平行四邊形的基本性質：關於平行四邊形的內角、邊、對角線等的幾何性質。"
+  },
+  {
+   "id": "tw-108-zh-b52bb68974",
+   "code": "S-8-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "正方形、長方形、箏形的基本性質：長方形的對角線等長且互相平分；菱形對角線互相垂直平分；箏形的其中一條對角線垂直平分另一條對角線。"
+  },
+  {
+   "id": "tw-108-zh-935e1bcaf6",
+   "code": "S-8-11",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "梯形的基本性質：等腰梯形的兩底角相等；等腰梯形為線對稱圖形；梯形兩腰中點的連線段長等於兩底長和的一半，且平行於上下底。"
+  },
+  {
+   "id": "tw-108-zh-2ef6267d87",
+   "code": "S-8-12",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    13
+   ],
+   "text": "尺規作圖與幾何推理：複製已知的線段、圓、角、三角形；能以尺規作出指定的中垂線、角平分線、平行線、垂直線；能寫出幾何推理所依據的幾何性質。"
+  },
+  {
+   "id": "tw-108-zh-3653208531",
+   "code": "G-8-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    13
+   ],
+   "text": "直角坐標系上兩點距離公式：直角坐標系上兩點𝐴(𝑎, 𝑏)和𝐵(𝑐,𝑑)的距離為𝐴̅𝐵̅=√((𝑎−𝑐)²+(𝑏−𝑑)²)；生活上相關問題。"
+  },
+  {
+   "id": "tw-108-zh-030130c05a",
+   "code": "A-8-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "二次式的乘法公式：(𝑎+𝑏)²=𝑎²+2𝑎𝑏+𝑏²；(𝑎−𝑏)²=𝑎²−2𝑎𝑏+𝑏²；(𝑎+𝑏)(𝑎−𝑏)=𝑎²−𝑏²；(𝑎+𝑏)(𝑐+𝑑)=𝑎𝑐+𝑎𝑑+𝑏𝑐+𝑏𝑑。"
+  },
+  {
+   "id": "tw-108-zh-1ed694511c",
+   "code": "A-8-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "多項式的意義：一元多項式的定義與相關名詞（多項式、項數、係數、常數項、一次項、二次項、最高次項、升冪、降冪）。"
+  },
+  {
+   "id": "tw-108-zh-54a17081b9",
+   "code": "A-8-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "多項式的四則運算：直式、橫式的多項式加法與減法；直式的多項式乘法（乘積最高至三次）；被除式為二次之多項式的除法運算。"
+  },
+  {
+   "id": "tw-108-zh-faf035d8b1",
+   "code": "A-8-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "因式分解：因式的意義（限制在二次多項式的一次因式）；二次多項式的因式分解意義。"
+  },
+  {
+   "id": "tw-108-zh-c5888786b2",
+   "code": "A-8-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "因式分解的方法：提公因式法；利用乘法公式與十字交乘法因式分解。"
+  },
+  {
+   "id": "tw-108-zh-0e43234b24",
+   "code": "A-8-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "一元二次方程式的意義：一元二次方程式及其解，具體情境中列出一元二次方程式。"
+  },
+  {
+   "id": "tw-108-zh-d2d2cc489b",
+   "code": "A-8-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    13
+   ],
+   "text": "一元二次方程式的解法與應用：利用因式分解、配方法、公式解一元二次方程式；應用問題；使用計算機計算一元二次方程式根的近似值。"
+  },
+  {
+   "id": "tw-108-zh-6420212851",
+   "code": "F-8-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    13
+   ],
+   "text": "一次函數：透過對應關係認識函數（不要出現𝑓(𝑥)的抽象型式）、常數函數（𝑦 = 𝑐）、一次函數（𝑦 =𝑎𝑥 + 𝑏）。"
+  },
+  {
+   "id": "tw-108-zh-0d93b6af45",
+   "code": "F-8-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    13
+   ],
+   "text": "一次函數的圖形：常數函數的圖形；一次函數的圖形。"
+  },
+  {
+   "id": "tw-108-zh-f47e06e87e",
+   "code": "D-8-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    13
+   ],
+   "text": "統計資料處理：累積次數、相對次數、累積相對次數折線圖。"
+  },
+  {
+   "id": "tw-108-zh-bf2da00c1a",
+   "code": "N-9-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    14
+   ],
+   "text": "連比：連比的記錄；連比推理；連比例式；及其基本運算與相關應用問題；涉及複雜數值時使用計算機協助計算。"
+  },
+  {
+   "id": "tw-108-zh-f30a0602fc",
+   "code": "S-9-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "相似形：平面圖形縮放的意義；多邊形相似的意義；對應角相等；對應邊長成比例。"
+  },
+  {
+   "id": "tw-108-zh-030e8def96",
+   "code": "S-9-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "三角形的相似性質：三角形的相似判定（AA、SAS、SSS）；對應邊長之比＝對應高之比；對應面積之比＝對應邊長平方之比；利用三角形相似的概念解應用問題；相似符號（~）。"
+  },
+  {
+   "id": "tw-108-zh-ff7da06906",
+   "code": "S-9-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "平行線截比例線段：連接三角形兩邊中點的線段必平行於第三邊（其長度等於第三邊的一半）；平行線截比例線段性質；利用截線段成比例判定兩直線平行；平行線截比例線段性質的應用。"
+  },
+  {
+   "id": "tw-108-zh-ebab89bc67",
+   "code": "S-9-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "相似直角三角形邊長比值的不變性：直角三角形中某一銳角的角度決定邊長比值，該比值為不變量，不因相似直角三角形的大小而改變；三內角為30°,60°,90°其邊長比記錄為「1:√3:2」；三內角為45°,45°,90°其邊長比記錄為「1:1:√2」。"
+  },
+  {
+   "id": "tw-108-zh-128621156b",
+   "code": "S-9-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "圓弧長與扇形面積：以π表示圓周率；弦、圓弧、弓形的意義；圓弧長公式；扇形面積公式。"
+  },
+  {
+   "id": "tw-108-zh-7f7d82dcd4",
+   "code": "S-9-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "圓的幾何性質：圓心角、圓周角與所對應弧的度數三者之間的關係；圓內接四邊形對角互補；切線段等長。"
+  },
+  {
+   "id": "tw-108-zh-57f9a7f423",
+   "code": "S-9-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "點、直線與圓的關係：點與圓的位置關係（內部、圓上、外部）；直線與圓的位置關係（不相交、相切、交於兩點）；圓心與切點的連線垂直此切線（切線性質）；圓心到弦的垂直線段（弦心距）垂直平分此弦。"
+  },
+  {
+   "id": "tw-108-zh-58bc6be177",
+   "code": "S-9-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "三角形的外心：外心的意義與外接圓；三角形的外心到三角形的三個頂點等距；直角三角形的外心即斜邊的中點。"
+  },
+  {
+   "id": "tw-108-zh-63a45d75c0",
+   "code": "S-9-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "三角形的內心：內心的意義與內切圓；三角形的內心到三角形的三邊等距；三角形的面積＝周長×內切圓半徑÷ 2；直角三角形的內切圓半徑＝（兩股和－斜邊）÷ 2。"
+  },
+  {
+   "id": "tw-108-zh-51de37145a",
+   "code": "S-9-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "三角形的重心：重心的意義與中線；三角形的三條中線將三角形面積六等份；重心到頂點的距離等於它到對邊中點的兩倍；重心的物理意義。"
+  },
+  {
+   "id": "tw-108-zh-f90e4bd13c",
+   "code": "S-9-11",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "證明的意義：幾何推理（須說明所依據的幾何性質）；代數推理（須說明所依據的代數性質）。"
+  },
+  {
+   "id": "tw-108-zh-47edc3e2e5",
+   "code": "S-9-12",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "空間中的線與平面：長方體與正四面體的示意圖，利用長方體與正四面體作為特例，介紹線與線的平行、垂直與歪斜關係，線與平面的垂直與平行關係。"
+  },
+  {
+   "id": "tw-108-zh-5b2f7edc62",
+   "code": "S-9-13",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    14
+   ],
+   "text": "表面積與體積：直角柱、直圓錐、正角錐的展開圖；直角柱、直圓錐、正角錐的表面積；直角柱的體積。"
+  },
+  {
+   "id": "tw-108-zh-bd53db8ed6",
+   "code": "F-9-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    14
+   ],
+   "text": "二次函數的意義：二次函數的意義；具體情境中列出兩量的二次函數關係。"
+  },
+  {
+   "id": "tw-108-zh-5fa07d2ee0",
+   "code": "F-9-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    14
+   ],
+   "text": "二次函數的圖形與極值：二次函數的相關名詞（對稱軸、頂點、最低點、最高點、開口向上、開口向下、最大值、最小值）；描繪𝑦 = 𝑎𝑥²、𝑦 =𝑎𝑥²+ 𝑘、𝑦 = 𝑎(𝑥−ℎ)²、𝑦 = 𝑎(𝑥−ℎ)²+ 𝑘的圖形；對稱軸就是通過頂點（最高點、最低點）的鉛垂線；𝑦 =𝑎𝑥²的圖形與𝑦 = 𝑎(𝑥−ℎ)²+ 𝑘的圖形的平移關係；已配方好之二次函數的最大值與最小值。"
+  },
+  {
+   "id": "tw-108-zh-409b8c410b",
+   "code": "D-9-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    14
+   ],
+   "text": "統計數據的分布：全距；四分位距；盒狀圖。"
+  },
+  {
+   "id": "tw-108-zh-4c91b90de3",
+   "code": "D-9-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    14
+   ],
+   "text": "認識機率：機率的意義；樹狀圖（以兩層為限）。"
+  },
+  {
+   "id": "tw-108-zh-4682a57c05",
+   "code": "D-9-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    14
+   ],
+   "text": "古典機率：具有對稱性的情境下（銅板、骰子、撲克牌、抽球等）之機率；不具對稱性的物體（圖釘、圓錐、爻杯）之機率探究。"
+  },
+  {
+   "id": "tw-108-zh-30931ed3f0",
+   "code": "N-10-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "實數：數線，十進制小數的意義，三一律，有理數的十進制小數特徵，無理數之十進制小數的估算（√2為無理數的證明），科學記號數字的運算。"
+  },
+  {
+   "id": "tw-108-zh-8159be50ae",
+   "code": "N-10-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "絕對值：絕對值方程式與不等式。"
+  },
+  {
+   "id": "tw-108-zh-4c7b1ca3e8",
+   "code": "N-10-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "指數：非負實數之小數或分數次方的意義，幾何平均數與算幾不等式，複習指數律，實數指數的意義，使用計算機的𝑥ʸ鍵。"
+  },
+  {
+   "id": "tw-108-zh-d66367c24c",
+   "code": "N-10-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "常用對數：log的意義，常用對數與科學記號連結，使用計算機的10ˣ鍵和log鍵。"
+  },
+  {
+   "id": "tw-108-zh-8771afeb10",
+   "code": "N-10-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "數值計算的誤差：認識計算機的有限性，可察覺誤差的發生並做適當有效位數的取捨。"
+  },
+  {
+   "id": "tw-108-zh-23b942baff",
+   "code": "N-10-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "數列、級數與遞迴關係：有限項遞迴數列，有限項等比級數，常用的求和公式，數學歸納法。"
+  },
+  {
+   "id": "tw-108-zh-3016cf707d",
+   "code": "N-10-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    15
+   ],
+   "text": "邏輯：認識命題及其否定，兩命題的或、且、推論關係，充分、必要、充要條件。"
+  },
+  {
+   "id": "tw-108-zh-cb5ad7b556",
+   "code": "G-10-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "坐標圖形的對稱性：坐標平面上，對𝑥軸，對𝑦軸，對𝑦 = 𝑥直線的對稱，對原點的對稱。"
+  },
+  {
+   "id": "tw-108-zh-895aea7146",
+   "code": "G-10-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "直線方程式：斜率，其絕對值的意義，點斜式，點與直線之平移，平行線、垂直線的方程式。點到直線的距離，平行線的距離、二元一次不等式。"
+  },
+  {
+   "id": "tw-108-zh-da59e6f3de",
+   "code": "G-10-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "圓方程式：圓的標準式。"
+  },
+  {
+   "id": "tw-108-zh-497c90cc0e",
+   "code": "G-10-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "直線與圓：圓的切線，圓與直線關係的代數與幾何判定。"
+  },
+  {
+   "id": "tw-108-zh-18a025b2fc",
+   "code": "G-10-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "廣義角和極坐標：廣義角的終邊，極坐標的定義，透過方格紙操作極坐標與直角坐標的轉換。"
+  },
+  {
+   "id": "tw-108-zh-a4c7878310",
+   "code": "G-10-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "三角比：定義銳角的正弦、餘弦、正切，推廣至廣義角的正弦、餘弦、正切，特殊角的值，使用計算機的sin, cos, tan鍵。"
+  },
+  {
+   "id": "tw-108-zh-87996318f6",
+   "code": "G-10-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    15
+   ],
+   "text": "三角比的性質：正弦定理，餘弦定理，正射影。連結斜率與直線斜角的正切，用計算機的反正弦、反餘弦、反正切鍵計算斜角或兩相交直線的夾角，（三角測量）。"
+  },
+  {
+   "id": "tw-108-zh-1f546ca826",
+   "code": "A-10-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    15
+   ],
+   "text": "式的運算：三次乘法公式，根式與分式的運算。"
+  },
+  {
+   "id": "tw-108-zh-65375fc830",
+   "code": "A-10-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    15
+   ],
+   "text": "多項式之除法原理：因式定理與餘式定理，多項式除以(𝑥−𝑎)之運算，並將其表為(𝑥−𝑎)之形式的多項式。"
+  },
+  {
+   "id": "tw-108-zh-6848b60284",
+   "code": "F-10-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    15
+   ],
+   "text": "一次與二次函數：從方程式到𝑓(𝑥)的形式轉換，一次函數圖形與𝑦 = 𝑚𝑥圖形的關係，數線上的分點公式與一次函數求值。用配方將二次函數化為標準式，二次函數圖形與𝑦 = 𝑎𝑥²圖形的關係，情境中的應用問題。"
+  },
+  {
+   "id": "tw-108-zh-123fcccc7c",
+   "code": "F-10-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    15
+   ],
+   "text": "三次函數的圖形特徵：二次、三次函數圖形的對稱性，兩者圖形的大域（global）特徵由最高次項決定，而局部（local）則近似一條直線。"
+  },
+  {
+   "id": "tw-108-zh-6d67a2ecba",
+   "code": "F-10-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    15
+   ],
+   "text": "多項式不等式：解一次、二次、或已分解之多項式不等式的解區間，連結多項式函數的圖形。"
+  },
+  {
+   "id": "tw-108-zh-bf7697663a",
+   "code": "D-10-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    15
+   ],
+   "text": "集合：集合的表示法，宇集、空集、子集、交集、聯集、餘集，屬於和包含關係，文氏圖。"
+  },
+  {
+   "id": "tw-108-zh-193ab9e727",
+   "code": "D-10-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    15
+   ],
+   "text": "數據分析：一維數據的平均數、標準差。二維數據的散布圖，最適直線與相關係數，數據的標準化。"
+  },
+  {
+   "id": "tw-108-zh-ef39d47e33",
+   "code": "D-10-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    15
+   ],
+   "text": "有系統的計數：有系統的窮舉，樹狀圖，加法原理，乘法原理，取捨原理。直線排列與組合。"
+  },
+  {
+   "id": "tw-108-zh-6b46f0e23d",
+   "code": "D-10-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    15
+   ],
+   "text": "複合事件的古典機率：樣本空間與事件，複合事件的古典機率性質，期望值。"
+  },
+  {
+   "id": "tw-108-zh-8e9487206b",
+   "code": "N-11A-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    16
+   ],
+   "text": "弧度量：弧度量的定義，弧長與扇形面積，計算機的rad鍵。"
+  },
+  {
+   "id": "tw-108-zh-91b11d8df7",
+   "code": "S-11A-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    16
+   ],
+   "text": "空間概念：空間的基本性質，空間中兩直線、兩平面、直線與平面的位置關係，三垂線定理。"
+  },
+  {
+   "id": "tw-108-zh-e9ba937114",
+   "code": "G-11A-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "平面向量：坐標平面上的向量係數積與加減，線性組合。"
+  },
+  {
+   "id": "tw-108-zh-2ad670e7fc",
+   "code": "G-11A-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "空間坐標系：點坐標，兩點距離，點到坐標軸或坐標平面的投影。"
+  },
+  {
+   "id": "tw-108-zh-a923b97448",
+   "code": "G-11A-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "空間向量：坐標空間中的向量係數積與加減，線性組合。"
+  },
+  {
+   "id": "tw-108-zh-3f1f3c8c33",
+   "code": "G-11A-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "三角不等式：向量的長度，三角不等式。"
+  },
+  {
+   "id": "tw-108-zh-0aedec1efa",
+   "code": "G-11A-5",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "三角的和差角公式：正弦與餘弦的和差角、倍角與半角公式。"
+  },
+  {
+   "id": "tw-108-zh-0e11a799a2",
+   "code": "G-11A-6",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "平面向量的運算：正射影與內積，面積與行列式，兩向量的平行與垂直判定，兩向量的夾角，柯西不等式。"
+  },
+  {
+   "id": "tw-108-zh-010fae9832",
+   "code": "G-11A-7",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "空間向量的運算：正射影與內積，兩向量平行與垂直的判定、柯西不等式，外積。"
+  },
+  {
+   "id": "tw-108-zh-b43bfe5c07",
+   "code": "G-11A-8",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "三階行列式：三向量決定的平行六面體體積，三重積。"
+  },
+  {
+   "id": "tw-108-zh-b7073c4748",
+   "code": "G-11A-9",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "平面方程式：平面的法向量與標準式、兩平面的夾角、點到平面的距離。"
+  },
+  {
+   "id": "tw-108-zh-563f2e211a",
+   "code": "G-11A-10",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "空間中的直線方程式：空間中直線的參數式與比例式，直線與平面的關係，點到直線距離，兩平行或歪斜線的距離。"
+  },
+  {
+   "id": "tw-108-zh-c272fc750d",
+   "code": "A-11A-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    16
+   ],
+   "text": "二元一次方程組的矩陣表達：定義方陣符號及其乘以向量的線性組合意涵，克拉瑪公式，方程組唯一解、無窮多組解、無解的情況。"
+  },
+  {
+   "id": "tw-108-zh-a350354d42",
+   "code": "A-11A-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    16
+   ],
+   "text": "三元一次聯立方程式：以消去法求解，改以方陣表達。用電腦求解多元一次方程組的觀念與示範。"
+  },
+  {
+   "id": "tw-108-zh-d0d143e717",
+   "code": "A-11A-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    16
+   ],
+   "text": "矩陣的運算：矩陣的定義，矩陣的係數積與加減運算，矩陣相乘，反方陣。將矩陣視為資料表，用電腦做矩陣運算的觀念與示範。"
+  },
+  {
+   "id": "tw-108-zh-b711f1c3e0",
+   "code": "A-11A-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    16
+   ],
+   "text": "對數律：從10ˣ及指數律認識log的對數律，其基本應用，並用於求解指數方程式。"
+  },
+  {
+   "id": "tw-108-zh-10bb119978",
+   "code": "F-11A-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    16
+   ],
+   "text": "三角函數的圖形：sin,cos, tan函數的圖形、定義域、值域、週期性，週期現象的數學模型。（cot,sec,csc之定義與圖形）"
+  },
+  {
+   "id": "tw-108-zh-f0bb2806b0",
+   "code": "F-11A-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    16
+   ],
+   "text": "正餘弦的疊合：同頻波疊合後的頻率、振幅。"
+  },
+  {
+   "id": "tw-108-zh-7bc2ca28f3",
+   "code": "F-11A-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    16
+   ],
+   "text": "矩陣的應用：平面上的線性變換，二階轉移方陣。"
+  },
+  {
+   "id": "tw-108-zh-0a0e776caf",
+   "code": "F-11A-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    16
+   ],
+   "text": "指數與對數函數：指數函數及其圖形，按比例成長或衰退的數學模型，常用對數函數的圖形，在科學和金融上的應用。"
+  },
+  {
+   "id": "tw-108-zh-e445fb40b8",
+   "code": "D-11A-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    16
+   ],
+   "text": "主觀機率與客觀機率：根據機率性質檢視主觀機率的合理性，根據已知的數據獲得客觀機率。"
+  },
+  {
+   "id": "tw-108-zh-a3b5c1e45d",
+   "code": "D-11A-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    16
+   ],
+   "text": "條件機率：條件機率的意涵及其應用，事件的獨立性及其應用。"
+  },
+  {
+   "id": "tw-108-zh-1dfabe6d22",
+   "code": "D-11A-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    16
+   ],
+   "text": "貝氏定理：條件機率的乘法公式，貝氏定理及其應用。"
+  },
+  {
+   "id": "tw-108-zh-480838aecd",
+   "code": "N-11B-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 數與量",
+   "ages": [
+    16
+   ],
+   "text": "弧度量：弧度量的定義，弧長與扇形面積，計算機的rad鍵。"
+  },
+  {
+   "id": "tw-108-zh-7419ccb0a4",
+   "code": "S-11B-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    16
+   ],
+   "text": "空間概念：空間的基本性質，空間中兩直線、兩平面、及直線與平面的位置關係。利用長方體的展開圖討論表面上的兩點距離，認識球面上的經線與緯線。"
+  },
+  {
+   "id": "tw-108-zh-a8315474eb",
+   "code": "S-11B-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 空間與形狀",
+   "ages": [
+    16
+   ],
+   "text": "圓錐曲線：由平面與圓錐截痕，視覺性地認識圓錐曲線，及其在自然中的呈現。"
+  },
+  {
+   "id": "tw-108-zh-49cf28cf2d",
+   "code": "G-11B-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "平面向量：坐標平面上的向量係數積與加減，線性組合。"
+  },
+  {
+   "id": "tw-108-zh-7b73cbac4d",
+   "code": "G-11B-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "平面向量的運算：正射影與內積，兩向量的垂直與平行判定，兩向量的夾角。"
+  },
+  {
+   "id": "tw-108-zh-016598d9a6",
+   "code": "G-11B-3",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "平面上的比例：生活情境與平面幾何的比例問題（在設計和透視上）。"
+  },
+  {
+   "id": "tw-108-zh-574625ae75",
+   "code": "G-11B-4",
+   "subject": "Mathematics",
+   "strand": "學習內容 坐標幾何",
+   "ages": [
+    16
+   ],
+   "text": "空間坐標系：點坐標，兩點距離，點到坐標軸或坐標平面的投影。"
+  },
+  {
+   "id": "tw-108-zh-832f095d22",
+   "code": "A-11B-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 代數",
+   "ages": [
+    16
+   ],
+   "text": "矩陣與資料表格：矩陣乘向量的線性組合意涵，二元一次方程組的意涵，矩陣之加、減、乘及二階反方陣。將矩陣視為資料表，用電腦做矩陣運算的觀念與示範。"
+  },
+  {
+   "id": "tw-108-zh-3e5cdcbc42",
+   "code": "F-11B-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    16
+   ],
+   "text": "週期性數學模型：正弦函數的圖形、週期性，其振幅、週期與頻率，週期性現象的範例。"
+  },
+  {
+   "id": "tw-108-zh-cbc906ab93",
+   "code": "F-11B-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 函數",
+   "ages": [
+    16
+   ],
+   "text": "按比例成長模型：指數函數與對數函數及其生活上的應用，例如地震規模，金融與理財，平均成長率，連續複利與𝑒的認識，自然對數函數。"
+  },
+  {
+   "id": "tw-108-zh-b9311b2382",
+   "code": "D-11B-1",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    16
+   ],
+   "text": "主觀機率與客觀機率：根據機率性質檢視主觀機率的合理性，根據已知的數據獲得客觀機率。"
+  },
+  {
+   "id": "tw-108-zh-3f680998b9",
+   "code": "D-11B-2",
+   "subject": "Mathematics",
+   "strand": "學習內容 資料與不確定性",
+   "ages": [
+    16
+   ],
+   "text": "不確定性：條件機率、貝氏定理、獨立事件及其基本應用，列聯表與文氏圖的關聯。"
+  }
+ ]
+}

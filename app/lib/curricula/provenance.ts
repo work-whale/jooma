@@ -580,7 +580,7 @@ export const PROVENANCE: Record<string, Provenance> = {
   "taiwan": {
     sheetRow: { tab: "Countries", name: "Taiwan" },
     source: "https://www.naer.edu.tw/",
-    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the Curriculum Guidelines of 12-Year Basic Education (108 curriculum) since 2019, competency-based; the CAP at the end of junior high; the GSAT each January. Reference: the elementary, junior high and senior or vocational high stages; American English. Licence: open (NAER and the Ministry of Education publish their site content under the Open Government Data License, version 1, commercial use with credit). Statements wait for the owner's decision. Profile only for now.",
+    notes: "Stage 3 batch B (2026-11-27), docs/curricula-stage3-build.md B.1 to B.7. Confirmed: the Curriculum Guidelines of 12-Year Basic Education (108 curriculum) since 2019, competency-based; the CAP at the end of junior high; the GSAT each January. Reference: the elementary, junior high and senior or vocational high stages; American English. Licence: open (NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324: all site material free for any use including adaptation, with the source credited). Statements (2026-11-28, docs/curricula-open-statements-build.md): 724 from the official Chinese text for Mandarin and mathematics (framework tw-108-zh, shown in Chinese as published) and 997 from NAER's official English translation for English and science (framework tw-108-en); learning performances and learning content with their codes; senior high required courses only (owner: official text only, no translation).",
   },
   "vietnam": {
     sheetRow: { tab: "Countries", name: "Vietnam" },

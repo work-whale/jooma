@@ -91,7 +91,7 @@ Parts read (PDF pages): elementary 国語 30 to 47, 算数 66 to 95, 理科 96 t
 - Build: the Japan data is its own on-demand chunk (231 KB, 41 KB gzipped); Next 16's build output no longer prints route sizes.
 - Release: Japan is behind the existing batch B switch (`curricula_s3_b`), so the statements go live with the batch B release. No migration.
 
-## 3. Taiwan: Curriculum Guidelines of 12-Year Basic Education (Step 0 done, build next session)
+## 3. Taiwan: Curriculum Guidelines of 12-Year Basic Education, frameworks `tw-108-zh` and `tw-108-en` (BUILT 2026-11-28)
 
 ### 3.1 Sources
 
@@ -106,7 +106,9 @@ Page: https://www.naer.edu.tw/eng/PageSyllabus?fid=148, "Domains / Subjects Curr
 
 NAER also publishes official English ("英譯 公告版") for Social Studies and Technology; not in this batch's scope.
 
-Licence: NAER and the Ministry publish site content under the Open Government Data License, version 1 (https://data.nat.gov.tw/license): commercial use with credit. To do before the build: quote NAER's own open-information notice (https://www.naer.edu.tw/PageMenu?fid=231) and the credit wording OGDL v1 asks for.
+Licence (checked 2026-11-28): NAER's own declaration, 政府網站資料開放宣告, https://www.naer.edu.tw/PageDoc?fid=324 (Chinese only). Section 一 grants "國家教育研究院全球資訊網上刊載之所有資料與素材" free, non-exclusive, irrevocable and sublicensable, for reproduction, adaptation, editing, public transmission and value-added derivatives, on one condition: "然使用時，應註明出處。" (credit the source). Exclusions: patents, trademarks and agency logos (二(一)); some audiovisual, image, score or commissioned works marked as needing consent, and works NAER does not own (二(三)); moral rights to be respected, no malicious alteration, no implied endorsement (三 to 五). It does **not** name the OGDL (the earlier note here was wrong): the credit names NAER's declaration instead. The Ministry of Education issues the guidelines and NAER publishes them; no consent notice is attached to the guideline PDFs. **For the owner:** if you want certainty that 二(三) does not reach Ministry-issued documents, one email to NAER would settle it; the build assumes the declaration covers them, as it covers "all material on the site".
+
+Credits (in `credits.ts`, stored in each JSON, on `/terms` section 13): name the guidelines, the Ministry, NAER and the PageSyllabus URL, say the statements are excerpts "edited by Jooma into a list", and name the declaration's URL.
 
 ### 3.2 Structure (for the builder)
 
@@ -115,10 +117,109 @@ Licence: NAER and the Ministry publish site content under the Open Government Da
 - Maths lists the performances twice (by stage, then by category): take the first listing only.
 - Maths learning content is a five-column table (code, item and explanation, notes, teaching aids, linked performances): only the item and explanation column is a statement. Needs a positional table reader.
 - Senior high: required courses only (部定必修), not the 加深加廣 electives, matching Japan.
-- The card note will need a Chinese line (Mandarin and maths) and none for English and science, so `FRAMEWORK_LANGUAGE_NOTE` may need to be per subject, or two framework ids (official English and Chinese). Decide at the build.
+- The card note will need a Chinese line (Mandarin and maths) and none for English and science. Decided at the build: two framework ids, `tw-108-zh` and `tw-108-en` (not `tw-108`: an existing rule says no framework id may start another's).
+
+### 3.3 What a statement is
+
+One coded row of a learning performance (學習表現) or learning content (學習內容) table, its text as printed, with its code (`5-II-3`, `Ab-II-6`, `n-IV-1`, `S-8-6`, `ti-Vc-1`, `BDa-Vc-1`). Stage numerals are written I to V in plain letters (the books mix Ⅳ and IV). Strand: "學習表現 聆聽" or "學習內容 字詞" in Chinese, "Learning content: Matter and energy" in English, with the category names the guidelines print (a test checks each is in the PDF).
+
+Ages: stage I = Grades 1 and 2 (6, 7), II = 8, 9, III = 10, 11, IV = 12 to 14, V and Vc = 15 to 17. Maths content goes by grade (Grade g = age g + 5; 11A and 11B = 16).
+
+Included:
+- Mandarin performances and content.
+- Maths performances (the first, by-stage listing) and content for Grades 1 to 10, 11A and 11B. Grade 12 is electives only, so Grade 12 has the stage V performances only.
+- English performances and content (stages II to V).
+- Science performances and content: elementary (stages II and III), junior high (including the three cross-subject themes), senior high required courses (Vc: biology, physics, chemistry, earth sciences).
+
+Left out: electives (maths 12甲/12乙, science Va, English section 3, Mandarin 加深加廣), the uncoded "Inquiry and Practices" course, and the appendices. Marks are dropped from text and code: ◎ (repeated in another stage), * (higher level), and in maths ※ (extension), ★ (not assessed directly), ＃ (taught within another topic). There is no science or English before Grade 3; the guidelines start both at stage II.
+
+### 3.4 What the PDFs do, and what the builder does about it
+
+`scripts/build-asia-standards.mjs --country=taiwan`:
+
+- **Column reader** (Mandarin, English, science):
+  - In each column a code starts a statement, and lines below it at the text's indent (within 4 to 6 points) continue it, across a page turn. Headers and stage labels sit at other indents.
+  - The code is matched on a copy of the row with every gap spaced, so a statement that starts with a number ("Ab-Ⅰ-1" then "1,000個") keeps its digits.
+- **Cell reader** (maths):
+  - The code sits in the middle of its cell, with text above and below it, so cells are cut along the table's drawn row rules.
+  - Only the item column is the statement, not the notes, teaching aids or linked performances.
+  - A cell with no code at the top of a page continues the last one.
+- **Small text:** exponents and indices (8.4 pt against 12) become Unicode superscripts and subscripts (𝑎ᵐ⁺ⁿ, 10ˣ, (𝑎+𝑏)²). One with no Unicode form stops the build.
+- **Characters:**
+  - NFC turns the CJK compatibility forms the fonts use (U+F97E for 量, in 64 statements) into the usual ones.
+  - The Symbol font's × (U+F0B4, "3×3×3") is mapped.
+  - Any other private-use character stops the build.
+- **Drawn symbols:** shapes inside the maths text column, tracked through the drawing transform, mark their cell. Each such cell must be in `TW_FIX` (read off the rendered page), or the build stops.
+  - S-9-4 lost two √: "1:√3:2" and "1:1:√2".
+  - G-8-1's overline and root became "𝐴̅𝐵̅=√((𝑎−𝑐)²+(𝑏−𝑑)²)". The brackets are added so it reads the same on one line.
+  - N-8-2 and N-10-1 keep a √ that is set as text; the shape is only its bar.
+- **Column edges vary by page:** elementary science content's stage III codes start at x 324 on some pages, so the edge is 320 (column II text never starts past 316).
+- **Page numbers** (y 52 in the English guideline) are dropped below y 56.
+- **Kept as printed:** EHa-Vc-3's "roles s", a typo in NAER's English.
+
+### 3.5 Counts (pinned in `tests/unit/taiwan-standards.spec.ts`)
+
+`tw-108-zh` has 724 statements (Mandarin 331, maths 393); `tw-108-en` has 997 (English and science). Per age:
+
+| Age | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Mandarin | 59 | 59 | 79 | 79 | 74 | 74 | 62 | 62 | 62 | 57 | 57 | 57 |
+| Mathematics | 25 | 38 | 44 | 46 | 51 | 43 | 63 | 67 | 57 | 58 | 70 | 35 |
+| English | | | 50 | 50 | 88 | 88 | 116 | 116 | 116 | 147 | 147 | 147 |
+| Science | | | 75 | 75 | 92 | 92 | 246 | 246 | 246 | 183 | 183 | 183 |
+
+JSON sizes: tw-108-zh 199 KB raw (37 KB gzipped); tw-108-en 309 KB raw (50 KB gzipped). Each is its own on-demand chunk.
+
+### 3.6 App changes
+
+- `FrameworkId` gains `tw-108-zh` and `tw-108-en`.
+- `FRAMEWORK_NAME`: both "Curriculum Guidelines of 12-Year Basic Education".
+- `FRAMEWORK_AGES`: zh 6 to 17, en 8 to 17. Loader cases for both.
+- `FRAMEWORK_PERMITTED`: both on, with the licence note.
+- `FRAMEWORK_CREDIT`: two credits.
+- `FRAMEWORK_LANGUAGE_NOTE["tw-108-zh"]`: "Mandarin and mathematics statements are shown in Chinese, as Taiwan's Ministry of Education publishes them. ..." None for en.
+- `/terms` section 13 lists both credits.
+- `alignment` on the taiwan entry, and provenance.
+- Matcher words:
+  - Mandarin, Chinese, 國語, 國文, 中文 map to Mandarin.
+  - 英文 maps to English; 自然 maps to Science.
+  - In England, "Mandarin" stays a modern language.
+- The prompt's own-language line (added for Japan) already fires on Han script.
+
+### 3.7 Tests and results (2026-11-28)
+
+`tests/unit/taiwan-standards.spec.ts`, 25 tests. The data tests cover:
+- ids and `frameworkOf`, and that codes are complete.
+- No serial number missing in any run.
+- Ages by stage or grade, with a shifted-band check.
+- Pinned counts, and known statements word for word.
+- The written-in symbols.
+- Electives, repeats, marks and headers are never statements, and the text is clean.
+- The credits.
+
+The PDF tests cover:
+- **Every statement is in its PDF**, read in pdf.js order. Because pdf.js reads tables row by row, the text is matched as runs of four or more characters in order. S-9-4 and G-8-1 are exempt by name; TW_FIX guards them.
+- **Every code the PDFs print is a statement**, electives aside. Mutation-checked: dropping two statements fails it.
+- The category names are in the PDFs.
+
+The wiring tests cover the curriculum entry, the card, permission off, the note, the terms page, the matcher and the prompt line.
+
+The PDF checks found three builder faults during the build, all fixed:
+- Page numbers appended to English content.
+- A "*" mark in text.
+- The INf-III and INg-III runs (13 statements) swallowed into stage II by the column edge.
+
+Results:
+- **Unit:** whole suite 2,757 passed; tsc clean; ESLint clean on changed files; language check passed.
+- **E2E:** `tests/tools/curricula-standards.spec.ts` 6 of 6 on a staging production build. The new Taiwan Grade 8 case checks:
+  - The subjects listed are Mandarin, Mathematics, English and Science.
+  - The English statements are in official English.
+  - S-8-6 shows in Chinese with its code, is ticked and is sent as `tw-108-zh-ce31a3ca1d`.
+  - The note and both credits show.
+- **Live** (`LIVE_MODEL=1`): worksheet settings were re-diffed first (staging = production: gpt-5.6-luna, low, medium). Taiwan Grade 8 with S-8-6 (畢氏定理) produced an English worksheet on the Pythagorean theorem, 5,902 characters, with no Chinese script. 1 of 1.
 
 ## 4. Not tested, on purpose
 
-- How well the topic matcher picks Japanese statements for English topics across many topics: needs many live runs (one live case only).
+- How well the topic matcher picks Japanese or Chinese statements for English topics across many topics: needs many live runs (one live case per country).
 - Senior high elective courses and the other subjects: not built.
 - Route sizes before the change: the data is one on-demand chunk, loaded only when a Japan teacher opens the card, so first-load sizes cannot change; only the after build was measured.

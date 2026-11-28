@@ -23,6 +23,13 @@ const NIC_CREDIT =
 const JP_COS_CREDIT =
   "Course of Study (学習指導要領) for elementary, junior high and senior high schools: Ministry of Education, Culture, Sports, Science and Technology (MEXT), https://www.mext.go.jp/a_menu/shotou/new-cs/1384661.htm. Statements are excerpts from the official Japanese text, edited by Jooma into a list. Used under the Government of Japan Standard Terms of Use (Ver. 2.0).";
 
+/** Taiwan: NAER's open data declaration asks only that the source is
+ *  credited; the credit also says the statements are edited excerpts. */
+const TW_108_ZH_CREDIT =
+  "Curriculum Guidelines of 12-Year Basic Education (十二年國民基本教育課程綱要) for Mandarin (國語文) and mathematics (數學): Ministry of Education, Taiwan, published by the National Academy for Educational Research (NAER), https://www.naer.edu.tw/eng/PageSyllabus?fid=148. Statements are excerpts from the official Chinese text, edited by Jooma into a list. Used under NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324.";
+const TW_108_EN_CREDIT =
+  "Curriculum Guidelines of 12-Year Basic Education for English and for natural science, official English translation: Ministry of Education, Taiwan, published by the National Academy for Educational Research (NAER), https://www.naer.edu.tw/eng/PageSyllabus?fid=148. Statements are excerpts from the official English text, edited by Jooma into a list. Used under NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324.";
+
 /** The credit each licence asks for, shown under the card whenever that
  *  framework's statements are listed. tests/unit/standards.spec.ts holds these
  *  equal to the credit stored with the data. */
@@ -43,6 +50,8 @@ export const FRAMEWORK_CREDIT: Record<FrameworkId, string> = {
   "nic-ks3": NIC_CREDIT,
   "nic-ks4": NIC_CREDIT,
   "jp-cos": JP_COS_CREDIT,
+  "tw-108-zh": TW_108_ZH_CREDIT,
+  "tw-108-en": TW_108_EN_CREDIT,
 };
 
 /** A line under the card for a framework whose statements are not in English:
@@ -50,5 +59,7 @@ export const FRAMEWORK_CREDIT: Record<FrameworkId, string> = {
  *  2026-11-28). */
 export const FRAMEWORK_LANGUAGE_NOTE: Partial<Record<FrameworkId, string>> = {
   "jp-cos": "Statements are shown in Japanese, as MEXT publishes them. Your resource is still written in the language you choose.",
+  "tw-108-zh":
+    "Mandarin and mathematics statements are shown in Chinese, as Taiwan's Ministry of Education publishes them. Your resource is still written in the language you choose.",
 };
 

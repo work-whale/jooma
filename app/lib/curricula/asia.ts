@@ -291,6 +291,7 @@ export const ASIA_CURRICULA: Curriculum[] = [
     promptLabel: "Taiwan 12-Year Basic Education Curriculum (108 curriculum)",
     versions: [{ label: "Curriculum Guidelines of 12-Year Basic Education (the 108 curriculum), competency-based, since 2019", inForceFrom: "2019-08-01" }],
     years: numbered("Grade", 1, 12, 6),
+    alignment: { frameworks: ["tw-108-zh", "tw-108-en"], adapted: false },
     defaultLanguage: "en-US",
     terms: {
       curriculum: "the Curriculum Guidelines of 12-Year Basic Education issued by the Ministry of Education",

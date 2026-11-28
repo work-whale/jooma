@@ -19,6 +19,10 @@
  *                          the Foundation Stage and Key Stages 1 to 4
  *   - data/jp-cos.json     Japan: the Course of Study (MEXT), in Japanese as
  *                          published, built by scripts/build-asia-standards.mjs
+ *   - data/tw-108-zh.json  Taiwan: the Curriculum Guidelines of 12-Year Basic
+ *                          Education for Mandarin and mathematics, in Chinese
+ *   - data/tw-108-en.json  Taiwan: the same for English and science, in NAER's
+ *                          official English translation (same builder)
  *
  * Statements carry the AGES they apply to, not a grade name, so one file
  * serves "Grade 3" in Texas and "Year 3" in Queensland alike: a year's age
@@ -74,6 +78,8 @@ export const FRAMEWORK_NAME: Record<FrameworkId, string> = {
   "nic-ks3": "Northern Ireland Curriculum statutory requirements",
   "nic-ks4": "Northern Ireland Curriculum statutory requirements",
   "jp-cos": "Course of Study (MEXT)",
+  "tw-108-zh": "Curriculum Guidelines of 12-Year Basic Education",
+  "tw-108-en": "Curriculum Guidelines of 12-Year Basic Education",
 };
 
 /** The ages each framework has statements for. */
@@ -101,6 +107,11 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   // Japan: Elementary 1 to 6 (ages 6 to 11), Junior High 1 to 3, Senior High
   // 1 to 3 (the compulsory first courses, at every senior high age).
   "jp-cos": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+  // Taiwan: Grade 1 to 12 (ages 6 to 17), by learning stage (I = Grades 1
+  // and 2 ... V = Grades 10 to 12); mathematics content by grade. English and
+  // science start at Grade 3 (stage II).
+  "tw-108-zh": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+  "tw-108-en": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched
@@ -135,6 +146,10 @@ export async function loadFramework(id: FrameworkId): Promise<FrameworkData> {
       return (await import("./data/nic-ks4.json")).default as unknown as FrameworkData;
     case "jp-cos":
       return (await import("./data/jp-cos.json")).default as unknown as FrameworkData;
+    case "tw-108-zh":
+      return (await import("./data/tw-108-zh.json")).default as unknown as FrameworkData;
+    case "tw-108-en":
+      return (await import("./data/tw-108-en.json")).default as unknown as FrameworkData;
   }
 }
 

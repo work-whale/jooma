@@ -82,3 +82,44 @@ test("LIVE japan: a worksheet aligned to a Japanese statement is written in Engl
   expect(text, "Japanese or Chinese script").not.toMatch(/[぀-ヿ一-鿿]/);
   expect(text).not.toMatch(/Key Stage|\bKS[1-4]\b|\bYear [0-9]/);
 });
+
+test("LIVE taiwan: a worksheet aligned to a Chinese statement is written in English and teaches it", async ({ page }) => {
+  test.skip(process.env.LIVE_MODEL !== "1", "Live model run: set LIVE_MODEL=1 (spends real money on staging).");
+  test.setTimeout(600_000);
+  const t = await createTeacher("LvTw108");
+  people.push(t);
+  await setPlan(t, "max", "paying");
+  for (const key of KEYS) await setSwitch(key, true);
+  await admin.from("profiles").update({ curriculum_id: "taiwan", curriculum_confirmed_at: new Date().toISOString() }).eq("id", t.id);
+  await page.route("**/api/suggest-subject", (route) => route.fulfill({ json: { subject: "", strand: "", statementIds: [] } }));
+
+  await signIn(page, t);
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Taiwan 12-Year Basic Education Curriculum (108 curriculum)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Grade 8");
+  await page.getByLabel("Subject", { exact: true }).fill("Maths");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Right-angled triangles");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await card.getByLabel("Subject").selectOption("Mathematics", NAV);
+  await card.getByRole("checkbox", { name: /畢氏定理：畢氏定理（勾股弦定理、商高定理）/ }).click();
+
+  const sentReq = page.waitForRequest((r) => r.url().includes("/api/worksheet-generator") && r.method() === "POST", NAV);
+  await page.locator("[data-jo-generate]").click();
+  const body = (await sentReq).postDataJSON();
+  expect(body.curriculumAlign.statements.map((s: { id: string }) => s.id)).toEqual(["tw-108-zh-ce31a3ca1d"]);
+
+  await expect(page.getByTestId("sheet-document")).toHaveAttribute("data-ready", "true", LIVE);
+  const text = (await page.getByTestId("sheet-document").innerText()).replace(/\s+/g, " ");
+  await page.screenshot({ path: join(OUT, "taiwan-grade8-pythagoras.png"), fullPage: true });
+  results.push({ case: "taiwan-grade8-pythagoras", chars: text.length, excerpt: text.slice(0, 1200) });
+
+  expect(text.length).toBeGreaterThan(300);
+  // It teaches the ticked statement: Pythagoras' theorem.
+  expect(text).toMatch(/Pythagor|hypotenuse/i);
+  // In English, with no Chinese script, and not in England's framing.
+  expect(text).toMatch(/\b(the|and|of|to)\b.*\b(the|and|of|to)\b.*\b(the|and|of|to)\b/i);
+  expect(text, "Chinese or Japanese script").not.toMatch(/[぀-ヿ一-鿿]/);
+  expect(text).not.toMatch(/Key Stage|\bKS[1-4]\b|\bYear [0-9]/);
+});

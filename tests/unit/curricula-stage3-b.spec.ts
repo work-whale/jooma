@@ -84,7 +84,7 @@ const ownText = (text: string) => text.split("\n").map((l) => (l.startsWith("- i
 
 test.describe("Stage 3 batch B entries", () => {
   /** Batch B curricula with statements since (docs/curricula-open-statements-build.md). */
-  const WITH_STATEMENTS = new Set<string>(["japan"]);
+  const WITH_STATEMENTS = new Set<string>(["japan", "taiwan"]);
 
   test("the nine exist, verified, in batch B, under Asia; Bangladesh is held", () => {
     const batch = CURRICULA_REGISTRY.filter((c) => c.release === "s3-b").map((c) => c.id);

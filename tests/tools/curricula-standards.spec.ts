@@ -220,3 +220,55 @@ test("a Japan Elementary 4 teacher aligns a worksheet to the Course of Study, in
     { id: "jp-cos-10e5f805c0", text: "面積の単位（平方センチメートル（cm²），平方メートル（m²），平方キロメートル（km²））について知ること。" },
   ]);
 });
+
+test("a Taiwan Grade 8 teacher aligns a worksheet to the Curriculum Guidelines, maths in Chinese with its code, English and science in official English", async ({ page }) => {
+  const t = await teacherOn("taiwan", "StdTaiwan");
+  await signIn(page, t);
+  const sent = await capture(page, "/api/worksheet-generator");
+  const asked = await noSuggestions(page);
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Taiwan 12-Year Basic Education Curriculum (108 curriculum)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Grade 8");
+  await page.getByLabel("Subject", { exact: true }).fill("Maths");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Pythagoras' theorem");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toContainText("Taiwan", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ year: "Grade 8", curriculumId: "taiwan" });
+
+  // Grade 8 has the four core subjects from both frameworks, named in English for the menu.
+  const subject = card.getByLabel("Subject");
+  await expect(subject.locator("option")).toHaveText(["Select subject", "Mandarin", "Mathematics", "English", "Science"], NAV);
+
+  // English is the official English translation.
+  await subject.selectOption("English");
+  await expect(card.getByRole("checkbox", { name: /Can say the words learned in class\./ }).first()).toBeVisible();
+
+  // Maths is the Chinese text as published, with its code.
+  await subject.selectOption("Mathematics");
+  const pythagoras = card.getByRole("checkbox", { name: /畢氏定理：畢氏定理（勾股弦定理、商高定理）的意義及其數學史/ });
+  await expect(pythagoras).toContainText("S-8-6");
+  await pythagoras.click();
+  await expect(pythagoras).toHaveAttribute("aria-checked", "true");
+
+  // A note says which are in Chinese; both credits name NAER's declaration.
+  await expect(card.getByTestId("curriculum-language-note")).toContainText("Mandarin and mathematics statements are shown in Chinese");
+  const credits = card.getByTestId("curriculum-credits");
+  await expect(credits).toContainText("Statements are excerpts from the official Chinese text");
+  await expect(credits).toContainText("https://www.naer.edu.tw/PageDoc?fid=324");
+  await shot(page, "worksheet-taiwan-grade8-maths", card);
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { curriculumName: string; countryName: string; year: string; statements: { id: string; text: string }[] };
+  expect(align).toMatchObject({ curriculumName: "Curriculum Guidelines of 12-Year Basic Education", countryName: "Taiwan", year: "Grade 8" });
+  expect(align.statements).toEqual([
+    {
+      id: "tw-108-zh-ce31a3ca1d",
+      text: "S-8-6: 畢氏定理：畢氏定理（勾股弦定理、商高定理）的意義及其數學史；畢氏定理在生活上的應用；三邊長滿足畢氏定理的三角形必定是直角三角形。",
+    },
+  ]);
+});

@@ -42,6 +42,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { getDocumentProxy } from "unpdf";
+import { OPS } from "unpdf/pdfjs";
 
 const OUT = "app/lib/standards/data";
 const arg = (name) => (process.argv.find((a) => a.startsWith(`--${name}=`)) ?? "").slice(name.length + 3);
@@ -458,5 +459,464 @@ async function japan() {
   console.log(Object.entries(count).map(([k, v]) => `  ${k}: ${v}`).join("\n"));
 }
 
+// ── Taiwan ──────────────────────────────────────────────────────────────────
+//
+// Curriculum Guidelines of 12-Year Basic Education (十二年國民基本教育課程綱要),
+// Ministry of Education, published by NAER: https://www.naer.edu.tw/eng/PageSyllabus?fid=148
+// (fetched 2026-11-28). Licence: NAER's open data declaration
+// (https://www.naer.edu.tw/PageDoc?fid=324): all material on its site, free,
+// non-exclusive, for any use including adaptation, with the source credited.
+//
+// What a statement is: one coded row of a learning performance (學習表現)
+// or learning content (學習內容) table, its text as printed. Mandarin and
+// mathematics are read from the Chinese text (no official English); English
+// and science from NAER's official English translation (英譯 公告版). They
+// are two frameworks, so the card can say which are in Chinese.
+//
+// Codes are kept, with the stage numerals written I to V in plain letters
+// (the books mix Ⅳ and IV). The marks ◎ (repeated in another stage) and *
+// (a higher level) are dropped from the code. Senior high: the
+// MOE-mandated required courses only (數學 10, 11A, 11B; science "Vc"), as
+// for Japan; the electives (12甲/乙, "Va", 加深加廣) are left out.
+
+const TW_DIR = "docs/standards/taiwan";
+const TW_PAGE = "https://www.naer.edu.tw/eng/PageSyllabus?fid=148";
+const TW_LICENCE = "https://www.naer.edu.tw/PageDoc?fid=324";
+const TW_CREDIT =
+  "Curriculum Guidelines of 12-Year Basic Education (十二年國民基本教育課程綱要) for Mandarin (國語文) and mathematics (數學): Ministry of Education, Taiwan, published by the National Academy for Educational Research (NAER), https://www.naer.edu.tw/eng/PageSyllabus?fid=148. Statements are excerpts from the official Chinese text, edited by Jooma into a list. Used under NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324.";
+const TW_EN_CREDIT =
+  "Curriculum Guidelines of 12-Year Basic Education for English and for natural science, official English translation: Ministry of Education, Taiwan, published by the National Academy for Educational Research (NAER), https://www.naer.edu.tw/eng/PageSyllabus?fid=148. Statements are excerpts from the official English text, edited by Jooma into a list. Used under NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324.";
+
+const STAGE_AGES = { I: [6, 7], II: [8, 9], III: [10, 11], IV: [12, 13, 14], V: [15, 16, 17] };
+const ROMAN_CHARS = { "Ⅰ": "I", "Ⅱ": "II", "Ⅲ": "III", "Ⅳ": "IV", "Ⅴ": "V" };
+const plainRoman = (s) => s.replace(/[ⅠⅡⅢⅣⅤ]/g, (c) => ROMAN_CHARS[c]).replace(/\s/g, "");
+
+/** The items of a page with text, page numbers and margins dropped. */
+async function twItems(pdf, p) {
+  const tc = await (await pdf.getPage(p)).getTextContent();
+  return tc.items
+    .map((i) => ({ str: i.str.replace(/[\u0000-\u001f]/g, " "), x: i.transform[4], y: i.transform[5], w: i.width, h: i.height }))
+    .filter((i) => i.str.trim() !== "" && i.y > 56 && i.y < 800);
+}
+
+// Exponents and indices are set small, raised or lowered: written with the
+// Unicode superscript and subscript forms. One with no such form stops the build.
+const SUP = Object.fromEntries(
+  [..."0123456789+−-=()𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧"].map((c, i) => [c, [..."⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁻⁼⁽⁾ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ"][i]]),
+);
+const SUB = Object.fromEntries([..."0123456789+−-=()𝑎𝑒𝑖𝑗𝑘𝑛𝑜𝑝𝑟𝑠𝑡𝑥"].map((c, i) => [c, [..."₀₁₂₃₄₅₆₇₈₉₊₋₋₌₍₎ₐₑᵢⱼₖₙₒₚᵣₛₜₓ"][i]]));
+const twScriptProblems = [];
+const scripted = (s, map, where) =>
+  [...s.replace(/\s/g, "")].map((c) => map[c] ?? (twScriptProblems.push(`${where}: no small form for "${c}" in "${s}"`), c)).join("");
+
+/** Items into rows, top to bottom, each row left to right. A small item a
+ *  few points above or below a row is its superscript or subscript. */
+function twRows(items, tol = 2.5) {
+  const rows = [];
+  const heights = items.map((i) => Math.round(i.h)).sort((a, b) => a - b);
+  const body = heights[Math.floor(heights.length / 2)] ?? 12;
+  const small = items.filter((i) => i.h < body * 0.8 && /^[\s0-9+−\-=()𝑎-𝑧ℎ]+$/u.test(i.str));
+  for (const it of [...items].filter((i) => !small.includes(i)).sort((a, b) => b.y - a.y || a.x - b.x)) {
+    const row = rows.find((r) => Math.abs(r.y - it.y) <= tol);
+    if (row) row.items.push(it);
+    else rows.push({ y: it.y, items: [it] });
+  }
+  for (const it of small) {
+    const row = rows.filter((r) => Math.abs(it.y - r.y) <= 7).sort((a, b) => Math.abs(it.y - a.y) - Math.abs(it.y - b.y))[0];
+    if (!row) {
+      rows.push({ y: it.y, items: [it] });
+      continue;
+    }
+    const up = it.y > row.y;
+    row.items.push({ ...it, str: scripted(it.str, up ? SUP : SUB, `y${Math.round(it.y)} x${Math.round(it.x)}`), w: it.w, script: true });
+  }
+  for (const r of rows) r.items.sort((a, b) => a.x - b.x);
+  return rows.sort((a, b) => b.y - a.y);
+}
+
+/** One row's items as text, with where each item starts in it. Chinese runs
+ *  on with no space (a Latin word or number keeps one from another); English
+ *  keeps a space wherever the print leaves a gap ("Can" "say"), and none
+ *  where a word was set in two pieces ("o" "f"). */
+function twJoin(items, en) {
+  let out = "";
+  const starts = [];
+  let prev = null;
+  for (const it of items) {
+    const gap = prev ? it.x - (prev.x + prev.w) : 0;
+    const s = it.str;
+    let sep = "";
+    if (prev && !it.script && !prev.script && !/\s$/.test(out) && !/^\s/.test(s)) {
+      if (en) sep = gap > 1.2 ? " " : "";
+      else sep = gap > 1.5 && /[A-Za-z0-9]$/.test(out) && /^[A-Za-z]/.test(s) ? " " : "";
+    }
+    out += sep;
+    starts.push(out.length);
+    out += s;
+    prev = it;
+  }
+  return { text: out, starts };
+}
+
+/** Two lines of one statement joined. */
+function twJoinLines(a, b, en) {
+  if (!a) return b;
+  if (en) return /[A-Za-z]-$/.test(a) ? a + b : `${a} ${b}`;
+  return /[A-Za-z0-9]$/.test(a) && /^[A-Za-z0-9]/.test(b) ? `${a} ${b}` : a + b;
+}
+
+const tidyTw = (s, en) => {
+  // NFC turns the CJK compatibility forms some fonts use (U+F97E for 量)
+  // into the usual characters. The Symbol font's × sits in the private use
+  // area; any other private use character stops the build.
+  let t = tidy(s).normalize("NFC").replace(//g, "×");
+  if (!en) t = t.replace(/(?<=[^\x00-\x7f]) (?=[^\x00-\x7f])/g, "");
+  return t.replace(/\s+([，。、；：」）])/g, "$1").replace(/([「（])\s+/g, "$1");
+};
+
+// A code at the start of a cell: category (letters, perhaps set apart as in
+// "I N d" or "B Mb", or a digit), stage (Roman numerals, perhaps with "c"
+// for the senior high required courses), serial number.
+const TW_CODE = /^[◎*＊\s]*([A-Za-z](?:\s?[A-Za-z]){0,3}|[1-9])\s*-\s*((?:[ⅠⅡⅢⅣⅤ]|I|V)(?:\s?(?:[ⅠⅡⅢⅣⅤ]|I|V)){0,2}(?:\s?c)?)\s*-\s*([0-9]{1,2})(?![0-9,])/;
+
+/**
+ * A table read as columns: in each column a code starts a statement and the
+ * lines below it at the same indent continue it, across a page turn.
+ * Headers and stage labels sit at other indents and are skipped. Reading
+ * starts after a row matching `start` and ends at a row matching `stop`.
+ */
+async function twColumns(sec, problems) {
+  const pdf = await getDocumentProxy(new Uint8Array(readFileSync(`${TW_DIR}/${sec.file}`)));
+  const found = [];
+  let on = !sec.start;
+  let done = false;
+  const open = sec.columns.map(() => null);
+  const close = (k) => {
+    if (open[k]) found.push(open[k]);
+    open[k] = null;
+  };
+  for (let p = sec.pages[0]; p <= sec.pages[1] && !done; p++) {
+    const items = (await twItems(pdf, p)).filter((i) => !["◎", "‧", "*", "＊"].includes(i.str.trim()));
+    // The live part of the page: after `start`, before `stop`.
+    let top = 800;
+    let bottom = 45;
+    for (const r of twRows(items)) {
+      const whole = tidy(twJoin(r.items, sec.en).text).replace(/\s/g, "");
+      if (!on && sec.start.test(whole)) {
+        on = true;
+        top = r.y - 1;
+        continue;
+      }
+      if (on && sec.stop && sec.stop.test(whole)) {
+        bottom = r.y + 1;
+        done = true;
+        break;
+      }
+    }
+    if (!on) continue;
+    sec.columns.forEach((col, k) => {
+      const mine = items.filter((i) => i.x >= col[0] && i.x < col[1] && i.y < top && i.y > bottom);
+      for (const r of twRows(mine)) {
+        const { text } = twJoin(r.items, sec.en);
+        if (sec.skip && sec.skip.test(text.replace(/\s/g, ""))) continue;
+        // The code is matched with every gap spaced, so a statement that
+        // starts with a number ("Ab-Ⅰ-1" "1,000個") keeps its own digits.
+        const { text: probe, starts } = twJoin(r.items, true);
+        const m = TW_CODE.exec(probe);
+        if (m) {
+          close(k);
+          const after = r.items.findIndex((_, n) => starts[n] >= m[0].length);
+          const rest = after >= 0 ? twJoin(r.items.slice(after), sec.en).text.replace(/^[\s:：]+/, "") : "";
+          open[k] = { cat: m[1].replace(/\s/g, ""), stage: plainRoman(m[2]), n: Number(m[3]), text: rest, textX: after >= 0 ? r.items[after].x : null, page: p };
+        } else if (open[k] && (open[k].textX === null || (r.items[0].x >= open[k].textX - 4 && r.items[0].x <= open[k].textX + 6))) {
+          if (open[k].textX === null) open[k].textX = r.items[0].x;
+          open[k].text = twJoinLines(open[k].text, text, sec.en);
+        }
+      }
+    });
+  }
+  sec.columns.forEach((_, k) => close(k));
+  if (!found.length) problems.push(`${sec.file} p${sec.pages}: nothing read`);
+  return found.map((s) => ({ ...s, text: tidyTw(s.text, sec.en) }));
+}
+
+/** The horizontal rules of a page that cross [x0, x1]: the row lines of its tables. */
+/** Also returns the small shapes drawn inside [x0, x1]: a symbol the PDF
+ *  draws instead of setting as text (the √ of "1:√3:2"), which the text
+ *  layer loses. Shapes are placed through the drawing transform. */
+async function twRules(pdf, p, x0, x1) {
+  const ops = await (await pdf.getPage(p)).getOperatorList();
+  const ys = [];
+  const shapes = [];
+  const mul = (m, n) => [m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1], m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3], m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5]];
+  let ctm = [1, 0, 0, 1, 0, 0];
+  const saved = [];
+  ops.fnArray.forEach((fn, i) => {
+    const a = ops.argsArray[i];
+    if (fn === OPS.save) saved.push(ctm);
+    else if (fn === OPS.restore) ctm = saved.pop() ?? [1, 0, 0, 1, 0, 0];
+    else if (fn === OPS.transform) ctm = mul(ctm, a);
+    if (fn !== OPS.constructPath || !a[2]) return;
+    const pts = [[a[2][0], a[2][1]], [a[2][2], a[2][3]]].map(([x, y]) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+    const m = [Math.min(pts[0][0], pts[1][0]), Math.min(pts[0][1], pts[1][1]), Math.max(pts[0][0], pts[1][0]), Math.max(pts[0][1], pts[1][1])];
+    if (m[3] - m[1] < 2 && m[0] <= x0 && m[2] >= x1) ys.push((m[1] + m[3]) / 2);
+    else if (m[0] > x0 && m[2] < x1 && m[2] - m[0] < 60 && m[3] - m[1] < 30 && (m[2] - m[0] > 0.5 || m[3] - m[1] > 0.5)) shapes.push({ x: m[0], y: (m[1] + m[3]) / 2 });
+  });
+  const rules = [...new Set(ys.map((y) => Math.round(y)))].sort((a, b) => b - a).filter((y, i, a) => i === 0 || a[i - 1] - y > 2);
+  return { rules, shapes };
+}
+
+/**
+ * The mathematics cells with a drawn symbol, by code: the text as read
+ * and as printed (read off the rendered pages, 2026-11-28; PDF pages). The
+ * build stops on a cell with a shape that is not listed here, or whose text
+ * has changed. N-8-2 and N-10-1: the shape is the bar over a √ that is set
+ * as text, so nothing is lost. G-8-1: the bar over AB is set as stray
+ * combining marks, written here over each letter, and the root's bar
+ * becomes brackets so the formula reads the same on one line.
+ */
+const TW_FIX = new Map([
+  // naer-maths-zh.pdf p41
+  ["N-8-2", ["二次方根的近似值：二次方根的近似值；二次方根的整數部分；十分逼近法。使用計算機√鍵。", null]],
+  // p43
+  [
+    "G-8-1",
+    [
+      "直角坐標系上兩點距離公式：直角坐標系上兩點𝐴(𝑎, 𝑏)和𝐵(𝑐,𝑑)的距離為̅̅̅̅𝐴𝐵=√(𝑎−𝑐)²+(𝑏−𝑑)²；生活上相關問題。",
+      "直角坐標系上兩點距離公式：直角坐標系上兩點𝐴(𝑎, 𝑏)和𝐵(𝑐,𝑑)的距離為𝐴̅𝐵̅=√((𝑎−𝑐)²+(𝑏−𝑑)²)；生活上相關問題。",
+    ],
+  ],
+  // p45
+  [
+    "S-9-4",
+    [
+      "相似直角三角形邊長比值的不變性：直角三角形中某一銳角的角度決定邊長比值，該比值為不變量，不因相似直角三角形的大小而改變；三內角為30°,60°,90°其邊長比記錄為「1:3:2」；三內角為45°,45°,90°其邊長比記錄為「1:1:2」。",
+      "相似直角三角形邊長比值的不變性：直角三角形中某一銳角的角度決定邊長比值，該比值為不變量，不因相似直角三角形的大小而改變；三內角為30°,60°,90°其邊長比記錄為「1:√3:2」；三內角為45°,45°,90°其邊長比記錄為「1:1:√2」。",
+    ],
+  ],
+  // p47
+  ["N-10-1", ["實數：數線，十進制小數的意義，三一律，有理數的十進制小數特徵，無理數之十進制小數的估算（√2為無理數的證明），科學記號數字的運算。", null]],
+]);
+
+/**
+ * The mathematics tables, read cell by cell between their rules: the code
+ * sits in the middle of its cell, with the text above and below it. Only
+ * the text column is the statement (the content table's notes, teaching aids
+ * and linked performances are not). A cell with no code at the top of a
+ * page goes on from the page before.
+ */
+async function twCells(sec, problems) {
+  const pdf = await getDocumentProxy(new Uint8Array(readFileSync(`${TW_DIR}/${sec.file}`)));
+  const found = [];
+  let grade = null;
+  let on = false;
+  for (let p = sec.pages[0]; p <= sec.pages[1]; p++) {
+    const items = await twItems(pdf, p);
+    const { rules, shapes } = await twRules(pdf, p, sec.text[0] + 4, sec.text[1] - 4);
+    let first = true;
+    for (let k = 0; k + 1 < rules.length; k++) {
+      const band = items.filter((i) => i.y < rules[k] && i.y > rules[k + 1]);
+      if (!band.length) continue;
+      const whole = tidy(twRows(band).map((r) => twJoin(r.items, false).text).join(" ")).replace(/\s/g, "");
+      if (sec.start.test(whole)) on = true;
+      if (!on) continue;
+      if (sec.stop.test(whole)) return found;
+      if (sec.skip.test(whole)) continue;
+      const g = whole.match(/^([0-9]{1,2})年級(?:（([AB])類）)?$/);
+      if (g) {
+        grade = g[1] + (g[2] ?? "");
+        continue;
+      }
+      const code = tidy(twJoin(twRows(band.filter((i) => i.x >= sec.code[0] && i.x < sec.code[1])).flatMap((r) => r.items), false).text).replace(/\s/g, "");
+      const text = tidyTw(
+        twRows(band.filter((i) => i.x >= sec.text[0] && i.x < sec.text[1]))
+          .map((r) => twJoin(r.items, false).text)
+          .reduce((a, b) => twJoinLines(a, b, false), ""),
+        false,
+      );
+      if (!code) {
+        if (first && found.length && text) found[found.length - 1].text = tidyTw(found[found.length - 1].text + text, false);
+        else if (text) problems.push(`${sec.file} p${p}: a cell with no code: ${text.slice(0, 40)}`);
+        first = false;
+        continue;
+      }
+      first = false;
+      const m = code.match(sec.codeRe);
+      if (!m) {
+        problems.push(`${sec.file} p${p}: not a code: ${code}`);
+        continue;
+      }
+      // The marks ※ (extension), ★ (not assessed directly) and ＃ (taught
+      // within another topic) are dropped, as ◎ and * are.
+      const shape = shapes.some((sh) => sh.y < rules[k] && sh.y > rules[k + 1]);
+      found.push({ cat: m[1], stage: plainRoman(m[2]), n: Number(m[3]), grade, text: text.replace(/[※★＃]/g, ""), page: p, shape });
+    }
+  }
+  problems.push(`${sec.file}: no end found`);
+  return found;
+}
+
+// The category names, as the guidelines print them.
+const TW_STRANDS = {
+  mandarinPerf: { 1: "聆聽", 2: "口語表達", 3: "標音符號與運用", 4: "識字與寫字", 5: "閱讀", 6: "寫作" },
+  mandarinContent: {
+    Aa: "標音符號", Ab: "字詞", Ac: "句段", Ad: "篇章", Ba: "記敘文本", Bb: "抒情文本", Bc: "說明文本", Bd: "議論文本", Be: "應用文本",
+    Ca: "物質文化", Cb: "社群文化", Cc: "精神文化",
+  },
+  maths: { n: "數與量", s: "空間與形狀", g: "坐標幾何", r: "關係", a: "代數", f: "函數", d: "資料與不確定性" },
+  // From the headings of the English guideline (the fifth has a dash in
+  // print, a hyphen here by the brand rule).
+  englishPerf: {
+    1: "Language proficiency in listening", 2: "Language proficiency in speaking", 3: "Language proficiency in reading", 4: "Language proficiency in writing",
+    5: "Language proficiency - integrative use of at least two out of four language skills", 6: "Learning interest and attitude",
+    7: "Learning approaches and strategies", 8: "Cultural literacy", 9: "Logical reasoning, judgement and creativity",
+  },
+  englishContent: {
+    Aa: "Linguistic knowledge, alphabet", Ab: "Linguistic knowledge, phonology", Ac: "Linguistic knowledge, vocabulary", Ad: "Linguistic knowledge, sentence structure",
+    Ae: "Linguistic knowledge, discourse", B: "Communication", C: "Culture and customs", D: "Cognitive capability",
+  },
+  // From the science guideline's Table 2 (performances) and Table 3 (content).
+  sciencePerf: {
+    ti: "Imagination and creativity", tr: "Reasoning and argumentation", tc: "Critical thinking", tm: "Construction of models",
+    po: "Observing and identifying", pe: "Planning and executing", pa: "Analyzing and finding", pc: "Discussing and communicating",
+    ai: "Cultivate interest in scientific inquiry", ah: "Develop the habit of applying scientific thinking and inquiry", an: "Understanding the nature of science",
+  },
+  scienceTopics: {
+    INa: "Matter and energy", INb: "Structure and function", INc: "System and scale", INd: "Change and stability", INe: "Interaction",
+    INf: "Science and daily life", INg: "Resource and sustainability",
+    A: "Composition and characteristics of matter", B: "Form, conversion, and flow of energy", C: "Structure and function of matter/materials",
+    D: "Structure and function of organisms", E: "Physical systems", F: "Earth environment", G: "Evolution and heredity", H: "History of the Earth",
+    I: "Dynamic Earth", J: "Reactions of the materials, equilibrium and production", K: "Phenomena and interactions in nature",
+    L: "Organisms and the environment", M: "Science, technology, society, and humanities", N: "Resources and sustainable development",
+  },
+  scienceSubjects: { B: "Biology", P: "Physics", C: "Chemistry", E: "Earth sciences" },
+};
+/** A science content code's category: "INa" (a cross-subject concept),
+ *  "Ab" (junior high topic A), "BDa" (senior high biology, topic D). */
+function scienceTopic(cat) {
+  const t = TW_STRANDS.scienceTopics;
+  if (t[cat]) return t[cat];
+  if (/^[A-N][a-f]$/.test(cat)) return t[cat[0]];
+  const m = cat.match(/^([BPCE])([A-N])[a-f]$/);
+  return m && t[m[2]] ? `${TW_STRANDS.scienceSubjects[m[1]]}, ${t[m[2]]}` : undefined;
+}
+
+const TW_SECTIONS = [
+  // Mandarin (國語文), Chinese. PDF pages.
+  { kind: "columns", fw: "tw-108-zh", subject: "Mandarin", part: "學習表現", strands: TW_STRANDS.mandarinPerf, file: "naer-mandarin-zh.pdf", pages: [8, 14], start: /^一、學習表現$/, stop: /^二、學習內容$/, columns: [[140, 560]] },
+  { kind: "columns", fw: "tw-108-zh", subject: "Mandarin", part: "學習內容", strands: TW_STRANDS.mandarinContent, file: "naer-mandarin-zh.pdf", pages: [14, 21], start: /^二、學習內容$/, stop: /^三、高級中等學校/, columns: [[140, 560]] },
+  // Mathematics (數學), Chinese: the performances listed by stage (the
+  // second listing, by category, repeats them), then the content by grade.
+  {
+    kind: "cells", fw: "tw-108-zh", subject: "Mathematics", part: "學習表現", strands: TW_STRANDS.maths, file: "naer-maths-zh.pdf", pages: [12, 16],
+    start: /^編碼學習表現（依學習階段排序）$/, stop: /依表現類別排序/, skip: /^(編碼學習表現|第.學習階段$)/, code: [55, 128], text: [128, 540],
+    codeRe: /^([nsgrafd])-((?:I|V){1,3})-([0-9]{1,2})$/,
+  },
+  {
+    kind: "cells", fw: "tw-108-zh", subject: "Mathematics", part: "學習內容", strands: TW_STRANDS.maths, file: "naer-maths-zh.pdf", pages: [22, 56],
+    start: /^編碼學習內容條目及說明/, stop: /^12年級（加深加廣/, skip: /^編碼學習內容條目及說明/, code: [55, 108], text: [108, 256],
+    codeRe: /^([NSGRAFD])-([0-9]{1,2}[AB]?)-([0-9]{1,2})$/,
+  },
+];
+
+const EN_SECTIONS = [
+  // English, official English translation.
+  {
+    kind: "columns", fw: "tw-108-en", subject: "English", part: "Learner performance", strands: TW_STRANDS.englishPerf, en: true, file: "naer-english-en.pdf", pages: [14, 27],
+    start: /^\(1\)Languageproficiencyinlistening$/, stop: /^2\.LearningContent$/, columns: [[150, 560]],
+  },
+  {
+    kind: "columns", fw: "tw-108-en", subject: "English", part: "Learning content", strand: (c) => TW_STRANDS.englishContent[c] ?? TW_STRANDS.englishContent[c[0]], en: true,
+    file: "naer-english-en.pdf", pages: [28, 36], start: /^LearningContent$/, stop: /^3\.Enrichmentandexpanded/, skip: /^Stage(I|II|III|IV|V)$/,
+    columns: [[160, 270], [270, 377], [377, 483], [483, 600]],
+  },
+  // Natural science, official English translation: elementary (two stage
+  // columns side by side), junior high, senior high required courses.
+  {
+    kind: "columns", fw: "tw-108-en", subject: "Science", part: "Learning performance", strands: TW_STRANDS.sciencePerf, en: true, file: "naer-science-en.pdf", pages: [11, 16],
+    start: /^\(1\)Learningperformances$/, stop: /^\(2\)Learningcontents$/, columns: [[215, 375], [375, 560]],
+  },
+  {
+    kind: "columns", fw: "tw-108-en", subject: "Science", part: "Learning content", strand: scienceTopic, en: true, file: "naer-science-en.pdf", pages: [16, 26],
+    start: /^\(2\)Learningcontents$/, stop: /^2\.LearningFocusesofJuniorHigh/, columns: [[125, 320], [320, 560]],
+  },
+  {
+    kind: "columns", fw: "tw-108-en", subject: "Science", part: "Learning performance", strands: TW_STRANDS.sciencePerf, en: true, file: "naer-science-en.pdf", pages: [26, 31],
+    start: /^\(1\)Learningperformances$/, stop: /^\(2\)Learningcontents$/, columns: [[250, 560]],
+  },
+  {
+    kind: "columns", fw: "tw-108-en", subject: "Science", part: "Learning content", strand: scienceTopic, en: true, file: "naer-science-en.pdf", pages: [31, 47],
+    start: /^\(2\)Learningcontents$/, stop: /^3\.LearningFocusesofMOE/, skip: /^(Subtopic)?LearningContents/, columns: [[250, 560]],
+  },
+  {
+    kind: "columns", fw: "tw-108-en", subject: "Science", part: "Learning performance", strands: TW_STRANDS.sciencePerf, en: true, file: "naer-science-en.pdf", pages: [47, 52],
+    start: /^\(1\)Learningperformances$/, stop: /^\(2\)Learningcontents$/, columns: [[245, 560]],
+  },
+  {
+    kind: "columns", fw: "tw-108-en", subject: "Science", part: "Learning content", strand: scienceTopic, en: true, file: "naer-science-en.pdf", pages: [52, 64],
+    start: /^\(2\)Learningcontents$/, stop: /^v\.Thecontentsof/, columns: [[275, 560]],
+  },
+];
+TW_SECTIONS.push(...EN_SECTIONS);
+
+async function taiwan() {
+  const problems = [];
+  const all = [];
+  for (const sec of TW_SECTIONS) {
+    const found = sec.kind === "cells" ? await twCells(sec, problems) : await twColumns(sec, problems);
+    for (const s of found) {
+      const cat = sec.strand ? sec.strand(s.cat) : (sec.strands[s.cat] ?? sec.strands[s.cat.toLowerCase()]);
+      if (!cat) problems.push(`${sec.file} p${s.page}: no category for ${s.cat}`);
+      let code;
+      let ages;
+      if (s.grade !== undefined && sec.part === "學習內容" && sec.subject === "Mathematics") {
+        code = `${s.cat}-${s.stage}-${s.n}`;
+        const g = Number(String(s.stage).replace(/[AB]$/, ""));
+        ages = [g + 5];
+        if (s.grade && s.grade !== s.stage) problems.push(`${code}: under the heading for grade ${s.grade}`);
+      } else {
+        code = `${s.cat}-${s.stage}-${s.n}`;
+        ages = STAGE_AGES[s.stage.replace(/c$/, "")];
+        if (!ages) problems.push(`${sec.file} p${s.page}: no stage in ${code}`);
+      }
+      if (!s.text) problems.push(`${sec.file} p${s.page}: ${code} has no text`);
+      if (/[-]/.test(s.text)) problems.push(`${sec.file} p${s.page}: ${code} has a private use character: ${s.text}`);
+      if (sec.kind === "cells" && TW_FIX.has(code)) {
+        const [read, printed] = TW_FIX.get(code);
+        if (s.text !== read) problems.push(`${code}: the text read has changed: ${s.text}`);
+        else if (printed) s.text = printed;
+      } else if (s.shape) problems.push(`${sec.file} p${s.page}: ${code} has a drawn symbol: ${s.text}`);
+      all.push({ fw: sec.fw, subject: sec.subject, strand: cat ? `${sec.part}${sec.en ? ": " : " "}${cat}` : sec.part, code, ages: ages ?? [], text: s.text, page: s.page });
+    }
+    if (debug && debug === `${sec.subject}:${sec.part}`) for (const s of all.filter((a) => a.subject === sec.subject && a.strand.startsWith(sec.part))) console.log(`p${s.page} ${s.code} [${s.ages}] ${s.strand} | ${s.text}`);
+  }
+  problems.push(...twScriptProblems);
+  const seen = new Set();
+  for (const s of all) {
+    const key = `${s.fw}|${s.subject}|${s.code}`;
+    if (seen.has(key)) problems.push(`${key}: twice`);
+    seen.add(key);
+  }
+  if (problems.length) {
+    console.error(problems.join("\n"));
+    throw new Error(`${problems.length} problems: nothing written`);
+  }
+  for (const [fw, credit, lang] of [
+    ["tw-108-zh", TW_CREDIT, "Chinese"],
+    ["tw-108-en", TW_EN_CREDIT, "official English"],
+  ]) {
+    const statements = all
+      .filter((s) => s.fw === fw)
+      .map((s) => ({ id: `${fw}-${sha1(`${s.subject}|${s.code}`).slice(0, 10)}`, code: s.code, subject: s.subject, strand: s.strand, ages: s.ages, text: s.text }));
+    if (!statements.length) continue;
+    write(fw, { source: { title: `Curriculum Guidelines of 12-Year Basic Education (${lang}), Ministry of Education, Taiwan (NAER)`, file: `${TW_DIR}/`, url: TW_PAGE, licence: TW_LICENCE, credit }, statements });
+    const count = {};
+    for (const s of statements) for (const a of s.ages) count[`${s.subject} ${a}`] = (count[`${s.subject} ${a}`] ?? 0) + 1;
+    console.log(`${fw}: ${statements.length} statements; dashes replaced ${dashesReplaced}`);
+    console.log(Object.entries(count).map(([k, v]) => `  ${k}: ${v}`).join("\n"));
+  }
+}
+
 if (country === "japan") await japan();
+else if (country === "taiwan") await taiwan();
 else throw new Error("Usage: --country=japan|taiwan");
