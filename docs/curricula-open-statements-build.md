@@ -87,7 +87,7 @@ Parts read (PDF pages): elementary 国語 30 to 47, 算数 66 to 95, 理科 96 t
 
 - Unit: whole suite 2,732 passed (21 new in `asia-standards.spec.ts`). `tsc` clean, ESLint clean on every changed file, language check passed.
 - E2E against a staging production build on :3000: `tests/tools/curricula-standards.spec.ts` 5 of 5 (the Japan case new).
-- Live (`LIVE_MODEL=1`, `tests/tools/curricula-open-statements-live.spec.ts`): 1 of 1. An Elementary 4 worksheet aligned to 面積の単位... came back in English, on area units (cm², m², km²), with a Japanese touch ("cities and prefectures") and no Japanese script. Screenshot and results in `docs/screenshots/2026-11-28-open-statements-live/` (gitignored). tool_settings were not re-diffed against production for this run.
+- Live (`LIVE_MODEL=1`, `tests/tools/curricula-open-statements-live.spec.ts`): 1 of 1. An Elementary 4 worksheet aligned to 面積の単位... came back in English, on area units (cm², m², km²), with a Japanese touch ("cities and prefectures") and no Japanese script. Screenshot and results in `docs/screenshots/2026-11-28-open-statements-live/` (gitignored). tool_settings checked afterwards (2026-11-28): the worksheet generator uses gpt-5.6-luna, effort low, verbosity medium on both staging and production, so the run is representative.
 - Build: the Japan data is its own on-demand chunk (231 KB, 41 KB gzipped); Next 16's build output no longer prints route sizes.
 - Release: Japan is behind the existing batch B switch (`curricula_s3_b`), so the statements go live with the batch B release. No migration.
 
