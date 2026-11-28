@@ -28,8 +28,8 @@ Licences that already allow commercial use. The owner decided (2026-11-27) to bu
 
 | Source | Licence | Note |
 |---|---|---|
-| Japan (MEXT Courses of Study) | GJS Terms 2.0 | English translation exists. First in line (owner). |
-| Taiwan (curriculum guidelines) | OGDL v1 | English translation exists. First in line (owner). |
+| Japan (MEXT Courses of Study) | GJS Terms 2.0 | **BUILT 2026-11-28** (`jp-cos`, 865 statements in Japanese: official English covers the General Provisions only). Behind the batch B switch. |
+| Taiwan (curriculum guidelines) | OGDL v1 | **Step 0 done 2026-11-28**, build next. Official English for English and science; Mandarin and maths in Chinese. |
 | Norway (Udir Grep) | NLOD | Machine-readable data. |
 | Sweden (Skolverket Syllabus API) | CC0 1.0 | Machine-readable data. |
 | France (programmes) | Licence Ouverte 2.0 / CRPA | Statements are in French. |
@@ -38,7 +38,7 @@ Licences that already allow commercial use. The owner decided (2026-11-27) to bu
 | Brazil (BNCC) | Probably open (gov.br CC BY-ND 3.0) | Check basenacionalcomum.mec.gov.br's terms; verbatim only (no derivatives). |
 | Vietnam | Open by statute only | Left out by the owner (no lawyer). |
 
-Build pattern: `docs/curricula-gaps-plan.md` section 4 (as for Scotland and Northern Ireland), sources and sha256 recorded in the build log.
+Build pattern: `docs/curricula-gaps-plan.md` section 4 (as for Scotland and Northern Ireland), sources and sha256 recorded in the build log. Open-licence builds log to `docs/curricula-open-statements-build.md` (owner rule 2026-11-28: official text only, never Jooma's translation; core four subjects). Taiwan's sources, sha256 and structure notes are in its section 3.
 
 ## 4. Language gaps
 
