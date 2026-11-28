@@ -782,4 +782,29 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://www.minedu.gob.pe/curriculo/",
     notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the CNEB approved by RM 281-2016-MINEDU, applied from 2017-01-01 in all basic education (gob.pe); a commission to update it created in July 2026 (El Peruano), nothing dated; ENLA 2026 in 4th and 6th primaria and 2nd secundaria (El Peruano). Reference: inicial 3 to 5, primaria 1 to 6 from age 6, secundaria 1 to 5, cycles I to VII. Licence: unclear (no reuse terms found; the copyright law's exclusion of official texts is not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
   },
+  "ethiopia": {
+    sheetRow: { tab: "Countries", name: "Ethiopia" },
+    source: "https://moe.gov.et/",
+    notes: "Stage 3 batch E (2026-11-28), docs/curricula-stage3-build.md, Batch E. Confirmed: the General Education Curriculum Framework (2020) sets two years of pre-primary for ages 5 and 6, primary Grades 1 to 6, middle Grades 7 and 8 and secondary Grades 9 to 12 (framework, Capital Ethiopia); the Council of Ministers approved rollout on 2023-02-27 and Grades 9 and 10 materials rolled out in September 2023 (Cambridge case study); Tigray adopted it in 2026 (allAfrica); the Grade 12 Secondary School Leaving Certificate Examination, run by the EAES, is the single university entrance exam covering Grades 9 to 12 (EAES schedule, 2026). Reference: mother-tongue teaching in primary set by the regional states, English later; exams at the end of primary and middle school (sources differ on which are regional or national, so none is named by grade). Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "rwanda": {
+    sheetRow: { tab: "Countries", name: "Rwanda" },
+    source: "https://www.reb.gov.rw/",
+    notes: "Stage 3 batch E (2026-11-28), docs/curricula-stage3-build.md, Batch E. Confirmed: the revised primary curriculum in full from September 2025, and the new upper secondary pathways starting with S4 and moving up to S5 and S6 in the following years (The New Times); NESA's national examinations for P6 and S3 (Mineduc results) and the 2025-26 timetable (NESA). Reference: three years of nursery, P1 at 6, Kinyarwanda in the first primary years and English after that, a school year from September. Sources differ on whether S6 in 2026-27 is on the old curriculum, so the version label says S5 and S6 follow later. Licence: unclear (no reuse terms found for REB documents); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "tanzania": {
+    sheetRow: { tab: "Countries", name: "Tanzania" },
+    source: "https://www.tie.go.tz/",
+    notes: "Stage 3 batch E (2026-11-28), docs/curricula-stage3-build.md, Batch E. Confirmed: the 1+6+4+2 structure of the Education and Training Policy (2014, 2023 edition), rolled out from 2024 with pre-primary, Standard I and Standard III; in 2027 the last Standard VII class and the first Standard VI class both finish primary (The Citizen, Daily News); the Form 5 curriculum moved to 2025; the Amali (vocational) secondary stream is piloted in 39 schools, national rollout in 2028 (The Citizen, 2026). Reference: the NECTA examinations (primary leaving, FTNA, CSEE, ACSEE), Kiswahili in primary and English in secondary, Zanzibar's own system. The 2028-01-01 version is when Standard VII ends. Licence: closed (the curriculum documents are copyright of the Ministry of Education, Science and Technology and TIE, and no reuse terms were found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "zambia": {
+    sheetRow: { tab: "Countries", name: "Zambia" },
+    source: "https://www.moe.gov.zm/",
+    notes: "Stage 3 batch E (2026-11-28), docs/curricula-stage3-build.md, Batch E. Confirmed: the 3-6-4-2 structure (ECE cut from 4 to 3 years, primary from 7 to 6, Grade 1 entry from 7 to 6, secondary six years in Forms) (UNICEF Zambia budget brief 2025); phased in from 2025 with ECE Level 1, Grade 1 and Form 1 (Lusaka Times, January 2026); the last Junior Secondary exams in 2025, the last 2013-curriculum Primary and School Certificate exams in 2028 and the first Advanced Level exams in 2027 (ECZ); Education (Amendment) Act No. 17 of 2026 (Parliament). Reference: Grade 7 and Grades 10 to 12 kept in the year list for classes finishing on the 2013 curriculum; local-language teaching in the early grades. The 2029-01-01 version is when the transition ends. Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "zimbabwe": {
+    sheetRow: { tab: "Countries", name: "Zimbabwe" },
+    source: "https://mopse.co.zw/",
+    notes: "Stage 3 batch E (2026-11-28), docs/curricula-stage3-build.md, Batch E. Confirmed: the Heritage-Based Curriculum Framework 2024 to 2030, approved by Cabinet in 2024 for ECD to upper secondary, with school-based projects in place of CALA and five secondary pathways, and full implementation in all schools directed in 2026 (The Herald, NewsDay). Reference: ECD A and B, Grades 1 to 7, Forms 1 to 6, the ZIMSEC Grade 7, O level and A level examinations, the US dollar and ZiG currencies. The continuous assessment weighting is left out: only one source gave it. Licence: unclear (no reuse terms found); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

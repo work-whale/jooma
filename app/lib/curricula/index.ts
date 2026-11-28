@@ -344,6 +344,12 @@ const COUNTRY_DEFAULT: Record<string, string> = {
   CL: "chile",
   CO: "colombia",
   PE: "peru",
+  // Stage 3 batch E.
+  ET: "ethiopia",
+  RW: "rwanda",
+  TZ: "tanzania",
+  ZM: "zambia",
+  ZW: "zimbabwe",
 };
 
 /**

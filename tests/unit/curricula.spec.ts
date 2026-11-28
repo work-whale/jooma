@@ -470,8 +470,9 @@ const PLACE: Record<AfricaId, { country: string; place: string }> = {
 };
 
 test.describe("the Africa curricula", () => {
-  test("the five exist in the Africa region, in this order, and nothing else is in it", () => {
-    expect(CURRICULA_REGISTRY.filter((c) => c.region === "africa").map((c) => c.id)).toEqual([...AFRICA_IDS]);
+  test("the five exist in the Africa region, in this order, and nothing else is in it but Stage 3 batch E", () => {
+    // Batch E (tests/unit/curricula-stage3-e.spec.ts) follows them behind its own switch.
+    expect(CURRICULA_REGISTRY.filter((c) => c.region === "africa" && c.release !== "s3-e").map((c) => c.id)).toEqual([...AFRICA_IDS]);
     for (const id of AFRICA_IDS) {
       const c = getCurriculum(id)!;
       expect(c, id).toBeDefined();

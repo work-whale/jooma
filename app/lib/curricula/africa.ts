@@ -5,6 +5,9 @@ import type { Curriculum, YearOption } from "./types";
  * against the sources in provenance.ts. Profiles only: every source here is
  * closed or unclear for commercial reuse, so there are no statements
  * (docs/curricula-permissions.md).
+ *
+ * Stage 3 batch E (checked 2026-11-28): Ethiopia, Rwanda, Tanzania, Zambia and
+ * Zimbabwe behind `release: "s3-e"`, all in British English. Profiles only.
  */
 
 /** "Grade 1" .. "Grade 12" style labels, one age per year. */
@@ -154,5 +157,131 @@ export const AFRICA_CURRICULA: Curriculum[] = [
     context:
       "The school year runs from February to December in three terms. In lower primary many schools teach through a local language, with English taking over from P4. Use Ugandan places, names and shilling amounts where a local example helps.",
     verifiedOn: "2026-11-25",
+  },
+  // Stage 3 batch E (checked 2026-11-28, docs/curricula-stage3-build.md,
+  // "Batch E"): shown only once curricula_s3_e is on. Profiles only.
+  {
+    id: "ethiopia",
+    region: "africa",
+    release: "s3-e",
+    country: "ET",
+    place: "Ethiopia",
+    name: "Ethiopia: General Education Curriculum (2023)",
+    promptLabel: "Ethiopian General Education Curriculum",
+    versions: [{ label: "General Education Curriculum Framework (2020), approved for rollout in February 2023 and taught from 2023-24, with regional states adapting it (Tigray from 2026)", inForceFrom: "2023-09-01" }],
+    years: [...numbered("Pre-primary", 1, 2, 5), ...numbered("Grade", 1, 12, 7)],
+    defaultLanguage: "en-GB",
+    terms: {
+      curriculum: "the General Education Curriculum of the Ministry of Education, adapted by the teacher's regional state",
+      stages: "pre-primary (two years), primary (Grades 1 to 6), middle school (Grades 7 and 8) and secondary (Grades 9 to 12)",
+      exams: "the Grade 12 Secondary School Leaving Certificate Examination (the university entrance exam, covering Grades 9 to 12) set by the Educational Assessment and Examinations Service (EAES), and the exams at the end of primary and middle school",
+    },
+    context:
+      "Regional states run primary schools, which teach in the regional mother tongue; English is the language of instruction later in school. Use Ethiopian places, names and birr amounts where a local example helps.",
+    verifiedOn: "2026-11-28",
+  },
+  {
+    id: "rwanda",
+    region: "africa",
+    release: "s3-e",
+    country: "RW",
+    place: "Rwanda",
+    name: "Rwanda: Competence-Based Curriculum (REB)",
+    promptLabel: "Rwandan Competence-Based Curriculum (REB)",
+    versions: [{ label: "Revised Competence-Based Curriculum (REB): primary in full from 2025-26, S1 to S3 and the new S4 pathways from 2026-27, then S5 and S6 in the following years", inForceFrom: "2026-09-01" }],
+    years: [...numbered("Nursery", 1, 3, 3), ...numbered("P", 1, 6, 6, ""), ...numbered("S", 1, 6, 12, "")],
+    defaultLanguage: "en-GB",
+    terms: {
+      curriculum: "the Competence-Based Curriculum of the Rwanda Basic Education Board (REB)",
+      stages: "nursery (three years), primary (P1 to P6), lower secondary (S1 to S3) and upper secondary (S4 to S6, in subject pathways)",
+      exams: "the national examinations set by the National Examination and School Inspection Authority (NESA) at the end of P6, S3 and S6",
+      inspection: "school inspection by NESA",
+    },
+    context:
+      "Schools teach in Kinyarwanda in the first primary years and in English after that. Use Rwandan places, names and franc amounts where a local example helps.",
+    verifiedOn: "2026-11-28",
+  },
+  {
+    id: "tanzania",
+    region: "africa",
+    release: "s3-e",
+    country: "TZ",
+    place: "Tanzania",
+    name: "Tanzania: improved competence-based curriculum (TIE)",
+    promptLabel: "Tanzanian Curriculum (Tanzania Institute of Education)",
+    versions: [
+      {
+        label: "Improved curriculum under the Education and Training Policy (2014, 2023 edition), rolling out year by year since 2024; in 2027 the last Standard VII class (old curriculum) and the first Standard VI class (new six-year primary) both finish primary",
+        inForceFrom: "2024-01-01",
+      },
+      { label: "Improved curriculum under the Education and Training Policy (2014, 2023 edition), with the six-year primary (Standards I to VI) in full", inForceFrom: "2028-01-01" },
+    ],
+    years: [{ label: "Pre-primary", age: 5 }, ...numbered("Standard", 1, 7, 6), ...numbered("Form", 1, 6, 13)],
+    defaultLanguage: "en-GB",
+    terms: {
+      curriculum: "the syllabuses of the Tanzania Institute of Education (TIE) for the improved curriculum",
+      stages: "pre-primary (one year), primary (Standards I to VI, VII for the last old-curriculum classes), ordinary level secondary (Forms 1 to 4) and advanced level secondary (Forms 5 and 6)",
+      exams: "the national examinations of the National Examinations Council of Tanzania (NECTA): the primary leaving examination, Form 2 and Form 4 (CSEE) and Form 6 (ACSEE)",
+    },
+    context:
+      "Primary schools mostly teach in Kiswahili and secondary schools in English. Zanzibar runs its own education system; if the teacher names it, follow it. Use Tanzanian places, names and shilling amounts where a local example helps.",
+    verifiedOn: "2026-11-28",
+  },
+  {
+    id: "zambia",
+    region: "africa",
+    release: "s3-e",
+    country: "ZM",
+    place: "Zambia",
+    name: "Zambia: Competence-Based Curriculum (2023 framework)",
+    promptLabel: "Zambian Competence-Based Curriculum",
+    versions: [
+      {
+        label: "Competence-Based Curriculum (Zambia Education Curriculum Framework 2023), phased in from 2025 (ECE Level 1, Grade 1, Form 1) under the new 3-6-4-2 structure; older classes finish on the 2013 curriculum, whose last Grade 7 and Grade 12 exams are in 2028",
+        inForceFrom: "2025-01-01",
+      },
+      { label: "Competence-Based Curriculum (Zambia Education Curriculum Framework 2023), with the 3-6-4-2 structure in full", inForceFrom: "2029-01-01" },
+    ],
+    // Grade 7 and Grades 10 to 12 are the classes finishing on the 2013
+    // curriculum (until 2028); listed by age next to the new Forms.
+    years: [
+      ...numbered("ECE Level", 1, 3, 3),
+      ...numbered("Grade", 1, 7, 6),
+      ...numbered("Form", 1, 4, 12),
+      { label: "Grade 10", age: 15 },
+      { label: "Form 5", age: 16 },
+      { label: "Grade 11", age: 16 },
+      { label: "Form 6", age: 17 },
+      { label: "Grade 12", age: 17 },
+    ],
+    defaultLanguage: "en-GB",
+    terms: {
+      curriculum: "the Competence-Based Curriculum of the Curriculum Development Centre (Zambia Education Curriculum Framework 2023)",
+      stages: "early childhood education (ECE Levels 1 to 3), primary (Grades 1 to 6), ordinary secondary (Forms 1 to 4) and advanced secondary (Forms 5 and 6); classes still on the 2013 curriculum keep Grade 7 and Grades 10 to 12",
+      exams: "the Examinations Council of Zambia (ECZ) examinations: competence-based exams at primary, School Certificate and Advanced Level, and the last 2013-curriculum Grade 7 and Grade 12 exams until 2028",
+    },
+    context:
+      "Schools teach in a familiar local language in the early grades and in English after that. Use Zambian places, names and kwacha amounts where a local example helps.",
+    verifiedOn: "2026-11-28",
+  },
+  {
+    id: "zimbabwe",
+    region: "africa",
+    release: "s3-e",
+    country: "ZW",
+    place: "Zimbabwe",
+    name: "Zimbabwe: Heritage-Based Curriculum (2024 to 2030)",
+    promptLabel: "Zimbabwean Heritage-Based Curriculum",
+    versions: [{ label: "Heritage-Based Curriculum Framework 2024 to 2030, in all schools, with school-based projects in place of CALA", inForceFrom: "2024-01-01" }],
+    years: [{ label: "ECD A", age: 4 }, { label: "ECD B", age: 5 }, ...numbered("Grade", 1, 7, 6), ...numbered("Form", 1, 6, 13)],
+    defaultLanguage: "en-GB",
+    terms: {
+      curriculum: "the Heritage-Based Curriculum of the Ministry of Primary and Secondary Education",
+      stages: "early childhood development (ECD A and ECD B), primary (Grades 1 to 7), lower secondary (Forms 1 to 4, O level) and upper secondary (Forms 5 and 6, A level, in pathways such as STEM, Humanities and Commercials)",
+      exams: "the ZIMSEC Grade 7, O level and A level examinations, with school-based projects counting as coursework",
+    },
+    context:
+      "Schools teach in English, with Shona, Ndebele or another local language in the early years. Use Zimbabwean places, names and US dollar or ZiG amounts where a local example helps.",
+    verifiedOn: "2026-11-28",
   },
 ];

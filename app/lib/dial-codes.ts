@@ -86,6 +86,11 @@ export const COUNTRIES: Country[] = [
   { name: "Chile", code: "CL", dial: "+56" },
   { name: "Colombia", code: "CO", dial: "+57" },
   { name: "Peru", code: "PE", dial: "+51" },
+  { name: "Ethiopia", code: "ET", dial: "+251" },
+  { name: "Rwanda", code: "RW", dial: "+250" },
+  { name: "Tanzania", code: "TZ", dial: "+255" },
+  { name: "Zambia", code: "ZM", dial: "+260" },
+  { name: "Zimbabwe", code: "ZW", dial: "+263" },
 ];
 
 export const DEFAULT_DIAL_CODE = "GB";

@@ -246,3 +246,27 @@ test.describe("Stage 3 batch D: Latin America", () => {
     expect(profileMobile("MX", "55 1234 5678")).toBe("+525512345678");
   });
 });
+
+test.describe("Stage 3 batch E: the rest of Africa", () => {
+  const E = [
+    ["Ethiopia", "ET", "+251"],
+    ["Rwanda", "RW", "+250"],
+    ["Tanzania", "TZ", "+255"],
+    ["Zambia", "ZM", "+260"],
+    ["Zimbabwe", "ZW", "+263"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of E) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number drops its trunk 0 behind the country prefix", () => {
+    expect(profileMobile("TZ", "0712 345 678")).toBe("+255712345678");
+    expect(profileMobile("ZW", "077 123 4567")).toBe("+263771234567");
+  });
+});
