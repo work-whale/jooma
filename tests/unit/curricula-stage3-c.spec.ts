@@ -97,7 +97,7 @@ const YEARS: Record<CId, { label: string; age: number }[]> = {
 const ENGLISH_DEFAULT = C_IDS.filter((id) => C[id].lang === "en-GB");
 const ownText = (text: string) => text.split("\n").map((l) => (l.startsWith("- instead of ") ? l.slice(l.indexOf(": ") + 2) : l)).join("\n");
 
-const WITH_STATEMENTS = new Set<string>(["norway"]);
+const WITH_STATEMENTS = new Set<string>(["norway", "sweden"]);
 
 test.describe("Stage 3 batch C entries", () => {
   test("the twenty-nine exist, verified, in batch C, under Europe", () => {

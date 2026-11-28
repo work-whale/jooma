@@ -25,6 +25,11 @@
  *                          official English translation (same builder)
  *   - data/no-lk20.json    Norway: the LK20 competence aims (Udir), in Udir's
  *                          English text, from the Grep snapshot (same builder)
+ *   - data/se-lgr22.json   Sweden: the compulsory school syllabuses (Lgr22),
+ *                          central content in Skolverket's Swedish, from the
+ *                          Syllabus API snapshot (same builder)
+ *   - data/se-gy25.json    Sweden: the upper secondary subject syllabuses (GY25),
+ *                          the same way
  *
  * Statements carry the AGES they apply to, not a grade name, so one file
  * serves "Grade 3" in Texas and "Year 3" in Queensland alike: a year's age
@@ -83,6 +88,8 @@ export const FRAMEWORK_NAME: Record<FrameworkId, string> = {
   "tw-108-zh": "Curriculum Guidelines of 12-Year Basic Education",
   "tw-108-en": "Curriculum Guidelines of 12-Year Basic Education",
   "no-lk20": "LK20 curricula (Udir)",
+  "se-lgr22": "Lgr22 syllabuses (Skolverket)",
+  "se-gy25": "GY25 subject syllabuses (Skolverket)",
 };
 
 /** The ages each framework has statements for. */
@@ -119,6 +126,11 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   // aims are set after Years 2, 4, 7 and 10 (maths every year), each set
   // covering the years since the one before.
   "no-lk20": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+  // Sweden: Grades 1 to 9 (ages 7 to 15), central content for Years 1 to 3,
+  // 4 to 6 and 7 to 9; none for the preschool class. Upper secondary (16 to
+  // 18) by level, not by year.
+  "se-lgr22": [7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "se-gy25": [16, 17, 18],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched
@@ -159,6 +171,10 @@ export async function loadFramework(id: FrameworkId): Promise<FrameworkData> {
       return (await import("./data/tw-108-en.json")).default as unknown as FrameworkData;
     case "no-lk20":
       return (await import("./data/no-lk20.json")).default as unknown as FrameworkData;
+    case "se-lgr22":
+      return (await import("./data/se-lgr22.json")).default as unknown as FrameworkData;
+    case "se-gy25":
+      return (await import("./data/se-gy25.json")).default as unknown as FrameworkData;
   }
 }
 

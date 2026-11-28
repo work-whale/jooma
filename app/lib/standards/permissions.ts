@@ -55,8 +55,14 @@ export const FRAMEWORK_PERMITTED = {
   // https://www.udir.no/om-udir/data/vilkar-for-bruk/, checked 2026-11-28).
   // Udir's English text. Credited in credits.ts.
   "no-lk20": true,
+  // Sweden's syllabuses from Skolverket's Syllabus API: its terms of use are
+  // "Villkoren i Skolverkets källicens (Creative Commons)", linking CC0 1.0
+  // (https://www.skolverket.se/om-skolverket/oppna-data/api-for-laroplaner-kurs--och-amnesplaner,
+  // checked 2026-11-28). In Skolverket's Swedish. Credited in credits.ts.
+  "se-lgr22": true,
+  "se-gy25": true,
 } as const satisfies Record<
-  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en" | "no-lk20",
+  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en" | "no-lk20" | "se-lgr22" | "se-gy25",
   boolean
 >;
 

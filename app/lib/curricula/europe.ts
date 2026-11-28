@@ -681,6 +681,7 @@ export const EUROPE_CURRICULA: Curriculum[] = [
     },
     context:
       "Schools teach in Swedish. Use Swedish places, names and krona amounts where a local example helps.",
+    alignment: { frameworks: ["se-lgr22", "se-gy25"], adapted: false },
     verifiedOn: "2026-11-27",
   },
   {

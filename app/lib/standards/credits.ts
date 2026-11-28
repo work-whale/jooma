@@ -36,6 +36,13 @@ const TW_108_EN_CREDIT =
 const NO_LK20_CREDIT =
   "Curricula of the Knowledge Promotion 2020 (LK20) for Norwegian, mathematics, natural science and English, in the English version published by the Norwegian Directorate for Education and Training (Udir), https://www.udir.no/lk20/. Statements are excerpts, edited by Jooma into a list. Contains data under NLOD (https://data.norge.no/nlod/en), made available on data.udir.no.";
 
+/** Sweden: CC0 asks for no credit; Jooma names the source anyway, and says
+ *  the items are edited excerpts. */
+const SE_LGR22_CREDIT =
+  "Syllabuses for Swedish, mathematics, English, biology, physics and chemistry in the compulsory school (Lgr22), Swedish National Agency for Education (Skolverket), from Skolverket's Syllabus API under CC0 1.0. Statements are excerpts, edited by Jooma into a list.";
+const SE_GY25_CREDIT =
+  "Subject syllabuses for Swedish, mathematics, English, natural science, biology, physics and chemistry in upper secondary school (GY25), Swedish National Agency for Education (Skolverket), from Skolverket's Syllabus API under CC0 1.0. Statements are excerpts, edited by Jooma into a list.";
+
 /** The credit each licence asks for, shown under the card whenever that
  *  framework's statements are listed. tests/unit/standards.spec.ts holds these
  *  equal to the credit stored with the data. */
@@ -59,6 +66,8 @@ export const FRAMEWORK_CREDIT: Record<FrameworkId, string> = {
   "tw-108-zh": TW_108_ZH_CREDIT,
   "tw-108-en": TW_108_EN_CREDIT,
   "no-lk20": NO_LK20_CREDIT,
+  "se-lgr22": SE_LGR22_CREDIT,
+  "se-gy25": SE_GY25_CREDIT,
 };
 
 /** A line under the card for a framework whose statements are not in English:
@@ -68,5 +77,7 @@ export const FRAMEWORK_LANGUAGE_NOTE: Partial<Record<FrameworkId, string>> = {
   "jp-cos": "Statements are shown in Japanese, as MEXT publishes them. Your resource is still written in the language you choose.",
   "tw-108-zh":
     "Mandarin and mathematics statements are shown in Chinese, as Taiwan's Ministry of Education publishes them. Your resource is still written in the language you choose.",
+  "se-lgr22": "Statements are shown in Swedish, as Skolverket publishes them. Your resource is still written in the language you choose.",
+  "se-gy25": "Statements are shown in Swedish, as Skolverket publishes them. Your resource is still written in the language you choose.",
 };
 

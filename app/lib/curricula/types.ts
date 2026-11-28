@@ -68,7 +68,7 @@ export interface LocalTerms {
 }
 
 /** A set of statement data in app/lib/standards/data. */
-export type FrameworkId = "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en" | "no-lk20";
+export type FrameworkId = "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en" | "no-lk20" | "se-lgr22" | "se-gy25";
 
 export type SheetTab = "Countries" | "USA by state" | "Canada" | "Australia" | "Other split systems" | "International";
 

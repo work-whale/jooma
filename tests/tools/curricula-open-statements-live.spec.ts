@@ -23,7 +23,7 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
 const NAV = { timeout: 120_000 };
 const LIVE = { timeout: 420_000 };
 const OUT = join(process.cwd(), "docs", "screenshots", "2026-11-28-open-statements-live");
-// Asia and batch B (Japan, Taiwan), Europe and batch C (Norway): put back after.
+// Asia and batch B (Japan, Taiwan), Europe and batch C (Norway, Sweden): put back after.
 const KEYS = ["curricula_asia", "curricula_s3_b", "curricula_europe", "curricula_s3_c"];
 const setSwitch = (key: string, value: unknown) => admin.from("app_settings").update({ value }).eq("key", key);
 
@@ -120,6 +120,53 @@ test("LIVE norway: a worksheet aligned to an LK20 aim teaches it, in English, wi
   expect(text).toMatch(/fraction/i);
   expect(text).toMatch(/decimal|percent|%/i);
   expect(text).toMatch(/\b(the|and|of|to)\b.*\b(the|and|of|to)\b.*\b(the|and|of|to)\b/i);
+  expect(text).not.toMatch(/Key Stage|\bKS[1-4]\b|\bYear [0-9]/);
+});
+
+test("LIVE sweden: a worksheet aligned to Swedish central content is written in English and teaches it", async ({ page }) => {
+  test.skip(process.env.LIVE_MODEL !== "1", "Live model run: set LIVE_MODEL=1 (spends real money on staging).");
+  test.setTimeout(600_000);
+  const t = await createTeacher("LvSeLgr22");
+  people.push(t);
+  await setPlan(t, "max", "paying");
+  for (const key of KEYS) await setSwitch(key, true);
+  await admin.from("profiles").update({ curriculum_id: "sweden", curriculum_confirmed_at: new Date().toISOString() }).eq("id", t.id);
+  // The teacher chose English output: Latin-script statements must not pull it into Swedish.
+  await page.addInitScript(() => localStorage.setItem("ll:language", JSON.stringify("en-GB")));
+  await page.route("**/api/suggest-subject", (route) => route.fulfill({ json: { subject: "", strand: "", statementIds: [] } }));
+
+  await signIn(page, t);
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Swedish Curriculum (Lgr22 and Gy11)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Grade 4");
+  await page.getByLabel("Subject", { exact: true }).fill("Maths");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Percentages");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await card.getByLabel("Subject").selectOption("Mathematics", NAV);
+  await card.getByRole("checkbox", { name: /Tal i procentform och deras samband med tal i bråk- och decimalform/ }).click();
+
+  const sentReq = page.waitForRequest((r) => r.url().includes("/api/worksheet-generator") && r.method() === "POST", NAV);
+  await page.locator("[data-jo-generate]").click();
+  const body = (await sentReq).postDataJSON();
+  expect(body.curriculumAlign.statements.map((s: { id: string }) => s.id)).toEqual(["se-lgr22-0f4fde44a3"]);
+
+  await expect(page.getByTestId("sheet-document")).toHaveAttribute("data-ready", "true", LIVE);
+  const text = (await page.getByTestId("sheet-document").innerText()).replace(/\s+/g, " ");
+  await page.screenshot({ path: join(OUT, "sweden-grade4-percentages.png"), fullPage: true });
+  results.push({ case: "sweden-grade4-percentages", chars: text.length, excerpt: text.slice(0, 1200) });
+
+  expect(text.length).toBeGreaterThan(300);
+  // It teaches the ticked statement: percentages with fractions and decimals.
+  expect(text).toMatch(/percent|%/i);
+  expect(text).toMatch(/fraction|decimal/i);
+  // In English: English function words, hardly any Swedish ones (Swedish
+  // names and places are fine), and not in England's framing.
+  const words = (re: RegExp) => (text.match(re) ?? []).length;
+  expect(words(/\b(the|and|of|to|is)\b/gi)).toBeGreaterThan(20);
+  // Letter-aware edges: \b does not treat the letters å, ä and ö as letters.
+  expect(words(/(?<!\p{L})(och|att|är|som|för|med|det)(?!\p{L})/giu), "Swedish function words").toBeLessThan(3);
   expect(text).not.toMatch(/Key Stage|\bKS[1-4]\b|\bYear [0-9]/);
 });
 

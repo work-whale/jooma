@@ -999,7 +999,133 @@ function norway() {
   console.log(Object.entries(count).map(([k, v]) => `  ${k}: ${v}`).join("\n"));
 }
 
+// ── Sweden ──────────────────────────────────────────────────────────────────
+//
+// Skolverket's syllabuses, from the Syllabus API snapshot
+// scripts/fetch-sweden-syllabus.mjs saves (docs/standards/sweden/
+// syllabus-snapshot.json). Terms of use: "Villkoren i Skolverkets källicens
+// (Creative Commons)", linking CC0 1.0
+// (https://www.skolverket.se/om-skolverket/oppna-data/api-for-laroplaner-kurs--och-amnesplaner).
+// CC0 asks for nothing; the credit names the source anyway.
+//
+// What a statement is: one item (<li>) of a syllabus's central content
+// (centralt innehåll), in Skolverket's Swedish, the regulation's text (SKOLFS).
+// Skolverket's English Lgr22 is no longer on its site and the API has no
+// English text, so the statements are Swedish (official text only, owner
+// 2026-11-28). Soft hyphens (U+00AD, line-break hints) are removed. Not
+// statements: lead-ins ("Undervisningen ... ska behandla följande centrala
+// innehåll"), headings, and the purpose and grading criteria.
+//
+// se-lgr22: the compulsory school course syllabuses (Lgr22), central content
+// for Years 1 to 3 (ages 7 to 9), 4 to 6 (10 to 12) and 7 to 9 (13 to 15).
+// Biology, physics and chemistry share one text for Years 1 to 3 (the
+// natural science subjects together): listed once.
+// se-gy25: the upper secondary grade-subject syllabuses (GY25, for students
+// starting from 2025-07-01), one block per level (nivå). Levels are not tied
+// to a school year, so each is at ages 16 to 18; the level is in the strand.
+//
+// Strand: the syllabus's own heading (h4, or an <em> paragraph), after the
+// science subject's name (Biologi, Fysik, Kemi, Naturkunskap) or the level.
+
+const SE_SNAPSHOT = "docs/standards/sweden/syllabus-snapshot.json";
+const SE_LICENCE = "https://www.skolverket.se/om-skolverket/oppna-data/api-for-laroplaner-kurs--och-amnesplaner";
+const SE_CREDIT = {
+  "se-lgr22":
+    "Syllabuses for Swedish, mathematics, English, biology, physics and chemistry in the compulsory school (Lgr22), Swedish National Agency for Education (Skolverket), from Skolverket's Syllabus API under CC0 1.0. Statements are excerpts, edited by Jooma into a list.",
+  "se-gy25":
+    "Subject syllabuses for Swedish, mathematics, English, natural science, biology, physics and chemistry in upper secondary school (GY25), Swedish National Agency for Education (Skolverket), from Skolverket's Syllabus API under CC0 1.0. Statements are excerpts, edited by Jooma into a list.",
+};
+const SE_SUBJECT = { SVE: "Swedish", SVEN: "Swedish", MAT: "Mathematics", MATE: "Mathematics", ENG: "English", ENGE: "English" };
+const SE_BAND_AGES = { "1-3": [7, 8, 9], "4-6": [10, 11, 12], "7-9": [13, 14, 15] };
+
+/** The text of an HTML fragment: tags dropped, soft hyphens removed, then tidied. */
+const seText = (html) => tidy(html.replace(/­/g, "").replace(/<[^>]+>/g, ""));
+
+/** The items of a central content block, each under the heading before it. */
+function seItems(html, where, problems) {
+  const out = [];
+  let heading = "";
+  for (const m of html.matchAll(/<h4>([^]*?)<\/h4>|<p>([^]*?)<\/p>|<li>([^]*?)<\/li>|<h3>[^]*?<\/h3>/g)) {
+    if (m[3] !== undefined) {
+      const text = seText(m[3]);
+      if (text.length < 3) problems.push(`${where}: empty item`);
+      out.push({ heading, text });
+      continue;
+    }
+    const inner = m[1] ?? m[2];
+    if (inner === undefined) continue; // the band's own heading ("I årskurs 1-3")
+    const text = seText(inner);
+    if (/^Undervisningen /.test(text) || text === "." || text === "") continue; // lead-ins, a stray full stop
+    if (m[2] !== undefined && !/<em>/.test(inner)) problems.push(`${where}: a paragraph that is not a heading: ${text}`);
+    heading = text;
+  }
+  if (/<li>(?:(?!<\/li>)[^])*<ul>/.test(html)) problems.push(`${where}: a nested list`);
+  return out;
+}
+
+function sweden() {
+  const snap = JSON.parse(readFileSync(SE_SNAPSHOT, "utf8"));
+  const problems = [];
+  const files = { "se-lgr22": [], "se-gy25": [] };
+  const sciencePrimary = new Map();
+  for (const [code, subj] of Object.entries(snap.subjects)) {
+    const upper = !code.startsWith("GR");
+    const short = upper ? code : code.slice(4, 7);
+    const subject = SE_SUBJECT[short] ?? "Science";
+    const science = subject === "Science";
+    const fw = upper ? "se-gy25" : "se-lgr22";
+    if (!upper) {
+      if (subj.centralContents.map((b) => b.year).join(" ") !== "1-3 4-6 7-9") problems.push(`${code}: bands ${subj.centralContents.map((b) => b.year)}`);
+      for (const block of subj.centralContents) {
+        const ages = SE_BAND_AGES[block.year];
+        for (const { heading, text } of seItems(block.text, `${code} ${block.year}`, problems)) {
+          if (!heading) problems.push(`${code} ${block.year}: an item with no heading`);
+          // Years 1 to 3 science: one shared text, listed once.
+          if (science && block.year === "1-3") {
+            const key = `${heading}|${text}`;
+            sciencePrimary.set(key, (sciencePrimary.get(key) ?? 0) + 1);
+            if (sciencePrimary.get(key) > 1) continue;
+          }
+          const strand = science && block.year !== "1-3" ? `${subj.name}: ${heading}` : heading;
+          const unit = science && block.year === "1-3" ? "NO" : short;
+          files[fw].push({ id: `${fw}-${sha1(`${unit}|${block.year}|${text}`).slice(0, 10)}`, code: "", subject, strand, ages, text });
+        }
+      }
+    } else {
+      for (const course of subj.courses) {
+        const level = course.name.replace(/^Nivå /, "nivå ");
+        for (const { heading, text } of seItems(course.centralContent.text, `${code} ${course.name}`, problems)) {
+          const strand = `${subj.name} ${level}${heading ? `: ${heading}` : ""}`;
+          files[fw].push({ id: `${fw}-${sha1(`${course.code}|${text}`).slice(0, 10)}`, code: "", subject, strand, ages: [16, 17, 18], text });
+        }
+      }
+    }
+  }
+  // The shared Years 1 to 3 text must be in all three science syllabuses.
+  for (const [key, n] of sciencePrimary) if (n !== 3) problems.push(`Years 1 to 3 science item in ${n} syllabuses: ${key}`);
+  for (const [fw, list] of Object.entries(files)) {
+    if (new Set(list.map((s) => s.id)).size !== list.length) problems.push(`${fw}: duplicate ids`);
+  }
+  if (problems.length) {
+    console.error(problems.join("\n"));
+    throw new Error(`${problems.length} problems: nothing written`);
+  }
+  const titles = { "se-lgr22": "Lgr22 course syllabuses (Skolverket)", "se-gy25": "GY25 subject syllabuses (Skolverket)" };
+  for (const [fw, statements] of Object.entries(files)) {
+    write(fw, {
+      source: { title: `${titles[fw]}, Syllabus API snapshot of ${snap.fetched}`, file: SE_SNAPSHOT, url: snap.source, licence: SE_LICENCE, credit: SE_CREDIT[fw] },
+      statements,
+    });
+    const count = {};
+    for (const s of statements) for (const a of s.ages) count[`${s.subject} ${a}`] = (count[`${s.subject} ${a}`] ?? 0) + 1;
+    console.log(`${fw}: ${statements.length} statements`);
+    console.log(Object.entries(count).map(([k, v]) => `  ${k}: ${v}`).join("\n"));
+  }
+  console.log(`dashes replaced ${dashesReplaced}`);
+}
+
 if (country === "japan") await japan();
 else if (country === "taiwan") await taiwan();
 else if (country === "norway") norway();
-else throw new Error("Usage: --country=japan|taiwan|norway");
+else if (country === "sweden") sweden();
+else throw new Error("Usage: --country=japan|taiwan|norway|sweden");

@@ -1,0 +1,3263 @@
+{
+ "source": {
+  "title": "Lgr22 course syllabuses (Skolverket), Syllabus API snapshot of 2026-11-28",
+  "file": "docs/standards/sweden/syllabus-snapshot.json",
+  "url": "https://api.skolverket.se/syllabus/v1",
+  "licence": "https://www.skolverket.se/om-skolverket/oppna-data/api-for-laroplaner-kurs--och-amnesplaner",
+  "credit": "Syllabuses for Swedish, mathematics, English, biology, physics and chemistry in the compulsory school (Lgr22), Swedish National Agency for Education (Skolverket), from Skolverket's Syllabus API under CC0 1.0. Statements are excerpts, edited by Jooma into a list."
+ },
+ "statements": [
+  {
+   "id": "se-lgr22-ffbba53892",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Gemensam och enskild läsning. Sambandet mellan ljud och bokstav. Strategier för att avkoda, förstå och tolka ord, begrepp och texter."
+  },
+  {
+   "id": "se-lgr22-6d68e66ee2",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Att återge delar av innehållet i olika texter samt resonera om budskap i texterna och jämföra med egna erfarenheter."
+  },
+  {
+   "id": "se-lgr22-0a2d6b61b1",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Gemensamt och enskilt skrivande. Strategier för att skriva ord, meningar och olika typer av texter med anpassning till deras uppbyggnad och språkliga drag. Skapande av texter där ord och bild samspelar, såväl med som utan digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-ba8ce9830d",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Grundläggande textbearbetning."
+  },
+  {
+   "id": "se-lgr22-a10bffdb34",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Handstil och att skriva med digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-d90369116f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Språkliga strukturer och normer. Grundläggande skrivregler, med gemener och versaler, de vanligaste skiljetecknen samt stavning av vanligt förekommande ord i elevnära texter."
+  },
+  {
+   "id": "se-lgr22-e44b91a302",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Alfabetet och alfabetisk ordning."
+  },
+  {
+   "id": "se-lgr22-8e394d4eda",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Strukturerade samtal. Att berätta om vardagliga händelser samt att uttrycka känslor, kunskaper och åsikter. Att lyssna, ställa frågor och ge kommentarer."
+  },
+  {
+   "id": "se-lgr22-76c17980dd",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Att lyssna aktivt och återberätta viktiga delar av ett innehåll."
+  },
+  {
+   "id": "se-lgr22-aa7b9527e6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Att ge och ta emot muntliga instruktioner."
+  },
+  {
+   "id": "se-lgr22-ae9762fb82",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Muntliga presentationer och muntligt berättande. Föremål, bilder, digitala medier och verktyg samt andra hjälpmedel som kan stödja presentationer."
+  },
+  {
+   "id": "se-lgr22-3f680a6332",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Skönlitteratur för barn från olika tider och skilda delar av världen. Sånger, muntligt berättande, bilderböcker, kapitelböcker, lyrik, dramatik, sagor och myter. Texter som belyser människors upplevelser och erfarenheter."
+  },
+  {
+   "id": "se-lgr22-34b0989f1b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Berättande texters budskap, uppbyggnad och innehåll. Hur en berättande text kan organiseras med inledning, händelseförlopp och avslutning samt personbeskrivningar."
+  },
+  {
+   "id": "se-lgr22-2c6ee5e90f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Några skönlitterärt betydelsefulla barnboksförfattare och illustratörer."
+  },
+  {
+   "id": "se-lgr22-5ed9a006ca",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Sakprosatexter för barn. Beskrivande, förklarande och instruerande texter och hur deras innehåll kan organiseras."
+  },
+  {
+   "id": "se-lgr22-5d7ce7a05d",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Texter som kombinerar ord och bild samt texter i digitala miljöer för barn."
+  },
+  {
+   "id": "se-lgr22-34f730f115",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Språkliga strategier för att minnas och lära, till exempel grafiska modeller."
+  },
+  {
+   "id": "se-lgr22-5bc3644abc",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Ord och begrepp för att på ett varierat sätt uttrycka känslor, kunskaper och åsikter."
+  },
+  {
+   "id": "se-lgr22-ab2de09d23",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Hur ord och yttranden uppfattas av omgivningen beroende på kroppsspråk, tonfall och ords nyanser. Språkbruk samt möjligheter och risker vid egen kommunikation i digitala medier."
+  },
+  {
+   "id": "se-lgr22-254259faf6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Skillnader mellan tal- och skriftspråk."
+  },
+  {
+   "id": "se-lgr22-637f3f6b54",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Informationssökning i böcker, tidskrifter och på webbplatser för barn samt i söktjänster på internet."
+  },
+  {
+   "id": "se-lgr22-b70ca94172",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Hur texters avsändare påverkar innehållet."
+  },
+  {
+   "id": "se-lgr22-d5a28055e8",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Gemensam och enskild läsning. Strategier för att förstå och tolka ord, begrepp och texter från olika medier. Att urskilja texters budskap, både det direkt uttalade och sådant som är indirekt uttryckt."
+  },
+  {
+   "id": "se-lgr22-9c1302c271",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Sammanfattning av texter."
+  },
+  {
+   "id": "se-lgr22-15eafacdea",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Resonemang om texter med koppling till sammanhang inom och utanför texten samt till den egna läsupplevelsen."
+  },
+  {
+   "id": "se-lgr22-19f605ce4f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Gemensamt och enskilt skrivande. Strategier för att skriva olika typer av texter med anpassning till deras uppbyggnad och språkliga drag. Skapande av texter där ord, bild och ljud samspelar, såväl med som utan digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-1983becd1f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Bearbetning av egna och gemensamma texter till innehåll och form. Att ge och ta emot respons på texter."
+  },
+  {
+   "id": "se-lgr22-61bf4fd797",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Handstil och att skriva med digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-94580ae5f4",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Språkliga strukturer och normer. Meningsbyggnad, med huvudsatser, bisatser och skiljetecken samt textbindning med hjälp av sambandsord. Stavning, ords böjningsformer och ordklasser."
+  },
+  {
+   "id": "se-lgr22-23f15d7bc8",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Ordböcker och digitala verktyg för stavning och ordförståelse."
+  },
+  {
+   "id": "se-lgr22-967e90f42e",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Olika former av samtal. Att lyssna aktivt, ställa frågor, uttrycka tankar och känslor samt resonera och argumentera i olika samtalssituationer och i samband med demokratiska beslutsprocesser."
+  },
+  {
+   "id": "se-lgr22-0e178fa9e0",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Muntliga presentationer och muntligt berättande för olika mottagare. Disposition med inledning, innehåll och avslutning. Stödord, bilder, digitala medier och verktyg samt andra hjälpmedel för att planera och genomföra en muntlig presentation. Hur gester och kroppsspråk kan påverka en presentation."
+  },
+  {
+   "id": "se-lgr22-2b3b358a91",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Skönlitteratur för barn och unga från olika tider, från Sverige, Norden och övriga världen. Lyrik, dramatik, sagor och myter. Texter som belyser människors villkor och identitets- och livsfrågor."
+  },
+  {
+   "id": "se-lgr22-beb46490bf",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Berättande texters budskap, språkliga drag och uppbyggnad. Tillbakablickar, miljö- och personbeskrivningar samt dialoger."
+  },
+  {
+   "id": "se-lgr22-b018f8c266",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Några skönlitterärt betydelsefulla barn- och ungdomsboksförfattare och deras verk."
+  },
+  {
+   "id": "se-lgr22-9c0c92a0a4",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Sakprosatexter för barn och unga. Beskrivande, förklarande, instruerande och argumenterande texter. Texternas innehåll, uppbyggnad och typiska språkliga drag."
+  },
+  {
+   "id": "se-lgr22-522dd3dc9f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Texter som kombinerar ord, bild och ljud samt texter i digitala miljöer. Texternas innehåll, uppbyggnad och typiska språkliga drag."
+  },
+  {
+   "id": "se-lgr22-365988d34b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Språkliga strategier för att minnas och lära, till exempel grafiska modeller och stödord."
+  },
+  {
+   "id": "se-lgr22-49dc8912cb",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Ord och begrepp för att på ett varierat sätt uttrycka känslor, kunskaper och åsikter. Ords och begrepps nyanser och värdeladdning."
+  },
+  {
+   "id": "se-lgr22-ab2f60efc6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Formellt och informellt språk. Skillnader i språkanvändning beroende på mottagare, syfte och sammanhang. Ansvarsfullt agerande vid kommunikation i digitala och andra medier."
+  },
+  {
+   "id": "se-lgr22-03c2b4ca41",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Språkbruk i Sverige och Norden. Några svenska dialekter. De nordiska grannspråken. De nationella minoritetsspråken i Sverige."
+  },
+  {
+   "id": "se-lgr22-3d0e28ed79",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Informationssökning i några olika medier och källor, till exempel i uppslagsböcker, genom intervjuer och i söktjänster på internet."
+  },
+  {
+   "id": "se-lgr22-169b62690d",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Hur man jämför källor och prövar deras tillförlitlighet med ett källkritiskt förhållningssätt."
+  },
+  {
+   "id": "se-lgr22-86ee86a39a",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Gemensam och enskild läsning. Strategier för att förstå, tolka och analysera texter från olika medier. Att urskilja texters budskap, tema och motiv samt deras syfte, avsändare och sammanhang. Att urskilja innehåll som kan vara direkt uttalat eller indirekt uttryckt i texten."
+  },
+  {
+   "id": "se-lgr22-9e65af7c4b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sammanfattning av texter."
+  },
+  {
+   "id": "se-lgr22-8096871fe5",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Analys av texter med koppling till upphovsperson, tid och andra texter samt utifrån egna erfarenheter, olika livsfrågor och omvärldsfrågor."
+  },
+  {
+   "id": "se-lgr22-6e9281883f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Gemensamt och enskilt skrivande. Strategier för att skriva olika typer av texter med anpassning till deras uppbyggnad och språkliga drag. Skapande av texter där ord, bild och ljud samspelar."
+  },
+  {
+   "id": "se-lgr22-96c9a7e9f8",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Disposition och redigering av texter med hjälp av digitala verktyg. Bearbetning av egna och gemensamma texter till innehåll och form. Att ge och ta emot respons på texter."
+  },
+  {
+   "id": "se-lgr22-97a1eec63b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkliga strukturer och normer. Stavning, meningsbyggnad, styckeindelning och olika typer av textbindning. Ordklasser och satsdelar."
+  },
+  {
+   "id": "se-lgr22-1bc2ab1716",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Läsa och skriva",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkliga handböcker och digitala verktyg för ordförståelse, språkriktighet och variation."
+  },
+  {
+   "id": "se-lgr22-9921f46424",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Olika former av samtal. Att delta aktivt, uttrycka känslor, tankar och kunskaper, lyssna, ställa frågor och föra resonemang, samt formulera och bemöta argument."
+  },
+  {
+   "id": "se-lgr22-046d97ce31",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Att leda ett samtal och sammanfatta huvuddragen i vad som sagts."
+  },
+  {
+   "id": "se-lgr22-a40797748b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Tala, lyssna och samtala",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Muntliga presentationer och muntligt berättande för olika mottagare. Anpassning av språk, innehåll och disposition till syfte, mottagare och sammanhang. Talmanus och olika verktyg för att planera och genomföra muntliga presentationer, såväl med som utan digital teknik."
+  },
+  {
+   "id": "se-lgr22-5d114b9d18",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Skönlitteratur för ungdomar och vuxna från olika tider, från Sverige, Norden och övriga världen. Epik, lyrik och dramatik. Texter som belyser människors villkor och identitets- och livsfrågor."
+  },
+  {
+   "id": "se-lgr22-0ce95c7ca1",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkliga drag, uppbyggnad och berättarperspektiv i berättande och poetiska texter. Bildspråk, gestaltningar, parallellhandling, tillbakablickar, miljö- och personbeskrivningar samt dialoger."
+  },
+  {
+   "id": "se-lgr22-3d250f389b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Några skönlitterära genrer och hur de stilistiskt och innehållsligt skiljer sig ifrån varandra."
+  },
+  {
+   "id": "se-lgr22-7421f9aba6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Några skönlitterärt betydelsefulla författare och deras verk samt de historiska och kulturella sammanhang som verken har tillkommit i."
+  },
+  {
+   "id": "se-lgr22-dbde86b19f",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sakprosatexter för ungdomar och vuxna. Beskrivande, förklarande, utredande, instruerande och argumenterande texter. Texternas syfte, innehåll, uppbyggnad och språkliga drag. Kombinationer av olika texttyper."
+  },
+  {
+   "id": "se-lgr22-603c1fe886",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Texter",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Texter i digitala miljöer samt andra texter som kombinerar ord, bild och ljud. Språkliga och dramaturgiska komponenter samt hur uttrycken kan samspela med varandra, till exempel i filmiskt berättande, teaterföreställningar och webbtexter."
+  },
+  {
+   "id": "se-lgr22-9fd51561b9",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkliga strategier för att minnas och lära genom att identifiera nyckelord och föra anteckningar."
+  },
+  {
+   "id": "se-lgr22-debe72aa5c",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Ord och begrepp för att på ett varierat sätt uttrycka känslor, kunskaper och åsikter. Ords och begrepps nyanser och värdeladdning."
+  },
+  {
+   "id": "se-lgr22-80207408e6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Skillnader i språkanvändning beroende på syfte, mottagare och sammanhang. Språkets betydelse för att utöva inflytande."
+  },
+  {
+   "id": "se-lgr22-2fca964b53",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkbruk, yttrandefrihet och integritet i digitala och andra medier och i olika sammanhang."
+  },
+  {
+   "id": "se-lgr22-855417c82e",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkbruk i Sverige och Norden. Några svenska dialekter och sociolekter. Framträdande skillnader och likheter mellan de nordiska språken. De nationella minoritetsspråken i Sverige och deras ställning i samhället."
+  },
+  {
+   "id": "se-lgr22-309d1b1b30",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Språkbruk",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkbruk och språkförändring genom tiderna, till exempel vilka språk som påverkat svenskan historiskt och i nutid."
+  },
+  {
+   "id": "se-lgr22-6431829de6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Informationssökning på bibliotek och på internet, i böcker och massmedier samt genom intervjuer."
+  },
+  {
+   "id": "se-lgr22-fdd3467ee4",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Hur man refererar, citerar och gör källhänvisningar, även referenser till digitala medier."
+  },
+  {
+   "id": "se-lgr22-85b0d0ef07",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Informationssökning och källkritik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Hur man sovrar i en stor informationsmängd och prövar källors tillförlitlighet med ett källkritiskt förhållningssätt."
+  },
+  {
+   "id": "se-lgr22-0f59a13089",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Naturliga tal och deras egenskaper samt hur talen delas upp och används för att ange antal och ordning."
+  },
+  {
+   "id": "se-lgr22-f85a2da932",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Positionssystemet och hur det används för att beskriva naturliga tal."
+  },
+  {
+   "id": "se-lgr22-3a903d103f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Symboler för tal och symbolernas utveckling i några olika kulturer genom historien."
+  },
+  {
+   "id": "se-lgr22-44a8cc3842",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Tal i bråkform som del av helhet och del av antal samt hur delarna benämns och uttrycks som enkla bråk. Hur enkla bråk förhåller sig till naturliga tal."
+  },
+  {
+   "id": "se-lgr22-3734ee489c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Hur naturliga tal och enkla tal i bråkform används i elevnära situationer."
+  },
+  {
+   "id": "se-lgr22-4d8705e28d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "De fyra räknesättens egenskaper och samband samt användning i olika situationer."
+  },
+  {
+   "id": "se-lgr22-bd6581107f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Metoder för beräkningar med naturliga tal, vid huvudräkning, överslagsräkning och skriftlig beräkning. Användning av digitala verktyg vid beräkningar."
+  },
+  {
+   "id": "se-lgr22-c0d835ca67",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Rimlighetsbedömning vid uppskattningar och beräkningar."
+  },
+  {
+   "id": "se-lgr22-81c5a9d5f5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Matematiska likheter och likhetstecknets betydelse."
+  },
+  {
+   "id": "se-lgr22-f9ffbdb67f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Obekanta tal och hur de kan betecknas med en symbol."
+  },
+  {
+   "id": "se-lgr22-ef43de3a94",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla mönster i talföljder och enkla geometriska mönster samt hur de konstrueras, beskrivs och uttrycks."
+  },
+  {
+   "id": "se-lgr22-3bd7b346af",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Entydiga stegvisa instruktioner och hur de konstrueras, beskrivs och följs som grund för programmering. Hur symboler används vid stegvisa instruktioner."
+  },
+  {
+   "id": "se-lgr22-a1ea403a96",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Vanliga lägesord för att beskriva föremåls och objekts läge i rummet."
+  },
+  {
+   "id": "se-lgr22-367b87ce64",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Grundläggande geometriska tvådimensionella objekt samt objekten klot, kon, cylinder och rätblock. Egenskaper hos dessa objekt och deras inbördes relationer. Konstruktion av geometriska objekt."
+  },
+  {
+   "id": "se-lgr22-b92cc1e66e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Jämförelser och uppskattningar av storheter. Mätning av längd, massa, volym och tid med vanliga nutida och äldre måttenheter."
+  },
+  {
+   "id": "se-lgr22-4cf525a22e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Skala vid enkel förminskning och förstoring."
+  },
+  {
+   "id": "se-lgr22-9b40be82a1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Symmetri i vardagen och hur symmetri kan konstrueras."
+  },
+  {
+   "id": "se-lgr22-111fd78dc6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Slumpmässiga händelser i konkreta situationer."
+  },
+  {
+   "id": "se-lgr22-32fb7d0678",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla tabeller och diagram och hur de används för att sortera data och beskriva resultat från undersökningar, såväl med som utan digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-a58a15fed4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Proportionella samband, däribland dubbelt och hälften."
+  },
+  {
+   "id": "se-lgr22-3e007da9aa",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Strategier för att lösa matematiska problem i elevnära situationer."
+  },
+  {
+   "id": "se-lgr22-a7726c29c8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Formulering av matematiska frågeställningar utifrån vardagliga situationer."
+  },
+  {
+   "id": "se-lgr22-ce1fcf4157",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Rationella tal, däribland negativa tal, och deras egenskaper samt hur talen kan delas upp och användas."
+  },
+  {
+   "id": "se-lgr22-0e07c5b851",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Positionssystemet och hur det används för att beskriva hela tal och tal i decimalform."
+  },
+  {
+   "id": "se-lgr22-26d26dbd60",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Olika talsystem och några talsystem som använts i olika kulturer genom historien."
+  },
+  {
+   "id": "se-lgr22-0f4fde44a3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Tal i procentform och deras samband med tal i bråk- och decimalform."
+  },
+  {
+   "id": "se-lgr22-acfce93019",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Hur tal i bråk- och decimalform kan användas i vardagliga situationer."
+  },
+  {
+   "id": "se-lgr22-d2e5512821",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "De fyra räknesätten och regler för deras användning vid beräkningar med naturliga tal."
+  },
+  {
+   "id": "se-lgr22-80fa6e085d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Metoder för beräkningar med naturliga tal och enkla tal i bråk- och decimalform vid överslagsräkning, huvudräkning och skriftlig beräkning. Användning av digitala verktyg vid beräkningar."
+  },
+  {
+   "id": "se-lgr22-ffb71a8538",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Rimlighetsbedömning vid uppskattningar och beräkningar."
+  },
+  {
+   "id": "se-lgr22-6c8a206325",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Matematiska likheter och hur likhetstecknet används för att teckna enkla ekvationer."
+  },
+  {
+   "id": "se-lgr22-654403eb40",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Variabler och deras användning i enkla algebraiska uttryck och ekvationer."
+  },
+  {
+   "id": "se-lgr22-811e6407fa",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Metoder, däribland algebraiska, för att lösa enkla ekvationer."
+  },
+  {
+   "id": "se-lgr22-ff1ccfc384",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Mönster i talföljder och geometriska mönster samt hur de konstrueras, beskrivs och uttrycks."
+  },
+  {
+   "id": "se-lgr22-099525dae0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Programmering i visuella programmeringsmiljöer. Hur algoritmer skapas och används vid programmering."
+  },
+  {
+   "id": "se-lgr22-d834893bc3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Grundläggande geometriska två- och tredimensionella objekt samt deras egenskaper och inbördes relationer. Konstruktion av geometriska objekt, såväl med som utan digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-d1c2111757",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Jämförelse, uppskattning och mätning av längd, area, massa, volym, tid och vinkel med standardiserade måttenheter samt enhetsbyten i samband med detta."
+  },
+  {
+   "id": "se-lgr22-ebeaf8cd0b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Metoder för hur omkrets och area hos olika tvådimensionella geometriska figurer kan bestämmas och uppskattas."
+  },
+  {
+   "id": "se-lgr22-6d65a8a2b2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Skala vid förminskning och förstoring samt användning av skala i elevnära situationer."
+  },
+  {
+   "id": "se-lgr22-c90d55da92",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Symmetri i planet och hur symmetri kan konstrueras."
+  },
+  {
+   "id": "se-lgr22-81ae415b2a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Slumpmässiga händelser, chans och risk med utgångspunkt i observationer, simuleringar och statistiskt material. Jämförelse av sannolikhet vid olika slumpmässiga försök."
+  },
+  {
+   "id": "se-lgr22-ab3ae02db0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Enkel kombinatorik i konkreta situationer."
+  },
+  {
+   "id": "se-lgr22-4125bcbd1d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Tabeller och diagram för att beskriva resultat från undersökningar, såväl med som utan digitala verktyg. Tolkning av data i tabeller och diagram."
+  },
+  {
+   "id": "se-lgr22-714a5442a7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Lägesmåtten medelvärde, typvärde och median samt hur de används i statistiska undersökningar."
+  },
+  {
+   "id": "se-lgr22-daf27ad81b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Proportionalitet samt hur proportionella samband uttrycks i bråk-, decimal- och procentform."
+  },
+  {
+   "id": "se-lgr22-e885af84fc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Koordinatsystem och gradering av koordinataxlar."
+  },
+  {
+   "id": "se-lgr22-12e20f1b12",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Grafer för att uttrycka proportionella samband."
+  },
+  {
+   "id": "se-lgr22-b8d96ddba2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Strategier för att lösa matematiska problem i elevnära situationer."
+  },
+  {
+   "id": "se-lgr22-ce96f91bf7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Formulering av matematiska frågeställningar utifrån vardagliga situationer."
+  },
+  {
+   "id": "se-lgr22-dd952eab49",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Reella tal och deras egenskaper samt talens användning i matematiska situationer."
+  },
+  {
+   "id": "se-lgr22-f1410cb534",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Talsystemets utveckling från naturliga tal till reella tal."
+  },
+  {
+   "id": "se-lgr22-6822a7d40e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Tal i potensform. Grundpotensform för att uttrycka små och stora tal samt användning av prefix."
+  },
+  {
+   "id": "se-lgr22-293346d18c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Matematiska lagar och regler samt deras användning vid beräkningar med tal i bråk-, decimal- och potensform."
+  },
+  {
+   "id": "se-lgr22-1e611af00c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Metoder för beräkningar med tal i bråk- och decimalform vid överslagsräkning, huvudräkning och skriftlig beräkning. Användning av digitala verktyg vid beräkningar."
+  },
+  {
+   "id": "se-lgr22-06dc175bfb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Taluppfattning och tals användning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Rimlighetsbedömning vid uppskattningar och beräkningar."
+  },
+  {
+   "id": "se-lgr22-26b7f8eb89",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Matematiska likheter samt hur likhetstecknet används för att teckna ekvationer och funktioner."
+  },
+  {
+   "id": "se-lgr22-68eae8eeb1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Variablers användning i algebraiska uttryck, formler, ekvationer och funktioner."
+  },
+  {
+   "id": "se-lgr22-69c619bb68",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Metoder för att lösa linjära ekvationer och enkla andragradsekvationer."
+  },
+  {
+   "id": "se-lgr22-728379a9f4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Mönster i talföljder och geometriska mönster samt hur de konstrueras, beskrivs och uttrycks generellt."
+  },
+  {
+   "id": "se-lgr22-67b84ba76e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Algebra",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Programmering i visuell och textbaserad programmeringsmiljö. Hur algoritmer skapas, testas och förbättras vid programmering."
+  },
+  {
+   "id": "se-lgr22-814816fb4b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Geometriska objekt samt deras egenskaper och inbördes relationer. Konstruktion av geometriska objekt, såväl med som utan digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-d9ef19d6a6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Metoder för beräkning av area, omkrets och volym hos geometriska objekt, samt enhetsbyten i samband med detta."
+  },
+  {
+   "id": "se-lgr22-09ff131bba",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Geometriska satser och formler samt argumentation för deras giltighet."
+  },
+  {
+   "id": "se-lgr22-c3528734bd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Skala vid förminskning och förstoring av två- och tredimensionella objekt."
+  },
+  {
+   "id": "se-lgr22-28aab1cfab",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Geometri",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Likformighet och kongruens."
+  },
+  {
+   "id": "se-lgr22-d9d7572046",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sannolikhet och metoder för att beräkna sannolikhet i olika situationer. Bedömningar av risker och chanser utifrån datorsimuleringar och statistiskt material."
+  },
+  {
+   "id": "se-lgr22-2911303632",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Kombinatoriska principer och hur de kan användas i olika situationer."
+  },
+  {
+   "id": "se-lgr22-416fff2a85",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Tabeller, diagram och grafer samt hur de tolkas och används för att beskriva resultat av egna och andras undersökningar, såväl med som utan digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-3e55a207e7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Sannolikhet och statistik",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Lägesmått och spridningsmått samt hur de används för bedömning av resultat vid statistiska undersökningar."
+  },
+  {
+   "id": "se-lgr22-76d010a4b3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Proportionalitet och hur det används för att uttrycka skala, likformighet och förändring."
+  },
+  {
+   "id": "se-lgr22-c033688701",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Härledda enheter, till exempel km/h och kr/kg."
+  },
+  {
+   "id": "se-lgr22-331165c493",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Procent och förändringsfaktor för att uttrycka förändring samt beräkningar med procent i vardagliga situationer och inom olika ämnesområden."
+  },
+  {
+   "id": "se-lgr22-143a282d19",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Räta linjens ekvation och förändringstakt. Användning av räta linjens ekvation för att beskriva samband."
+  },
+  {
+   "id": "se-lgr22-24c8d90837",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Samband och förändring",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Funktioner och hur de används för att beskriva samband och förändring samt undersöka förändringstakt. Hur funktioner uttrycks i form av grafer, tabeller och funktionsuttryck."
+  },
+  {
+   "id": "se-lgr22-286e24eb7d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Strategier för att lösa matematiska problem i olika situationer och inom olika ämnesområden samt värdering av valda strategier och metoder."
+  },
+  {
+   "id": "se-lgr22-5014178d24",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Formulering av matematiska frågeställningar utifrån olika situationer och ämnesområden."
+  },
+  {
+   "id": "se-lgr22-334366f30e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Problemlösning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Enkla matematiska modeller och hur de kan användas i olika situationer."
+  },
+  {
+   "id": "se-lgr22-20157c3004",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Ämnesområden som är välbekanta för eleverna."
+  },
+  {
+   "id": "se-lgr22-38352132fe",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Vardagliga situationer, intressen, personer och platser."
+  },
+  {
+   "id": "se-lgr22-1469d11dd5",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Vardagsliv och levnadssätt i olika sammanhang och områden där engelska används."
+  },
+  {
+   "id": "se-lgr22-b67a9d06b0",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Tydligt talad engelska och enkla texter som är instruerande, beskrivande och kontaktskapande, från olika medier, även i kombination med illustrationer."
+  },
+  {
+   "id": "se-lgr22-86e739a383",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla dialoger och samtal."
+  },
+  {
+   "id": "se-lgr22-f0ddf541c4",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Filmer och dramatiserade berättelser för barn."
+  },
+  {
+   "id": "se-lgr22-9ce73ad865",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Sånger, ramsor, dikter och sagor."
+  },
+  {
+   "id": "se-lgr22-3095563a90",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Ord och fraser i närmiljön, till exempel på skyltar, i reklam och andra enkla texter."
+  },
+  {
+   "id": "se-lgr22-3ff7c2338a",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla presentationer, meddelanden, beskrivningar och dialoger i tal och skrift."
+  },
+  {
+   "id": "se-lgr22-f39c1a4d64",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla samtal."
+  },
+  {
+   "id": "se-lgr22-8ef76b453a",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Sånger, ramsor och dramatiseringar."
+  },
+  {
+   "id": "se-lgr22-19d04975a9",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Ämnesområden som är välbekanta för eleverna."
+  },
+  {
+   "id": "se-lgr22-b90b35cd7e",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Vardagliga situationer, intressen, personer, platser, aktiviteter och händelser."
+  },
+  {
+   "id": "se-lgr22-43cdbb6171",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Åsikter, känslor och erfarenheter."
+  },
+  {
+   "id": "se-lgr22-7d58bcb2aa",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Vardagsliv, levnadssätt och sociala relationer i olika sammanhang och områden där engelska används, även i jämförelse med egna erfarenheter och kunskaper. Engelskans utbredning i världen."
+  },
+  {
+   "id": "se-lgr22-1dc4e1c951",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Tydligt talad engelska och enkla texter som är instruerande, beskrivande och kontaktskapande, från olika medier."
+  },
+  {
+   "id": "se-lgr22-453ab07429",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Dialoger, samtal och intervjuer."
+  },
+  {
+   "id": "se-lgr22-0fe6f14311",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Berättelser och annan fiktion för barn och unga, även i talad eller dramatiserad form."
+  },
+  {
+   "id": "se-lgr22-62207fd40c",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Sånger, dikter och sagor."
+  },
+  {
+   "id": "se-lgr22-e51a0f9376",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Muntliga och skriftliga meddelanden samt information, till exempel reklam, tidtabeller och notiser."
+  },
+  {
+   "id": "se-lgr22-a10194f299",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Strategier för att uppfatta betydelsebärande ord och sammanhang samt för att anpassa lyssnande och läsning till framställningens form och innehåll."
+  },
+  {
+   "id": "se-lgr22-a5fa471870",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Sökning av enkel information i ett avgränsat urval av muntliga och skriftliga källor av olika slag för användning i egen produktion och interaktion."
+  },
+  {
+   "id": "se-lgr22-e9df62f397",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Språkliga företeelser, däribland uttal, ord och fasta språkliga uttryck, grammatiska strukturer samt stavning, i det språk eleverna möter."
+  },
+  {
+   "id": "se-lgr22-11f3aa5757",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Hur olika formuleringar används för att inleda och avsluta olika typer av framställningar och samtal."
+  },
+  {
+   "id": "se-lgr22-17abe88a86",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Samtal och skrivande för kontakt och kommunikation."
+  },
+  {
+   "id": "se-lgr22-21c5c10eaf",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Presentationer, instruktioner, meddelanden, berättelser och beskrivningar i sammanhängande tal och skrift."
+  },
+  {
+   "id": "se-lgr22-4e4c786093",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Strategier, däribland omformuleringar, frågor och stödjande fraser, för att bidra till och underlätta samtal och skriftlig interaktion, även digital."
+  },
+  {
+   "id": "se-lgr22-d985386345",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Språkliga företeelser, däribland uttal, ord, artighetsfraser, tilltalsord och andra fasta språkliga uttryck, samt grammatiska strukturer och stavning i elevernas egen produktion och interaktion."
+  },
+  {
+   "id": "se-lgr22-29d6f984fa",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Bearbetning av egna muntliga och skriftliga framställningar för att förtydliga och anpassa kommunikationen efter syfte och mottagare."
+  },
+  {
+   "id": "se-lgr22-07faa9044f",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Aktuella och för eleven bekanta ämnesområden."
+  },
+  {
+   "id": "se-lgr22-a21f08f68c",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Vardagliga situationer, intressen, aktiviteter och händelseförlopp."
+  },
+  {
+   "id": "se-lgr22-1207150699",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Åsikter, känslor, erfarenheter och framtidsplaner samt relationer och etiska frågor."
+  },
+  {
+   "id": "se-lgr22-b6f00fe487",
+   "code": "",
+   "subject": "English",
+   "strand": "Kommunikationens innehåll",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Levnadsvillkor, traditioner, sociala relationer och kulturella företeelser i olika sammanhang och områden där engelska används, även i jämförelse med egna erfarenheter och kunskaper."
+  },
+  {
+   "id": "se-lgr22-c553c62585",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Talad engelska, även med inslag av regional och sociolektal variation, och texter, från olika medier."
+  },
+  {
+   "id": "se-lgr22-f09549e80a",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Talad engelska och texter som är instruerande, informerande, beskrivande, berättande, diskuterande, argumenterande och kontaktskapande - varje slag för sig eller i olika kombinationer - till exempel samtal, intervjuer, nyheter, reportage och tidningsartiklar."
+  },
+  {
+   "id": "se-lgr22-08ba7c0854",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Skönlitteratur och annan fiktion, även i talad och filmatiserad form."
+  },
+  {
+   "id": "se-lgr22-c135aa8410",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sånger och dikter."
+  },
+  {
+   "id": "se-lgr22-5204fe6180",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Strategier för att uppfatta detaljer och förstå sammanhang samt för att anpassa lyssnande och läsning till framställningens form, innehåll och syfte."
+  },
+  {
+   "id": "se-lgr22-b831cd753b",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sökning och värdering av innehåll i muntliga och skriftliga källor av olika slag, utifrån olika syften."
+  },
+  {
+   "id": "se-lgr22-a4d1d65291",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkliga företeelser, däribland uttal, grammatiska strukturer och satsbyggnad, ord med olika stilvärden och fasta språkliga uttryck samt stavning, i det språk eleverna möter."
+  },
+  {
+   "id": "se-lgr22-47a8f1eb59",
+   "code": "",
+   "subject": "English",
+   "strand": "Lyssna och läsa - reception",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Hur sammanbindande ord och andra uttryck används för att skapa struktur och språkligt sammanhängande helheter."
+  },
+  {
+   "id": "se-lgr22-32cb029ca8",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Samtal, diskussion och skrivande där eleverna berättar, beskriver, instruerar och motiverar sina åsikter."
+  },
+  {
+   "id": "se-lgr22-4a94a1e70e",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Strategier för att bidra till och underlätta samtal och skriftlig interaktion, även digital, till exempel genom att ge bekräftelse, ställa följdfrågor, lyssna aktivt, formulera om, förklara, bidra med nya infallsvinklar och avsluta på ett artigt sätt."
+  },
+  {
+   "id": "se-lgr22-7b7e56ca2d",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Språkliga företeelser, däribland uttal, ord och fasta språkliga uttryck, grammatiska strukturer och satsbyggnad samt stavning i elevernas egen produktion och interaktion."
+  },
+  {
+   "id": "se-lgr22-e94e4921a5",
+   "code": "",
+   "subject": "English",
+   "strand": "Tala, skriva och samtala - produktion och interaktion",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Bearbetning av egna muntliga och skriftliga framställningar för att förtydliga, variera, precisera och anpassa kommunikationen efter syfte, mottagare och sammanhang."
+  },
+  {
+   "id": "se-lgr22-e0d6a672df",
+   "code": "",
+   "subject": "Science",
+   "strand": "Året runt i naturen",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Årstidsväxlingar i naturen. Några djurs och växters livscykler och anpassningar till olika livsmiljöer och årstider."
+  },
+  {
+   "id": "se-lgr22-0b7abd3c5a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Året runt i naturen",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Djur, växter och svampar i närmiljön, hur de kan grupperas samt namn på några vanligt förekommande arter."
+  },
+  {
+   "id": "se-lgr22-4557221615",
+   "code": "",
+   "subject": "Science",
+   "strand": "Året runt i naturen",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla näringskedjor som beskriver samband mellan organismer i ekosystem."
+  },
+  {
+   "id": "se-lgr22-ca87aba4e0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kropp och hälsa",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Några av människans organ, deras namn och översiktliga funktion."
+  },
+  {
+   "id": "se-lgr22-8da08c768d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kropp och hälsa",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Människans upplevelser av ljus, ljud, värme, smak och doft med hjälp av olika sinnen."
+  },
+  {
+   "id": "se-lgr22-ed63405b7e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kropp och hälsa",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Betydelsen av kost, sömn, hygien, motion och sociala relationer för att må bra."
+  },
+  {
+   "id": "se-lgr22-47815b405c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kraft och rörelse",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Tyngdkraft, tyngdpunkt, jämvikt, balans och friktion som kan upplevas och observeras vid lek och rörelse."
+  },
+  {
+   "id": "se-lgr22-ebe82f3092",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kraft och rörelse",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Solsystemets himlakroppar och deras rörelser. Människan i rymden."
+  },
+  {
+   "id": "se-lgr22-8e62842f6a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Material och ämnen",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Hur material kan sorteras efter några egenskaper, till exempel utseende, om de är magnetiska och om de flyter eller sjunker i vatten. Hur materialen kan återvinnas."
+  },
+  {
+   "id": "se-lgr22-c1d0c424a4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Material och ämnen",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Några blandningar och hur de kan delas upp i sina olika beståndsdelar, till exempel genom avdunstning och filtrering."
+  },
+  {
+   "id": "se-lgr22-45212bc3ee",
+   "code": "",
+   "subject": "Science",
+   "strand": "Material och ämnen",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Vattnets olika former: fast, flytande och gas. Avdunstning, kokning, kondensering, smältning och stelning."
+  },
+  {
+   "id": "se-lgr22-db2f78e87b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Systematiska undersökningar",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Enkla fältstudier, observationer och experiment. Utförande och dokumentation av undersökningarna med ord, bilder och digitala verktyg."
+  },
+  {
+   "id": "se-lgr22-813a75df08",
+   "code": "",
+   "subject": "Science",
+   "strand": "Systematiska undersökningar",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "Några berättelser om hur naturvetenskaplig kunskap vuxit fram."
+  },
+  {
+   "id": "se-lgr22-3b54c83372",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Vad liv är och hur livets utveckling kan förklaras med evolutionsteorin. Biologisk mångfald och organismers anpassningar till miljön."
+  },
+  {
+   "id": "se-lgr22-31f0e9d90d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Näringskedjor och kretslopp i närmiljön. Djurs, växters och svampars samspel med varandra och hur några miljöfaktorer påverkar dem. Fotosyntes och cellandning."
+  },
+  {
+   "id": "se-lgr22-1d2fecebf4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Hur djur, växter och svampar kan identifieras och grupperas på ett systematiskt sätt, samt namn på några vanligt förekommande arter."
+  },
+  {
+   "id": "se-lgr22-4056f0e390",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Människans beroende av och påverkan på naturen med koppling till naturbruk, hållbar utveckling och ekosystemtjänster. Naturen som resurs och vårt ansvar när vi nyttjar den."
+  },
+  {
+   "id": "se-lgr22-7b21551798",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Människans organsystem. Några organs namn, utseende, placering, funktion och samverkan."
+  },
+  {
+   "id": "se-lgr22-ffc4b91aca",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Några vanliga sjukdomar och hur de kan förebyggas och behandlas. Hur den psykiska och fysiska hälsan påverkas av levnadsförhållanden, kost, sömn, hygien, motion och beroendeframkallande medel."
+  },
+  {
+   "id": "se-lgr22-d1300d07ce",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Människans pubertet, reproduktion, sexualitet och identitet samt frågor om relationer, kärlek och ansvar."
+  },
+  {
+   "id": "se-lgr22-51dc1975f4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Fältstudier och experiment med såväl analoga som digitala verktyg. Planering, utförande, värdering av resultat samt dokumentation med ord, bilder och tabeller."
+  },
+  {
+   "id": "se-lgr22-ccfa8b51b4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Några upptäckter inom biologiområdet och deras betydelse för människans levnadsvillkor och syn på naturen."
+  },
+  {
+   "id": "se-lgr22-eda5644eb4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Kritisk granskning och användning av information som rör biologi."
+  },
+  {
+   "id": "se-lgr22-34fea4557e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Livets uppkomst, utveckling och mångfald samt evolutionens mekanismer. Arvsmassans egenskaper och förhållandet mellan arv och miljö."
+  },
+  {
+   "id": "se-lgr22-ba3202a8ba",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Några gentekniska metoder samt möjligheter, risker och etiska frågor kopplade till genteknik."
+  },
+  {
+   "id": "se-lgr22-c1c9983fbb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Lokala och globala ekosystem. Sambanden mellan populationer och tillgängliga resurser. Fotosyntes, cellandning, materiens kretslopp och energins flöden."
+  },
+  {
+   "id": "se-lgr22-609649cfd5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Natur och miljö",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Människans påverkan på naturen lokalt och globalt samt hur man på individ- och samhällsnivå kan främja hållbar utveckling. Betydelsen av biologisk mångfald och ekosystemtjänster."
+  },
+  {
+   "id": "se-lgr22-af90f28444",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Kroppens celler samt några organ och organsystem och deras uppbyggnad, funktion och samverkan."
+  },
+  {
+   "id": "se-lgr22-c19792f68d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Virus, bakterier, infektioner, smittspridning och antibiotikaresistens. Hur infektionssjukdomar kan förebyggas och behandlas."
+  },
+  {
+   "id": "se-lgr22-d0b5e75533",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Hur den psykiska och fysiska hälsan påverkas av levnadsförhållanden, kost, sömn, motion, stress och beroendeframkallande medel samt hur hälsoproblem kan begränsas på individ- och samhällsnivå."
+  },
+  {
+   "id": "se-lgr22-520eaa8f2b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Kropp och hälsa",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Människans reproduktion, sexualitet och identitet samt frågor om relationer, kärlek, ansvar, samtycke och ömsesidighet. Sexuellt överförbara sjukdomar och preventivmedel."
+  },
+  {
+   "id": "se-lgr22-9b077ed826",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Fältstudier och experiment med såväl analoga som digitala verktyg. Formulering av undersökningsbara frågor, planering, utförande, värdering av resultat samt dokumentation med bilder, tabeller, diagram och rapporter."
+  },
+  {
+   "id": "se-lgr22-c292782f99",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sambandet mellan biologiska undersökningar och utvecklingen av begrepp och förklaringsmodeller. De biologiska förklaringsmodellernas historiska framväxt, användbarhet och föränderlighet."
+  },
+  {
+   "id": "se-lgr22-475b883fbc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Informationssökning, kritisk granskning och användning av information som rör biologi. Argumentation och ställningstaganden i aktuella frågor som rör miljö och hälsa."
+  },
+  {
+   "id": "se-lgr22-358f3ad654",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Hur dag, natt, årstider och år kan förklaras utifrån rörelser hos solsystemets himlakroppar."
+  },
+  {
+   "id": "se-lgr22-fa6b0cc650",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Vanliga väderfenomen och deras orsaker, till exempel hur vindar och nederbörd uppstår."
+  },
+  {
+   "id": "se-lgr22-5c3467748b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Energiformer samt olika typer av energikällor och deras påverkan på miljön."
+  },
+  {
+   "id": "se-lgr22-c872ba323b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Energiflöden mellan föremål som har olika temperatur. Hur man kan påverka energiflödena med hjälp av olika värmeledande och isolerande material."
+  },
+  {
+   "id": "se-lgr22-5de60203d2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Hur ljus och ljud breder ut sig och kan reflekteras."
+  },
+  {
+   "id": "se-lgr22-487feccaaf",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Elektriska kretsar med batterier. Hur de kan kopplas och hur de kan användas i vardaglig elektrisk utrustning."
+  },
+  {
+   "id": "se-lgr22-b42f76f13d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Krafter och rörelser som kan observeras och mätas i vardagssituationer."
+  },
+  {
+   "id": "se-lgr22-975973870a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Några instrument samt hur de används för att mäta fysikaliska storheter, till exempel temperatur och kraft."
+  },
+  {
+   "id": "se-lgr22-0805d71b46",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Observationer och experiment med såväl analoga som digitala verktyg. Planering, utförande, värdering av resultat samt dokumentation med ord, bilder och tabeller."
+  },
+  {
+   "id": "se-lgr22-3d82e46f50",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Några upptäckter inom fysikområdet och deras betydelse för människans levnadsvillkor och syn på naturen."
+  },
+  {
+   "id": "se-lgr22-27f11bc835",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Kritisk granskning och användning av information som rör fysik."
+  },
+  {
+   "id": "se-lgr22-34426484bf",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Universums uppkomst, uppbyggnad och utveckling samt förutsättningar för att finna planeter och liv i andra solsystem."
+  },
+  {
+   "id": "se-lgr22-d1cf6332c8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Partikelmodell av materiens egenskaper samt fasövergångar, tryck, volym, densitet och temperatur."
+  },
+  {
+   "id": "se-lgr22-ed270517b2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Fysikaliska förklaringsmodeller av jordens strålningsbalans, växthuseffekten och klimatförändringar."
+  },
+  {
+   "id": "se-lgr22-7bfaf85ab8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Energins flöde och oförstörbarhet samt olika energislags kvalitet. Olika typer av energikällor samt deras för- och nackdelar för samhället och miljön."
+  },
+  {
+   "id": "se-lgr22-0606d0dde9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Partikelstrålning och elektromagnetisk strålning, deras användningsområden och risker."
+  },
+  {
+   "id": "se-lgr22-f4da7bf67b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Hur ljus breder ut sig, reflekteras och bryts."
+  },
+  {
+   "id": "se-lgr22-f5194ee8cf",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Hur ljud uppstår, breder ut sig och kan registreras på olika sätt."
+  },
+  {
+   "id": "se-lgr22-9f1a210bb1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sambandet mellan elektricitet och magnetism samt mellan ström och spänning i elektriska kretsar. Hur kretsarna kan användas i elektrisk utrustning."
+  },
+  {
+   "id": "se-lgr22-5b41b80f91",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Krafter, rörelser och rörelseförändringar samt hur kunskaper om detta kan användas, till exempel i frågor om trafiksäkerhet."
+  },
+  {
+   "id": "se-lgr22-4a27364ceb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Fysiken i naturen och samhället",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Några instrument för att mäta fysikaliska storheter, till exempel kraft och ström. Användning av mätvärden i enkla beräkningar, till exempel beräkningar av densitet och hastighet."
+  },
+  {
+   "id": "se-lgr22-030d00fea5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Observationer och experiment med såväl analoga som digitala verktyg. Formulering av undersökningsbara frågor, planering, utförande, värdering av resultat samt dokumentation med bilder, tabeller, diagram och rapporter."
+  },
+  {
+   "id": "se-lgr22-55923981a2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sambandet mellan undersökningar av fysikaliska fenomen och utvecklingen av begrepp och förklaringsmodeller. De fysikaliska förklaringsmodellernas historiska framväxt, användbarhet och föränderlighet."
+  },
+  {
+   "id": "se-lgr22-c81546ebfc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Informationssökning, kritisk granskning och användning av information som rör fysik. Argumentation och ställningstaganden i aktuella frågor som rör energi, teknik och miljö."
+  },
+  {
+   "id": "se-lgr22-a00962c4e7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Materiens uppbyggnad visualiserad med hjälp av enkla partikelmodeller."
+  },
+  {
+   "id": "se-lgr22-7405893a2f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Indelning av ämnen och material utifrån egenskaperna löslighet, ledningsförmåga, surt eller basiskt."
+  },
+  {
+   "id": "se-lgr22-f37ec67594",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Vattnets egenskaper och kretslopp."
+  },
+  {
+   "id": "se-lgr22-eedce016d1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Luftens egenskaper och sammansättning."
+  },
+  {
+   "id": "se-lgr22-ce096f2782",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Fotosyntes och förbränning som exempel på kemiska reaktioner i naturen."
+  },
+  {
+   "id": "se-lgr22-b5589278d6",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Fossila och förnybara bränslen och deras påverkan på klimatet."
+  },
+  {
+   "id": "se-lgr22-eabdb4bc7a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Matens innehåll och näringsämnenas betydelse för hälsan."
+  },
+  {
+   "id": "se-lgr22-0796d39609",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Vanliga kemikalier i hemmet. Deras användning och påverkan på miljön och människan samt hur de är märkta och bör hanteras."
+  },
+  {
+   "id": "se-lgr22-85eacf75b2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Råvarors förädling till produkter, till exempel metaller, papper och plast. Hur produkterna kan återanvändas eller återvinnas."
+  },
+  {
+   "id": "se-lgr22-8b77facfbb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Observationer och experiment med såväl analoga som digitala verktyg. Planering, utförande, värdering av resultat samt dokumentation med ord, bilder och tabeller."
+  },
+  {
+   "id": "se-lgr22-f8b0ba45ec",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Några upptäckter inom kemiområdet och deras betydelse för människans levnadsvillkor och syn på naturen."
+  },
+  {
+   "id": "se-lgr22-732636d1ad",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "Kritisk granskning och användning av information som rör kemi."
+  },
+  {
+   "id": "se-lgr22-40d7d9205e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Materiens uppbyggnad, kretslopp och oförstörbarhet visualiserat med hjälp av partikelmodeller. Grundämnen, molekyl- och jonföreningar samt hur ämnen omvandlas genom kemiska reaktioner. Atomer, elektroner och kärnpartiklar."
+  },
+  {
+   "id": "se-lgr22-723fc048d0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Separations- och analysmetoder, till exempel filtrering, fällning, pH-mätning och identifikation av ämnen."
+  },
+  {
+   "id": "se-lgr22-f1dcf75355",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Vatten som lösningsmedel och transportör av ämnen, till exempel i mark, växter och människokroppen."
+  },
+  {
+   "id": "se-lgr22-269bdb654d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Några kemiska processer i mark, luft och vatten samt deras koppling till frågor om miljö och hälsa, till exempel växthuseffekten, vattenrening och spridning av miljögifter."
+  },
+  {
+   "id": "se-lgr22-7202cbac1d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Kolatomens egenskaper och kretslopp i naturen, i samhället och i människokroppen."
+  },
+  {
+   "id": "se-lgr22-63ca0c73bb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Kolhydrater, proteiner och fetter samt deras funktioner i människokroppen."
+  },
+  {
+   "id": "se-lgr22-7fad19f290",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Utveckling av produkter och material, till exempel läkemedel, funktionskläder och batterier."
+  },
+  {
+   "id": "se-lgr22-b048ebfc12",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Kemin i naturen, i samhället och i människokroppen",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Några produkters livscykler och påverkan på miljön."
+  },
+  {
+   "id": "se-lgr22-d72fbe406d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Observationer och experiment med såväl analoga som digitala verktyg. Formulering av undersökningsbara frågor, planering, utförande, värdering av resultat samt dokumentation med bilder, tabeller, diagram och rapporter."
+  },
+  {
+   "id": "se-lgr22-3c9cac8b58",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Sambandet mellan kemiska undersökningar och utvecklingen av begrepp och förklaringsmodeller. De kemiska förklaringsmodellernas historiska framväxt, användbarhet och föränderlighet."
+  },
+  {
+   "id": "se-lgr22-96f974e568",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi: Systematiska undersökningar och granskning av information",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "Informationssökning, kritisk granskning och användning av information som rör kemi. Argumentation och ställningstaganden i aktuella frågor som rör miljö och hälsa."
+  }
+ ]
+}

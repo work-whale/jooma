@@ -127,6 +127,12 @@ const CONCEPTS: Concept[] = [
   { typed: /\bmatematikk\b/i, tiers: [/math/i] },
   { typed: /\bnaturfag\b/i, tiers: [/(?<!social )scien/i] },
   { typed: /\bengelsk\b/i, tiers: [/\benglish\b/i] },
+  // Sweden's svenska is listed as "Swedish"; subjects typed in Swedish. In
+  // England "Swedish" finds no such subject.
+  { typed: /\b(swedish|svenska)\b/i, tiers: [/^swedish$/i] },
+  { typed: /\bmatematik\b/i, tiers: [/math/i] },
+  { typed: /\b(naturkunskap|naturorienterande|biologi|fysik|kemi)\b/i, tiers: [/(?<!social )scien/i] },
+  { typed: /\bengelska\b/i, tiers: [/\benglish\b/i] },
 ];
 
 /** The curriculum subjects (from `subjects`, in its order) the typed text

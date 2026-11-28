@@ -335,6 +335,8 @@ test.describe("NGSS stays off until permission", () => {
       "tw-108-zh": true,
       "tw-108-en": true,
       "no-lk20": true,
+      "se-lgr22": true,
+      "se-gy25": true,
     });
   });
 

@@ -278,6 +278,55 @@ Batch 2 started at the owner's request ("Lets continue with norway"), under the 
 - E2E `tests/tools/curricula-standards.spec.ts` 7 of 7 on a staging production build. New Norway Grade 5 case: subject typed as "matematikk"; subjects Norwegian, Mathematics, Science, English; the fractions aim ticked and sent as `no-lk20-km13265`; no language note; NLOD credit shown.
 - Live (`LIVE_MODEL=1`, worksheet settings re-diffed earlier today, staging = production): Norway Grade 5, the fractions aim, gave an English worksheet on fractions, decimals and percentages, 4,823 characters. 1 of 1. The spec now restores the Europe and batch C switches too.
 
+## 6. Sweden: Skolverket's syllabuses, frameworks `se-lgr22` and `se-gy25` (BUILT 2026-11-28)
+
+Started at the owner's request ("Do sweden now"), under the same rules: official text only, the core four subjects.
+
+### 6.1 Source and licence
+
+- **Data:** Skolverket's Syllabus API, https://api.skolverket.se/syllabus/v1 (version 1.16.2, status "active"; v2 exists but is "alpha"). `scripts/fetch-sweden-syllabus.mjs` saves the 13 syllabuses in one snapshot; the builder reads only the snapshot.
+  - Snapshot: `docs/standards/sweden/syllabus-snapshot.json`, fetched 2026-11-28, sha256 dfc0a856cd43e7b2e183b7acdfc184e0e87a2f9057dc6531127f3108b1a2fcfa.
+  - Compulsory school (Lgr22 course syllabuses, from 2022-07-01): GRGRSVE01 Svenska (v15, SKOLFS 2024:590), GRGRMAT01 Matematik, GRGRENG01 Engelska, GRGRBIO01 Biologi, GRGRFYS01 Fysik, GRGRKEM01 Kemi (v14, SKOLFS 2022:8).
+  - Upper secondary (GY25 grade-subject syllabuses, for students starting from 2025-07-01): SVEN, MATE, ENGE, NATU (Naturkunskap), BIOG (v1), FYSK, KEMI (v2, from 2026-02-01). The Gy11 course syllabuses they replace (SVE, MAT, ENG, NAK, BIO, FYS, KEM) are cancelled for new students and run out by 2030-06-30: not listed.
+- **Licence:** https://www.skolverket.se/om-skolverket/oppna-data/api-for-laroplaner-kurs--och-amnesplaner, under "Villkor för användning": "Villkoren i Skolverkets källicens (Creative Commons)", linking https://creativecommons.org/publicdomain/zero/1.0/deed.sv (CC0 1.0). The parent page says "Det är fritt att använda vår data som är tillgänglig för allmänheten." CC0 asks for no credit; Jooma names the source and says the items are edited excerpts.
+- **Language:** the API has Swedish text only (GY25 subjects carry an `englishName` title, nothing more). Skolverket's English Lgr22 PDF (pdf12435) now returns "Sidan kunde inte hittas", no English upper secondary syllabuses were found, and a translation would not be covered by the API's CC0 anyway. So the statements are Skolverket's Swedish, the regulation's text, with a card language note, as for Japan.
+
+### 6.2 What a statement is, ages and strands
+
+- One central content item (`<li>` of centralt innehåll), word for word. Soft hyphens (U+00AD) are removed; 8 en dashes became hyphens (brand rule). Not statements: the lead-ins ("Undervisningen ... ska behandla följande centrala innehåll"), headings, a stray "." paragraph in Svenska 1 to 3, purpose and grading criteria.
+- **Years 1 to 3 science:** biology, physics and chemistry carry one identical text (the natural science subjects together, identical once soft hyphens are removed). Listed once; the builder stops if any item is not in all three.
+- **Ages:** se-lgr22 Years 1 to 3 = 7 to 9, 4 to 6 = 10 to 12, 7 to 9 = 13 to 15 (Grade 1 is age 7 on the profile). No central content for the preschool class (age 6), so the card is not offered there. se-gy25: levels (nivå) are not tied to a school year, so every level is at 16 to 18 and the level is in the strand.
+- **Strand:** the syllabus's own heading: h4, or an `<em>` paragraph (one, "Fysikens arbetsmetode</em>r", is split by the markup and joined). Science in Years 4 to 9 is prefixed by the subject ("Fysik: Fysiken i naturen och samhället"); upper secondary by subject and level ("Matematik nivå 1c: Trigonometri och vektorer", "Svenska nivå 2").
+- **Repeats:** the source restates some items word for word in a later band or level (e.g. "Rimlighetsbedömning vid uppskattningar och beräkningar." in all three maths bands; many items shared by Matematik 1a, 1b and 1c). Each copy is its own statement under its own strand.
+- **For the owner:** upper secondary lists every level of all seven subjects (Mathematics 111 items over 6 levels; Science 158 over Naturkunskap, Biologi, Fysik, Kemi). The strand filter narrows it. Keeping only Naturkunskap for science, or only some levels, is a one-line change.
+
+### 6.3 Counts (pinned in `tests/unit/sweden-standards.spec.ts`)
+
+627 statements: se-lgr22 271 (81 KB raw, 13 KB gzipped), se-gy25 356 (116 KB raw, 14 KB gzipped), each its own on-demand chunk.
+
+| Age | 7 to 9 | 10 to 12 | 13 to 15 | 16 to 18 |
+|---|---|---|---|---|
+| Swedish | 22 | 21 | 25 | 29 |
+| Mathematics | 22 | 27 | 28 | 111 |
+| English | 11 | 18 | 16 | 58 |
+| Science | 13 | 33 | 35 | 158 |
+
+### 6.4 App changes
+
+- `FrameworkId` + `se-lgr22`, `se-gy25`. Names "Lgr22 syllabuses (Skolverket)" (ages 7 to 15) and "GY25 subject syllabuses (Skolverket)" (16 to 18), loaders.
+- `FRAMEWORK_PERMITTED` on, with the licence note. `FRAMEWORK_CREDIT` for each. `FRAMEWORK_LANGUAGE_NOTE`: "Statements are shown in Swedish, as Skolverket publishes them. Your resource is still written in the language you choose." `/terms` section 13.
+- `alignment` on the sweden entry; provenance.
+- **Prompt:** the own-language line used to fire only on CJK script. Swedish is Latin script, so `curriculumPromptBlock` now also fires it when a ticked statement's id belongs to a framework with a language note (ids start with the framework id and a hyphen).
+- Matcher: svenska and Swedish → Swedish; matematik → Mathematics; naturkunskap, naturorienterande, biologi, fysik, kemi → Science; engelska → English. Elsewhere "Swedish" matches nothing.
+
+### 6.5 Tests and results (2026-11-28)
+
+- `tests/unit/sweden-standards.spec.ts`, 19 tests: ids; the snapshot holds the syllabuses in force (Lgr22 course syllabuses, GY25 grade-subject syllabuses, none ended); **every central content item is a statement, word for word, and nothing else is**; the shared Years 1 to 3 science text listed once; subjects, text, ages; band ages and a shifted-band check; pinned counts; strands (lead-ins excluded, the split heading joined); credits; curriculum wiring (no card for the preschool class), all four subjects at every covered year, the card, permission off, the language note, terms; matcher; the own-language prompt line by framework id (not for no id, an English framework's id, or a look-alike "se-lgr22x-"). Mutation-checked: switching off the id rule and shifting the 4 to 6 band each fail.
+- Existing tests updated for the expected change: `standards.spec.ts` (permitted list), `curricula-stage3-c.spec.ts` (Sweden now has statements).
+- Whole unit suite 2,794 passed; tsc clean; ESLint clean on changed files; language check passed.
+- E2E `tests/tools/curricula-standards.spec.ts` 8 of 8 on a staging production build. New Sweden Grade 4 case: subject typed as "matematik"; subjects Swedish, Mathematics, English, Science; the percentages item ticked and sent as `se-lgr22-0f4fde44a3`; language note and CC0 credit shown.
+- Live (`LIVE_MODEL=1`, worksheet settings re-diffed: staging = production, gpt-5.6-luna, low, medium): Sweden Grade 4 with English output, the percentages item, gave an English worksheet "Percentages: Parts of a Whole" (4,025 characters, under 3 Swedish function words). 1 of 1. A first run generated an equally English sheet but failed on a broken regex in the spec (fixed; it cost one extra generation). The switches were confirmed back to false.
+
 ## 4. Not tested, on purpose
 
 - How well the topic matcher picks Japanese or Chinese statements for English topics across many topics: needs many live runs (one live case per country).

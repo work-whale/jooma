@@ -260,6 +260,42 @@ test("a Norway Grade 5 teacher aligns a worksheet to an LK20 competence aim, in 
   ]);
 });
 
+test("a Sweden Grade 4 teacher aligns a worksheet to Lgr22 central content, in Skolverket's Swedish, with a language note and credit", async ({ page }) => {
+  const t = await teacherOn("sweden", "StdSweden");
+  await signIn(page, t);
+  const sent = await capture(page, "/api/worksheet-generator");
+  const asked = await noSuggestions(page);
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Swedish Curriculum (Lgr22 and Gy11)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Grade 4");
+  await page.getByLabel("Subject", { exact: true }).fill("matematik");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Percentages, fractions and decimals");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toContainText("Sweden", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ year: "Grade 4", curriculumId: "sweden" });
+
+  const subject = card.getByLabel("Subject");
+  await expect(subject.locator("option")).toHaveText(["Select subject", "Swedish", "Mathematics", "English", "Science"], NAV);
+  await subject.selectOption("Mathematics");
+  const item = card.getByRole("checkbox", { name: /Tal i procentform och deras samband med tal i bråk- och decimalform/ });
+  await item.click();
+  await expect(item).toHaveAttribute("aria-checked", "true");
+
+  await expect(card.getByTestId("curriculum-language-note")).toContainText("Statements are shown in Swedish, as Skolverket publishes them.");
+  await expect(card.getByTestId("curriculum-credits")).toContainText("Skolverket's Syllabus API under CC0 1.0");
+  await shot(page, "worksheet-sweden-grade4-maths", card);
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { curriculumName: string; countryName: string; year: string; statements: { id: string; text: string }[] };
+  expect(align).toMatchObject({ curriculumName: "Lgr22 syllabuses (Skolverket)", countryName: "Sweden", year: "Grade 4" });
+  expect(align.statements).toEqual([{ id: "se-lgr22-0f4fde44a3", text: "Tal i procentform och deras samband med tal i bråk- och decimalform." }]);
+});
+
 test("a Taiwan Grade 8 teacher aligns a worksheet to the Curriculum Guidelines, maths in Chinese with its code, English and science in official English", async ({ page }) => {
   const t = await teacherOn("taiwan", "StdTaiwan");
   await signIn(page, t);

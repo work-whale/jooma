@@ -1,0 +1,4283 @@
+{
+ "source": {
+  "title": "GY25 subject syllabuses (Skolverket), Syllabus API snapshot of 2026-11-28",
+  "file": "docs/standards/sweden/syllabus-snapshot.json",
+  "url": "https://api.skolverket.se/syllabus/v1",
+  "licence": "https://www.skolverket.se/om-skolverket/oppna-data/api-for-laroplaner-kurs--och-amnesplaner",
+  "credit": "Subject syllabuses for Swedish, mathematics, English, natural science, biology, physics and chemistry in upper secondary school (GY25), Swedish National Agency for Education (Skolverket), from Skolverket's Syllabus API under CC0 1.0. Statements are excerpts, edited by Jooma into a list."
+ },
+ "statements": [
+  {
+   "id": "se-gy25-e6fa347027",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntlig framställning i och inför grupp med fokus på anpassning till sammanhang, syfte och mottagare. Manusskrivande och hjälpmedel för att stödja muntliga framställningar. Att lyssna och ge respons som är anpassad till kommunikationssituationen. Grunderna i den retoriska arbetsprocessen."
+  },
+  {
+   "id": "se-gy25-18d0f58529",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Skriftlig framställning av olika typer av texter för kommunikation, lärande och reflektion, däribland argumenterande texter och kreativt skrivande."
+  },
+  {
+   "id": "se-gy25-b07b55568a",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Struktur och språkliga drag i olika typer av texter. Skriftspråkets normer för språkriktighet och vilka språkliga egenskaper som gör att en text fungerar väl i sitt sammanhang. Användning av digitala verktyg för textbearbetning samt för respons på texter. Citat- och referatteknik."
+  },
+  {
+   "id": "se-gy25-cffdbd9362",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Läsning av och samtal om sakprosa. Produktion av texter som anknyter till läst sakprosa."
+  },
+  {
+   "id": "se-gy25-12cfc501d8",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Informationssökning och värdering av information från olika typer av texter. Sammanfattning och kritisk läsning av texter från olika typer av källor."
+  },
+  {
+   "id": "se-gy25-7988507bb8",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Läsning av, samtal om och analys av skönlitterära texter ur genrerna epik, lyrik och dramatik, författade av såväl kvinnor som män, med betoning på samtida litteratur."
+  },
+  {
+   "id": "se-gy25-5d37e9966c",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "En översikt över de litterära epokerna."
+  },
+  {
+   "id": "se-gy25-6d706f187e",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Centrala motiv, berättarteknik och stildrag i fiktivt berättande."
+  },
+  {
+   "id": "se-gy25-d2807e4ed8",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Grundläggande språkvetenskapliga begrepp som behövs för att på ett strukturerat sätt tala om språkets uppbyggnad och funktion samt diskutera språkriktighetsfrågor."
+  },
+  {
+   "id": "se-gy25-620fa3544c",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 1",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Språk och språkanvändning med särskild betoning på språklig variation i talat och skrivet språk. Hur språklig variation hänger samman med geografisk och social bakgrund, ålder och kön samt hur makt, normer och identitet kan komma till uttryck i språkanvändning."
+  },
+  {
+   "id": "se-gy25-5916eb6d1d",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntlig framställning av utredande och argumenterande slag i och inför grupp. Tillämpning av den retoriska arbetsprocessen för att planera och genomföra muntliga utredande och argumenterande framställningar i olika sammanhang, för olika syften och för olika mottagare. Retoriska verkningsmedel."
+  },
+  {
+   "id": "se-gy25-36a7e1541a",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Skriftlig framställning av argumenterande och utredande texter och kreativt skrivande."
+  },
+  {
+   "id": "se-gy25-b5ca08cc3c",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Struktur och språkliga drag i argumenterande och utredande texter. Skriftspråkets normer för språkriktighet och vilka språkliga egenskaper som gör att en text fungerar väl i sitt sammanhang. Användning av digitala verktyg för textbearbetning samt för respons på texter. Citat- och referatteknik."
+  },
+  {
+   "id": "se-gy25-2ecc087346",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Läsning av och samtal om sakprosa. Produktion av texter som anknyter till läst sakprosa."
+  },
+  {
+   "id": "se-gy25-b5a0381a50",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Informationssökning och värdering av information från olika typer av texter. Sammanfattning och kritisk läsning av texter från olika typer av källor."
+  },
+  {
+   "id": "se-gy25-4e406fb735",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Läsning av, samtal om och analys av samtida och äldre skönlitterära texter ur genrerna epik, lyrik och dramatik från Sverige och olika delar av världen, författade av såväl kvinnor som män. Dansk och norsk skönlitteratur, delvis på originalspråk."
+  },
+  {
+   "id": "se-gy25-9d53690532",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fördjupning i några litterära epoker samt skönlitteraturens relation till förhållanden och idéströmningar i samhället, historiskt och i nutid. Några tongivande författare från olika tider och från olika delar av världen."
+  },
+  {
+   "id": "se-gy25-43ef86ff63",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Skönlitterära verkningsmedel. Centrala litteraturvetenskapliga begrepp och deras användning."
+  },
+  {
+   "id": "se-gy25-b55a60d14d",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Det svenska språkets grammatik, däribland hur ord, fraser och satser samspelar i språket. Analys av det svenska språkets uppbyggnad i olika typer av texter."
+  },
+  {
+   "id": "se-gy25-bdeaa419a6",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 2",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Språk och språkanvändning med särskild betoning på språkförhållanden i Sverige och övriga Norden. Svensk språklagstiftning, däribland hur svenskan, den språkliga mångfalden i Sverige och den enskildes tillgång till språk kan värnas samt de nationella minoritetsspråkens och teckenspråkets ställning. Flerspråkighet och dess betydelse för individ och samhälle."
+  },
+  {
+   "id": "se-gy25-74e03e1381",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntliga framställningar i formella sammanhang, till exempel samtal i seminarieform och argumentation i och inför grupp. Tillämpning av den retoriska arbetsprocessen för att planera och genomföra muntlig framställning i formella sammanhang."
+  },
+  {
+   "id": "se-gy25-f49e290905",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kritisk granskning av och reflektion över retoriken i muntliga framställningar i olika sammanhang, till exempel i politiska tal och debatter."
+  },
+  {
+   "id": "se-gy25-3f5e28497a",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Skriftlig framställning av texter av vetenskaplig karaktär som behandlar någon aspekt av svenskämnet."
+  },
+  {
+   "id": "se-gy25-66407b712b",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Struktur och språkliga drag i texter av vetenskaplig karaktär. Skriftspråkets normer för språkriktighet och vilka språkliga egenskaper som gör att en text fungerar väl i sitt sammanhang. Användning av digitala verktyg för textbearbetning samt för respons på texter. Citat- och referatteknik."
+  },
+  {
+   "id": "se-gy25-537b8f2b83",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Läsning av, samtal om och analys av texter av vetenskaplig karaktär."
+  },
+  {
+   "id": "se-gy25-1ab6036165",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Informationssökning och värdering av information från olika typer av texter. Sammanfattning och kritisk läsning av texter från olika typer av källor."
+  },
+  {
+   "id": "se-gy25-a6a8b75335",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Läsning av, samtal om och analys av samtida och äldre skönlitterära texter ur genrerna epik, lyrik och dramatik från Sverige, övriga Norden och olika delar av världen, författade av såväl kvinnor som män. Jämförande analys av litterära verk från olika tider och deras relation till de historiska och kulturella sammanhang de tillkommit i."
+  },
+  {
+   "id": "se-gy25-704f053b53",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Litteraturvetenskapligt grundad analys av skönlitterära texter med användning av litteraturvetenskapliga begrepp."
+  },
+  {
+   "id": "se-gy25-463086772a",
+   "code": "",
+   "subject": "Swedish",
+   "strand": "Svenska nivå 3",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Språk och språkanvändning med särskild betoning på det svenska språkets historiska utveckling. Jämförelser av originaltexter från olika tider, släktskapsförhållanden mellan det svenska språket och andra språk samt språkförändringar."
+  },
+  {
+   "id": "se-gy25-b1ac60da16",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Matematiska begrepp som är relevanta för arbetslivet, till exempel proportionalitet, skala, likformighet, vinklar, Pythagoras sats, procent och andelar, indexmått, vinstmarginal, jämvikt, felmarginaler, symmetrier, vektorer, trigonometriska funktioner och barns lärande inom matematik."
+  },
+  {
+   "id": "se-gy25-39ca7bc705",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Beräkningsmetoder som är relevanta för arbetslivet, till exempel uppskattningar, beräkningar på störningar eller mätfel, spill- och svinnberäkningar, överslagsräkning, avrundning, användning av kalkylprogram och metoder för kontrollberäkning."
+  },
+  {
+   "id": "se-gy25-b0ae6f1886",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hantering av formler som är relevanta för arbetslivet."
+  },
+  {
+   "id": "se-gy25-b5b0e469c9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Mätning och hantering av storheter och enheter som är relevanta för arbetslivet, till exempel enhetsbyten, mätning av vinklar, avrundningsprinciper, tidsuppskattningar, beräkning av förbrukningsmaterial, kostnadsberäkningar, säkerhetsmarginaler, hantering av mätverktyg och hantering av mätosäkerheter."
+  },
+  {
+   "id": "se-gy25-2ea879aeeb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hjälpmedel och verktyg som är relevanta för att hantera matematik inom arbetslivet, till exempel formulär, mallar, tumregler, föreskrifter, manualer, referensverk och handböcker."
+  },
+  {
+   "id": "se-gy25-d48e6b2b4d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hantering av formler och algebraiska uttryck, däribland faktorisering och multiplicering av uttryck."
+  },
+  {
+   "id": "se-gy25-aafd84dd42",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet funktion. Representationer av funktioner i form av ord, funktionsuttryck, tabeller och grafer. Digitala metoder för att skapa funktionsgrafer."
+  },
+  {
+   "id": "se-gy25-cfcb9d1581",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att bestämma funktionsvärden. Grafiska metoder för att lösa ekvationer av typen f(x) = a."
+  },
+  {
+   "id": "se-gy25-bfd282433c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet linjär funktion och egenskaper hos linjära funktioner."
+  },
+  {
+   "id": "se-gy25-1dbb34acff",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa linjära ekvationer."
+  },
+  {
+   "id": "se-gy25-1454f10221",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet exponentialfunktion och egenskaper hos exponentialfunktioner. Skillnader och likheter med linjära funktioner."
+  },
+  {
+   "id": "se-gy25-a14e7ccc3d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet förändringsfaktor och beräkning av förändringar i flera steg."
+  },
+  {
+   "id": "se-gy25-37cc991858",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen oberoende och beroende händelse samt komplementhändelse. Metoder för att beräkna sannolikheter i flera steg. Tillämpningar inom spel samt risk- och säkerhetsbedömningar."
+  },
+  {
+   "id": "se-gy25-a7b17430b3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Exempel på hur några statistiska begrepp används i samhälle och arbetsliv, däribland signifikans, korrelation, kausalitet, urvalsmetoder och felkällor."
+  },
+  {
+   "id": "se-gy25-fcc2dcd24b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av kalkylprogram för beräkning av ränta och amortering."
+  },
+  {
+   "id": "se-gy25-a45a57594b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av digitala verktyg för att effektivisera beräkningar och komplettera metoder, till exempel vid ekvationslösning och problemlösning."
+  },
+  {
+   "id": "se-gy25-bcd59e3b74",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning som omfattar att upptäcka och uttrycka generella samband."
+  },
+  {
+   "id": "se-gy25-84ba598ad1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning med särskild utgångspunkt i arbetslivet samt privatekonomi och samhällsliv, däribland frågeställningar som berör hållbar utveckling och hur matematik kan användas för kritisk granskning av fakta och påståenden."
+  },
+  {
+   "id": "se-gy25-5c2d4ea097",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tillämpning och formulering av matematiska modeller i realistiska situationer. Utvärdering av matematiska modellers egenskaper och begränsningar."
+  },
+  {
+   "id": "se-gy25-e2501b04e6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Orientering om något ur matematikens historia, till exempel hur ett matematiskt begrepp utvecklats, matematikens roll i något historiskt skeende, en betydande person inom matematiken eller ett historiskt matematiskt problem."
+  },
+  {
+   "id": "se-gy25-819b6003ce",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hantering av formler och algebraiska uttryck, däribland faktorisering och multiplicering av uttryck."
+  },
+  {
+   "id": "se-gy25-26415f96a1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen funktion, definitionsmängd och värdemängd. Representationer av funktioner i form av ord, funktionsuttryck, tabeller och grafer. Digitala metoder för att skapa funktionsgrafer."
+  },
+  {
+   "id": "se-gy25-81d991e938",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att bestämma funktionsvärden. Digitala och grafiska metoder för att lösa ekvationer av typen f(x) = a."
+  },
+  {
+   "id": "se-gy25-b450a4073b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet linjär funktion och egenskaper hos linjära funktioner. Räta linjens ekvation. Metoder för att bestämma linjära funktioner."
+  },
+  {
+   "id": "se-gy25-5c63cb2594",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa linjära ekvationer."
+  },
+  {
+   "id": "se-gy25-ab22d7d85c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen intervall och linjär olikhet. Metoder för att lösa linjära olikheter."
+  },
+  {
+   "id": "se-gy25-9b50821395",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet exponentialfunktion och egenskaper hos exponentialfunktioner. Skillnader och likheter med linjära funktioner."
+  },
+  {
+   "id": "se-gy25-a660521214",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och hantering av räkneregler för potenser. Metoder för att lösa potensekvationer."
+  },
+  {
+   "id": "se-gy25-7a7bb691aa",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet potensfunktion."
+  },
+  {
+   "id": "se-gy25-187ae534e3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet förändringsfaktor och beräkning av förändringar i flera steg."
+  },
+  {
+   "id": "se-gy25-6af120f2e0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet index."
+  },
+  {
+   "id": "se-gy25-67e7c40de0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen oberoende och beroende händelse samt komplementhändelse. Metoder för att beräkna sannolikheter i flera steg. Tillämpningar inom spel samt risk- och säkerhetsbedömningar."
+  },
+  {
+   "id": "se-gy25-5b55d64e99",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Exempel på hur några statistiska begrepp används i samhälle och inom vetenskap, däribland signifikans, korrelation, kausalitet, urvalsmetoder och felkällor."
+  },
+  {
+   "id": "se-gy25-2e106eae19",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av kalkylprogram för beräkning av ränta och amortering."
+  },
+  {
+   "id": "se-gy25-848546f00e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av digitala verktyg för att effektivisera beräkningar och komplettera metoder, till exempel vid ekvationslösning och problemlösning."
+  },
+  {
+   "id": "se-gy25-ec98398071",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning som omfattar att upptäcka och uttrycka generella samband."
+  },
+  {
+   "id": "se-gy25-70246b8cc1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning med särskild utgångspunkt i utbildningens karaktär, privatekonomi och samhällsliv, däribland frågeställningar som berör hållbar utveckling och hur matematik kan användas för kritisk granskning av fakta och påståenden."
+  },
+  {
+   "id": "se-gy25-a613be7c7d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tillämpning och formulering av matematiska modeller i realistiska situationer. Utvärdering av matematiska modellers egenskaper och begränsningar."
+  },
+  {
+   "id": "se-gy25-f2c677fcf4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Orientering om något ur matematikens historia, till exempel hur ett matematiskt begrepp utvecklats, matematikens roll i något historiskt skeende, en betydande person inom matematiken eller ett historiskt matematiskt problem."
+  },
+  {
+   "id": "se-gy25-f1d005c3f1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hantering av formler och algebraiska uttryck, däribland faktorisering och multiplicering av uttryck."
+  },
+  {
+   "id": "se-gy25-80f31b50e9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen funktion, definitionsmängd och värdemängd. Representationer av funktioner i form av ord, funktionsuttryck, tabeller och grafer. Digitala metoder för att skapa funktionsgrafer."
+  },
+  {
+   "id": "se-gy25-fa7ff2fea5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att bestämma funktionsvärden. Digitala och grafiska metoder för att lösa ekvationer av typen f(x) = a."
+  },
+  {
+   "id": "se-gy25-e03ba95b58",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet linjär funktion och egenskaper hos linjära funktioner. Räta linjens ekvation. Metoder för att bestämma linjära funktioner."
+  },
+  {
+   "id": "se-gy25-26c7727acc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa linjära ekvationer."
+  },
+  {
+   "id": "se-gy25-d2ae8e99e4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen intervall och linjär olikhet. Metoder för att lösa linjära olikheter."
+  },
+  {
+   "id": "se-gy25-1ef45c3ea3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet exponentialfunktion och egenskaper hos exponentialfunktioner. Skillnader och likheter med linjära funktioner."
+  },
+  {
+   "id": "se-gy25-1adf605454",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och hantering av räkneregler för potenser. Metoder för att lösa potensekvationer."
+  },
+  {
+   "id": "se-gy25-0257210b8e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet potensfunktion."
+  },
+  {
+   "id": "se-gy25-c6e548e230",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet förändringsfaktor och beräkning av förändringar i flera steg."
+  },
+  {
+   "id": "se-gy25-ef2de73dc1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Trigonometri och vektorer",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen sinus, cosinus och tangens. Begreppet invers funktion i samband med arcusfunktioner. Metoder för att beräkna sträckor och vinklar i koordinatsystem och i rätvinkliga trianglar."
+  },
+  {
+   "id": "se-gy25-c152077530",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Trigonometri och vektorer",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet vektor. Representationer av vektorer i koordinatsystem och skrivna i koordinatform. Metoder för beräkningar med vektorer, däribland addition, subtraktion, beräkning av absolutbelopp och multiplikation med skalär."
+  },
+  {
+   "id": "se-gy25-c3f4bc832e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen oberoende och beroende händelse samt komplementhändelse. Metoder för att beräkna sannolikheter i flera steg. Tillämpningar inom spel samt risk- och säkerhetsbedömningar."
+  },
+  {
+   "id": "se-gy25-2c0c4c270a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Sannolikhet och statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Exempel på hur några statistiska begrepp används i samhälle och inom vetenskap, däribland signifikans, korrelation, kausalitet, urvalsmetoder och felkällor."
+  },
+  {
+   "id": "se-gy25-2c20662420",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av kalkylprogram för beräkning av ränta och amortering."
+  },
+  {
+   "id": "se-gy25-db8445e9ea",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av digitala verktyg för att effektivisera beräkningar och komplettera metoder, till exempel vid ekvationslösning och problemlösning."
+  },
+  {
+   "id": "se-gy25-48c4ff0c0a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Exempel på hur programmering kan användas som verktyg vid problemlösning, databearbetning eller tillämpning av numeriska metoder."
+  },
+  {
+   "id": "se-gy25-70fe451562",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning som omfattar att upptäcka och uttrycka generella samband."
+  },
+  {
+   "id": "se-gy25-625c17589b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning med särskild utgångspunkt i utbildningens karaktär, privatekonomi och samhällsliv, däribland frågeställningar som berör hållbar utveckling och hur matematik kan användas för kritisk granskning av fakta och påståenden."
+  },
+  {
+   "id": "se-gy25-3015665933",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tillämpning och formulering av matematiska modeller i realistiska situationer. Utvärdering av matematiska modellers egenskaper och begränsningar."
+  },
+  {
+   "id": "se-gy25-5fd53e454a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 1c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Orientering om något ur matematikens historia, till exempel hur ett matematiskt begrepp utvecklats, matematikens roll i något historiskt skeende, en betydande person inom matematiken eller ett historiskt matematiskt problem."
+  },
+  {
+   "id": "se-gy25-8adf183479",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Breddning eller fördjupning av matematiska begrepp och metoder som är relevanta för arbetslivet och utbildningens karaktär."
+  },
+  {
+   "id": "se-gy25-96b9d7463f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Program- eller yrkesspecifikt innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hjälpmedel och verktyg som är relevanta för att hantera matematik inom arbetslivet och utbildningens karaktär."
+  },
+  {
+   "id": "se-gy25-f582c5a457",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Räta linjens ekvation. Metoder för att bestämma linjära funktioner."
+  },
+  {
+   "id": "se-gy25-a1c0743bf2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet linjärt ekvationssystem. Metoder för att lösa linjära ekvationssystem."
+  },
+  {
+   "id": "se-gy25-29190d8723",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet potensfunktion."
+  },
+  {
+   "id": "se-gy25-621bdd0d07",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och hantering av räkneregler för potenser. Metoder för att lösa potensekvationer."
+  },
+  {
+   "id": "se-gy25-1bef97032c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Digitala metoder för att lösa exponentialekvationer."
+  },
+  {
+   "id": "se-gy25-746057ed4e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och hantering av konjugatregeln och kvadreringsreglerna."
+  },
+  {
+   "id": "se-gy25-671b47915b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet andragradsfunktion och egenskaper hos andragradsfunktioner, däribland symmetrilinje, extrempunkt och nollställen."
+  },
+  {
+   "id": "se-gy25-1c87400756",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa andragradsekvationer."
+  },
+  {
+   "id": "se-gy25-15de84f6b2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Lägesmått och spridningsmått, däribland percentiler och standardavvikelse, samt digitala metoder för att bestämma dessa."
+  },
+  {
+   "id": "se-gy25-b8cdd091e5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet normalfördelning och egenskaper hos normalfördelat material. Metoder för att göra enklare beräkningar på normalfördelat material."
+  },
+  {
+   "id": "se-gy25-d5ba0b8096",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning och motivering av Pythagoras sats med exempel som omfattar beräkningar i koordinatsystem."
+  },
+  {
+   "id": "se-gy25-0215897f28",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av digitala verktyg för att effektivisera beräkningar och komplettera metoder, till exempel vid ekvationslösning och problemlösning."
+  },
+  {
+   "id": "se-gy25-211380c807",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning med särskild utgångspunkt i arbets- och samhällsliv, däribland frågeställningar som berör hållbar utveckling och hur matematik kan användas för kritisk granskning av fakta och påståenden."
+  },
+  {
+   "id": "se-gy25-f3ccd45056",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tillämpning och formulering av matematiska modeller i realistiska situationer. Utvärdering av matematiska modellers egenskaper och begränsningar."
+  },
+  {
+   "id": "se-gy25-82c8fff24b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2a: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Orientering om något ur matematikens historia, till exempel hur ett matematiskt begrepp utvecklats, matematikens roll i något historiskt skeende, en betydande person inom matematiken eller ett historiskt matematiskt problem."
+  },
+  {
+   "id": "se-gy25-6769ec7b9f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet linjärt ekvationssystem. Metoder för att lösa linjära ekvationssystem."
+  },
+  {
+   "id": "se-gy25-b4933d911f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet logaritm. Hantering av räkneregler för logaritmer i samband med lösning av exponentialekvationer. Metoder för att lösa exponentialekvationer."
+  },
+  {
+   "id": "se-gy25-c41d8fdbd3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Likheter och skillnader mellan exponential- och potensekvationer."
+  },
+  {
+   "id": "se-gy25-f8719457fc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och hantering av konjugatregeln och kvadreringsreglerna."
+  },
+  {
+   "id": "se-gy25-f252a810fd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet andragradsfunktion och egenskaper hos andragradsfunktioner, däribland symmetrilinje, extrempunkt och nollställen."
+  },
+  {
+   "id": "se-gy25-cc229a25fb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa andragradsekvationer."
+  },
+  {
+   "id": "se-gy25-6082319b25",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Lägesmått och spridningsmått, däribland percentiler och standardavvikelse, samt digitala metoder för att bestämma dessa."
+  },
+  {
+   "id": "se-gy25-d32d988de3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet normalfördelning och egenskaper hos normalfördelat material. Digitala metoder för att göra beräkningar på normalfördelat material."
+  },
+  {
+   "id": "se-gy25-b3de05a2fb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen regressionsanalys och korrelationskoefficient. Digitala metoder för regressionsanalys."
+  },
+  {
+   "id": "se-gy25-a85b0d4b43",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen implikation och ekvivalens."
+  },
+  {
+   "id": "se-gy25-83e057d294",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen definition, sats och bevis."
+  },
+  {
+   "id": "se-gy25-b887b5a24e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och användning av enklare geometriska satser om vinklar och likformighet samt Pythagoras sats med exempel som omfattar beräkningar i koordinatsystem."
+  },
+  {
+   "id": "se-gy25-65f2bb3072",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av digitala verktyg för att effektivisera beräkningar och komplettera metoder, till exempel vid ekvationslösning och problemlösning."
+  },
+  {
+   "id": "se-gy25-b32da848bb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning med särskild utgångspunkt i utbildningens karaktär och samhällsliv, däribland frågeställningar som berör hållbar utveckling och hur matematik kan användas för kritisk granskning av fakta och påståenden."
+  },
+  {
+   "id": "se-gy25-74a870f8af",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tillämpning och formulering av matematiska modeller i realistiska situationer. Utvärdering av matematiska modellers egenskaper och begränsningar."
+  },
+  {
+   "id": "se-gy25-3e6c998496",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2b: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Orientering om något ur matematikens historia, till exempel hur ett matematiskt begrepp utvecklats, matematikens roll i något historiskt skeende, en betydande person inom matematiken eller ett historiskt matematiskt problem."
+  },
+  {
+   "id": "se-gy25-cee0f76827",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet linjärt ekvationssystem. Metoder för att lösa linjära ekvationssystem."
+  },
+  {
+   "id": "se-gy25-3589daaf27",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet logaritm. Motivering och hantering av räkneregler för logaritmer. Metoder för att lösa exponentialekvationer."
+  },
+  {
+   "id": "se-gy25-b6cdfad2ea",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Likheter och skillnader mellan exponential- och potensekvationer."
+  },
+  {
+   "id": "se-gy25-7f6b42aaa9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och hantering av konjugatregeln och kvadreringsreglerna."
+  },
+  {
+   "id": "se-gy25-1f91673e6e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet andragradsfunktion och egenskaper hos andragradsfunktioner, däribland symmetrilinje, extrempunkt och nollställen."
+  },
+  {
+   "id": "se-gy25-2444e8a64f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa andragradsekvationer."
+  },
+  {
+   "id": "se-gy25-615aaaf748",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Aritmetik, algebra och funktioner",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för att lösa rotekvationer."
+  },
+  {
+   "id": "se-gy25-fd81812ead",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Lägesmått och spridningsmått, däribland percentiler och standardavvikelse, samt digitala metoder för att bestämma dessa."
+  },
+  {
+   "id": "se-gy25-2c3b704de2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppet normalfördelning och egenskaper hos normalfördelat material. Digitala metoder för att göra beräkningar på normalfördelat material."
+  },
+  {
+   "id": "se-gy25-8cbb233e15",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Statistik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen regressionsanalys och korrelationskoefficient. Digitala metoder för regressionsanalys."
+  },
+  {
+   "id": "se-gy25-50dfcc46c9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen implikation och ekvivalens."
+  },
+  {
+   "id": "se-gy25-3620c79eba",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Begreppen definition, sats och bevis."
+  },
+  {
+   "id": "se-gy25-340b959ef7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Logik och geometri",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Motivering och användning av enklare geometriska satser om vinklar och likformighet samt Pythagoras sats med exempel som omfattar beräkningar i koordinatsystem."
+  },
+  {
+   "id": "se-gy25-75cb89fe1d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av digitala verktyg för att effektivisera beräkningar och komplettera metoder, till exempel vid ekvationslösning och problemlösning."
+  },
+  {
+   "id": "se-gy25-5d88029d28",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Digitala verktyg",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Exempel på hur programmering kan användas som verktyg vid problemlösning, databearbetning eller tillämpning av numeriska metoder."
+  },
+  {
+   "id": "se-gy25-205580a4af",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Problemlösning med särskild utgångspunkt i utbildningens karaktär och samhällsliv, däribland frågeställningar som berör hållbar utveckling och hur matematik kan användas för kritisk granskning av fakta och påståenden."
+  },
+  {
+   "id": "se-gy25-36f35146f8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tillämpning och formulering av matematiska modeller i realistiska situationer. Utvärdering av matematiska modellers egenskaper och begränsningar."
+  },
+  {
+   "id": "se-gy25-bd5794c0a1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Matematik nivå 2c: Problemlösning och tillämpningsområden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Orientering om något ur matematikens historia, till exempel hur ett matematiskt begrepp utvecklats, matematikens roll i något historiskt skeende, en betydande person inom matematiken eller ett historiskt matematiskt problem."
+  },
+  {
+   "id": "se-gy25-42c2946175",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Aktuella och bekanta ämnesområden, även med anknytning till samhälls- och arbetsliv och till elevernas utbildning."
+  },
+  {
+   "id": "se-gy25-92c3967439",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Händelser och händelseförlopp."
+  },
+  {
+   "id": "se-gy25-7745fe772b",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Åsikter, tankar och erfarenheter samt relationer och etiska frågor."
+  },
+  {
+   "id": "se-gy25-b92ba0f730",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Innehåll och form i olika typer av fiktion."
+  },
+  {
+   "id": "se-gy25-d0b1a624cc",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Aktuella händelser, sociala och kulturella företeelser och förhållanden samt värderingar i olika sammanhang och områden där engelska används, även i jämförelse med egna erfarenheter och kunskaper."
+  },
+  {
+   "id": "se-gy25-51bf5fff1b",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Engelska språkets ställning i världen."
+  },
+  {
+   "id": "se-gy25-ac11f8bea6",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska i varierande tempo, även med inslag av dialektal och sociolektal variation, och texter, däribland texter av mindre komplex karaktär, från olika medier."
+  },
+  {
+   "id": "se-gy25-f0da9f9bfc",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska och texter som är berättande, förklarande, diskuterande, argumenterande och rapporterande, till exempel intervjuer, reportage, manualer och enklare populärvetenskapliga texter."
+  },
+  {
+   "id": "se-gy25-91368840d4",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Skönlitteratur och annan fiktion."
+  },
+  {
+   "id": "se-gy25-1afa1a0c69",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Sånger och dikter."
+  },
+  {
+   "id": "se-gy25-d39fddd169",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Strategier för att uppfatta detaljer och dra slutsatser om innehåll och budskap, till exempel genom att associera, återberätta, förutse innehåll och ställa sig frågor."
+  },
+  {
+   "id": "se-gy25-b8f9641f34",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Sökning av innehåll i källor av olika slag och utifrån olika syften. Värdering av källornas relevans och trovärdighet."
+  },
+  {
+   "id": "se-gy25-7515c9ff91",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur variation och anpassning till syfte, mottagare och sammanhang, i den engelska som eleverna möter, skapas genom meningsbyggnad, ord, fraser och kollokationer."
+  },
+  {
+   "id": "se-gy25-586cf8f24e",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur struktur och sammanhang, i den engelska som eleverna möter, skapas genom ord och fraser som markerar till exempel orsakssammanhang, kontrast, talarens inställning, tidsaspekt och avslutning."
+  },
+  {
+   "id": "se-gy25-07c9f59483",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Språklig säkerhet i elevernas egen produktion och interaktion. Hur man kan uttrycka sig sammanhängande och med variation, tydlighet, struktur, flyt och grundläggande anpassning till syfte, mottagare och sammanhang. Uttal, vokabulär och stavning samt grammatiska strukturer, meningsbyggnad och textbindning."
+  },
+  {
+   "id": "se-gy25-57a039dc3d",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntlig och skriftlig produktion och interaktion av olika slag, i informella och något formella sammanhang, där eleverna berättar, sammanfattar, förklarar, motiverar sina åsikter, värderar och diskuterar."
+  },
+  {
+   "id": "se-gy25-010aac2431",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur man skiljer mellan en källas innehåll och sina egna tankar i egen produktion och interaktion."
+  },
+  {
+   "id": "se-gy25-719515307d",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Strategier för att bidra till och aktivt medverka i diskussioner och skriftlig interaktion med anknytning till samhälls- och arbetsliv, till exempel genom att ställa följdfrågor, formulera om, förklara och bidra med nya infallsvinklar."
+  },
+  {
+   "id": "se-gy25-432a3339ca",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 1: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Bearbetning av egna muntliga och skriftliga framställningar."
+  },
+  {
+   "id": "se-gy25-99b23e8ee7",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Konkreta och abstrakta ämnesområden med anknytning till samhälls- och arbetsliv och till elevernas utbildning."
+  },
+  {
+   "id": "se-gy25-49979b62ea",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Åsikter, idéer och erfarenheter samt etiska och existentiella frågor."
+  },
+  {
+   "id": "se-gy25-c93f125c74",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Teman, innehåll och form i olika typer av fiktion, däribland film och skönlitteratur."
+  },
+  {
+   "id": "se-gy25-9f4546e1a7",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Samhällsfrågor, sociala, kulturella, politiska och historiska förhållanden samt värderingar i olika sammanhang och områden där engelska används, även i jämförelse med egna erfarenheter och kunskaper."
+  },
+  {
+   "id": "se-gy25-5c7571d456",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska, även i relativt snabbt tempo och med inslag av dialektal och sociolektal variation."
+  },
+  {
+   "id": "se-gy25-8bf734ff37",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska och texter, även av relativt komplex och formell karaktär, från olika medier."
+  },
+  {
+   "id": "se-gy25-0945caa850",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska och texter som är berättande, diskuterande, argumenterande, rapporterande och redogörande, till exempel föredrag, debatter, formella brev och populärvetenskapliga texter."
+  },
+  {
+   "id": "se-gy25-c906314e02",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Skönlitteratur, även dikter och dramatik, såväl samtida som utdrag ur äldre verk."
+  },
+  {
+   "id": "se-gy25-4f2cb9549e",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur attityder, synsätt och stilnivå kommer till uttryck i den engelska som eleverna möter."
+  },
+  {
+   "id": "se-gy25-ee31d7afb2",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Strategier för att dra slutsatser om syfte, synsätt och underförstådd betydelse, även i större textmängder eller längre sekvenser av talat språk, till exempel genom att anteckna, ställa sig frågor och identifiera huvudbudskap."
+  },
+  {
+   "id": "se-gy25-e897f7bf61",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Värdering av relevans och tillförlitlighet hos källor av olika slag och utifrån olika syften."
+  },
+  {
+   "id": "se-gy25-a5954d3b7c",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur variation och anpassning till syfte, mottagare och sammanhang, i den engelska som eleverna möter, skapas genom meningsbyggnad, ordbildning och val av ord, till exempel regionala varianter och kollokationer, i informella och formella sammanhang."
+  },
+  {
+   "id": "se-gy25-c4755695e3",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur struktur och sammanhang, i den engelska som eleverna möter, skapas genom sambandsmarkörer som uttrycker till exempel orsakssammanhang och jämförelse."
+  },
+  {
+   "id": "se-gy25-0216db3e79",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur den muntliga och skriftliga engelska som eleverna möter är uppbyggd för att påverka en tänkt målgrupp."
+  },
+  {
+   "id": "se-gy25-0bde2cc21e",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Språklig säkerhet i elevernas egen produktion och interaktion. Hur man kan uttrycka sig nyanserat och med variation, tydlighet, struktur, ledighet och anpassning till syfte, mottagare och sammanhang. Uttal, vokabulär, stavning, grammatiska strukturer och meningsbyggnad samt textbindning och styckeindelning i elevernas egen produktion och interaktion."
+  },
+  {
+   "id": "se-gy25-5eadb0a202",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntlig och skriftlig produktion och interaktion med olika syften, i informella och något formella sammanhang, där eleverna resonerar, argumenterar och ansöker samt sammanför innehåll från olika muntliga och skriftliga källor."
+  },
+  {
+   "id": "se-gy25-56ab733635",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Strategier för att bidra till och aktivt medverka i argumentation och diskussioner med anknytning till samhälls- och arbetsliv, till exempel genom att ställa följdfrågor, förklara, bidra med nya infallsvinklar och anknyta till andras inlägg."
+  },
+  {
+   "id": "se-gy25-687a0fc8dd",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 2: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Bearbetning av egna muntliga och skriftliga framställningar."
+  },
+  {
+   "id": "se-gy25-76111ecd53",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Teoretiska och komplexa ämnesområden, även av viss vetenskaplig karaktär, med anknytning till samhälls- och arbetsliv, till elevernas utbildning och till ett valt fördjupningsområde."
+  },
+  {
+   "id": "se-gy25-3ac1727d93",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Åsikter, idéer och erfarenheter."
+  },
+  {
+   "id": "se-gy25-7c812ff412",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kulturyttringar i samtiden och historien."
+  },
+  {
+   "id": "se-gy25-4d23cfceca",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Kommunikationens innehåll",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Samhällsfrågor, sociala, kulturella, politiska och historiska förhållanden samt aktuella etiska och existentiella frågor i olika sammanhang och områden där engelska används, även i jämförelse med egna erfarenheter och kunskaper."
+  },
+  {
+   "id": "se-gy25-4b7361d1a8",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska, även i snabbt tempo och med inslag av dialektal och sociolektal variation."
+  },
+  {
+   "id": "se-gy25-c1f986fa2b",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska och texter, även av komplex och formell karaktär, från olika medier."
+  },
+  {
+   "id": "se-gy25-ca403729d1",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Talad engelska och texter som är berättande, diskuterande, argumenterande, redogörande och utredande, till exempel debatter, föreläsningar, avtalstexter och texter som används inom högre studier."
+  },
+  {
+   "id": "se-gy25-cb5b8b63a6",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Samtida och äldre skönlitteratur inom olika genrer, till exempel dramatik."
+  },
+  {
+   "id": "se-gy25-6d9036b21c",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Underförstådd betydelse i den talade engelska och i de texter som eleverna möter."
+  },
+  {
+   "id": "se-gy25-ccc0e1a4ee",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Strategier för att överblicka och strukturera innehåll från större textmängder eller längre sekvenser av talat språk, till exempel genom att sortera, visualisera, sammanfatta och identifiera det bärande innehållet."
+  },
+  {
+   "id": "se-gy25-7de0333b8e",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Värdering av användbarhet hos källor av olika slag och utifrån olika syften."
+  },
+  {
+   "id": "se-gy25-aa7b058fff",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur variation och anpassning till syfte, mottagare och sammanhang, i den engelska som eleverna möter, skapas genom komplex meningsbyggnad, ordbildning och stilnivå."
+  },
+  {
+   "id": "se-gy25-59297f5f5c",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur struktur och sammanhang, i den engelska som eleverna möter, skapas genom sambandsmarkörer, effektiv styckeindelning, tes och kärnmeningar."
+  },
+  {
+   "id": "se-gy25-96f4e5cf2c",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Reception",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hur stilistiska och retoriska grepp används för olika syften samt hur språk används som maktmedel."
+  },
+  {
+   "id": "se-gy25-72773e0cad",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Språklig säkerhet i elevernas egen produktion och interaktion. Hur man kan uttrycka sig nyanserat och välstrukturerat samt med variation, tydlighet, ledighet, precision och flexibilitet med hänsyn till syfte, mottagare och sammanhang. Uttal, vokabulär, stavning, grammatiska strukturer och meningsbyggnad samt textbindning och styckeindelning i elevernas egen produktion och interaktion."
+  },
+  {
+   "id": "se-gy25-46a82d5771",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntlig och skriftlig produktion och interaktion med olika syften, i informella och formella sammanhang, där eleverna resonerar utifrån olika perspektiv, argumenterar, utreder, ansöker och förhandlar."
+  },
+  {
+   "id": "se-gy25-9b5ed8b10a",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Muntlig och skriftlig framställning inom ett fördjupningsområde."
+  },
+  {
+   "id": "se-gy25-474dda399e",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av olika typer av källor, med källkritisk medvetenhet och vedertagna sätt att ange källor, inom valt fördjupningsområde och inom andra områden."
+  },
+  {
+   "id": "se-gy25-c05a9905a6",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Strategier för att medverka i och leda samtal med anknytning till samhälls- och arbetsliv, till exempel genom att inleda, fördela ordet, förklara, sammanfatta och anknyta till andras inlägg."
+  },
+  {
+   "id": "se-gy25-63ca2dfeba",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Användning av grundläggande stilistiska och retoriska grepp."
+  },
+  {
+   "id": "se-gy25-e131542cb9",
+   "code": "",
+   "subject": "English",
+   "strand": "Engelska nivå 3: Produktion och interaktion",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Bearbetning av egna och andras framställningar."
+  },
+  {
+   "id": "se-gy25-8b9e8355fd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Ekosystemens bärkraft, biologisk mångfald, ekosystemtjänster och resursutnyttjande."
+  },
+  {
+   "id": "se-gy25-183922a8aa",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Energi, klimat, produktion och konsumtion ur perspektivet hållbar utveckling."
+  },
+  {
+   "id": "se-gy25-47dbee4d16",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Människokroppens behov av näringsämnen, energi och återhämtning. Hur kroppen påverkas av fysisk och psykisk belastning, till exempel träning, stress och missbruk."
+  },
+  {
+   "id": "se-gy25-7955865986",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Sexualitet och sexuell hälsa samt hur dessa kan kopplas till relationer, identitet och samtycke."
+  },
+  {
+   "id": "se-gy25-455e94a4f2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskap bakom historiska och aktuella händelser i omvärlden samt naturvetenskapens betydelse för individ och samhälle."
+  },
+  {
+   "id": "se-gy25-2603210485",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Etiska frågor med koppling till det naturvetenskapliga innehållet."
+  },
+  {
+   "id": "se-gy25-2bf37f1819",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskap som tillämpas inom arbetslivet."
+  },
+  {
+   "id": "se-gy25-da1f962676",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fältstudier och laborationer. Frågeställningar, planering, riskbedömning, utförande, värdering och redovisning."
+  },
+  {
+   "id": "se-gy25-0ea4445971",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a1: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör naturvetenskap. Skillnaden mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-2784f5d38f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hållbar produktutveckling. Råvaror, kemiska processer, energiförbrukning och avfallshantering."
+  },
+  {
+   "id": "se-gy25-129bb3ecbf",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Global hälsa och människors levnadsförhållanden med utgångspunkt i geografiska förutsättningar och statistik om folkhälsa."
+  },
+  {
+   "id": "se-gy25-259ef368e9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Cellens och individens genetik och evolutionära aspekter på detta. Gentekniska metoder och etiska perspektiv på bioteknikens möjligheter."
+  },
+  {
+   "id": "se-gy25-5c1f29e45d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskap bakom historiska och aktuella händelser i omvärlden samt naturvetenskapens betydelse för individ och samhälle."
+  },
+  {
+   "id": "se-gy25-4b88cc3503",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Etiska frågor med koppling till det naturvetenskapliga innehållet."
+  },
+  {
+   "id": "se-gy25-38d4f23373",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fältstudier, laborationer och simuleringar. Frågeställningar, planering, riskbedömning, utförande, värdering och redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-677ae8f3ed",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1a2: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör naturvetenskap. Skillnaden mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-7160b6064a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Ekosystems bärkraft, biologisk mångfald, ekosystemtjänster och resursutnyttjande."
+  },
+  {
+   "id": "se-gy25-3ad4c8ac71",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Energi, klimat, produktion och konsumtion ur perspektivet hållbar utveckling."
+  },
+  {
+   "id": "se-gy25-ce97cbb33e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Hållbar produktutveckling. Råvaror, kemiska processer, energiförbrukning och avfallshantering."
+  },
+  {
+   "id": "se-gy25-dbb4582384",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Människokroppens behov av näringsämnen, energi och återhämtning. Hur kroppen påverkas av fysisk och psykisk belastning, till exempel träning, stress och missbruk."
+  },
+  {
+   "id": "se-gy25-9637d4463f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Sexualitet och sexuell hälsa samt hur dessa kan kopplas till relationer, identitet och samtycke."
+  },
+  {
+   "id": "se-gy25-b5eed43c4f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Global hälsa och människors levnadsförhållanden med utgångspunkt i geografiska förutsättningar och statistik om folkhälsa."
+  },
+  {
+   "id": "se-gy25-20a4130207",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Cellens och individens genetik och evolutionära aspekter på detta. Gentekniska metoder och etiska perspektiv på bioteknikens möjligheter."
+  },
+  {
+   "id": "se-gy25-839f8e85ad",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskap bakom historiska och aktuella händelser i omvärlden samt naturvetenskapens betydelse för individ och samhälle."
+  },
+  {
+   "id": "se-gy25-87e0d3c140",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Etiska frågor med koppling till det naturvetenskapliga innehållet."
+  },
+  {
+   "id": "se-gy25-f742b10b90",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskap som tillämpas inom arbetslivet."
+  },
+  {
+   "id": "se-gy25-7de4eaa1a4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fältstudier, laborationer och simuleringar. Frågeställningar, planering, riskbedömning, utförande, värdering och redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-ae69bc823e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 1b: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör naturvetenskap. Skillnaden mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-d4637df5bd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Natur och hållbar utveckling",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Materians uppkomst och kretslopp. Organiska och oorganiska ämnen i naturen och industrin samt hur de används och påverkar miljön."
+  },
+  {
+   "id": "se-gy25-b18ad519cc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kroppens reglering och några organsystem, däribland nerv-, hormon- och immunsystemet."
+  },
+  {
+   "id": "se-gy25-acb8d3d3a0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysisk och psykisk hälsa. Förebyggande åtgärder, behandlingar och läkemedel."
+  },
+  {
+   "id": "se-gy25-f3018a6b29",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Artbildning och jämförande anatomi ur ett evolutionärt perspektiv."
+  },
+  {
+   "id": "se-gy25-22712321c3",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Människokroppen och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Cellbiologi och användning av levande organismer inom bioteknik, till exempel alger, bakterier och svampar."
+  },
+  {
+   "id": "se-gy25-bdb05c135a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskap bakom historiska och aktuella händelser i omvärlden samt naturvetenskapens betydelse för individ och samhälle."
+  },
+  {
+   "id": "se-gy25-8b03831c88",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Naturvetenskap i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Etiska frågor med koppling till det naturvetenskapliga innehållet, till exempel inom bioteknik."
+  },
+  {
+   "id": "se-gy25-e52670cbc8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fältstudier, laborationer och simuleringar. Formulering av frågeställningar, planering, riskbedömning, utförande, värdering och redovisning."
+  },
+  {
+   "id": "se-gy25-283940117d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Naturkunskap nivå 2: Naturvetenskapliga arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör naturvetenskap. Skillnaden mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-d7dd771f10",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Ekologi och evolution",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Olika ekosystems struktur, dynamik och bärkraft. Biologisk mångfald och ekosystemtjänster."
+  },
+  {
+   "id": "se-gy25-3a232cef29",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Ekologi och evolution",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Naturvetenskapliga modeller för livets uppkomst samt evolutionens mekanismer för livets utveckling."
+  },
+  {
+   "id": "se-gy25-d9aa3d6f94",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Cellbiologi och genetik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Cellers och virus uppbyggnad och funktion."
+  },
+  {
+   "id": "se-gy25-c04e11c431",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Cellbiologi och genetik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Ärftlighetens mekanismer samt celldelning och mutationer. Genernas uttryck och koppling till organismens egenskaper. Proteinsyntes."
+  },
+  {
+   "id": "se-gy25-ca4ca30fea",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Cellbiologi och genetik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Gentekniska tillämpningar."
+  },
+  {
+   "id": "se-gy25-a4b96775bc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Fysiologi, anatomi och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Några organsystem hos människan, till exempel respirations-, cirkulations- och matspjälkningssystemen samt evolutionär jämförelse med andra djur. Hälsa och sjukdom kopplat till olika organsystem."
+  },
+  {
+   "id": "se-gy25-c0f05033f8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Fysiologi, anatomi och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Sexualitet och sexuell hälsa samt hur dessa kan kopplas till relationer, identitet och samtycke."
+  },
+  {
+   "id": "se-gy25-72b6278648",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Biologin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Biologins betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-3115480fa8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Biologin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till biologi."
+  },
+  {
+   "id": "se-gy25-dc8c62921e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Biologins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fältstudier och laborationer. Insamling av data från observationer, mätningar, simuleringar och databaser. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data samt beräkningar och värdering av metod och resultat. Redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-6f254fe2e1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Biologins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Modeller som beskrivning av verkligheten. Modellers och teoriers giltighet samt det experimentella arbetets betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-f82989286b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 1: Biologins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör biologi. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-f091bce4d6",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Ekologi och evolution",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Människans påverkan på lokala och globala ekosystem."
+  },
+  {
+   "id": "se-gy25-402328789b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Ekologi och evolution",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Evolutionär systematik och organismernas huvudgrupper. Växter, svampar och deras fysiologi och livscykler."
+  },
+  {
+   "id": "se-gy25-442b2e1eae",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Ekologi och evolution",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Djurs beteende och beteendets betydelse för överlevnad och reproduktiv framgång."
+  },
+  {
+   "id": "se-gy25-65eff59aca",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Cellbiologi och genetik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Cellorganellers funktion samt cellers differentiering och kommunikation."
+  },
+  {
+   "id": "se-gy25-c6aa39fcd8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Cellbiologi och genetik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fotosyntes, cellandning och transport över membran."
+  },
+  {
+   "id": "se-gy25-560fedd107",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Cellbiologi och genetik",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Bio- och gentekniska metoder samt deras användning inom olika områden."
+  },
+  {
+   "id": "se-gy25-af85c43439",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Fysiologi, anatomi och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Nerv- och hormonsystemen samt deras reglering av andra organ."
+  },
+  {
+   "id": "se-gy25-e5feb71430",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Fysiologi, anatomi och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Immunsystemet, infektioner och smittspridning."
+  },
+  {
+   "id": "se-gy25-e5d52a4eb1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Fysiologi, anatomi och hälsa",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysisk och psykisk hälsa. Förebyggande åtgärder samt behandlingar vid ohälsa."
+  },
+  {
+   "id": "se-gy25-287a1c5ac9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Biologin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Biologins betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-036fcc5217",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Biologin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till biologi."
+  },
+  {
+   "id": "se-gy25-f9e8c0d620",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Biologins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fältstudier och laborationer. Insamling av data från observationer, mätningar, simuleringar och databaser. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data samt beräkningar och värdering av metod och resultat. Redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-8d6aef6f1e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Biologins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Modeller som beskrivning av verkligheten. Modellers och teoriers giltighet samt det experimentella arbetets betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-d9f1727b6b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Biologi nivå 2: Biologins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör biologi. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-dc3f20e1f2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Likformig och likformigt accelererad rätlinjig rörelse. Krafter och impuls som orsak till förändring av hastighet och rörelsemängd."
+  },
+  {
+   "id": "se-gy25-d1d80e5f1f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Vridmoment för att beskriva jämviktstillstånd."
+  },
+  {
+   "id": "se-gy25-5daf380980",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Jämvikt och linjär rörelse i homogena gravitationsfält."
+  },
+  {
+   "id": "se-gy25-94d89d51ff",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tryck, tryckvariationer och Arkimedes princip. Allmänna gaslagen."
+  },
+  {
+   "id": "se-gy25-2905ae7e03",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Olika energiformer, däribland mekanisk energi och elektrisk energi."
+  },
+  {
+   "id": "se-gy25-ae2f30ee68",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Energiprincipen samt begreppen arbete, effekt och verkningsgrad för att beskriva omvandling, nyttjande och lagring av energi."
+  },
+  {
+   "id": "se-gy25-cb93a0855d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Elektrisk laddning och elektriska fält samt spänning, ström och resistans. Elektriska kretsar och tillämpningar."
+  },
+  {
+   "id": "se-gy25-3611e3297f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Termisk energi, värme, temperatur och fasomvandlingar."
+  },
+  {
+   "id": "se-gy25-3140f50fd4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Huvuddragen i standardmodellen."
+  },
+  {
+   "id": "se-gy25-647f65562a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikens betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-4ff179c19f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till fysik."
+  },
+  {
+   "id": "se-gy25-a3e27fa0a3",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Laborationer och experiment. Insamling av data från observationer, mätningar och simuleringar. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data, värdering av metod och resultat samt redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-343321cfb7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Beräkningar, regressionsanalys och analys av grafer. Storleksuppskattningar, enhetsanalys och mätnoggrannhet."
+  },
+  {
+   "id": "se-gy25-37ea512ff7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikaliska och matematiska modeller som beskrivning av verkligheten. Modellers och teoriers giltighet samt det experimentella arbetets betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-62582e559e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a1: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör fysik. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-d079ce8ac8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Jämvikt och linjär rörelse i homogena gravitationsfält och elektriska fält."
+  },
+  {
+   "id": "se-gy25-ac695d9a21",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Olika energiformer, däribland kärnenergi."
+  },
+  {
+   "id": "se-gy25-8c7bad4cd1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Energiprincipen, verkningsgrad och hållbar energiresursanvändning."
+  },
+  {
+   "id": "se-gy25-ddae64a38a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Huvuddragen inom det elektromagnetiska spektrumet."
+  },
+  {
+   "id": "se-gy25-ee68f88476",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kärnreaktioner, fusion och fission, bindningsenergi och massaenergiekvivalensen."
+  },
+  {
+   "id": "se-gy25-530db90396",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Radioaktivt sönderfall, joniserande strålning, halveringstid, aktivitet och stråldos. Strålning tillämpad inom medicin och teknik."
+  },
+  {
+   "id": "se-gy25-78530ed2ee",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikens betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-a08f9036eb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till fysik."
+  },
+  {
+   "id": "se-gy25-c82f2c3c6d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Laborationer och experiment. Insamling av data från observationer, mätningar och simuleringar. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data, värdering av metod och resultat samt redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-80a91d7159",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Beräkningar, regressionsanalys och analys av grafer. Storleksuppskattningar, enhetsanalys och mätnoggrannhet."
+  },
+  {
+   "id": "se-gy25-f202686981",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikaliska och matematiska modeller som beskrivning av verkligheten. Modellers och teoriers giltighet och det experimentella arbetets betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-abae5236e7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1a2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör fysik. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-d7a69a763d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Likformig och likformigt accelererad rätlinjig rörelse. Krafter och impuls som orsak till förändring av hastighet och rörelsemängd."
+  },
+  {
+   "id": "se-gy25-d55a8c5e82",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Vridmoment för att beskriva jämviktstillstånd."
+  },
+  {
+   "id": "se-gy25-2efa3e3bda",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Jämvikt och linjär rörelse i homogena gravitationsfält och elektriska fält."
+  },
+  {
+   "id": "se-gy25-9da14533b7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Tryck, tryckvariationer och Arkimedes princip. Allmänna gaslagen."
+  },
+  {
+   "id": "se-gy25-ca425cb3e8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Olika energiformer, däribland mekanisk energi, elektrisk energi och kärnenergi."
+  },
+  {
+   "id": "se-gy25-1be5d6895c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Energiprincipen samt begreppen arbete, effekt och verkningsgrad för att beskriva omvandling, nyttjande och lagring av energi. Hållbar energiresursanvändning."
+  },
+  {
+   "id": "se-gy25-d0c0eb7ccd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Huvuddragen inom det elektromagnetiska spektrumet."
+  },
+  {
+   "id": "se-gy25-a216c41082",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Elektrisk laddning och elektriska fält samt spänning, ström och resistans. Elektriska kretsar och tillämpningar av dessa."
+  },
+  {
+   "id": "se-gy25-2c0d901ca3",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Termisk energi, värme, temperatur och fasomvandlingar."
+  },
+  {
+   "id": "se-gy25-0c8113c803",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Huvuddragen i standardmodellen."
+  },
+  {
+   "id": "se-gy25-70143bba48",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kärnreaktioner, fusion och fission, bindningsenergi och massaenergiekvivalensen."
+  },
+  {
+   "id": "se-gy25-0ed516245e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Radioaktivt sönderfall, joniserande strålning, halveringstid, aktivitet och stråldos. Tillämpningar av strålning inom medicin och teknik."
+  },
+  {
+   "id": "se-gy25-23e82ad9c5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikens betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-5f83cdde9f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till fysik."
+  },
+  {
+   "id": "se-gy25-6b559ec40e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Laborationer och experiment. Insamling av data från observationer, mätningar och simuleringar. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data, värdering av metod och resultat samt redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-124d578dbf",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Beräkningar, regressionsanalys och analys av grafer. Storleksuppskattningar, enhetsanalys och mätnoggrannhet."
+  },
+  {
+   "id": "se-gy25-b31ee119e1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikaliska och matematiska modeller som beskrivning av verkligheten. Modellers och teoriers giltighet samt det experimentella arbetets betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-fd99f1f963",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 1b: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör fysik. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-050563175d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Harmonisk svängning och centralrörelse samt tvådimensionell rörelse i gravitationsfält och i elektriska fält."
+  },
+  {
+   "id": "se-gy25-01437a09d4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Elektriska laddningars rörelse i magnetiska och elektriska fält."
+  },
+  {
+   "id": "se-gy25-472f3c77d9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Vågrörelser och deras utbredning samt brytning, diffraktion och interferens. Stående vågor och resonans. Tillämpningar inom akustik."
+  },
+  {
+   "id": "se-gy25-91a57228c1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Krafter och rörelse",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Einsteins beskrivning av rörelse och energi vid höga hastigheter."
+  },
+  {
+   "id": "se-gy25-30796d9ec2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Elektriska och magnetiska fält samt samband mellan dessa. Induktion samt tillämpningar av växelström i generatorer och transformatorer."
+  },
+  {
+   "id": "se-gy25-76b47b24fc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Våg- och partikelbeskrivning av elektromagnetisk strålning och materia. Fotoelektrisk effekt, fotonbegreppet och våg-partikeldualism."
+  },
+  {
+   "id": "se-gy25-05bf54068c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Temperaturstrålning och strålningsbalans, däribland jordens strålningsbalans."
+  },
+  {
+   "id": "se-gy25-381afa0c7d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Energi, energiresurser och elektromagnetism",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikaliska principer bakom tekniska tillämpningar, till exempel inom kommunikations- och medicinteknik. Elektromagnetiska fält i omgivningen."
+  },
+  {
+   "id": "se-gy25-a131a7162a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Huvuddragen i universums utveckling och struktur, till exempel stjärnbildning och exoplaneter."
+  },
+  {
+   "id": "se-gy25-b2fc17efef",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Metoder för undersökning av universum. Elektromagnetisk strålning från stjärnor och interstellära rymden."
+  },
+  {
+   "id": "se-gy25-23d6c10a1d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Universum, materien och strålning",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Atomers elektronstruktur samt absorptions- och emissionsspektra."
+  },
+  {
+   "id": "se-gy25-06c8179a8d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikens betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-d50a68e80b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Fysiken i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till fysik."
+  },
+  {
+   "id": "se-gy25-904df25fbd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Laborationer och experiment. Insamling av data från observationer, mätningar och simuleringar. Formulering av frågeställningar, samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data, värdering av metod och resultat samt redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-f9b6efef8b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Beräkningar, regressionsanalys och analys av grafer. Storleksuppskattningar, enhetsanalys, mätnoggrannhet och felberäkningar."
+  },
+  {
+   "id": "se-gy25-c4d8f10ecd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Fysikaliska och matematiska modeller som beskrivning av verkligheten. Modellers och teoriers giltighet och det experimentella arbetes betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-75010db1dd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Fysik nivå 2: Fysikens arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör fysik. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-bfcec554d8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Grundämnens egenskaper och trender i det periodiska systemet."
+  },
+  {
+   "id": "se-gy25-9fa75ca801",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Några organiska ämnesklasser, däribland alkaner, alkoholer och karboxylsyror."
+  },
+  {
+   "id": "se-gy25-ac63f57368",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kemiska bindningar och deras inverkan på organiska och oorganiska ämnens kemiska och fysikaliska egenskaper."
+  },
+  {
+   "id": "se-gy25-be5ad2eb59",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Materiens och energins oförstörbarhet i kemiska reaktioner."
+  },
+  {
+   "id": "se-gy25-45bfc00fee",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Energiomsättningar vid endoterma och exoterma reaktioner samt vid fasövergångar."
+  },
+  {
+   "id": "se-gy25-6659cc9d50",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kemiska reaktioner, däribland syrabasreaktioner, redoxreaktioner och fällningsreaktioner."
+  },
+  {
+   "id": "se-gy25-c06d9c3fef",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Elektrokemi, däribland galvaniska element och elektrolys."
+  },
+  {
+   "id": "se-gy25-3c1628b19f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Formler för att beskriva kemiska föreningar och reaktioner. Beräkningar av substansmängdförhållanden och koncentrationer. Begränsande reaktanter och utbyte."
+  },
+  {
+   "id": "se-gy25-170d2e6ed5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemisk analys",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kvalitativa och kvantitativa metoder för kemisk analys, till exempel kromatografi och titrering."
+  },
+  {
+   "id": "se-gy25-44d30194af",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kemins betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-ccebfd67ff",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till kemi."
+  },
+  {
+   "id": "se-gy25-b3c81a0443",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kemitekniska tillämpningar inom energi- och miljöområden."
+  },
+  {
+   "id": "se-gy25-42b51457ef",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Laborationer och experiment. Insamling av data från observationer, mätningar och simuleringar. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data samt beräkningar och värdering av metod och resultat. Redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-1477f48dc4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Modeller som beskrivning av verkligheten. Modellers och teoriers giltighet samt det experimentella arbetets betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-7e282a22d5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 1: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör kemi. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  },
+  {
+   "id": "se-gy25-75cd7ced26",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Olika organiska ämnesklasser samt deras egenskaper, struktur och reaktivitet."
+  },
+  {
+   "id": "se-gy25-99985b1b96",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Oorganiska ämnens betydelse för hållbar utveckling."
+  },
+  {
+   "id": "se-gy25-fa366b57f0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Materia och energi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Materiens och energins oförstörbarhet i kemiska reaktioner, däribland beräkning av entalpiändringar. Gibbs fria energi."
+  },
+  {
+   "id": "se-gy25-4770303dd3",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Reaktionshastighet och olika faktorers inverkan på den."
+  },
+  {
+   "id": "se-gy25-96660cf0dd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Reaktionsmekanismer, däribland additions- och substitutionsreaktioner."
+  },
+  {
+   "id": "se-gy25-7675bb3460",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Redoxreaktioner inom organisk kemi och biokemi."
+  },
+  {
+   "id": "se-gy25-ebea07bac9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Jämvikter och jämviktskonstanter samt faktorer som påverkar dessa. Jämviktssystem i olika miljöer."
+  },
+  {
+   "id": "se-gy25-6f88e42136",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Reaktioner och jämvikt",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Syrabasjämvikter, buffertverkan och pH-beräkningar."
+  },
+  {
+   "id": "se-gy25-049df3324c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Livets kemi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Biomolekylernas struktur, egenskaper och funktion i levande organismer."
+  },
+  {
+   "id": "se-gy25-ab751728e1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Livets kemi",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Ämnesomsättning på molekylär nivå, däribland proteinsyntes och cellandning."
+  },
+  {
+   "id": "se-gy25-21dcb5d3b9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemisk analys",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kvalitativa och kvantitativa metoder för kemisk analys, till exempel spektrofotometri och masspektrometri."
+  },
+  {
+   "id": "se-gy25-df78a7a303",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kemins betydelse för vetenskap, individ och samhälle med exempel från historiska och aktuella händelser."
+  },
+  {
+   "id": "se-gy25-46a58a56ed",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Frågor om etik och hållbar utveckling med koppling till kemi."
+  },
+  {
+   "id": "se-gy25-992a885e4c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemin i omvärlden",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Kemitekniska tillämpningar, till exempel inom livsmedels-, material- och läkemedelsområdena."
+  },
+  {
+   "id": "se-gy25-bc8a443ff9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Laborationer och experiment. Insamling av data från observationer, mätningar och simuleringar. Formulering av frågeställningar samt planering, riskbedömning och utförande av systematiska undersökningar. Bearbetning av data samt beräkningar och värdering av metod och resultat. Redovisning med olika uttrycksformer."
+  },
+  {
+   "id": "se-gy25-83664547d5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Analys av prover och felkällor, till exempel detektionsnivå, riktighet och precision samt systematiska och slumpmässiga fel."
+  },
+  {
+   "id": "se-gy25-ba20346bf3",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Modeller som beskrivning av verkligheten. Modellers och teoriers giltighet samt det experimentella arbetes betydelse för deras utveckling över tid."
+  },
+  {
+   "id": "se-gy25-6b2c2db7ec",
+   "code": "",
+   "subject": "Science",
+   "strand": "Kemi nivå 2: Kemins arbetsmetoder",
+   "ages": [
+    16,
+    17,
+    18
+   ],
+   "text": "Granskning av information och argumentation som rör kemi. Skillnader mellan vetenskapliga och icke-vetenskapliga påståenden."
+  }
+ ]
+}

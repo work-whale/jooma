@@ -31,7 +31,7 @@ Licences that already allow commercial use. The owner decided (2026-11-27) to bu
 | Japan (MEXT Courses of Study) | GJS Terms 2.0 | **BUILT 2026-11-28** (`jp-cos`, 865 statements in Japanese: official English covers the General Provisions only). Behind the batch B switch. |
 | Taiwan (curriculum guidelines) | NAER open data declaration (PageDoc?fid=324; not OGDL) | **BUILT 2026-11-28** (`tw-108-zh`, 724 statements in Chinese for Mandarin and maths; `tw-108-en`, 997 in NAER's official English for English and science). Behind the batch B switch. |
 | Norway (Udir Grep) | NLOD | **BUILT 2026-11-28** (`no-lk20`, 592 competence aims in Udir's English, LK20 plans in force from 2026-08-01, snapshot in docs/standards/norway). Behind the batch C switch. |
-| Sweden (Skolverket Syllabus API) | CC0 1.0 | Machine-readable data. |
+| Sweden (Skolverket Syllabus API) | CC0 1.0 | **BUILT 2026-11-28** (`se-lgr22` 271 + `se-gy25` 356 central content items in Skolverket's Swedish, with a card language note; snapshot in docs/standards/sweden). Behind the batch C switch. |
 | France (programmes) | Licence Ouverte 2.0 / CRPA | Statements are in French. |
 | Finland (ePerusteet) | Probably open | Licence text not found; confirm first. |
 | Argentina (NAP) | Probably open (argentina.gob.ar CC BY 4.0) | Read one booklet's own notice first. |

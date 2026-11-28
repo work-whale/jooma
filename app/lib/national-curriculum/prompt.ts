@@ -3,6 +3,7 @@
 // aligned to the same statements are told the same thing.
 
 import { STAGE_LABEL, curriculumNameFor, isCurriculumYear, stageForYear, type NcStatement } from "./index";
+import { FRAMEWORK_LANGUAGE_NOTE } from "@/app/lib/standards/credits";
 
 /** The most statements a prompt quotes. More than this and the model spreads
  *  itself thin; the card does not stop a teacher ticking more. */
@@ -52,7 +53,7 @@ type PromptCurriculum = {
   stage?: string;
   subject?: string;
   strand?: string;
-  statements?: { text?: unknown }[];
+  statements?: { id?: unknown; text?: unknown }[];
 } | null | undefined;
 
 /** The statement texts a prompt quotes: trimmed, blanks dropped, capped. */
@@ -91,10 +92,11 @@ export function worksheetCurriculumRules(year: string): string[] {
 export function curriculumPromptBlock(cur: PromptCurriculum, year: string, noun: string, rules: string[]): string {
   const statements = curriculumStatementTexts(cur);
   if (!cur || statements.length === 0) return "";
-  // Statements in the curriculum's own script (Japan's Course of Study) must
-  // not pull the output into that language: this block comes late in the
-  // prompt. No language is named, so the line cannot do that itself.
-  const ownLanguage = statements.some((s) => OWN_SCRIPT.test(s))
+  // Statements in the curriculum's own language (Japan's Course of Study,
+  // Sweden's syllabuses) must not pull the output into that language: this
+  // block comes late in the prompt. No language is named, so the line cannot
+  // do that itself. Known by the script, or by a ticked statement's framework.
+  const ownLanguage = statements.some((s) => OWN_SCRIPT.test(s)) || fromOwnLanguageFramework(cur)
     ? `\nThe statements above are quoted in the curriculum's own language. Use them for content and level only: write the whole ${noun} in the output language you were given, and where a rule below asks for the statements' terms, use those terms translated into that language.`
     : "";
   return `═══════════════════════════════════════════════════
@@ -104,6 +106,16 @@ ${[cur.curriculumName, cur.stage, year, cur.subject, cur.strand].filter(Boolean)
 This ${noun} must teach towards these statements, quoted from the curriculum:
 ${statements.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}${ownLanguage}
 ${rules.join("\n")}`;
+}
+
+/** A statement from a framework the card shows in its own language (it has a
+ *  language note), by its id: every id starts with its framework's id and a
+ *  hyphen, and no framework id is the start of another. */
+function fromOwnLanguageFramework(cur: PromptCurriculum): boolean {
+  const frameworks = Object.keys(FRAMEWORK_LANGUAGE_NOTE);
+  return (Array.isArray(cur?.statements) ? cur.statements : []).some(
+    (s) => typeof s?.id === "string" && frameworks.some((f) => (s.id as string).startsWith(`${f}-`)),
+  );
 }
 
 /** Chinese characters, kana or hangul: a statement quoted in its own language. */
