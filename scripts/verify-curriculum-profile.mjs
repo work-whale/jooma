@@ -11,7 +11,9 @@
  * 20261124000000_curricula_stage2_regions.sql adds five more (Africa, Asia,
  * Caribbean, Europe, Middle East), all off; and
  * 20261127000000_curricula_stage3_releases.sql adds five Stage 3 batch
- * switches (curricula_s3_a to _e), all off.
+ * switches (curricula_s3_a to _e), all off; and
+ * 20261128000000_curricula_latin_america.sql adds the Latin America region
+ * switch, ON (its entries are gated by curricula_s3_d).
  * This asserts:
  *
  *   - a teacher sets and reads their own curriculum
@@ -23,6 +25,7 @@
  *     off on staging), through public_settings(), and that function returns
  *     nothing beyond its named keys
  *   - they read the five Stage 3 batch switches, all off
+ *   - they read the Latin America switch, on
  *   - a teacher cannot flip a region switch or a batch switch
  *
  * HOW IT PROVES ANYTHING
@@ -95,7 +98,9 @@ const STAGE2_SWITCHES = [
 ];
 // Added by 20261127000000_curricula_stage3_releases.sql: Stage 3 batches, off.
 const STAGE3_RELEASES = ["curricula_s3_a", "curricula_s3_b", "curricula_s3_c", "curricula_s3_d", "curricula_s3_e"];
-const PUBLIC_KEYS = new Set(["signups_open", "maintenance_mode", "google_signin", ...SWITCHES, ...STAGE2_SWITCHES, ...STAGE3_RELEASES]);
+// Added by 20261128000000_curricula_latin_america.sql: seeded ON.
+const LATIN_AMERICA = "curricula_latin_america";
+const PUBLIC_KEYS = new Set(["signups_open", "maintenance_mode", "google_signin", ...SWITCHES, ...STAGE2_SWITCHES, ...STAGE3_RELEASES, LATIN_AMERICA]);
 
 async function signIn(person) {
   const client = createClient(URL, ANON, { auth: { persistSession: false } });
@@ -203,6 +208,11 @@ async function main() {
       !error && STAGE3_RELEASES.every((k) => (data ?? []).some((r) => r.key === k && r.value === false)),
       JSON.stringify((data ?? []).filter((r) => STAGE3_RELEASES.includes(r.key))),
     );
+    check(
+      `${who} reads the Latin America switch, on`,
+      !error && (data ?? []).some((r) => r.key === LATIN_AMERICA && r.value === true),
+      JSON.stringify((data ?? []).filter((r) => r.key === LATIN_AMERICA)),
+    );
     check(`${who} reads nothing beyond the named keys`, keys.every((k) => PUBLIC_KEYS.has(k)), keys.join(", "));
   }
   {
@@ -214,6 +224,11 @@ async function main() {
     const { error } = await ada.rpc("admin_set_setting", { p_key: "curricula_s3_a", p_value: true });
     const { data } = await admin.from("app_settings").select("value").eq("key", "curricula_s3_a").single();
     check("a teacher cannot switch a Stage 3 batch on", Boolean(error) && data.value === false, error ? JSON.stringify(data) : "rpc went through");
+  }
+  {
+    const { error } = await ada.rpc("admin_set_setting", { p_key: LATIN_AMERICA, p_value: false });
+    const { data } = await admin.from("app_settings").select("value").eq("key", LATIN_AMERICA).single();
+    check("a teacher cannot switch the Latin America region off", Boolean(error) && data.value === true, error ? JSON.stringify(data) : "rpc went through");
   }
 }
 

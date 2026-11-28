@@ -752,4 +752,34 @@ export const PROVENANCE: Record<string, Provenance> = {
     source: "https://mon.gov.ua/",
     notes: "Stage 3 batch C (2026-11-27), docs/curricula-stage3-build.md C.1 to C.6. Confirmed: the profile upper secondary pilot in 150 lyceums from September 2026 and the nationwide start in Grade 10 from September 2027 (Ministry, ua.news); the NMT. Reference: NUS primary from 2018 and basic secondary from 2022 (workbook), the state final attestation, the move to twelve years. Licence: unclear (no reuse terms found; official texts may fall outside copyright by statute, not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
   },
+  "mexico": {
+    sheetRow: { tab: "Countries", name: "Mexico" },
+    source: "https://educacionbasica.sep.gob.mx/",
+    notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the Plan de Estudio 2022 in every grade of basic education since 2023-08-28, SEP's 2025 second edition the current text; phases 2 (preescolar), 3 to 5 (primaria) and 6 (secundaria) (SEP and Mejoredu 2024-25 presentation); the Bachillerato Nacional under the MCCEMS (Acuerdo 21/08/25) from 2025-26 (DOF, SEP DGAIR); no national census test since Mejoredu was abolished in 2025 (UNESCO, April 2026). Reference: preescolar 3 years from age 3, secundaria from 12, the EXANI-II (Ceneval). Licence: unclear (no reuse terms found for the SEP plan; the copyright law's exclusion of official texts is not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "brazil": {
+    sheetRow: { tab: "Countries", name: "Brazil" },
+    source: "https://basenacionalcomum.mec.gov.br/",
+    notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the new secondary rules of Lei 14.945/2024 start in the 1st serie in 2025, the 2nd in 2026 and the 3rd in 2027 (planalto.gov.br, state notices); the 2025 SAEB in the 2nd, 5th and 9th ano and the 3rd serie (INEP). Reference: the BNCC (2017 and 2018, CNE/CP resolutions 2/2017 and 4/2018), the nine-year fundamental from age 6 (Lei 11.274/2006), the ENEM, a school year from February. Licence: probably open, not confirmed (the gov.br portal is under CC BY-ND 3.0, which allows verbatim commercial reuse with credit; the BNCC site's own terms were not found). Statements wait for the owner's decision. Profile only for now.",
+  },
+  "argentina": {
+    sheetRow: { tab: "Countries", name: "Argentina" },
+    source: "https://www.argentina.gob.ar/educacion",
+    notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the NAP are the federal common base agreed in the Consejo Federal de Educacion (educ.ar); each jurisdiction picks 6 years of primary and 6 of secondary or 7 and 5, about half each, Buenos Aires City 7 and 5 (CABA rules, 2017 national report); Aprender assesses Lengua and Matematica in the 6th grade of primary and the last year of secondary. CFE Resolution 476/24 is about initial teacher training, not the school curriculum, so it is not named. Reference: compulsory from age 4, a school year from March. Licence: probably open, not confirmed (argentina.gob.ar licenses its content under CC BY 4.0 unless stated otherwise; each NAP booklet's own notice still to be read). Statements wait for the owner's decision. Profile only for now.",
+  },
+  "chile": {
+    sheetRow: { tab: "Countries", name: "Chile" },
+    source: "https://www.curriculumnacional.cl/",
+    notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the 2020 prioritisation ended in December 2025, so the full Bases Curriculares apply from 2026 (curriculumnacional.cl Cartilla N1); updated Bases for 1st basico to 2nd medio are still before the CNED (CNED 2026 documents); SIMCE 2025 in 4th and 8th basico and II medio (Mineduc). Reference: NT1 and NT2, 1st to 8th basico from age 6, 1st to 4th medio, the PAES, a school year from March. Licence: unclear (no reuse terms found for curriculumnacional.cl); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "colombia": {
+    sheetRow: { tab: "Countries", name: "Colombia" },
+    source: "https://www.mineducacion.gov.co/",
+    notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the Estandares Basicos de Competencias by grade bands and the Derechos Basicos de Aprendizaje (Ministry, OECD review); the ICFES Pruebas Saber 3, 5, 9 and Saber 11 (ICFES). Reference: Transicion at 5 and Grados 1 to 11 under Ley 115 de 1994; the version is dated generically (calendar A schools start in January or February, calendar B in August). Licence: closed (the Ministry portal allows personal, non-commercial use with credit); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
+  "peru": {
+    sheetRow: { tab: "Countries", name: "Peru" },
+    source: "https://www.minedu.gob.pe/curriculo/",
+    notes: "Stage 3 batch D (2026-11-28), docs/curricula-stage3-build.md D.1 to D.7. Confirmed: the CNEB approved by RM 281-2016-MINEDU, applied from 2017-01-01 in all basic education (gob.pe); a commission to update it created in July 2026 (El Peruano), nothing dated; ENLA 2026 in 4th and 6th primaria and 2nd secundaria (El Peruano). Reference: inicial 3 to 5, primaria 1 to 6 from age 6, secundaria 1 to 5, cycles I to VII. Licence: unclear (no reuse terms found; the copyright law's exclusion of official texts is not relied on); permission request on docs/curricula-permissions.md. Profile only, no statements.",
+  },
 };

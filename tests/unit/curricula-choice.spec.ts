@@ -309,7 +309,8 @@ test.describe("Middle East: starting a teacher on their own country's curriculum
     expect(groups[1].label).toBe("Middle East");
     expect(groups[1].curricula.map((c) => c.id)).toEqual(["uae-moe"]);
     expect(pickerGroups(visibleCurricula([], true)).map((g) => g.region)).toContain("middle-east");
-    expect(pickerGroups(visibleCurricula(ALL_ON, true)).map((g) => g.region).at(-1)).toBe("middle-east");
+    // Latin America (Stage 3 batch D) comes after it.
+    expect(pickerGroups(visibleCurricula(ALL_ON, true)).map((g) => g.region).slice(-2)).toEqual(["middle-east", "latin-america"]);
   });
 
   test("it brings no other output language with it, and a stored choice is never overridden", () => {

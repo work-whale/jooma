@@ -80,6 +80,12 @@ export const COUNTRIES: Country[] = [
   { name: "Slovakia", code: "SK", dial: "+421" },
   { name: "Slovenia", code: "SI", dial: "+386" },
   { name: "Ukraine", code: "UA", dial: "+380" },
+  { name: "Mexico", code: "MX", dial: "+52" },
+  { name: "Brazil", code: "BR", dial: "+55" },
+  { name: "Argentina", code: "AR", dial: "+54" },
+  { name: "Chile", code: "CL", dial: "+56" },
+  { name: "Colombia", code: "CO", dial: "+57" },
+  { name: "Peru", code: "PE", dial: "+51" },
 ];
 
 export const DEFAULT_DIAL_CODE = "GB";

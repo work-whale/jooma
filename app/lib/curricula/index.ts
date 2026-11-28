@@ -25,6 +25,7 @@ import { CARIBBEAN_CURRICULA } from "./caribbean";
 import { EUROPE_CURRICULA } from "./europe";
 import { INTERNATIONAL_CURRICULA } from "./international";
 import { IRELAND_CURRICULA } from "./ireland";
+import { LATIN_AMERICA_CURRICULA } from "./latin-america";
 import { MIDDLE_EAST_CURRICULA } from "./middle-east";
 import { UK_CURRICULA, UK_YEARS } from "./uk";
 import { USA_CURRICULA } from "./usa";
@@ -46,6 +47,7 @@ export const REGIONS: readonly Region[] = [
   { id: "caribbean", label: "Caribbean" },
   { id: "europe", label: "Europe" },
   { id: "middle-east", label: "Middle East" },
+  { id: "latin-america", label: "Latin America" },
 ];
 
 /** The Stage 3 batches, each with its own switch (curricula_s3_a and on). */
@@ -57,7 +59,7 @@ export const RELEASES: readonly Release[] = [
   { id: "s3-e", label: "Stage 3 batch E: Africa" },
 ];
 
-export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA, ...AFRICA_CURRICULA, ...ASIA_CURRICULA, ...CARIBBEAN_CURRICULA, ...EUROPE_CURRICULA, ...MIDDLE_EAST_CURRICULA];
+export const CURRICULA_REGISTRY: readonly Curriculum[] = [...UK_CURRICULA, ...BRITISH_ISLES_CURRICULA, ...IRELAND_CURRICULA, ...INTERNATIONAL_CURRICULA, ...AUSTRALIA_NZ_CURRICULA, ...USA_CURRICULA, ...CANADA_CURRICULA, ...AFRICA_CURRICULA, ...ASIA_CURRICULA, ...CARIBBEAN_CURRICULA, ...EUROPE_CURRICULA, ...MIDDLE_EAST_CURRICULA, ...LATIN_AMERICA_CURRICULA];
 
 export const UK_CURRICULUM_IDS = ["england", "england-eyfs", "scotland", "wales", "northern-ireland"] as const;
 
@@ -335,6 +337,13 @@ const COUNTRY_DEFAULT: Record<string, string> = {
   SE: "sweden",
   CH: "switzerland",
   UA: "ukraine",
+  // Stage 3 batch D.
+  MX: "mexico",
+  BR: "brazil",
+  AR: "argentina",
+  CL: "chile",
+  CO: "colombia",
+  PE: "peru",
 };
 
 /**

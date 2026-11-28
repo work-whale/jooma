@@ -159,13 +159,19 @@ test.describe("the Stage 2 regions", () => {
     }
     const ids = REGIONS.map((r) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.slice(ids.indexOf("canada") + 1)).toEqual(NEW.map(([id]) => id));
+    // Stage 3 batch D adds Latin America after them.
+    expect(ids.slice(ids.indexOf("canada") + 1)).toEqual([...NEW.map(([id]) => id), "latin-america"]);
   });
 
   test("every region's setting key is unique and has a migration (so a region cannot be added in code alone)", async () => {
-    const { readFile } = await import("node:fs/promises");
-    const sql = await readFile("supabase/migrations/20261124000000_curricula_stage2_regions.sql", "utf8");
+    const { readFile, readdir } = await import("node:fs/promises");
+    const dir = "supabase/migrations";
+    const files = (await readdir(dir)).filter((f) => f.endsWith(".sql")).sort();
+    const texts = await Promise.all(files.map((f) => readFile(`${dir}/${f}`, "utf8")));
+    // The newest public_settings() definition is the one in force.
+    const sql = texts.filter((t) => /create or replace function (public\.)?public_settings\(/i.test(t)).pop()!;
     const base = await readFile("supabase/migrations/20261114000000_curricula.sql", "utf8");
+    const allSql = texts.join("\n");
     const keys = REGIONS.map((r) => regionSettingKey(r.id)).filter((k): k is string => k !== null);
     expect(new Set(keys).size).toBe(keys.length);
     const whitelist = (text: string) => {
@@ -178,10 +184,13 @@ test.describe("the Stage 2 regions", () => {
     for (const k of keys) expect(latest, k).toContain(k);
     for (const k of whitelist(base)) expect(latest, `kept ${k}`).toContain(k);
     expect(new Set(latest).size, "no duplicates").toBe(latest.length);
-    // Every key is seeded in one of the two migrations, off.
+    // Every key is seeded by a migration: off, except Latin America, which
+    // starts on because its entries are gated by the batch D switch (owner,
+    // 2026-11-28).
     for (const k of keys) {
-      const seeded = new RegExp(`\\('${k}',\\s*'(?:[^']|'')*',\\s*'(?:[^']|'')*',\\s*'curricula',\\s*'false'::jsonb,\\s*\\d+\\)`).test(sql + base);
-      expect(seeded, `${k} seeded false`).toBe(true);
+      const value = k === "curricula_latin_america" ? "true" : "false";
+      const seeded = new RegExp(`\\('${k}',\\s*'(?:[^']|'')*',\\s*'(?:[^']|'')*',\\s*'curricula',\\s*'${value}'::jsonb,\\s*\\d+\\)`).test(allSql);
+      expect(seeded, `${k} seeded ${value}`).toBe(true);
     }
   });
 

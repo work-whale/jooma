@@ -221,3 +221,28 @@ test.describe("Stage 3 batch C: the European countries not yet offered", () => {
     expect(profileMobile("RO", "0722 123 456")).toBe("+40722123456");
   });
 });
+
+test.describe("Stage 3 batch D: Latin America", () => {
+  const D = [
+    ["Mexico", "MX", "+52"],
+    ["Brazil", "BR", "+55"],
+    ["Argentina", "AR", "+54"],
+    ["Chile", "CL", "+56"],
+    ["Colombia", "CO", "+57"],
+    ["Peru", "PE", "+51"],
+  ] as const;
+
+  test("are offered once each, with their own dial code", () => {
+    for (const [name, code, dial] of D) {
+      expect(COUNTRIES.filter((c) => c.code === code), code).toEqual([{ name, code, dial }]);
+      expect(dialPrefix(code), code).toBe(dial);
+    }
+    const codes = COUNTRIES.map((c) => c.code);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  test("a local number goes behind the country prefix", () => {
+    expect(profileMobile("CO", "300 123 4567")).toBe("+573001234567");
+    expect(profileMobile("MX", "55 1234 5678")).toBe("+525512345678");
+  });
+});

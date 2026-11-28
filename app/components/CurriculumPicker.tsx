@@ -15,6 +15,7 @@ const SECOND_LABEL: Partial<Record<RegionId, string>> = {
   caribbean: "Country",
   europe: "Country",
   "middle-east": "Country",
+  "latin-america": "Country",
 };
 
 /**
