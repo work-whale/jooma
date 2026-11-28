@@ -60,7 +60,7 @@ These need their own language most, because state schools teach mainly in it.
 | Lithuanian | Lithuania |
 | Ukrainian | Ukraine |
 | German, French, Italian (several at once) | Switzerland: three of its languages are Jooma languages, but no single one fits every canton, so it defaults to English; Belgium likewise (Dutch is not a Jooma language, French and German are) |
-| Spanish (Latin America) | Argentina, Chile, Colombia, Mexico, Peru (until decided otherwise these use Jooma's Spanish, see the Stage 3 plan section 6) |
+| Spanish (Latin America, es-419) | Argentina, Chile, Colombia, Mexico, Peru: default to Jooma's Spanish with a Latin American usage note in the curriculum line (owner, 2026-11-28); speech stays es-ES until es-419 is added |
 | Amharic | Ethiopia (primary) |
 | Kinyarwanda | Rwanda (early primary) |
 | Kiswahili | Tanzania (primary) |

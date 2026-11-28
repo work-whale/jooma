@@ -290,3 +290,74 @@ Every entry has at least one fact confirmed from a source. Seven were first writ
 - E2E 12/12: a French teacher picks France under Europe (30 offered with batch C on and batch A off), is switched to French, sees PS to Terminale, and the worksheet request carries `language: "fr"`.
 - Live `tests/tools/curricula-stage3-c-live.spec.ts`: France with French (in French, CM1, "J'apprends à"), Denmark and Switzerland in English. Final run 9/9 (three each). One earlier Denmark run failed a check that was too strict (single Danish letters, and "die", which is also an English word); its record was overwritten before it could be read, so the cause is not confirmed. The check now counts words only Danish, German or French use, and each run writes its own results file.
 - Not tested: live output for the other 26.
+
+## Batch D: Latin America, Step 0 (Opus, 2026-11-28)
+
+Owner decisions for this batch are in `docs/curricula-stage3-plan.md` section 6 ("Batch D decisions"): Spanish default with a Latin American usage note, Brazil in Brazilian Portuguese, a new `latin-america` region seeded on with `curricula_s3_d` off, one national entry each, open sources recorded and their statements built later.
+
+Confirmed = an official or primary page says it (checked 2026-11-28). Reference = from law or long-standing structure, not re-read today.
+
+### D.1 Licence verdicts
+
+| Verdict | Countries | Basis |
+|---|---|---|
+| **Probably open, not confirmed** | Argentina | argentina.gob.ar's terms licence all its content under CC BY 4.0 (commercial use and adaptation allowed with credit) "unless stated otherwise" (Confirmed, argentina.gob.ar/terminos-y-condiciones). The NAP booklets are hosted there and on educ.ar; each booklet's own notice still has to be read before any statement is built, and educ.ar's terms were not found. |
+| **Probably open, not confirmed** | Brazil | The gov.br portal publishes its content under CC BY-ND 3.0 (Confirmed, gov.br "Sobre o portal"): verbatim reuse, commercial included, is allowed with credit; adaptations are not. The BNCC itself lives on basenacionalcomum.mec.gov.br, whose terms were not found. Lei 9.610 Art. 8 also puts official acts outside copyright, and the BNCC was instituted by CNE resolutions (CNE/CP 2/2017, 4/2018), but as for Vietnam the statute alone is not relied on. |
+| Closed | Colombia | The Ministry's portal allows downloads for personal, non-commercial use with credit to the Ministry (Confirmed for the Ventanilla Unica section; the site-wide terms of 16 December 2025 were not readable in full). |
+| Unclear | Mexico, Chile, Peru | No reuse terms found for the SEP plan, curriculumnacional.cl or the CNEB. Mexico's Ley Federal del Derecho de Autor and Peru's Decreto Legislativo 822 exclude official legislative and administrative texts, but that is not relied on. |
+
+Permission rows 68 to 71 cover Mexico, Chile, Colombia and Peru. Argentina and Brazil are not on the list (like Finland): their statements wait for the owner after the Stage 3 profiles.
+
+### D.2 Versions and dated changes
+
+| Country | Version in force | Change ahead |
+|---|---|---|
+| Mexico | Plan de Estudio 2022 for basic education (Nueva Escuela Mexicana), in every grade since 2023-08-28; SEP's 2025 second edition is the current text (Confirmed, educacionbasica.sep.gob.mx). Upper secondary: the Bachillerato Nacional under the MCCEMS (Acuerdo 21/08/25), from 2025-26, with two certificates (Confirmed, DOF and SEP DGAIR). | None dated. |
+| Brazil | BNCC for early childhood and fundamental education (2017) and secondary (2018). New Ensino Medio law 14.945/2024: 1st serie from 2025, 2nd from 2026, 3rd from 2027 (Confirmed, planalto.gov.br and state notices). | One version labelled "new secondary rules in the 1st and 2nd series, the 3rd from 2027", plus a dated version 2027-02-01 when it covers all three. |
+| Argentina | NAP (Nucleos de Aprendizajes Prioritarios), the federal common base agreed in the Consejo Federal de Educacion, made concrete by each province's curriculum design (Confirmed, educ.ar, argentina.gob.ar). Note: CFE Resolution 476/24 is about initial TEACHER TRAINING, not the school curriculum, and must not be named as the school curriculum. | INFD notes new NAP are planned; nothing dated. |
+| Chile | Bases Curriculares (1 to 6 basico: Decrees 433 and 439 of 2012; later decrees for 7 basico to 4 medio). Curriculum prioritisation ended December 2025, so from 2026 schools teach the full Bases (Confirmed, curriculumnacional.cl Cartilla N1). | Updated Bases for 1 basico to 2 medio are still before the CNED (re-submitted for 1 to 6, 2026); no approval date. One version, label names the pending update. |
+| Colombia | Estandares Basicos de Competencias (grade bands 1-3, 4-5, 6-7, 8-9, 10-11) with the Derechos Basicos de Aprendizaje by grade (Confirmed, mineducacion.gov.co). | None dated. |
+| Peru | Curriculo Nacional de la Educacion Basica (CNEB), RM 281-2016-MINEDU, in force since 2017-01-01 (Confirmed). | A commission to update it was created in July 2026 (El Peruano); nothing dated. One version, label names the review. |
+
+### D.3 Years (first age = the age at the start of the year)
+
+| Country | Years |
+|---|---|
+| Mexico | Preescolar 1 to 3 (3 to 5), Primaria 1 to 6 (6), Secundaria 1 to 3 (12), Bachillerato 1 to 3 (15). Curriculum phases: Phase 2 preschool, Phases 3 to 5 primary (two grades each), Phase 6 secundaria (Confirmed, SEP/Mejoredu 2024-25 presentation). |
+| Brazil | Educacao Infantil pre-escola (4, 5), Ensino Fundamental 1 to 9 ano (6; anos iniciais 1 to 5, anos finais 6 to 9), Ensino Medio 1 to 3 serie (15) (Reference, Lei 11.274/2006). |
+| Argentina | Sala de 4 and Sala de 5 (compulsory from 4), Primary 1 to 6 (6), Secondary 1 to 6 (12). About half the jurisdictions (including Buenos Aires City) use 7 years of primary and 5 of secondary instead (Confirmed, CABA rules and the 2017 national report); the context line says so and the model follows the teacher's province. |
+| Chile | Educacion Parvularia NT1 Pre-kinder (4) and NT2 Kinder (5), 1 to 8 basico (6), 1 to 4 medio (14) (Reference). |
+| Colombia | Transicion (5), Grado 1 to 11 (6): basica primaria 1 to 5, basica secundaria 6 to 9, media 10 and 11 (Reference, Ley 115 de 1994). |
+| Peru | Inicial 3 to 5 anos (3), Primaria 1 to 6 (6), Secundaria 1 to 5 (12); CNEB cycles I to VII (Reference). |
+
+### D.4 Exams and quality bodies
+
+| Country | Terms |
+|---|---|
+| Mexico | No national census test since Mejoredu was abolished in 2025 (UNESCO, April 2026, noted the lack of national evaluations); SEP ran a voluntary diagnostic. The profile names no national test, as for Iceland. |
+| Brazil | SAEB (2, 5 and 9 ano and 3 serie; INEP, Confirmed 2025 cycle), ENEM for university entry; IDEB as the quality index. |
+| Argentina | Aprender (Lengua and Matematica, 6th grade of primary and the last year of secondary; Confirmed). |
+| Chile | SIMCE by the Agencia de Calidad de la Educacion (4 and 8 basico and II medio census in 2025, Confirmed); PAES for university entry (DEMRE). |
+| Colombia | Pruebas Saber 3, 5, 9 and Saber 11 (ICFES, Confirmed); Saber 11 is the exit and university entry exam. |
+| Peru | ENLA (Evaluacion Nacional de Logros de Aprendizaje), sample-based, grades vary by year (2026: 4 and 6 primaria, 2 secundaria; Confirmed, El Peruano). |
+
+Accents are left out of this log; entries keep the real spellings (for example Educação, Kínder) since their default language is Spanish or Portuguese.
+
+### D.5 Languages
+
+Argentina, Chile, Colombia, Mexico and Peru default to `es`, with a Latin American usage note that applies only when the output is Spanish and never changes the output language. Brazil defaults to `pt-BR`. `docs/curricula-language-gaps.md` keeps its "Spanish (Latin America)" row, updated to the decision. Indigenous languages (Nahuatl and others in Mexico, Quechua and Aymara in Peru) are named in context lines only where the official curriculum does.
+
+### D.6 For the owner to open in a browser
+
+- basenacionalcomum.mec.gov.br: footer or terms (does CC BY-ND or anything else apply to the BNCC?).
+- One NAP booklet on argentina.gob.ar or educ.ar: does it carry its own notice overriding CC BY 4.0?
+- mineducacion.gov.co/portal/secciones/Terminos-y-condiciones/: the full site-wide wording.
+- curriculumnacional.cl: any terms of use.
+
+None of these block the profiles; they matter only for statements later.
+
+### D.7 Build plan (Opus builds, as for A to C)
+
+1. Step 1 for batch D: region `latin-america` ("Latin America") in the region list and admin settings; staging migration seeding `curricula_latin-america` true and adding it to the `public_settings()` whitelist (`curricula_s3_d` is already seeded false by 20261127000000); the picker offers MX, BR, AR, CL, CO, PE.
+2. Step 2: six entries in `app/lib/curricula/latin-america.ts` with provenance rows, then the workbook refreshed.
+3. Tests first: `curricula-stage3-d.spec.ts` (six entries, years and ages, language defaults, the Latin American note only for `es`, no other country's exams named, Brazil's 2027 version picked on the day, region AND release gate), the definer check for the new key, E2E (a Mexican teacher under "Latin America" is switched to Spanish and the request carries `language: "es"`), and a live spec (Mexico in Spanish with Latin American usage, Brazil in Brazilian Portuguese, Chile with English chosen stays English).

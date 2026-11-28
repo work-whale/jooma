@@ -85,5 +85,9 @@ Use the draft in `docs/curricula-gaps-plan.md` section 7, filling in the curricu
 | 65 | Spain: LOMLOE minimum teaching | 3 | Permission | Ministry of Education, Vocational Training and Sports | Not sent |
 | 66 | Switzerland: Lehrplan 21, PER, Piano di studio | 3 | Permission | D-EDK, CIIP, Canton of Ticino | Not sent |
 | 67 | Ukraine: New Ukrainian School standards | 3 | Permission | Ministry of Education and Science | Not sent |
+| 68 | Mexico: Plan de Estudio 2022 and MCCEMS | 3 | Permission | SEP | Not sent |
+| 69 | Chile: Bases Curriculares | 3 | Permission | Mineduc, Unidad de Curriculum y Evaluacion | Not sent |
+| 70 | Colombia: Estandares Basicos and DBA | 3 | Commercial use (portal allows personal, non-commercial use) | Ministerio de Educacion Nacional | Not sent |
+| 71 | Peru: CNEB | 3 | Permission | Minedu | Not sent |
 
-Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: A.1; batch B: B.1; batch C: C.1). Japan, Taiwan, Norway, Sweden and France (open licences), Finland (probably open) and Vietnam (open by statute) are not on this list: statements for them come after the Stage 3 profiles (owner, 2026-11-27).
+Sources for each Stage 2 finding: `docs/curricula-stage2-build.md` section 0.3. Stage 1 findings: `docs/curricula-gaps-plan.md` section 1. Stage 3 findings: `docs/curricula-stage3-build.md` (batch A: A.1; batch B: B.1; batch C: C.1; batch D: D.1). Japan, Taiwan, Norway, Sweden and France (open licences), Finland, Argentina and Brazil (probably open) and Vietnam (open by statute) are not on this list: statements for them come after the Stage 3 profiles (owner, 2026-11-27).
