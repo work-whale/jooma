@@ -30,6 +30,12 @@ const TW_108_ZH_CREDIT =
 const TW_108_EN_CREDIT =
   "Curriculum Guidelines of 12-Year Basic Education for English and for natural science, official English translation: Ministry of Education, Taiwan, published by the National Academy for Educational Research (NAER), https://www.naer.edu.tw/eng/PageSyllabus?fid=148. Statements are excerpts from the official English text, edited by Jooma into a list. Used under NAER's open data declaration, https://www.naer.edu.tw/PageDoc?fid=324.";
 
+/** Norway: NLOD asks for "Contains data under NLOD, made available on
+ *  data.udir.no" (Udir's terms); the credit also says the aims are edited
+ *  excerpts in Udir's English version. */
+const NO_LK20_CREDIT =
+  "Curricula of the Knowledge Promotion 2020 (LK20) for Norwegian, mathematics, natural science and English, in the English version published by the Norwegian Directorate for Education and Training (Udir), https://www.udir.no/lk20/. Statements are excerpts, edited by Jooma into a list. Contains data under NLOD (https://data.norge.no/nlod/en), made available on data.udir.no.";
+
 /** The credit each licence asks for, shown under the card whenever that
  *  framework's statements are listed. tests/unit/standards.spec.ts holds these
  *  equal to the credit stored with the data. */
@@ -52,6 +58,7 @@ export const FRAMEWORK_CREDIT: Record<FrameworkId, string> = {
   "jp-cos": JP_COS_CREDIT,
   "tw-108-zh": TW_108_ZH_CREDIT,
   "tw-108-en": TW_108_EN_CREDIT,
+  "no-lk20": NO_LK20_CREDIT,
 };
 
 /** A line under the card for a framework whose statements are not in English:

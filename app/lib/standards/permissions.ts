@@ -48,8 +48,15 @@ export const FRAMEWORK_PERMITTED = {
   // science in NAER's official English translation. Credited in credits.ts.
   "tw-108-zh": true,
   "tw-108-en": true,
+  // Norway's LK20 curricula from Udir's Grep: published under the Norwegian
+  // Licence for Open Government Data (NLOD), which allows commercial use and
+  // changes with the credit "Contains data under NLOD, made available on
+  // data.udir.no" (https://www.udir.no/om-udir/data/ and
+  // https://www.udir.no/om-udir/data/vilkar-for-bruk/, checked 2026-11-28).
+  // Udir's English text. Credited in credits.ts.
+  "no-lk20": true,
 } as const satisfies Record<
-  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en",
+  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos" | "tw-108-zh" | "tw-108-en" | "no-lk20",
   boolean
 >;
 

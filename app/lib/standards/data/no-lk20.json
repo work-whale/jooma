@@ -1,0 +1,6251 @@
+{
+ "source": {
+  "title": "LK20 curricula (Udir), English version, Grep snapshot of 2026-11-28",
+  "file": "docs/standards/norway/grep-snapshot.json",
+  "url": "https://www.udir.no/lk20/",
+  "licence": "https://www.udir.no/om-udir/data/vilkar-for-bruk/",
+  "credit": "Curricula of the Knowledge Promotion 2020 (LK20) for Norwegian, mathematics, natural science and English, in the English version published by the Norwegian Directorate for Education and Training (Udir), https://www.udir.no/lk20/. Statements are excerpts, edited by Jooma into a list. Contains data under NLOD (https://data.norge.no/nlod/en), made available on data.udir.no."
+ },
+ "statements": [
+  {
+   "id": "no-lk20-km14139",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "listen to and talk about fiction and factual prose in both \"bokmål\" and \"nynorsk\""
+  },
+  {
+   "id": "no-lk20-km14151",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "borrow and read books from the library"
+  },
+  {
+   "id": "no-lk20-km14141",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "express perceptions of texts through play, singing, drawing, writing and other creative activities"
+  },
+  {
+   "id": "no-lk20-km14149",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "talk about and describe how the words we use can affect others"
+  },
+  {
+   "id": "no-lk20-km14145",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "play with rhyme and rhythm and listen to identify the various speech sounds and syllables in words"
+  },
+  {
+   "id": "no-lk20-km14146",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "combine letter sounds into words when reading and writing"
+  },
+  {
+   "id": "no-lk20-km14140",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "read with coherence and comprehension on paper and on screen and use simple strategies for reading comprehension"
+  },
+  {
+   "id": "no-lk20-km14142",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "listen, speak in turn and give grounds for one’s own opinions in conversations"
+  },
+  {
+   "id": "no-lk20-km14143",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "describe and tell orally and in writing"
+  },
+  {
+   "id": "no-lk20-km14147",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "write texts using pen and paper and using a keyboard"
+  },
+  {
+   "id": "no-lk20-km14144",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use upper-case and lower-case letters, periods, question marks and exclamation marks in texts and in conversations about one’s own and others’ texts"
+  },
+  {
+   "id": "no-lk20-km14152",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "create texts that combine text and pictures"
+  },
+  {
+   "id": "no-lk20-km14148",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Language as system and opportunity",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore and talk about the structure and meaning of words and expressions"
+  },
+  {
+   "id": "no-lk20-km14150",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Language as system and opportunity",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore one’s own spoken language and talk about differences and similarities between spoken language and written language"
+  },
+  {
+   "id": "no-lk20-km14153",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "read and listen to stories, fairy tales, lyrics, factual books and other texts in \"bokmål\" and \"nynorsk\" and in translation from Sami and other languages, and talk about what the texts mean to him or her"
+  },
+  {
+   "id": "no-lk20-km14166",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "choose books from the library based on one’s own interests and reading skills"
+  },
+  {
+   "id": "no-lk20-km14164",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "read texts with fluency and comprehension and use reading strategies focused on learning"
+  },
+  {
+   "id": "no-lk20-km14158",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore and present texts through conversation, writing, play, movement and other creative expressions"
+  },
+  {
+   "id": "no-lk20-km14163",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "talk about the difference between opinions and facts in texts"
+  },
+  {
+   "id": "no-lk20-km14154",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "give oral presentations with and without digital resources"
+  },
+  {
+   "id": "no-lk20-km14155",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "combine various forms of expression in multimedia texts"
+  },
+  {
+   "id": "no-lk20-km14167",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "follow up input from others in dialogues on subject-related matter and ask questions to clarify and elaborate"
+  },
+  {
+   "id": "no-lk20-km14162",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "describe, relate and reason both orally and in writing and use the language creatively"
+  },
+  {
+   "id": "no-lk20-km14156",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "write texts with functional handwriting and with the use of a keyboard"
+  },
+  {
+   "id": "no-lk20-km14157",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "use commas and other punctuation marks in texts"
+  },
+  {
+   "id": "no-lk20-km14159",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "use grammatical terms about syntax, verb conjugation and declension of nouns and adjectives in conversations about language and one’s own and others’ texts"
+  },
+  {
+   "id": "no-lk20-km14160",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "reflect on how our use of language affects others and how we adapt and change our language to different situations"
+  },
+  {
+   "id": "no-lk20-km14168",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Language as system and opportunity",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "compare words and expressions in Norwegian and other languages"
+  },
+  {
+   "id": "no-lk20-km14165",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Linguistic diversity",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore and talk about linguistic variation and diversity in the local environment"
+  },
+  {
+   "id": "no-lk20-km14161",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore the differences and similarities between written Norwegian first-choice language and written Norwegian second-choice language"
+  },
+  {
+   "id": "no-lk20-km14176",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "read poetry, short stories, factual texts and fiction in \"bokmål\" and \"nynorsk\", Swedish and Danish and talk about purpose, form and content"
+  },
+  {
+   "id": "no-lk20-km14184",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "read Sami texts in Norwegian and talk about the values that are expressed and how place names and personal names that contain Sami letters are pronounced"
+  },
+  {
+   "id": "no-lk20-km14173",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "find information in subject-related sources in libraries and digital media, assess the reliability of the sources and refer to the sources in one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14185",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "use reading strategies adapted to the purpose of the reading"
+  },
+  {
+   "id": "no-lk20-km14180",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "write texts with functional handwriting and with fluid keyboard typing"
+  },
+  {
+   "id": "no-lk20-km14169",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "listen to and develop input from others and justify one’s own points of views in conversations"
+  },
+  {
+   "id": "no-lk20-km14182",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "reflect ethically on how he or she presents him or herself and others in digital media"
+  },
+  {
+   "id": "no-lk20-km14170",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "present subject-related topics orally with and without digital resources"
+  },
+  {
+   "id": "no-lk20-km14171",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "play with language and experiment with various language features, literary devices and types of presentation in oral and written texts"
+  },
+  {
+   "id": "no-lk20-km14181",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "describe, relate, reason and reflect in different oral and written genres and for different purposes"
+  },
+  {
+   "id": "no-lk20-km14172",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "write texts with a clear structure and master important rules for spelling, word inflection and punctuation"
+  },
+  {
+   "id": "no-lk20-km14174",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "provide feedback on the texts of fellow pupils based on criteria and use the feedback to revise one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14177",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "use subject-related terminology and knowledge about word classes and syntax in conversations about one’s own and others’ texts"
+  },
+  {
+   "id": "no-lk20-km14183",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore and describe the interaction between writing, pictures and other forms of expression and create one’s own multimedia texts"
+  },
+  {
+   "id": "no-lk20-km14175",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "experiment with writing texts in the second-choice language"
+  },
+  {
+   "id": "no-lk20-km14178",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Language as system and opportunity",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "compare the spoken language in the local environment with other varieties of spoken language in Norway and with neighbouring languages"
+  },
+  {
+   "id": "no-lk20-km14179",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Linguistic diversity",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore and reflect on the relationship between language and identity"
+  },
+  {
+   "id": "no-lk20-km14193",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "read fiction and factual prose in \"bokmål\" and \"nynorsk\" and translations from Sami and other languages, and reflect on the purpose, content, genre features, language features and literary devices in the texts"
+  },
+  {
+   "id": "no-lk20-km14197",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "compare and interpret novels, short stories, poetry and other texts based on historical context and their contemporary period"
+  },
+  {
+   "id": "no-lk20-km14201",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "describe and reflect on one’s own use of reading strategies when reading fiction and factual texts"
+  },
+  {
+   "id": "no-lk20-km14200",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "listen to and read texts in Swedish and Danish and explain their content and language features"
+  },
+  {
+   "id": "no-lk20-km14198",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Text in context",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "investigate and reflect on how texts present the life situation of young people"
+  },
+  {
+   "id": "no-lk20-km14192",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "recognise and use language features, literary devices and rhetorical language"
+  },
+  {
+   "id": "no-lk20-km14190",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use sources critically, highlight quotes and refer to sources in a verifiable manner in one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14199",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Critical approach to text",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore and assess how digital media affect and change language and communication"
+  },
+  {
+   "id": "no-lk20-km14186",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use appropriate terminology and argue in a reasoned way in discussions, conversations, oral presentations and written texts on interdisciplinary and subject-related topics"
+  },
+  {
+   "id": "no-lk20-km14188",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "inform, relate, reason and reflect in various oral and written genres and for different purposes and adapted to the receiver and the medium"
+  },
+  {
+   "id": "no-lk20-km14191",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "write texts with functional coherence and correct punctuation and master spelling and word inflection in the written first-choice and second-choice languages"
+  },
+  {
+   "id": "no-lk20-km14194",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Written text creation",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use subject-related terminology and knowledge about grammar, text structure and genres in conversations on and revisions of texts"
+  },
+  {
+   "id": "no-lk20-km14187",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "express him or herself in different genres and experiment with genres in a creative way"
+  },
+  {
+   "id": "no-lk20-km14189",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Oral communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "create multimedia texts and justify the choice of forms of expression"
+  },
+  {
+   "id": "no-lk20-km14195",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Linguistic diversity",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explain the historical background of \"bokmål\" and \"nynorsk\" and reflect on the status of the official languages in Norway today"
+  },
+  {
+   "id": "no-lk20-km14196",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Linguistic diversity",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore linguistic variations and diversity in Norway and reflect on attitudes to different languages and language variants"
+  },
+  {
+   "id": "no-lk20-km14211",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "read, analyse and interpret newer works of fiction in \"bokmål\" and \"nynorsk\" and in translations from Sami and other languages"
+  },
+  {
+   "id": "no-lk20-km14212",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "reflect on how texts present encounters between different cultures"
+  },
+  {
+   "id": "no-lk20-km14205",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "explain and reflect on the use of rhetorical language and language features and literary devices in factual prose texts"
+  },
+  {
+   "id": "no-lk20-km14202",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "listen to others, construct reasoned arguments and use rhetorical language in discussions"
+  },
+  {
+   "id": "no-lk20-km14209",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "use different sources in a critical, independent and verifiable manner"
+  },
+  {
+   "id": "no-lk20-km14203",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "communicate clearly and comprehensibly, both orally and in writing, in vocationally relevant genres"
+  },
+  {
+   "id": "no-lk20-km14204",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "use relevant vocational terminology to present, explain and document subject-related topics and work processes in one’s own education programme"
+  },
+  {
+   "id": "no-lk20-km14207",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "read technical material from one’s own vocational field to find, combine and assess relevant information"
+  },
+  {
+   "id": "no-lk20-km14213",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "combine language features and forms of expression creatively in the creation of one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14210",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "assess and revise one’s own texts based on feedback and subject-related criteria"
+  },
+  {
+   "id": "no-lk20-km14208",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "write texts with good structure and coherence and master punctuation and spelling in the written first-choice language"
+  },
+  {
+   "id": "no-lk20-km14214",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "compare distinctive features of Norwegian with other languages and demonstrate how language can be changed due to influence from other languages"
+  },
+  {
+   "id": "no-lk20-km14206",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 vocational education programmes",
+   "ages": [
+    17
+   ],
+   "text": "explain the prevalence of the Sami languages in Norway, the Norwegianization policy and linguistic rights the Sami have as an indigenous people"
+  },
+  {
+   "id": "no-lk20-km14229",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "read, analyse and interpret newer works of fiction in \"bokmål\" and \"nynorsk\" and in translations from Sami and other languages"
+  },
+  {
+   "id": "no-lk20-km14230",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "reflect on how texts present encounters between different cultures"
+  },
+  {
+   "id": "no-lk20-km14226",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain and reflect on the use of rhetorical language, language features and literary devices in factual prose texts"
+  },
+  {
+   "id": "no-lk20-km14224",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "listen to others, construct well-reasoned arguments and use rhetorical language in discussions"
+  },
+  {
+   "id": "no-lk20-km14227",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use different sources in a critical, independent and verifiable manner"
+  },
+  {
+   "id": "no-lk20-km14225",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain and discuss Norwegian subject-related or interdisciplinary topics orally"
+  },
+  {
+   "id": "no-lk20-km14234",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "write articles that explain and discuss topics that relate to the Norwegian subject or interdisciplinary topics"
+  },
+  {
+   "id": "no-lk20-km14232",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use subject-related terminology to describe sentence structure and the relationship between sentences when working with texts"
+  },
+  {
+   "id": "no-lk20-km14235",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "combine language features, literary devices and forms of expression creatively in the creation of one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14228",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "assess and revise one’s own texts based on feedback and subject-related criteria"
+  },
+  {
+   "id": "no-lk20-km14233",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "write texts with good structure and coherence and master punctuation and spelling in the written first-choice and second-choice languages"
+  },
+  {
+   "id": "no-lk20-km14236",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "compare distinctive features of Norwegian with other languages and demonstrate how language can be changed due to influence from other languages"
+  },
+  {
+   "id": "no-lk20-km14231",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain the prevalence of the Sami languages in Norway, the Norwegianization policy and linguistic rights the Sami have as an indigenous people"
+  },
+  {
+   "id": "no-lk20-km14215",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "read Old Norse texts in translation and compare them to texts from more recent times"
+  },
+  {
+   "id": "no-lk20-km14216",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "read and interpret texts from 1500 to 1850 in a cultural-history context and discuss their relevance today"
+  },
+  {
+   "id": "no-lk20-km14217",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "explore and reflect on how texts from romanticism and romantic nationalism present humankind, nature and society and compare them to texts from more recent times"
+  },
+  {
+   "id": "no-lk20-km14222",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "reflect on factual prose texts and explain the rhetorical situation that has prompted them"
+  },
+  {
+   "id": "no-lk20-km14219",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "write subject-related articles that explain and discuss texts in context"
+  },
+  {
+   "id": "no-lk20-km14221",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "use feedback and knowledge about language, text and genres to develop one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14218",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "use subject-related knowledge and rhetorical skills in discussions and presentations relating to the Norwegian subject"
+  },
+  {
+   "id": "no-lk20-km14220",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "use appropriate terminology in the subject to describe the distinctive features of Norwegian compared to Swedish, Danish and Old Norse"
+  },
+  {
+   "id": "no-lk20-km14223",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg2 programmes for general studies",
+   "ages": [
+    17
+   ],
+   "text": "explain the historical background of the language situation in Norway today"
+  },
+  {
+   "id": "no-lk20-km14237",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "analyse and interpret novels, short stories, plays, poetry and factual prose in \"bokmål\" and \"nynorsk\" from 1850 to the present and reflect on the texts in light of the cultural-history context and one’s own contemporary time"
+  },
+  {
+   "id": "no-lk20-km14238",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "explore and reflect on how texts from the realist and modernist traditions present humankind, nature and society"
+  },
+  {
+   "id": "no-lk20-km14246",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "write essays that explore and reflect on the content of texts"
+  },
+  {
+   "id": "no-lk20-km14239",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "write literary interpretations and comparisons"
+  },
+  {
+   "id": "no-lk20-km14240",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "analyse forms of expression in multimedia texts in different media and assess how they interact"
+  },
+  {
+   "id": "no-lk20-km14243",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "use subject-related knowledge and precise terminology in exploratory conversations, discussions and oral presentations on topics relating to the Norwegian subject"
+  },
+  {
+   "id": "no-lk20-km14242",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "write rhetorical analyses and interpretations of factual prose texts"
+  },
+  {
+   "id": "no-lk20-km14244",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "master language morphology rules in the written first-choice and second-choice languages and write texts with verifiable use of sources and precise and nuanced language"
+  },
+  {
+   "id": "no-lk20-km14245",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "read subject-related literature, assess sources critically and write articles that explain and discuss topics relating to the Norwegian subject"
+  },
+  {
+   "id": "no-lk20-km14241",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 programmes for general studies",
+   "ages": [
+    18
+   ],
+   "text": "explain present-day changes in spoken Norwegian and reflect on relationships between language, culture and identity"
+  },
+  {
+   "id": "no-lk20-km14247",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "read Old Norse texts in translation and compare them to texts from more recent times"
+  },
+  {
+   "id": "no-lk20-km14248",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "read and interpret texts from 1500 to 1850 in a cultural-history context and discuss their relevance today"
+  },
+  {
+   "id": "no-lk20-km14249",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "investigate and reflect on how texts from the romantic and romantic nationalist periods present people, nature and society and compare them to texts from more recent times"
+  },
+  {
+   "id": "no-lk20-km14250",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "reflect on factual prose texts and explain the rhetorical situation that has prompted them"
+  },
+  {
+   "id": "no-lk20-km14251",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "write subject-related articles that explain and discuss texts in context"
+  },
+  {
+   "id": "no-lk20-km14253",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "use feedback and knowledge about language, text and genres to develop one’s own texts"
+  },
+  {
+   "id": "no-lk20-km14254",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "use subject-related knowledge and rhetorical skills in discussions and presentations"
+  },
+  {
+   "id": "no-lk20-km14255",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "use appropriate subject-related terminology to describe special features of Norwegian compared to Swedish, Danish and Old Norse"
+  },
+  {
+   "id": "no-lk20-km14252",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explain the historical background of the language situation in Norway today"
+  },
+  {
+   "id": "no-lk20-km14256",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "analyse and interpret novels, short stories, plays, poetry and factual prose in \"bokmål\" and \"nynorsk\" from 1850 to the present day and reflect on the texts in light of the cultural-historical context and one’s contemporary time"
+  },
+  {
+   "id": "no-lk20-km14257",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explore and reflect on how texts from realism and modernism traditions present humankind, nature and society"
+  },
+  {
+   "id": "no-lk20-km14264",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "write essays that explore and reflect on the content of texts"
+  },
+  {
+   "id": "no-lk20-km14265",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "write literary interpretations and comparisons"
+  },
+  {
+   "id": "no-lk20-km14258",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "analyse forms of expression in multimedia texts in various media and assess how they interact"
+  },
+  {
+   "id": "no-lk20-km14259",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "use subject-related knowledge and precise terminology in exploratory conversations, discussions and oral presentations on subject-related topics"
+  },
+  {
+   "id": "no-lk20-km14260",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "write rhetorical analyses and interpretations of factual prose texts"
+  },
+  {
+   "id": "no-lk20-km14261",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "master morphological language rules in the written Norwegian first-choice and second-choice languages and write texts with verifiable use of sources and precise and nuanced language"
+  },
+  {
+   "id": "no-lk20-km14262",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "read subject-related literature, assess sources critically and write articles that explain and discuss subject-related topics"
+  },
+  {
+   "id": "no-lk20-km14263",
+   "code": "",
+   "subject": "Norwegian",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explain present-day changes in spoken Norwegian and reflect on relationships between language, culture and identity"
+  },
+  {
+   "id": "no-lk20-km13228",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "group numbers and sets based on their properties and to reflect upon whether there are multiple ways to do this"
+  },
+  {
+   "id": "no-lk20-km13229",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore numbers, sets and counting through play, nature, visual art, music and children’s literature"
+  },
+  {
+   "id": "no-lk20-km13241",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use numerals, number words, drawings and tangible objects to represent numbers and sets in different ways and translate between the different representations"
+  },
+  {
+   "id": "no-lk20-km13230",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "count both up and down, choose different starting points and intervals for counting, and explain counting patterns"
+  },
+  {
+   "id": "no-lk20-km13231",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "describe and explore the properties of odd and even numbers"
+  },
+  {
+   "id": "no-lk20-km13232",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use numerals, number words, drawings and tangible objects to represent the positional system and translate between the different representations"
+  },
+  {
+   "id": "no-lk20-km13233",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "place numbers on the number line and use the number line to carry out arithmetic and solve problems"
+  },
+  {
+   "id": "no-lk20-km13234",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use addition and subtraction in order to create and solve problems from play and in daily life"
+  },
+  {
+   "id": "no-lk20-km13235",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use commutative and associative properties when carrying out addition in written and mental arithmetic"
+  },
+  {
+   "id": "no-lk20-km13242",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use the equals sign as a relational symbol that shows that two expressions have the same value"
+  },
+  {
+   "id": "no-lk20-km13236",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "recognise and describe repeating units in patterns and create their own patterns"
+  },
+  {
+   "id": "no-lk20-km13237",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore, draw and describe geometric shapes from their own local environment and reason in relation to ways to sort them according to their properties"
+  },
+  {
+   "id": "no-lk20-km13240",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "measure length and mass in practical situations using both non-standardised and standardised units of measurement, and to discuss the results"
+  },
+  {
+   "id": "no-lk20-km13238",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "describe time with the aid of a calendar as well as analogue and digital clocks"
+  },
+  {
+   "id": "no-lk20-km13239",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "create and follow rules and step-by-step instructions during play and games"
+  },
+  {
+   "id": "no-lk20-km13243",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    8
+   ],
+   "text": "use appropriate strategies for addition and subtraction in order to create and solve problems from play and in daily life"
+  },
+  {
+   "id": "no-lk20-km13244",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    8
+   ],
+   "text": "explain and explore the relationships between addition and subtraction in written and mental arithmetic"
+  },
+  {
+   "id": "no-lk20-km13245",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    8
+   ],
+   "text": "describe and explore multiplication through counting and grouping"
+  },
+  {
+   "id": "no-lk20-km13254",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    8
+   ],
+   "text": "double and halve in written and mental arithmetic"
+  },
+  {
+   "id": "no-lk20-km13246",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    8
+   ],
+   "text": "use multiplication and division in order to create and solve problems from play and in daily life"
+  },
+  {
+   "id": "no-lk20-km13247",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    8
+   ],
+   "text": "use numerals, text, tables, drawings and tangible objects to represent multiplication in different ways and translate between the different representations"
+  },
+  {
+   "id": "no-lk20-km13248",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    8
+   ],
+   "text": "use commutative, associative and distributive properties when carrying out multiplication in written and mental arithmetic"
+  },
+  {
+   "id": "no-lk20-km13249",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    8
+   ],
+   "text": "use the equals sign and inequality signs as relational symbols to compare measures, quantities, expressions, and numbers"
+  },
+  {
+   "id": "no-lk20-km13250",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    8
+   ],
+   "text": "use numerals, drawings, and tangible objects to explore equivalence and translate between the different representations"
+  },
+  {
+   "id": "no-lk20-km13253",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    8
+   ],
+   "text": "measure areas in practical situations using both non-standardised and standardised units of measurement"
+  },
+  {
+   "id": "no-lk20-km13251",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    8
+   ],
+   "text": "experiment with, name and plot points using a coordinate system"
+  },
+  {
+   "id": "no-lk20-km13252",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    8
+   ],
+   "text": "create and follow rules and step-by-step instructions during play and games related to a coordinate system"
+  },
+  {
+   "id": "no-lk20-km13255",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "explore and use grouping and sharing division in practical situations"
+  },
+  {
+   "id": "no-lk20-km13256",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "use numbers, text, drawings, and tangible objects to explore division in different ways and translate between the different representations"
+  },
+  {
+   "id": "no-lk20-km13257",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "use and explain different division strategies"
+  },
+  {
+   "id": "no-lk20-km13258",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "use written and mental arithmetic to explore and explain the relationships between the four arithmetic operations"
+  },
+  {
+   "id": "no-lk20-km13259",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    9
+   ],
+   "text": "assess, estimate, explain their reasoning, and critically assess their own and others’ models and solutions when working in practical situations"
+  },
+  {
+   "id": "no-lk20-km13260",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    9
+   ],
+   "text": "create mathematical expressions for practical situations and identify practical situations that fit a given mathematical expression"
+  },
+  {
+   "id": "no-lk20-km13261",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "describe and explore the properties of two- and three-dimensional shapes by using angles, edges, corners, and faces"
+  },
+  {
+   "id": "no-lk20-km13264",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Other competence aims",
+   "ages": [
+    9
+   ],
+   "text": "measure volume in practical situations using both non-standardised and standardised units of measurement, and to discuss the results"
+  },
+  {
+   "id": "no-lk20-km13262",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "describe and explore structures and patterns in games and play"
+  },
+  {
+   "id": "no-lk20-km13263",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    9
+   ],
+   "text": "create algorithms and express them using variables, conditions and loops"
+  },
+  {
+   "id": "no-lk20-km13265",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    10
+   ],
+   "text": "use numbers, drawings, and tangible objects to describe and explore the relationships between fractions, decimals, and percentages"
+  },
+  {
+   "id": "no-lk20-km13266",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    10
+   ],
+   "text": "describe fractions as part of a whole, as part of a quantity, as part of a division, and as a number on a number line"
+  },
+  {
+   "id": "no-lk20-km13267",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    10
+   ],
+   "text": "use numbers, text, drawings, tangible objects, and practical situation to represent fractions, and to be able to translate between different representations"
+  },
+  {
+   "id": "no-lk20-km13268",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    10
+   ],
+   "text": "develop and use different strategies for arithmetic using positive numbers and fractions, and to explain their reasoning"
+  },
+  {
+   "id": "no-lk20-km13269",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    10
+   ],
+   "text": "formulate and solve problems related to fractions"
+  },
+  {
+   "id": "no-lk20-km13270",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    10
+   ],
+   "text": "explore and describe chance and probability in games and practical situations, and to connect these concepts to fractions"
+  },
+  {
+   "id": "no-lk20-km13274",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    10
+   ],
+   "text": "use numbers, text, drawings and tangible objects to solve equations and test and explain solutions"
+  },
+  {
+   "id": "no-lk20-km13271",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    10
+   ],
+   "text": "use spreadsheets to create and solve tasks relating to personal finance"
+  },
+  {
+   "id": "no-lk20-km13273",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    10
+   ],
+   "text": "create and solve tasks relating to time"
+  },
+  {
+   "id": "no-lk20-km13272",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    10
+   ],
+   "text": "create and program algorithms using variables, conditions and loops"
+  },
+  {
+   "id": "no-lk20-km13275",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    11
+   ],
+   "text": "describe and place decimal numbers on the number line and compare numbers with different numbers of decimals as part of the positional system"
+  },
+  {
+   "id": "no-lk20-km13276",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "develop and use different strategies for arithmetic using decimals and be able to compare these to numeracy strategies used for whole numbers"
+  },
+  {
+   "id": "no-lk20-km13277",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    11
+   ],
+   "text": "create and solve problems featuring decimal numbers, fractions, and percentages, and to provide reasoning for their own solutions"
+  },
+  {
+   "id": "no-lk20-km13278",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "describe and explore the properties of two- and three-dimensional shapes and explain which properties the shapes share in common, and which properties distinguish the shapes from each other"
+  },
+  {
+   "id": "no-lk20-km13283",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "explore and describe symmetry in patterns"
+  },
+  {
+   "id": "no-lk20-km13284",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "perform congruence transformations with and without a coordinate system"
+  },
+  {
+   "id": "no-lk20-km13279",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "measure the radius, diameter and circumference of circles, and explore and explain the relationship between pi and the diameter of a circle"
+  },
+  {
+   "id": "no-lk20-km13280",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    11
+   ],
+   "text": "explore areas and volumes in practical situations and use appropriate units of measurement"
+  },
+  {
+   "id": "no-lk20-km13285",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "explore practical issues relating to area through the use of partitioning and distributivity"
+  },
+  {
+   "id": "no-lk20-km13281",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    11
+   ],
+   "text": "use and explore strategies for measuring and calculating area and perimeter"
+  },
+  {
+   "id": "no-lk20-km13282",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    11
+   ],
+   "text": "use variables, loops, conditions and functions in programming to explore geometric shapes and patterns"
+  },
+  {
+   "id": "no-lk20-km13286",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    12
+   ],
+   "text": "use numbers, text, tables, drawings, and tangible objects to represent percentages, and to translate between fractions, decimals, and percentages"
+  },
+  {
+   "id": "no-lk20-km13288",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    12
+   ],
+   "text": "use appropriate strategies in written and mental arithmetic relating to fractions, decimals, and percentages, and to be able to explain these strategies"
+  },
+  {
+   "id": "no-lk20-km13292",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    12
+   ],
+   "text": "use and explore negative numbers in both practical and theoretical terms"
+  },
+  {
+   "id": "no-lk20-km13287",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    12
+   ],
+   "text": "apply the rules for the order of operations in problem solving and to create and solve multi-step numerical expressions"
+  },
+  {
+   "id": "no-lk20-km13291",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Reasoning and argumentation",
+   "ages": [
+    12
+   ],
+   "text": "use different strategies to solve equations and assess whether those solutions are valid"
+  },
+  {
+   "id": "no-lk20-km13294",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    12
+   ],
+   "text": "formulate and solve problems related to equations"
+  },
+  {
+   "id": "no-lk20-km13296",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Other competence aims",
+   "ages": [
+    12
+   ],
+   "text": "use numbers, text, drawings and tangible objects to solve inequalities and test and explain solutions"
+  },
+  {
+   "id": "no-lk20-km13289",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    12
+   ],
+   "text": "calculate averages from their own and others’ datasets, and to choose which average it is appropriate to use"
+  },
+  {
+   "id": "no-lk20-km13290",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    12
+   ],
+   "text": "log, sort, read and present data in tables and diagrams, and explain the choice of presentation"
+  },
+  {
+   "id": "no-lk20-km13295",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    12
+   ],
+   "text": "assess, estimate, explain their reasoning, and critically assess their own and others’ models and solutions in relation to practical situations when working on finance"
+  },
+  {
+   "id": "no-lk20-km13293",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    12
+   ],
+   "text": "use programming to explore data contained in tables and datasets"
+  },
+  {
+   "id": "no-lk20-km13297",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    13
+   ],
+   "text": "work with powers and square roots, and explain their approach and results"
+  },
+  {
+   "id": "no-lk20-km13303",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Representation and communication",
+   "ages": [
+    13
+   ],
+   "text": "use commutative, associative and distributive properties to develop and communicate strategies for written and mental arithmetic"
+  },
+  {
+   "id": "no-lk20-km13298",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    13
+   ],
+   "text": "describe and explore factorisation and prime factorisation, and to use this in fractional arithmetic"
+  },
+  {
+   "id": "no-lk20-km13299",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    13
+   ],
+   "text": "explore and generalise geometric patterns and numerical patterns in their own words and algebraically"
+  },
+  {
+   "id": "no-lk20-km13301",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    13
+   ],
+   "text": "create and explain mathematical expressions with numbers, variables and constants related to practical situations"
+  },
+  {
+   "id": "no-lk20-km13304",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    13
+   ],
+   "text": "create and solve equations related to practical situations and critically assess solutions"
+  },
+  {
+   "id": "no-lk20-km13305",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Other competence aims",
+   "ages": [
+    13
+   ],
+   "text": "use different strategies to solve inequalities and assess whether those solutions are valid"
+  },
+  {
+   "id": "no-lk20-km13302",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    13
+   ],
+   "text": "describe, compare and explore functions related to practical situations"
+  },
+  {
+   "id": "no-lk20-km13306",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Other competence aims",
+   "ages": [
+    13
+   ],
+   "text": "use situations, tables, graphs and expressions to represent functions and show relationships between the representations"
+  },
+  {
+   "id": "no-lk20-km13300",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    13
+   ],
+   "text": "explore how algorithms can be created, tested and improved using programming"
+  },
+  {
+   "id": "no-lk20-km13316",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "create and solve problems involving compound units"
+  },
+  {
+   "id": "no-lk20-km13308",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "explore the properties of different two-dimensional shapes and explain the concepts of isomorphism and congruence"
+  },
+  {
+   "id": "no-lk20-km13317",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    14
+   ],
+   "text": "use isomorphism and Pythagoras’ theorem to explore practical situations"
+  },
+  {
+   "id": "no-lk20-km13307",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "explore, describe and reason around the relationships between side lengths in triangles"
+  },
+  {
+   "id": "no-lk20-km13309",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "explore and put forward the argument for how changing assumptions in geometric problems affects solutions both practically and algebraically"
+  },
+  {
+   "id": "no-lk20-km13310",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "use and put forward the argument for formulas for the calculation of the surface area and volume of three-dimensional shapes"
+  },
+  {
+   "id": "no-lk20-km13312",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    14
+   ],
+   "text": "interpret and critically assess statistical presentations found in the media and the local community"
+  },
+  {
+   "id": "no-lk20-km13313",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    14
+   ],
+   "text": "calculate averages and measures of dispersion in their own and others’ datasets, and then use these results to describe the data"
+  },
+  {
+   "id": "no-lk20-km13314",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    14
+   ],
+   "text": "compare and put forward the argument for how presentations of figures and data can be used to promote different points of view"
+  },
+  {
+   "id": "no-lk20-km13315",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "calculate and assess probability in statistics and games"
+  },
+  {
+   "id": "no-lk20-km13311",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    14
+   ],
+   "text": "simulate outcomes in randomised trials and calculate the probability of something occurring through the use of programming"
+  },
+  {
+   "id": "no-lk20-km13328",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "use the order of operations and generalise relationships algebraically"
+  },
+  {
+   "id": "no-lk20-km13318",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "explore the square theorems geometrically and algebraically and use the square theorems as calculation strategies"
+  },
+  {
+   "id": "no-lk20-km13324",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    15
+   ],
+   "text": "create, solve and explain systems of equations related to practical situations"
+  },
+  {
+   "id": "no-lk20-km13319",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "explore and compare properties of linear functions, exponential functions, fractional functions and second-degree functions through the use of digital tools"
+  },
+  {
+   "id": "no-lk20-km13320",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    15
+   ],
+   "text": "explain the concept of change per unit and calculate the slope of linear functions"
+  },
+  {
+   "id": "no-lk20-km13322",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "explore and explain the relationship between constant percentage change, growth factor and exponential functions"
+  },
+  {
+   "id": "no-lk20-km13321",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "retrieve and interpret relevant information and reflect on the possible consequences of buying and selling, interest on savings, loans and credit purchases"
+  },
+  {
+   "id": "no-lk20-km13325",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "plan, carry out and present an exploratory assignment related to personal finance"
+  },
+  {
+   "id": "no-lk20-km13323",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Modelling and applications",
+   "ages": [
+    15
+   ],
+   "text": "model situations, present the results and assess the validity of the models"
+  },
+  {
+   "id": "no-lk20-km13326",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Exploration and problem solving",
+   "ages": [
+    15
+   ],
+   "text": "explore mathematical properties and relationships using programming"
+  },
+  {
+   "id": "no-lk20-km13327",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Other competence aims",
+   "ages": [
+    15
+   ],
+   "text": "read and explain text-based programming code in Python"
+  },
+  {
+   "id": "no-lk20-km325",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "read, extract and evaluate mathematics in texts about situations from the local environment, do calculations related to this, and present and argue for the results"
+  },
+  {
+   "id": "no-lk20-km328",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "explore how different premises may impact how mathematical problems from society and working life are solved"
+  },
+  {
+   "id": "no-lk20-km330",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "model situations related to issues from society and the workplace, present and argue for the results and for when the models are valid"
+  },
+  {
+   "id": "no-lk20-km329",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "identify variable quantities in different situations and use them for exploration and generalisation"
+  },
+  {
+   "id": "no-lk20-km335",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas that apply to society and the workplace"
+  },
+  {
+   "id": "no-lk20-km324",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "use percentages, percentage points, thousandths and growth factors in calculations, and present and justify solutions"
+  },
+  {
+   "id": "no-lk20-km323",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "explore, describe and apply the concepts of proportionality and inverse proportionality"
+  },
+  {
+   "id": "no-lk20-km326",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurements in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km322",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use functions in mathematical modelling and problem solving"
+  },
+  {
+   "id": "no-lk20-km321",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "plan, carry out and present independent work related to mathematical modelling and functions within social studies topic areas"
+  },
+  {
+   "id": "no-lk20-km372",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "use digital tools in exploration and problem solving related to the properties of functions, and discuss the solutions"
+  },
+  {
+   "id": "no-lk20-km373",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P",
+   "ages": [
+    16
+   ],
+   "text": "interpret and calculate using radical expressions, powers and numbers in standard form"
+  },
+  {
+   "id": "no-lk20-km302",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Building and Construction",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km352",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Building and Construction",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km351",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Building and Construction",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km349",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Building and Construction",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km350",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Building and Construction",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Building and Construction, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km348",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Building and Construction",
+   "ages": [
+    16
+   ],
+   "text": "explore and use the properties of geometric shapes, scale and trigonometry to calculate lengths, angles and areas when problem solving in Building and Construction"
+  },
+  {
+   "id": "no-lk20-km341",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y in Electrical Engineering and Computer Technology",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km340",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y in Electrical Engineering and Computer Technology",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km339",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y in Electrical Engineering and Computer Technology",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km355",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y in Electrical Engineering and Computer Technology",
+   "ages": [
+    16
+   ],
+   "text": "use various strategies to solve equations"
+  },
+  {
+   "id": "no-lk20-km345",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y in Electrical Engineering and Computer Technology",
+   "ages": [
+    16
+   ],
+   "text": "explain the definitions of sine, cosine and tangent, interpret the definitions graphically and relate them to examples in Electrical Engineering and Computer Technology"
+  },
+  {
+   "id": "no-lk20-km354",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y in Electrical Engineering and Computer Technology",
+   "ages": [
+    16
+   ],
+   "text": "use trigonometry to calculate lengths, angles and areas of triangles when problem solving in Electrical Engineering and Computer Technology"
+  },
+  {
+   "id": "no-lk20-km356",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Hairdressing, Floral, Interior and Retail Design",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km371",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Hairdressing, Floral, Interior and Retail Design",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km370",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Hairdressing, Floral, Interior and Retail Design",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km368",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Hairdressing, Floral, Interior and Retail Design",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km369",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Hairdressing, Floral, Interior and Retail Design",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Hairdressing, Floral, Interior and Retail Design, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km367",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Hairdressing, Floral, Interior and Retail Design",
+   "ages": [
+    16
+   ],
+   "text": "explore and use the properties of geometric shapes and calculate lengths, angles, area, volume, proportions and scale when problem solving in Hairdressing, Floral, Interior and Retail Design"
+  },
+  {
+   "id": "no-lk20-km347",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Crafts, Design and Product Development",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km353",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Crafts, Design and Product Development",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km346",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Crafts, Design and Product Development",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km343",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Crafts, Design and Product Development",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km344",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Crafts, Design and Product Development",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Crafts, Design and Product Development, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km342",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Crafts, Design and Product Development",
+   "ages": [
+    16
+   ],
+   "text": "explore and use the properties of geometric shapes, calculate lengths, angles, area, volume, proportions and scale when problem solving in Crafts, Design and Product Development"
+  },
+  {
+   "id": "no-lk20-km366",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Healthcare, Child and Youth Development",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km365",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Healthcare, Child and Youth Development",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km364",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Healthcare, Child and Youth Development",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km362",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Healthcare, Child and Youth Development",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km363",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Healthcare, Child and Youth Development",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Healthcare, Child and Youth Development, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km361",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Healthcare, Child and Youth Development",
+   "ages": [
+    16
+   ],
+   "text": "do calculations related to welfare technology involving economy"
+  },
+  {
+   "id": "no-lk20-km360",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Information Technology and Media Production",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km359",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Information Technology and Media Production",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km358",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Information Technology and Media Production",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km338",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Information Technology and Media Production",
+   "ages": [
+    16
+   ],
+   "text": "collect data, process large datasets, and do calculations and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km357",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Information Technology and Media Production",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Information Technology and Media Production, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km337",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Information Technology and Media Production",
+   "ages": [
+    16
+   ],
+   "text": "explore and use geometric shapes and proportions and use them in design and product development"
+  },
+  {
+   "id": "no-lk20-km336",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Agriculture, Fishing and Forestry",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km318",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Agriculture, Fishing and Forestry",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km316",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Agriculture, Fishing and Forestry",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km314",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Agriculture, Fishing and Forestry",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km315",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Agriculture, Fishing and Forestry",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Agriculture, Fishing and Forestry, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km313",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Agriculture, Fishing and Forestry",
+   "ages": [
+    16
+   ],
+   "text": "explore and use the properties of geometric shapes and calculate lengths, angles, area, volume, proportions and scale when problem solving in Agriculture, Fishing and Forestry"
+  },
+  {
+   "id": "no-lk20-km312",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Restaurant and Food Processing",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km311",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Restaurant and Food Processing",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km317",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Restaurant and Food Processing",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km308",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Restaurant and Food Processing",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km310",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Restaurant and Food Processing",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Restaurant and Food Processing, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km307",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Restaurant and Food Processing",
+   "ages": [
+    16
+   ],
+   "text": "interpret and do calculations on nutritional and energy content, and convert between different compound units related to Restaurant and Food Processing"
+  },
+  {
+   "id": "no-lk20-km306",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Sales, Service and Tourism",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km305",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Sales, Service and Tourism",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km304",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Sales, Service and Tourism",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km309",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Sales, Service and Tourism",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km303",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Sales, Service and Tourism",
+   "ages": [
+    16
+   ],
+   "text": "read, use and create spreadsheets when working with budgets, bids and cost calculations related to Sales, Service and Tourism, and evaluate how different factors affect the result"
+  },
+  {
+   "id": "no-lk20-km319",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Sales, Service and Tourism",
+   "ages": [
+    16
+   ],
+   "text": "interpret and do calculations on statistical data that are relevant to Sales, Service and Tourism"
+  },
+  {
+   "id": "no-lk20-km327",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Technological and Industrial Production",
+   "ages": [
+    16
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km320",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Technological and Industrial Production",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use formulas related to everyday life and working life"
+  },
+  {
+   "id": "no-lk20-km334",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Technological and Industrial Production",
+   "ages": [
+    16
+   ],
+   "text": "interpret and use compound units of measurement in practical contexts and choose suitable units of measurement"
+  },
+  {
+   "id": "no-lk20-km332",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Technological and Industrial Production",
+   "ages": [
+    16
+   ],
+   "text": "collect data from the practice field, make estimates and do calculations, and prepare suitable representations of these results, and present them"
+  },
+  {
+   "id": "no-lk20-km333",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Technological and Industrial Production",
+   "ages": [
+    16
+   ],
+   "text": "do calculations and evaluations related to measurement uncertainty and tolerance"
+  },
+  {
+   "id": "no-lk20-km331",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 1P-Y for Technological and Industrial Production",
+   "ages": [
+    16
+   ],
+   "text": "explore and use the properties of geometric shapes, and calculate length, angles, area, volume, proportions and scale when problem solving in Technological and Industrial Production"
+  },
+  {
+   "id": "no-lk20-km12756",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "formulate and solve problems through the use of computational thinking, different problem solving strategies, digital tools and programming"
+  },
+  {
+   "id": "no-lk20-km12764",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "read and understand mathematical proofs and explore and develop proofs in relevant mathematical topics"
+  },
+  {
+   "id": "no-lk20-km12762",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "identify variable quantities in different contexts, create formulas and explore these using digital tools"
+  },
+  {
+   "id": "no-lk20-km12755",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "explore strategies for solving equations, systems of equations and inequalities, and argue for one’s thought processes"
+  },
+  {
+   "id": "no-lk20-km12763",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "explain the difference between an identity, an equation, an algebraic expression and a function"
+  },
+  {
+   "id": "no-lk20-km12759",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "explore relationships between quadratic equations, quadratic inequalities, quadratic functions and the binomial formulas, and use these relationships in problem solving"
+  },
+  {
+   "id": "no-lk20-km12757",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "model situations related to different topics, discuss, present and explain the results and argue the validity of the models"
+  },
+  {
+   "id": "no-lk20-km12760",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "read, extract and evaluate mathematics in relevant texts on various topics and present relevant calculations and analyses of the results"
+  },
+  {
+   "id": "no-lk20-km12768",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "explore and describe the properties of polynomial functions, rational functions, exponential functions and power functions"
+  },
+  {
+   "id": "no-lk20-km12758",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "use average and instantaneous growth rates in concrete examples and account for the derivative"
+  },
+  {
+   "id": "no-lk20-km12761",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "explain polynomial division and use it to rewrite algebraic expressions, discuss functions and solve equations and inequalities"
+  },
+  {
+   "id": "no-lk20-km12765",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "explain the definitions of sine, cosine and tangent and use trigonometry to calculate the length, angles and area of arbitrary triangles"
+  },
+  {
+   "id": "no-lk20-km12766",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "justify the area, sine and cosine rules"
+  },
+  {
+   "id": "no-lk20-km12767",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics vg1 theoretical (Mathematics T)",
+   "ages": [
+    16
+   ],
+   "text": "use trigonometry to analyse and solve complex theoretical and practical problems involving length, angles and area"
+  },
+  {
+   "id": "no-lk20-km447",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "explain and use percentages, percentage points and growth factors for modelling practical situations with digital tools"
+  },
+  {
+   "id": "no-lk20-km448",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "explore and explain relationships between price index, relative currency value, purchasing power, salary and gross and net income"
+  },
+  {
+   "id": "no-lk20-km449",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "explore strategies for solving equations, systems of equations and inequalities, and argue for one’s thought processes"
+  },
+  {
+   "id": "no-lk20-km450",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "evaluate choices related to personal finances and reflect on the consequences of taking out loans and using credit cards"
+  },
+  {
+   "id": "no-lk20-km451",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "analyse and present findings in datasets from local communities and media"
+  },
+  {
+   "id": "no-lk20-km452",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "use and evaluate choices of suitable measures of central tendency and measures of variability in statistical data"
+  },
+  {
+   "id": "no-lk20-km453",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P",
+   "ages": [
+    17
+   ],
+   "text": "explore and explain how similarity, scale and the properties of geometric shapes can be used in calculations and in practical work"
+  },
+  {
+   "id": "no-lk20-km461",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "explore how different premises may impact how mathematical problems from society and working life are solved"
+  },
+  {
+   "id": "no-lk20-km454",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "analyse and present findings in datasets from local communities and media"
+  },
+  {
+   "id": "no-lk20-km455",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "use and evaluate choices of suitable measures of central tendency and measures of variability in statistical data"
+  },
+  {
+   "id": "no-lk20-km456",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "read, extract and evaluate mathematics in texts about topics from social studies and the local environment, do calculations related to this, and present and argue for the results"
+  },
+  {
+   "id": "no-lk20-km463",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "explore, describe and use the concepts of proportionality and inverse proportionality"
+  },
+  {
+   "id": "no-lk20-km459",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "identify variable quantities in different situations and use them for exploration and generalisation"
+  },
+  {
+   "id": "no-lk20-km457",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "explain and use percentages, percentage points and growth factors for modelling practical situations with digital tools"
+  },
+  {
+   "id": "no-lk20-km458",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "interpret and calculate using radical expressions, powers and numbers in standard form"
+  },
+  {
+   "id": "no-lk20-km462",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "plan, carry out and present independent work related to modelling and functions within topics from social studies"
+  },
+  {
+   "id": "no-lk20-km460",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Mathematics 2P-Y",
+   "ages": [
+    18
+   ],
+   "text": "use digital tools in exploration and problem solving related to the properties of functions, and discuss the solutions"
+  },
+  {
+   "id": "no-lk20-km13806",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "query, explore and make questions and to link these to one's own or others’ experiences"
+  },
+  {
+   "id": "no-lk20-km13807",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "present one’s findings and describe how one has arrived at them"
+  },
+  {
+   "id": "no-lk20-km13808",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "present one’s own ideas for technological inventions"
+  },
+  {
+   "id": "no-lk20-km13809",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore and describe observable properties of different objects, materials and substances and sort them according to their properties"
+  },
+  {
+   "id": "no-lk20-km13815",
+   "code": "",
+   "subject": "Science",
+   "strand": "Earth and life on Earth",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "talk about how we can make environmentally aware choices and carry out local environmental initiatives"
+  },
+  {
+   "id": "no-lk20-km13810",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore a local natural area and describe how some organisms are adapted to the area and to each other"
+  },
+  {
+   "id": "no-lk20-km13811",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "experience nature during the different seasons, reflect on how nature is undergoing changes and why the year is divided in different ways in the Norwegian and Sami traditions"
+  },
+  {
+   "id": "no-lk20-km13812",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "plan and carry out examinations of weather and sky phenomena and compare measurements, observations and weather signs throughout the year"
+  },
+  {
+   "id": "no-lk20-km13813",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "explore the senses through indoor and outdoor play and talk about how the senses are used to collect information"
+  },
+  {
+   "id": "no-lk20-km13814",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "give examples of some common diseases and talk about what can be done to protect the body from infectious diseases"
+  },
+  {
+   "id": "no-lk20-km13816",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "query, ask questions, formulate hypotheses and explore them to find answers"
+  },
+  {
+   "id": "no-lk20-km13817",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "use tables and figures to structure data, make explanations based on data and present findings"
+  },
+  {
+   "id": "no-lk20-km13818",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "compare models with observations and talk about how we use models in natural science"
+  },
+  {
+   "id": "no-lk20-km13820",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore technological systems that are composed of different parts and describe how the parts function and work together"
+  },
+  {
+   "id": "no-lk20-km13821",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "design and make a product based on specifications"
+  },
+  {
+   "id": "no-lk20-km13822",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore and describe how some substances can change when mixed with other substances"
+  },
+  {
+   "id": "no-lk20-km13823",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore observable quantities, such as speed and temperature, and connect them to energy"
+  },
+  {
+   "id": "no-lk20-km13824",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "talk about what energy is and explore different energy chains"
+  },
+  {
+   "id": "no-lk20-km13819",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore an area in nature and discuss sustainable use of the area"
+  },
+  {
+   "id": "no-lk20-km13825",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore and compare how different species of animals and plants adapt to environments and habitats and discuss why some species become extinct"
+  },
+  {
+   "id": "no-lk20-km13827",
+   "code": "",
+   "subject": "Science",
+   "strand": "Earth and life on Earth",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "participate in harvesting and using natural resources and explain how natural resources can be used in a sustainable way"
+  },
+  {
+   "id": "no-lk20-km13826",
+   "code": "",
+   "subject": "Science",
+   "strand": "Earth and life on Earth",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "give examples of good animal welfare and reflect on how to look after the needs of animals"
+  },
+  {
+   "id": "no-lk20-km13828",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore and describe the water cycle and explain why water is important for life on Earth"
+  },
+  {
+   "id": "no-lk20-km13832",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "talk about physical and mental health and explain how lifestyles and well-being affect health"
+  },
+  {
+   "id": "no-lk20-km13829",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "talk about the similarities and differences between the genders, about gender identity and about human reproduction"
+  },
+  {
+   "id": "no-lk20-km13831",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "describe how the muscles and skeleton function and relate this to movement"
+  },
+  {
+   "id": "no-lk20-km13830",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "describe functions in the body’s external defence mechanisms and talk about how these protect against disease"
+  },
+  {
+   "id": "no-lk20-km13833",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "ask questions and formulate hypotheses about natural-science phenomena, identify variables and collect data to find answers"
+  },
+  {
+   "id": "no-lk20-km13834",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "distinguish between observations and conclusions, structure data, use cause and effect arguments, draw conclusions, assess sources of errors and present findings"
+  },
+  {
+   "id": "no-lk20-km13835",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "use and assess models that represent phenomena that cannot be observed directly and explain why models are used in natural science"
+  },
+  {
+   "id": "no-lk20-km13836",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "read and understand hazard labelling and reflect on the purpose os such labelling"
+  },
+  {
+   "id": "no-lk20-km13837",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "give examples of how natural-science knowledge has developed and continues to develop"
+  },
+  {
+   "id": "no-lk20-km13851",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "give examples of how traditional knowledge has contributed and continues to contribute to natural-science knowledge"
+  },
+  {
+   "id": "no-lk20-km13838",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore, make and program technological systems that consist of parts that work together"
+  },
+  {
+   "id": "no-lk20-km13839",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "design and make a product based on user needs"
+  },
+  {
+   "id": "no-lk20-km13840",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "reflect on how technology can solve challenges, create opportunities and lead to new dilemmas"
+  },
+  {
+   "id": "no-lk20-km13841",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore phase transitions and chemical reactions and describe their properties"
+  },
+  {
+   "id": "no-lk20-km13852",
+   "code": "",
+   "subject": "Science",
+   "strand": "Energy and matter",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "use the particle model to explain phase transitions and the properties of solids, liquids and gases"
+  },
+  {
+   "id": "no-lk20-km13842",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore electric and magnetic forces through experiments and talk about how we exploit electric energy in everyday life"
+  },
+  {
+   "id": "no-lk20-km13843",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explain how organisms can be divided into main groups and give examples of the special features of different organisms"
+  },
+  {
+   "id": "no-lk20-km13853",
+   "code": "",
+   "subject": "Science",
+   "strand": "Earth and life on Earth",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explain the importance of biological diversity and implement measures to protect biological diversity in the local community"
+  },
+  {
+   "id": "no-lk20-km13844",
+   "code": "",
+   "subject": "Science",
+   "strand": "Earth and life on Earth",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "propose measures to preserve biological diversity in northern areas and give examples of the importance of traditional knowledge in nature management"
+  },
+  {
+   "id": "no-lk20-km13845",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore and describe different food cycles and use this to discuss synergy in nature"
+  },
+  {
+   "id": "no-lk20-km13846",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "describe and visualise how day and night, moon phases and seasons arise and talk about the effect on life on Earth"
+  },
+  {
+   "id": "no-lk20-km13847",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explain the conditions for life on Earth and compare these to other celestial bodies in the universe"
+  },
+  {
+   "id": "no-lk20-km13848",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explain how the geological cycle, plate tectonics and external forces help shape and change different landscapes"
+  },
+  {
+   "id": "no-lk20-km13849",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explain physical and mental changes during puberty and talk about how these can affect emotions, actions and sexuality"
+  },
+  {
+   "id": "no-lk20-km13850",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "describe some of the body’s organ systems and describe how the systems work together"
+  },
+  {
+   "id": "no-lk20-km13854",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "ask questions and formulate hypotheses about natural-science phenomena, identify dependent and independent variables and collect data to find answers"
+  },
+  {
+   "id": "no-lk20-km13855",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "analyse and use collected data to make explanations, discuss the explanations in the light of relevant theory and assess the quality of one’s own and others’ explorations"
+  },
+  {
+   "id": "no-lk20-km13856",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use and make models to predict or describe natural-science processes and systems and explain the strengths and limitations of the models"
+  },
+  {
+   "id": "no-lk20-km13857",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "participate in risk assessments in relation to experiments and comply with safety measures"
+  },
+  {
+   "id": "no-lk20-km13858",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "give examples of current research and explain how new knowledge is generated through collaboration and a critical approach to existing knowledge"
+  },
+  {
+   "id": "no-lk20-km13859",
+   "code": "",
+   "subject": "Science",
+   "strand": "Technology",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore, understand and make technological systems that have a transmitter and receiver"
+  },
+  {
+   "id": "no-lk20-km13860",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use programming to explore natural-science phenomena"
+  },
+  {
+   "id": "no-lk20-km13861",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore chemical reactions, explain mass conservation and explain the importance of some combustion reactions"
+  },
+  {
+   "id": "no-lk20-km13862",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use atomic models and the periodic table to explain the properties of the elements and chemical compounds"
+  },
+  {
+   "id": "no-lk20-km13863",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "describe the greenhouse effect and explain factors that can cause global climate changes"
+  },
+  {
+   "id": "no-lk20-km13864",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explain energy conservation and energy quality and explore different ways to convert, transport and store energy"
+  },
+  {
+   "id": "no-lk20-km13865",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explain how energy production and energy use can affect the environment locally and globally"
+  },
+  {
+   "id": "no-lk20-km13866",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "describe how researchers have arrived at evolution theory and use it to explain the development of biological diversity"
+  },
+  {
+   "id": "no-lk20-km13867",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "compare cells in various organisms and describe the connections between structure and function"
+  },
+  {
+   "id": "no-lk20-km13868",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore connections between abiotic and biotic factors in an ecosystem and discuss how energy and matter are converted in cycles"
+  },
+  {
+   "id": "no-lk20-km13875",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "give examples of and discuss current dilemmas related to exploitation of natural resources and the loss of biological diversity"
+  },
+  {
+   "id": "no-lk20-km13869",
+   "code": "",
+   "subject": "Science",
+   "strand": "Earth and life on Earth",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "give examples of traditional Sami knowledge about nature and discuss how this knowledge can contribute to sustainable nature management"
+  },
+  {
+   "id": "no-lk20-km13870",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explain how photosynthesis and cellular respiration produce energy for all living organisms throughout the carbon cycle"
+  },
+  {
+   "id": "no-lk20-km13871",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use plate tectonic theory to explain the development of Earth over time and give examples of observations that support this theory"
+  },
+  {
+   "id": "no-lk20-km13872",
+   "code": "",
+   "subject": "Science",
+   "strand": "Body and health",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "discuss questions relating to sexual and reproductive health"
+  },
+  {
+   "id": "no-lk20-km13873",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "compare the nervous system and hormone system and describe how drugs, medicines, environmental toxins and doping affect the cell signalling systems"
+  },
+  {
+   "id": "no-lk20-km13874",
+   "code": "",
+   "subject": "Science",
+   "strand": "Natural-science practices and approaches",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "describe the body’s immune system and how vaccines work and explain the importance of vaccines for public health"
+  },
+  {
+   "id": "no-lk20-km13876",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen natural-science research question, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13877",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13878",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "discuss how the development of natural-science hypotheses, models and theories helps us to understand and explain the world"
+  },
+  {
+   "id": "no-lk20-km13879",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "assess and make programs that model natural-science phenomena"
+  },
+  {
+   "id": "no-lk20-km13883",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explore and describe some central wave phenomena"
+  },
+  {
+   "id": "no-lk20-km13890",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain the main principles of wireless communication and give examples of applications of this technology"
+  },
+  {
+   "id": "no-lk20-km13882",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explore and describe electromagnetic and ionising radiation and assess information about radiation and the effect on health of various types of radiation"
+  },
+  {
+   "id": "no-lk20-km13887",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "describe the Big Bang theory, and the origin and development of the universe, and explain observations that support this theory"
+  },
+  {
+   "id": "no-lk20-km13880",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explore and explain the connections between chemical bonds and the properties of different substances"
+  },
+  {
+   "id": "no-lk20-km13881",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties and reactions of some organic and inorganic carbon compounds, give examples of applications and explain the importance of carbon for life on Earth"
+  },
+  {
+   "id": "no-lk20-km13886",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain how some environmental toxins can accumulate in food chains and assess measures to protect health and the environment"
+  },
+  {
+   "id": "no-lk20-km13888",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13889",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from various sources"
+  },
+  {
+   "id": "no-lk20-km13884",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "describe DNA and how characteristics are inherited and explain how heredity is a precondition for evolution"
+  },
+  {
+   "id": "no-lk20-km13891",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain how climate changes affect evolution, the prevalence of species and biological diversity"
+  },
+  {
+   "id": "no-lk20-km13885",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 programmes for general studies",
+   "ages": [
+    16
+   ],
+   "text": "give examples of the use of biotechnology and discuss ethical questions related to biotechnology"
+  },
+  {
+   "id": "no-lk20-km13892",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13893",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13896",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13894",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13895",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13897",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties of different materials and surface treatments and assess their use in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13898",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 building and construction",
+   "ages": [
+    16
+   ],
+   "text": "use the concepts of energy transition, energy conservation and efficiency to assess energy economy in buildings"
+  },
+  {
+   "id": "no-lk20-km13899",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13900",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13903",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13901",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13902",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13904",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "explain the connections between electrical energy and effect and present some energy-efficient solutions in buildings"
+  },
+  {
+   "id": "no-lk20-km13905",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 electrical engineering and computer technology",
+   "ages": [
+    16
+   ],
+   "text": "use the terms alternating current technology, direct current technology, energy storage and efficiency to describe and discuss methods for sustainable energy production"
+  },
+  {
+   "id": "no-lk20-km13955",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13956",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13957",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13958",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13959",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13960",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "examine and assess the life cycle of various products from a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13961",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 hairdressing, floral, interior and retail design",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties and reactions of some substances and substance mixtures that are relevant to the education programme"
+  },
+  {
+   "id": "no-lk20-km13906",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13907",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13908",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to their own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13911",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13912",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13910",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties and reactions of some substances and substance mixtures that are relevant to the education programme"
+  },
+  {
+   "id": "no-lk20-km13909",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 health and early development",
+   "ages": [
+    16
+   ],
+   "text": "discuss the importance of microorganisms for the body and health"
+  },
+  {
+   "id": "no-lk20-km13934",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13935",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13936",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13937",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13938",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13940",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "investigate and assess the life cycle of various products in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13939",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 crafts, design and product development",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties of different materials and surface treatments and assess their use from a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13941",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13942",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13943",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13944",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13945",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13946",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "describe different types of electromagnetic radiation and give examples of how radiation is used in wireless communication"
+  },
+  {
+   "id": "no-lk20-km13947",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 information technology and media production",
+   "ages": [
+    16
+   ],
+   "text": "explore wave phenomena relating to sound and acoustics"
+  },
+  {
+   "id": "no-lk20-km13913",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13914",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13915",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13916",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13917",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13918",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "explore issues related to land use, explain how changes can affect ecosystems and propose sustainable solutions"
+  },
+  {
+   "id": "no-lk20-km13919",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 agriculture, fishing and forestry",
+   "ages": [
+    16
+   ],
+   "text": "explain why some elements are important for life and assess how human activity can affect the cycles of these elements"
+  },
+  {
+   "id": "no-lk20-km13920",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13921",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13922",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13923",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13924",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13925",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties and reactions of some substances and substance mixtures that are relevant to the education programme"
+  },
+  {
+   "id": "no-lk20-km13926",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 restaurant and food",
+   "ages": [
+    16
+   ],
+   "text": "explain food safety and the importance of microorganisms for food production, operations hygiene and food processing"
+  },
+  {
+   "id": "no-lk20-km13948",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13949",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13950",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13951",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13952",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13953",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "explore the life cycle of various materials and products and assess them from a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13954",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 sales, service and tourism",
+   "ages": [
+    16
+   ],
+   "text": "explain current environmental challenges relating to trade and tourism and discuss them from a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13927",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "explore a self-chosen research question relating to one’s own education programme, present findings and argue for the choice of methods"
+  },
+  {
+   "id": "no-lk20-km13928",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "carry out risk assessment of one’s own experiments and manage the resulting waste in a suitable manner"
+  },
+  {
+   "id": "no-lk20-km13929",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "explore and present technology relating to one’s own education programme and assess it in a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13930",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "discuss current health and lifestyle issues and assess the reliability of information from different sources"
+  },
+  {
+   "id": "no-lk20-km13931",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "explain the functions of some nutrients and discuss why a varied diet is important in a health and sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13932",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "explore the properties of different materials and surface treatments and assess their use from a sustainability perspective"
+  },
+  {
+   "id": "no-lk20-km13933",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg1 technical and industrial production",
+   "ages": [
+    16
+   ],
+   "text": "explore and assess different methods for storing and transferring energy"
+  },
+  {
+   "id": "no-lk20-km13962",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explain how the development of natural-science hypotheses, models and theories helps us to understand and explain the world"
+  },
+  {
+   "id": "no-lk20-km13963",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "assess and make programs that model natural-science phenomena"
+  },
+  {
+   "id": "no-lk20-km13964",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "describe the Big Bang theory, and the origin and development of the universe, and explain observations that support this theory"
+  },
+  {
+   "id": "no-lk20-km13965",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explore and describe electromagnetic and ionising radiation and assess information on radiation and the health effects of various types of radiation"
+  },
+  {
+   "id": "no-lk20-km13966",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explore and describe some central wave phenomena"
+  },
+  {
+   "id": "no-lk20-km13970",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explain the main principles of wireless communication and give examples of applications of this technology"
+  },
+  {
+   "id": "no-lk20-km13967",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "describe DNA and how characteristics are inherited and explain how heredity is a precondition for evolution"
+  },
+  {
+   "id": "no-lk20-km13971",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explain how climate changes affect evolution, the prevalence of species and biological diversity"
+  },
+  {
+   "id": "no-lk20-km13968",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "give examples of the use of biotechnology and discuss ethical questions related to biotechnology"
+  },
+  {
+   "id": "no-lk20-km13969",
+   "code": "",
+   "subject": "Science",
+   "strand": "Vg3 supplementary programme for general university and college admissions certification",
+   "ages": [
+    18
+   ],
+   "text": "explain how some environmental toxins can accumulate in food chains and assess measures to protect health and the environment"
+  },
+  {
+   "id": "no-lk20-km13338",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "use digital aids to experience the language through authentic language models and interlocutors"
+  },
+  {
+   "id": "no-lk20-km13329",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "listen to and recognise phonemes and syllables in words"
+  },
+  {
+   "id": "no-lk20-km13330",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "associate phonemes with letters and spelling patterns and combine letter sounds into words"
+  },
+  {
+   "id": "no-lk20-km13331",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "listen to and explore the English alphabet and pronunciation patterns through play and singing"
+  },
+  {
+   "id": "no-lk20-km13334",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "find high frequency words and phrases in different types of texts"
+  },
+  {
+   "id": "no-lk20-km13332",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "ask and answer simple questions, follow simple instructions and use some polite expressions"
+  },
+  {
+   "id": "no-lk20-km13333",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "participate in rehearsed dialogues and spontaneous conversations about one’s own needs and feelings, daily life and interests"
+  },
+  {
+   "id": "no-lk20-km13335",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "find words that are common to English and other languages with which the pupil is familiar"
+  },
+  {
+   "id": "no-lk20-km13336",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "listen to, read and talk about the content of simple texts, including picture books"
+  },
+  {
+   "id": "no-lk20-km13339",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "read and experiment with writing familiar words, phrases and simple sentences"
+  },
+  {
+   "id": "no-lk20-km13337",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "learn words and acquire cultural knowledge through English-language literature for children"
+  },
+  {
+   "id": "no-lk20-km13343",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore different dictionaries and how they can be used in language learning"
+  },
+  {
+   "id": "no-lk20-km13351",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "use digital resources to explore the language and interact with others"
+  },
+  {
+   "id": "no-lk20-km13340",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "explore and use the English alphabet and pronunciation patterns in a variety of playing, singing and language-learning activities"
+  },
+  {
+   "id": "no-lk20-km13354",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "listen to and understand words and expressions in adapted texts"
+  },
+  {
+   "id": "no-lk20-km13341",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "use a number of common small words, polite expressions and simple phrases and sentences to obtain help to understand and be understood"
+  },
+  {
+   "id": "no-lk20-km13342",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "participate in conversations on one’s own and others’ needs, feelings, daily life and interests and use conversation rules"
+  },
+  {
+   "id": "no-lk20-km13346",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "discover and play with words and expressions that are common to both English and other languages with which the pupil is familiar"
+  },
+  {
+   "id": "no-lk20-km13344",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "identify word classes in adapted texts"
+  },
+  {
+   "id": "no-lk20-km13345",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "follow simple rules for spelling and syntax"
+  },
+  {
+   "id": "no-lk20-km13347",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "read and understand texts with phonetic words and familiar and unfamiliar word images"
+  },
+  {
+   "id": "no-lk20-km13348",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "read and understand the meaning of familiar and unfamiliar words, phrases and sentences based on the context in self-chosen texts"
+  },
+  {
+   "id": "no-lk20-km13349",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "read and talk about the content of various types of texts, including picture books"
+  },
+  {
+   "id": "no-lk20-km13352",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "write simple texts that express thoughts and opinions"
+  },
+  {
+   "id": "no-lk20-km13353",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "talk about some aspects of different ways of living, traditions and customs in the English-speaking world and in Norway"
+  },
+  {
+   "id": "no-lk20-km13350",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "learn words and phrases and acquire cultural knowledge through English-language literature"
+  },
+  {
+   "id": "no-lk20-km13359",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "use simple strategies for language learning, text creation and communication"
+  },
+  {
+   "id": "no-lk20-km13364",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "use digital resources and different dictionaries in language learning, text creation and interaction"
+  },
+  {
+   "id": "no-lk20-km13355",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore and use pronunciation patterns and words and expressions in play, singing and role playing"
+  },
+  {
+   "id": "no-lk20-km13356",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "listen to and understand words and expressions in adapted and authentic texts"
+  },
+  {
+   "id": "no-lk20-km13357",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "express oneself in an understandable way with a varied vocabulary and polite expressions adapted to the receiver and situation"
+  },
+  {
+   "id": "no-lk20-km13358",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "initiate, maintain and conclude conversations about one's own interests and current topics"
+  },
+  {
+   "id": "no-lk20-km13361",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "explore and talk about some linguistic similarities between English and other languages that the pupil is familiar with and use this in their language learning"
+  },
+  {
+   "id": "no-lk20-km13370",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "identify sentence elements in various types of sentences and use knowledge of verb conjugation and declension of nouns and adjectives in working on own oral and written texts"
+  },
+  {
+   "id": "no-lk20-km13360",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "follow rules for spelling, word inflection and syntax"
+  },
+  {
+   "id": "no-lk20-km13362",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "read and present content from various types of texts, including self-chosen texts"
+  },
+  {
+   "id": "no-lk20-km13363",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "read and listen to English-language factual texts and literature for children and young people and write and talk about the content"
+  },
+  {
+   "id": "no-lk20-km13365",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "talk about the reliability of various sources and choose sources for one's own use"
+  },
+  {
+   "id": "no-lk20-km13366",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "write cohesive texts, including multimedia texts, that retell, tell, inquire about and express opinions and interests adapted to the recipient"
+  },
+  {
+   "id": "no-lk20-km13367",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "revise one's own texts based on feedback"
+  },
+  {
+   "id": "no-lk20-km13368",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "reflect on and talk about the role played by English in their own lives"
+  },
+  {
+   "id": "no-lk20-km13369",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    10,
+    11,
+    12
+   ],
+   "text": "investigate ways of living and traditions in different societies in the English-speaking world and in Norway and reflect on identity and cultural belonging"
+  },
+  {
+   "id": "no-lk20-km13374",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use a variety of strategies for language learning, text creation and communication"
+  },
+  {
+   "id": "no-lk20-km13380",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use different digital resources and other aids in language learning, text creation and interaction"
+  },
+  {
+   "id": "no-lk20-km13388",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use key patterns of pronunciation in communication"
+  },
+  {
+   "id": "no-lk20-km13371",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "listen to and understand words and expressions in variants of English"
+  },
+  {
+   "id": "no-lk20-km13372",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "express oneself with fluency and coherence with a varied vocabulary and idiomatic expressions adapted to the purpose, recipient and situation"
+  },
+  {
+   "id": "no-lk20-km13373",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "ask questions and follow up input when talking about various topics adapted to different purposes, recipients and situations"
+  },
+  {
+   "id": "no-lk20-km13376",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore and describe some linguistic similarities and differences between English and other languages the pupil is familiar with and use this in one's own language learning"
+  },
+  {
+   "id": "no-lk20-km13389",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use knowledge of word classes and syntax in working on one's own oral and written texts"
+  },
+  {
+   "id": "no-lk20-km13375",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "follow rules for spelling, word inflection, syntax and text structure"
+  },
+  {
+   "id": "no-lk20-km13377",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "read, discuss and present content from various types of texts, including self-chosen texts"
+  },
+  {
+   "id": "no-lk20-km13378",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "read, interpret and reflect on English-language fiction, including young people’s literature"
+  },
+  {
+   "id": "no-lk20-km13379",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "read factual texts and assess the reliability of the sources"
+  },
+  {
+   "id": "no-lk20-km13381",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "use sources in a critical and accountable manner"
+  },
+  {
+   "id": "no-lk20-km13382",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "write formal and informal texts, including multimedia texts with structure and coherence that describe, narrate and reflect, and are adapted to the purpose, recipient and situation"
+  },
+  {
+   "id": "no-lk20-km13383",
+   "code": "",
+   "subject": "English",
+   "strand": "Language learning",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "revise one's own texts based on feedback and knowledge of the language"
+  },
+  {
+   "id": "no-lk20-km13384",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "describe and reflect on the role played by the English language in Norway and the rest of the world"
+  },
+  {
+   "id": "no-lk20-km13385",
+   "code": "",
+   "subject": "English",
+   "strand": "Working with texts in English",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore and reflect on the situation of indigenous peoples in the English-speaking world and in Norway"
+  },
+  {
+   "id": "no-lk20-km13387",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore and describe ways of living, ways of thinking, communication patterns and diversity in the English-speaking world"
+  },
+  {
+   "id": "no-lk20-km13386",
+   "code": "",
+   "subject": "English",
+   "strand": "Communication",
+   "ages": [
+    13,
+    14,
+    15
+   ],
+   "text": "explore and present the content of cultural forms of expression from various media in the English-speaking world that are related to one's own interests"
+  },
+  {
+   "id": "no-lk20-km13393",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "use appropriate strategies for language learning, text creation and communication"
+  },
+  {
+   "id": "no-lk20-km13398",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "use appropriate digital resources and other aids in language learning, text creation and interaction"
+  },
+  {
+   "id": "no-lk20-km13405",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "use patterns of pronunciation in communication"
+  },
+  {
+   "id": "no-lk20-km13390",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "listen to, understand and use terminology appropriate for the trade, both orally and in writing, in work situations"
+  },
+  {
+   "id": "no-lk20-km13391",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "express oneself in a nuanced and precise manner with fluency and coherence, using idiomatic expressions and varied sentence structures adapted to the purpose, recipient and situation"
+  },
+  {
+   "id": "no-lk20-km13392",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "explain the reasoning of others and use and follow up input during conversations and discussions on vocationally relevant topics"
+  },
+  {
+   "id": "no-lk20-km13394",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "use knowledge of similarities between English and other languages the pupil knows in language learning"
+  },
+  {
+   "id": "no-lk20-km13406",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "use knowledge of grammar and text structure in working on one's own oral and written texts"
+  },
+  {
+   "id": "no-lk20-km13395",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "read, discuss and reflect on the content and language features and literary devices in various types of texts, including self-chosen texts"
+  },
+  {
+   "id": "no-lk20-km13396",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "read and summarise vocational content from English-language documentation"
+  },
+  {
+   "id": "no-lk20-km13397",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "read and compare different factual texts on the same topic from different sources and critically assess the reliability of the sources"
+  },
+  {
+   "id": "no-lk20-km13399",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "use different sources in a critical, appropriate and accountable manner"
+  },
+  {
+   "id": "no-lk20-km13400",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "create texts relevant to the vocation with structure and coherence that describe and document the pupil’s own work and are adapted to the purpose, recipient and situation"
+  },
+  {
+   "id": "no-lk20-km13401",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "assess and revise one's own texts based on criteria in the subject and knowledge of language"
+  },
+  {
+   "id": "no-lk20-km13402",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "describe key features of the development of English as a language in working life"
+  },
+  {
+   "id": "no-lk20-km13404",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "explore and reflect on diversity and social conditions in the English-speaking world based on historical contexts"
+  },
+  {
+   "id": "no-lk20-km13403",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 vocational education programmes",
+   "ages": [
+    16
+   ],
+   "text": "discuss and reflect on form, content and language features and literary devices in cultural forms of expression in English from different media in the English-speaking world, including music, film and gaming"
+  },
+  {
+   "id": "no-lk20-km13410",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use appropriate strategies for language learning, text creation and communication"
+  },
+  {
+   "id": "no-lk20-km13416",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use appropriate digital resources and other aids in language learning, text creation and interaction"
+  },
+  {
+   "id": "no-lk20-km13423",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use pronunciation patterns in communication"
+  },
+  {
+   "id": "no-lk20-km13407",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "listen to, understand and use academic language in working on one's own oral and written texts"
+  },
+  {
+   "id": "no-lk20-km13408",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "express himself or herself in a nuanced and precise manner with fluency and coherence, using idiomatic expressions and varied sentence structures adapted to the purpose, receiver and situation"
+  },
+  {
+   "id": "no-lk20-km13409",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explain the reasoning of others and use and follow up input from others during conversations and discussions on various topics"
+  },
+  {
+   "id": "no-lk20-km13411",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use knowledge of similarities between English and other languages with which the pupil is familiar in language learning"
+  },
+  {
+   "id": "no-lk20-km13412",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use knowledge of grammar and text structure in working on one's own oral and written texts"
+  },
+  {
+   "id": "no-lk20-km13413",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "read, discuss and reflect on the content and language features and literary devices in various types of texts, including self-chosen texts"
+  },
+  {
+   "id": "no-lk20-km13414",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "read, analyse and interpret fictional texts in English"
+  },
+  {
+   "id": "no-lk20-km13415",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "read and compare different factual texts on the same topic from different sources and critically assess the reliability of the sources"
+  },
+  {
+   "id": "no-lk20-km13417",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "use different sources in a critical, appropriate and accountable manner"
+  },
+  {
+   "id": "no-lk20-km13418",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "write different types of formal and informal texts, including multimedia texts with structure and coherence that describe, discuss, reason and reflect adapted to the purpose, recipient and situation"
+  },
+  {
+   "id": "no-lk20-km13419",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "assess and revise one's own texts based on criteria in the subject and knowledge of language"
+  },
+  {
+   "id": "no-lk20-km13420",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "describe key features of the development of English as a global language"
+  },
+  {
+   "id": "no-lk20-km13422",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "explore and reflect on diversity and social conditions in the English-speaking world based on historical contexts"
+  },
+  {
+   "id": "no-lk20-km13421",
+   "code": "",
+   "subject": "English",
+   "strand": "Vg1 programme for general studies",
+   "ages": [
+    16
+   ],
+   "text": "discuss and reflect on form, content and language features and literary devices in different cultural forms of expression from different media in the English-language world, including music, film and gaming"
+  }
+ ]
+}

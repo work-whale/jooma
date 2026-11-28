@@ -23,7 +23,8 @@ import { admin, createTeacher, deleteTeacher, setPlan, signIn, type TestTeacher 
 const NAV = { timeout: 120_000 };
 const LIVE = { timeout: 420_000 };
 const OUT = join(process.cwd(), "docs", "screenshots", "2026-11-28-open-statements-live");
-const KEYS = ["curricula_asia", "curricula_s3_b"];
+// Asia and batch B (Japan, Taiwan), Europe and batch C (Norway): put back after.
+const KEYS = ["curricula_asia", "curricula_s3_b", "curricula_europe", "curricula_s3_c"];
 const setSwitch = (key: string, value: unknown) => admin.from("app_settings").update({ value }).eq("key", key);
 
 const before: Record<string, unknown> = {};
@@ -80,6 +81,45 @@ test("LIVE japan: a worksheet aligned to a Japanese statement is written in Engl
   // In English, with no Japanese script, and not in England's framing.
   expect(text).toMatch(/\b(the|and|of|to)\b.*\b(the|and|of|to)\b.*\b(the|and|of|to)\b/i);
   expect(text, "Japanese or Chinese script").not.toMatch(/[぀-ヿ一-鿿]/);
+  expect(text).not.toMatch(/Key Stage|\bKS[1-4]\b|\bYear [0-9]/);
+});
+
+test("LIVE norway: a worksheet aligned to an LK20 aim teaches it, in English, with no England framing", async ({ page }) => {
+  test.skip(process.env.LIVE_MODEL !== "1", "Live model run: set LIVE_MODEL=1 (spends real money on staging).");
+  test.setTimeout(600_000);
+  const t = await createTeacher("LvNoLk20");
+  people.push(t);
+  await setPlan(t, "max", "paying");
+  for (const key of KEYS) await setSwitch(key, true);
+  await admin.from("profiles").update({ curriculum_id: "norway", curriculum_confirmed_at: new Date().toISOString() }).eq("id", t.id);
+  await page.route("**/api/suggest-subject", (route) => route.fulfill({ json: { subject: "", strand: "", statementIds: [] } }));
+
+  await signIn(page, t);
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Norwegian Curriculum (LK20)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Grade 5");
+  await page.getByLabel("Subject", { exact: true }).fill("Maths");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Fractions, decimals and percentages");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await card.getByLabel("Subject").selectOption("Mathematics", NAV);
+  await card.getByRole("checkbox", { name: /relationships between fractions, decimals, and percentages/ }).click();
+
+  const sentReq = page.waitForRequest((r) => r.url().includes("/api/worksheet-generator") && r.method() === "POST", NAV);
+  await page.locator("[data-jo-generate]").click();
+  const body = (await sentReq).postDataJSON();
+  expect(body.curriculumAlign.statements.map((s: { id: string }) => s.id)).toEqual(["no-lk20-km13265"]);
+
+  await expect(page.getByTestId("sheet-document")).toHaveAttribute("data-ready", "true", LIVE);
+  const text = (await page.getByTestId("sheet-document").innerText()).replace(/\s+/g, " ");
+  await page.screenshot({ path: join(OUT, "norway-grade5-fractions.png"), fullPage: true });
+  results.push({ case: "norway-grade5-fractions", chars: text.length, excerpt: text.slice(0, 1200) });
+
+  expect(text.length).toBeGreaterThan(300);
+  expect(text).toMatch(/fraction/i);
+  expect(text).toMatch(/decimal|percent|%/i);
+  expect(text).toMatch(/\b(the|and|of|to)\b.*\b(the|and|of|to)\b.*\b(the|and|of|to)\b/i);
   expect(text).not.toMatch(/Key Stage|\bKS[1-4]\b|\bYear [0-9]/);
 });
 

@@ -23,6 +23,8 @@
  *                          Education for Mandarin and mathematics, in Chinese
  *   - data/tw-108-en.json  Taiwan: the same for English and science, in NAER's
  *                          official English translation (same builder)
+ *   - data/no-lk20.json    Norway: the LK20 competence aims (Udir), in Udir's
+ *                          English text, from the Grep snapshot (same builder)
  *
  * Statements carry the AGES they apply to, not a grade name, so one file
  * serves "Grade 3" in Texas and "Year 3" in Queensland alike: a year's age
@@ -80,6 +82,7 @@ export const FRAMEWORK_NAME: Record<FrameworkId, string> = {
   "jp-cos": "Course of Study (MEXT)",
   "tw-108-zh": "Curriculum Guidelines of 12-Year Basic Education",
   "tw-108-en": "Curriculum Guidelines of 12-Year Basic Education",
+  "no-lk20": "LK20 curricula (Udir)",
 };
 
 /** The ages each framework has statements for. */
@@ -112,6 +115,10 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   // science start at Grade 3 (stage II).
   "tw-108-zh": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
   "tw-108-en": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+  // Norway: Grade 1 to 10 (ages 6 to 15), Vg1 to Vg3 (16 to 18). Competence
+  // aims are set after Years 2, 4, 7 and 10 (maths every year), each set
+  // covering the years since the one before.
+  "no-lk20": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched
@@ -150,6 +157,8 @@ export async function loadFramework(id: FrameworkId): Promise<FrameworkData> {
       return (await import("./data/tw-108-zh.json")).default as unknown as FrameworkData;
     case "tw-108-en":
       return (await import("./data/tw-108-en.json")).default as unknown as FrameworkData;
+    case "no-lk20":
+      return (await import("./data/no-lk20.json")).default as unknown as FrameworkData;
   }
 }
 

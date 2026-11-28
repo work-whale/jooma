@@ -218,6 +218,66 @@ Results:
   - The note and both credits show.
 - **Live** (`LIVE_MODEL=1`): worksheet settings were re-diffed first (staging = production: gpt-5.6-luna, low, medium). Taiwan Grade 8 with S-8-6 (畢氏定理) produced an English worksheet on the Pythagorean theorem, 5,902 characters, with no Chinese script. 1 of 1.
 
+## 5. Norway: LK20 curricula (Udir), framework `no-lk20` (BUILT 2026-11-28)
+
+Batch 2 started at the owner's request ("Lets continue with norway"), under the same rules: official text only, the core four subjects.
+
+### 5.1 Source and licence
+
+- **Data:** Udir's Grep REST API, https://data.udir.no/kl06/v201906/. `scripts/fetch-norway-grep.mjs` saves the plans, their competence aim sets, every aim and the core elements the aims link to in one snapshot. The builder reads only the snapshot, so a build is repeatable.
+  - Snapshot: `docs/standards/norway/grep-snapshot.json`, fetched 2026-11-28, 8 plans, 54 sets, 592 aims, 39 core elements.
+  - sha256: e153e20de0a5a316626c2690900e827323d96b7260ee833a8b71e8889c682a0a.
+  - Udir's page says REST API keys apply from 1 September 2026, but the API answered without one on 2026-11-28. A refetch may need a key.
+- **Plans** (all `status_publisert`; the first five revised from 2026-08-01, replacing NOR01-07, MAT01-05, NAT01-04, ENG01-05 and MAT09-01):
+  - NOR01-08 Norwegian
+  - MAT01-06 Mathematics Years 1 to 10
+  - MAT09-02 Mathematics T (Vg1)
+  - NAT01-05 Natural science
+  - ENG01-06 English
+  - MAT08-01 Mathematics P (Vg1), with its vocational 1P-Y versions
+  - MAT05-04 Mathematics 2P (Vg2)
+  - MAT06-04 Mathematics 2P-Y (Vg3 supplementary)
+- **Licence:** NLOD. https://www.udir.no/om-udir/data/ says "Dataene er lagt ut for viderebruk under Norsk lisens for offentlig data (NLOD)" (copy, change, combine, use commercially). The terms page https://www.udir.no/om-udir/data/vilkar-for-bruk/ asks for the credit "Contains data under NLOD, made available on data.udir.no" and says the Udir logo may not be used. The NLOD 2.0 page itself (data.norge.no) did not load (HTTP 406); Udir's wording is used.
+- **Language:** every aim carries `nob`, `nno` and `eng` text. Only the Norwegian is the regulation (`forskrift: true`). Udir publishes the English on its curriculum pages (`?lang=eng`) and as PDFs, with no "unofficial" notice found, so under the owner's rule (official English where it exists) the statements are Udir's English. No card language note.
+
+### 5.2 What a statement is, ages and strands
+
+- One competence aim (kompetansemål), Udir's English word for word. Id `no-lk20-km<Grep code>`, no code shown (Udir does not number aims).
+- **Ages come from each set's title** (the regulation's "Year 4", "vg1"). A Years 1 to 10 set covers the years since the plan's previous set:
+  - After Year 2 = Years 1 and 2; after Year 4 = Years 3 and 4; after Year 7 = Years 5 to 7; after Year 10 = Years 8 to 10. Maths has a set for every year from Year 3.
+  - Vg1 = 16, Vg2 = 17, Vg3 and the Vg3 supplementary programme = 18.
+  - Grep's own "used in" years are not used: for natural science's Year 4 set (KV1076) they say Years 4 and 5, which would leave Year 3 with no science.
+- **Strand:**
+  - Years 1 to 10: the first core element the aim links to (e.g. "Energy and matter", "Working with texts in English"). Five maths aims link to none: "Other competence aims".
+  - Upper secondary: the course or programme the set is for (e.g. "Mathematics 1P-Y for Building and Construction", "Vg1 programmes for general studies").
+- **Upper secondary scope:** the common core (fellesfag) courses in these subjects, vocational programme versions included, since each is required for its students. **For the owner:** this makes Vg1 long (86 maths aims across 12 courses, 86 science aims across 11 programmes; the strand filter narrows it). Dropping the vocational versions is a one-line change in the builder if you prefer.
+- **No aims exist for:** science in Vg2; English in Vg2 and Vg3. The common core ends there.
+
+### 5.3 Counts (pinned in `tests/unit/norway-standards.spec.ts`)
+
+592 statements. JSON 168 KB raw, 19 KB gzipped, its own on-demand chunk.
+
+| Age | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Norwegian | 14 | 14 | 16 | 16 | 17 | 17 | 17 | 16 | 16 | 16 | 13 | 22 | 29 |
+| Mathematics | 15 | 15 | 12 | 10 | 10 | 11 | 11 | 10 | 11 | 11 | 86 | 7 | 10 |
+| Science | 10 | 10 | 17 | 17 | 21 | 21 | 21 | 22 | 22 | 22 | 86 | | 10 |
+| English | 11 | 11 | 15 | 15 | 16 | 16 | 16 | 19 | 19 | 19 | 34 | | |
+
+### 5.4 App changes
+
+- `FrameworkId` + `no-lk20`. Name "LK20 curricula (Udir)", ages 6 to 18, loader.
+- `FRAMEWORK_PERMITTED` on, with the licence note. `FRAMEWORK_CREDIT` with NLOD's wording. `/terms` section 13.
+- `alignment` on the norway entry; provenance.
+- Matcher: norsk and Norwegian → Norwegian; matematikk → Mathematics; naturfag → Science; engelsk → English. Elsewhere "Norwegian" matches nothing, as before.
+
+### 5.5 Tests and results (2026-11-28)
+
+- `tests/unit/norway-standards.spec.ts`, 18 tests: ids; the snapshot's plans are the ones in force; **every aim of every set is a statement, word for word, and nothing else is**; subjects, text, ages; ages by set title (KV1076 = Years 3 and 4; a shifted-band check); pinned counts; strands; credit; curriculum wiring, the subjects each year has, the card, permission off, no language note, terms; matcher; no own-language prompt line. Mutation-checked: dropping an aim, editing a text and shifting an age each fail.
+- Whole unit suite 2,775 passed; tsc clean; ESLint clean on changed files; language check passed.
+- E2E `tests/tools/curricula-standards.spec.ts` 7 of 7 on a staging production build. New Norway Grade 5 case: subject typed as "matematikk"; subjects Norwegian, Mathematics, Science, English; the fractions aim ticked and sent as `no-lk20-km13265`; no language note; NLOD credit shown.
+- Live (`LIVE_MODEL=1`, worksheet settings re-diffed earlier today, staging = production): Norway Grade 5, the fractions aim, gave an English worksheet on fractions, decimals and percentages, 4,823 characters. 1 of 1. The spec now restores the Europe and batch C switches too.
+
 ## 4. Not tested, on purpose
 
 - How well the topic matcher picks Japanese or Chinese statements for English topics across many topics: needs many live runs (one live case per country).

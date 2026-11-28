@@ -97,6 +97,8 @@ const YEARS: Record<CId, { label: string; age: number }[]> = {
 const ENGLISH_DEFAULT = C_IDS.filter((id) => C[id].lang === "en-GB");
 const ownText = (text: string) => text.split("\n").map((l) => (l.startsWith("- instead of ") ? l.slice(l.indexOf(": ") + 2) : l)).join("\n");
 
+const WITH_STATEMENTS = new Set<string>(["norway"]);
+
 test.describe("Stage 3 batch C entries", () => {
   test("the twenty-nine exist, verified, in batch C, under Europe", () => {
     const batch = CURRICULA_REGISTRY.filter((c) => c.release === "s3-c").map((c) => c.id);
@@ -107,7 +109,9 @@ test.describe("Stage 3 batch C entries", () => {
       expect(c.region, id).toBe("europe");
       expect(c.country, id).toBe(C[id].country);
       expect(c.place, id).toBe(C[id].place);
-      expect(c.alignment, `${id} has no statements yet`).toBeUndefined();
+      // Open-licence statements, built after the profiles (owner, 2026-11-28).
+      if (WITH_STATEMENTS.has(id)) expect(c.alignment?.frameworks.length, `${id} has its own statements`).toBeGreaterThan(0);
+      else expect(c.alignment, `${id} has no statements yet`).toBeUndefined();
     }
   });
 
@@ -155,7 +159,7 @@ test.describe("Stage 3 batch C entries", () => {
       expect(p.notes, id).toMatch(/Stage 3 batch C \(2026-11-27\)/);
       expect(p.notes, id).toMatch(/Confirmed|workbook, checked/);
       expect(p.notes, id).toMatch(/licen[cs]e/i);
-      expect(p.notes, id).toMatch(/Profile only/);
+      expect(p.notes, id).toMatch(WITH_STATEMENTS.has(id) ? /Statements \(2026-11-28/ : /Profile only/);
       expect(p.notes, id).not.toMatch(/[–—]/);
     }
   });

@@ -121,6 +121,12 @@ const CONCEPTS: Concept[] = [
   // "Chinese" finds no such subject and stays a modern language (above).
   { typed: /\b(mandarin|chinese)\b|國語|國文|国语|中文/i, tiers: [/^mandarin$/i] },
   { typed: /自然/, tiers: [/(?<!social )scien/i] },
+  // Norway's norsk is listed as "Norwegian"; subjects typed in Norwegian.
+  // In England "Norwegian" finds no such subject.
+  { typed: /\b(norwegian|norsk)\b/i, tiers: [/^norwegian$/i] },
+  { typed: /\bmatematikk\b/i, tiers: [/math/i] },
+  { typed: /\bnaturfag\b/i, tiers: [/(?<!social )scien/i] },
+  { typed: /\bengelsk\b/i, tiers: [/\benglish\b/i] },
 ];
 
 /** The curriculum subjects (from `subjects`, in its order) the typed text

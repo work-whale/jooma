@@ -221,6 +221,45 @@ test("a Japan Elementary 4 teacher aligns a worksheet to the Course of Study, in
   ]);
 });
 
+test("a Norway Grade 5 teacher aligns a worksheet to an LK20 competence aim, in Udir's English, credited under NLOD", async ({ page }) => {
+  const t = await teacherOn("norway", "StdNorway");
+  await signIn(page, t);
+  const sent = await capture(page, "/api/worksheet-generator");
+  const asked = await noSuggestions(page);
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Norwegian Curriculum (LK20)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Grade 5");
+  await page.getByLabel("Subject", { exact: true }).fill("matematikk");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Fractions, decimals and percentages");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toContainText("Norway", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ year: "Grade 5", curriculumId: "norway" });
+
+  const subject = card.getByLabel("Subject");
+  await expect(subject.locator("option")).toHaveText(["Select subject", "Norwegian", "Mathematics", "Science", "English"], NAV);
+  await subject.selectOption("Mathematics");
+  const aim = card.getByRole("checkbox", { name: /use numbers, drawings, and tangible objects to describe and explore the relationships between fractions, decimals, and percentages/ });
+  await aim.click();
+  await expect(aim).toHaveAttribute("aria-checked", "true");
+
+  // In English, so no language note; NLOD's credit is shown.
+  await expect(card.getByTestId("curriculum-language-note")).toHaveCount(0);
+  await expect(card.getByTestId("curriculum-credits")).toContainText("Contains data under NLOD (https://data.norge.no/nlod/en), made available on data.udir.no.");
+  await shot(page, "worksheet-norway-grade5-maths", card);
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { curriculumName: string; countryName: string; year: string; statements: { id: string; text: string }[] };
+  expect(align).toMatchObject({ curriculumName: "LK20 curricula (Udir)", countryName: "Norway", year: "Grade 5" });
+  expect(align.statements).toEqual([
+    { id: "no-lk20-km13265", text: "use numbers, drawings, and tangible objects to describe and explore the relationships between fractions, decimals, and percentages" },
+  ]);
+});
+
 test("a Taiwan Grade 8 teacher aligns a worksheet to the Curriculum Guidelines, maths in Chinese with its code, English and science in official English", async ({ page }) => {
   const t = await teacherOn("taiwan", "StdTaiwan");
   await signIn(page, t);

@@ -118,6 +118,7 @@ export default function TermsPage() {
               {FRAMEWORK_PERMITTED["jp-cos"] && <li>{FRAMEWORK_CREDIT["jp-cos"]}</li>}
               {FRAMEWORK_PERMITTED["tw-108-zh"] && <li>{FRAMEWORK_CREDIT["tw-108-zh"]}</li>}
               {FRAMEWORK_PERMITTED["tw-108-en"] && <li>{FRAMEWORK_CREDIT["tw-108-en"]}</li>}
+              {FRAMEWORK_PERMITTED["no-lk20"] && <li>{FRAMEWORK_CREDIT["no-lk20"]}</li>}
             </ul>
             <p>
               The International Baccalaureate, Cambridge International and Pearson Edexcel programmes are named so that teachers can choose

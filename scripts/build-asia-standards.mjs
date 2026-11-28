@@ -917,6 +917,89 @@ async function taiwan() {
   }
 }
 
+// ── Norway ──────────────────────────────────────────────────────────────────
+//
+// LK20 curricula (Kunnskapsløftet 2020), Udir, from the Grep snapshot
+// scripts/fetch-norway-grep.mjs saves (docs/standards/norway/
+// grep-snapshot.json). Licence: NLOD (https://www.udir.no/om-udir/data/ and
+// .../data/vilkar-for-bruk/), which asks for the credit "Contains data under
+// NLOD, made available on data.udir.no".
+//
+// What a statement is: one competence aim (kompetansemål), in Udir's own
+// English text (Grep's "eng"; Udir publishes it on its curriculum pages and
+// as PDFs). The Norwegian text is the regulation; no Jooma translation.
+//
+// Ages: from each set's title, which is the regulation's ("Year 4", "vg1").
+// Years 1 to 10 run from the year after the plan's previous set to the set's
+// year (after Year 2 = Years 1 and 2, after Year 4 = 3 and 4, after Year 7 =
+// 5 to 7, after Year 10 = 8 to 10; maths has a set for every year). Grep's
+// own "used in" years are not used: for natural science's Year 4 set
+// (KV1076) they say Years 4 and 5, which would leave Year 3 with none.
+// Vg1 = 16, Vg2 = 17, Vg3 (and the Vg3 supplementary programme) = 18.
+//
+// Strand: Years 1 to 10, the first core element (kjerneelement) the aim is
+// linked to; upper secondary, the course or programme the set is for.
+
+const NO_SNAPSHOT = "docs/standards/norway/grep-snapshot.json";
+const NO_CREDIT =
+  "Curricula of the Knowledge Promotion 2020 (LK20) for Norwegian, mathematics, natural science and English, in the English version published by the Norwegian Directorate for Education and Training (Udir), https://www.udir.no/lk20/. Statements are excerpts, edited by Jooma into a list. Contains data under NLOD (https://data.norge.no/nlod/en), made available on data.udir.no.";
+const NO_SUBJECT = { NOR: "Norwegian", MAT: "Mathematics", NAT: "Science", ENG: "English" };
+
+function norway() {
+  const snap = JSON.parse(readFileSync(NO_SNAPSHOT, "utf8"));
+  const eng = (x) => (x?.tekst ?? x)?.find?.((v) => v.spraak === "eng")?.verdi;
+  const problems = [];
+  const statements = [];
+  for (const [planCode, plan] of Object.entries(snap.plans)) {
+    const subject = NO_SUBJECT[planCode.slice(0, 3)];
+    let prevYear = 0;
+    const sets = plan["kompetansemaal-kapittel"].kompetansemaalsett.map((r) => snap.sets[r.kode]);
+    for (const set of sets) {
+      const title = eng(set.tittel) ?? "";
+      const year = title.match(/\byear (\d{1,2})\b/i);
+      const vg = title.match(/\bvg([1-3])\b/i) ?? (/^Competence aims and assessment( mathematics (1P|1T|2P))?/i.test(title) && set["etter-aarstrinn"]?.[0]?.kode.match(/^vg([1-3])$/));
+      let ages;
+      let course = "";
+      if (year) {
+        const y = Number(year[1]);
+        ages = Array.from({ length: y - prevYear }, (_, i) => prevYear + 1 + i + 5);
+        prevYear = y;
+      } else if (vg) {
+        ages = [15 + Number(vg[1])];
+        course = title.replace(/^Competence aims and assessment\s*/i, "") || eng(plan.tittel).replace(/^Curriculum for /, "");
+        course = course.charAt(0).toUpperCase() + course.slice(1);
+      } else {
+        problems.push(`${set.kode}: no year in "${title}"`);
+        continue;
+      }
+      for (const ref of set.kompetansemaal) {
+        const aim = snap.aims[ref.kode];
+        const text = tidy(eng(aim?.tittel) ?? "");
+        if (!text) problems.push(`${ref.kode}: no English text`);
+        const ke = aim?.["tilknyttede-kjerneelementer"]?.[0]?.referanse;
+        // Five maths aims link to no core element in Grep: "Other competence aims".
+        const strand = course || (ke ? eng(snap.coreElements[ke.kode]?.tittel) : "Other competence aims");
+        if (!strand) problems.push(`${ref.kode}: no strand`);
+        statements.push({ id: `no-lk20-${ref.kode.toLowerCase()}`, code: "", subject, strand, ages, text });
+      }
+    }
+  }
+  if (new Set(statements.map((s) => s.id)).size !== statements.length) problems.push("an aim is in two sets");
+  if (problems.length) {
+    console.error(problems.join("\n"));
+    throw new Error(`${problems.length} problems: nothing written`);
+  }
+  write("no-lk20", {
+    source: { title: `LK20 curricula (Udir), English version, Grep snapshot of ${snap.fetched}`, file: NO_SNAPSHOT, url: "https://www.udir.no/lk20/", licence: "https://www.udir.no/om-udir/data/vilkar-for-bruk/", credit: NO_CREDIT },
+    statements,
+  });
+  const count = {};
+  for (const s of statements) for (const a of s.ages) count[`${s.subject} ${a}`] = (count[`${s.subject} ${a}`] ?? 0) + 1;
+  console.log(`no-lk20: ${statements.length} statements; dashes replaced ${dashesReplaced}`);
+  console.log(Object.entries(count).map(([k, v]) => `  ${k}: ${v}`).join("\n"));
+}
+
 if (country === "japan") await japan();
 else if (country === "taiwan") await taiwan();
-else throw new Error("Usage: --country=japan|taiwan");
+else if (country === "norway") norway();
+else throw new Error("Usage: --country=japan|taiwan|norway");

@@ -507,6 +507,7 @@ export const EUROPE_CURRICULA: Curriculum[] = [
     promptLabel: "Norwegian Curriculum (LK20)",
     versions: [{ label: "Knowledge Promotion 2020 (LK20) curricula, in force since 2020", inForceFrom: "2020-08-01" }],
     years: [...numbered("Grade", 1, 10, 6), ...numbered("Vg", 1, 3, 16, "")],
+    alignment: { frameworks: ["no-lk20"], adapted: false },
     defaultLanguage: "en-GB",
     terms: {
       curriculum: "the LK20 curricula of the Norwegian Directorate for Education and Training (Udir)",
