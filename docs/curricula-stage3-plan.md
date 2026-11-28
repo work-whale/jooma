@@ -107,6 +107,15 @@ Planned before the code (`AGENTS.md`). Each asked: would it still pass if the co
 2. **Spanish for Latin America:** Jooma's Spanish speaks with a Spain voice (`es-ES`). Use it for Latin America as is, or add Latin American Spanish as a new output language first? Recommendation: use it, and list `es-419` in the language gaps.
 3. **Europe:** one batch or two (West and North / Central and East)?
 
+### Batch D decisions (owner, 2026-11-28)
+
+| Topic | Decision |
+|---|---|
+| Spanish | Argentina, Chile, Colombia, Mexico and Peru default to Jooma's Spanish (`es`). When the output language is Spanish, the curriculum line asks for Latin American usage ("ustedes", "computadora"), and never changes the output language itself (batch A lesson). Speech stays es-ES. `es-419` goes on `docs/curricula-language-gaps.md`. Brazil defaults to `pt-BR`. |
+| Switches | New region `latin-america` (picker heading "Latin America"), its switch `curricula_latin-america` seeded TRUE in the staging migration; the release switch `curricula_s3_d` stays false, so release is one flip as in batches A to C. Both keys go on the `public_settings()` whitelist. |
+| Split systems | One national entry per country (Brazil's states, Argentina's provinces and Mexico's states named in the `context` line), as in batch C. |
+| Open sources | If Step 0 finds a source open for commercial use (Brazil's BNCC is the likely one), record it in the build log; statements are built later with Japan and Taiwan, after Stage 3's profiles. |
+
 ## 7. Order of work
 
 Every step runs as a loop: Opus plans, a Sonnet subagent builds on `staging` (tests first), Opus reviews the diff and reruns the tests before it is committed and pushed. Fixes go back to Sonnet.
