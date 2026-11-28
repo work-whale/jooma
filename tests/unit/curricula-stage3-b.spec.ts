@@ -83,6 +83,9 @@ const US_ENGLISH = new Set<BId>(["japan", "south-korea", "taiwan"]);
 const ownText = (text: string) => text.split("\n").map((l) => (l.startsWith("- instead of ") ? l.slice(l.indexOf(": ") + 2) : l)).join("\n");
 
 test.describe("Stage 3 batch B entries", () => {
+  /** Batch B curricula with statements since (docs/curricula-open-statements-build.md). */
+  const WITH_STATEMENTS = new Set<string>(["japan"]);
+
   test("the nine exist, verified, in batch B, under Asia; Bangladesh is held", () => {
     const batch = CURRICULA_REGISTRY.filter((c) => c.release === "s3-b").map((c) => c.id);
     expect([...batch].sort()).toEqual([...B_IDS].sort());
@@ -92,7 +95,9 @@ test.describe("Stage 3 batch B entries", () => {
       expect(c.region, id).toBe("asia");
       expect(c.country, id).toBe(COUNTRY[id]);
       expect(c.place, id).toBe(PLACE[id]);
-      expect(c.alignment, `${id} has no statements yet`).toBeUndefined();
+      // Open-licence statements, built after the profiles (owner, 2026-11-28).
+      if (WITH_STATEMENTS.has(id)) expect(c.alignment?.frameworks.length, `${id} has its own statements`).toBeGreaterThan(0);
+      else expect(c.alignment, `${id} has no statements yet`).toBeUndefined();
     }
     expect(getCurriculum("bangladesh")).toBeUndefined();
   });
@@ -123,7 +128,7 @@ test.describe("Stage 3 batch B entries", () => {
       expect(p.notes, id).toMatch(/Stage 3 batch B \(2026-11-27\)/);
       expect(p.notes, id).toMatch(/Confirmed/);
       expect(p.notes, id).toMatch(/licen[cs]e/i);
-      expect(p.notes, id).toMatch(/Profile only/);
+      expect(p.notes, id).toMatch(WITH_STATEMENTS.has(id) ? /Statements \(2026-11-28/ : /Profile only/);
       expect(p.notes, id).not.toMatch(/[–—]/);
     }
     // The open sources say so, and that statements wait for the owner.

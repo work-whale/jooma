@@ -17,6 +17,12 @@ const CFE_CREDIT =
 const NIC_CREDIT =
   "Northern Ireland Curriculum statutory requirements, from The Education (Curriculum Minimum Content) Order (Northern Ireland) 2007: © Crown copyright. Contains public sector information licensed under the Open Government Licence v3.0.";
 
+/** Japan's Course of Study, excerpted in Japanese under the Government of
+ *  Japan Standard Terms of Use (Ver. 2.0): source named, edits noted. Also
+ *  stored with the data (scripts/build-asia-standards.mjs). */
+const JP_COS_CREDIT =
+  "Course of Study (学習指導要領) for elementary, junior high and senior high schools: Ministry of Education, Culture, Sports, Science and Technology (MEXT), https://www.mext.go.jp/a_menu/shotou/new-cs/1384661.htm. Statements are excerpts from the official Japanese text, edited by Jooma into a list. Used under the Government of Japan Standard Terms of Use (Ver. 2.0).";
+
 /** The credit each licence asks for, shown under the card whenever that
  *  framework's statements are listed. tests/unit/standards.spec.ts holds these
  *  equal to the credit stored with the data. */
@@ -36,5 +42,13 @@ export const FRAMEWORK_CREDIT: Record<FrameworkId, string> = {
   "nic-ks2": NIC_CREDIT,
   "nic-ks3": NIC_CREDIT,
   "nic-ks4": NIC_CREDIT,
+  "jp-cos": JP_COS_CREDIT,
+};
+
+/** A line under the card for a framework whose statements are not in English:
+ *  Jooma shows the official text only, never its own translation (owner,
+ *  2026-11-28). */
+export const FRAMEWORK_LANGUAGE_NOTE: Partial<Record<FrameworkId, string>> = {
+  "jp-cos": "Statements are shown in Japanese, as MEXT publishes them. Your resource is still written in the language you choose.",
 };
 

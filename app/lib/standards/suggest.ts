@@ -109,6 +109,14 @@ const CONCEPTS: Concept[] = [
   },
   { typed: /\b(latin|greek|classics|classical)\b/i, tiers: [/classical/i] },
   { typed: /\bgaelic\b/i, tiers: [/gaelic/i] },
+  // A national language taught as the school's own: Japan's 国語 is listed as
+  // "Japanese". In England "Japanese" finds no such subject and stays a modern
+  // language (above).
+  { typed: /\b(japanese|kokugo)\b|国語/i, tiers: [/^japanese$/i] },
+  // Subjects typed in Japanese or Chinese, which have no word boundaries.
+  { typed: /算数|数学|數學/, tiers: [/math/i] },
+  { typed: /理科|自然科学|自然科學/, tiers: [/(?<!social )scien/i] },
+  { typed: /英語/, tiers: [/\benglish\b/i] },
 ];
 
 /** The curriculum subjects (from `subjects`, in its order) the typed text

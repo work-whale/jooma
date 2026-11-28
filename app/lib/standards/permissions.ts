@@ -34,8 +34,14 @@ export const FRAMEWORK_PERMITTED = {
   "nic-ks2": true,
   "nic-ks3": true,
   "nic-ks4": true,
+  // Japan's Course of Study: MEXT's website follows the Government of Japan
+  // Standard Terms of Use (Ver. 2.0), which allow commercial use with the
+  // source named and, for an edited work, a note that it was edited
+  // (https://www.mext.go.jp/en/other/title01/detail01/1375290.htm, checked
+  // 2026-11-28). Excerpts in the original Japanese, credited in credits.ts.
+  "jp-cos": true,
 } as const satisfies Record<
-  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4",
+  "ccss-math" | "ccss-ela" | "ngss" | "ac9" | "cfe-early" | "cfe-first" | "cfe-second" | "cfe-third-fourth" | "nic-fs" | "nic-ks1" | "nic-ks2" | "nic-ks3" | "nic-ks4" | "jp-cos",
   boolean
 >;
 

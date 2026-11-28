@@ -91,11 +91,20 @@ export function worksheetCurriculumRules(year: string): string[] {
 export function curriculumPromptBlock(cur: PromptCurriculum, year: string, noun: string, rules: string[]): string {
   const statements = curriculumStatementTexts(cur);
   if (!cur || statements.length === 0) return "";
+  // Statements in the curriculum's own script (Japan's Course of Study) must
+  // not pull the output into that language: this block comes late in the
+  // prompt. No language is named, so the line cannot do that itself.
+  const ownLanguage = statements.some((s) => OWN_SCRIPT.test(s))
+    ? `\nThe statements above are quoted in the curriculum's own language. Use them for content and level only: write the whole ${noun} in the output language you were given, and where a rule below asks for the statements' terms, use those terms translated into that language.`
+    : "";
   return `═══════════════════════════════════════════════════
 CURRICULUM ALIGNMENT (the teacher chose these; follow them exactly)
 ═══════════════════════════════════════════════════
 ${[cur.curriculumName, cur.stage, year, cur.subject, cur.strand].filter(Boolean).join(" · ")}
 This ${noun} must teach towards these statements, quoted from the curriculum:
-${statements.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}
+${statements.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}${ownLanguage}
 ${rules.join("\n")}`;
 }
+
+/** Chinese characters, kana or hangul: a statement quoted in its own language. */
+const OWN_SCRIPT = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;

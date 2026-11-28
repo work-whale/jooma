@@ -1,0 +1,9290 @@
+{
+ "source": {
+  "title": "Course of Study (学習指導要領), MEXT: 2017 elementary and junior high, 2018 senior high",
+  "file": "docs/standards/japan/",
+  "url": "https://www.mext.go.jp/a_menu/shotou/new-cs/1384661.htm",
+  "credit": "Course of Study (学習指導要領) for elementary, junior high and senior high schools: Ministry of Education, Culture, Sports, Science and Technology (MEXT), https://www.mext.go.jp/a_menu/shotou/new-cs/1384661.htm. Statements are excerpts from the official Japanese text, edited by Jooma into a list. Used under the Government of Japan Standard Terms of Use (Ver. 2.0)."
+ },
+ "statements": [
+  {
+   "id": "jp-cos-3f31ad3f20",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "言葉には，事物の内容を表す働きや，経験したことを伝える働きがあることに気付くこと。"
+  },
+  {
+   "id": "jp-cos-c4af5757f2",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "音節と文字との関係，アクセントによる語の意味の違いなどに気付くとともに，姿勢や口形，発声や発音に注意して話すこと。"
+  },
+  {
+   "id": "jp-cos-ff2de2fb2a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "長音，拗音，促音，撥音などの表記，助詞の「は」，「へ」及び「を」の使い方，句読点の打ち方，かぎ（「 」）の使い方を理解して文や文章の中で使うこと。また，平仮名及び片仮名を読み，書くとともに，片仮名で書く語の種類を知り，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-3d6184d6c1",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "第１学年においては，別表の学年別漢字配当表（以下「学年別漢字配当表」という。）の第１学年に配当されている漢字を読み，漸次書き，文や文章の中で使うこと。第２学年においては，学年別漢字配当表の第２学年までに配当されている漢字を読むこと。また，第１学年に配当されている漢字を書き，文や文章の中で使うとともに，第２学年に配当されている漢字を漸次書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-8232f4bbe5",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "身近なことを表す語句の量を増し，話や文章の中で使うとともに，言葉には意味による語句のまとまりがあることに気付き，語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-219c122249",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "文の中における主語と述語との関係に気付くこと。"
+  },
+  {
+   "id": "jp-cos-e7feec7539",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "丁寧な言葉と普通の言葉との違いに気を付けて使うとともに，敬体で書かれた文章に慣れること。"
+  },
+  {
+   "id": "jp-cos-257bb21579",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "語のまとまりや言葉の響きなどに気を付けて音読すること。"
+  },
+  {
+   "id": "jp-cos-37a88bff09",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "共通，相違，事柄の順序など情報と情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-d424d36603",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "昔話や神話・伝承などの読み聞かせを聞くなどして，我が国の伝統的な言語文化に親しむこと。"
+  },
+  {
+   "id": "jp-cos-837a13b354",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "長く親しまれている言葉遊びを通して，言葉の豊かさに気付くこと。"
+  },
+  {
+   "id": "jp-cos-5cecba6840",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "姿勢や筆記具の持ち方を正しくして書くこと。"
+  },
+  {
+   "id": "jp-cos-a2fe527a86",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "点画の書き方や文字の形に注意しながら，筆順に従って丁寧に書くこと。"
+  },
+  {
+   "id": "jp-cos-9b2209ec63",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "点画相互の接し方や交わり方，長短や方向などに注意して，文字を正しく書くこと。"
+  },
+  {
+   "id": "jp-cos-7463bb21a0",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "読書に親しみ，いろいろな本があることを知ること。"
+  },
+  {
+   "id": "jp-cos-062ccda3ae",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "身近なことや経験したことなどから話題を決め，伝え合うために必要な事柄を選ぶこと。"
+  },
+  {
+   "id": "jp-cos-16b50d9646",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "相手に伝わるように，行動したことや経験したことに基づいて，話す事柄の順序を考えること。"
+  },
+  {
+   "id": "jp-cos-b4a80568c3",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "伝えたい事柄や相手に応じて，声の大きさや速さなどを工夫すること。"
+  },
+  {
+   "id": "jp-cos-08a09a528e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "話し手が知らせたいことや自分が聞きたいことを落とさないように集中して聞き，話の内容を捉えて感想をもつこと。"
+  },
+  {
+   "id": "jp-cos-aeca8c7192",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "互いの話に関心をもち，相手の発言を受けて話をつなぐこと。"
+  },
+  {
+   "id": "jp-cos-610a340ff2",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "経験したことや想像したことなどから書くことを見付け，必要な事柄を集めたり確かめたりして，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-205e2c7565",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "自分の思いや考えが明確になるように，事柄の順序に沿って簡単な構成を考えること。"
+  },
+  {
+   "id": "jp-cos-f351e89e7d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "語と語や文と文との続き方に注意しながら，内容のまとまりが分かるように書き表し方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-5e12d01b4d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "文章を読み返す習慣を付けるとともに，間違いを正したり，語と語や文と文との続き方を確かめたりすること。"
+  },
+  {
+   "id": "jp-cos-6161617431",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "文章に対する感想を伝え合い，自分の文章の内容や表現のよいところを見付けること。"
+  },
+  {
+   "id": "jp-cos-eccde3480b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "時間的な順序や事柄の順序などを考えながら，内容の大体を捉えること。"
+  },
+  {
+   "id": "jp-cos-56a409a398",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "場面の様子や登場人物の行動など，内容の大体を捉えること。"
+  },
+  {
+   "id": "jp-cos-f72ba85719",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "文章の中の重要な語や文を考えて選び出すこと。"
+  },
+  {
+   "id": "jp-cos-e3105aa9a4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "場面の様子に着目して，登場人物の行動を具体的に想像すること。"
+  },
+  {
+   "id": "jp-cos-37a654565f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "文章の内容と自分の体験とを結び付けて，感想をもつこと。"
+  },
+  {
+   "id": "jp-cos-727ef9f95f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    6,
+    7
+   ],
+   "text": "文章を読んで感じたことや分かったことを共有すること。"
+  },
+  {
+   "id": "jp-cos-ed6b4e12f6",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "言葉には，考えたことや思ったことを表す働きがあることに気付くこと。"
+  },
+  {
+   "id": "jp-cos-3001dd14e3",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "相手を見て話したり聞いたりするとともに，言葉の抑揚や強弱，間の取り方などに注意して話すこと。"
+  },
+  {
+   "id": "jp-cos-b5e3c34203",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "漢字と仮名を用いた表記，送り仮名の付け方，改行の仕方を理解して文や文章の中で使うとともに，句読点を適切に打つこと。また，第３学年においては，日常使われている簡単な単語について，ローマ字で表記されたものを読み，ローマ字で書くこと。"
+  },
+  {
+   "id": "jp-cos-3c7bbb8c9a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "第３学年及び第４学年の各学年においては，学年別漢字配当表の当該学年までに配当されている漢字を読むこと。また，当該学年の前の学年までに配当されている漢字を書き，文や文章の中で使うとともに，当該学年に配当されている漢字を漸次書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-cad3cc5168",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "様子や行動，気持ちや性格を表す語句の量を増し，話や文章の中で使うとともに，言葉には性質や役割による語句のまとまりがあることを理解し，語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-b80821fb7c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "主語と述語との関係，修飾と被修飾との関係，指示する語句と接続する語句の役割，段落の役割について理解すること。"
+  },
+  {
+   "id": "jp-cos-59418d948f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "丁寧な言葉を使うとともに，敬体と常体との違いに注意しながら書くこと。"
+  },
+  {
+   "id": "jp-cos-575388eb57",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "文章全体の構成や内容の大体を意識しながら音読すること。"
+  },
+  {
+   "id": "jp-cos-4b53c5cd69",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "考えとそれを支える理由や事例，全体と中心など情報と情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-2f4711a4c6",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "比較や分類の仕方，必要な語句などの書き留め方，引用の仕方や出典の示し方，辞書や事典の使い方を理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-91695a46a5",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "易しい文語調の短歌や俳句を音読したり暗唱したりするなどして，言葉の響きやリズムに親しむこと。"
+  },
+  {
+   "id": "jp-cos-86c1944320",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "長い間使われてきたことわざや慣用句，故事成語などの意味を知り，使うこと。"
+  },
+  {
+   "id": "jp-cos-b2cd578728",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "漢字が，へんやつくりなどから構成されていることについて理解すること。"
+  },
+  {
+   "id": "jp-cos-b03dbf04bb",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "文字の組立て方を理解し，形を整えて書くこと。"
+  },
+  {
+   "id": "jp-cos-5ff5993e03",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "漢字や仮名の大きさ，配列に注意して書くこと。"
+  },
+  {
+   "id": "jp-cos-b67ba37ead",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "毛筆を使用して点画の書き方への理解を深め，筆圧などに注意して書くこと。"
+  },
+  {
+   "id": "jp-cos-91ca85a4b9",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "幅広く読書に親しみ，読書が，必要な知識や情報を得ることに役立つことに気付くこと。"
+  },
+  {
+   "id": "jp-cos-6286e00d58",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "目的を意識して，日常生活の中から話題を決め，集めた材料を比較したり分類したりして，伝え合うために必要な事柄を選ぶこと。"
+  },
+  {
+   "id": "jp-cos-c7e90ef54e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "相手に伝わるように，理由や事例などを挙げながら，話の中心が明確になるよう話の構成を考えること。"
+  },
+  {
+   "id": "jp-cos-e81b1aa600",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "話の中心や話す場面を意識して，言葉の抑揚や強弱，間の取り方などを工夫すること。"
+  },
+  {
+   "id": "jp-cos-f92ade1986",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "必要なことを記録したり質問したりしながら聞き，話し手が伝えたいことや自分が聞きたいことの中心を捉え，自分の考えをもつこと。"
+  },
+  {
+   "id": "jp-cos-5d9c851fef",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "目的や進め方を確認し，司会などの役割を果たしながら話し合い，互いの意見の共通点や相違点に着目して，考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-7639326aa7",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "相手や目的を意識して，経験したことや想像したことなどから書くことを選び，集めた材料を比較したり分類したりして，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-e7ee0583f3",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "書く内容の中心を明確にし，内容のまとまりで段落をつくったり，段落相互の関係に注意したりして，文章の構成を考えること。"
+  },
+  {
+   "id": "jp-cos-2a79b5731b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "自分の考えとそれを支える理由や事例との関係を明確にして，書き表し方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-e21e584677",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "間違いを正したり，相手や目的を意識した表現になっているかを確かめたりして，文や文章を整えること。"
+  },
+  {
+   "id": "jp-cos-bcfc3ee7ad",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "書こうとしたことが明確になっているかなど，文章に対する感想や意見を伝え合い，自分の文章のよいところを見付けること。"
+  },
+  {
+   "id": "jp-cos-d2dd272108",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "段落相互の関係に着目しながら，考えとそれを支える理由や事例との関係などについて，叙述を基に捉えること。"
+  },
+  {
+   "id": "jp-cos-6dc8159961",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "登場人物の行動や気持ちなどについて，叙述を基に捉えること。"
+  },
+  {
+   "id": "jp-cos-f72b98802c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "目的を意識して，中心となる語や文を見付けて要約すること。"
+  },
+  {
+   "id": "jp-cos-6cee197a0c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "登場人物の気持ちの変化や性格，情景について，場面の移り変わりと結び付けて具体的に想像すること。"
+  },
+  {
+   "id": "jp-cos-d8ff35b610",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "文章を読んで理解したことに基づいて，感想や考えをもつこと。"
+  },
+  {
+   "id": "jp-cos-3f19f89857",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "文章を読んで感じたことや考えたことを共有し，一人一人の感じ方などに違いがあることに気付くこと。"
+  },
+  {
+   "id": "jp-cos-b872aebf66",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "言葉には，相手とのつながりをつくる働きがあることに気付くこと。"
+  },
+  {
+   "id": "jp-cos-78bc787489",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "話し言葉と書き言葉との違いに気付くこと。"
+  },
+  {
+   "id": "jp-cos-5daa5551d8",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文や文章の中で漢字と仮名を適切に使い分けるとともに，送り仮名や仮名遣いに注意して正しく書くこと。"
+  },
+  {
+   "id": "jp-cos-8c4f6efd79",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "第５学年及び第６学年の各学年においては，学年別漢字配当表の当該学年までに配当されている漢字を読むこと。また，当該学年の前の学年までに配当されている漢字を書き，文や文章の中で使うとともに，当該学年に配当されている漢字を漸次書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-bed8bbe6d8",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "思考に関わる語句の量を増し，話や文章の中で使うとともに，語句と語句との関係，語句の構成や変化について理解し，語彙を豊かにすること。また，語感や言葉の使い方に対する感覚を意識して，語や語句を使うこと。"
+  },
+  {
+   "id": "jp-cos-bea2173b02",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文の中での語句の係り方や語順，文と文との接続の関係，話や文章の構成や展開，話や文章の種類とその特徴について理解すること。"
+  },
+  {
+   "id": "jp-cos-4f2041d80b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "日常よく使われる敬語を理解し使い慣れること。"
+  },
+  {
+   "id": "jp-cos-b5e65ce52c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "比喩や反復などの表現の工夫に気付くこと。"
+  },
+  {
+   "id": "jp-cos-14e212d89b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文章を音読したり朗読したりすること。"
+  },
+  {
+   "id": "jp-cos-f2605cb2a7",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "原因と結果など情報と情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-9b9d44f7b8",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "情報と情報との関係付けの仕方，図などによる語句と語句との関係の表し方を理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-cfe4db160d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "親しみやすい古文や漢文，近代以降の文語調の文章を音読するなどして，言葉の響きやリズムに親しむこと。"
+  },
+  {
+   "id": "jp-cos-44f26d9920",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "古典について解説した文章を読んだり作品の内容の大体を知ったりすることを通して，昔の人のものの見方や感じ方を知ること。"
+  },
+  {
+   "id": "jp-cos-de27f8e950",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "語句の由来などに関心をもつとともに，時間の経過による言葉の変化や世代による言葉の違いに気付き，共通語と方言との違いを理解すること。また，仮名及び漢字の由来，特質などについて理解すること。"
+  },
+  {
+   "id": "jp-cos-fc8b9f94ba",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "用紙全体との関係に注意して，文字の大きさや配列などを決めるとともに，書く速さを意識して書くこと。"
+  },
+  {
+   "id": "jp-cos-f266c965af",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "毛筆を使用して，穂先の動きと点画のつながりを意識して書くこと。"
+  },
+  {
+   "id": "jp-cos-19d16163ae",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "目的に応じて使用する筆記具を選び，その特徴を生かして書くこと。"
+  },
+  {
+   "id": "jp-cos-e15e73c1e6",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "日常的に読書に親しみ，読書が，自分の考えを広げることに役立つことに気付くこと。"
+  },
+  {
+   "id": "jp-cos-77120620fc",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "目的や意図に応じて，日常生活の中から話題を決め，集めた材料を分類したり関係付けたりして，伝え合う内容を検討すること。"
+  },
+  {
+   "id": "jp-cos-4c079209ea",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "話の内容が明確になるように，事実と感想，意見とを区別するなど，話の構成を考えること。"
+  },
+  {
+   "id": "jp-cos-6598a621c7",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "資料を活用するなどして，自分の考えが伝わるように表現を工夫すること。"
+  },
+  {
+   "id": "jp-cos-e79cba28e2",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "話し手の目的や自分が聞こうとする意図に応じて，話の内容を捉え，話し手の考えと比較しながら，自分の考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-0fe84644f4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "互いの立場や意図を明確にしながら計画的に話し合い，考えを広げたりまとめたりすること。"
+  },
+  {
+   "id": "jp-cos-b410e92294",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "目的や意図に応じて，感じたことや考えたことなどから書くことを選び，集めた材料を分類したり関係付けたりして，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-6a4448b481",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "筋道の通った文章となるように，文章全体の構成や展開を考えること。"
+  },
+  {
+   "id": "jp-cos-88d7a15e11",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "目的や意図に応じて簡単に書いたり詳しく書いたりするとともに，事実と感想，意見とを区別して書いたりするなど，自分の考えが伝わるように書き表し方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-fe78006815",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "引用したり，図表やグラフなどを用いたりして，自分の考えが伝わるように書き表し方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-035d76434f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文章全体の構成や書き表し方などに着目して，文や文章を整えること。"
+  },
+  {
+   "id": "jp-cos-a9d4edef02",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文章全体の構成や展開が明確になっているかなど，文章に対する感想や意見を伝え合い，自分の文章のよいところを見付けること。"
+  },
+  {
+   "id": "jp-cos-d7dc06d051",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "事実と感想，意見などとの関係を叙述を基に押さえ，文章全体の構成を捉えて要旨を把握すること。"
+  },
+  {
+   "id": "jp-cos-285df0bbb6",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "登場人物の相互関係や心情などについて，描写を基に捉えること。"
+  },
+  {
+   "id": "jp-cos-242e9f1b2d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "目的に応じて，文章と図表などを結び付けるなどして必要な情報を見付けたり，論の進め方について考えたりすること。"
+  },
+  {
+   "id": "jp-cos-87e18ea093",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "人物像や物語などの全体像を具体的に想像したり，表現の効果を考えたりすること。"
+  },
+  {
+   "id": "jp-cos-a3a5a92e2e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文章を読んで理解したことに基づいて，自分の考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-8227fbc333",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文章を読んでまとめた意見や感想を共有し，自分の考えを広げること。"
+  },
+  {
+   "id": "jp-cos-87a1dbb333",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "ものとものとを対応させることによって，ものの個数を比べること。"
+  },
+  {
+   "id": "jp-cos-dbf7323f01",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "個数や順番を正しく数えたり表したりすること。"
+  },
+  {
+   "id": "jp-cos-835628ae8a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "数の大小や順序を考えることによって，数の系列を作ったり，数直線の上に表したりすること。"
+  },
+  {
+   "id": "jp-cos-017d66f3cd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "一つの数をほかの数の和や差としてみるなど，ほかの数と関係付けてみること。"
+  },
+  {
+   "id": "jp-cos-c718a24f4f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "２位数の表し方について理解すること。"
+  },
+  {
+   "id": "jp-cos-aa116e14b7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "簡単な場合について，３位数の表し方を知ること。"
+  },
+  {
+   "id": "jp-cos-ade161b465",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "数を，十を単位としてみること。"
+  },
+  {
+   "id": "jp-cos-9e265b9af1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "具体物をまとめて数えたり等分したりして整理し，表すこと。"
+  },
+  {
+   "id": "jp-cos-af48998acd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "数のまとまりに着目し，数の大きさの比べ方や数え方を考え，それらを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-e4c0a839bb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "加法及び減法の意味について理解し，それらが用いられる場合について知ること。"
+  },
+  {
+   "id": "jp-cos-1b56e35b07",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "加法及び減法が用いられる場面を式に表したり，式を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-cc4fd5089b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "１位数と１位数との加法及びその逆の減法の計算が確実にできること。"
+  },
+  {
+   "id": "jp-cos-7e4060fcce",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "簡単な場合について，２位数などについても加法及び減法ができることを知ること。"
+  },
+  {
+   "id": "jp-cos-7a916ea14f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    6
+   ],
+   "text": "数量の関係に着目し，計算の意味や計算の仕方を考えたり，日常生活に生かしたりすること。"
+  },
+  {
+   "id": "jp-cos-3e05ac7792",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    6
+   ],
+   "text": "ものの形を認め，形の特徴を知ること。"
+  },
+  {
+   "id": "jp-cos-999bafe204",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    6
+   ],
+   "text": "具体物を用いて形を作ったり分解したりすること。"
+  },
+  {
+   "id": "jp-cos-0ffaa9f2e9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    6
+   ],
+   "text": "前後，左右，上下など方向や位置についての言葉を用いて，ものの位置を表すこと。"
+  },
+  {
+   "id": "jp-cos-49757d9034",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    6
+   ],
+   "text": "ものの形に着目し，身の回りにあるものの特徴を捉えたり，具体的な操作を通して形の構成について考えたりすること。"
+  },
+  {
+   "id": "jp-cos-f8a7bde154",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    6
+   ],
+   "text": "長さ，広さ，かさなどの量を，具体的な操作によって直接比べたり，他のものを用いて比べたりすること。"
+  },
+  {
+   "id": "jp-cos-a95cf78dd1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    6
+   ],
+   "text": "身の回りにあるものの大きさを単位として，その幾つ分かで大きさを比べること。"
+  },
+  {
+   "id": "jp-cos-fcf73c7860",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    6
+   ],
+   "text": "身の回りのものの特徴に着目し，量の大きさの比べ方を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-ec2b158847",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    6
+   ],
+   "text": "日常生活の中で時刻を読むこと。"
+  },
+  {
+   "id": "jp-cos-18bbe861cc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    6
+   ],
+   "text": "時刻の読み方を用いて，時刻と日常生活を関連付けること。"
+  },
+  {
+   "id": "jp-cos-a4416f72d3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    6
+   ],
+   "text": "ものの個数について，簡単な絵や図などに表したり，それらを読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-5933921282",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    6
+   ],
+   "text": "データの個数に着目し，身の回りの事象の特徴を捉えること。"
+  },
+  {
+   "id": "jp-cos-c6112d5a84",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "同じ大きさの集まりにまとめて数えたり，分類して数えたりすること。"
+  },
+  {
+   "id": "jp-cos-1c47b1d31c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "４位数までについて，十進位取り記数法による数の表し方及び数の大小や順序について理解すること。"
+  },
+  {
+   "id": "jp-cos-c391eca325",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "数を十や百を単位としてみるなど，数の相対的な大きさについて理解すること。"
+  },
+  {
+   "id": "jp-cos-3af4bd0bb8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "一つの数をほかの数の積としてみるなど，ほかの数と関係付けてみること。"
+  },
+  {
+   "id": "jp-cos-c6afda43d7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "簡単な事柄を分類整理し，それを数を用いて表すこと。"
+  },
+  {
+   "id": "jp-cos-d25d28112e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "1/2，1/3など簡単な分数について知ること。"
+  },
+  {
+   "id": "jp-cos-fed0201f0f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "数のまとまりに着目し，大きな数の大きさの比べ方や数え方を考え，日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-46ea4f29b7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "２位数の加法及びその逆の減法の計算が，１位数などについての基本的な計算を基にしてできることを理解し，それらの計算が確実にできること。また，それらの筆算の仕方について理解すること。"
+  },
+  {
+   "id": "jp-cos-5db80dc474",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "簡単な場合について，３位数などの加法及び減法の計算の仕方を知ること。"
+  },
+  {
+   "id": "jp-cos-73c58f7842",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "加法及び減法に関して成り立つ性質について理解すること。"
+  },
+  {
+   "id": "jp-cos-06910c03c6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "加法と減法との相互関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-dbb8de82e9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7,
+    8,
+    9
+   ],
+   "text": "数量の関係に着目し，計算の仕方を考えたり計算に関して成り立つ性質を見いだしたりするとともに，その性質を活用して，計算を工夫したり計算の確かめをしたりすること。"
+  },
+  {
+   "id": "jp-cos-1e7e1b9b91",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "乗法の意味について理解し，それが用いられる場合について知ること。"
+  },
+  {
+   "id": "jp-cos-454d8487e8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "乗法が用いられる場面を式に表したり，式を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-e50503a903",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "乗法に関して成り立つ簡単な性質について理解すること。"
+  },
+  {
+   "id": "jp-cos-623be97f21",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "乗法九九について知り，１位数と１位数との乗法の計算が確実にできること。"
+  },
+  {
+   "id": "jp-cos-cc1f1948c4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "簡単な場合について，２位数と１位数との乗法の計算の仕方を知ること。"
+  },
+  {
+   "id": "jp-cos-6481958ad9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7
+   ],
+   "text": "数量の関係に着目し，計算の意味や計算の仕方を考えたり計算に関して成り立つ性質を見いだしたりするとともに，その性質を活用して，計算を工夫したり計算の確かめをしたりすること。"
+  },
+  {
+   "id": "jp-cos-e8c0c0a6d3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    7,
+    8
+   ],
+   "text": "数量の関係に着目し，計算を日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-205069cc4c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    7
+   ],
+   "text": "三角形，四角形について知ること。"
+  },
+  {
+   "id": "jp-cos-82939a252c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    7
+   ],
+   "text": "正方形，長方形，直角三角形について知ること。"
+  },
+  {
+   "id": "jp-cos-b703e83b37",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    7
+   ],
+   "text": "正方形や長方形の面で構成される箱の形をしたものについて理解し，それらを構成したり分解したりすること。"
+  },
+  {
+   "id": "jp-cos-6bc42f5261",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    7
+   ],
+   "text": "図形を構成する要素に着目し，構成の仕方を考えるとともに，身の回りのものの形を図形として捉えること。"
+  },
+  {
+   "id": "jp-cos-870e97856f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    7
+   ],
+   "text": "長さの単位（ミリメートル（mm），センチメートル（cm），メートル（m））及びかさの単位（ミリリットル（mL），デシリットル（dL），リットル（L））について知り，測定の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-ba08726876",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    7
+   ],
+   "text": "長さ及びかさについて，およその見当を付け，単位を適切に選択して測定すること。"
+  },
+  {
+   "id": "jp-cos-957f15ca3e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    7
+   ],
+   "text": "身の回りのものの特徴に着目し，目的に応じた単位で量の大きさを的確に表現したり，比べたりすること。"
+  },
+  {
+   "id": "jp-cos-d0fbf1b73b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    7
+   ],
+   "text": "日，時，分について知り，それらの関係を理解すること。"
+  },
+  {
+   "id": "jp-cos-4a7315af8f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    7
+   ],
+   "text": "時間の単位に着目し，時刻や時間を日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-fe62dbd4b0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    7
+   ],
+   "text": "身の回りにある数量を分類整理し，簡単な表やグラフを用いて表したり読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-47135f5d7a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    7
+   ],
+   "text": "データを整理する観点に着目し，身の回りの事象について表やグラフを用いて考察すること。"
+  },
+  {
+   "id": "jp-cos-881c22e1bd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "万の単位について知ること。"
+  },
+  {
+   "id": "jp-cos-abaf79c5c7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "10 倍，100 倍，1000 倍，1/10の大きさの数及びそれらの表し方について知ること。"
+  },
+  {
+   "id": "jp-cos-3278b029a4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数の相対的な大きさについての理解を深めること。"
+  },
+  {
+   "id": "jp-cos-e515bba837",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数のまとまりに着目し，大きな数の大きさの比べ方や表し方を考え，日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-f633b69569",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "３位数や４位数の加法及び減法の計算が，２位数などについての基本的な計算を基にしてできることを理解すること。また，それらの筆算の仕方について理解すること。"
+  },
+  {
+   "id": "jp-cos-1a47d656fc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "加法及び減法の計算が確実にでき，それらを適切に用いること。"
+  },
+  {
+   "id": "jp-cos-a2fdd219a8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "２位数や３位数に１位数や２位数をかける乗法の計算が，乗法九九などの基本的な計算を基にしてできることを理解すること。また，その筆算の仕方について理解すること。"
+  },
+  {
+   "id": "jp-cos-c75dbe4b36",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "乗法の計算が確実にでき，それを適切に用いること。"
+  },
+  {
+   "id": "jp-cos-d3645f99c5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "乗法に関して成り立つ性質について理解すること。"
+  },
+  {
+   "id": "jp-cos-60f62cccd2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "除法の意味について理解し，それが用いられる場合について知ること。また，余りについて知ること。"
+  },
+  {
+   "id": "jp-cos-371ea5398b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "除法が用いられる場面を式に表したり，式を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-b693c4eb56",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "除法と乗法や減法との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-562563cf43",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "除数と商が共に１位数である除法の計算が確実にできること。"
+  },
+  {
+   "id": "jp-cos-325c3259ba",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "簡単な場合について，除数が１位数で商が２位数の除法の計算の仕方を知ること。"
+  },
+  {
+   "id": "jp-cos-4429c03737",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数量の関係に着目し，計算の意味や計算の仕方を考えたり，計算に関して成り立つ性質を見いだしたりするとともに，その性質を活用して，計算を工夫したり計算の確かめをしたりすること。"
+  },
+  {
+   "id": "jp-cos-32a595eb02",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "端数部分の大きさを表すのに小数を用いることを知ること。また，小数の表し方及び1/10の位について知ること。"
+  },
+  {
+   "id": "jp-cos-4c2ef9d164",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "1/10の位までの小数の加法及び減法の意味について理解し，それらの計算ができることを知ること。"
+  },
+  {
+   "id": "jp-cos-4fbeea7b0b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数のまとまりに着目し，小数でも数の大きさを比べたり計算したりできるかどうかを考えるとともに，小数を日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-8d95d5a5a9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "等分してできる部分の大きさや端数部分の大きさを表すのに分数を用いることを知ること。また，分数の表し方について知ること。"
+  },
+  {
+   "id": "jp-cos-aecb7f0179",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "分数が単位分数の幾つ分かで表すことができることを知ること。"
+  },
+  {
+   "id": "jp-cos-b9f5110b2b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "簡単な場合について，分数の加法及び減法の意味について理解し，それらの計算ができることを知ること。"
+  },
+  {
+   "id": "jp-cos-b580378e7c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数のまとまりに着目し，分数でも数の大きさを比べたり計算したりできるかどうかを考えるとともに，分数を日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-2d81fd942e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数量の関係を表す式について理解するとともに，数量を□などを用いて表し，その関係を式に表したり，□などに数を当てはめて調べたりすること。"
+  },
+  {
+   "id": "jp-cos-6f1e3eaa6f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "数量の関係に着目し，数量の関係を図や式を用いて簡潔に表したり，式と図を関連付けて式を読んだりすること。"
+  },
+  {
+   "id": "jp-cos-ac4868fea2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "そろばんによる数の表し方について知ること。"
+  },
+  {
+   "id": "jp-cos-343fdd41e6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8
+   ],
+   "text": "簡単な加法及び減法の計算の仕方について知り，計算すること。"
+  },
+  {
+   "id": "jp-cos-c84763e0df",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "そろばんの仕組みに着目し，大きな数や小数の計算の仕方を考えること。"
+  },
+  {
+   "id": "jp-cos-7c0647bf7c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    8
+   ],
+   "text": "二等辺三角形，正三角形などについて知り，作図などを通してそれらの関係に次第に着目すること。"
+  },
+  {
+   "id": "jp-cos-bbc3dc5617",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    8
+   ],
+   "text": "基本的な図形と関連して角について知ること。"
+  },
+  {
+   "id": "jp-cos-b265e72b51",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    8
+   ],
+   "text": "円について，中心，半径，直径を知ること。また，円に関連して，球についても直径などを知ること。"
+  },
+  {
+   "id": "jp-cos-6890b3543e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    8
+   ],
+   "text": "図形を構成する要素に着目し，構成の仕方を考えるとともに，図形の性質を見いだし，身の回りのものの形を図形として捉えること。"
+  },
+  {
+   "id": "jp-cos-6846a1465b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    8
+   ],
+   "text": "長さの単位（キロメートル（km））及び重さの単位（グラム（g），キログラム（kg））について知り，測定の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-52f763df02",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    8
+   ],
+   "text": "長さや重さについて，適切な単位で表したり，およその見当を付け計器を適切に選んで測定したりすること。"
+  },
+  {
+   "id": "jp-cos-140ac5a188",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    8
+   ],
+   "text": "身の回りのものの特徴に着目し，単位の関係を統合的に考察すること。"
+  },
+  {
+   "id": "jp-cos-9e0458f361",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    8
+   ],
+   "text": "秒について知ること。"
+  },
+  {
+   "id": "jp-cos-2410589cd8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    8
+   ],
+   "text": "日常生活に必要な時刻や時間を求めること。"
+  },
+  {
+   "id": "jp-cos-ca804b8c61",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 測定",
+   "ages": [
+    8
+   ],
+   "text": "時間の単位に着目し，時刻や時間の求め方について考察し，日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-79a84d451a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    8
+   ],
+   "text": "日時の観点や場所の観点などからデータを分類整理し，表に表したり読んだりすること。"
+  },
+  {
+   "id": "jp-cos-05ed3a7194",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    8
+   ],
+   "text": "棒グラフの特徴やその用い方を理解すること。"
+  },
+  {
+   "id": "jp-cos-ecbe107400",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    8
+   ],
+   "text": "データを整理する観点に着目し，身の回りの事象について表やグラフを用いて考察して，見いだしたことを表現すること。"
+  },
+  {
+   "id": "jp-cos-e907a92b87",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "億，兆の単位について知り，十進位取り記数法についての理解を深めること。"
+  },
+  {
+   "id": "jp-cos-5b787039d0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "数のまとまりに着目し，大きな数の大きさの比べ方や表し方を統合的に捉えるとともに，それらを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-abaa1c2386",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "概数が用いられる場合について知ること。"
+  },
+  {
+   "id": "jp-cos-2e7ac8f8ac",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "四捨五入について知ること。"
+  },
+  {
+   "id": "jp-cos-210feb133b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "目的に応じて四則計算の結果の見積りをすること。"
+  },
+  {
+   "id": "jp-cos-d57357c9ac",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "日常の事象における場面に着目し，目的に合った数の処理の仕方を考えるとともに，それを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-5a99ef75ce",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "除数が１位数や２位数で被除数が２位数や３位数の場合の計算が，基本的な計算を基にしてできることを理解すること。また，その筆算の仕方について理解すること。"
+  },
+  {
+   "id": "jp-cos-070cdce596",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "除法の計算が確実にでき，それを適切に用いること。"
+  },
+  {
+   "id": "jp-cos-dc4d678654",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "除法について，次の関係を理解すること。（被除数）＝（除数）×（商）＋（余り）"
+  },
+  {
+   "id": "jp-cos-b05d7b8483",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "除法に関して成り立つ性質について理解すること。"
+  },
+  {
+   "id": "jp-cos-b336ee72aa",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "ある量の何倍かを表すのに小数を用いることを知ること。"
+  },
+  {
+   "id": "jp-cos-36e86a127a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "小数が整数と同じ仕組みで表されていることを知るとともに，数の相対的な大きさについての理解を深めること。"
+  },
+  {
+   "id": "jp-cos-1fd92f5878",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "小数の加法及び減法の計算ができること。"
+  },
+  {
+   "id": "jp-cos-d8351c4fdc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "乗数や除数が整数である場合の小数の乗法及び除法の計算ができること。"
+  },
+  {
+   "id": "jp-cos-cb4496a4c5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "数の表し方の仕組みや数を構成する単位に着目し，計算の仕方を考えるとともに，それを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-37574f6987",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "簡単な場合について，大きさの等しい分数があることを知ること。"
+  },
+  {
+   "id": "jp-cos-91e1ce6b4c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "同分母の分数の加法及び減法の計算ができること。"
+  },
+  {
+   "id": "jp-cos-6f2c475ea0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "数を構成する単位に着目し，大きさの等しい分数を探したり，計算の仕方を考えたりするとともに，それを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-c152903183",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "四則の混合した式や（ ）を用いた式について理解し，正しく計算すること。"
+  },
+  {
+   "id": "jp-cos-62c1b86d36",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "公式についての考え方を理解し，公式を用いること。"
+  },
+  {
+   "id": "jp-cos-0a184ef3e2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "数量を□，△などを用いて表し，その関係を式に表したり，□，△などに数を当てはめて調べたりすること。"
+  },
+  {
+   "id": "jp-cos-a639254b6a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "問題場面の数量の関係に着目し，数量の関係を簡潔に，また一般的に表現したり，式の意味を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-42a2976eb7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "四則に関して成り立つ性質についての理解を深めること。"
+  },
+  {
+   "id": "jp-cos-4e6edc4390",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "数量の関係に着目し，計算に関して成り立つ性質を用いて計算の仕方を考えること。"
+  },
+  {
+   "id": "jp-cos-c6763c61a5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    9
+   ],
+   "text": "加法及び減法の計算をすること。"
+  },
+  {
+   "id": "jp-cos-a8c89bfc50",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "直線の平行や垂直の関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-b2973d7024",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "平行四辺形，ひし形，台形について知ること。"
+  },
+  {
+   "id": "jp-cos-5e6d64f979",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "図形を構成する要素及びそれらの位置関係に着目し，構成の仕方を考察し図形の性質を見いだすとともに，その性質を基に既習の図形を捉え直すこと。"
+  },
+  {
+   "id": "jp-cos-cf5ee577aa",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "立方体，直方体について知ること。"
+  },
+  {
+   "id": "jp-cos-643c8352da",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "直方体に関連して，直線や平面の平行や垂直の関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-4a1e3b184f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "見取図，展開図について知ること。"
+  },
+  {
+   "id": "jp-cos-42fe15dc8f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "図形を構成する要素及びそれらの位置関係に着目し，立体図形の平面上での表現や構成の仕方を考察し図形の性質を見いだすとともに，日常の事象を図形の性質から捉え直すこと。"
+  },
+  {
+   "id": "jp-cos-42d9903f4d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "ものの位置の表し方について理解すること。"
+  },
+  {
+   "id": "jp-cos-51b489a111",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "平面や空間における位置を決める要素に着目し，その位置を数を用いて表現する方法を考察すること。"
+  },
+  {
+   "id": "jp-cos-10e5f805c0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "面積の単位（平方センチメートル（cm²），平方メートル（m²），平方キロメートル（km²））について知ること。"
+  },
+  {
+   "id": "jp-cos-a5a8554347",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "正方形及び長方形の面積の計算による求め方について理解すること。"
+  },
+  {
+   "id": "jp-cos-9d93175b87",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "面積の単位や図形を構成する要素に着目し，図形の面積の求め方を考えるとともに，面積の単位とこれまでに学習した単位との関係を考察すること。"
+  },
+  {
+   "id": "jp-cos-e0ec63d650",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "角の大きさを回転の大きさとして捉えること。"
+  },
+  {
+   "id": "jp-cos-9ef2929cdd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "角の大きさの単位（度（°））について知り，角の大きさを測定すること。"
+  },
+  {
+   "id": "jp-cos-55f71ceeaf",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    9
+   ],
+   "text": "図形の角の大きさに着目し，角の大きさを柔軟に表現したり，図形の考察に生かしたりすること。"
+  },
+  {
+   "id": "jp-cos-21557dff5a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    9
+   ],
+   "text": "変化の様子を表や式，折れ線グラフを用いて表したり，変化の特徴を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-6ac701f060",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    9,
+    10
+   ],
+   "text": "伴って変わる二つの数量を見いだして，それらの関係に着目し，表や式を用いて変化や対応の特徴を考察すること。"
+  },
+  {
+   "id": "jp-cos-39fa2e28ab",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    9
+   ],
+   "text": "簡単な場合について，ある二つの数量の関係と別の二つの数量の関係とを比べる場合に割合を用いる場合があることを知ること。"
+  },
+  {
+   "id": "jp-cos-d243378478",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    9
+   ],
+   "text": "日常の事象における数量の関係に着目し，図や式などを用いて，ある二つの数量の関係と別の二つの数量の関係との比べ方を考察すること。"
+  },
+  {
+   "id": "jp-cos-f801b7ba59",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    9
+   ],
+   "text": "データを二つの観点から分類整理する方法を知ること。"
+  },
+  {
+   "id": "jp-cos-57279f84ef",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    9
+   ],
+   "text": "折れ線グラフの特徴とその用い方を理解すること。"
+  },
+  {
+   "id": "jp-cos-f2d284145d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    9
+   ],
+   "text": "目的に応じてデータを集めて分類整理し，データの特徴や傾向に着目し，問題を解決するために適切なグラフを選択して判断し，その結論について考察すること。"
+  },
+  {
+   "id": "jp-cos-dda5ea87b7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "整数は，観点を決めると偶数と奇数に類別されることを知ること。"
+  },
+  {
+   "id": "jp-cos-064655f3f4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "約数，倍数について知ること。"
+  },
+  {
+   "id": "jp-cos-4832aaf974",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "乗法及び除法に着目し，観点を決めて整数を類別する仕方を考えたり，数の構成について考察したりするとともに，日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-39e8e9f6b0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "ある数の 10 倍，100 倍，1000 倍，1/10，1/100などの大きさの数を，小数点の位置を移してつくること。"
+  },
+  {
+   "id": "jp-cos-c179232e5a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "数の表し方の仕組みに着目し，数の相対的な大きさを考察し，計算などに有効に生かすこと。"
+  },
+  {
+   "id": "jp-cos-991d42a201",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "乗数や除数が小数である場合の小数の乗法及び除法の意味について理解すること。"
+  },
+  {
+   "id": "jp-cos-b3122e20b7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "小数の乗法及び除法の計算ができること。また，余りの大きさについて理解すること。"
+  },
+  {
+   "id": "jp-cos-0617b4fa52",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "小数の乗法及び除法についても整数の場合と同じ関係や法則が成り立つことを理解すること。"
+  },
+  {
+   "id": "jp-cos-de0e546ac7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "乗法及び除法の意味に着目し，乗数や除数が小数である場合まで数の範囲を広げて乗法及び除法の意味を捉え直すとともに，それらの計算の仕方を考えたり，それらを日常生活に生かしたりすること。"
+  },
+  {
+   "id": "jp-cos-bc497dd364",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "整数及び小数を分数の形に直したり，分数を小数で表したりすること。"
+  },
+  {
+   "id": "jp-cos-a9b10a3e3b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "整数の除法の結果は，分数を用いると常に一つの数として表すことができることを理解すること。"
+  },
+  {
+   "id": "jp-cos-0cc1fee136",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "一つの分数の分子及び分母に同じ数を乗除してできる分数は，元の分数と同じ大きさを表すことを理解すること。"
+  },
+  {
+   "id": "jp-cos-c133cb513c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "分数の相等及び大小について知り，大小を比べること。"
+  },
+  {
+   "id": "jp-cos-218c6e3ea0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "数を構成する単位に着目し，数の相等及び大小関係について考察すること。"
+  },
+  {
+   "id": "jp-cos-354e8aa459",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "分数の表現に着目し，除法の結果の表し方を振り返り，分数の意味をまとめること。"
+  },
+  {
+   "id": "jp-cos-c4aaae3cd8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "異分母の分数の加法及び減法の計算ができること。"
+  },
+  {
+   "id": "jp-cos-070d414b06",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "分数の意味や表現に着目し，計算の仕方を考えること。"
+  },
+  {
+   "id": "jp-cos-b3814f31e2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "数量の関係を表す式についての理解を深めること。"
+  },
+  {
+   "id": "jp-cos-8716e61e04",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    10
+   ],
+   "text": "二つの数量の対応や変わり方に着目し，簡単な式で表されている関係について考察すること。"
+  },
+  {
+   "id": "jp-cos-e4cf82a680",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "図形の形や大きさが決まる要素について理解するとともに，図形の合同について理解すること。"
+  },
+  {
+   "id": "jp-cos-b0298a683a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "三角形や四角形など多角形についての簡単な性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-787bfb1b3b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "円と関連させて正多角形の基本的な性質を知ること。"
+  },
+  {
+   "id": "jp-cos-65552e54db",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "円周率の意味について理解し，それを用いること。"
+  },
+  {
+   "id": "jp-cos-3dbec50dd5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "図形を構成する要素及び図形間の関係に着目し，構成の仕方を考察したり，図形の性質を見いだし，その性質を筋道を立てて考え説明したりすること。"
+  },
+  {
+   "id": "jp-cos-8a26dec05f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "基本的な角柱や円柱について知ること。"
+  },
+  {
+   "id": "jp-cos-b422e35a7d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "図形を構成する要素に着目し，図形の性質を見いだすとともに，その性質を基に既習の図形を捉え直すこと。"
+  },
+  {
+   "id": "jp-cos-1094f5a1a3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "三角形，平行四辺形，ひし形，台形の面積の計算による求め方について理解すること。"
+  },
+  {
+   "id": "jp-cos-8e2943eee6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "図形を構成する要素などに着目して，基本図形の面積の求め方を見いだすとともに，その表現を振り返り，簡潔かつ的確な表現に高め，公式として導くこと。"
+  },
+  {
+   "id": "jp-cos-b60f76e3bd",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "体積の単位（立方センチメートル（cm³），立方メートル（m³））について知ること。"
+  },
+  {
+   "id": "jp-cos-180004a4c5",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "立方体及び直方体の体積の計算による求め方について理解すること。"
+  },
+  {
+   "id": "jp-cos-60e0204243",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    10
+   ],
+   "text": "体積の単位や図形を構成する要素に着目し，図形の体積の求め方を考えるとともに，体積の単位とこれまでに学習した単位との関係を考察すること。"
+  },
+  {
+   "id": "jp-cos-c000a8ffdf",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    10
+   ],
+   "text": "簡単な場合について，比例の関係があることを知ること。"
+  },
+  {
+   "id": "jp-cos-3f24011851",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    10
+   ],
+   "text": "速さなど単位量当たりの大きさの意味及び表し方について理解し，それを求めること。"
+  },
+  {
+   "id": "jp-cos-4d9c11c1e9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    10
+   ],
+   "text": "異種の二つの量の割合として捉えられる数量の関係に着目し，目的に応じて大きさを比べたり表現したりする方法を考察し，それらを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-043a80a06b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    10
+   ],
+   "text": "ある二つの数量の関係と別の二つの数量の関係とを比べる場合に割合を用いる場合があることを理解すること。"
+  },
+  {
+   "id": "jp-cos-7fd814300d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    10
+   ],
+   "text": "百分率を用いた表し方を理解し，割合などを求めること。"
+  },
+  {
+   "id": "jp-cos-e0a601ab1f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    10
+   ],
+   "text": "日常の事象における数量の関係に着目し，図や式などを用いて，ある二つの数量の関係と別の二つの数量の関係との比べ方を考察し，それを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-ff223d0909",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    10
+   ],
+   "text": "円グラフや帯グラフの特徴とそれらの用い方を理解すること。"
+  },
+  {
+   "id": "jp-cos-149c1b57fe",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    10
+   ],
+   "text": "データの収集や適切な手法の選択など統計的な問題解決の方法を知ること。"
+  },
+  {
+   "id": "jp-cos-0f9e21f48b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    10
+   ],
+   "text": "目的に応じてデータを集めて分類整理し，データの特徴や傾向に着目し，問題を解決するために適切なグラフを選択して判断し，その結論について多面的に捉え考察すること。"
+  },
+  {
+   "id": "jp-cos-45cd5516ed",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    10
+   ],
+   "text": "平均の意味について理解すること。"
+  },
+  {
+   "id": "jp-cos-d8dc97bbb3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    10
+   ],
+   "text": "概括的に捉えることに着目し，測定した結果を平均する方法について考察し，それを学習や日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-b7700c9a7f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    11
+   ],
+   "text": "乗数や除数が整数や分数である場合も含めて，分数の乗法及び除法の意味について理解すること。"
+  },
+  {
+   "id": "jp-cos-35554d559e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    11
+   ],
+   "text": "分数の乗法及び除法の計算ができること。"
+  },
+  {
+   "id": "jp-cos-87df17f7fc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    11
+   ],
+   "text": "分数の乗法及び除法についても，整数の場合と同じ関係や法則が成り立つことを理解すること。"
+  },
+  {
+   "id": "jp-cos-8752d4139f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    11
+   ],
+   "text": "数の意味と表現，計算について成り立つ性質に着目し，計算の仕方を多面的に捉え考えること。"
+  },
+  {
+   "id": "jp-cos-7001d78823",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    11
+   ],
+   "text": "数量を表す言葉や□，△などの代わりに，a，x などの文字を用いて式に表したり，文字に数を当てはめて調べたりすること。"
+  },
+  {
+   "id": "jp-cos-5bdd110553",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と計算",
+   "ages": [
+    11
+   ],
+   "text": "問題場面の数量の関係に着目し，数量の関係を簡潔かつ一般的に表現したり，式の意味を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-97efbc0701",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "縮図や拡大図について理解すること。"
+  },
+  {
+   "id": "jp-cos-5ce1df54b0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "対称な図形について理解すること。"
+  },
+  {
+   "id": "jp-cos-0fc2403595",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "図形を構成する要素及び図形間の関係に着目し，構成の仕方を考察したり図形の性質を見いだしたりするとともに，その性質を基に既習の図形を捉え直したり日常生活に生かしたりすること。"
+  },
+  {
+   "id": "jp-cos-0f4d927909",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "身の回りにある形について，その概形を捉え，およその面積などを求めること。"
+  },
+  {
+   "id": "jp-cos-3bb3130205",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "図形を構成する要素や性質に着目し，筋道を立てて面積などの求め方を考え，それを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-dc3213e61f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "円の面積の計算による求め方について理解すること。"
+  },
+  {
+   "id": "jp-cos-207d6a0326",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "図形を構成する要素などに着目し，基本図形の面積の求め方を見いだすとともに，その表現を振り返り，簡潔かつ的確な表現に高め，公式として導くこと。"
+  },
+  {
+   "id": "jp-cos-6563aae255",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "基本的な角柱及び円柱の体積の計算による求め方について理解すること。"
+  },
+  {
+   "id": "jp-cos-4b490e7815",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    11
+   ],
+   "text": "図形を構成する要素に着目し，基本図形の体積の求め方を見いだすとともに，その表現を振り返り，簡潔かつ的確な表現に高め，公式として導くこと。"
+  },
+  {
+   "id": "jp-cos-fb5600c034",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    11
+   ],
+   "text": "比例の関係の意味や性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-ebb2836682",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    11
+   ],
+   "text": "比例の関係を用いた問題解決の方法について知ること。"
+  },
+  {
+   "id": "jp-cos-b9a780bb65",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    11
+   ],
+   "text": "反比例の関係について知ること。"
+  },
+  {
+   "id": "jp-cos-1e7abae4cc",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    11
+   ],
+   "text": "伴って変わる二つの数量を見いだして，それらの関係に着目し，目的に応じて表や式，グラフを用いてそれらの関係を表現して，変化や対応の特徴を見いだすとともに，それらを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-72a70b6347",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    11
+   ],
+   "text": "比の意味や表し方を理解し，数量の関係を比で表したり，等しい比をつくったりすること。"
+  },
+  {
+   "id": "jp-cos-6e0adeb6c4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 変化と関係",
+   "ages": [
+    11
+   ],
+   "text": "日常の事象における数量の関係に着目し，図や式などを用いて数量の関係の比べ方を考察し，それを日常生活に生かすこと。"
+  },
+  {
+   "id": "jp-cos-711d4e7f04",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    11
+   ],
+   "text": "代表値の意味や求め方を理解すること。"
+  },
+  {
+   "id": "jp-cos-ace1aef734",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    11
+   ],
+   "text": "度数分布を表す表やグラフの特徴及びそれらの用い方を理解すること。"
+  },
+  {
+   "id": "jp-cos-50c48326b0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    11
+   ],
+   "text": "目的に応じてデータを収集したり適切な手法を選択したりするなど，統計的な問題解決の方法を知ること。"
+  },
+  {
+   "id": "jp-cos-54abf819a6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    11
+   ],
+   "text": "目的に応じてデータを集めて分類整理し，データの特徴や傾向に着目し，代表値などを用いて問題の結論について判断するとともに，その妥当性について批判的に考察すること。"
+  },
+  {
+   "id": "jp-cos-495e1f8cd0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    11
+   ],
+   "text": "起こり得る場合を順序よく整理するための図や表などの用い方を知ること。"
+  },
+  {
+   "id": "jp-cos-5e8c02f1db",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    11
+   ],
+   "text": "事象の特徴に着目し，順序よく整理する観点を決めて，落ちや重なりなく調べる方法を考察すること。"
+  },
+  {
+   "id": "jp-cos-a679fab8d4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物と重さ",
+   "ages": [
+    8
+   ],
+   "text": "物は，形が変わっても重さは変わらないこと。"
+  },
+  {
+   "id": "jp-cos-9673e832dd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物と重さ",
+   "ages": [
+    8
+   ],
+   "text": "物は，体積が同じでも重さは違うことがあること。"
+  },
+  {
+   "id": "jp-cos-d3cfbaeb19",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物と重さ",
+   "ages": [
+    8
+   ],
+   "text": "物の形や体積と重さとの関係について追究する中で，差異点や共通点を基に，物の性質についての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-ddb2199cd6",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 風とゴムの力の働き",
+   "ages": [
+    8
+   ],
+   "text": "風の力は，物を動かすことができること。また，風の力の大きさを変えると，物が動く様子も変わること。"
+  },
+  {
+   "id": "jp-cos-c1d46e79f5",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 風とゴムの力の働き",
+   "ages": [
+    8
+   ],
+   "text": "ゴムの力は，物を動かすことができること。また，ゴムの力の大きさを変えると，物が動く様子も変わること。"
+  },
+  {
+   "id": "jp-cos-96234109ea",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 風とゴムの力の働き",
+   "ages": [
+    8
+   ],
+   "text": "風とゴムの力で物が動く様子について追究する中で，差異点や共通点を基に，風とゴムの力の働きについての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-7e2e51eae7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 光と音の性質",
+   "ages": [
+    8
+   ],
+   "text": "日光は直進し，集めたり反射させたりできること。"
+  },
+  {
+   "id": "jp-cos-fc5205f80a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 光と音の性質",
+   "ages": [
+    8
+   ],
+   "text": "物に日光を当てると，物の明るさや暖かさが変わること。"
+  },
+  {
+   "id": "jp-cos-af0a464521",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 光と音の性質",
+   "ages": [
+    8
+   ],
+   "text": "物から音が出たり伝わったりするとき，物は震えていること。また，音の大きさが変わるとき物の震え方が変わること。"
+  },
+  {
+   "id": "jp-cos-00dce6d355",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 光と音の性質",
+   "ages": [
+    8
+   ],
+   "text": "光を当てたときの明るさや暖かさの様子，音を出したときの震え方の様子について追究する中で，差異点や共通点を基に，光と音の性質についての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-677a61091f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 磁石の性質",
+   "ages": [
+    8
+   ],
+   "text": "磁石に引き付けられる物と引き付けられない物があること。また，磁石に近付けると磁石になる物があること。"
+  },
+  {
+   "id": "jp-cos-1053a7cbe0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 磁石の性質",
+   "ages": [
+    8
+   ],
+   "text": "磁石の異極は引き合い，同極は退け合うこと。"
+  },
+  {
+   "id": "jp-cos-f65e168048",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 磁石の性質",
+   "ages": [
+    8
+   ],
+   "text": "磁石を身の回りの物に近付けたときの様子について追究する中で，差異点や共通点を基に，磁石の性質についての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-37fa00334e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の通り道",
+   "ages": [
+    8
+   ],
+   "text": "電気を通すつなぎ方と通さないつなぎ方があること。"
+  },
+  {
+   "id": "jp-cos-d1523ae70b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の通り道",
+   "ages": [
+    8
+   ],
+   "text": "電気を通す物と通さない物があること。"
+  },
+  {
+   "id": "jp-cos-f14e99a479",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の通り道",
+   "ages": [
+    8
+   ],
+   "text": "乾電池と豆電球などのつなぎ方と乾電池につないだ物の様子について追究する中で，差異点や共通点を基に，電気の回路についての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-c31da15045",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 身の回りの生物",
+   "ages": [
+    8
+   ],
+   "text": "生物は，色，形，大きさなど，姿に違いがあること。また，周辺の環境と関わって生きていること。"
+  },
+  {
+   "id": "jp-cos-4199d34390",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 身の回りの生物",
+   "ages": [
+    8
+   ],
+   "text": "昆虫の育ち方には一定の順序があること。また，成虫の体は頭，胸及び腹からできていること。"
+  },
+  {
+   "id": "jp-cos-5c8e6c766c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 身の回りの生物",
+   "ages": [
+    8
+   ],
+   "text": "植物の育ち方には一定の順序があること。また，その体は根，茎及び葉からできていること。"
+  },
+  {
+   "id": "jp-cos-e381e01b25",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 身の回りの生物",
+   "ages": [
+    8
+   ],
+   "text": "身の回りの生物の様子について追究する中で，差異点や共通点を基に，身の回りの生物と環境との関わり，昆虫や植物の成長のきまりや体のつくりについての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-87c95a16c2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 太陽と地面の様子",
+   "ages": [
+    8
+   ],
+   "text": "日陰は太陽の光を遮るとでき，日陰の位置は太陽の位置の変化によって変わること。"
+  },
+  {
+   "id": "jp-cos-4946ad1933",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 太陽と地面の様子",
+   "ages": [
+    8
+   ],
+   "text": "地面は太陽によって暖められ，日なたと日陰では地面の暖かさや湿り気に違いがあること。"
+  },
+  {
+   "id": "jp-cos-d731fa9df4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 太陽と地面の様子",
+   "ages": [
+    8
+   ],
+   "text": "日なたと日陰の様子について追究する中で，差異点や共通点を基に，太陽と地面の様子との関係についての問題を見いだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-6d8905470f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 空気と水の性質",
+   "ages": [
+    9
+   ],
+   "text": "閉じ込めた空気を圧すと，体積は小さくなるが，圧し返す力は大きくなること。"
+  },
+  {
+   "id": "jp-cos-f3c4ba859b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 空気と水の性質",
+   "ages": [
+    9
+   ],
+   "text": "閉じ込めた空気は圧し縮められるが，水は圧し縮められないこと。"
+  },
+  {
+   "id": "jp-cos-ddabba1d3f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 空気と水の性質",
+   "ages": [
+    9
+   ],
+   "text": "空気と水の性質について追究する中で，既習の内容や生活経験を基に，空気と水の体積や圧し返す力の変化と圧す力との関係について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-f254b72674",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 金属，水，空気と温度",
+   "ages": [
+    9
+   ],
+   "text": "金属，水及び空気は，温めたり冷やしたりすると，それらの体積が変わるが，その程度には違いがあること。"
+  },
+  {
+   "id": "jp-cos-3aea8f138c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 金属，水，空気と温度",
+   "ages": [
+    9
+   ],
+   "text": "金属は熱せられた部分から順に温まるが，水や空気は熱せられた部分が移動して全体が温まること。"
+  },
+  {
+   "id": "jp-cos-c6a92dd504",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 金属，水，空気と温度",
+   "ages": [
+    9
+   ],
+   "text": "水は，温度によって水蒸気や氷に変わること。また，水が氷になると体積が増えること。"
+  },
+  {
+   "id": "jp-cos-ba832a0083",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 金属，水，空気と温度",
+   "ages": [
+    9
+   ],
+   "text": "金属，水及び空気の性質について追究する中で，既習の内容や生活経験を基に，金属，水及び空気の温度を変化させたときの体積や状態の変化，熱の伝わり方について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-f53e66a244",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電流の働き",
+   "ages": [
+    9
+   ],
+   "text": "乾電池の数やつなぎ方を変えると，電流の大きさや向きが変わり，豆電球の明るさやモーターの回り方が変わること。"
+  },
+  {
+   "id": "jp-cos-485c895542",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電流の働き",
+   "ages": [
+    9
+   ],
+   "text": "電流の働きについて追究する中で，既習の内容や生活経験を基に，電流の大きさや向きと乾電池につないだ物の様子との関係について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-685eee390b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと運動",
+   "ages": [
+    9
+   ],
+   "text": "人の体には骨と筋肉があること。"
+  },
+  {
+   "id": "jp-cos-b8c86eadfc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと運動",
+   "ages": [
+    9
+   ],
+   "text": "人が体を動かすことができるのは，骨，筋肉の働きによること。"
+  },
+  {
+   "id": "jp-cos-ae9c0dcdb9",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと運動",
+   "ages": [
+    9
+   ],
+   "text": "人や他の動物について追究する中で，既習の内容や生活経験を基に，人や他の動物の骨や筋肉のつくりと働きについて，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-4a845c0f24",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 季節と生物",
+   "ages": [
+    9
+   ],
+   "text": "動物の活動は，暖かい季節，寒い季節などによって違いがあること。"
+  },
+  {
+   "id": "jp-cos-535b9196ad",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 季節と生物",
+   "ages": [
+    9
+   ],
+   "text": "植物の成長は，暖かい季節，寒い季節などによって違いがあること。"
+  },
+  {
+   "id": "jp-cos-b7c8a86a28",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 季節と生物",
+   "ages": [
+    9
+   ],
+   "text": "身近な動物や植物について追究する中で，既習の内容や生活経験を基に，季節ごとの動物の活動や植物の成長の変化について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-167df5fc6f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 雨水の行方と地面の様子",
+   "ages": [
+    9
+   ],
+   "text": "水は，高い場所から低い場所へと流れて集まること。"
+  },
+  {
+   "id": "jp-cos-80e12de0d1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 雨水の行方と地面の様子",
+   "ages": [
+    9
+   ],
+   "text": "水のしみ込み方は，土の粒の大きさによって違いがあること。"
+  },
+  {
+   "id": "jp-cos-6a536752d1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 雨水の行方と地面の様子",
+   "ages": [
+    9
+   ],
+   "text": "雨水の行方と地面の様子について追究する中で，既習の内容や生活経験を基に，雨水の流れ方やしみ込み方と地面の傾きや土の粒の大きさとの関係について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-e915e29f5b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 天気の様子",
+   "ages": [
+    9
+   ],
+   "text": "天気によって１日の気温の変化の仕方に違いがあること。"
+  },
+  {
+   "id": "jp-cos-81ac0d3b8e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 天気の様子",
+   "ages": [
+    9
+   ],
+   "text": "水は，水面や地面などから蒸発し，水蒸気になって空気中に含まれていくこと。また，空気中の水蒸気は，結露して再び水になって現れることがあること。"
+  },
+  {
+   "id": "jp-cos-776ef94192",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 天気の様子",
+   "ages": [
+    9
+   ],
+   "text": "天気や自然界の水の様子について追究する中で，既習の内容や生活経験を基に，天気の様子や水の状態変化と気温や水の行方との関係について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-78e3c94a3b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 月と星",
+   "ages": [
+    9
+   ],
+   "text": "月は日によって形が変わって見え，１日のうちでも時刻によって位置が変わること。"
+  },
+  {
+   "id": "jp-cos-a303f867df",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 月と星",
+   "ages": [
+    9
+   ],
+   "text": "空には，明るさや色の違う星があること。"
+  },
+  {
+   "id": "jp-cos-a71234a044",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 月と星",
+   "ages": [
+    9
+   ],
+   "text": "星の集まりは，１日のうちでも時刻によって，並び方は変わらないが，位置が変わること。"
+  },
+  {
+   "id": "jp-cos-9e7fc24ba4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 月と星",
+   "ages": [
+    9
+   ],
+   "text": "月や星の特徴について追究する中で，既習の内容や生活経験を基に，月や星の位置の変化と時間の経過との関係について，根拠のある予想や仮説を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-71a0c7bd66",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物の溶け方",
+   "ages": [
+    10
+   ],
+   "text": "物が水に溶けても，水と物とを合わせた重さは変わらないこと。"
+  },
+  {
+   "id": "jp-cos-0f9a5056c7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物の溶け方",
+   "ages": [
+    10
+   ],
+   "text": "物が水に溶ける量には，限度があること。"
+  },
+  {
+   "id": "jp-cos-5aa362777e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物の溶け方",
+   "ages": [
+    10
+   ],
+   "text": "物が水に溶ける量は水の温度や量，溶ける物によって違うこと。また，この性質を利用して，溶けている物を取り出すことができること。"
+  },
+  {
+   "id": "jp-cos-217159e954",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 物の溶け方",
+   "ages": [
+    10
+   ],
+   "text": "物の溶け方について追究する中で，物の溶け方の規則性についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-67125e182d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 振り子の運動",
+   "ages": [
+    10
+   ],
+   "text": "振り子が１往復する時間は，おもりの重さなどによっては変わらないが，振り子の長さによって変わること。"
+  },
+  {
+   "id": "jp-cos-623c5d9c4c",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 振り子の運動",
+   "ages": [
+    10
+   ],
+   "text": "振り子の運動の規則性について追究する中で，振り子が１往復する時間に関係する条件についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-17d5c1acc4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電流がつくる磁力",
+   "ages": [
+    10
+   ],
+   "text": "電流の流れているコイルは，鉄心を磁化する働きがあり，電流の向きが変わると，電磁石の極も変わること。"
+  },
+  {
+   "id": "jp-cos-46a00fe3fc",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電流がつくる磁力",
+   "ages": [
+    10
+   ],
+   "text": "電磁石の強さは，電流の大きさや導線の巻数によって変わること。"
+  },
+  {
+   "id": "jp-cos-46ab37af80",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電流がつくる磁力",
+   "ages": [
+    10
+   ],
+   "text": "電流がつくる磁力について追究する中で，電流がつくる磁力の強さに関係する条件についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-e2b38ac478",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の発芽，成長，結実",
+   "ages": [
+    10
+   ],
+   "text": "植物は，種子の中の養分を基にして発芽すること。"
+  },
+  {
+   "id": "jp-cos-27ef52618f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の発芽，成長，結実",
+   "ages": [
+    10
+   ],
+   "text": "植物の発芽には，水，空気及び温度が関係していること。"
+  },
+  {
+   "id": "jp-cos-8af620b782",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の発芽，成長，結実",
+   "ages": [
+    10
+   ],
+   "text": "植物の成長には，日光や肥料などが関係していること。"
+  },
+  {
+   "id": "jp-cos-c7129535a7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の発芽，成長，結実",
+   "ages": [
+    10
+   ],
+   "text": "花にはおしべやめしべなどがあり，花粉がめしべの先に付くとめしべのもとが実になり，実の中に種子ができること。"
+  },
+  {
+   "id": "jp-cos-31028fae39",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の発芽，成長，結実",
+   "ages": [
+    10
+   ],
+   "text": "植物の育ち方について追究する中で，植物の発芽，成長及び結実とそれらに関わる条件についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-498a0f1308",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 動物の誕生",
+   "ages": [
+    10
+   ],
+   "text": "魚には雌雄があり，生まれた卵は日がたつにつれて中の様子が変化してかえること。"
+  },
+  {
+   "id": "jp-cos-cd4516228f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 動物の誕生",
+   "ages": [
+    10
+   ],
+   "text": "人は，母体内で成長して生まれること。"
+  },
+  {
+   "id": "jp-cos-3f31249821",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 動物の誕生",
+   "ages": [
+    10
+   ],
+   "text": "動物の発生や成長について追究する中で，動物の発生や成長の様子と経過についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-6c6785cfe3",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 流れる水の働きと土地の変化",
+   "ages": [
+    10
+   ],
+   "text": "流れる水には，土地を侵食したり，石や土などを運搬したり堆積させたりする働きがあること。"
+  },
+  {
+   "id": "jp-cos-f9f2e80e09",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 流れる水の働きと土地の変化",
+   "ages": [
+    10
+   ],
+   "text": "川の上流と下流によって，川原の石の大きさや形に違いがあること。"
+  },
+  {
+   "id": "jp-cos-958fffd85d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 流れる水の働きと土地の変化",
+   "ages": [
+    10
+   ],
+   "text": "雨の降り方によって，流れる水の速さや量は変わり，増水により土地の様子が大きく変化する場合があること。"
+  },
+  {
+   "id": "jp-cos-329f5596e7",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 流れる水の働きと土地の変化",
+   "ages": [
+    10
+   ],
+   "text": "流れる水の働きについて追究する中で，流れる水の働きと土地の変化との関係についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-cc3deff786",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 天気の変化",
+   "ages": [
+    10
+   ],
+   "text": "天気の変化は，雲の量や動きと関係があること。"
+  },
+  {
+   "id": "jp-cos-26a60acd92",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 天気の変化",
+   "ages": [
+    10
+   ],
+   "text": "天気の変化は，映像などの気象情報を用いて予想できること。"
+  },
+  {
+   "id": "jp-cos-bd6497ea27",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 天気の変化",
+   "ages": [
+    10
+   ],
+   "text": "天気の変化の仕方について追究する中で，天気の変化の仕方と雲の量や動きとの関係についての予想や仮説を基に，解決の方法を発想し，表現すること。"
+  },
+  {
+   "id": "jp-cos-6e79c6dcdb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 燃焼の仕組み",
+   "ages": [
+    11
+   ],
+   "text": "植物体が燃えるときには，空気中の酸素が使われて二酸化炭素ができること。"
+  },
+  {
+   "id": "jp-cos-ecd3981620",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 燃焼の仕組み",
+   "ages": [
+    11
+   ],
+   "text": "燃焼の仕組みについて追究する中で，物が燃えたときの空気の変化について，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-e09488d0e0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 水溶液の性質",
+   "ages": [
+    11
+   ],
+   "text": "水溶液には，酸性，アルカリ性及び中性のものがあること。"
+  },
+  {
+   "id": "jp-cos-9909f44b85",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 水溶液の性質",
+   "ages": [
+    11
+   ],
+   "text": "水溶液には，気体が溶けているものがあること。"
+  },
+  {
+   "id": "jp-cos-95ae2e94ec",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 水溶液の性質",
+   "ages": [
+    11
+   ],
+   "text": "水溶液には，金属を変化させるものがあること。"
+  },
+  {
+   "id": "jp-cos-27152c805a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 水溶液の性質",
+   "ages": [
+    11
+   ],
+   "text": "水溶液の性質や働きについて追究する中で，溶けているものによる性質や働きの違いについて，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-d49655f69b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー てこの規則性",
+   "ages": [
+    11
+   ],
+   "text": "力を加える位置や力の大きさを変えると，てこを傾ける働きが変わり，てこがつり合うときにはそれらの間に規則性があること。"
+  },
+  {
+   "id": "jp-cos-353a4a5020",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー てこの規則性",
+   "ages": [
+    11
+   ],
+   "text": "身の回りには，てこの規則性を利用した道具があること。"
+  },
+  {
+   "id": "jp-cos-473e5a9cf2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー てこの規則性",
+   "ages": [
+    11
+   ],
+   "text": "てこの規則性について追究する中で，力を加える位置や力の大きさとてこの働きとの関係について，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-90ca7f6e6e",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の利用",
+   "ages": [
+    11
+   ],
+   "text": "電気は，つくりだしたり蓄えたりすることができること。"
+  },
+  {
+   "id": "jp-cos-670f425daf",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の利用",
+   "ages": [
+    11
+   ],
+   "text": "電気は，光，音，熱，運動などに変換することができること。"
+  },
+  {
+   "id": "jp-cos-2fcab5a91b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の利用",
+   "ages": [
+    11
+   ],
+   "text": "身の回りには，電気の性質や働きを利用した道具があること。"
+  },
+  {
+   "id": "jp-cos-c475ec039b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ａ 物質・エネルギー 電気の利用",
+   "ages": [
+    11
+   ],
+   "text": "電気の性質や働きについて追究する中で，電気の量と働きとの関係，発電や蓄電，電気の変換について，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-e4d1d2f27a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと働き",
+   "ages": [
+    11
+   ],
+   "text": "体内に酸素が取り入れられ，体外に二酸化炭素などが出されていること。"
+  },
+  {
+   "id": "jp-cos-e7164d3dfd",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと働き",
+   "ages": [
+    11
+   ],
+   "text": "食べ物は，口，胃，腸などを通る間に消化，吸収され，吸収されなかった物は排出されること。"
+  },
+  {
+   "id": "jp-cos-65dcbec0f2",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと働き",
+   "ages": [
+    11
+   ],
+   "text": "血液は，心臓の働きで体内を巡り，養分，酸素及び二酸化炭素などを運んでいること。"
+  },
+  {
+   "id": "jp-cos-72dce96bd4",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと働き",
+   "ages": [
+    11
+   ],
+   "text": "体内には，生命活動を維持するための様々な臓器があること。"
+  },
+  {
+   "id": "jp-cos-80ddfac629",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 人の体のつくりと働き",
+   "ages": [
+    11
+   ],
+   "text": "人や他の動物の体のつくりと働きについて追究する中で，体のつくりと呼吸，消化，排出及び循環の働きについて，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-66ac21d97f",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の養分と水の通り道",
+   "ages": [
+    11
+   ],
+   "text": "植物の葉に日光が当たるとでんぷんができること。"
+  },
+  {
+   "id": "jp-cos-fe9c58be7a",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の養分と水の通り道",
+   "ages": [
+    11
+   ],
+   "text": "根，茎及び葉には，水の通り道があり，根から吸い上げられた水は主に葉から蒸散により排出されること。"
+  },
+  {
+   "id": "jp-cos-ff7229cf82",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 植物の養分と水の通り道",
+   "ages": [
+    11
+   ],
+   "text": "植物の体のつくりと働きについて追究する中で，体のつくり，体内の水などの行方及び葉で養分をつくる働きについて，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-0500cb8860",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 生物と環境",
+   "ages": [
+    11
+   ],
+   "text": "生物は，水及び空気を通して周囲の環境と関わって生きていること。"
+  },
+  {
+   "id": "jp-cos-f7b2f3aec8",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 生物と環境",
+   "ages": [
+    11
+   ],
+   "text": "生物の間には，食う食われるという関係があること。"
+  },
+  {
+   "id": "jp-cos-95fbb6c8cb",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 生物と環境",
+   "ages": [
+    11
+   ],
+   "text": "人は，環境と関わり，工夫して生活していること。"
+  },
+  {
+   "id": "jp-cos-c9f95d4437",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 生物と環境",
+   "ages": [
+    11
+   ],
+   "text": "生物と環境について追究する中で，生物と環境との関わりについて，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-1f8729823b",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 土地のつくりと変化",
+   "ages": [
+    11
+   ],
+   "text": "土地は，礫，砂，泥，火山灰などからできており，層をつくって広がっているものがあること。また，層には化石が含まれているものがあること。"
+  },
+  {
+   "id": "jp-cos-f7020a56a1",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 土地のつくりと変化",
+   "ages": [
+    11
+   ],
+   "text": "地層は，流れる水の働きや火山の噴火によってできること。"
+  },
+  {
+   "id": "jp-cos-3b8ae1e304",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 土地のつくりと変化",
+   "ages": [
+    11
+   ],
+   "text": "土地は，火山の噴火や地震によって変化すること。"
+  },
+  {
+   "id": "jp-cos-d661d301b0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 土地のつくりと変化",
+   "ages": [
+    11
+   ],
+   "text": "土地のつくりと変化について追究する中で，土地のつくりやでき方について，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-cbfaba0f2d",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 月と太陽",
+   "ages": [
+    11
+   ],
+   "text": "月の輝いている側に太陽があること。また，月の形の見え方は，太陽と月との位置関係によって変わること。"
+  },
+  {
+   "id": "jp-cos-eb81b669a0",
+   "code": "",
+   "subject": "Science",
+   "strand": "Ｂ 生命・地球 月と太陽",
+   "ages": [
+    11
+   ],
+   "text": "月の形の見え方について追究する中で，月の位置や形と太陽の位置との関係について，より妥当な考えをつくりだし，表現すること。"
+  },
+  {
+   "id": "jp-cos-24fd23a1f8",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "現代の標準的な発音"
+  },
+  {
+   "id": "jp-cos-43a3779832",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "語と語の連結による音の変化"
+  },
+  {
+   "id": "jp-cos-49f83b2239",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "語や句，文における基本的な強勢"
+  },
+  {
+   "id": "jp-cos-265358750a",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文における基本的なイントネーション"
+  },
+  {
+   "id": "jp-cos-5e8d8ab975",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文における基本的な区切り"
+  },
+  {
+   "id": "jp-cos-ec9e86010d",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "活字体の大文字，小文字"
+  },
+  {
+   "id": "jp-cos-1975f5b3bb",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "終止符や疑問符，コンマなどの基本的な符号"
+  },
+  {
+   "id": "jp-cos-74fe1edce6",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "１に示す五つの領域別の目標を達成するために必要となる，第３学年及び第４学年において第４章外国語活動を履修する際に取り扱った語を含む 600 〜 700 語程度の語"
+  },
+  {
+   "id": "jp-cos-57af72eb76",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "連語のうち，get up，look at などの活用頻度の高い基本的なもの"
+  },
+  {
+   "id": "jp-cos-5a52343a7b",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "慣用表現のうち，excuse me，I see，I'm sorry，thank you，you're welcome などの活用頻度の高い基本的なもの"
+  },
+  {
+   "id": "jp-cos-ec0f9a4a6c",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文：a 単文 b 肯定，否定の平叙文 c 肯定，否定の命令文 d 疑問文のうち，be 動詞で始まるものや助動詞（can，do など）で始まるもの，疑問詞（who，what，when，where，why，how）で始まるもの e 代名詞のうち，I，you，he，she などの基本的なものを含むもの f 動名詞や過去形のうち，活用頻度の高い基本的なものを含むもの"
+  },
+  {
+   "id": "jp-cos-24f1e6c5ef",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "文構造：a ［主語＋動詞］b ［主語＋動詞＋補語］のうち，名詞主語＋ be 動詞＋ 代名詞形容詞 c ［主語＋動詞＋目的語］のうち，名詞主語＋動詞＋代名詞"
+  },
+  {
+   "id": "jp-cos-d1de3f28a8",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔思考力，判断力，表現力等〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "身近で簡単な事柄について，伝えようとする内容を整理した上で，簡単な語句や基本的な表現を用いて，自分の考えや気持ちなどを伝え合うこと。"
+  },
+  {
+   "id": "jp-cos-984ce74c45",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語 〔思考力，判断力，表現力等〕",
+   "ages": [
+    10,
+    11
+   ],
+   "text": "身近で簡単な事柄について，音声で十分に慣れ親しんだ簡単な語句や基本的な表現を推測しながら読んだり，語順を意識しながら書いたりすること。"
+  },
+  {
+   "id": "jp-cos-2c574a60d6",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語活動 〔知識及び技能〕 英語の特徴等に関する事項",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "言語を用いて主体的にコミュニケーションを図ることの楽しさや大切さを知ること。"
+  },
+  {
+   "id": "jp-cos-57a2a7519b",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語活動 〔知識及び技能〕 英語の特徴等に関する事項",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "英語の音声やリズムなどに慣れ親しむとともに，日本語との違いを知り，言葉の面白さや豊かさに気付くこと。"
+  },
+  {
+   "id": "jp-cos-ebb70c13b9",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語活動 〔知識及び技能〕 英語の特徴等に関する事項",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "日本と外国との生活や習慣，行事などの違いを知り，多様な考え方があることに気付くこと。"
+  },
+  {
+   "id": "jp-cos-42382a2b5a",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語活動 〔知識及び技能〕 英語の特徴等に関する事項",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "異なる文化をもつ人々との交流などを体験し，文化等に対する理解を深めること。"
+  },
+  {
+   "id": "jp-cos-47a3b449c3",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語活動 〔思考力，判断力，表現力等〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "自分のことや身近で簡単な事柄について，簡単な語句や基本的な表現を使って，相手に配慮しながら，伝え合うこと。"
+  },
+  {
+   "id": "jp-cos-c46d5df8a3",
+   "code": "",
+   "subject": "English",
+   "strand": "外国語活動 〔思考力，判断力，表現力等〕",
+   "ages": [
+    8,
+    9
+   ],
+   "text": "身近で簡単な事柄について，自分の考えや気持ちなどが伝わるよう，工夫して質問をしたり質問に答えたりすること。"
+  },
+  {
+   "id": "jp-cos-c1df293c8d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "音声の働きや仕組みについて，理解を深めること。"
+  },
+  {
+   "id": "jp-cos-a2ee20c947",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "小学校学習指導要領第２章第１節国語の学年別漢字配当表（以下「学年別漢字配当表」という。）に示されている漢字に加え，その他の常用漢字のうち 300 字程度から 400 字程度までの漢字を読むこと。また，学年別漢字配当表の漢字のうち 900 字程度の漢字を書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-8c04d9acfb",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "事象や行為，心情を表す語句の量を増すとともに，語句の辞書的な意味と文脈上の意味との関係に注意して話や文章の中で使うことを通して，語感を磨き語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-ac812ed7d2",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "単語の類別について理解するとともに，指示する語句と接続する語句の役割について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-1fa72884f6",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "比喩，反復，倒置，体言止めなどの表現の技法を理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-7dca48a8d1",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "原因と結果，意見と根拠など情報と情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-66a887a12b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "比較や分類，関係付けなどの情報の整理の仕方，引用の仕方や出典の示し方について理解を深め，それらを使うこと。"
+  },
+  {
+   "id": "jp-cos-db50058a7f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "音読に必要な文語のきまりや訓読の仕方を知り，古文や漢文を音読し，古典特有のリズムを通して，古典の世界に親しむこと。"
+  },
+  {
+   "id": "jp-cos-e841e0a4ea",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "古典には様々な種類の作品があることを知ること。"
+  },
+  {
+   "id": "jp-cos-2777c81d0f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "共通語と方言の果たす役割について理解すること。"
+  },
+  {
+   "id": "jp-cos-d93c4303aa",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "字形を整え，文字の大きさ，配列などについて理解して，楷書で書くこと。"
+  },
+  {
+   "id": "jp-cos-2b2a5b38c6",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "漢字の行書の基礎的な書き方を理解して，身近な文字を行書で書くこと。"
+  },
+  {
+   "id": "jp-cos-272c3a53ca",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    12
+   ],
+   "text": "読書が，知識や情報を得たり，自分の考えを広げたりすることに役立つことを理解すること。"
+  },
+  {
+   "id": "jp-cos-8b9b8825dd",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    12
+   ],
+   "text": "目的や場面に応じて，日常生活の中から話題を決め，集めた材料を整理し，伝え合う内容を検討すること。"
+  },
+  {
+   "id": "jp-cos-8e367ade69",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    12
+   ],
+   "text": "自分の考えや根拠が明確になるように，話の中心的な部分と付加的な部分，事実と意見との関係などに注意して，話の構成を考えること。"
+  },
+  {
+   "id": "jp-cos-8995b02c33",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    12
+   ],
+   "text": "相手の反応を踏まえながら，自分の考えが分かりやすく伝わるように表現を工夫すること。"
+  },
+  {
+   "id": "jp-cos-347179aa3c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    12
+   ],
+   "text": "必要に応じて記録したり質問したりしながら話の内容を捉え，共通点や相違点などを踏まえて，自分の考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-eb234cfbef",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    12
+   ],
+   "text": "話題や展開を捉えながら話し合い，互いの発言を結び付けて考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-b88cf89464",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    12
+   ],
+   "text": "目的や意図に応じて，日常生活の中から題材を決め，集めた材料を整理し，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-b198be194a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    12
+   ],
+   "text": "書く内容の中心が明確になるように，段落の役割などを意識して文章の構成や展開を考えること。"
+  },
+  {
+   "id": "jp-cos-7a986eae03",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    12
+   ],
+   "text": "根拠を明確にしながら，自分の考えが伝わる文章になるように工夫すること。"
+  },
+  {
+   "id": "jp-cos-2d8492f7ad",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    12
+   ],
+   "text": "読み手の立場に立って，表記や語句の用法，叙述の仕方などを確かめて，文章を整えること。"
+  },
+  {
+   "id": "jp-cos-45b46d657e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    12
+   ],
+   "text": "根拠の明確さなどについて，読み手からの助言などを踏まえ，自分の文章のよい点や改善点を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-9a40cfe962",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    12
+   ],
+   "text": "文章の中心的な部分と付加的な部分，事実と意見との関係などについて叙述を基に捉え，要旨を把握すること。"
+  },
+  {
+   "id": "jp-cos-1a1b68842f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    12
+   ],
+   "text": "場面の展開や登場人物の相互関係，心情の変化などについて，描写を基に捉えること。"
+  },
+  {
+   "id": "jp-cos-5c46ef72fd",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    12
+   ],
+   "text": "目的に応じて必要な情報に着目して要約したり，場面と場面，場面と描写などを結び付けたりして，内容を解釈すること。"
+  },
+  {
+   "id": "jp-cos-f0c78048d8",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    12
+   ],
+   "text": "文章の構成や展開，表現の効果について，根拠を明確にして考えること。"
+  },
+  {
+   "id": "jp-cos-4038f5ccda",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    12
+   ],
+   "text": "文章を読んで理解したことに基づいて，自分の考えを確かなものにすること。"
+  },
+  {
+   "id": "jp-cos-84100d5156",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "言葉には，相手の行動を促す働きがあることに気付くこと。"
+  },
+  {
+   "id": "jp-cos-f485e90d19",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "話し言葉と書き言葉の特徴について理解すること。"
+  },
+  {
+   "id": "jp-cos-3ae675fa99",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "第１学年までに学習した常用漢字に加え，その他の常用漢字のうち 350 字程度から 450 字程度までの漢字を読むこと。また，学年別漢字配当表に示されている漢字を書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-ad797f2b29",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "抽象的な概念を表す語句の量を増すとともに，類義語と対義語，同音異義語や多義的な意味を表す語句などについて理解し，話や文章の中で使うことを通して，語感を磨き語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-52d5789301",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "単語の活用，助詞や助動詞などの働き，文の成分の順序や照応など文の構成について理解するとともに，話や文章の構成や展開について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-660d4fac8d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "敬語の働きについて理解し，話や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-3ae184f62f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "意見と根拠，具体と抽象など情報と情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-65d7484d5d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "情報と情報との関係の様々な表し方を理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-3e7e7745eb",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "作品の特徴を生かして朗読するなどして，古典の世界に親しむこと。"
+  },
+  {
+   "id": "jp-cos-b5f7b9ab0c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "現代語訳や語注などを手掛かりに作品を読むことを通して，古典に表れたものの見方や考え方を知ること。"
+  },
+  {
+   "id": "jp-cos-3fee63cd09",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "漢字の行書とそれに調和した仮名の書き方を理解して，読みやすく速く書くこと。"
+  },
+  {
+   "id": "jp-cos-6a23b71768",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "目的や必要に応じて，楷書又は行書を選んで書くこと。"
+  },
+  {
+   "id": "jp-cos-7d7c2abf81",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    13
+   ],
+   "text": "本や文章などには，様々な立場や考え方が書かれていることを知り，自分の考えを広げたり深めたりする読書に生かすこと。"
+  },
+  {
+   "id": "jp-cos-d3b208af72",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    13
+   ],
+   "text": "目的や場面に応じて，社会生活の中から話題を決め，異なる立場や考えを想定しながら集めた材料を整理し，伝え合う内容を検討すること。"
+  },
+  {
+   "id": "jp-cos-c9cbce03ff",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    13
+   ],
+   "text": "自分の立場や考えが明確になるように，根拠の適切さや論理の展開などに注意して，話の構成を工夫すること。"
+  },
+  {
+   "id": "jp-cos-86cfd7c378",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    13
+   ],
+   "text": "資料や機器を用いるなどして，自分の考えが分かりやすく伝わるように表現を工夫すること。"
+  },
+  {
+   "id": "jp-cos-cdc5bd092d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    13
+   ],
+   "text": "論理の展開などに注意して聞き，話し手の考えと比較しながら，自分の考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-2344060222",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    13
+   ],
+   "text": "互いの立場や考えを尊重しながら話し合い，結論を導くために考えをまとめること。"
+  },
+  {
+   "id": "jp-cos-e8cf05571c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    13
+   ],
+   "text": "目的や意図に応じて，社会生活の中から題材を決め，多様な方法で集めた材料を整理し，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-79dad50277",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    13
+   ],
+   "text": "伝えたいことが分かりやすく伝わるように，段落相互の関係などを明確にし，文章の構成や展開を工夫すること。"
+  },
+  {
+   "id": "jp-cos-479e08aaff",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    13
+   ],
+   "text": "根拠の適切さを考えて説明や具体例を加えたり，表現の効果を考えて描写したりするなど，自分の考えが伝わる文章になるように工夫すること。"
+  },
+  {
+   "id": "jp-cos-a8319ddb56",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    13
+   ],
+   "text": "読み手の立場に立って，表現の効果などを確かめて，文章を整えること。"
+  },
+  {
+   "id": "jp-cos-8d45fc4fd4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    13
+   ],
+   "text": "表現の工夫とその効果などについて，読み手からの助言などを踏まえ，自分の文章のよい点や改善点を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-22187e9102",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    13
+   ],
+   "text": "文章全体と部分との関係に注意しながら，主張と例示との関係や登場人物の設定の仕方などを捉えること。"
+  },
+  {
+   "id": "jp-cos-9553396529",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    13
+   ],
+   "text": "目的に応じて複数の情報を整理しながら適切な情報を得たり，登場人物の言動の意味などについて考えたりして，内容を解釈すること。"
+  },
+  {
+   "id": "jp-cos-101ee3b900",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    13
+   ],
+   "text": "文章と図表などを結び付け，その関係を踏まえて内容を解釈すること。"
+  },
+  {
+   "id": "jp-cos-92304d1a60",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    13
+   ],
+   "text": "観点を明確にして文章を比較するなどし，文章の構成や論理の展開，表現の効果について考えること。"
+  },
+  {
+   "id": "jp-cos-cc21f65b63",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    13
+   ],
+   "text": "文章を読んで理解したことや考えたことを知識や経験と結び付け，自分の考えを広げたり深めたりすること。"
+  },
+  {
+   "id": "jp-cos-2202ee790c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "第２学年までに学習した常用漢字に加え，その他の常用漢字の大体を読むこと。また，学年別漢字配当表に示されている漢字について，文や文章の中で使い慣れること。"
+  },
+  {
+   "id": "jp-cos-ba4af5412c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "理解したり表現したりするために必要な語句の量を増し，慣用句や四字熟語などについて理解を深め，話や文章の中で使うとともに，和語，漢語，外来語などを使い分けることを通して，語感を磨き語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-d9d82696c0",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "話や文章の種類とその特徴について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-e7e9517751",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "敬語などの相手や場に応じた言葉遣いを理解し，適切に使うこと。"
+  },
+  {
+   "id": "jp-cos-5edbbba72c",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "具体と抽象など情報と情報との関係について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-fd85061903",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "情報の信頼性の確かめ方を理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-b03ab64d6a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "歴史的背景などに注意して古典を読むことを通して，その世界に親しむこと。"
+  },
+  {
+   "id": "jp-cos-168844931e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "長く親しまれている言葉や古典の一節を引用するなどして使うこと。"
+  },
+  {
+   "id": "jp-cos-39c535bf5a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "時間の経過による言葉の変化や世代による言葉の違いについて理解すること。"
+  },
+  {
+   "id": "jp-cos-24b8b2a9e2",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "身の回りの多様な表現を通して文字文化の豊かさに触れ，効果的に文字を書くこと。"
+  },
+  {
+   "id": "jp-cos-169bb12a70",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "〔知識及び技能〕",
+   "ages": [
+    14
+   ],
+   "text": "自分の生き方や社会との関わり方を支える読書の意義と効用について理解すること。"
+  },
+  {
+   "id": "jp-cos-12a1c3f462",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    14
+   ],
+   "text": "目的や場面に応じて，社会生活の中から話題を決め，多様な考えを想定しながら材料を整理し，伝え合う内容を検討すること。"
+  },
+  {
+   "id": "jp-cos-a362465ac5",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    14
+   ],
+   "text": "自分の立場や考えを明確にし，相手を説得できるように論理の展開などを考えて，話の構成を工夫すること。"
+  },
+  {
+   "id": "jp-cos-71582707df",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    14
+   ],
+   "text": "場の状況に応じて言葉を選ぶなど，自分の考えが分かりやすく伝わるように表現を工夫すること。"
+  },
+  {
+   "id": "jp-cos-69f5ec7510",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    14
+   ],
+   "text": "話の展開を予測しながら聞き，聞き取った内容や表現の仕方を評価して，自分の考えを広げたり深めたりすること。"
+  },
+  {
+   "id": "jp-cos-8feedf1442",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ａ 話すこと・聞くこと",
+   "ages": [
+    14
+   ],
+   "text": "進行の仕方を工夫したり互いの発言を生かしたりしながら話し合い，合意形成に向けて考えを広げたり深めたりすること。"
+  },
+  {
+   "id": "jp-cos-c3f1003ef5",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    14
+   ],
+   "text": "目的や意図に応じて，社会生活の中から題材を決め，集めた材料の客観性や信頼性を確認し，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-bbb5538260",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    14
+   ],
+   "text": "文章の種類を選択し，多様な読み手を説得できるように論理の展開などを考えて，文章の構成を工夫すること。"
+  },
+  {
+   "id": "jp-cos-ee1c2e80eb",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    14
+   ],
+   "text": "表現の仕方を考えたり資料を適切に引用したりするなど，自分の考えが分かりやすく伝わる文章になるように工夫すること。"
+  },
+  {
+   "id": "jp-cos-bf8ccc2e7f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    14
+   ],
+   "text": "目的や意図に応じた表現になっているかなどを確かめて，文章全体を整えること。"
+  },
+  {
+   "id": "jp-cos-ce753bf71f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｂ 書くこと",
+   "ages": [
+    14
+   ],
+   "text": "論理の展開などについて，読み手からの助言などを踏まえ，自分の文章のよい点や改善点を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-812e0a3bdd",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    14
+   ],
+   "text": "文章の種類を踏まえて，論理や物語の展開の仕方などを捉えること。"
+  },
+  {
+   "id": "jp-cos-2198066a71",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    14
+   ],
+   "text": "文章を批判的に読みながら，文章に表れているものの見方や考え方について考えること。"
+  },
+  {
+   "id": "jp-cos-02fd83ab73",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    14
+   ],
+   "text": "文章の構成や論理の展開，表現の仕方について評価すること。"
+  },
+  {
+   "id": "jp-cos-931e9b33e7",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "Ｃ 読むこと",
+   "ages": [
+    14
+   ],
+   "text": "文章を読んで考えを広げたり深めたりして，人間，社会，自然などについて，自分の意見をもつこと。"
+  },
+  {
+   "id": "jp-cos-7fb6c70c11",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "正の数と負の数の必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-8b6bb07520",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "正の数と負の数の四則計算をすること。"
+  },
+  {
+   "id": "jp-cos-05be6f122e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "具体的な場面で正の数と負の数を用いて表したり処理したりすること。"
+  },
+  {
+   "id": "jp-cos-7efdff2e3d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "算数で学習した数の四則計算と関連付けて，正の数と負の数の四則計算の方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-c3f60d9d86",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "正の数と負の数を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-3d58a55171",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "文字を用いることの必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-8f20318b21",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "文字を用いた式における乗法と除法の表し方を知ること。"
+  },
+  {
+   "id": "jp-cos-45823463a4",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "簡単な一次式の加法と減法の計算をすること。"
+  },
+  {
+   "id": "jp-cos-c015e92323",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "数量の関係や法則などを文字を用いた式に表すことができることを理解し，式を用いて表したり読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-039c4396b9",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "具体的な場面と関連付けて，一次式の加法と減法の計算の方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-78a1202da6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "方程式の必要性と意味及び方程式の中の文字や解の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-d69b0004a3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "簡単な一元一次方程式を解くこと。"
+  },
+  {
+   "id": "jp-cos-9688c30120",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "等式の性質を基にして，一元一次方程式を解く方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-abd1fa8023",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    12
+   ],
+   "text": "一元一次方程式を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-79d6e10df6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "角の二等分線，線分の垂直二等分線，垂線などの基本的な作図の方法を理解すること。"
+  },
+  {
+   "id": "jp-cos-4d8dbe5e81",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "平行移動，対称移動及び回転移動について理解すること。"
+  },
+  {
+   "id": "jp-cos-16c62a8bcb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "図形の性質に着目し，基本的な作図の方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-84ec2731ad",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "図形の移動に着目し，二つの図形の関係について考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-453e979beb",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "基本的な作図や図形の移動を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-e299f23d98",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "空間における直線や平面の位置関係を知ること。"
+  },
+  {
+   "id": "jp-cos-8260ac3c2e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "扇形の弧の長さと面積，基本的な柱体や錐体，球の表面積と体積を求めること。"
+  },
+  {
+   "id": "jp-cos-4b8f44ac19",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "空間図形を直線や平面図形の運動によって構成されるものと捉えたり，空間図形を平面上に表現して平面上の表現から空間図形の性質を見いだしたりすること。"
+  },
+  {
+   "id": "jp-cos-0794971017",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    12
+   ],
+   "text": "立体図形の表面積や体積の求め方を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-a11521e5df",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    12
+   ],
+   "text": "関数関係の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-1787058169",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    12
+   ],
+   "text": "比例，反比例について理解すること。"
+  },
+  {
+   "id": "jp-cos-bcf6d37a4b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    12
+   ],
+   "text": "座標の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-51756f7436",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    12
+   ],
+   "text": "比例，反比例を表，式，グラフなどに表すこと。"
+  },
+  {
+   "id": "jp-cos-14fc01f677",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    12
+   ],
+   "text": "比例，反比例として捉えられる二つの数量について，表，式，グラフなどを用いて調べ，それらの変化や対応の特徴を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-efbbe1690d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    12
+   ],
+   "text": "比例，反比例を用いて具体的な事象を捉え考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-b7ffc339b8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    12
+   ],
+   "text": "ヒストグラムや相対度数などの必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-8e19850b3b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    12
+   ],
+   "text": "コンピュータなどの情報手段を用いるなどしてデータを表やグラフに整理すること。"
+  },
+  {
+   "id": "jp-cos-4caccc40c2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    12
+   ],
+   "text": "目的に応じてデータを収集して分析し，そのデータの分布の傾向を読み取り，批判的に考察し判断すること。"
+  },
+  {
+   "id": "jp-cos-bead1ae1e8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    12
+   ],
+   "text": "多数の観察や多数回の試行によって得られる確率の必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-e6517fea1e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    12
+   ],
+   "text": "多数の観察や多数回の試行の結果を基にして，不確定な事象の起こりやすさの傾向を読み取り表現すること。"
+  },
+  {
+   "id": "jp-cos-66fe54716a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "簡単な整式の加法と減法及び単項式の乗法と除法の計算をすること。"
+  },
+  {
+   "id": "jp-cos-b5d7d21b3f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "具体的な事象の中の数量の関係を文字を用いた式で表したり，式の意味を読み取ったりすること。"
+  },
+  {
+   "id": "jp-cos-a2b5bce674",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "文字を用いた式で数量及び数量の関係を捉え説明できることを理解すること。"
+  },
+  {
+   "id": "jp-cos-f5d8946998",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "目的に応じて，簡単な式を変形すること。"
+  },
+  {
+   "id": "jp-cos-8db85da2e2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "具体的な数の計算や既に学習した計算の方法と関連付けて，整式の加法と減法及び単項式の乗法と除法の計算の方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-bd5d866337",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "文字を用いた式を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-8d5758c72e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "二元一次方程式とその解の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-2131db0b74",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "連立二元一次方程式の必要性と意味及びその解の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-e0f340036a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "簡単な連立二元一次方程式を解くこと。"
+  },
+  {
+   "id": "jp-cos-9d1717b237",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "一元一次方程式と関連付けて，連立二元一次方程式を解く方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-683b8701b6",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    13
+   ],
+   "text": "連立二元一次方程式を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-c9bd479382",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "平行線や角の性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-172d0178f8",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "多角形の角についての性質が見いだせることを知ること。"
+  },
+  {
+   "id": "jp-cos-fe46e52205",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "基本的な平面図形の性質を見いだし，平行線や角の性質を基にしてそれらを確かめ説明すること。"
+  },
+  {
+   "id": "jp-cos-527fe3a891",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "平面図形の合同の意味及び三角形の合同条件について理解すること。"
+  },
+  {
+   "id": "jp-cos-caf7d0a758",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "証明の必要性と意味及びその方法について理解すること。"
+  },
+  {
+   "id": "jp-cos-9df704101c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "三角形の合同条件などを基にして三角形や平行四辺形の基本的な性質を論理的に確かめたり，証明を読んで新たな性質を見いだしたりすること。"
+  },
+  {
+   "id": "jp-cos-6afb78f976",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    13
+   ],
+   "text": "三角形や平行四辺形の基本的な性質などを具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-c5024777ed",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    13
+   ],
+   "text": "一次関数について理解すること。"
+  },
+  {
+   "id": "jp-cos-15dfbdf20e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    13
+   ],
+   "text": "事象の中には一次関数として捉えられるものがあることを知ること。"
+  },
+  {
+   "id": "jp-cos-fa3984d67e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    13
+   ],
+   "text": "二元一次方程式を関数を表す式とみること。"
+  },
+  {
+   "id": "jp-cos-09d8c0a08b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    13
+   ],
+   "text": "一次関数として捉えられる二つの数量について，変化や対応の特徴を見いだし，表，式，グラフを相互に関連付けて考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-0e7abf36ab",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    13
+   ],
+   "text": "一次関数を用いて具体的な事象を捉え考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-81fe5c227c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "四分位範囲や箱ひげ図の必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-a290ab1761",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "コンピュータなどの情報手段を用いるなどしてデータを整理し箱ひげ図で表すこと。"
+  },
+  {
+   "id": "jp-cos-ac38675ccf",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "四分位範囲や箱ひげ図を用いてデータの分布の傾向を比較して読み取り，批判的に考察し判断すること。"
+  },
+  {
+   "id": "jp-cos-fe5d2b492c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "多数回の試行によって得られる確率と関連付けて，場合の数を基にして得られる確率の必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-9dc0fa7e73",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "簡単な場合について確率を求めること。"
+  },
+  {
+   "id": "jp-cos-25eb762967",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "同様に確からしいことに着目し，場合の数を基にして得られる確率の求め方を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-056db1a0d1",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    13
+   ],
+   "text": "確率を用いて不確定な事象を捉え考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-3d1c05c190",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "数の平方根の必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-a125a60638",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "数の平方根を含む簡単な式の計算をすること。"
+  },
+  {
+   "id": "jp-cos-d4081ecf0d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "具体的な場面で数の平方根を用いて表したり処理したりすること。"
+  },
+  {
+   "id": "jp-cos-5b9ca13950",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "既に学習した計算の方法と関連付けて，数の平方根を含む式の計算の方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-2e7aa48732",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "数の平方根を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-ec14cc8e01",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "単項式と多項式の乗法及び多項式を単項式で割る除法の計算をすること。"
+  },
+  {
+   "id": "jp-cos-292328b929",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "簡単な一次式の乗法の計算及び次の公式を用いる簡単な式の展開や因数分解をすること。（a＋b）²＝a²＋2ab＋b²（a－b）²＝a²－2ab＋b²（a＋b）（a－b）＝a²－b²（x＋a）（x＋b）＝x²＋（a＋b）x＋ab"
+  },
+  {
+   "id": "jp-cos-82db7ee491",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "既に学習した計算の方法と関連付けて，式の展開や因数分解をする方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-b472c48581",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "文字を用いた式で数量及び数量の関係を捉え説明すること。"
+  },
+  {
+   "id": "jp-cos-73784b6b28",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "二次方程式の必要性と意味及びその解の意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-7fb03c0cb0",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "因数分解したり平方の形に変形したりして二次方程式を解くこと。"
+  },
+  {
+   "id": "jp-cos-a26daf5b6e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "解の公式を知り，それを用いて二次方程式を解くこと。"
+  },
+  {
+   "id": "jp-cos-b2552bac74",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "因数分解や平方根の考えを基にして，二次方程式を解く方法を考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-c54d744d87",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ａ 数と式",
+   "ages": [
+    14
+   ],
+   "text": "二次方程式を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-624965741d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "平面図形の相似の意味及び三角形の相似条件について理解すること。"
+  },
+  {
+   "id": "jp-cos-e03c6494ec",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "基本的な立体の相似の意味及び相似な図形の相似比と面積比や体積比との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-e540468dc7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "三角形の相似条件などを基にして図形の基本的な性質を論理的に確かめること。"
+  },
+  {
+   "id": "jp-cos-5cb5d9a0db",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "平行線と線分の比についての性質を見いだし，それらを確かめること。"
+  },
+  {
+   "id": "jp-cos-f091e97001",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "相似な図形の性質を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-4d65e43ef3",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "円周角と中心角の関係の意味を理解し，それが証明できることを知ること。"
+  },
+  {
+   "id": "jp-cos-87a590fd7f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "円周角と中心角の関係を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-ff3ef8ab93",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "円周角と中心角の関係を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-e6e7b6b14c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "三平方の定理の意味を理解し，それが証明できることを知ること。"
+  },
+  {
+   "id": "jp-cos-e4514e169d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "三平方の定理を見いだすこと。"
+  },
+  {
+   "id": "jp-cos-7997d9e389",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｂ 図形",
+   "ages": [
+    14
+   ],
+   "text": "三平方の定理を具体的な場面で活用すること。"
+  },
+  {
+   "id": "jp-cos-e3fa3fef31",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    14
+   ],
+   "text": "関数 y＝ax²について理解すること。"
+  },
+  {
+   "id": "jp-cos-db2a3fc745",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    14
+   ],
+   "text": "事象の中には関数 y＝ax²として捉えられるものがあることを知ること。"
+  },
+  {
+   "id": "jp-cos-2eb455ed8d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    14
+   ],
+   "text": "いろいろな事象の中に，関数関係があることを理解すること。"
+  },
+  {
+   "id": "jp-cos-fccf172e54",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    14
+   ],
+   "text": "関数 y＝ax²として捉えられる二つの数量について，変化や対応の特徴を見いだし，表，式，グラフを相互に関連付けて考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-2e22ba3109",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｃ 関数",
+   "ages": [
+    14
+   ],
+   "text": "関数 y＝ax²を用いて具体的な事象を捉え考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-11b8b67b7e",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    14
+   ],
+   "text": "標本調査の必要性と意味を理解すること。"
+  },
+  {
+   "id": "jp-cos-496086f0d2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    14
+   ],
+   "text": "コンピュータなどの情報手段を用いるなどして無作為に標本を取り出し，整理すること。"
+  },
+  {
+   "id": "jp-cos-8a6c4c7c72",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    14
+   ],
+   "text": "標本調査の方法や結果を批判的に考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-6ff43300e2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "Ｄ データの活用",
+   "ages": [
+    14
+   ],
+   "text": "簡単な場合について標本調査を行い，母集団の傾向を推定し判断すること。"
+  },
+  {
+   "id": "jp-cos-d27d3a46df",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身近な物理現象",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "光の反射・屈折：光の反射や屈折の実験を行い，光が水やガラスなどの物質の境界面で反射，屈折するときの規則性を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-60e16e9d24",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身近な物理現象",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "凸レンズの働き：凸レンズの働きについての実験を行い，物体の位置と像のでき方との関係を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-78e48f26dd",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身近な物理現象",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "音の性質：音についての実験を行い，音はものが振動することによって生じ空気中などを伝わること及び音の高さや大きさは発音体の振動の仕方に関係することを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-ad46d4c947",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身近な物理現象",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "力の働き：物体に力を働かせる実験を行い，物体に力が働くとその物体が変形したり動き始めたり，運動の様子が変わったりすることを見いだして理解するとともに，力は大きさと向きによって表されることを知ること。また，物体に働く２力についての実験を行い，力がつり合うときの条件を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-09a842391b",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身近な物理現象",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身近な物理現象について，問題を見いだし見通しをもって観察，実験などを行い，光の反射や屈折，凸レンズの働き，音の性質，力の働きの規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-bb89d55ac7",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身の回りの物質",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身の回りの物質とその性質：身の回りの物質の性質を様々な方法で調べる実験を行い，物質には密度や加熱したときの変化など固有の性質と共通の性質があることを見いだして理解するとともに，実験器具の操作，記録の仕方などの技能を身に付けること。"
+  },
+  {
+   "id": "jp-cos-af6e3a7af9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身の回りの物質",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "気体の発生と性質：気体を発生させてその性質を調べる実験を行い，気体の種類による特性を理解するとともに，気体を発生させる方法や捕集法などの技能を身に付けること。"
+  },
+  {
+   "id": "jp-cos-39833419b4",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身の回りの物質",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "水溶液：水溶液から溶質を取り出す実験を行い，その結果を溶解度と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-4c2d467341",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身の回りの物質",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "状態変化と熱：物質の状態変化についての観察，実験を行い，状態変化によって物質の体積は変化するが質量は変化しないことを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-cd460b70cd",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身の回りの物質",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "物質の融点と沸点：物質は融点や沸点を境に状態が変化することを知るとともに，混合物を加熱する実験を行い，沸点の違いによって物質の分離ができることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-80809e9d55",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 身の回りの物質",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身の回りの物質について，問題を見いだし見通しをもって観察，実験などを行い，物質の性質や状態変化における規則性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-2d7aa1b370",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "回路と電流・電圧：回路をつくり，回路の電流や電圧を測定する実験を行い，回路の各点を流れる電流や各部に加わる電圧についての規則性を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-03d9a58aa9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "電流・電圧と抵抗：金属線に加わる電圧と電流を測定する実験を行い，電圧と電流の関係を見いだして理解するとともに，金属線には電気抵抗があることを理解すること。"
+  },
+  {
+   "id": "jp-cos-d85db7a454",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "電気とそのエネルギー：電流によって熱や光などを発生させる実験を行い，熱や光などが取り出せること及び電力の違いによって発生する熱や光などの量に違いがあることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-a1d258b2b9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "静電気と電流：異なる物質同士をこすり合わせると静電気が起こり，帯電した物体間では空間を隔てて力が働くこと及び静電気と電流には関係があることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-56ef554900",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "電流がつくる磁界：磁石や電流による磁界の観察を行い，磁界を磁力線で表すことを理解するとともに，コイルの回りに磁界ができることを知ること。"
+  },
+  {
+   "id": "jp-cos-f0ab55e78c",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "磁界中の電流が受ける力：磁石とコイルを用いた実験を行い，磁界中のコイルに電流を流すと力が働くことを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-683e418c14",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "電磁誘導と発電：磁石とコイルを用いた実験を行い，コイルや磁石を動かすことにより電流が得られることを見いだして理解するとともに，直流と交流の違いを理解すること。"
+  },
+  {
+   "id": "jp-cos-ee80d467f8",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 電流とその利用",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "電流，磁界に関する現象について，見通しをもって解決する方法を立案して観察，実験などを行い，その結果を分析して解釈し，電流と電圧，電流の働き，静電気，電流と磁界の規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-dd47307b8e",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "物質の分解：物質を分解する実験を行い，分解して生成した物質は元の物質とは異なることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-fdb1502952",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "原子・分子：物質は原子や分子からできていることを理解するとともに，物質を構成する原子の種類は記号で表されることを知ること。"
+  },
+  {
+   "id": "jp-cos-1b63969ea9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化：２種類の物質を反応させる実験を行い，反応前とは異なる物質が生成することを見いだして理解するとともに，化学変化は原子や分子のモデルで説明できること，化合物の組成は化学式で表されること及び化学変化は化学反応式で表されることを理解すること。"
+  },
+  {
+   "id": "jp-cos-ba570b978f",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化における酸化と還元：酸化や還元の実験を行い，酸化や還元は酸素が関係する反応であることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-e1ba68ba49",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化と熱：化学変化によって熱を取り出す実験を行い，化学変化には熱の出入りが伴うことを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-36bbfd0c5c",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化と質量の保存：化学変化の前後における物質の質量を測定する実験を行い，反応物の質量の総和と生成物の質量の総和が等しいことを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-b05a8c7d23",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "質量変化の規則性：化学変化に関係する物質の質量を測定する実験を行い，反応する物質の質量の間には一定の関係があることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-0d35865bc9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化と原子・分子",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化について，見通しをもって解決する方法を立案して観察，実験などを行い，原子や分子と関連付けてその結果を分析して解釈し，化学変化における物質の変化やその量的な関係を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-524cf28950",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "水中の物体に働く力：水圧についての実験を行い，その結果を水の重さと関連付けて理解すること。また，水中にある物体には浮力が働くことを知ること。"
+  },
+  {
+   "id": "jp-cos-558324f81e",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "力の合成・分解：力の合成と分解についての実験を行い，合力や分力の規則性を理解すること。"
+  },
+  {
+   "id": "jp-cos-cca842b815",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "運動の速さと向き：物体の運動についての観察，実験を行い，運動には速さと向きがあることを知ること。"
+  },
+  {
+   "id": "jp-cos-7a4c4bcc40",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "力と運動：物体に力が働く運動及び力が働かない運動についての観察，実験を行い，力が働く運動では運動の向きや時間の経過に伴って物体の速さが変わること及び力が働かない運動では物体は等速直線運動することを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-417a87b0a3",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "仕事とエネルギー：仕事に関する実験を行い，仕事と仕事率について理解すること。また，衝突の実験を行い，物体のもつ力学的エネルギーは物体が他の物体になしうる仕事で測れることを理解すること。"
+  },
+  {
+   "id": "jp-cos-3bd866924a",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "力学的エネルギーの保存：力学的エネルギーに関する実験を行い，運動エネルギーと位置エネルギーが相互に移り変わることを見いだして理解するとともに，力学的エネルギーの総量が保存されることを理解すること。"
+  },
+  {
+   "id": "jp-cos-d484468166",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 運動とエネルギー",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "運動とエネルギーについて，見通しをもって観察，実験などを行い，その結果を分析して解釈し，力のつり合い，合成や分解，物体の運動，力学的エネルギーの規則性や関係性を見いだして表現すること。また，探究の過程を振り返ること。"
+  },
+  {
+   "id": "jp-cos-6c8fcf6c86",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化とイオン",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "原子の成り立ちとイオン：水溶液に電圧をかけ電流を流す実験を行い，水溶液には電流が流れるものと流れないものとがあることを見いだして理解すること。また，電解質水溶液に電圧をかけ電流を流す実験を行い，電極に物質が生成することからイオンの存在を知るとともに，イオンの生成が原子の成り立ちに関係することを知ること。"
+  },
+  {
+   "id": "jp-cos-27d9ee150f",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化とイオン",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "酸・アルカリ：酸とアルカリの性質を調べる実験を行い，酸とアルカリのそれぞれの特性が水素イオンと水酸化物イオンによることを知ること。"
+  },
+  {
+   "id": "jp-cos-876b1e2b7f",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化とイオン",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "中和と塩：中和反応の実験を行い，酸とアルカリを混ぜると水と塩が生成することを理解すること。"
+  },
+  {
+   "id": "jp-cos-baf3f36444",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化とイオン",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "金属イオン：金属を電解質水溶液に入れる実験を行い，金属によってイオンへのなりやすさが異なることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-adf5262381",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化とイオン",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化と電池：電解質水溶液と２種類の金属などを用いた実験を行い，電池の基本的な仕組みを理解するとともに，化学エネルギーが電気エネルギーに変換されていることを知ること。"
+  },
+  {
+   "id": "jp-cos-b4b6eba74e",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 化学変化とイオン",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "化学変化について，見通しをもって観察，実験などを行い，イオンと関連付けてその結果を分析して解釈し，化学変化における規則性や関係性を見いだして表現すること。また，探究の過程を振り返ること。"
+  },
+  {
+   "id": "jp-cos-95d54a4287",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 科学技術と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "エネルギーとエネルギー資源：様々なエネルギーとその変換に関する観察，実験などを通して，日常生活や社会では様々なエネルギーの変換を利用していることを見いだして理解すること。また，人間は，水力，火力，原子力，太陽光などからエネルギーを得ていることを知るとともに，エネルギー資源の有効な利用が大切であることを認識すること。"
+  },
+  {
+   "id": "jp-cos-84ae0b72cd",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 科学技術と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "様々な物質とその利用：物質に関する観察，実験などを通して，日常生活や社会では，様々な物質が幅広く利用されていることを理解するとともに，物質の有効な利用が大切であることを認識すること。"
+  },
+  {
+   "id": "jp-cos-9d68233d26",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 科学技術と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "科学技術の発展：科学技術の発展の過程を知るとともに，科学技術が人間の生活を豊かで便利にしていることを認識すること。"
+  },
+  {
+   "id": "jp-cos-0bdd236b2b",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 科学技術と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自然環境の保全と科学技術の利用：自然環境の保全と科学技術の利用の在り方について科学的に考察することを通して，持続可能な社会をつくることが重要であることを認識すること。"
+  },
+  {
+   "id": "jp-cos-6a517d15ca",
+   "code": "",
+   "subject": "Science",
+   "strand": "第１分野 科学技術と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "日常生活や社会で使われているエネルギーや物質について，見通しをもって観察，実験などを行い，その結果を分析して解釈するとともに，自然環境の保全と科学技術の利用の在り方について，科学的に考察して判断すること。"
+  },
+  {
+   "id": "jp-cos-ae79894975",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 いろいろな生物とその共通点",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生物の観察：校庭や学校周辺の生物の観察を行い，いろいろな生物が様々な場所で生活していることを見いだして理解するとともに，観察器具の操作，観察記録の仕方などの技能を身に付けること。"
+  },
+  {
+   "id": "jp-cos-ed26dbe6d0",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 いろいろな生物とその共通点",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生物の特徴と分類の仕方：いろいろな生物を比較して見いだした共通点や相違点を基にして分類できることを理解するとともに，分類の仕方の基礎を身に付けること。"
+  },
+  {
+   "id": "jp-cos-b64a578e9e",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 いろいろな生物とその共通点",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "植物の体の共通点と相違点：身近な植物の外部形態の観察を行い，その観察記録などに基づいて，共通点や相違点があることを見いだして，植物の体の基本的なつくりを理解すること。また，その共通点や相違点に基づいて植物が分類できることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-7a02afd6b9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 いろいろな生物とその共通点",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "動物の体の共通点と相違点：身近な動物の外部形態の観察を行い，その観察記録などに基づいて，共通点や相違点があることを見いだして，動物の体の基本的なつくりを理解すること。また，その共通点や相違点に基づいて動物が分類できることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-65f368b9a2",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 いろいろな生物とその共通点",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身近な生物についての観察，実験などを通して，いろいろな生物の共通点や相違点を見いだすとともに，生物を分類するための観点や基準を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-09170dc1c9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 大地の成り立ちと変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身近な地形や地層，岩石の観察：身近な地形や地層，岩石などの観察を通して，土地の成り立ちや広がり，構成物などについて理解するとともに，観察器具の操作，記録の仕方などの技能を身に付けること。"
+  },
+  {
+   "id": "jp-cos-8e0d7faeb5",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 大地の成り立ちと変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "地層の重なりと過去の様子：地層の様子やその構成物などから地層のでき方を考察し，重なり方や広がり方についての規則性を見いだして理解するとともに，地層とその中の化石を手掛かりとして過去の環境と地質年代を推定できることを理解すること。"
+  },
+  {
+   "id": "jp-cos-8126cf189d",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 大地の成り立ちと変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "火山活動と火成岩：火山の形，活動の様子及びその噴出物を調べ，それらを地下のマグマの性質と関連付けて理解するとともに，火山岩と深成岩の観察を行い，それらの組織の違いを成因と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-14016bf2bd",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 大地の成り立ちと変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "地震の伝わり方と地球内部の働き：地震の体験や記録を基に，その揺れの大きさや伝わり方の規則性に気付くとともに，地震の原因を地球内部の働きと関連付けて理解し，地震に伴う土地の変化の様子を理解すること。"
+  },
+  {
+   "id": "jp-cos-6d6f397ede",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 大地の成り立ちと変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自然の恵みと火山災害・地震災害：自然がもたらす恵み及び火山災害と地震災害について調べ，これらを火山活動や地震発生の仕組みと関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-cb774fcc68",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 大地の成り立ちと変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "大地の成り立ちと変化について，問題を見いだし見通しをもって観察，実験などを行い，地層の重なり方や広がり方の規則性，地下のマグマの性質と火山の形との関係性などを見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-022a65a08a",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生物の体のつくりと働き",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生物と細胞：生物の組織などの観察を行い，生物の体が細胞からできていること及び植物と動物の細胞のつくりの特徴を見いだして理解するとともに，観察器具の操作，観察記録の仕方などの技能を身に付けること。"
+  },
+  {
+   "id": "jp-cos-66ba8b2f19",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生物の体のつくりと働き",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "葉・茎・根のつくりと働き：植物の葉，茎，根のつくりについての観察を行い，それらのつくりと，光合成，呼吸，蒸散の働きに関する実験の結果とを関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-e22d9b6b8d",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生物の体のつくりと働き",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生命を維持する働き：消化や呼吸についての観察，実験などを行い，動物の体が必要な物質を取り入れ運搬している仕組みを観察，実験の結果などと関連付けて理解すること。また，不要となった物質を排出する仕組みがあることについて理解すること。"
+  },
+  {
+   "id": "jp-cos-6ca21164e1",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生物の体のつくりと働き",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "刺激と反応：動物が外界の刺激に適切に反応している様子の観察を行い，その仕組みを感覚器官，神経系及び運動器官のつくりと関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-06619897b4",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生物の体のつくりと働き",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身近な植物や動物の体のつくりと働きについて，見通しをもって解決する方法を立案して観察，実験などを行い，その結果を分析して解釈し，生物の体のつくりと働きについての規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-b0b72a94ee",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "気象要素：気象要素として，気温，湿度，気圧，風向などを理解すること。また，気圧を取り上げ，圧力についての実験を行い，圧力は力の大きさと面積に関係があることを見いだして理解するとともに，大気圧の実験を行い，その結果を空気の重さと関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-9e7aded809",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "気象観測：校庭などで気象観測を継続的に行い，その観測記録などに基づいて，気温，湿度，気圧，風向などの変化と天気との関係を見いだして理解するとともに，観測方法や記録の仕方を身に付けること。"
+  },
+  {
+   "id": "jp-cos-321129e185",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "霧や雲の発生：霧や雲の発生についての観察，実験を行い，そのでき方を気圧，気温及び湿度の変化と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-b289a517aa",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "前線の通過と天気の変化：前線の通過に伴う天気の変化の観測結果などに基づいて，その変化を暖気，寒気と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-720364ddd9",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "日本の天気の特徴：天気図や気象衛星画像などから，日本の天気の特徴を気団と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-ebfa5cdc02",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "大気の動きと海洋の影響：気象衛星画像や調査記録などから，日本の気象を日本付近の大気の動きや海洋の影響に関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-925174344b",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自然の恵みと気象災害：気象現象がもたらす恵みと気象災害について調べ，これらを天気の変化や日本の気象と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-c1848d614c",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 気象とその変化",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "気象とその変化について，見通しをもって解決する方法を立案して観察，実験などを行い，その結果を分析して解釈し，天気の変化や日本の気象についての規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-2fd2391cda",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生命の連続性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "細胞分裂と生物の成長：体細胞分裂の観察を行い，その順序性を見いだして理解するとともに，細胞の分裂と生物の成長とを関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-7fca469abd",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生命の連続性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生物の殖え方：生物の殖え方を観察し，有性生殖と無性生殖の特徴を見いだして理解するとともに，生物が殖えていくときに親の形質が子に伝わることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-783f4cd548",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生命の連続性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "遺伝の規則性と遺伝子：交配実験の結果などに基づいて，親の形質が子に伝わるときの規則性を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-506a281565",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生命の連続性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生物の種類の多様性と進化：現存の生物及び化石の比較などを通して，現存の多様な生物は過去の生物が長い時間の経過の中で変化して生じてきたものであることを体のつくりと関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-57874b2554",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 生命の連続性",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "生命の連続性について，観察，実験などを行い，その結果や資料を分析して解釈し，生物の成長と殖え方，遺伝現象，生物の種類の多様性と進化についての特徴や規則性を見いだして表現すること。また，探究の過程を振り返ること。"
+  },
+  {
+   "id": "jp-cos-c3a707584c",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 地球と宇宙",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "日周運動と自転：天体の日周運動の観察を行い，その観察記録を地球の自転と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-4c369c21da",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 地球と宇宙",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "年周運動と公転：星座の年周運動や太陽の南中高度の変化などの観察を行い，その観察記録を地球の公転や地軸の傾きと関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-35e760602f",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 地球と宇宙",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "太陽の様子：太陽の観察を行い，その観察記録や資料に基づいて，太陽の特徴を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-e29efe4728",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 地球と宇宙",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "惑星と恒星：観測資料などを基に，惑星と恒星などの特徴を見いだして理解するとともに，太陽系の構造について理解すること。"
+  },
+  {
+   "id": "jp-cos-a1fc38af34",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 地球と宇宙",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "月や金星の運動と見え方：月の観察を行い，その観察記録や資料に基づいて，月の公転と見え方を関連付けて理解すること。また，金星の観測資料などを基に，金星の公転と見え方を関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-2c8cf45d4d",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 地球と宇宙",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "地球と宇宙について，天体の観察，実験などを行い，その結果や資料を分析して解釈し，天体の運動と見え方についての特徴や規則性を見いだして表現すること。また，探究の過程を振り返ること。"
+  },
+  {
+   "id": "jp-cos-830347bb10",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 自然と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自然界のつり合い：微生物の働きを調べ，植物，動物及び微生物を栄養の面から相互に関連付けて理解するとともに，自然界では，これらの生物がつり合いを保って生活していることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-d4683a2b9f",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 自然と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自然環境の調査と環境保全：身近な自然環境について調べ，様々な要因が自然界のつり合いに影響していることを理解するとともに，自然環境を保全することの重要性を認識すること。"
+  },
+  {
+   "id": "jp-cos-f7d919e628",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 自然と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "地域の自然災害：地域の自然災害について，総合的に調べ，自然と人間との関わり方について認識すること。"
+  },
+  {
+   "id": "jp-cos-4d4ee23084",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 自然と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "自然環境の保全と科学技術の利用：自然環境の保全と科学技術の利用の在り方について科学的に考察することを通して，持続可能な社会をつくることが重要であることを認識すること。"
+  },
+  {
+   "id": "jp-cos-fa87d76e71",
+   "code": "",
+   "subject": "Science",
+   "strand": "第２分野 自然と人間",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "身近な自然環境や地域の自然災害などを調べる観察，実験などを行い，自然環境の保全と科学技術の利用の在り方について，科学的に考察して判断すること。"
+  },
+  {
+   "id": "jp-cos-8b7f1a596c",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "現代の標準的な発音"
+  },
+  {
+   "id": "jp-cos-09c2b6dc9b",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "語と語の連結による音の変化"
+  },
+  {
+   "id": "jp-cos-aa806f88fd",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "語や句，文における基本的な強勢"
+  },
+  {
+   "id": "jp-cos-a1e8ac1929",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "文における基本的なイントネーション"
+  },
+  {
+   "id": "jp-cos-06c17f3420",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "文における基本的な区切り"
+  },
+  {
+   "id": "jp-cos-82a6316bb1",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "符号：感嘆符，引用符などの符号"
+  },
+  {
+   "id": "jp-cos-1e893b295f",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "１に示す五つの領域別の目標を達成するために必要となる，小学校で学習した語に 1600 ～ 1800 語程度の新語を加えた語"
+  },
+  {
+   "id": "jp-cos-2794c1d485",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "連語のうち，活用頻度の高いもの"
+  },
+  {
+   "id": "jp-cos-f86419d1bc",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "慣用表現のうち，活用頻度の高いもの"
+  },
+  {
+   "id": "jp-cos-4077fc767c",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "文：a 重文，複文 b 疑問文のうち，助動詞（may，will など）で始まるものや or を含むもの，疑問詞（which，whose）で始まるもの c 感嘆文のうち基本的なもの"
+  },
+  {
+   "id": "jp-cos-7c14fefeb8",
+   "code": "",
+   "subject": "English",
+   "strand": "〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "文法事項：a 代名詞⒜ 人称や指示，疑問，数量を表すもの⒝ 関係代名詞のうち，主格の that，which，who，目的格の that，which の制限的用法 b 接続詞 c 助動詞 d 前置詞 e 動詞の時制及び相など現在形や過去形，現在進行形，過去進行形，現在完了形，現在完了進行形，助動詞などを用いた未来表現 f 形容詞や副詞を用いた比較表現 g to 不定詞 h 動名詞 i 現在分詞や過去分詞の形容詞としての用法 j 受け身 k 仮定法のうち基本的なもの"
+  },
+  {
+   "id": "jp-cos-16c29c142a",
+   "code": "",
+   "subject": "English",
+   "strand": "〔思考力，判断力，表現力等〕",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "日常的な話題や社会的な話題について，英語を聞いたり読んだりして必要な情報や考えなどを捉えること。"
+  },
+  {
+   "id": "jp-cos-67f3534956",
+   "code": "",
+   "subject": "English",
+   "strand": "〔思考力，判断力，表現力等〕",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "日常的な話題や社会的な話題について，英語を聞いたり読んだりして得られた情報や表現を，選択したり抽出したりするなどして活用し，話したり書いたりして事実や自分の考え，気持ちなどを表現すること。"
+  },
+  {
+   "id": "jp-cos-6195d42e9c",
+   "code": "",
+   "subject": "English",
+   "strand": "〔思考力，判断力，表現力等〕",
+   "ages": [
+    12,
+    13,
+    14
+   ],
+   "text": "日常的な話題や社会的な話題について，伝える内容を整理し，英語で話したり書いたりして互いに事実や自分の考え，気持ちなどを伝え合うこと。"
+  },
+  {
+   "id": "jp-cos-6cf68a035f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "言葉には，認識や思考を支える働きがあることを理解すること。"
+  },
+  {
+   "id": "jp-cos-d03087c2b5",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "話し言葉と書き言葉の特徴や役割，表現の特色を踏まえ，正確さ，分かりやすさ，適切さ，敬意と親しさなどに配慮した表現や言葉遣いについて理解し，使うこと。"
+  },
+  {
+   "id": "jp-cos-8fbed913b0",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "常用漢字の読みに慣れ，主な常用漢字を書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-169a30cd08",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "実社会において理解したり表現したりするために必要な語句の量を増すとともに，語句や語彙の構造や特色，用法及び表記の仕方などを理解し，話や文章の中で使うことを通して，語感を磨き語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-256833c868",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文，話，文章の効果的な組立て方や接続の仕方について理解すること。"
+  },
+  {
+   "id": "jp-cos-c9f82f0cc7",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "比喩，例示，言い換えなどの修辞や，直接的な述べ方や婉曲的な述べ方について理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-a07fe16df4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "主張と論拠など情報と情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-71b554583f",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "個別の情報と一般化された情報との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-2e3acba12b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "推論の仕方を理解し使うこと。"
+  },
+  {
+   "id": "jp-cos-140d9e40a5",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "情報の妥当性や信頼性の吟味の仕方について理解を深め使うこと。"
+  },
+  {
+   "id": "jp-cos-4429da231b",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "引用の仕方や出典の示し方，それらの必要性について理解を深め使うこと。"
+  },
+  {
+   "id": "jp-cos-efd1da1e5e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "実社会との関わりを考えるための読書の意義と効用について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-77627ccea4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ａ 話すこと・聞くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "目的や場に応じて，実社会の中から適切な話題を決め，様々な観点から情報を収集，整理して，伝え合う内容を検討すること。"
+  },
+  {
+   "id": "jp-cos-d5d831afcb",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ａ 話すこと・聞くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "自分の考えが的確に伝わるよう，自分の立場や考えを明確にするとともに，相手の反応を予想して論理の展開を考えるなど，話の構成や展開を工夫すること。"
+  },
+  {
+   "id": "jp-cos-08d31fa56d",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ａ 話すこと・聞くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "話し言葉の特徴を踏まえて話したり，場の状況に応じて資料や機器を効果的に用いたりするなど，相手の理解が得られるように表現を工夫すること。"
+  },
+  {
+   "id": "jp-cos-dfa7dbcbb8",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ａ 話すこと・聞くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "論理の展開を予想しながら聞き，話の内容や構成，論理の展開，表現の仕方を評価するとともに，聞き取った情報を整理して自分の考えを広げたり深めたりすること。"
+  },
+  {
+   "id": "jp-cos-d967421a62",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ａ 話すこと・聞くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "論点を共有し，考えを広げたり深めたりしながら，話合いの目的，種類，状況に応じて，表現や進行など話合いの仕方や結論の出し方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-844ab5477a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ｂ 書くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "目的や意図に応じて，実社会の中から適切な題材を決め，集めた情報の妥当性や信頼性を吟味して，伝えたいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-c7ec55e84e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ｂ 書くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "読み手の理解が得られるよう，論理の展開，情報の分量や重要度などを考えて，文章の構成や展開を工夫すること。"
+  },
+  {
+   "id": "jp-cos-7f0cc96770",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ｂ 書くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "自分の考えや事柄が的確に伝わるよう，根拠の示し方や説明の仕方を考えるとともに，文章の種類や，文体，語句などの表現の仕方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-4cac743911",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ｂ 書くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "目的や意図に応じて書かれているかなどを確かめて，文章全体を整えたり，読み手からの助言などを踏まえて，自分の文章の特長や課題を捉え直したりすること。"
+  },
+  {
+   "id": "jp-cos-c45197bd57",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ｃ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文章の種類を踏まえて，内容や構成，論理の展開などについて叙述を基に的確に捉え，要旨や要点を把握すること。"
+  },
+  {
+   "id": "jp-cos-398d65607a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "現代の国語 Ｃ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "目的に応じて，文章や図表などに含まれている情報を相互に関係付けながら，内容や書き手の意図を解釈したり，文章の構成や論理の展開などについて評価したりするとともに，自分の考えを深めること。"
+  },
+  {
+   "id": "jp-cos-04bd90a93e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "言葉には，文化の継承，発展，創造を支える働きがあることを理解すること。"
+  },
+  {
+   "id": "jp-cos-cc693ab6f1",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "常用漢字の読みに慣れ，主な常用漢字を書き，文や文章の中で使うこと。"
+  },
+  {
+   "id": "jp-cos-a45a3f8b33",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "我が国の言語文化に特徴的な語句の量を増し，それらの文化的背景について理解を深め，文章の中で使うことを通して，語感を磨き語彙を豊かにすること。"
+  },
+  {
+   "id": "jp-cos-f1ae3dd0ea",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文章の意味は，文脈の中で形成されることを理解すること。"
+  },
+  {
+   "id": "jp-cos-a21b66af58",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "本歌取りや見立てなどの我が国の言語文化に特徴的な表現の技法とその効果について理解すること。"
+  },
+  {
+   "id": "jp-cos-ecf3dfa8d0",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "我が国の言語文化の特質や我が国の文化と外国の文化との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-c6708b4229",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "古典の世界に親しむために，作品や文章の歴史的・文化的背景などを理解すること。"
+  },
+  {
+   "id": "jp-cos-9b2d66c8bd",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "古典の世界に親しむために，古典を読むために必要な文語のきまりや訓読のきまり，古典特有の表現などについて理解すること。"
+  },
+  {
+   "id": "jp-cos-e18f82b9c4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "時間の経過や地域の文化的特徴などによる文字や言葉の変化について理解を深め，古典の言葉と現代の言葉とのつながりについて理解すること。"
+  },
+  {
+   "id": "jp-cos-2730e7ad64",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "言文一致体や和漢混交文など歴史的な文体の変化について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-b676239be7",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 〔知識及び技能〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "我が国の言語文化への理解につながる読書の意義と効用について理解を深めること。"
+  },
+  {
+   "id": "jp-cos-1856ebde51",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ａ 書くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "自分の知識や体験の中から適切な題材を決め，集めた材料のよさや味わいを吟味して，表現したいことを明確にすること。"
+  },
+  {
+   "id": "jp-cos-cbd82f0aec",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ａ 書くこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "自分の体験や思いが効果的に伝わるよう，文章の種類，構成，展開や，文体，描写，語句などの表現の仕方を工夫すること。"
+  },
+  {
+   "id": "jp-cos-2b5c89aac4",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ｂ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文章の種類を踏まえて，内容や構成，展開などについて叙述を基に的確に捉えること。"
+  },
+  {
+   "id": "jp-cos-5d020801ed",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ｂ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "作品や文章に表れているものの見方，感じ方，考え方を捉え，内容を解釈すること。"
+  },
+  {
+   "id": "jp-cos-57cb95740a",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ｂ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文章の構成や展開，表現の仕方，表現の特色について評価すること。"
+  },
+  {
+   "id": "jp-cos-56fd47c034",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ｂ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "作品や文章の成立した背景や他の作品などとの関係を踏まえ，内容の解釈を深めること。"
+  },
+  {
+   "id": "jp-cos-978bcac71e",
+   "code": "",
+   "subject": "Japanese",
+   "strand": "言語文化 Ｂ 読むこと",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "作品の内容や解釈を踏まえ，自分のものの見方，感じ方，考え方を深め，我が国の言語文化について自分の考えをもつこと。"
+  },
+  {
+   "id": "jp-cos-c43318b36f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "数を実数まで拡張する意義を理解し，簡単な無理数の四則計算をすること。"
+  },
+  {
+   "id": "jp-cos-73ecd565de",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "集合と命題に関する基本的な概念を理解すること。"
+  },
+  {
+   "id": "jp-cos-1f940c880a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "二次の乗法公式及び因数分解の公式の理解を深めること。"
+  },
+  {
+   "id": "jp-cos-0c7a01e625",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "不等式の解の意味や不等式の性質について理解し，一次不等式の解を求めること。"
+  },
+  {
+   "id": "jp-cos-339fa20b66",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "集合の考えを用いて論理的に考察し，簡単な命題を証明すること。"
+  },
+  {
+   "id": "jp-cos-4fc382909f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "問題を解決する際に，既に学習した計算の方法と関連付けて，式を多面的に捉えたり目的に応じて適切に変形したりすること。"
+  },
+  {
+   "id": "jp-cos-090a799b32",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "不等式の性質を基に一次不等式を解く方法を考察すること。"
+  },
+  {
+   "id": "jp-cos-271510109a",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 数と式",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "日常の事象や社会の事象などを数学的に捉え，一次不等式を問題解決に活用すること。"
+  },
+  {
+   "id": "jp-cos-9cdcb9468d",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 図形と計量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "鋭角の三角比の意味と相互関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-bbf0236055",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 図形と計量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "三角比を鈍角まで拡張する意義を理解し，鋭角の三角比の値を用いて鈍角の三角比の値を求める方法を理解すること。"
+  },
+  {
+   "id": "jp-cos-e6284ba5b2",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 図形と計量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "正弦定理や余弦定理について三角形の決定条件や三平方の定理と関連付けて理解し，三角形の辺の長さや角の大きさなどを求めること。"
+  },
+  {
+   "id": "jp-cos-77e75bf57c",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 図形と計量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "図形の構成要素間の関係を三角比を用いて表現するとともに，定理や公式として導くこと。"
+  },
+  {
+   "id": "jp-cos-1773dce23b",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 図形と計量",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "図形の構成要素間の関係に着目し，日常の事象や社会の事象などを数学的に捉え，問題を解決したり，解決の過程を振り返って事象の数学的な特徴や他の事象との関係を考察したりすること。"
+  },
+  {
+   "id": "jp-cos-f1ab77a319",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 二次関数",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "二次関数の値の変化やグラフの特徴について理解すること。"
+  },
+  {
+   "id": "jp-cos-ed4ad5ea93",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 二次関数",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "二次関数の最大値や最小値を求めること。"
+  },
+  {
+   "id": "jp-cos-93ebd00250",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 二次関数",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "二次方程式の解と二次関数のグラフとの関係について理解すること。また，二次不等式の解と二次関数のグラフとの関係について理解し，二次関数のグラフを用いて二次不等式の解を求めること。"
+  },
+  {
+   "id": "jp-cos-6441e70108",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 二次関数",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "二次関数の式とグラフとの関係について，コンピュータなどの情報機器を用いてグラフをかくなどして多面的に考察すること。"
+  },
+  {
+   "id": "jp-cos-1a9d57981f",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 二次関数",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "二つの数量の関係に着目し，日常の事象や社会の事象などを数学的に捉え，問題を解決したり，解決の過程を振り返って事象の数学的な特徴や他の事象との関係を考察したりすること。"
+  },
+  {
+   "id": "jp-cos-0014f0ad23",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ データの分析",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "分散，標準偏差，散布図及び相関係数の意味やその用い方を理解すること。"
+  },
+  {
+   "id": "jp-cos-7f8551d652",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ データの分析",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "コンピュータなどの情報機器を用いるなどして，データを表やグラフに整理したり，分散や標準偏差などの基本的な統計量を求めたりすること。"
+  },
+  {
+   "id": "jp-cos-7b25f45112",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ データの分析",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "具体的な事象において仮説検定の考え方を理解すること。"
+  },
+  {
+   "id": "jp-cos-e43f8688fa",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ データの分析",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "データの散らばり具合や傾向を数値化する方法を考察すること。"
+  },
+  {
+   "id": "jp-cos-69c52565b7",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ データの分析",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "目的に応じて複数の種類のデータを収集し，適切な統計量やグラフ，手法などを選択して分析を行い，データの傾向を把握して事象の特徴を表現すること。"
+  },
+  {
+   "id": "jp-cos-074b437310",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ データの分析",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "不確実な事象の起こりやすさに着目し，主張の妥当性について，実験などを通して判断したり，批判的に考察したりすること。"
+  },
+  {
+   "id": "jp-cos-eb05446395",
+   "code": "",
+   "subject": "Mathematics",
+   "strand": "数学Ⅰ 〔課題学習〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "から（4）までの内容又はそれらを相互に関連付けた内容を生活と関連付けたり発展させたりするなどした課題を設け，生徒の主体的な学習を促し，数学のよさを認識させ，学習意欲を含めた数学的に考える資質・能力を高めるようにする。"
+  },
+  {
+   "id": "jp-cos-b7865cc07c",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 科学技術の発展",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "科学技術の発展が今日の人間生活に対してどのように貢献してきたかについて理解すること。"
+  },
+  {
+   "id": "jp-cos-3498a82653",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 科学技術の発展",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "科学技術の発展と人間生活との関わりについて科学的に考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-ebf9cd2fb3",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "光の性質とその利用：光に関する観察，実験などを行い，光を中心とした電磁波の性質とその利用について，日常生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-3a3161ddbf",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "熱の性質とその利用：熱に関する観察，実験などを行い，熱の性質，エネルギーの変換と保存及び有効利用について，日常生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-341e07114a",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "材料とその再利用：身近な材料に関する観察，実験などを行い，金属やプラスチックの種類，性質及び用途と資源の再利用について，日常生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-04c4187203",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "衣料と食品：衣料と食品に関する観察，実験などを行い，身近な衣料材料の性質や用途，食品中の主な成分の性質について，日常生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-7975af031e",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "ヒトの生命現象：ヒトの生命現象に関する観察，実験などを行い，ヒトの生命現象を人間生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-83c9c2ea75",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "微生物とその利用：微生物に関する観察，実験などを行い，微生物の働きを人間生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-c283775d1d",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "太陽と地球：天体に関する観察，実験などを行い，太陽などの身近に見られる天体の運動や太陽の放射エネルギーについて，人間生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-4f3669fd61",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "自然景観と自然災害：自然景観と自然災害に関する観察，実験などを行い，身近な自然景観の成り立ちと自然災害について，人間生活と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-44abe3620a",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 人間生活の中の科学",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "光や熱の科学，物質の科学，生命の科学，宇宙や地球の科学について，問題を見いだし見通しをもって観察，実験などを行い，人間生活と関連付けて，科学的に考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-f37099ebbe",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 これからの科学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "これからの科学と人間生活との関わり方について認識を深めること。"
+  },
+  {
+   "id": "jp-cos-93b659464a",
+   "code": "",
+   "subject": "Science",
+   "strand": "科学と人間生活 これからの科学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "これからの科学と人間生活との関わり方について科学的に考察し表現すること。"
+  },
+  {
+   "id": "jp-cos-cd6c8f4017",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物理量の測定と扱い方：身近な物理現象について，物理量の測定と表し方，分析の手法を理解すること。"
+  },
+  {
+   "id": "jp-cos-5169f03a8e",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "運動の表し方：物体の運動の表し方について，直線運動を中心に理解すること。"
+  },
+  {
+   "id": "jp-cos-9f9580ebce",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "直線運動の加速度：速度が変化する物体の直線運動に関する実験などを行い，速度と時間との関係を見いだして理解するとともに，物体が直線運動する場合の加速度を理解すること。"
+  },
+  {
+   "id": "jp-cos-4368741298",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "様々な力：物体に様々な力が働くことを理解すること。"
+  },
+  {
+   "id": "jp-cos-4452d267dd",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "力のつり合い：物体に働く力のつり合いを理解すること。"
+  },
+  {
+   "id": "jp-cos-e727c14623",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "運動の法則：物体に一定の力を加え続けたときの運動に関する実験などを行い，物体の質量，物体に働く力，物体に生じる加速度の関係を見いだして理解するとともに，運動の三法則を理解すること。"
+  },
+  {
+   "id": "jp-cos-231898142c",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物体の落下運動：物体が落下する際の運動の特徴及び物体に働く力と運動との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-707ebddc59",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "運動エネルギーと位置エネルギー：運動エネルギーと位置エネルギーについて，仕事と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-0c2d5ab223",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "力学的エネルギーの保存：力学的エネルギーに関する実験などを行い，力学的エネルギー保存の法則を仕事と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-bba5f07f99",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 物体の運動とエネルギー",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物体の運動とエネルギーについて，観察，実験などを通して探究し，運動の表し方，様々な力とその働き，力学的エネルギーにおける規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-d64289fa92",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "波の性質：波の性質について，直線状に伝わる場合を中心に理解すること。"
+  },
+  {
+   "id": "jp-cos-7f8194f9c2",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "音と振動：気柱の共鳴に関する実験などを行い，気柱の共鳴と音源の振動数を関連付けて理解すること。また，弦の振動，音波の性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-0c206ac9eb",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "熱と温度：熱と温度について，原子や分子の熱運動の観点から理解すること。"
+  },
+  {
+   "id": "jp-cos-ed3338d997",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "熱の利用：熱に関する実験などを行い，熱の移動及び熱と仕事の変換について理解すること。"
+  },
+  {
+   "id": "jp-cos-5191787842",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物質と電気抵抗：電気抵抗に関する実験などを行い，同じ物質からなる導体でも長さや断面積によって電気抵抗が異なることを見いだして理解すること。また，物質によって抵抗率が異なることを理解すること。"
+  },
+  {
+   "id": "jp-cos-a2b4e24a9e",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "電気の利用：発電，送電及び電気の利用について，基本的な仕組みを理解すること。"
+  },
+  {
+   "id": "jp-cos-997d088e27",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "エネルギーとその利用：人類が利用可能な水力，化石燃料，原子力，太陽光などを源とするエネルギーの特性や利用などについて，物理学的な観点から理解すること。"
+  },
+  {
+   "id": "jp-cos-4bb91615dc",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物理学が拓く世界：この科目で学んだ事柄が，日常生活や社会を支えている科学技術と結び付いていることを理解すること。"
+  },
+  {
+   "id": "jp-cos-fa45af67db",
+   "code": "",
+   "subject": "Science",
+   "strand": "物理基礎 様々な物理現象とエネルギーの利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "様々な物理現象とエネルギーの利用について，観察，実験などを通して探究し，波，熱，電気，エネルギーとその利用における規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-8208bd3623",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 化学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "化学の特徴：日常生活や社会を支える身近な物質の性質を調べる活動を通して，物質を対象とする科学である化学の特徴について理解すること。"
+  },
+  {
+   "id": "jp-cos-2425ebb5e2",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 化学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物質の分離・精製：物質の分離や精製の実験などを行い，実験における基本操作と物質を探究する方法を身に付けること。"
+  },
+  {
+   "id": "jp-cos-70c1d93c24",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 化学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "単体と化合物：元素を確認する実験などを行い，単体，化合物について理解すること。"
+  },
+  {
+   "id": "jp-cos-e9a12121ad",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 化学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "熱運動と物質の三態：粒子の熱運動と温度との関係，粒子の熱運動と物質の三態変化との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-f0bed7dab5",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 化学と人間生活",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "身近な物質や元素について，観察，実験などを通して探究し，科学的に考察し，表現すること。"
+  },
+  {
+   "id": "jp-cos-778f4158af",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の構成",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "原子の構造：原子の構造及び陽子，中性子，電子の性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-68a0a84747",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の構成",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "電子配置と周期表：元素の周期律及び原子の電子配置と周期表の族や周期との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-10b62fa36e",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の構成",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "イオンとイオン結合：イオンの生成を電子配置と関連付けて理解すること。また，イオン結合及びイオン結合でできた物質の性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-8ff7b0219a",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の構成",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "分子と共有結合：共有結合を電子配置と関連付けて理解すること。また，分子からなる物質の性質を理解すること。"
+  },
+  {
+   "id": "jp-cos-4b48b3654e",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の構成",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "金属と金属結合：金属の性質及び金属結合を理解すること。"
+  },
+  {
+   "id": "jp-cos-3ea03d2854",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の構成",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物質の構成について，観察，実験などを通して探究し，物質の構成における規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-b9e9bd11fa",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の変化とその利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物質量：物質量と粒子数，質量，気体の体積との関係について理解すること。"
+  },
+  {
+   "id": "jp-cos-dafd360e11",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の変化とその利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "化学反応式：化学反応に関する実験などを行い，化学反応式が化学反応に関与する物質とその量的関係を表すことを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-a3293b451c",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の変化とその利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "酸・塩基と中和：酸や塩基に関する実験などを行い，酸と塩基の性質及び中和反応に関与する物質の量的関係を理解すること。"
+  },
+  {
+   "id": "jp-cos-c7b97a01dc",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の変化とその利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "酸化と還元：酸化と還元が電子の授受によることを理解すること。"
+  },
+  {
+   "id": "jp-cos-6b4ad35035",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の変化とその利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "化学が拓く世界：この科目で学んだ事柄が，日常生活や社会を支えている科学技術と結び付いていることを理解すること。"
+  },
+  {
+   "id": "jp-cos-c463c07ac2",
+   "code": "",
+   "subject": "Science",
+   "strand": "化学基礎 物質の変化とその利用",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "物質の変化とその利用について，観察，実験などを通して探究し，物質の変化における規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-29a7118938",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の特徴",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "生物の共通性と多様性：様々な生物の比較に基づいて，生物は多様でありながら共通性をもっていることを見いだして理解すること。また，生物の共通性と起源の共有を関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-04aa391673",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の特徴",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "生物とエネルギー：生物とエネルギーに関する資料に基づいて，生命活動にエネルギーが必要であることを理解すること。また，光合成や呼吸などの代謝と ATP を関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-7f687e203f",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の特徴",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "遺伝情報と DNA：DNA の構造に関する資料に基づいて，遺伝情報を担う物質としての DNA の特徴を見いだして理解するとともに，塩基の相補性と DNA の複製を関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-e8828ec4ce",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の特徴",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "遺伝情報とタンパク質の合成：遺伝情報の発現に関する資料に基づいて，DNA の塩基配列とタンパク質のアミノ酸配列との関係を見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-9c0be03d78",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の特徴",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "生物の特徴について，観察，実験などを通して探究し，多様な生物がもつ共通の特徴を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-19d4f2aca4",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 ヒトの体の調節",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "情報の伝達：体の調節に関する観察，実験などを行い，体内での情報の伝達が体の調節に関係していることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-aad50e1c65",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 ヒトの体の調節",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "体内環境の維持の仕組み：体内環境の維持の仕組みに関する資料に基づいて，体内環境の維持とホルモンの働きとの関係を見いだして理解すること。また，体内環境の維持を自律神経と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-14a72fe157",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 ヒトの体の調節",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "免疫の働き：免疫に関する資料に基づいて，異物を排除する防御機構が備わっていることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-8fe1b407be",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 ヒトの体の調節",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "ヒトの体の調節について，観察，実験などを通して探究し，神経系と内分泌系による調節及び免疫などの特徴を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-1aa292b890",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の多様性と生態系",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "植生と遷移：植生の遷移に関する資料に基づいて，遷移の要因を見いだして理解すること。また，植生の遷移をバイオームと関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-e09c5e1690",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の多様性と生態系",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "生態系と生物の多様性：生態系と生物の多様性に関する観察，実験などを行い，生態系における生物の種多様性を見いだして理解すること。また，生物の種多様性と生物間の関係性とを関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-62a6f28f75",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の多様性と生態系",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "生態系のバランスと保全：生態系のバランスに関する資料に基づいて，生態系のバランスと人為的攪乱を関連付けて理解すること。また，生態系の保全の重要性を認識すること。"
+  },
+  {
+   "id": "jp-cos-6c148fe23b",
+   "code": "",
+   "subject": "Science",
+   "strand": "生物基礎 生物の多様性と生態系",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "生物の多様性と生態系について，観察，実験などを通して探究し，生態系における，生物の多様性及び生物と環境との関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-1b4addfc1e",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "地球の形と大きさ：地球の形や大きさに関する観察，実験などを行い，地球の形の特徴と大きさを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-7717dd3e01",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "地球内部の層構造：地球内部の層構造とその状態を理解すること。"
+  },
+  {
+   "id": "jp-cos-63f16a0bd7",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "プレートの運動：プレートの分布と運動について理解するとともに，大地形の形成と地質構造をプレートの運動と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-0aedce748d",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "火山活動と地震：火山活動や地震に関する資料に基づいて，火山活動と地震の発生の仕組みをプレートの運動と関連付けて理解すること。"
+  },
+  {
+   "id": "jp-cos-2dccb9b7c2",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "地球の熱収支：気圧や気温の鉛直方向の変化などについての資料に基づいて，大気の構造の特徴を見いだして理解するとともに，太陽放射の受熱量と地球放射の放熱量がつり合っていることを理解すること。"
+  },
+  {
+   "id": "jp-cos-eafce70f4e",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "大気と海水の運動：大気と海水の運動に関する資料に基づいて，大気と海洋の大循環について理解するとともに，緯度により太陽放射の受熱量が異なることなどから，地球規模で熱が輸送されていることを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-9c79199e2c",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 地球のすがた",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "地球のすがたについて，観察，実験などを通して探究し，惑星としての地球，活動する地球，大気と海洋について，規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-a8b0e6eecd",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 変動する地球",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "宇宙，太陽系と地球の誕生：宇宙の誕生，太陽系の誕生と生命を生み出す条件を備えた地球の特徴を理解すること。"
+  },
+  {
+   "id": "jp-cos-cfd80a4faa",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 変動する地球",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "古生物の変遷と地球環境：地層や化石に関する観察などを行い，地質時代が古生物の変遷に基づいて区分されることを理解するとともに，地球環境の変化に関する資料に基づいて，大気の変化と生命活動の相互の関わりを見いだして理解すること。"
+  },
+  {
+   "id": "jp-cos-4e753bd59a",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 変動する地球",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "地球環境の科学：地球規模の自然環境に関する資料に基づいて，地球環境の変化を見いだしてその仕組みを理解するとともに，それらの現象と人間生活との関わりについて認識すること。"
+  },
+  {
+   "id": "jp-cos-0cd91181d5",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 変動する地球",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "日本の自然環境：日本の自然環境を理解し，それらがもたらす恩恵や災害など自然環境と人間生活との関わりについて認識すること。"
+  },
+  {
+   "id": "jp-cos-4c018aa0ef",
+   "code": "",
+   "subject": "Science",
+   "strand": "地学基礎 変動する地球",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "変動する地球について，観察，実験などを通して探究し，地球の変遷，地球の環境について，規則性や関係性を見いだして表現すること。"
+  },
+  {
+   "id": "jp-cos-8711f841a5",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "語や句，文における強勢"
+  },
+  {
+   "id": "jp-cos-d627338584",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文におけるイントネーション"
+  },
+  {
+   "id": "jp-cos-b1b60d8071",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文における区切り"
+  },
+  {
+   "id": "jp-cos-b0d73bc2da",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "コンマ"
+  },
+  {
+   "id": "jp-cos-75c128394d",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "コロン，セミコロン"
+  },
+  {
+   "id": "jp-cos-df89061b42",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "ダッシュ"
+  },
+  {
+   "id": "jp-cos-d3f719572b",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "小学校及び中学校で学習した語に 400〜600 語程度の新語を加えた語"
+  },
+  {
+   "id": "jp-cos-542777759d",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "連語"
+  },
+  {
+   "id": "jp-cos-6b6cd57c96",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "慣用表現"
+  },
+  {
+   "id": "jp-cos-21881642ee",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文構造のうち，活用頻度の高いもの"
+  },
+  {
+   "id": "jp-cos-a0ca1c4116",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔知識及び技能〕 英語の特徴やきまりに関する事項",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "文法事項：ａ 不定詞の用法ｂ 関係代名詞の用法ｃ 関係副詞の用法ｄ 接続詞の用法ｅ 助動詞の用法ｆ 前置詞の用法ｇ 動詞の時制及び相などｈ 仮定法"
+  },
+  {
+   "id": "jp-cos-0d9a096d8e",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔思考力，判断力，表現力等〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "日常的な話題や社会的な話題について，英語を聞いたり読んだりして，情報や考えなどの概要や要点，詳細，話し手や書き手の意図などを的確に捉えたり，自分自身の考えをまとめたりすること。"
+  },
+  {
+   "id": "jp-cos-4d11db7adc",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔思考力，判断力，表現力等〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "日常的な話題や社会的な話題について，英語を聞いたり読んだりして得られた情報や考えなどを活用しながら，話したり書いたりして情報や自分自身の考えなどを適切に表現すること。"
+  },
+  {
+   "id": "jp-cos-1f901adee3",
+   "code": "",
+   "subject": "English",
+   "strand": "英語コミュニケーションⅠ 〔思考力，判断力，表現力等〕",
+   "ages": [
+    15,
+    16,
+    17
+   ],
+   "text": "日常的な話題や社会的な話題について，伝える内容を整理し，英語で話したり書いたりして，要点や意図などを明確にしながら，情報や自分自身の考えなどを伝え合うこと。"
+  }
+ ]
+}

@@ -249,6 +249,9 @@ export const ASIA_CURRICULA: Curriculum[] = [
     },
     context:
       "Schools teach in Japanese, with English taught as a subject. The school year starts in April and has three terms in most schools. Use Japanese places, names and yen amounts where a local example helps.",
+    // The Course of Study's own statements, in Japanese (open licence: see
+    // app/lib/standards/permissions.ts).
+    alignment: { frameworks: ["jp-cos"], adapted: false },
     verifiedOn: "2026-11-27",
   },
   {

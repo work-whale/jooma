@@ -5,6 +5,7 @@ import { BookOpen, ChevronDown, HelpCircle, Loader2, Search, X } from "lucide-re
 import { getCurriculum } from "@/app/lib/curricula";
 import {
   FRAMEWORK_CREDIT,
+  FRAMEWORK_LANGUAGE_NOTE,
   alignmentMode,
   alignmentStageLabel,
   alignmentYears,
@@ -211,11 +212,15 @@ export default function CurriculumAlignment({
     () => (statements && value.subject ? strandsIn(statements as Nc, value.subject) : []),
     [statements, value.subject],
   );
-  // The frameworks on the list, for the credits under it.
-  const credits = useMemo(() => {
-    if (england || !statements) return [];
+  // The frameworks on the list, for the credits under it, and a note for any
+  // whose statements are not in English (shown as published, not translated).
+  const { credits, languageNotes } = useMemo(() => {
+    if (england || !statements) return { credits: [], languageNotes: [] };
     const ids = [...new Set(statements.map((s) => frameworkOf(s.id)).filter((f): f is FrameworkId => f !== null))];
-    return [...new Set(ids.map((f) => FRAMEWORK_CREDIT[f]))];
+    return {
+      credits: [...new Set(ids.map((f) => FRAMEWORK_CREDIT[f]))],
+      languageNotes: [...new Set(ids.map((f) => FRAMEWORK_LANGUAGE_NOTE[f]).filter((n): n is string => !!n))],
+    };
   }, [statements, england]);
   const listed = useMemo(() => {
     if (!statements || !value.subject) return [];
@@ -492,6 +497,9 @@ export default function CurriculumAlignment({
                   {cur.place ?? "Your state"} publishes its own version of these standards, so its wording may differ.
                 </p>
               )}
+              {languageNotes.map((n) => (
+                <p key={n} data-testid="curriculum-language-note" className="text-[11px] text-gray-500 leading-snug">{n}</p>
+              ))}
               {credits.map((c) => (
                 <p key={c} className="text-[10px] text-gray-400 leading-snug">{c}</p>
               ))}

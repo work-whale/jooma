@@ -17,6 +17,8 @@
  *   - data/nic-*.json      Northern Ireland: the statutory requirements of the
  *                          Education (Curriculum Minimum Content) Order 2007 for
  *                          the Foundation Stage and Key Stages 1 to 4
+ *   - data/jp-cos.json     Japan: the Course of Study (MEXT), in Japanese as
+ *                          published, built by scripts/build-asia-standards.mjs
  *
  * Statements carry the AGES they apply to, not a grade name, so one file
  * serves "Grade 3" in Texas and "Year 3" in Queensland alike: a year's age
@@ -36,7 +38,7 @@ import { getCurriculum, type Curriculum, type FrameworkId, type YearOption } fro
 export type { FrameworkId } from "@/app/lib/curricula";
 import { FRAMEWORK_PERMITTED } from "./permissions";
 
-export { FRAMEWORK_CREDIT } from "./credits";
+export { FRAMEWORK_CREDIT, FRAMEWORK_LANGUAGE_NOTE } from "./credits";
 export { FRAMEWORK_PERMITTED } from "./permissions";
 
 export interface Statement {
@@ -71,6 +73,7 @@ export const FRAMEWORK_NAME: Record<FrameworkId, string> = {
   "nic-ks2": "Northern Ireland Curriculum statutory requirements",
   "nic-ks3": "Northern Ireland Curriculum statutory requirements",
   "nic-ks4": "Northern Ireland Curriculum statutory requirements",
+  "jp-cos": "Course of Study (MEXT)",
 };
 
 /** The ages each framework has statements for. */
@@ -95,6 +98,9 @@ export const FRAMEWORK_AGES: Record<FrameworkId, readonly number[]> = {
   "nic-ks2": [8, 9, 10],
   "nic-ks3": [11, 12, 13],
   "nic-ks4": [14, 15],
+  // Japan: Elementary 1 to 6 (ages 6 to 11), Junior High 1 to 3, Senior High
+  // 1 to 3 (the compulsory first courses, at every senior high age).
+  "jp-cos": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
 };
 
 /** Load one framework's statements. Each file is its own chunk, fetched
@@ -127,6 +133,8 @@ export async function loadFramework(id: FrameworkId): Promise<FrameworkData> {
       return (await import("./data/nic-ks3.json")).default as unknown as FrameworkData;
     case "nic-ks4":
       return (await import("./data/nic-ks4.json")).default as unknown as FrameworkData;
+    case "jp-cos":
+      return (await import("./data/jp-cos.json")).default as unknown as FrameworkData;
   }
 }
 

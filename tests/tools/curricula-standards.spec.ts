@@ -178,3 +178,45 @@ test("a Queensland Year 4 teacher aligns a worksheet to a Humanities and Social 
   expect(align.statements.map((s) => s.id)).toEqual(["ac9-ac9hs4k02"]);
   expect(align.statements[0].text).toMatch(/^AC9HS4K02: The causes of the establishment of the first British colony/);
 });
+
+test("a Japan Elementary 4 teacher aligns a worksheet to the Course of Study, in Japanese as MEXT publishes it, credited", async ({ page }) => {
+  const t = await teacherOn("japan", "StdJapan");
+  await signIn(page, t);
+  const sent = await capture(page, "/api/worksheet-generator");
+  const asked = await noSuggestions(page);
+
+  await page.goto("/tools/worksheet-generator", NAV);
+  await expect(page.getByLabel("Curriculum", { exact: true })).toHaveValue("Japanese Course of Study (MEXT)", NAV);
+  await page.getByLabel("Year group", { exact: true }).selectOption("Elementary 4");
+  await page.getByLabel("Subject", { exact: true }).fill("Maths");
+  await page.getByLabel("Learning objective", { exact: true }).fill("Units of area: square centimetres and square metres");
+
+  const card = page.getByTestId("curriculum-alignment");
+  await card.getByRole("button", { name: /Align to curriculum/ }).click();
+  await expect(card.getByTestId("curriculum-alignment-name")).toContainText("Japan", NAV);
+  await expect.poll(() => asked.length, NAV).toBeGreaterThan(0);
+  expect(asked[0]).toMatchObject({ year: "Elementary 4", curriculumId: "japan" });
+
+  // Elementary 4 has the four core subjects, named in English for the menu.
+  const subject = card.getByLabel("Subject");
+  await expect(subject.locator("option")).toHaveText(["Select subject", "Japanese", "Mathematics", "Science", "English"], NAV);
+  await subject.selectOption("Mathematics");
+
+  // The statement is the Course of Study's own Japanese, superscripts written in.
+  const area = card.getByRole("checkbox", { name: /面積の単位（平方センチメートル（cm²）/ });
+  await area.click();
+  await expect(area).toHaveAttribute("aria-checked", "true");
+
+  // A note says why it is in Japanese, and MEXT is credited under the licence.
+  await expect(card.getByTestId("curriculum-language-note")).toContainText("Statements are shown in Japanese, as MEXT publishes them.");
+  await expect(card.getByTestId("curriculum-credits")).toContainText("Government of Japan Standard Terms of Use (Ver. 2.0)");
+  await shot(page, "worksheet-japan-elementary4-maths", card);
+
+  await page.locator("[data-jo-generate]").click();
+  await expect.poll(() => sent.length, NAV).toBeGreaterThan(0);
+  const align = sent[0].curriculumAlign as { curriculumName: string; countryName: string; year: string; statements: { id: string; text: string }[] };
+  expect(align).toMatchObject({ curriculumName: "Course of Study (MEXT)", countryName: "Japan", year: "Elementary 4" });
+  expect(align.statements).toEqual([
+    { id: "jp-cos-10e5f805c0", text: "面積の単位（平方センチメートル（cm²），平方メートル（m²），平方キロメートル（km²））について知ること。" },
+  ]);
+});
